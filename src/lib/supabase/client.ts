@@ -7,3 +7,9 @@ export const isSupabaseConfigured = Boolean(url && key)
 
 // null, kým nie je vyplnené .env.local — shell aplikácie beží aj bez backendu.
 export const supabase: SupabaseClient | null = isSupabaseConfigured ? createClient(url!, key!) : null
+
+/** Pre kód, ktorý sa renderuje iba pri pripojenom backende. */
+export function getSupabase(): SupabaseClient {
+  if (!supabase) throw new Error('Supabase nie je nakonfigurovaný')
+  return supabase
+}

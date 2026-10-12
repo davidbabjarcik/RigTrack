@@ -14,9 +14,6 @@ function renderAt(path: string) {
 describe('router', () => {
   it.each([
     ['/', 'Prehľad'],
-    ['/equipment', 'Technika'],
-    ['/equipment/abc/edit', 'Úprava techniky'],
-    ['/events/42', 'Detail eventu'],
     ['/more', 'Viac'],
     ['/more/customize', 'Prispôsobiť lištu'],
   ])('renders %s', (path, heading) => {

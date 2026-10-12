@@ -1,0 +1,279 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Trash2 } from 'lucide-react'
+import { useState, type FormEvent, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Field, SelectField } from '@/components/ui/field'
+import { useAuth } from '@/features/auth/auth-context'
+import {
+  companyKeys,
+  deleteInvitation,
+  fetchInvitations,
+  fetchMembers,
+  inviteMember,
+  removeMember,
+  updateMemberRole,
+} from '@/features/companies/api'
+import { useCompany, type Membership } from '@/features/companies/company-context'
+import { BrandingSettings } from '@/features/companies/BrandingSettings'
+import { LookupSettings } from '@/features/equipment/LookupSettings'
+import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
+import { canDeleteInventory } from '@/lib/permissions'
+import { ROLE_LABELS, ROLES, type Role } from '@/lib/roles'
+import { getSupabase } from '@/lib/supabase/client'
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="mb-8">
+      <h2 className="mb-2 text-sm font-medium text-muted-foreground">{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+function RoleOptions() {
+  return ROLES.map((role) => (
+    <option key={role} value={role}>
+      {ROLE_LABELS[role]}
+    </option>
+  ))
+}
+
+function Members({ company, userId }: { company: Membership; userId: string }) {
+  const queryClient = useQueryClient()
+  const isAdmin = company.role === 'admin'
+  const key = companyKeys.members(company.companyId)
+  const members = useQuery({ queryKey: key, queryFn: () => fetchMembers(company.companyId) })
+
+  // Zmena vlastnej roly alebo odchod mení aj zoznam mojich firiem.
+  const refresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: key }),
+      queryClient.invalidateQueries({ queryKey: companyKeys.memberships(userId) }),
+    ])
+
+  const changeRole = useMutation({
+    mutationFn: ({ memberId, role }: { memberId: string; role: Role }) =>
+      updateMemberRole(company.companyId, memberId, role),
+    onSettled: refresh,
+  })
+  const remove = useMutation({
+    mutationFn: (memberId: string) => removeMember(company.companyId, memberId),
+    onSettled: refresh,
+  })
+
+  if (members.isPending) return <p className="text-sm text-muted-foreground">Načítavam…</p>
+  if (members.isError) {
+    return (
+      <p role="alert" className="text-sm text-destructive">
+        Členov sa nepodarilo načítať.
+      </p>
+    )
+  }
+
+  return (
+    <>
+      <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
+        {members.data.map((member) => (
+          <li key={member.userId} className="flex flex-wrap items-center gap-3 px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">
+                {member.fullName || member.email}
+                {member.userId === userId && <span className="text-muted-foreground"> (vy)</span>}
+              </p>
+              {member.fullName && <p className="truncate text-sm text-muted-foreground">{member.email}</p>}
+            </div>
+            {isAdmin ? (
+              <>
+                <SelectField
+                  label={`Rola: ${member.email}`}
+                  hideLabel
+                  className="w-40"
+                  value={member.role}
+                  disabled={changeRole.isPending}
+                  onChange={(e) => changeRole.mutate({ memberId: member.userId, role: e.target.value as Role })}
+                >
+                  <RoleOptions />
+                </SelectField>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={`Odobrať: ${member.email}`}
+                  disabled={remove.isPending}
+                  onClick={() => {
+                    if (window.confirm(`Odobrať ${member.email} z firmy?`)) remove.mutate(member.userId)
+                  }}
+                >
+                  <Trash2 className="size-4" aria-hidden />
+                </Button>
+              </>
+            ) : (
+              <span className="text-sm text-muted-foreground">{ROLE_LABELS[member.role]}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {(changeRole.isError || remove.isError) && (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          Zmena sa nepodarila. Firma musí mať vždy aspoň jedného admina.
+        </p>
+      )}
+    </>
+  )
+}
+
+function Invitations({ company }: { company: Membership }) {
+  const queryClient = useQueryClient()
+  const key = companyKeys.invitations(company.companyId)
+  const invitations = useQuery({ queryKey: key, queryFn: () => fetchInvitations(company.companyId) })
+  const [email, setEmail] = useState('')
+  const [role, setRole] = useState<Role>('viewer')
+
+  const invite = useMutation({
+    mutationFn: () => inviteMember(company.companyId, email, role),
+    onSuccess: () => {
+      setEmail('')
+      return queryClient.invalidateQueries({ queryKey: key })
+    },
+  })
+  const cancel = useMutation({
+    mutationFn: deleteInvitation,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
+  })
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    invite.mutate()
+  }
+
+  return (
+    <>
+      <form onSubmit={handleSubmit} className="mb-3 flex flex-col gap-3 rounded-xl border bg-surface p-4 sm:flex-row sm:items-end">
+        <Field
+          label="E-mail"
+          type="email"
+          required
+          className="flex-1"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <SelectField label="Rola" className="sm:w-44" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+          <RoleOptions />
+        </SelectField>
+        <Button type="submit" disabled={invite.isPending}>
+          Pozvať
+        </Button>
+      </form>
+      {invite.isError && (
+        <p role="alert" className="mb-3 text-sm text-destructive">
+          Pozvánku sa nepodarilo vytvoriť. Možno už pre tento e-mail existuje.
+        </p>
+      )}
+      <p className="mb-3 text-sm text-muted-foreground">
+        Pozvánka sa neposiela e-mailom. Pozvaný ju uvidí po prihlásení do RigTracku účtom s touto adresou.
+      </p>
+      {invitations.data && invitations.data.length > 0 && (
+        <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
+          {invitations.data.map((invitation) => (
+            <li key={invitation.id} className="flex items-center gap-3 px-4 py-3">
+              <span className="min-w-0 flex-1 truncate">{invitation.email}</span>
+              <span className="text-sm text-muted-foreground">{ROLE_LABELS[invitation.role]}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Zrušiť pozvánku: ${invitation.email}`}
+                disabled={cancel.isPending}
+                onClick={() => cancel.mutate(invitation.id)}
+              >
+                <Trash2 className="size-4" aria-hidden />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  )
+}
+
+function InventoryLookups({ companyId }: { companyId: string }) {
+  const { categories, locations } = useEquipmentLookups(companyId)
+  return (
+    <>
+      <Section title="Kategórie techniky">
+        <LookupSettings companyId={companyId} table="equipment_categories" items={categories} noun="kategóriu" />
+        <p className="mt-2 text-sm text-muted-foreground">
+          Tovar v kategórii označenej ako spotrebný materiál (viazačky, konektory…) sa pri objednávke nepridáva do techniky,
+          eviduje sa len jeho nákup a cena.
+        </p>
+      </Section>
+      <Section title="Umiestnenia">
+        <LookupSettings companyId={companyId} table="locations" items={locations} noun="umiestnenie" />
+      </Section>
+    </>
+  )
+}
+
+export function SettingsPage() {
+  const { session } = useAuth()
+  const { active } = useCompany()
+  const user = session!.user
+  const company = active!
+
+  return (
+    <>
+      <PageHeader title="Nastavenia" description="Firma, členovia a účet" />
+
+      <Section title="Firma">
+        <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
+          <div className="min-w-0">
+            <p className="truncate font-medium">{company.companyName}</p>
+            <p className="text-sm text-muted-foreground">Vaša rola: {ROLE_LABELS[company.role]}</p>
+          </div>
+          <Link to="/company/select" className="shrink-0 text-sm font-medium text-accent hover:underline">
+            Zmeniť firmu
+          </Link>
+        </div>
+      </Section>
+
+      <Section title="Členovia">
+        <Members company={company} userId={user.id} />
+      </Section>
+
+      {company.role === 'admin' && (
+        <Section title="Pozvánky">
+          <Invitations company={company} />
+        </Section>
+      )}
+
+      {company.role === 'admin' && (
+        <Section title="História zmien">
+          <Link to="/audit" className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4 hover:bg-muted">
+            <span>
+              <span className="block font-medium">Kto, kedy a čo zmenil</span>
+              <span className="block text-sm text-muted-foreground">Technika, cases, výpožičky, objednávky, vozidlá, servis a eventy</span>
+            </span>
+            <span className="shrink-0 text-sm font-medium text-accent">Otvoriť</span>
+          </Link>
+        </Section>
+      )}
+
+      {company.role === 'admin' && (
+        <Section title="Štítky na cases">
+          <BrandingSettings companyId={company.companyId} />
+        </Section>
+      )}
+
+      {canDeleteInventory(company.role) && <InventoryLookups companyId={company.companyId} />}
+
+      <Section title="Účet">
+        <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
+          <p className="min-w-0 truncate">{user.email}</p>
+          <Button variant="outline" size="sm" onClick={() => void getSupabase().auth.signOut()}>
+            Odhlásiť sa
+          </Button>
+        </div>
+      </Section>
+    </>
+  )
+}

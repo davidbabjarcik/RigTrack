@@ -1,0 +1,56 @@
+import { useQuery } from '@tanstack/react-query'
+import { useState, type ReactNode } from 'react'
+import { useAuth } from '@/features/auth/auth-context'
+import { companyKeys, fetchMemberships } from './api'
+import { CompanyContext } from './company-context'
+
+const STORAGE_KEY = 'rigtrack:active-company'
+
+function readStored() {
+  try {
+    return localStorage.getItem(STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function CompanyProvider({ children }: { children: ReactNode }) {
+  const { session } = useAuth()
+  const userId = session?.user.id
+  const [storedId, setStoredId] = useState(readStored)
+
+  const query = useQuery({
+    queryKey: companyKeys.memberships(userId ?? ''),
+    queryFn: () => fetchMemberships(userId!),
+    enabled: Boolean(userId),
+  })
+
+  const memberships = query.data ?? []
+  // Uložená firma platí iba vtedy, ak v nej používateľ stále je členom.
+  const active =
+    memberships.find((m) => m.companyId === storedId) ?? (memberships.length === 1 ? memberships[0] : null)
+
+  function setActive(companyId: string) {
+    try {
+      localStorage.setItem(STORAGE_KEY, companyId)
+    } catch {
+      // bez úložiska platí výber len do zatvorenia karty
+    }
+    setStoredId(companyId)
+  }
+
+  return (
+    <CompanyContext
+      value={{
+        memberships,
+        active,
+        loading: Boolean(userId) && query.isPending,
+        error: query.isError,
+        setActive,
+        refetch: () => void query.refetch(),
+      }}
+    >
+      {children}
+    </CompanyContext>
+  )
+}

@@ -1,10 +1,16 @@
 import { Link } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { useCompany } from '@/features/companies/company-context'
+import { RestockList } from '@/features/equipment/RestockList'
+import { LoanAlerts } from '@/features/loans/LoanAlerts'
+import { MyTasks } from '@/features/tasks/MyTasks'
+import { VehicleDeadlineAlerts } from '@/features/vehicles/VehicleDeadlineAlerts'
 import { NAV_ITEMS } from '@/lib/navigation'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
 
 export function DashboardPage() {
   const modules = NAV_ITEMS.filter((item) => item.id !== 'dashboard')
+  const { active } = useCompany()
 
   return (
     <>
@@ -18,6 +24,15 @@ export function DashboardPage() {
             <code>.env.local</code>.
           </p>
         </div>
+      )}
+
+      {isSupabaseConfigured && active && (
+        <>
+          <MyTasks companyId={active.companyId} />
+          <LoanAlerts companyId={active.companyId} />
+          <VehicleDeadlineAlerts companyId={active.companyId} />
+          <RestockList companyId={active.companyId} />
+        </>
       )}
 
       <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">

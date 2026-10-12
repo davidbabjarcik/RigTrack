@@ -1,7 +1,8 @@
 import { Menu } from 'lucide-react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import { OfflineBanner } from '@/components/feedback/OfflineBanner'
 import { UpdatePrompt } from '@/components/feedback/UpdatePrompt'
+import { useCompany } from '@/features/companies/company-context'
 import { NAV_ITEMS, type NavItem } from '@/lib/navigation'
 import { usePinnedNav } from '@/lib/usePinnedNav'
 import { cn } from '@/lib/utils'
@@ -46,6 +47,7 @@ function TabLink({ item }: { item: Pick<NavItem, 'label' | 'to' | 'icon'> }) {
 
 export function AppLayout() {
   const { pinned } = usePinnedNav()
+  const { active } = useCompany()
   const pinnedItems = pinned.map((id) => NAV_ITEMS.find((item) => item.id === id)!)
 
   return (
@@ -55,6 +57,15 @@ export function AppLayout() {
           <img src="/icons/icon.svg" alt="" className="size-8 rounded-lg" />
           <span className="text-lg font-semibold tracking-tight">RigTrack</span>
         </div>
+        {active && (
+          <Link
+            to="/company/select"
+            title="Zmeniť firmu"
+            className="mx-3 mb-3 truncate rounded-lg border px-3 py-2 text-sm font-medium hover:bg-muted"
+          >
+            {active.companyName}
+          </Link>
+        )}
         <nav aria-label="Hlavná navigácia" className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-4">
           {NAV_ITEMS.map((item) => (
             <SidebarLink key={item.id} item={item} />

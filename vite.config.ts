@@ -33,6 +33,8 @@ export default defineConfig({
         // Precache iba statický shell. Žiadna runtime cache: odpovede Supabase
         // (firemné dáta, signed URL, dokumenty) sa do Cache Storage neukladajú.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // Čítanie PDF sa sťahuje až pri importe faktúry; do offline shellu nepatrí.
+        globIgnores: ['**/pdf-*.js'],
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,
       },
@@ -44,5 +46,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Databázové testy si v beforeAll stavajú celú schému zo všetkých migrácií;
+    // pri paralelnom behu to pri predvolených 10 s občas nestihnú.
+    hookTimeout: 60_000,
+    testTimeout: 30_000,
+    // Testy bežia vždy bez backendu, aj keď existuje .env.local.
+    env: { VITE_SUPABASE_URL: '', VITE_SUPABASE_PUBLISHABLE_KEY: '' },
   },
 })

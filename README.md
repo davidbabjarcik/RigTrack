@@ -11,18 +11,36 @@ npm install
 npm run dev
 ```
 
-Pre pripojenie databázy skopíruj `.env.example` do `.env.local` a doplň údaje zo Supabase.
+Bez databázy beží iba kostra aplikácie bez prihlásenia.
+
+## Pripojenie Supabase
+
+1. Vytvor projekt na supabase.com.
+2. V SQL Editore spusti postupne súbory zo `supabase/migrations/` (podľa čísla).
+3. V Authentication → URL Configuration nastav Site URL (`http://localhost:5173`, neskôr produkčnú doménu)
+   a medzi Redirect URLs pridaj `<adresa>/auth/update-password`.
+4. Potvrdzovanie e-mailu (Authentication → Sign In / Providers → Email → Confirm email) nechaj **zapnuté** —
+   pozvánky do firmy sa viažu na potvrdenú adresu.
+5. Skopíruj `.env.example` do `.env.local` a doplň Project URL a publishable kľúč.
+
+Migrácie a RLS pravidlá overujú testy v `supabase/tests/` (bežia v pamäti cez PGlite, bez Supabase).
 
 ## Nasadenie na vlastný server (Docker + Cloudflare Tunnel)
 
-Na serveri stačí Docker. Netreba otvárať porty na routeri ani riešiť certifikát — HTTPS zabezpečuje Cloudflare.
+Netreba otvárať porty na routeri ani riešiť certifikát — HTTPS zabezpečuje Cloudflare.
 
-1. V Cloudflare Zero Trust → Networks → Tunnels vytvor tunel (typ Cloudflared) a skopíruj jeho token.
-2. V tuneli pridaj Public Hostname `rigtrack.jef-sp.sk` so službou `http://web:80`.
-3. Na serveri naklonuj repozitár, skopíruj `.env.example` do `.env` a doplň hodnoty.
-4. Spusti `docker compose up -d --build`.
+### Hotový balík na NAS (odporúčané)
 
-Aktualizácia: `git pull` a znova `docker compose up -d --build`.
+1. `npm run package` vytvorí priečinok `release/`.
+2. Skopíruj `release/` na NAS a spusti v ňom `docker compose up -d`. Aplikácia beží na porte 8080.
+3. V existujúcom Cloudflare tuneli pridaj Public Hostname `rigtrack.jef-sp.sk` so službou `http://IP-NAS:8080`.
+
+Aktualizácia: znova `npm run package` a prepíš na NAS priečinok `release/dist`.
+
+### Zostavenie priamo na serveri
+
+Naklonuj repozitár, skopíruj `.env.example` do `.env` a spusti `docker compose up -d --build`.
+Ak ešte nemáš tunel, doplň `TUNNEL_TOKEN` a pridaj `--profile tunnel`; služba v tuneli je potom `http://web:80`.
 
 ## Skripty
 

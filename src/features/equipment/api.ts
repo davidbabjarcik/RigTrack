@@ -1,0 +1,245 @@
+import { getSupabase } from '@/lib/supabase/client'
+import {
+  attributesFor,
+  cableName,
+  isSimpleKind,
+  normalizeMac,
+  type CableSetValues,
+  type Equipment,
+  type EquipmentAttributes,
+  type EquipmentFormValues,
+  type EquipmentKind,
+  type EquipmentStatus,
+  type LabelRole,
+  type Lookup,
+} from './model'
+
+export type LookupTable = 'equipment_categories' | 'locations'
+
+export const equipmentKeys = {
+  list: (companyId: string) => ['company', companyId, 'equipment'] as const,
+  detail: (companyId: string, id: string) => ['company', companyId, 'equipment', id] as const,
+  lookup: (companyId: string, table: LookupTable) => ['company', companyId, table] as const,
+}
+
+const COLUMNS =
+  'id, name, kind, attributes, category_id, location_id, case_id, label_role, quantity, min_quantity, manufacturer, model, serial_number, ' +
+  'inventory_number, mac_address, ip_address, service_interval_months, last_service_on, photo_path, status, note, updated_at'
+
+type Row = {
+  id: string
+  name: string
+  kind: EquipmentKind
+  attributes: EquipmentAttributes | null
+  category_id: string | null
+  location_id: string | null
+  case_id: string | null
+  label_role: LabelRole | null
+  min_quantity: number | null
+  quantity: number
+  manufacturer: string
+  model: string
+  serial_number: string
+  inventory_number: string
+  mac_address: string
+  ip_address: string
+  service_interval_months: number | null
+  last_service_on: string | null
+  photo_path: string
+  status: EquipmentStatus
+  note: string
+  updated_at: string
+}
+
+function fromRow(row: Row): Equipment {
+  return {
+    id: row.id,
+    name: row.name,
+    kind: row.kind,
+    attributes: row.attributes ?? {},
+    categoryId: row.category_id,
+    locationId: row.location_id,
+    caseId: row.case_id,
+    labelRole: row.label_role,
+    minQuantity: row.min_quantity,
+    quantity: row.quantity,
+    manufacturer: row.manufacturer,
+    model: row.model,
+    serialNumber: row.serial_number,
+    inventoryNumber: row.inventory_number,
+    macAddress: row.mac_address,
+    ipAddress: row.ip_address,
+    serviceIntervalMonths: row.service_interval_months,
+    lastServiceOn: row.last_service_on,
+    photoPath: row.photo_path,
+    status: row.status,
+    note: row.note,
+    updatedAt: row.updated_at,
+  }
+}
+
+// Supabase vracia najviac 1000 riadkov na dotaz, preto sa zoznam načíta po stranách.
+const PAGE = 1000
+
+export async function fetchEquipmentList(companyId: string): Promise<Equipment[]> {
+  const all: Equipment[] = []
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await getSupabase()
+      .from('equipment')
+      .select(COLUMNS)
+      .eq('company_id', companyId)
+      .order('name')
+      .order('id')
+      .range(from, from + PAGE - 1)
+    if (error) throw error
+    all.push(...(data as unknown as Row[]).map(fromRow))
+    if (data.length < PAGE) return all
+  }
+}
+
+export async function fetchEquipment(companyId: string, id: string): Promise<Equipment | null> {
+  const { data, error } = await getSupabase()
+    .from('equipment')
+    .select(COLUMNS)
+    .eq('company_id', companyId)
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw error
+  return data ? fromRow(data as unknown as Row) : null
+}
+
+export async function fetchLookup(companyId: string, table: LookupTable): Promise<Lookup[]> {
+  const columns = table === 'equipment_categories' ? 'id, name, consumable' : 'id, name'
+  const { data, error } = await getSupabase().from(table).select(columns).eq('company_id', companyId).order('name')
+  if (error) throw error
+  return data as unknown as Lookup[]
+}
+
+/** Nájde kategóriu/umiestnenie podľa názvu, alebo ho založí. Prázdny názov = bez priradenia. */
+export async function resolveLookup(companyId: string, table: LookupTable, name: string, existing: Lookup[]) {
+  if (!name) return null
+  const match = existing.find((item) => item.name.toLowerCase() === name.toLowerCase())
+  if (match) return match.id
+  const { data, error } = await getSupabase().from(table).insert({ company_id: companyId, name }).select('id').single()
+  if (error) throw error
+  return (data as { id: string }).id
+}
+
+export async function renameLookup(table: LookupTable, id: string, name: string) {
+  const { data, error } = await getSupabase().from(table).update({ name: name.trim() }).eq('id', id).select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
+}
+
+export async function deleteLookup(table: LookupTable, id: string) {
+  const { data, error } = await getSupabase().from(table).delete().eq('id', id).select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not deleted')
+}
+
+export async function setCategoryConsumable(id: string, consumable: boolean) {
+  const { data, error } = await getSupabase().from('equipment_categories').update({ consumable }).eq('id', id).select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
+}
+
+type SaveArgs = {
+  companyId: string
+  id: string | null
+  values: EquipmentFormValues
+  categories: Lookup[]
+  locations: Lookup[]
+}
+
+export async function saveEquipment({ companyId, id, values, categories, locations }: SaveArgs): Promise<string> {
+  // Polia, na ktoré sa formulár pri danom druhu nepýta, sa vyprázdnia, aby po zmene druhu neostali staré hodnoty.
+  const simple = isSimpleKind(values.kind)
+  const fields = {
+    name: values.name,
+    kind: values.kind,
+    attributes: attributesFor(values),
+    category_id: await resolveLookup(companyId, 'equipment_categories', values.category, categories),
+    location_id: await resolveLookup(companyId, 'locations', values.location, locations),
+    manufacturer: values.manufacturer,
+    model: values.model,
+    serial_number: simple ? '' : values.serialNumber,
+    inventory_number: values.inventoryNumber,
+    mac_address: simple ? '' : normalizeMac(values.macAddress),
+    ip_address: simple ? '' : values.ipAddress,
+    service_interval_months: simple ? null : (values.serviceIntervalMonths ?? null),
+    last_service_on: simple ? null : values.lastServiceOn || null,
+    case_id: values.caseId || null,
+    quantity: values.quantity,
+    min_quantity: values.minQuantity ?? null,
+    status: values.status,
+    note: values.note,
+  }
+  const table = getSupabase().from('equipment')
+  const { data, error } = id
+    ? await table.update(fields).eq('company_id', companyId).eq('id', id).select('id').single()
+    : await table.insert({ ...fields, company_id: companyId }).select('id').single()
+  if (error) throw error
+  return (data as { id: string }).id
+}
+
+type CableSetArgs = { companyId: string; values: CableSetValues; categories: Lookup[]; locations: Lookup[] }
+
+/** Založí jednu položku techniky za každú dĺžku kábla. Všetko jedným zápisom: buď všetky, alebo žiadna. */
+export async function createCableSet({ companyId, values, categories, locations }: CableSetArgs) {
+  const categoryId = await resolveLookup(companyId, 'equipment_categories', values.category, categories)
+  const locationId = await resolveLookup(companyId, 'locations', values.location, locations)
+  const rows = values.rows.map((row) => ({
+    company_id: companyId,
+    name: cableName(values.namePrefix, row.lengthM),
+    kind: 'cable',
+    attributes: { ...(values.connector && { connector: values.connector }), lengthM: row.lengthM },
+    category_id: categoryId,
+    location_id: locationId,
+    quantity: row.quantity,
+  }))
+  const { error } = await getSupabase().from('equipment').insert(rows)
+  if (error) throw error
+}
+
+export async function deleteEquipment(companyId: string, id: string) {
+  // .select() odhalí prípad, keď RLS zmazanie potichu nepovolí (0 riadkov).
+  const { data, error } = await getSupabase().from('equipment').delete().eq('company_id', companyId).eq('id', id).select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not deleted')
+}
+
+/** Vloží techniku do case, alebo ju z neho vyberie (caseId = null). */
+export async function setEquipmentCase(companyId: string, equipmentId: string, caseId: string | null) {
+  const { data, error } = await getSupabase()
+    .from('equipment')
+    .update({ case_id: caseId })
+    .eq('company_id', companyId)
+    .eq('id', equipmentId)
+    .select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
+}
+
+/** Nastaví rolu techniky na štítku case. Nový hlavný prvok nahradí doterajší (rieši databáza). */
+export async function setEquipmentLabelRole(companyId: string, equipmentId: string, role: LabelRole | null) {
+  const { data, error } = await getSupabase()
+    .from('equipment')
+    .update({ label_role: role })
+    .eq('company_id', companyId)
+    .eq('id', equipmentId)
+    .select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
+}
+
+/** Rýchla zmena počtu kusov (spotreba, doplnenie) bez otvárania formulára. */
+export async function setEquipmentQuantity(companyId: string, equipmentId: string, quantity: number) {
+  const { data, error } = await getSupabase()
+    .from('equipment')
+    .update({ quantity })
+    .eq('company_id', companyId)
+    .eq('id', equipmentId)
+    .select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
+}

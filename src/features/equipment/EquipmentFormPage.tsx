@@ -1,0 +1,408 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useId, useState, type ReactNode } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
+import { useNavigate, useParams } from 'react-router-dom'
+import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Button, LinkButton } from '@/components/ui/button'
+import { Field, SelectField, TextareaField } from '@/components/ui/field'
+import { useCases } from '@/features/cases/useCases'
+import { useCompany } from '@/features/companies/company-context'
+import { canDeleteInventory, canEditInventory } from '@/lib/permissions'
+import { equipmentKeys, fetchEquipment, saveEquipment } from './api'
+import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
+import { LengthColorField, type ColorEdit } from './LengthColorField'
+import {
+  asOptionalNumber,
+  COMMON_CONNECTORS,
+  EQUIPMENT_KINDS,
+  EQUIPMENT_STATUSES,
+  equipmentSchema,
+  isSimpleKind,
+  KIND_LABELS,
+  LIGHT_SOURCE_LABELS,
+  LIGHT_SOURCES,
+  STATUS_LABELS,
+  type Equipment,
+  type EquipmentFormValues,
+  type Lookup,
+} from './model'
+import { useEquipmentLookups } from './useEquipmentLookups'
+
+const EMPTY: EquipmentFormValues = {
+  name: '',
+  kind: 'general',
+  category: '',
+  location: '',
+  caseId: '',
+  manufacturer: '',
+  model: '',
+  serialNumber: '',
+  inventoryNumber: '',
+  quantity: 1,
+  minQuantity: undefined,
+  status: 'available',
+  connector: '',
+  lengthM: undefined,
+  powerW: undefined,
+  lightSource: '',
+  macAddress: '',
+  ipAddress: '',
+  serviceIntervalMonths: undefined,
+  lastServiceOn: '',
+  note: '',
+}
+
+function toFormValues(equipment: Equipment, categories: Lookup[], locations: Lookup[]): EquipmentFormValues {
+  return {
+    name: equipment.name,
+    kind: equipment.kind,
+    category: categories.find((c) => c.id === equipment.categoryId)?.name ?? '',
+    location: locations.find((l) => l.id === equipment.locationId)?.name ?? '',
+    caseId: equipment.caseId ?? '',
+    manufacturer: equipment.manufacturer,
+    model: equipment.model,
+    serialNumber: equipment.serialNumber,
+    inventoryNumber: equipment.inventoryNumber,
+    quantity: equipment.quantity,
+    minQuantity: equipment.minQuantity ?? undefined,
+    status: equipment.status,
+    connector: equipment.attributes.connector ?? '',
+    lengthM: equipment.attributes.lengthM,
+    powerW: equipment.attributes.powerW,
+    lightSource: equipment.attributes.lightSource ?? '',
+    macAddress: equipment.macAddress,
+    ipAddress: equipment.ipAddress,
+    serviceIntervalMonths: equipment.serviceIntervalMonths ?? undefined,
+    lastServiceOn: equipment.lastServiceOn ?? '',
+    note: equipment.note,
+  }
+}
+
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <fieldset className="rounded-xl border bg-surface p-4">
+      <legend className="px-1 text-sm font-medium text-muted-foreground">{title}</legend>
+      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    </fieldset>
+  )
+}
+
+type FormProps = {
+  companyId: string
+  equipment: Equipment | null
+  categories: Lookup[]
+  locations: Lookup[]
+  cases: Lookup[]
+  colors: CableColor[]
+  canEditColors: boolean
+}
+
+function EquipmentForm({ companyId, equipment, categories, locations, cases, colors, canEditColors }: FormProps) {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const categoryListId = useId()
+  const locationListId = useId()
+  const connectorListId = useId()
+  const cancelTo = equipment ? `/equipment/${equipment.id}` : '/equipment'
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<EquipmentFormValues>({
+    resolver: zodResolver(equipmentSchema),
+    defaultValues: equipment ? toFormValues(equipment, categories, locations) : EMPTY,
+  })
+  const kind = useWatch({ control, name: 'kind' })
+  const lengthM = useWatch({ control, name: 'lengthM' })
+  const simple = isSimpleKind(kind)
+  // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
+  const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
+
+  const save = useMutation({
+    mutationFn: async (values: EquipmentFormValues) => {
+      const colorEdit = values.kind === 'cable' && values.lengthM !== undefined ? colorEdits[values.lengthM] : undefined
+      if (colorEdit) await saveCableColor(companyId, { lengthM: values.lengthM!, ...colorEdit })
+      return saveEquipment({ companyId, id: equipment?.id ?? null, values, categories, locations })
+    },
+    onSuccess: async (id) => {
+      // Uloženie mohlo založiť novú kategóriu či umiestnenie, preto celý strom firmy.
+      await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
+      navigate(`/equipment/${id}`, { replace: true })
+    },
+    onError: (error: { code?: string; message?: string }) => {
+      if (error.code === '23505' && error.message?.includes('inventory_number')) {
+        setError('inventoryNumber', { message: 'Toto inventárne číslo už má iná technika' }, { shouldFocus: true })
+      }
+    },
+  })
+
+  return (
+    <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
+      <div className="grid gap-4 sm:grid-cols-[12rem_1fr]">
+        <SelectField label="Druh" error={errors.kind?.message} {...register('kind')}>
+          {EQUIPMENT_KINDS.map((value) => (
+            <option key={value} value={value}>
+              {KIND_LABELS[value]}
+            </option>
+          ))}
+        </SelectField>
+        <Field label="Názov *" autoFocus={!equipment} error={errors.name?.message} {...register('name')} />
+      </div>
+
+      {kind === 'cable' && (
+        <Group title="Kábel">
+          <Field
+            label="Konektor / typ"
+            list={connectorListId}
+            placeholder="napr. XLR alebo powerCON napájací"
+            autoComplete="off"
+            error={errors.connector?.message}
+            {...register('connector')}
+          />
+          <datalist id={connectorListId}>
+            {COMMON_CONNECTORS.map((connector) => (
+              <option key={connector} value={connector} />
+            ))}
+          </datalist>
+          <Field
+            label="Dĺžka (m)"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            error={errors.lengthM?.message}
+            {...register('lengthM', asOptionalNumber)}
+          />
+          <div className="sm:col-span-2">
+            <LengthColorField
+              lengthM={lengthM}
+              existing={colors}
+              edit={lengthM === undefined ? undefined : colorEdits[lengthM]}
+              onEdit={(edit) => lengthM !== undefined && setColorEdits((current) => ({ ...current, [lengthM]: edit }))}
+              canEdit={canEditColors}
+            />
+          </div>
+        </Group>
+      )}
+
+      {kind === 'light' && (
+        <Group title="Svetlo">
+          <Field
+            label="Výkon (W)"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            error={errors.powerW?.message}
+            {...register('powerW', asOptionalNumber)}
+          />
+          <SelectField label="Zdroj svetla" error={errors.lightSource?.message} {...register('lightSource')}>
+            <option value="">— neuvedené —</option>
+            {LIGHT_SOURCES.map((source) => (
+              <option key={source} value={source}>
+                {LIGHT_SOURCE_LABELS[source]}
+              </option>
+            ))}
+          </SelectField>
+        </Group>
+      )}
+
+      {kind === 'audio' && (
+        <Group title="Zvuk">
+          <Field
+            label="Výkon (W)"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            error={errors.powerW?.message}
+            {...register('powerW', asOptionalNumber)}
+          />
+        </Group>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field
+          label="Kategória"
+          list={categoryListId}
+          placeholder="Vyberte alebo napíšte novú"
+          autoComplete="off"
+          error={errors.category?.message}
+          {...register('category')}
+        />
+        <datalist id={categoryListId}>
+          {categories.map((category) => (
+            <option key={category.id} value={category.name} />
+          ))}
+        </datalist>
+
+        <Field
+          label="Umiestnenie"
+          list={locationListId}
+          placeholder="Vyberte alebo napíšte nové"
+          autoComplete="off"
+          error={errors.location?.message}
+          {...register('location')}
+        />
+        <datalist id={locationListId}>
+          {locations.map((location) => (
+            <option key={location.id} value={location.name} />
+          ))}
+        </datalist>
+
+        <Field label="Výrobca" error={errors.manufacturer?.message} {...register('manufacturer')} />
+        <Field label="Model" error={errors.model?.message} {...register('model')} />
+        {!simple && (
+          <Field label="Sériové číslo" autoComplete="off" error={errors.serialNumber?.message} {...register('serialNumber')} />
+        )}
+        <Field
+          label="Inventárne číslo"
+          autoComplete="off"
+          error={errors.inventoryNumber?.message}
+          {...register('inventoryNumber')}
+        />
+        <Field
+          label="Počet kusov"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          step={1}
+          error={errors.quantity?.message}
+          {...register('quantity', { valueAsNumber: true })}
+        />
+        <Field
+          label="Upozorniť, keď ostane (ks)"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          step={1}
+          placeholder="nevyplnené = nesledovať"
+          error={errors.minQuantity?.message}
+          {...register('minQuantity', asOptionalNumber)}
+        />
+        <SelectField label="Stav" error={errors.status?.message} {...register('status')}>
+          {EQUIPMENT_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {STATUS_LABELS[status]}
+            </option>
+          ))}
+        </SelectField>
+      </div>
+      <p className="-mt-2 text-sm text-muted-foreground">
+        Počet nechajte na 1, ak evidujete každý kus zvlášť. Viac kusov je pre veci na množstvo, napr. káble alebo háky. Pri
+        spotrebnom materiáli (kvapalina do hazera) nastavte, pri koľkých kusoch sa má objaviť v zozname „treba kúpiť“.
+      </p>
+
+      <SelectField label="Case" error={errors.caseId?.message} {...register('caseId')}>
+        <option value="">— nie je v žiadnom case —</option>
+        {cases.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.name}
+          </option>
+        ))}
+      </SelectField>
+
+      {!simple && (
+        <>
+          <Group title="Sieť (nepovinné)">
+            <Field
+              label="MAC adresa"
+              placeholder="00:1A:2B:3C:4D:5E"
+              autoComplete="off"
+              autoCapitalize="characters"
+              error={errors.macAddress?.message}
+              {...register('macAddress')}
+            />
+            <Field
+              label="IP adresa"
+              placeholder="192.168.1.10"
+              inputMode="decimal"
+              autoComplete="off"
+              error={errors.ipAddress?.message}
+              {...register('ipAddress')}
+            />
+          </Group>
+
+          <Group title="Servis (nepovinné)">
+            <Field
+              label="Interval (mesiace)"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              step={1}
+              placeholder="napr. 12"
+              error={errors.serviceIntervalMonths?.message}
+              {...register('serviceIntervalMonths', asOptionalNumber)}
+            />
+            <Field label="Posledný servis" type="date" error={errors.lastServiceOn?.message} {...register('lastServiceOn')} />
+          </Group>
+        </>
+      )}
+
+      <TextareaField label="Poznámka" error={errors.note?.message} {...register('note')} />
+
+      {save.isError && !errors.inventoryNumber && (
+        <p role="alert" className="text-sm text-destructive">
+          Uloženie zlyhalo. Skontrolujte pripojenie a skúste to znova.
+        </p>
+      )}
+
+      <div className="flex gap-3">
+        <Button type="submit" disabled={save.isPending}>
+          {save.isPending ? 'Ukladám…' : 'Uložiť'}
+        </Button>
+        <LinkButton to={cancelTo} variant="outline">
+          Zrušiť
+        </LinkButton>
+      </div>
+    </form>
+  )
+}
+
+export function EquipmentFormPage() {
+  const { id } = useParams()
+  const company = useCompany().active!
+  const lookups = useEquipmentLookups(company.companyId)
+  const cases = useCases(company.companyId)
+  const colors = useQuery({ queryKey: cableColorKeys.list(company.companyId), queryFn: () => fetchCableColors(company.companyId) })
+  const item = useQuery({
+    queryKey: equipmentKeys.detail(company.companyId, id ?? ''),
+    queryFn: () => fetchEquipment(company.companyId, id!),
+    enabled: Boolean(id),
+  })
+
+  const title = id ? 'Úprava techniky' : 'Nová technika'
+  let body
+  if (!canEditInventory(company.role)) {
+    body = <ErrorBlock message="Na úpravu techniky nemáte oprávnenie." />
+  } else if (lookups.isPending || cases.isPending || (id && item.isPending)) {
+    body = <LoadingBlock />
+  } else if (lookups.isError || cases.isError || item.isError) {
+    body = <ErrorBlock message="Údaje sa nepodarilo načítať." onRetry={() => void item.refetch()} />
+  } else if (id && !item.data) {
+    body = <ErrorBlock message="Táto technika neexistuje alebo k nej nemáte prístup." />
+  } else {
+    body = (
+      <EquipmentForm
+        key={id ?? 'new'}
+        companyId={company.companyId}
+        equipment={item.data ?? null}
+        categories={lookups.categories}
+        locations={lookups.locations}
+        cases={cases.data}
+        colors={colors.data ?? []}
+        canEditColors={canDeleteInventory(company.role)}
+      />
+    )
+  }
+
+  return (
+    <>
+      <PageHeader title={title} />
+      {body}
+    </>
+  )
+}
