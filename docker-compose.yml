@@ -1,0 +1,20 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY:-}
+    restart: unless-stopped
+    # Len pre kontrolu z domácej siete; verejný prístup ide cez tunel nižšie.
+    ports:
+      - "8080:80"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Doplň TUNNEL_TOKEN do .env}
+    restart: unless-stopped
+    depends_on:
+      - web
