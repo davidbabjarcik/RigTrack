@@ -10,18 +10,18 @@ const me = 'user-me'
 
 const equipment = (patch: Partial<Equipment>): Equipment => ({
   id: 'e1', name: 'Hazer', kind: 'general', attributes: {}, categoryId: null, locationId: null, caseId: null, labelRole: null,
-  minQuantity: null, quantity: 1, manufacturer: '', model: '', serialNumber: '', inventoryNumber: '', macAddress: '', ipAddress: '',
-  serviceIntervalMonths: null, lastServiceOn: null, photoPath: '', status: 'available', note: '', updatedAt: '', ...patch,
+  minQuantity: null, trackUnits: false, unitIds: [], rentalPrice: null, quantity: 1, manufacturer: '', model: '', serialNumber: '', inventoryNumber: '', macAddress: '', ipAddress: '',
+  serviceIntervalMonths: null, lastServiceOn: null, hoursIntervalMonths: null, operatingHours: null, hoursReadOn: null, photoPath: '', status: 'available', note: '', updatedAt: '', ...patch,
 })
 const loan = (patch: Partial<Loan>): Loan => ({
-  id: 'l1', borrower: 'Klient', contact: '', startsOn: '2026-10-01', endsOn: '2026-10-05', status: 'issued', note: '',
-  issuedAt: null, returnedAt: null, items: [], ...patch,
+  id: 'l1', borrower: 'Klient', contact: '', borrowerIco: '', borrowerAddress: '', billedDays: null, price: null, deposit: null, startsOn: '2026-10-01', endsOn: '2026-10-05', status: 'issued', note: '',
+  issuedAt: null, returnedAt: null, issuedByName: '', returnedByName: '', items: [], ...patch,
 })
 const task = (patch: Partial<Task>): Task => ({
   id: 't1', title: 'Inventúra', note: '', assigneeId: me, priority: 'normal', dueOn: '2026-10-01', status: 'open', createdBy: null, ...patch,
 })
 const vehicle = (patch: Partial<Vehicle>): Vehicle => ({
-  id: 'v1', plate: 'SP123AB', model: '', vin: '', status: 'active', driver: '', odometerKm: null, note: '',
+  id: 'v1', plate: 'SP123AB', model: '', vin: '', status: 'active', driver: '', odometerKm: null, photoPath: '', payloadKg: null, cargoLengthCm: null, cargoWidthCm: null, cargoHeightCm: null, cargoObstacles: [], note: '',
   stkUntil: null, ekUntil: null, vignetteUntil: null, pzpUntil: null, cascoUntil: null, leasingUntil: null, ...patch,
 })
 const none: NotificationSources = { equipment: [], loans: [], tasks: [], vehicles: [], invitations: [] }
@@ -54,6 +54,18 @@ describe('buildNotifications', () => {
         ],
       }),
     ).toEqual(['urgent: Hazer — servis po termíne', 'urgent: Kvapalina — došlo, treba kúpiť'])
+  })
+
+  it('reminds to read operating hours when the interval has passed or nothing was read yet', () => {
+    expect(
+      notify({
+        equipment: [
+          equipment({ id: 'a', name: 'Hlava', hoursIntervalMonths: 3, hoursReadOn: '2026-06-01' }),
+          equipment({ id: 'b', name: 'Zosilňovač', hoursIntervalMonths: 6 }),
+          equipment({ id: 'c', name: 'Čerstvo odčítané', hoursIntervalMonths: 6, hoursReadOn: '2026-10-01' }),
+        ],
+      }),
+    ).toEqual(['urgent: Hlava — treba odčítať prevádzkové hodiny', 'urgent: Zosilňovač — prevádzkové hodiny ešte neboli odčítané'])
   })
 
   it('mentions only my own overdue tasks and my pending invitations', () => {

@@ -8,7 +8,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { formatNumber } from '@/features/equipment/model'
 import { formatMoney } from '@/lib/format'
-import { canEditInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { serviceTotals, sortServiceRecords } from './model'
 import { ServiceRecordRow } from './ServiceRecordRow'
@@ -16,7 +16,7 @@ import { useServiceRecords } from './useServiceRecords'
 
 export function ServiceListPage() {
   const company = useCompany().active!
-  const canEdit = canEditInventory(company.role)
+  const canEdit = can(company, 'service.edit')
   const [showDone, setShowDone] = useState(false)
   const records = useServiceRecords(company.companyId)
   const equipment = useQuery({

@@ -4,13 +4,17 @@ import {
   cableName,
   cableSetSchema,
   describeAttributes,
+  describeUnitIds,
   equipmentSchema,
   filterEquipment,
-  needsRestock,
+  hoursState,
   isValidIp,
+  needsRestock,
   NO_CASE,
   normalizeMac,
+  parseUnitIds,
   serviceState,
+  unitIdsOf,
   unpackedEquipment,
   type Equipment,
   type EquipmentFilter,
@@ -25,12 +29,15 @@ const base: Equipment = {
   ipAddress: '',
   serviceIntervalMonths: null,
   lastServiceOn: null,
+  hoursIntervalMonths: null,
+  operatingHours: null,
+  hoursReadOn: null,
   photoPath: '',
   categoryId: 'zvuk',
   locationId: 'sklad',
   caseId: null,
   labelRole: null,
-  minQuantity: null,
+  minQuantity: null, trackUnits: false, unitIds: [], rentalPrice: null,
   quantity: 1,
   manufacturer: 'Shure',
   model: 'SM58',
@@ -101,6 +108,8 @@ describe('equipmentSchema', () => {
     serialNumber: '',
     inventoryNumber: '',
     quantity: 1,
+    trackUnits: false,
+    unitIds: '',
     status: 'available',
     connector: '',
     lightSource: '',
@@ -131,7 +140,7 @@ describe('network addresses', () => {
   })
 
   it('validates MAC and IP in the form', () => {
-    const base = { name: 'x', kind: 'general', category: '', location: '', caseId: '', manufacturer: '', model: '', serialNumber: '', inventoryNumber: '', quantity: 1, status: 'available', connector: '', lightSource: '', lastServiceOn: '', note: '' }
+    const base = { name: 'x', kind: 'general', category: '', location: '', caseId: '', manufacturer: '', model: '', serialNumber: '', inventoryNumber: '', quantity: 1, trackUnits: false, unitIds: '', status: 'available', connector: '', lightSource: '', lastServiceOn: '', note: '' }
     const ok = (macAddress: string, ipAddress: string) => equipmentSchema.safeParse({ ...base, macAddress, ipAddress }).success
     expect(ok('00-1a-2b-3c-4d-5e', '192.168.1.10')).toBe(true)
     expect(ok('', '')).toBe(true)
@@ -207,5 +216,37 @@ describe('stock', () => {
 
   it('does not ask for consumables to be packed into a case', () => {
     expect(unpackedEquipment([{ ...base, id: '9', kind: 'consumable' }])).toEqual([])
+  })
+})
+
+describe('hoursState', () => {
+  const today = '2026-10-13'
+
+  it('asks for a first reading once an interval is set and then follows it', () => {
+    expect(hoursState({ hoursIntervalMonths: null, hoursReadOn: null }, today)).toEqual({ state: 'none' })
+    expect(hoursState({ hoursIntervalMonths: 3, hoursReadOn: null }, today)).toEqual({ state: 'unknown' })
+    expect(hoursState({ hoursIntervalMonths: 3, hoursReadOn: '2026-06-01' }, today)).toEqual({ state: 'overdue', dueOn: '2026-09-01' })
+    expect(hoursState({ hoursIntervalMonths: 3, hoursReadOn: '2026-08-01' }, today)).toEqual({ state: 'soon', dueOn: '2026-11-01' })
+    expect(hoursState({ hoursIntervalMonths: 3, hoursReadOn: '2026-10-01' }, today)).toEqual({ state: 'ok', dueOn: '2027-01-01' })
+  })
+})
+
+describe('unit numbers', () => {
+  it('reads a typed list, dropping duplicates and sorting', () => {
+    expect(parseUnitIds('8, 1;4  4')).toEqual([1, 4, 8])
+    expect(parseUnitIds('')).toEqual([])
+    expect(parseUnitIds(' , ')).toEqual([])
+  })
+
+  it('uses the custom list when there is one, otherwise 1..quantity', () => {
+    expect(unitIdsOf({ quantity: 3, unitIds: [] })).toEqual([1, 2, 3])
+    expect(unitIdsOf({ quantity: 3, unitIds: [1, 4, 8] })).toEqual([1, 4, 8])
+  })
+
+  it('describes the numbers, shortening a consecutive run', () => {
+    expect(describeUnitIds([1, 2, 3, 4])).toBe('#1 – #4')
+    expect(describeUnitIds([1, 4, 8])).toBe('#1, #4, #8')
+    expect(describeUnitIds([1, 2])).toBe('#1, #2')
+    expect(describeUnitIds([])).toBe('')
   })
 })

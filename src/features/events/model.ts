@@ -12,7 +12,8 @@ export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
   cancelled: 'Zrušený',
 }
 
-export type EventEquipment = { equipmentId: string; quantity: number }
+/** `caseId` je vyplnené, keď technika prišla na event ako súčasť celého case. */
+export type EventEquipment = { equipmentId: string; quantity: number; caseId: string | null }
 export type EventCrew = { id: string; memberId: string | null; name: string; role: string }
 
 export type CompanyEvent = {
@@ -65,6 +66,13 @@ export function sortEvents(events: CompanyEvent[], today: string) {
   })
 }
 
+/** Koľko kusov techniky je v termíne od–do naplánovaných na živých eventoch. */
+export function plannedOnEvents(events: CompanyEvent[], equipmentId: string, startsOn: string, endsOn: string) {
+  return events
+    .filter((event) => isLive(event) && event.startsOn <= endsOn && event.endsOn >= startsOn)
+    .reduce((sum, event) => sum + (event.equipment.find((item) => item.equipmentId === equipmentId)?.quantity ?? 0), 0)
+}
+
 /**
  * Koľko kusov techniky je v termíne eventu obsadených inde: na iných živých eventoch
  * a na otvorených výpožičkách.
@@ -76,10 +84,11 @@ export function busyElsewhere(
   loans: Loan[],
   today: string,
 ) {
-  const onEvents = events
-    .filter((other) => other.id !== event.id && isLive(other) && other.startsOn <= event.endsOn && other.endsOn >= event.startsOn)
-    .reduce((sum, other) => sum + (other.equipment.find((item) => item.equipmentId === equipmentId)?.quantity ?? 0), 0)
-  return onEvents + busyQuantity(loans, equipmentId, event.startsOn, event.endsOn, today)
+  const others = events.filter((other) => other.id !== event.id)
+  return (
+    plannedOnEvents(others, equipmentId, event.startsOn, event.endsOn) +
+    busyQuantity(loans, equipmentId, event.startsOn, event.endsOn, today)
+  )
 }
 
 /** 1536 → „1,5 kB“ */
@@ -96,3 +105,39 @@ export function formatFileSize(bytes: number) {
 }
 
 export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
+
+/**
+ * Kľúč opakovanej akcie: názov bez letopočtu, diakritiky a veľkých písmen.
+ * „JESKO Medzilaborce 2025“ a „Jesko Medzilaborce 2026“ sú tá istá akcia.
+ */
+export function seriesKey(name: string) {
+  return name
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/\b(19|20)\d{2}\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+/** Posledný skorší ročník tej istej akcie (podľa názvu); zrušené sa nerátajú. */
+export function previousEdition(events: CompanyEvent[], event: { id?: string; name: string; startsOn: string }): CompanyEvent | null {
+  const key = seriesKey(event.name)
+  if (!key) return null
+  const earlier = events
+    .filter((other) => other.id !== event.id && other.status !== 'cancelled' && other.startsOn < event.startsOn && seriesKey(other.name) === key)
+    .sort((a, b) => b.startsOn.localeCompare(a.startsOn))
+  return earlier[0] ?? null
+}
+
+/** Názvy doterajších akcií na našepkávanie: každá akcia raz, podľa najnovšieho ročníka, najnovšie prvé. */
+export function pastEventNames(events: CompanyEvent[]) {
+  const latest = new Map<string, CompanyEvent>()
+  for (const event of events) {
+    const key = seriesKey(event.name)
+    if (!key || event.status === 'cancelled') continue
+    const known = latest.get(key)
+    if (!known || event.startsOn > known.startsOn) latest.set(key, event)
+  }
+  return [...latest.values()].sort((a, b) => b.startsOn.localeCompare(a.startsOn)).map((event) => event.name)
+}

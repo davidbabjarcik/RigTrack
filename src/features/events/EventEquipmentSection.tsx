@@ -1,66 +1,78 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, TriangleAlert, X } from 'lucide-react'
+import { Package, Plus, TriangleAlert, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
+import { useCases } from '@/features/cases/useCases'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
-import { filterEquipment } from '@/features/equipment/model'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
+import { LoanPicker } from '@/features/loans/LoanPicker'
+import { describeContent, groupByCase } from '@/features/loans/model'
 import { useLoans } from '@/features/loans/useLoans'
 import { todayIso } from '@/lib/format'
-import { addEventEquipment, eventKeys, removeEventEquipment, setEventEquipmentQuantity } from './api'
+import { addEventCase, addEventEquipment, eventKeys, removeEventCase, removeEventEquipment, setEventEquipmentQuantity } from './api'
 import { busyElsewhere, type CompanyEvent } from './model'
 
-// Pri veľkom sklade nemá zmysel vykresliť tisíce riadkov; používateľ zúži výber hľadaním.
-const PICKER_LIMIT = 20
-
 type Props = { companyId: string; event: CompanyEvent; events: CompanyEvent[]; canEdit: boolean }
+
+const COLLISION = 'Kolízia: v tomto termíne je časť techniky na inom evente alebo výpožičke.'
 
 /** Technika naplánovaná na event, s upozornením na kolízie s inými eventmi a výpožičkami. */
 export function EventEquipmentSection({ companyId, event, events, canEdit }: Props) {
   const queryClient = useQueryClient()
   const [adding, setAdding] = useState(false)
-  const [search, setSearch] = useState('')
   const today = todayIso()
 
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
+  const cases = useCases(companyId)
   const loans = useLoans(companyId)
   const all = equipment.data ?? []
+  const lendable = all.filter((item) => item.status !== 'retired' && item.kind !== 'consumable')
   const itemOf = (equipmentId: string) => all.find((item) => item.id === equipmentId)
+  const nameOf = (equipmentId: string) => itemOf(equipmentId)?.name ?? 'Technika'
+  // Náhľady pre naplánovanú techniku; pri otvorenom výbere aj pre celý sklad.
   const thumbs = usePhotoThumbs(
     companyId,
-    event.equipment.map((item) => itemOf(item.equipmentId)?.photoPath ?? ''),
+    (adding ? lendable : event.equipment.map((item) => itemOf(item.equipmentId))).map((item) => item?.photoPath ?? ''),
   )
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: eventKeys.list(companyId) })
   const add = useMutation({ mutationFn: (equipmentId: string) => addEventEquipment(companyId, event.id, equipmentId), onSettled: refresh })
+  const addCase = useMutation({
+    mutationFn: (caseId: string) =>
+      addEventCase(
+        companyId,
+        event.id,
+        caseId,
+        lendable.filter((item) => item.caseId === caseId && item.quantity > 0).map((item) => ({ equipmentId: item.id, quantity: item.quantity })),
+      ),
+    onSettled: refresh,
+  })
   const remove = useMutation({ mutationFn: (equipmentId: string) => removeEventEquipment(event.id, equipmentId), onSettled: refresh })
+  const removeCase = useMutation({ mutationFn: (caseId: string) => removeEventCase(event.id, caseId), onSettled: refresh })
   const quantity = useMutation({
     mutationFn: ({ equipmentId, value }: { equipmentId: string; value: number }) => setEventEquipmentQuantity(event.id, equipmentId, value),
     onSettled: refresh,
   })
-  const busy = add.isPending || remove.isPending || quantity.isPending
+  const mutations = [add, addCase, remove, removeCase, quantity]
+  const busy = mutations.some((mutation) => mutation.isPending)
 
   const freeOf = (equipmentId: string, total: number) => total - busyElsewhere(event, equipmentId, events, loans.data ?? [], today)
-  const chosen = new Set(event.equipment.map((item) => item.equipmentId))
-  const candidates = filterEquipment(
-    all.filter((item) => item.status !== 'retired' && item.kind !== 'consumable' && !chosen.has(item.id)),
-    { search, status: '', categoryId: '', locationId: '', caseId: '' },
-  )
+  const grouped = groupByCase(event.equipment)
 
   return (
     <section aria-labelledby="event-equipment-heading" className="mb-6">
       <div className="mb-2 flex items-center justify-between gap-3">
         <h2 id="event-equipment-heading" className="text-sm font-medium text-muted-foreground">
-          Technika ({event.equipment.length})
+          Technika ({grouped.cases.length + grouped.single.length})
         </h2>
-        {canEdit && !adding && (
-          <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
-            <Plus className="size-4" aria-hidden />
-            Pridať techniku
+        {canEdit && (
+          <Button variant="outline" size="sm" onClick={() => setAdding(!adding)}>
+            {!adding && <Plus className="size-4" aria-hidden />}
+            {adding ? 'Hotovo' : 'Pridať techniku'}
           </Button>
         )}
       </div>
@@ -75,7 +87,36 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
         </p>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
-          {event.equipment.map((item) => {
+          {grouped.cases.map(({ caseId, content }) => {
+            const name = cases.data?.find((item) => item.id === caseId)?.name ?? 'Case'
+            const collision = content.some((item) => item.quantity > freeOf(item.equipmentId, itemOf(item.equipmentId)?.quantity ?? 0))
+            return (
+              <li key={caseId} className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <Package className="size-5" aria-hidden />
+                  </span>
+                  <Link to={`/cases/${caseId}`} className="min-w-0 flex-1 hover:underline">
+                    <span className="block truncate font-medium">{name}</span>
+                    <span className="block text-xs text-muted-foreground">{describeContent(content, nameOf)}</span>
+                  </Link>
+                  <span className="shrink-0 font-medium">celý case</span>
+                  {canEdit && (
+                    <Button variant="ghost" size="sm" aria-label={`Odobrať z eventu case: ${name}`} disabled={busy} onClick={() => removeCase.mutate(caseId)}>
+                      <X className="size-4" aria-hidden />
+                    </Button>
+                  )}
+                </div>
+                {collision && (
+                  <p className="mt-2 flex items-center gap-2 text-sm text-destructive">
+                    <TriangleAlert className="size-4 shrink-0" aria-hidden />
+                    {COLLISION}
+                  </p>
+                )}
+              </li>
+            )
+          })}
+          {grouped.single.map((item) => {
             const piece = itemOf(item.equipmentId)
             const free = freeOf(item.equipmentId, piece?.quantity ?? 0)
             const collision = item.quantity > free
@@ -126,7 +167,7 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                 {collision && (
                   <p className="mt-2 flex items-center gap-2 text-sm text-destructive">
                     <TriangleAlert className="size-4 shrink-0" aria-hidden />
-                    Kolízia: v tomto termíne je časť techniky na inom evente alebo výpožičke.
+                    {COLLISION}
                   </p>
                 )}
               </li>
@@ -135,56 +176,26 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
         </ul>
       )}
 
-      {(add.isError || remove.isError || quantity.isError) && (
+      {mutations.some((mutation) => mutation.isError) && (
         <p role="alert" className="mt-2 text-sm text-destructive">
           Zmena sa nepodarila.
         </p>
       )}
 
       {adding && (
-        <div className="mt-4 rounded-xl border bg-surface p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h3 className="font-medium">Pridať techniku na event</h3>
-            <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>
-              Hotovo
-            </Button>
-          </div>
-          <Field
-            label="Hľadať techniku"
-            hideLabel
-            type="search"
-            autoFocus
-            placeholder="Názov, výrobca, sériové alebo inventárne číslo"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+        <div className="mt-4">
+          <LoanPicker
+            title="Pridať techniku na event"
+            equipment={lendable}
+            cases={cases.data ?? []}
+            chosen={new Set(event.equipment.map((item) => item.equipmentId))}
+            chosenCases={new Set(grouped.cases.map((group) => group.caseId))}
+            thumbs={thumbs}
+            freeOf={(item) => freeOf(item.id, item.quantity)}
+            disabled={busy}
+            onAdd={(item) => add.mutate(item.id)}
+            onAddCase={(caseId) => addCase.mutate(caseId)}
           />
-          {candidates.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">Žiadna ďalšia technika.</p>
-          ) : (
-            <ul className="mt-3 divide-y">
-              {candidates.slice(0, PICKER_LIMIT).map((item) => {
-                const free = freeOf(item.id, item.quantity)
-                return (
-                  <li key={item.id} className="flex items-center gap-3 py-2">
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">{item.name}</span>
-                      <span className={free > 0 ? 'block text-sm text-muted-foreground' : 'block text-sm text-destructive'}>
-                        {free > 0 ? `voľné ${free} z ${item.quantity} ks` : 'v tomto termíne obsadené'}
-                      </span>
-                    </span>
-                    <Button variant="outline" size="sm" disabled={busy} onClick={() => add.mutate(item.id)}>
-                      Pridať
-                    </Button>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-          {candidates.length > PICKER_LIMIT && (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Zobrazených prvých {PICKER_LIMIT} z {candidates.length}. Spresnite hľadanie.
-            </p>
-          )}
         </div>
       )}
     </section>

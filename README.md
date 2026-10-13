@@ -1,8 +1,32 @@
 # RigTrack
 
-PWA na evidenciu techniky, kufrov, výpožičiek, servisu a eventov.
+PWA na evidenciu techniky a jej prevádzky pre firmu z event/AV prostredia.
 
 React + TypeScript + Vite, Tailwind CSS, React Router, TanStack Query, Supabase, `vite-plugin-pwa`.
+
+## Moduly
+
+- **Technika** — druhy s vlastnými poľami (kábel, svetlo, zvuk, spotrebný materiál), fotky, sieťové údaje,
+  servisný interval, zásoby s upozornením „treba kúpiť“, hromadné pridanie káblov podľa dĺžok.
+- **Sklad** — pôdorys s regálmi, paletami a zónami; kde ktorý case leží.
+- **Cases** — obsah, hmotnosť a rozmery, kontroly, flight case štítok (PNG) a hárok FLIGHTCASE CONTENT (A4).
+- **Objednávky** — nákupy s cenami, import faktúr z Thomannu (PDF sa číta v prehliadači), história nákupov pri technike.
+- **Nákupy** — zoznamy „kúpiť“ a „chceme časom“.
+- **Výpožičky** — rezervácia, vydanie, vrátenie; kolízie termínov stráži databáza vrátane techniky na eventoch.
+- **Eventy** — technika, posádka a dokumenty k akcii.
+- **Servis** — opravy, kontroly a údržba s prílohami; prepína stav techniky.
+- **Vozidlá** — STK, EK, známky, poistky, záznamy o prevádzke, dokumenty.
+- **Úlohy, Návrhy** — interná agenda firmy.
+- **Odmeny** — odmeny a zálohy členov; člen vidí len svoje, admin všetky.
+- **Kalendár, Upozornenia, Štatistiky** — odvodené pohľady, nič sa do nich nezapisuje.
+- **Kôš** — zmazaná technika, cases, fotky a dokumenty sa dajú 30 dní obnoviť (`/admin/recycle-bin`, iba admin).
+- **Nastavenia** — členovia a roly (admin, skladník, technik, viewer), pozvánky, logo, kategórie, história zmien.
+
+Izolácia firiem a oprávnenia rolí stoja na RLS v databáze; kontroly vo frontende sú iba UX.
+
+## Odložené na neskôr
+
+- Notifikácie e-mailom a na telefón (upozornenia sú zatiaľ iba v aplikácii).
 
 ## Spustenie
 

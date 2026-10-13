@@ -8,13 +8,17 @@ import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { PurchaseHistory } from '@/features/orders/PurchaseHistory'
 import { EquipmentServiceHistory } from '@/features/service/EquipmentServiceHistory'
-import { formatDate, todayIso } from '@/lib/format'
-import { canDeleteInventory, canEditInventory, canManageOrders } from '@/lib/permissions'
+import { formatUnits, piecesInService, unitsInService } from '@/features/service/model'
+import { useServiceRecords } from '@/features/service/useServiceRecords'
+import { UnitsOverview } from '@/features/usage/UnitsOverview'
+import { UsageHistory } from '@/features/usage/UsageHistory'
+import { formatDate, formatMoney, todayIso } from '@/lib/format'
+import { can } from '@/lib/permissions'
 import { deleteEquipment, equipmentKeys, fetchEquipment } from './api'
 import { EquipmentPhoto } from './EquipmentPhoto'
-import { describeAttributes, KIND_LABELS, needsRestock, serviceState } from './model'
+import { describeAttributes, describeUnitIds, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
+import { OperatingHours } from './OperatingHours'
 import { QuantityStepper } from './QuantityStepper'
-import { discardPhotoFile } from './photo'
 import { StatusBadge } from './StatusBadge'
 import { useEquipmentLookups } from './useEquipmentLookups'
 
@@ -25,17 +29,14 @@ export function EquipmentDetailPage() {
   const queryClient = useQueryClient()
   const { categories, locations } = useEquipmentLookups(company.companyId)
   const cases = useCases(company.companyId)
+  const serviceRecords = useServiceRecords(company.companyId)
   const item = useQuery({
     queryKey: equipmentKeys.detail(company.companyId, id),
     queryFn: () => fetchEquipment(company.companyId, id),
   })
 
   const remove = useMutation({
-    mutationFn: async () => {
-      const photoPath = item.data?.photoPath
-      await deleteEquipment(company.companyId, id)
-      if (photoPath) await discardPhotoFile(photoPath).catch(() => {})
-    },
+    mutationFn: () => deleteEquipment(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: equipmentKeys.list(company.companyId) })
       navigate('/equipment', { replace: true })
@@ -62,6 +63,8 @@ export function EquipmentDetailPage() {
 
   const equipment = item.data
   const inCase = cases.data?.find((c) => c.id === equipment.caseId)
+  const inService = piecesInService(serviceRecords.data ?? []).get(equipment.id) ?? 0
+  const unitsOut = unitsInService(serviceRecords.data ?? []).get(equipment.id) ?? []
   const service = serviceState(equipment, todayIso())
   const serviceText: ReactNode =
     service.state === 'none' ? undefined : service.state === 'unknown' ? (
@@ -93,10 +96,16 @@ export function EquipmentDetailPage() {
           companyId={company.companyId}
           equipmentId={equipment.id}
           quantity={equipment.quantity}
-          canEdit={canEditInventory(company.role)}
+          canEdit={can(company, 'equipment.edit')}
         />
       </span>,
     ],
+    [
+      'V servise',
+      inService > 0 ? [unitsOut.length > 0 && `kus ${formatUnits(unitsOut)}`, `${inService} z ${equipment.quantity} ks`].filter(Boolean).join(' · ') : undefined,
+    ],
+    ['Evidencia', equipment.quantity > 1 ? (equipment.trackUnits ? `po kusoch (${describeUnitIds(unitIdsOf(equipment))})` : 'len počet kusov') : undefined],
+    ['Cena prenájmu', equipment.rentalPrice !== null ? `${formatMoney(equipment.rentalPrice, 'EUR')} za kus a deň` : undefined],
     ['Upozorniť pri počte', equipment.minQuantity !== null ? `${equipment.minQuantity} ks a menej` : undefined],
     ['Výrobca', equipment.manufacturer],
     ['Model', equipment.model],
@@ -120,19 +129,19 @@ export function EquipmentDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          {canEditInventory(company.role) && (
+          {can(company, 'equipment.edit') && (
             <LinkButton to={`/equipment/${equipment.id}/edit`} variant="outline" size="sm">
               <Pencil className="size-4" aria-hidden />
               Upraviť
             </LinkButton>
           )}
-          {canDeleteInventory(company.role) && (
+          {can(company, 'equipment.delete') && (
             <Button
               variant="destructive"
               size="sm"
               disabled={remove.isPending}
               onClick={() => {
-                if (window.confirm(`Naozaj odstrániť „${equipment.name}“? Tento krok sa nedá vrátiť.`)) remove.mutate()
+                if (window.confirm(`Presunúť „${equipment.name}“ do koša? Admin ju odtiaľ 30 dní vie obnoviť.`)) remove.mutate()
               }}
             >
               <Trash2 className="size-4" aria-hidden />
@@ -153,7 +162,7 @@ export function EquipmentDetailPage() {
         equipmentId={equipment.id}
         name={equipment.name}
         photoPath={equipment.photoPath}
-        canEdit={canEditInventory(company.role)}
+        canEdit={can(company, 'equipment.edit')}
       />
 
       <dl className="divide-y overflow-hidden rounded-xl border bg-surface">
@@ -165,9 +174,15 @@ export function EquipmentDetailPage() {
         ))}
       </dl>
 
-      <EquipmentServiceHistory companyId={company.companyId} equipmentId={equipment.id} canEdit={canEditInventory(company.role)} />
+      {equipment.trackUnits && equipment.quantity > 1 && <UnitsOverview companyId={company.companyId} equipment={equipment} />}
 
-      {canManageOrders(company.role) && <PurchaseHistory companyId={company.companyId} equipmentId={equipment.id} />}
+      <OperatingHours companyId={company.companyId} equipment={equipment} canEdit={can(company, 'equipment.edit')} />
+
+      <EquipmentServiceHistory companyId={company.companyId} equipmentId={equipment.id} canEdit={can(company, 'service.edit')} />
+
+      <UsageHistory companyId={company.companyId} equipmentIds={[equipment.id]} />
+
+      {can(company, 'orders.view') && <PurchaseHistory companyId={company.companyId} equipmentId={equipment.id} />}
 
       {equipment.note && (
         <section className="mt-6">

@@ -21,11 +21,13 @@ type Row = {
   width_cm: number | null
   length_cm: number | null
   depth_cm: number | null
+  spot_id: string | null
+  spot_level: number | null
   note: string
   updated_at: string
 }
 
-const COLUMNS = 'id, name, inventory_number, location_id, label_number, label_category, label_title, label_photo_path, weight_kg, width_cm, length_cm, depth_cm, note, updated_at'
+const COLUMNS = 'id, name, inventory_number, location_id, label_number, label_category, label_title, label_photo_path, weight_kg, width_cm, length_cm, depth_cm, spot_id, spot_level, note, updated_at'
 
 // PostgREST môže numeric vrátiť ako číslo aj ako text.
 const toNumber = (value: number | string | null) => (value === null ? null : Number(value))
@@ -59,6 +61,8 @@ export async function fetchCases(companyId: string): Promise<Case[]> {
     widthCm: toNumber(row.width_cm),
     lengthCm: toNumber(row.length_cm),
     depthCm: toNumber(row.depth_cm),
+    spotId: row.spot_id,
+    spotLevel: row.spot_level,
     note: row.note,
     updatedAt: row.updated_at,
     lastCheck: lastChecks.get(row.id) ?? null,
@@ -107,10 +111,10 @@ export async function saveCase({ companyId, id, values, locations }: SaveArgs): 
   return (data as { id: string }).id
 }
 
-export async function deleteCase(companyId: string, id: string) {
-  const { data, error } = await getSupabase().from('cases').delete().eq('company_id', companyId).eq('id', id).select('id')
+/** Presunie case do koša. Technika z neho ostane v evidencii bez case; pri obnove sa doň vráti. */
+export async function deleteCase(id: string) {
+  const { error } = await getSupabase().rpc('trash_case', { _id: id })
   if (error) throw error
-  if (data.length === 0) throw new Error('Not deleted')
 }
 
 /** Vlastný obsah štítku: názov a/alebo fotka namiesto hlavného prvku z evidencie. */

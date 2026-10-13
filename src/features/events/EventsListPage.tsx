@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { formatDate, todayIso } from '@/lib/format'
-import { canEditInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { EventStatusBadge } from './EventStatusBadge'
 import { isLive, sortEvents } from './model'
@@ -14,7 +14,7 @@ import { useEvents } from './useEvents'
 
 export function EventsListPage() {
   const company = useCompany().active!
-  const canEdit = canEditInventory(company.role)
+  const canEdit = can(company, 'events.edit')
   const events = useEvents(company.companyId)
   const [showPast, setShowPast] = useState(false)
   const today = todayIso()

@@ -11,7 +11,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { NO_CASE, unpackedEquipment } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { formatDateTime } from '@/lib/format'
-import { canEditInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { useCases } from './useCases'
 
 function unpackedLabel(count: number) {
@@ -28,7 +28,7 @@ function pieces(count: number) {
 
 export function CasesListPage() {
   const company = useCompany().active!
-  const canEdit = canEditInventory(company.role)
+  const canEdit = can(company, 'cases.edit')
   const [search, setSearch] = useState('')
   const cases = useCases(company.companyId)
   const { locations } = useEquipmentLookups(company.companyId)

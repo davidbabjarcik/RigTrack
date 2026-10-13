@@ -1,3 +1,4 @@
+import { defaultPermissions } from '@/features/permissions/catalog'
 import type { Role } from '@/lib/roles'
 import { getSupabase } from '@/lib/supabase/client'
 import type { Membership } from './company-context'
@@ -22,7 +23,8 @@ export async function fetchMemberships(userId: string): Promise<Membership[]> {
   if (error) throw error
   const rows = data as unknown as { role: Role; company: { id: string; name: string } }[]
   return rows
-    .map((row) => ({ companyId: row.company.id, companyName: row.company.name, role: row.role }))
+    // Skutočné oprávnenia aktívnej firmy doplní CompanyProvider; dovtedy platia predvolené podľa roly.
+    .map((row) => ({ companyId: row.company.id, companyName: row.company.name, role: row.role, permissions: defaultPermissions(row.role) }))
     .sort((a, b) => a.companyName.localeCompare(b.companyName, 'sk'))
 }
 

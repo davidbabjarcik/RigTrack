@@ -1,5 +1,5 @@
 import { getSupabase } from '@/lib/supabase/client'
-import type { RecordFormValues, RecordKind, Vehicle, VehicleFormValues, VehicleRecord, VehicleStatus } from './model'
+import type { CargoObstacle, RecordFormValues, RecordKind, Vehicle, VehicleFormValues, VehicleRecord, VehicleStatus } from './model'
 
 export const vehicleKeys = {
   list: (companyId: string) => ['company', companyId, 'vehicles'] as const,
@@ -8,7 +8,7 @@ export const vehicleKeys = {
 }
 
 const COLUMNS =
-  'id, plate, model, vin, status, driver, odometer_km, stk_until, ek_until, vignette_until, pzp_until, casco_until, leasing_until, note'
+  'id, plate, model, vin, status, driver, odometer_km, stk_until, ek_until, vignette_until, pzp_until, casco_until, leasing_until, photo_path, payload_kg, cargo_length_cm, cargo_width_cm, cargo_height_cm, cargo_obstacles, note'
 
 type Row = {
   id: string
@@ -24,7 +24,29 @@ type Row = {
   pzp_until: string | null
   casco_until: string | null
   leasing_until: string | null
+  photo_path: string
+  payload_kg: number | null
+  cargo_length_cm: number | null
+  cargo_width_cm: number | null
+  cargo_height_cm: number | null
+  cargo_obstacles: unknown
   note: string
+}
+
+/** Prekážky sú v databáze voľný JSON; čokoľvek, čo nemá tvar kvádra, sa zahodí. */
+function readObstacles(value: unknown): CargoObstacle[] {
+  if (!Array.isArray(value)) return []
+  const sides = ['x', 'y', 'length', 'width', 'height'] as const
+  return (value as Record<string, unknown>[])
+    .filter((item) => item && sides.every((side) => typeof item[side] === 'number' && Number.isFinite(item[side])))
+    .map((item) => ({
+      label: typeof item.label === 'string' ? item.label : '',
+      x: item.x as number,
+      y: item.y as number,
+      length: item.length as number,
+      width: item.width as number,
+      height: item.height as number,
+    }))
 }
 
 export async function fetchVehicles(companyId: string): Promise<Vehicle[]> {
@@ -44,6 +66,12 @@ export async function fetchVehicles(companyId: string): Promise<Vehicle[]> {
     pzpUntil: row.pzp_until,
     cascoUntil: row.casco_until,
     leasingUntil: row.leasing_until,
+    photoPath: row.photo_path,
+    payloadKg: row.payload_kg,
+    cargoLengthCm: row.cargo_length_cm,
+    cargoWidthCm: row.cargo_width_cm,
+    cargoHeightCm: row.cargo_height_cm,
+    cargoObstacles: readObstacles(row.cargo_obstacles),
     note: row.note,
   }))
 }
@@ -62,6 +90,11 @@ export async function saveVehicle(companyId: string, id: string | null, values: 
     pzp_until: values.pzpUntil || null,
     casco_until: values.cascoUntil || null,
     leasing_until: values.leasingUntil || null,
+    payload_kg: values.payloadKg ?? null,
+    cargo_length_cm: values.cargoLengthCm ?? null,
+    cargo_width_cm: values.cargoWidthCm ?? null,
+    cargo_height_cm: values.cargoHeightCm ?? null,
+    cargo_obstacles: values.cargoObstacles,
     note: values.note,
   }
   const table = getSupabase().from('vehicles')
@@ -70,6 +103,12 @@ export async function saveVehicle(companyId: string, id: string | null, values: 
     : await table.insert({ ...fields, company_id: companyId }).select('id').single()
   if (error) throw error
   return (data as { id: string }).id
+}
+
+export async function setVehiclePhoto(companyId: string, id: string, path: string) {
+  const { data, error } = await getSupabase().from('vehicles').update({ photo_path: path }).eq('company_id', companyId).eq('id', id).select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
 }
 
 export async function deleteVehicle(companyId: string, id: string) {

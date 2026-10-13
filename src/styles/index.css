@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+/* Tmavý režim sa riadi atribútom data-theme na <html>. Nastavuje ho skript v index.html
+   a src/lib/theme.ts: podľa zariadenia, alebo podľa voľby používateľa. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 :root {
   --background: #f8fafc;
   --surface: #ffffff;
@@ -14,20 +18,18 @@
   --destructive: #dc2626;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0b1120;
-    --surface: #111827;
-    --foreground: #f1f5f9;
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-    --border: #1f2937;
-    --primary: #f59e0b;
-    --primary-foreground: #0f172a;
-    --accent: #f59e0b;
-    --accent-foreground: #0f172a;
-    --destructive: #f87171;
-  }
+:root[data-theme='dark'] {
+  --background: #0b1120;
+  --surface: #111827;
+  --foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #1f2937;
+  --primary: #f59e0b;
+  --primary-foreground: #0f172a;
+  --accent: #f59e0b;
+  --accent-foreground: #0f172a;
+  --destructive: #f87171;
 }
 
 @theme inline {
@@ -50,7 +52,11 @@
   }
 
   html {
-    color-scheme: light dark;
+    color-scheme: light;
+  }
+
+  html[data-theme='dark'] {
+    color-scheme: dark;
   }
 
   body {

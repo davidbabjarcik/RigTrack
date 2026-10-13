@@ -17,6 +17,9 @@ export type Case = {
   widthCm: number | null
   lengthCm: number | null
   depthCm: number | null
+  /** Miesto na pláne skladu a pri regáli poschodie; null = case na pláne nie je. */
+  spotId: string | null
+  spotLevel: number | null
   note: string
   updatedAt: string
   lastCheck: CaseCheck | null

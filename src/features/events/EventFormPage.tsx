@@ -1,24 +1,37 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
-import { todayIso } from '@/lib/format'
-import { canEditInventory } from '@/lib/permissions'
+import { formatDate, todayIso } from '@/lib/format'
+import { can } from '@/lib/permissions'
 import { eventKeys, saveEvent } from './api'
-import { EVENT_STATUS_LABELS, EVENT_STATUSES, eventSchema, type CompanyEvent, type EventFormValues } from './model'
+import {
+  EVENT_STATUS_LABELS,
+  EVENT_STATUSES,
+  eventSchema,
+  pastEventNames,
+  previousEdition,
+  type CompanyEvent,
+  type EventFormValues,
+} from './model'
 import { useEvents } from './useEvents'
 
-function EventForm({ companyId, current }: { companyId: string; current: CompanyEvent | null }) {
+type FormProps = { companyId: string; current: CompanyEvent | null; events: CompanyEvent[] }
+
+function EventForm({ companyId, current, events }: FormProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const today = todayIso()
   const {
     register,
+    control,
+    getValues,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<EventFormValues>({
@@ -34,6 +47,17 @@ function EventForm({ companyId, current }: { companyId: string; current: Company
     },
   })
 
+  // Opakovaná akcia: podľa názvu nájdeme minulý ročník a ponúkneme jeho údaje.
+  const name = useWatch({ control, name: 'name' })
+  const startsOn = useWatch({ control, name: 'startsOn' })
+  const previous = previousEdition(events, { id: current?.id, name, startsOn })
+  const copyPrevious = () => {
+    if (!previous) return
+    for (const key of ['client', 'venue', 'note'] as const) {
+      if (!getValues(key).trim() && previous[key]) setValue(key, previous[key], { shouldDirty: true })
+    }
+  }
+
   const save = useMutation({
     mutationFn: (values: EventFormValues) => saveEvent(companyId, current?.id ?? null, values),
     onSuccess: async (id) => {
@@ -44,7 +68,25 @@ function EventForm({ companyId, current }: { companyId: string; current: Company
 
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
-      <Field label="Názov eventu *" autoFocus={!current} error={errors.name?.message} {...register('name')} />
+      <Field label="Názov eventu *" autoFocus={!current} list="past-event-names" error={errors.name?.message} {...register('name')} />
+      <datalist id="past-event-names">
+        {pastEventNames(events).map((past) => (
+          <option key={past} value={past} />
+        ))}
+      </datalist>
+      {previous && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+          <span className="min-w-0">
+            Vyzerá to ako ďalší ročník akcie <strong>{previous.name}</strong> ({formatDate(previous.startsOn)}
+            {previous.venue && `, ${previous.venue}`}). Posádka vtedy: {previous.crew.length}, položiek techniky: {previous.equipment.length}.
+          </span>
+          {(previous.client || previous.venue || previous.note) && (
+            <Button variant="outline" size="sm" onClick={copyPrevious}>
+              Doplniť klienta, miesto a poznámku
+            </Button>
+          )}
+        </div>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Klient" error={errors.client?.message} {...register('client')} />
         <Field label="Miesto" placeholder="napr. Dom kultúry Stropkov" error={errors.venue?.message} {...register('venue')} />
@@ -88,7 +130,7 @@ export function EventFormPage() {
   const current = id ? events.data?.find((event) => event.id === id) : null
 
   let body
-  if (!canEditInventory(company.role)) {
+  if (!can(company, 'events.edit')) {
     body = <ErrorBlock message="Na úpravu eventov nemáte oprávnenie." />
   } else if (events.isPending) {
     body = <LoadingBlock />
@@ -97,7 +139,7 @@ export function EventFormPage() {
   } else if (id && !current) {
     body = <ErrorBlock message="Tento event neexistuje alebo k nemu nemáte prístup." />
   } else {
-    body = <EventForm key={id ?? 'new'} companyId={company.companyId} current={current ?? null} />
+    body = <EventForm key={id ?? 'new'} companyId={company.companyId} current={current ?? null} events={events.data} />
   }
 
   return (

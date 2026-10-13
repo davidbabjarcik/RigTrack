@@ -5,6 +5,8 @@ export type Membership = {
   companyId: string
   companyName: string
   role: Role
+  /** Čo člen vo firme smie (po zmenách admina); admin smie vždy všetko. */
+  permissions: ReadonlySet<string>
 }
 
 export type CompanyState = {

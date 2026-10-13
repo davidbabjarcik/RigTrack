@@ -61,6 +61,49 @@ describe('service records', () => {
     await t.as('admin', `update public.equipment set status = 'available' where id = $1`, [light])
   })
 
+  it('keeps multi-piece equipment available until every piece is in service', async () => {
+    const box = (await t.as('admin', `insert into public.equipment (company_id, name, quantity) values ($1, 'DI box', 2) returning id`, [companyA]))[0].id
+    const status = async () => (await t.as('viewer', 'select status from public.equipment where id = $1', [box]))[0].status
+    const send = (quantity: number) =>
+      t.as('technik', 'insert into public.service_records (company_id, equipment_id, quantity) values ($1, $2, $3) returning id', [companyA, box, quantity])
+
+    const first = (await send(1))[0].id
+    expect(await status()).toBe('available')
+    const second = (await send(1))[0].id
+    expect(await status()).toBe('in_service')
+    await t.as('technik', `update public.service_records set status = 'done' where id = $1`, [first])
+    expect(await status()).toBe('available')
+
+    await t.as('technik', 'update public.service_records set quantity = 2 where id = $1', [second])
+    expect(await status()).toBe('in_service')
+    await expect(send(3)).rejects.toThrow(/viac kusov/)
+    await t.as('admin', 'delete from public.service_records where id = $1', [second])
+    expect(await status()).toBe('available')
+    await t.as('admin', 'delete from public.service_records where id = $1', [first])
+  })
+
+  it('tracks which numbered pieces are in service', async () => {
+    const blinder = (await t.as('admin', `insert into public.equipment (company_id, name, quantity) values ($1, 'Blinder', 4) returning id`, [companyA]))[0].id
+    const status = async () => (await t.as('viewer', 'select status from public.equipment where id = $1', [blinder]))[0].status
+    const send = (units: string) =>
+      t.as('technik', 'insert into public.service_records (company_id, equipment_id, unit_numbers) values ($1, $2, $3::int[]) returning id, quantity, unit_numbers', [companyA, blinder, units])
+
+    const first = (await send('{4,2,4}'))[0]
+    expect(first).toMatchObject({ quantity: 2, unit_numbers: [2, 4] })
+    expect(await status()).toBe('available')
+    await expect(send('{4}')).rejects.toThrow(/#4 už je v servise/)
+    await expect(send('{5}')).rejects.toThrow(/kus #5 neexistuje/)
+    await expect(send('{0}')).rejects.toThrow(/Neplatné číslo kusu/)
+
+    const second = (await send('{1,3}'))[0]
+    expect(await status()).toBe('in_service')
+    await t.as('technik', `update public.service_records set status = 'done' where id = $1`, [first.id])
+    expect(await status()).toBe('available')
+    expect((await send('{4}'))[0].quantity).toBe(1)
+    await t.as('admin', 'delete from public.service_records where equipment_id = $1', [blinder])
+    expect(second.unit_numbers).toEqual([1, 3])
+  })
+
   it('is read-only for viewers and invisible to other companies', async () => {
     await expect(open('viewer')).rejects.toThrow(/row-level security/)
     await expect(open('outsider')).rejects.toThrow(/row-level security/)

@@ -8,7 +8,7 @@ import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { formatDateTime } from '@/lib/format'
-import { canDeleteInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import {
   addComment,
@@ -223,8 +223,8 @@ export function SuggestionsPage() {
               companyId={companyId}
               suggestion={suggestion}
               userId={userId}
-              canManage={canDeleteInventory(company.role)}
-              isAdmin={company.role === 'admin'}
+              canManage={can(company, 'suggestions.manage')}
+              isAdmin={can(company, 'suggestions.delete')}
             />
           ))}
         </ul>

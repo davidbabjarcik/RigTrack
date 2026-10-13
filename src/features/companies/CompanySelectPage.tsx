@@ -7,6 +7,7 @@ import { ROLE_LABELS } from '@/lib/roles'
 import { getSupabase } from '@/lib/supabase/client'
 import { acceptInvitation, companyKeys, deleteInvitation, fetchMyInvitations } from './api'
 import { useCompany } from './company-context'
+import { CompanyLogo } from './CompanyLogo'
 
 export function CompanySelectPage() {
   const { session } = useAuth()
@@ -99,7 +100,15 @@ export function CompanySelectPage() {
                   onClick={() => choose(membership.companyId)}
                   className="flex min-h-16 w-full items-center gap-3 px-4 text-left hover:bg-muted"
                 >
-                  <Building2 className="size-5 text-muted-foreground" aria-hidden />
+                  <CompanyLogo
+                    companyId={membership.companyId}
+                    className="size-10"
+                    fallback={
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
+                        <Building2 className="size-5 text-muted-foreground" aria-hidden />
+                      </span>
+                    }
+                  />
                   <span className="flex-1">
                     <span className="block font-medium">{membership.companyName}</span>
                     <span className="block text-sm text-muted-foreground">{ROLE_LABELS[membership.role]}</span>

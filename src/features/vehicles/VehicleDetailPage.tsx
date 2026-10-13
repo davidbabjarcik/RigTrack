@@ -10,9 +10,12 @@ import { Field, SelectField } from '@/components/ui/field'
 import { collectAttachmentFiles } from '@/features/attachments/api'
 import { Attachments } from '@/features/attachments/Attachments'
 import { useCompany } from '@/features/companies/company-context'
+import { LoadDiagram } from '@/features/loading/LoadDiagram'
+import { ObstacleLegend } from '@/features/loading/ObstacleLegend'
+import { cargoSpaceOf } from '@/features/loading/sources'
 import { asOptionalNumber, formatNumber } from '@/features/equipment/model'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
-import { canDeleteVehicles, canLogVehicle, canManageVehicles } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { addVehicleRecord, deleteVehicle, deleteVehicleRecord, fetchVehicleRecords, vehicleKeys } from './api'
 import { DeadlineLine } from './DeadlineBadge'
 import {
@@ -26,6 +29,7 @@ import {
   type RecordFormValues,
 } from './model'
 import { useVehicles } from './useVehicles'
+import { VehiclePhoto } from './VehiclePhoto'
 
 function RecordForm({ companyId, vehicleId, onDone }: { companyId: string; vehicleId: string; onDone: () => void }) {
   const queryClient = useQueryClient()
@@ -172,6 +176,8 @@ export function VehicleDetailPage() {
     ['Náklady spolu', records.data && records.data.length > 0 ? formatMoney(totalCost(records.data), 'EUR') : ''],
   ]
 
+  const space = cargoSpaceOf(vehicle)
+
   return (
     <>
       {back}
@@ -181,13 +187,13 @@ export function VehicleDetailPage() {
           {vehicle.model && <p className="mt-1 text-muted-foreground">{vehicle.model}</p>}
         </div>
         <div className="flex gap-2">
-          {canManageVehicles(company.role) && (
+          {can(company, 'vehicles.edit') && (
             <LinkButton to={`/vehicles/${id}/edit`} variant="outline" size="sm">
               <Pencil className="size-4" aria-hidden />
               Upraviť
             </LinkButton>
           )}
-          {canDeleteVehicles(company.role) && (
+          {can(company, 'vehicles.delete') && (
             <Button
               variant="destructive"
               size="sm"
@@ -202,6 +208,36 @@ export function VehicleDetailPage() {
           )}
         </div>
       </header>
+
+      <VehiclePhoto
+        companyId={company.companyId}
+        vehicleId={vehicle.id}
+        name={vehicle.plate}
+        photoPath={vehicle.photoPath}
+        canEdit={can(company, 'vehicles.edit')}
+      />
+
+      {space && (
+        <section className="mb-6" aria-labelledby="cargo-heading">
+          <h2 id="cargo-heading" className="mb-2 text-sm font-medium text-muted-foreground">
+            Nákladný priestor
+          </h2>
+          <div className="rounded-xl border bg-surface p-4">
+            <p className="mb-3 font-medium">
+              {space.length} × {space.width} × {space.height} cm
+              {vehicle.payloadKg !== null && ` · nosnosť ${vehicle.payloadKg} kg`}
+              {space.obstacles.length > 0 && ` · prekážok: ${space.obstacles.length}`}
+            </p>
+            <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+              <span>← dvere</span>
+              <span>kabína →</span>
+            </div>
+            <LoadDiagram space={space} />
+            <ObstacleLegend obstacles={space.obstacles} />
+            <p className="mt-2 text-sm text-muted-foreground">Pohľad zhora, ľavá stena je hore; farebné šrafované plochy sú miesta, kam sa nakladať nedá.</p>
+          </div>
+        </section>
+      )}
 
       {(remove.isError || removeRecord.isError) && (
         <p role="alert" className="mb-4 text-sm text-destructive">
@@ -243,7 +279,7 @@ export function VehicleDetailPage() {
         companyId={companyId}
         entity="vehicle"
         entityId={id}
-        canEdit={canManageVehicles(company.role)}
+        canEdit={can(company, 'vehicles.edit')}
         title="Dokumenty"
         empty="Žiadne dokumenty. Sem patrí technický preukaz, poistné zmluvy a faktúry."
       />
@@ -253,7 +289,7 @@ export function VehicleDetailPage() {
           <h2 id="records-heading" className="text-sm font-medium text-muted-foreground">
             Záznamy o prevádzke
           </h2>
-          {canLogVehicle(company.role) && !adding && (
+          {can(company, 'vehicles.log') && !adding && (
             <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
               <Plus className="size-4" aria-hidden />
               Pridať záznam
@@ -287,7 +323,7 @@ export function VehicleDetailPage() {
                     {record.description && <p className="mt-1 text-sm whitespace-pre-wrap">{record.description}</p>}
                   </div>
                   {record.cost !== null && <p className="shrink-0 font-medium">{formatMoney(record.cost, 'EUR')}</p>}
-                  {canManageVehicles(company.role) && (
+                  {can(company, 'vehicles.edit') && (
                     <Button
                       variant="ghost"
                       size="sm"

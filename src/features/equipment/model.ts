@@ -76,6 +76,12 @@ export type Equipment = {
   /** Pri tomto počte kusov (a menej) sa položka objaví v zozname „treba kúpiť“. */
   minQuantity: number | null
   quantity: number
+  /** Každý kus má číslo (#1..počet) a vlastnú históriu; inak sa technika ráta len na počet. */
+  trackUnits: boolean
+  /** Vlastné čísla kusov (napr. 1, 4, 8); prázdne = kusy 1..počet. */
+  unitIds: number[]
+  /** Cena prenájmu za kus a deň; bez nej sa do kalkulácie výpožičky nepočíta. */
+  rentalPrice: number | null
   manufacturer: string
   model: string
   serialNumber: string
@@ -84,6 +90,11 @@ export type Equipment = {
   ipAddress: string
   serviceIntervalMonths: number | null
   lastServiceOn: string | null
+  /** Ako často treba odčítať počítadlo prevádzkových hodín zariadenia. */
+  hoursIntervalMonths: number | null
+  /** Posledný odčítaný stav počítadla a kedy sa odčítal. */
+  operatingHours: number | null
+  hoursReadOn: string | null
   /** Cesta fotky v Storage; prázdna = bez fotky. */
   photoPath: string
   status: EquipmentStatus
@@ -126,6 +137,15 @@ export const equipmentSchema = z.object({
   inventoryNumber: text(40),
   quantity: z.number('Zadajte počet kusov').int('Zadajte celé číslo').min(0, 'Počet nemôže byť záporný').max(100000),
   minQuantity: z.number('Zadajte číslo').int('Zadajte celé číslo').min(0, 'Nemôže byť záporné').max(100000).optional(),
+  trackUnits: z.boolean(),
+  /** Čísla kusov oddelené čiarkou alebo medzerou; prázdne = 1..počet. */
+  unitIds: z
+    .string()
+    .trim()
+    .max(2000, 'Príliš veľa čísel')
+    .regex(/^[\d\s,;]*$/, 'Len čísla oddelené čiarkou')
+    .refine((text) => parseUnitIds(text).every((id) => id >= 1 && id <= 100000), 'Čísla od 1 do 100000'),
+  rentalPrice: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(1_000_000).optional(),
   status: z.enum(EQUIPMENT_STATUSES),
   connector: text(60),
   lengthM: optionalNumber(1000),
@@ -141,6 +161,7 @@ export const equipmentSchema = z.object({
     .refine((value) => value === '' || isValidIp(value), 'IP adresa má tvar 192.168.1.10'),
   serviceIntervalMonths: z.number('Zadajte číslo').int('Celé mesiace').min(1, 'Aspoň 1 mesiac').max(120).optional(),
   lastServiceOn: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Zadajte dátum'),
+  hoursIntervalMonths: z.number('Zadajte číslo').int('Celé mesiace').min(1, 'Aspoň 1 mesiac').max(120).optional(),
   note: text(2000),
 })
 
@@ -205,9 +226,18 @@ const SOON_DAYS = 30
 
 /** Stav servisu k dnešnému dňu: po termíne, do 30 dní, v poriadku, alebo interval bez zapísaného servisu. */
 export function serviceState(item: Pick<Equipment, 'serviceIntervalMonths' | 'lastServiceOn'>, today: string): ServiceState {
-  if (!item.serviceIntervalMonths) return { state: 'none' }
-  if (!item.lastServiceOn) return { state: 'unknown' }
-  const dueOn = addMonths(item.lastServiceOn, item.serviceIntervalMonths)
+  return intervalState(item.serviceIntervalMonths, item.lastServiceOn, today)
+}
+
+/** Stav odčítania prevádzkových hodín: rovnaká logika ako pri servise, len s vlastným intervalom. */
+export function hoursState(item: Pick<Equipment, 'hoursIntervalMonths' | 'hoursReadOn'>, today: string): ServiceState {
+  return intervalState(item.hoursIntervalMonths, item.hoursReadOn, today)
+}
+
+function intervalState(intervalMonths: number | null, lastOn: string | null, today: string): ServiceState {
+  if (!intervalMonths) return { state: 'none' }
+  if (!lastOn) return { state: 'unknown' }
+  const dueOn = addMonths(lastOn, intervalMonths)
   if (dueOn < today) return { state: 'overdue', dueOn }
   const daysLeft = (Date.parse(dueOn) - Date.parse(today)) / 86_400_000
   return { state: daysLeft <= SOON_DAYS ? 'soon' : 'ok', dueOn }
@@ -295,4 +325,25 @@ export type CableSetValues = z.infer<typeof cableSetSchema>
 
 export function cableName(namePrefix: string, lengthM: number) {
   return `${namePrefix} ${formatNumber(lengthM)} m`
+}
+
+/** Čísla kusov 1..count. */
+export const unitRange = (count: number) => Array.from({ length: Math.max(count, 0) }, (_, index) => index + 1)
+
+/** Platné čísla kusov techniky: vlastný zoznam, alebo 1..počet, ak ho nemá. */
+export function unitIdsOf(item: Pick<Equipment, 'quantity' | 'unitIds'>) {
+  return item.unitIds.length > 0 ? item.unitIds : unitRange(item.quantity)
+}
+
+/** „1, 4 8;4“ → [1, 4, 8]: bez duplicít, vzostupne. */
+export function parseUnitIds(text: string) {
+  const ids = text.split(/[\s,;]+/).filter(Boolean).map(Number).filter(Number.isInteger)
+  return [...new Set(ids)].sort((a, b) => a - b)
+}
+
+/** [1, 4, 8] → „#1, #4, #8“; súvislý rad skráti na „#1 – #16“. */
+export function describeUnitIds(ids: number[]) {
+  if (ids.length === 0) return ''
+  const consecutive = ids.length > 2 && ids.every((id, index) => index === 0 || id === ids[index - 1] + 1)
+  return consecutive ? `#${ids[0]} – #${ids[ids.length - 1]}` : ids.map((id) => `#${id}`).join(', ')
 }

@@ -7,9 +7,10 @@ import { LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { RestockList } from '@/features/equipment/RestockList'
 import { formatDate, formatMoney } from '@/lib/format'
-import { canManageOrders } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { fetchOrders, orderKeys } from './api'
 import { OrderLineSearch } from './OrderLineSearch'
+import { SupplierBadge } from './SupplierBadge'
 
 function itemsLabel(count: number) {
   if (count === 1) return '1 položka'
@@ -19,7 +20,7 @@ function itemsLabel(count: number) {
 
 export function OrdersListPage() {
   const company = useCompany().active!
-  const allowed = canManageOrders(company.role)
+  const allowed = can(company, 'orders.view')
   const orders = useQuery({
     queryKey: orderKeys.list(company.companyId),
     queryFn: () => fetchOrders(company.companyId),
@@ -66,6 +67,7 @@ export function OrdersListPage() {
           {orders.data.map((order) => (
             <li key={order.id}>
               <Link to={`/orders/${order.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
+                <SupplierBadge supplier={order.supplier} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{order.supplier}</span>
                   <span className="block truncate text-sm text-muted-foreground">

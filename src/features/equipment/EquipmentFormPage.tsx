@@ -9,7 +9,7 @@ import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
-import { canDeleteInventory, canEditInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { equipmentKeys, fetchEquipment, saveEquipment } from './api'
 import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
@@ -23,6 +23,7 @@ import {
   KIND_LABELS,
   LIGHT_SOURCE_LABELS,
   LIGHT_SOURCES,
+  parseUnitIds,
   STATUS_LABELS,
   type Equipment,
   type EquipmentFormValues,
@@ -42,6 +43,9 @@ const EMPTY: EquipmentFormValues = {
   inventoryNumber: '',
   quantity: 1,
   minQuantity: undefined,
+  trackUnits: false,
+  unitIds: '',
+  rentalPrice: undefined,
   status: 'available',
   connector: '',
   lengthM: undefined,
@@ -51,6 +55,7 @@ const EMPTY: EquipmentFormValues = {
   ipAddress: '',
   serviceIntervalMonths: undefined,
   lastServiceOn: '',
+  hoursIntervalMonths: undefined,
   note: '',
 }
 
@@ -67,6 +72,9 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     inventoryNumber: equipment.inventoryNumber,
     quantity: equipment.quantity,
     minQuantity: equipment.minQuantity ?? undefined,
+    trackUnits: equipment.trackUnits,
+    unitIds: equipment.unitIds.join(', '),
+    rentalPrice: equipment.rentalPrice ?? undefined,
     status: equipment.status,
     connector: equipment.attributes.connector ?? '',
     lengthM: equipment.attributes.lengthM,
@@ -76,6 +84,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     ipAddress: equipment.ipAddress,
     serviceIntervalMonths: equipment.serviceIntervalMonths ?? undefined,
     lastServiceOn: equipment.lastServiceOn ?? '',
+    hoursIntervalMonths: equipment.hoursIntervalMonths ?? undefined,
     note: equipment.note,
   }
 }
@@ -118,6 +127,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
     defaultValues: equipment ? toFormValues(equipment, categories, locations) : EMPTY,
   })
   const kind = useWatch({ control, name: 'kind' })
+  const trackUnits = useWatch({ control, name: 'trackUnits' })
+  const unitIdsText = useWatch({ control, name: 'unitIds' })
   const lengthM = useWatch({ control, name: 'lengthM' })
   const simple = isSimpleKind(kind)
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
@@ -283,6 +294,43 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           error={errors.minQuantity?.message}
           {...register('minQuantity', asOptionalNumber)}
         />
+        <Field
+          label="Cena prenájmu za kus a deň (€)"
+          type="number"
+          inputMode="decimal"
+          min={0}
+          step="0.01"
+          placeholder="nevyplnené = bez ceny"
+          error={errors.rentalPrice?.message}
+          {...register('rentalPrice', asOptionalNumber)}
+        />
+        <label className="flex cursor-pointer items-start gap-3 sm:col-span-2">
+          <input type="checkbox" className="mt-0.5 size-5 shrink-0" {...register('trackUnits')} />
+          <span>
+            Evidovať každý kus zvlášť
+            <span className="block text-sm text-muted-foreground">
+              Kusy dostanú čísla #1, #2… a každý má vlastnú históriu servisu a výpožičiek (svetlá, repráky). Pri hákoch či
+              gurtniach, kábloch či viazačoch nechajte vypnuté, tie sa rátajú len na počet.
+            </span>
+          </span>
+        </label>
+        {trackUnits && (
+          <div className="sm:col-span-2">
+            <Field
+              label="Čísla kusov (nepovinné)"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="napr. 1, 4, 8 — prázdne = 1 až počet kusov"
+              error={errors.unitIds?.message}
+              {...register('unitIds')}
+            />
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              {parseUnitIds(unitIdsText ?? '').length > 0
+                ? `Kusov podľa čísel: ${parseUnitIds(unitIdsText ?? '').length}. Počet kusov sa pri uložení nastaví podľa nich.`
+                : 'Vyplňte, keď čísla nejdú po sebe – napríklad po vyradení kusu #2 ostanú 1, 3, 4. Ostatné kusy si svoje čísla a históriu nechajú.'}
+            </p>
+          </div>
+        )}
         <SelectField label="Stav" error={errors.status?.message} {...register('status')}>
           {EQUIPMENT_STATUSES.map((status) => (
             <option key={status} value={status}>
@@ -339,6 +387,23 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
             />
             <Field label="Posledný servis" type="date" error={errors.lastServiceOn?.message} {...register('lastServiceOn')} />
           </Group>
+
+          <Group title="Prevádzkové hodiny (nepovinné)">
+            <Field
+              label="Odčítať každých (mesiacov)"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              step={1}
+              placeholder="napr. 3"
+              error={errors.hoursIntervalMonths?.message}
+              {...register('hoursIntervalMonths', asOptionalNumber)}
+            />
+            <p className="self-end text-sm text-muted-foreground">
+              Pre zariadenia s vlastným počítadlom hodín (hlavy, zosilňovače). Appka pripomenie, kedy ho treba odčítať;
+              samotný stav zapíšete v detaile techniky.
+            </p>
+          </Group>
         </>
       )}
 
@@ -376,7 +441,7 @@ export function EquipmentFormPage() {
 
   const title = id ? 'Úprava techniky' : 'Nová technika'
   let body
-  if (!canEditInventory(company.role)) {
+  if (!can(company, 'equipment.edit')) {
     body = <ErrorBlock message="Na úpravu techniky nemáte oprávnenie." />
   } else if (lookups.isPending || cases.isPending || (id && item.isPending)) {
     body = <LoadingBlock />
@@ -394,7 +459,7 @@ export function EquipmentFormPage() {
         locations={lookups.locations}
         cases={cases.data}
         colors={colors.data ?? []}
-        canEditColors={canDeleteInventory(company.role)}
+        canEditColors={can(company, 'lookups.manage')}
       />
     )
   }

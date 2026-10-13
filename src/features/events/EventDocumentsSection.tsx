@@ -94,7 +94,7 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
                   aria-label={`Odstrániť: ${document.name}`}
                   disabled={remove.isPending}
                   onClick={() => {
-                    if (window.confirm(`Odstrániť dokument „${document.name}“?`)) remove.mutate(document)
+                    if (window.confirm(`Odstrániť dokument „${document.name}“? Admin ho 30 dní vie obnoviť z koša.`)) remove.mutate(document)
                   }}
                 >
                   <Trash2 className="size-4" aria-hidden />

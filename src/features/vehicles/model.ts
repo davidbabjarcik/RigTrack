@@ -28,13 +28,30 @@ export type Vehicle = {
   status: VehicleStatus
   driver: string
   odometerKm: number | null
+  /** Cesta fotky v Storage, prázdna bez fotky. */
+  photoPath: string
+  /** Najviac koľko kg sa smie naložiť. */
+  payloadKg: number | null
+  /** Vnútorné rozmery nákladného priestoru. */
+  cargoLengthCm: number | null
+  cargoWidthCm: number | null
+  cargoHeightCm: number | null
+  cargoObstacles: CargoObstacle[]
   note: string
 } & Record<DeadlineKey, string | null>
+
+/**
+ * Miesto v nákladnom priestore, kam sa nedá nakladať (podbeh kolesa, prepážka).
+ * Kváder na podlahe: x = od kabíny, y = od ľavej steny, všetko v cm.
+ */
+export type CargoObstacle = { label: string; x: number; y: number; length: number; width: number; height: number }
 
 const text = (max: number) => z.string().trim().max(max, `Najviac ${max} znakov`)
 const optionalDate = z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Zadajte dátum')
 
-// Limity zodpovedajú check constraints v 0013_vehicles.sql.
+const cargoSide = (max: number) => z.number('Zadajte číslo').int('Celé centimetre').min(1, 'Aspoň 1 cm').max(max).optional()
+
+// Limity zodpovedajú check constraints v 0013_vehicles.sql a 0031_vehicle_cargo.sql.
 export const vehicleSchema = z.object({
   plate: text(20).min(1, 'Zadajte EČV'),
   model: text(80),
@@ -48,6 +65,22 @@ export const vehicleSchema = z.object({
   pzpUntil: optionalDate,
   cascoUntil: optionalDate,
   leasingUntil: optionalDate,
+  payloadKg: z.number('Zadajte číslo').int('Celé kilogramy').min(1, 'Aspoň 1 kg').max(100_000).optional(),
+  cargoLengthCm: cargoSide(2000),
+  cargoWidthCm: cargoSide(500),
+  cargoHeightCm: cargoSide(500),
+  cargoObstacles: z
+    .array(
+      z.object({
+        label: text(40),
+        x: z.number('Číslo').min(0, 'Nie záporné').max(2000),
+        y: z.number('Číslo').min(0, 'Nie záporné').max(500),
+        length: z.number('Číslo').positive('Viac ako 0').max(2000),
+        width: z.number('Číslo').positive('Viac ako 0').max(500),
+        height: z.number('Číslo').positive('Viac ako 0').max(500),
+      }),
+    )
+    .max(20, 'Najviac 20 prekážok'),
   note: text(2000),
 })
 export type VehicleFormValues = z.infer<typeof vehicleSchema>

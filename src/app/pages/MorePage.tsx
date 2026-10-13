@@ -1,12 +1,14 @@
 import { ChevronRight, SlidersHorizontal } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { NAV_ITEMS } from '@/lib/navigation'
+import { useCompany } from '@/features/companies/company-context'
+import { visibleNavItems } from '@/lib/navigation'
 import { usePinnedNav } from '@/lib/usePinnedNav'
 
 export function MorePage() {
   const { pinned } = usePinnedNav()
-  const rest = NAV_ITEMS.filter((item) => !pinned.includes(item.id))
+  const { active } = useCompany()
+  const rest = visibleNavItems(active).filter((item) => !pinned.includes(item.id))
 
   return (
     <>

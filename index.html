@@ -8,6 +8,18 @@
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>RigTrack</title>
+    <script>
+      // Režim sa nastaví ešte pred vykreslením, aby stránka nebliklo: voľba používateľa, inak zariadenie.
+      // Rovnaká logika je v src/lib/theme.ts.
+      ;(function () {
+        var stored = null
+        try {
+          stored = localStorage.getItem('rigtrack:theme')
+        } catch (error) {}
+        var dark = stored === 'dark' || (stored !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

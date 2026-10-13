@@ -4,6 +4,7 @@ import {
   cableName,
   isSimpleKind,
   normalizeMac,
+  parseUnitIds,
   type CableSetValues,
   type Equipment,
   type EquipmentAttributes,
@@ -23,8 +24,8 @@ export const equipmentKeys = {
 }
 
 const COLUMNS =
-  'id, name, kind, attributes, category_id, location_id, case_id, label_role, quantity, min_quantity, manufacturer, model, serial_number, ' +
-  'inventory_number, mac_address, ip_address, service_interval_months, last_service_on, photo_path, status, note, updated_at'
+  'id, name, kind, attributes, category_id, location_id, case_id, label_role, quantity, track_units, unit_ids, rental_price, min_quantity, manufacturer, model, serial_number, ' +
+  'inventory_number, mac_address, ip_address, service_interval_months, last_service_on, hours_interval_months, operating_hours, hours_read_on, photo_path, status, note, updated_at'
 
 type Row = {
   id: string
@@ -36,6 +37,9 @@ type Row = {
   case_id: string | null
   label_role: LabelRole | null
   min_quantity: number | null
+  track_units: boolean
+  unit_ids: number[] | null
+  rental_price: number | string | null
   quantity: number
   manufacturer: string
   model: string
@@ -45,6 +49,9 @@ type Row = {
   ip_address: string
   service_interval_months: number | null
   last_service_on: string | null
+  hours_interval_months: number | null
+  operating_hours: number | string | null
+  hours_read_on: string | null
   photo_path: string
   status: EquipmentStatus
   note: string
@@ -62,6 +69,9 @@ function fromRow(row: Row): Equipment {
     caseId: row.case_id,
     labelRole: row.label_role,
     minQuantity: row.min_quantity,
+    trackUnits: row.track_units,
+    unitIds: row.unit_ids ?? [],
+    rentalPrice: row.rental_price === null ? null : Number(row.rental_price),
     quantity: row.quantity,
     manufacturer: row.manufacturer,
     model: row.model,
@@ -71,6 +81,9 @@ function fromRow(row: Row): Equipment {
     ipAddress: row.ip_address,
     serviceIntervalMonths: row.service_interval_months,
     lastServiceOn: row.last_service_on,
+    hoursIntervalMonths: row.hours_interval_months,
+    operatingHours: row.operating_hours === null ? null : Number(row.operating_hours),
+    hoursReadOn: row.hours_read_on,
     photoPath: row.photo_path,
     status: row.status,
     note: row.note,
@@ -168,9 +181,14 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     ip_address: simple ? '' : values.ipAddress,
     service_interval_months: simple ? null : (values.serviceIntervalMonths ?? null),
     last_service_on: simple ? null : values.lastServiceOn || null,
+    hours_interval_months: simple ? null : (values.hoursIntervalMonths ?? null),
     case_id: values.caseId || null,
     quantity: values.quantity,
     min_quantity: values.minQuantity ?? null,
+    track_units: values.trackUnits,
+    // Vlastné čísla určujú aj počet kusov; databáza si ho z nich dopočíta.
+    unit_ids: values.trackUnits ? parseUnitIds(values.unitIds) : [],
+    rental_price: values.rentalPrice ?? null,
     status: values.status,
     note: values.note,
   }
@@ -201,11 +219,10 @@ export async function createCableSet({ companyId, values, categories, locations 
   if (error) throw error
 }
 
-export async function deleteEquipment(companyId: string, id: string) {
-  // .select() odhalí prípad, keď RLS zmazanie potichu nepovolí (0 riadkov).
-  const { data, error } = await getSupabase().from('equipment').delete().eq('company_id', companyId).eq('id', id).select('id')
+/** Presunie techniku do koša; admin ju odtiaľ 30 dní vie obnoviť. Fotka aj história ostávajú. */
+export async function deleteEquipment(id: string) {
+  const { error } = await getSupabase().rpc('trash_equipment', { _id: id })
   if (error) throw error
-  if (data.length === 0) throw new Error('Not deleted')
 }
 
 /** Vloží techniku do case, alebo ju z neho vyberie (caseId = null). */
@@ -242,4 +259,33 @@ export async function setEquipmentQuantity(companyId: string, equipmentId: strin
     .select('id')
   if (error) throw error
   if (data.length === 0) throw new Error('Not updated')
+}
+
+export type HourReading = { id: string; readOn: string; hours: number; note: string; authorName: string }
+
+export const hourReadingKeys = {
+  list: (companyId: string, equipmentId: string) => ['company', companyId, 'equipment', equipmentId, 'hours'] as const,
+}
+
+/** Odčítania počítadla prevádzkových hodín jedného zariadenia, najnovšie prvé. */
+export async function fetchHourReadings(companyId: string, equipmentId: string): Promise<HourReading[]> {
+  const { data, error } = await getSupabase()
+    .from('equipment_hour_readings')
+    .select('id, read_on, hours, note, author_name')
+    .eq('company_id', companyId)
+    .eq('equipment_id', equipmentId)
+    .order('read_on', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(20)
+  if (error) throw error
+  const rows = data as { id: string; read_on: string; hours: number | string; note: string; author_name: string }[]
+  return rows.map((row) => ({ id: row.id, readOn: row.read_on, hours: Number(row.hours), note: row.note, authorName: row.author_name }))
+}
+
+/** Kto odčítal, doplní databáza; stav na technike prepíše trigger. */
+export async function addHourReading(companyId: string, equipmentId: string, reading: { readOn: string; hours: number; note: string }) {
+  const { error } = await getSupabase()
+    .from('equipment_hour_readings')
+    .insert({ company_id: companyId, equipment_id: equipmentId, read_on: reading.readOn, hours: reading.hours, note: reading.note.trim() })
+  if (error) throw error
 }

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Trash2 } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
@@ -15,13 +15,16 @@ import {
   removeMember,
   updateMemberRole,
 } from '@/features/companies/api'
+import { CaseTemplateSettings } from '@/features/cases/CaseTemplateSettings'
 import { useCompany, type Membership } from '@/features/companies/company-context'
 import { BrandingSettings } from '@/features/companies/BrandingSettings'
 import { LookupSettings } from '@/features/equipment/LookupSettings'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
-import { canDeleteInventory } from '@/lib/permissions'
+import { PermissionsSettings } from '@/features/permissions/PermissionsSettings'
+import { can } from '@/lib/permissions'
 import { ROLE_LABELS, ROLES, type Role } from '@/lib/roles'
 import { getSupabase } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -38,6 +41,11 @@ function RoleOptions() {
       {ROLE_LABELS[role]}
     </option>
   ))
+}
+
+function PermissionsSection({ companyId }: { companyId: string }) {
+  const members = useQuery({ queryKey: companyKeys.members(companyId), queryFn: () => fetchMembers(companyId) })
+  return <PermissionsSettings companyId={companyId} members={members.data ?? []} />
 }
 
 function Members({ company, userId }: { company: Membership; userId: string }) {
@@ -210,6 +218,9 @@ function InventoryLookups({ companyId }: { companyId: string }) {
       <Section title="Umiestnenia">
         <LookupSettings companyId={companyId} table="locations" items={locations} noun="umiestnenie" />
       </Section>
+      <Section title="Šablóny cases">
+        <CaseTemplateSettings companyId={companyId} />
+      </Section>
     </>
   )
 }
@@ -220,60 +231,117 @@ export function SettingsPage() {
   const user = session!.user
   const company = active!
 
+  const isAdmin = company.role === 'admin'
+  const tabs = [
+    { id: 'company', label: 'Firma', shown: true },
+    { id: 'members', label: 'Členovia', shown: true },
+    { id: 'permissions', label: 'Oprávnenia', shown: isAdmin },
+    { id: 'lists', label: 'Zoznamy', shown: can(company, 'lookups.manage') },
+    { id: 'account', label: 'Účet', shown: true },
+  ].filter((tab) => tab.shown)
+  // Záložka je v adrese, aby sa na ňu dalo odkázať a aby ju prežilo obnovenie stránky.
+  const [params, setParams] = useSearchParams()
+  const tab = tabs.find((item) => item.id === params.get('tab'))?.id ?? 'company'
+
   return (
     <>
       <PageHeader title="Nastavenia" description="Firma, členovia a účet" />
 
-      <Section title="Firma">
-        <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
-          <div className="min-w-0">
-            <p className="truncate font-medium">{company.companyName}</p>
-            <p className="text-sm text-muted-foreground">Vaša rola: {ROLE_LABELS[company.role]}</p>
+      <div className="mb-6 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Časti nastavení">
+        {tabs.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.id}
+            onClick={() => setParams(item.id === 'company' ? {} : { tab: item.id }, { replace: true })}
+            className={cn(
+              'h-9 shrink-0 rounded-lg border px-3 text-sm font-medium',
+              tab === item.id ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'company' && (
+        <>
+          <Section title="Firma">
+            <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{company.companyName}</p>
+                <p className="text-sm text-muted-foreground">Vaša rola: {ROLE_LABELS[company.role]}</p>
+              </div>
+              <Link to="/company/select" className="shrink-0 text-sm font-medium text-accent hover:underline">
+                Zmeniť firmu
+              </Link>
+            </div>
+          </Section>
+
+          {isAdmin && (
+            <Section title="Logo a štítky na cases">
+              <BrandingSettings companyId={company.companyId} />
+            </Section>
+          )}
+
+          {isAdmin && (
+            <Section title="Kôš">
+              <Link to="/admin/recycle-bin" className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4 hover:bg-muted">
+                <span>
+                  <span className="block font-medium">Zmazané záznamy</span>
+                  <span className="block text-sm text-muted-foreground">Technika, cases, fotky a dokumenty sa dajú 30 dní obnoviť</span>
+                </span>
+                <span className="shrink-0 text-sm font-medium text-accent">Otvoriť</span>
+              </Link>
+            </Section>
+          )}
+
+          {can(company, 'audit.view') && (
+            <Section title="História zmien">
+              <Link to="/audit" className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4 hover:bg-muted">
+                <span>
+                  <span className="block font-medium">Kto, kedy a čo zmenil</span>
+                  <span className="block text-sm text-muted-foreground">Technika, cases, výpožičky, objednávky, vozidlá, servis a eventy</span>
+                </span>
+                <span className="shrink-0 text-sm font-medium text-accent">Otvoriť</span>
+              </Link>
+            </Section>
+          )}
+        </>
+      )}
+
+      {tab === 'members' && (
+        <>
+          <Section title="Členovia">
+            <Members company={company} userId={user.id} />
+          </Section>
+          {isAdmin && (
+            <Section title="Pozvánky">
+              <Invitations company={company} />
+            </Section>
+          )}
+        </>
+      )}
+
+      {tab === 'permissions' && (
+        <Section title="Oprávnenia">
+          <PermissionsSection companyId={company.companyId} />
+        </Section>
+      )}
+
+      {tab === 'lists' && <InventoryLookups companyId={company.companyId} />}
+
+      {tab === 'account' && (
+        <Section title="Účet">
+          <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
+            <p className="min-w-0 truncate">{user.email}</p>
+            <Button variant="outline" size="sm" onClick={() => void getSupabase().auth.signOut()}>
+              Odhlásiť sa
+            </Button>
           </div>
-          <Link to="/company/select" className="shrink-0 text-sm font-medium text-accent hover:underline">
-            Zmeniť firmu
-          </Link>
-        </div>
-      </Section>
-
-      <Section title="Členovia">
-        <Members company={company} userId={user.id} />
-      </Section>
-
-      {company.role === 'admin' && (
-        <Section title="Pozvánky">
-          <Invitations company={company} />
         </Section>
       )}
-
-      {company.role === 'admin' && (
-        <Section title="História zmien">
-          <Link to="/audit" className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4 hover:bg-muted">
-            <span>
-              <span className="block font-medium">Kto, kedy a čo zmenil</span>
-              <span className="block text-sm text-muted-foreground">Technika, cases, výpožičky, objednávky, vozidlá, servis a eventy</span>
-            </span>
-            <span className="shrink-0 text-sm font-medium text-accent">Otvoriť</span>
-          </Link>
-        </Section>
-      )}
-
-      {company.role === 'admin' && (
-        <Section title="Štítky na cases">
-          <BrandingSettings companyId={company.companyId} />
-        </Section>
-      )}
-
-      {canDeleteInventory(company.role) && <InventoryLookups companyId={company.companyId} />}
-
-      <Section title="Účet">
-        <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
-          <p className="min-w-0 truncate">{user.email}</p>
-          <Button variant="outline" size="sm" onClick={() => void getSupabase().auth.signOut()}>
-            Odhlásiť sa
-          </Button>
-        </div>
-      </Section>
     </>
   )
 }

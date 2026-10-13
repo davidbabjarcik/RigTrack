@@ -110,7 +110,7 @@ export function Attachments({ companyId, entity, entityId, canEdit, title, empty
                   aria-label={`Odstrániť: ${attachment.name}`}
                   disabled={remove.isPending}
                   onClick={() => {
-                    if (window.confirm(`Odstrániť súbor „${attachment.name}“?`)) remove.mutate(attachment)
+                    if (window.confirm(`Odstrániť súbor „${attachment.name}“? Admin ho 30 dní vie obnoviť z koša.`)) remove.mutate(attachment)
                   }}
                 >
                   <Trash2 className="size-4" aria-hidden />

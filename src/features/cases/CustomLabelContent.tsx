@@ -3,7 +3,7 @@ import { Camera, Trash2 } from 'lucide-react'
 import { useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
-import { discardPhotoFile, storeCompanyPhoto } from '@/features/equipment/photo'
+import { discardPhotoFile, storeCompanyPhoto, trashPhoto } from '@/features/equipment/photo'
 import { caseKeys, saveCaseLabelCustom } from './api'
 import type { Case } from './model'
 
@@ -34,10 +34,7 @@ export function CustomLabelContent({ companyId, current, canEdit }: Props) {
     onSettled: refresh,
   })
   const removePhoto = useMutation({
-    mutationFn: async () => {
-      await saveCaseLabelCustom(companyId, current.id, { labelPhotoPath: '' })
-      await discardPhotoFile(current.labelPhotoPath).catch(() => {})
-    },
+    mutationFn: () => trashPhoto('cases', current.id),
     onSettled: refresh,
   })
   const busy = uploadPhoto.isPending || removePhoto.isPending

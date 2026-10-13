@@ -41,12 +41,10 @@ export async function uploadAttachment(companyId: string, entity: AttachmentEnti
   }
 }
 
+/** Presunie prílohu do koša; súbor ostáva, kým ju admin neobnoví alebo kým sa kôš nevyčistí. */
 export async function deleteAttachment(attachment: Attachment) {
-  const db = getSupabase()
-  const { data, error } = await db.from('attachments').delete().eq('id', attachment.id).select('id')
+  const { error } = await getSupabase().rpc('trash_attachment', { _id: attachment.id })
   if (error) throw error
-  if (data.length === 0) throw new Error('Not deleted')
-  await db.storage.from(BUCKET).remove([attachment.path])
 }
 
 /** Krátkodobý odkaz na stiahnutie; bucket je súkromný. */

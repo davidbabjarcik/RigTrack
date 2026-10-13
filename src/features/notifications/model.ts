@@ -1,4 +1,4 @@
-import { needsRestock, serviceState, type Equipment } from '@/features/equipment/model'
+import { hoursState, needsRestock, serviceState, type Equipment } from '@/features/equipment/model'
 import { isAwaitingIssue, isOverdue, type Loan } from '@/features/loans/model'
 import { isTaskOverdue, type Task } from '@/features/tasks/model'
 import { describeDays, upcomingDeadlines, type Vehicle } from '@/features/vehicles/model'
@@ -57,6 +57,16 @@ export function buildNotifications(sources: NotificationSources, today: string, 
         severity: service === 'overdue' ? 'urgent' : 'soon',
         title: item.name,
         detail: service === 'overdue' ? 'servis po termíne' : 'servis do 30 dní',
+        to: `/equipment/${item.id}`,
+      })
+    }
+    const hours = hoursState(item, today).state
+    if (hours === 'overdue' || hours === 'soon' || hours === 'unknown') {
+      list.push({
+        id: `hours-${item.id}`,
+        severity: hours === 'soon' ? 'soon' : 'urgent',
+        title: item.name,
+        detail: hours === 'unknown' ? 'prevádzkové hodiny ešte neboli odčítané' : hours === 'overdue' ? 'treba odčítať prevádzkové hodiny' : 'odčítanie prevádzkových hodín do 30 dní',
         to: `/equipment/${item.id}`,
       })
     }

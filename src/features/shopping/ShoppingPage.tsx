@@ -9,7 +9,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { RestockList } from '@/features/equipment/RestockList'
 import { formatDate, formatMoney } from '@/lib/format'
-import { canDeleteInventory, canEditInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { fetchShoppingItems, patchShoppingItem, shoppingKeys } from './api'
 import {
@@ -33,7 +33,7 @@ export function ShoppingPage() {
   const company = useCompany().active!
   const companyId = company.companyId
   const userId = useAuth().session!.user.id
-  const canEdit = canEditInventory(company.role)
+  const canEdit = can(company, 'shopping.edit')
   const queryClient = useQueryClient()
   const [list, setList] = useState<ShoppingList>('buy')
   // 'new' = formulár novej položky, inak id upravovanej položky
@@ -59,7 +59,7 @@ export function ShoppingPage() {
       defaultList={list}
       members={members.data ?? []}
       // Mazať smie admin a skladník, a každý svoju vlastnú položku (rovnako to stráži databáza).
-      canDelete={canDeleteInventory(company.role) || item?.createdBy === userId}
+      canDelete={can(company, 'shopping.delete') || item?.createdBy === userId}
       onClose={() => setEditing(null)}
     />
   )

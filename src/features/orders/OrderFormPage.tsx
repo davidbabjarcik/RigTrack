@@ -13,7 +13,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { EQUIPMENT_KINDS, KIND_LABELS, type Equipment, type Lookup } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { formatMoney, todayIso } from '@/lib/format'
-import { canManageOrders } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { createOrder, fetchArticleMemory } from './api'
 import { invoiceToFormValues } from './import/toFormValues'
@@ -343,7 +343,7 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
 
 export function OrderFormPage() {
   const company = useCompany().active!
-  const allowed = canManageOrders(company.role)
+  const allowed = can(company, 'orders.edit')
   const lookups = useEquipmentLookups(company.companyId)
   const equipment = useQuery({
     queryKey: equipmentKeys.list(company.companyId),

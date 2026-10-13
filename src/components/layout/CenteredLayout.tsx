@@ -1,11 +1,16 @@
 import { Outlet } from 'react-router-dom'
 import { OfflineBanner } from '@/components/feedback/OfflineBanner'
+import { Credits } from './Credits'
+import { ThemeToggle } from './ThemeToggle'
 
 /** Obrazovky mimo hlavnej navigácie: prihlásenie a výber firmy. */
 export function CenteredLayout() {
   return (
     <div className="flex min-h-dvh flex-col">
       <OfflineBanner />
+      <header className="flex justify-end px-2 pt-2">
+        <ThemeToggle />
+      </header>
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
         <div className="mb-8 flex items-center justify-center gap-3">
           <img src="/icons/icon.svg" alt="" className="size-10 rounded-xl" />
@@ -13,6 +18,7 @@ export function CenteredLayout() {
         </div>
         <Outlet />
       </main>
+      <Credits className="px-4 pb-6" />
     </div>
   )
 }

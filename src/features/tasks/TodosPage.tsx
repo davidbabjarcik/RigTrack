@@ -8,7 +8,7 @@ import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { formatDate, todayIso } from '@/lib/format'
-import { canDeleteInventory, canEditInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { setTaskStatus, taskKeys } from './api'
 import { isTaskOverdue, sortTasks, TASK_STATUS_LABELS } from './model'
@@ -21,7 +21,7 @@ export function TodosPage() {
   const company = useCompany().active!
   const companyId = company.companyId
   const userId = useAuth().session!.user.id
-  const canEdit = canEditInventory(company.role)
+  const canEdit = can(company, 'tasks.edit')
   const queryClient = useQueryClient()
   const tasks = useTasks(companyId)
   const members = useMembers(companyId)
@@ -49,7 +49,7 @@ export function TodosPage() {
       members={members.data ?? []}
       defaultAssigneeId={userId}
       // Mazať smie admin a skladník, a každý svoju vlastnú úlohu (rovnako to stráži databáza).
-      canDelete={canDeleteInventory(company.role) || task?.createdBy === userId}
+      canDelete={can(company, 'tasks.delete') || task?.createdBy === userId}
       onClose={() => setEditing(null)}
     />
   )

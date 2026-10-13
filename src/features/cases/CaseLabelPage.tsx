@@ -5,11 +5,11 @@ import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
-import { brandingKeys, fetchBranding, fetchLogoBlob } from '@/features/companies/branding'
+import { brandingKeys, fetchBranding, fetchLogoBlob, logoForLightBackground } from '@/features/companies/branding'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { fetchPhotoBlob } from '@/features/equipment/photo'
-import { canEditInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { caseKeys } from './api'
 import { downloadCanvas, fileSlug } from './canvas'
 import { CustomLabelContent } from './CustomLabelContent'
@@ -36,7 +36,8 @@ export function CaseLabelPage() {
   const logoPath = branding.data?.logoPath ?? ''
   const logo = useQuery({
     queryKey: brandingKeys.logo(companyId, logoPath),
-    queryFn: () => fetchLogoBlob(logoPath),
+    // Štítok aj hárok sú biele: svetlé logo sa na ne prefarbí na čierno.
+    queryFn: async () => logoForLightBackground(await fetchLogoBlob(logoPath)),
     enabled: Boolean(logoPath),
     staleTime: Infinity,
   })
@@ -136,7 +137,7 @@ export function CaseLabelPage() {
           alebo nižšie zadajte vlastný názov.
         </p>
       )}
-      {!main && <CustomLabelContent companyId={companyId} current={current} canEdit={canEditInventory(company.role)} />}
+      {!main && <CustomLabelContent companyId={companyId} current={current} canEdit={can(company, 'cases.edit')} />}
       {main && !main.photoPath && (
         <p role="status" className="mt-3 rounded-lg border border-accent/40 bg-accent/10 p-3 text-sm">
           Hlavný prvok nemá fotku.{' '}

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeftRight, Car, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, CalendarDays, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -13,7 +13,20 @@ import { useTasks } from '@/features/tasks/useTasks'
 import { useVehicles } from '@/features/vehicles/useVehicles'
 import { formatDate, todayIso } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { addDays, buildAgenda, ENTRY_KIND_LABELS, ENTRY_KINDS, groupAgenda, type AgendaEntry, type EntryKind } from './model'
+import { CalendarGrid } from './CalendarGrid'
+import { KIND_STYLES } from './kindStyles'
+import {
+  addDays,
+  buildAgenda,
+  ENTRY_KIND_LABELS,
+  ENTRY_KINDS,
+  entriesByDay,
+  groupAgenda,
+  monthGridDays,
+  type AgendaEntry,
+  type AgendaSources,
+  type EntryKind,
+} from './model'
 
 const ICONS: Record<EntryKind, LucideIcon> = {
   event: Ticket,
@@ -23,6 +36,8 @@ const ICONS: Record<EntryKind, LucideIcon> = {
   service: Wrench,
   shopping: ShoppingCart,
 }
+
+const VIEW_KEY = 'rigtrack.calendar.view'
 
 const WINDOWS = [
   { days: 30, label: '30 dní' },
@@ -38,8 +53,8 @@ function weekday(isoDate: string) {
 function EntryRow({ entry, showDate }: { entry: AgendaEntry; showDate?: boolean }) {
   const Icon = ICONS[entry.kind]
   return (
-    <Link to={entry.to} className="flex items-center gap-3 px-4 py-3 hover:bg-muted">
-      <Icon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+    <Link to={entry.to} className={cn('flex items-center gap-3 border-l-4 px-4 py-3 hover:bg-muted', KIND_STYLES[entry.kind].bar)}>
+      <Icon className={cn('size-5 shrink-0', KIND_STYLES[entry.kind].text)} aria-hidden />
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{entry.title}</span>
         <span className="block truncate text-sm text-muted-foreground">
@@ -56,6 +71,13 @@ export function CalendarPage() {
   const [days, setDays] = useState(90)
   const [hidden, setHidden] = useState<EntryKind[]>([])
   const today = todayIso()
+  // Zvolený pohľad si prehliadač pamätá.
+  const [view, setView] = useState<'list' | 'grid'>(() => (localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'))
+  const [month, setMonth] = useState(today.slice(0, 7))
+  const chooseView = (next: 'list' | 'grid') => {
+    setView(next)
+    localStorage.setItem(VIEW_KEY, next)
+  }
 
   const events = useEvents(companyId)
   const loans = useLoans(companyId)
@@ -65,17 +87,22 @@ export function CalendarPage() {
   const shopping = useQuery({ queryKey: shoppingKeys.list(companyId), queryFn: () => fetchShoppingItems(companyId) })
   const sources = [events, loans, vehicles, tasks, equipment, shopping]
 
-  const entries = buildAgenda(
-    {
-      events: events.data ?? [],
-      loans: loans.data ?? [],
-      vehicles: vehicles.data ?? [],
-      tasks: tasks.data ?? [],
-      equipment: equipment.data ?? [],
-      shopping: shopping.data ?? [],
-    },
-    today,
-  ).filter((entry) => !hidden.includes(entry.kind))
+  const data: AgendaSources = {
+    events: events.data ?? [],
+    loans: loans.data ?? [],
+    vehicles: vehicles.data ?? [],
+    tasks: tasks.data ?? [],
+    equipment: equipment.data ?? [],
+    shopping: shopping.data ?? [],
+  }
+  const entries = buildAgenda(data, today).filter((entry) => !hidden.includes(entry.kind))
+  const gridDays = monthGridDays(month)
+  const gridEntries = new Map(
+    [...entriesByDay(data, today, gridDays[0], gridDays[gridDays.length - 1])].map(([day, dayEntries]) => [
+      day,
+      dayEntries.filter((entry) => !hidden.includes(entry.kind)),
+    ]),
+  )
   const { overdue, upcoming, later } = groupAgenda(entries, today, addDays(today, days))
   const toggle = (kind: EntryKind) =>
     setHidden((current) => (current.includes(kind) ? current.filter((value) => value !== kind) : [...current, kind]))
@@ -84,7 +111,29 @@ export function CalendarPage() {
     <>
       <PageHeader title="Kalendár" description="Termíny zo všetkých častí aplikácie na jednom mieste" />
 
-      <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Obdobie">
+      <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Zobrazenie">
+        {(
+          [
+            { id: 'list', label: 'Zoznam', icon: List },
+            { id: 'grid', label: 'Mriežka', icon: CalendarDays },
+          ] as const
+        ).map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            aria-pressed={view === option.id}
+            onClick={() => chooseView(option.id)}
+            className={cn(
+              'inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium',
+              view === option.id ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
+            )}
+          >
+            <option.icon className="size-4" aria-hidden />
+            {option.label}
+          </button>
+        ))}
+      </div>
+      <div className={cn('mb-3 flex flex-wrap gap-2', view === 'grid' && 'hidden')} role="group" aria-label="Obdobie">
         {WINDOWS.map((option) => (
           <button
             key={option.days}
@@ -112,7 +161,7 @@ export function CalendarPage() {
               onClick={() => toggle(kind)}
               className={cn(
                 'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm',
-                shown ? 'bg-muted font-medium' : 'bg-surface text-muted-foreground line-through',
+                shown ? cn('border-transparent font-medium', KIND_STYLES[kind].chip) : 'bg-surface text-muted-foreground line-through',
               )}
             >
               <Icon className="size-4" aria-hidden />
@@ -126,6 +175,8 @@ export function CalendarPage() {
         <LoadingBlock />
       ) : sources.some((source) => source.isError) ? (
         <ErrorBlock message="Termíny sa nepodarilo načítať." onRetry={() => sources.forEach((source) => void source.refetch())} />
+      ) : view === 'grid' ? (
+        <CalendarGrid month={month} today={today} entries={gridEntries} onMonthChange={setMonth} renderEntry={(entry) => <EntryRow entry={entry} />} />
       ) : overdue.length === 0 && upcoming.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
           <p className="font-medium">V tomto období nie sú žiadne termíny</p>

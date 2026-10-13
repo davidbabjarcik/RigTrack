@@ -44,20 +44,25 @@ export async function uploadEquipmentPhoto(companyId: string, equipmentId: strin
 
 /**
  * Uloží zmenšenú fotku do priečinka firmy pod daným názvom a vráti jej cestu.
- * Pre fotky, ktoré nepatria kusu techniky (napr. vlastná fotka na štítku case).
+ * Pre fotky, ktoré nepatria kusu techniky (vlastná fotka na štítku case, fotka vozidla).
  */
-export async function storeCompanyPhoto(companyId: string, name: string, file: File): Promise<string> {
+export async function storeCompanyPhoto(companyId: string, name: string, file: File, options: { thumb?: boolean } = {}): Promise<string> {
+  const storage = getSupabase().storage.from(BUCKET)
   const path = `${companyId}/${name}-${Date.now()}.jpg`
-  const upload = await getSupabase()
-    .storage.from(BUCKET)
-    .upload(path, await shrink(file, MAX_SIDE, 0.85), { contentType: 'image/jpeg' })
+  const upload = await storage.upload(path, await shrink(file, MAX_SIDE, 0.85), { contentType: 'image/jpeg' })
   if (upload.error) throw upload.error
+  // Náhľad do zoznamov je len zrýchlenie; ak sa nenahrá, použije sa veľká fotka.
+  if (options.thumb) await storage.upload(thumbPath(path), await shrink(file, THUMB_SIDE, 0.8), { contentType: 'image/jpeg' })
   return path
 }
 
-export async function removeEquipmentPhoto(companyId: string, equipmentId: string, path: string) {
-  await setPhotoPath(companyId, equipmentId, '')
-  await getSupabase().storage.from(BUCKET).remove([path, thumbPath(path)])
+/**
+ * Odstráni fotku záznamu do koša: súbor ostáva v úložisku, kým ju admin neobnoví alebo kým
+ * sa kôš nevyčistí. `owner` hovorí, čia fotka to je.
+ */
+export async function trashPhoto(owner: 'equipment' | 'vehicles' | 'cases', ownerId: string) {
+  const { error } = await getSupabase().rpc('trash_photo', { _owner_table: owner, _owner_id: ownerId })
+  if (error) throw error
 }
 
 /** Upratanie súborov po zmazaní techniky. Zlyhanie nevadí: v evidencii už na fotku nič neodkazuje. */

@@ -1,6 +1,6 @@
 import { serviceState, type Equipment } from '@/features/equipment/model'
-import { isLive, type CompanyEvent } from '@/features/events/model'
-import { isOpen, type Loan } from '@/features/loans/model'
+import { EVENT_STATUS_LABELS, isLive, type CompanyEvent } from '@/features/events/model'
+import { isOpen, LOAN_STATUS_LABELS, type Loan } from '@/features/loans/model'
 import type { ShoppingItem } from '@/features/shopping/model'
 import type { Task } from '@/features/tasks/model'
 import { vehicleDeadlines, type Vehicle } from '@/features/vehicles/model'
@@ -123,4 +123,59 @@ export function addDays(isoDate: string, days: number) {
   const date = new Date(`${isoDate}T00:00:00Z`)
   date.setUTCDate(date.getUTCDate() + days)
   return date.toISOString().slice(0, 10)
+}
+
+/** Mesiac o `by` mesiacov ďalej: „2026-12“ + 1 → „2027-01“. */
+export function shiftMonth(month: string, by: number) {
+  const [year, monthNumber] = month.split('-').map(Number)
+  return new Date(Date.UTC(year, monthNumber - 1 + by, 1)).toISOString().slice(0, 7)
+}
+
+/** Dni mriežky mesiaca: celé týždne od pondelka, vrátane dní susedných mesiacov. */
+export function monthGridDays(month: string) {
+  const first = `${month}-01`
+  const offset = (new Date(`${first}T00:00:00Z`).getUTCDay() + 6) % 7
+  const [year, monthNumber] = month.split('-').map(Number)
+  const length = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate()
+  const start = addDays(first, -offset)
+  return Array.from({ length: Math.ceil((offset + length) / 7) * 7 }, (_, index) => addDays(start, index))
+}
+
+/**
+ * Termíny pre mriežku, podľa dní od `from` do `to`. Na rozdiel od agendy tu eventy
+ * a výpožičky zaberajú každý svoj deň a vidno aj tie minulé; zrušené eventy nie.
+ */
+export function entriesByDay(sources: AgendaSources, today: string, from: string, to: string) {
+  const byDay = new Map<string, AgendaEntry[]>()
+  const add = (entry: AgendaEntry) => byDay.set(entry.date, [...(byDay.get(entry.date) ?? []), entry])
+  const span = (startsOn: string, endsOn: string, entry: Omit<AgendaEntry, 'date'>) => {
+    const last = endsOn < to ? endsOn : to
+    for (let day = startsOn > from ? startsOn : from; day <= last; day = addDays(day, 1)) {
+      add({ ...entry, id: `${entry.id}-${day}`, date: day })
+    }
+  }
+
+  for (const event of sources.events) {
+    if (event.status === 'cancelled') continue
+    span(event.startsOn, event.endsOn, {
+      id: `event-${event.id}`,
+      kind: 'event',
+      title: event.name,
+      detail: [EVENT_STATUS_LABELS[event.status], event.venue].filter(Boolean).join(' · '),
+      to: `/events/${event.id}`,
+    })
+  }
+  for (const loan of sources.loans) {
+    span(loan.startsOn, loan.endsOn, {
+      id: `loan-${loan.id}`,
+      kind: 'loan',
+      title: loan.borrower,
+      detail: LOAN_STATUS_LABELS[loan.status],
+      to: `/loans/${loan.id}`,
+    })
+  }
+  for (const entry of buildAgenda(sources, today)) {
+    if (entry.kind !== 'event' && entry.kind !== 'loan' && entry.date >= from && entry.date <= to) add(entry)
+  }
+  return byDay
 }

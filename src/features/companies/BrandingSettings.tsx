@@ -114,7 +114,7 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
               Odstrániť
             </Button>
           )}
-          <p className="text-sm text-muted-foreground">PNG, JPG alebo WebP. Najlepšie čierne logo na priehľadnom pozadí.</p>
+          <p className="text-sm text-muted-foreground">PNG, JPG alebo WebP. Jednofarebné pozadie sa odstráni samo a prázdne okraje sa orežú. Tmavé logo sa v tmavom režime zobrazí biele, svetlé sa na bielom papieri vytlačí čierne.</p>
         </div>
       </div>
       {(upload.isError || remove.isError) && (

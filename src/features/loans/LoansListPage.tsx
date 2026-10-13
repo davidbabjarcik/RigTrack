@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { formatDate, todayIso } from '@/lib/format'
-import { canEditInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { LoanStatusBadge } from './LoanStatusBadge'
 import { isOpen, sortLoans } from './model'
@@ -20,7 +20,7 @@ function piecesLabel(count: number) {
 
 export function LoansListPage() {
   const company = useCompany().active!
-  const canEdit = canEditInventory(company.role)
+  const canEdit = can(company, 'loans.edit')
   const loans = useLoans(company.companyId)
   const [showClosed, setShowClosed] = useState(false)
   const today = todayIso()

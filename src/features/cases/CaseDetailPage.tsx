@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CirclePlus, ClipboardList, Pencil, Plus, Star, Tag, Trash2, X } from 'lucide-react'
+import { ArrowLeft, CirclePlus, ClipboardList, MapPin, Pencil, Plus, Star, Tag, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -12,7 +12,10 @@ import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { StatusBadge } from '@/features/equipment/StatusBadge'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
-import { canDeleteInventory, canEditInventory } from '@/lib/permissions'
+import { UsageHistory } from '@/features/usage/UsageHistory'
+import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
+import { describeSpot } from '@/features/warehouse/model'
+import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { caseKeys, deleteCase } from './api'
 import { CaseChecks } from './CaseChecks'
@@ -27,13 +30,15 @@ export function CaseDetailPage() {
   const { id = '' } = useParams()
   const company = useCompany().active!
   const companyId = company.companyId
-  const canEdit = canEditInventory(company.role)
+  const canEdit = can(company, 'cases.edit')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [adding, setAdding] = useState(false)
   const [search, setSearch] = useState('')
 
   const cases = useCases(companyId)
+  // Plán skladu je len doplnok: ak sa nenačíta, detail case funguje ďalej bez neho.
+  const warehouse = useQuery({ queryKey: warehouseKeys.plan(companyId), queryFn: () => fetchWarehouse(companyId) })
   const { locations } = useEquipmentLookups(companyId)
   const equipment = useQuery({
     queryKey: equipmentKeys.list(companyId),
@@ -58,7 +63,7 @@ export function CaseDetailPage() {
   })
 
   const remove = useMutation({
-    mutationFn: () => deleteCase(companyId, id),
+    mutationFn: () => deleteCase(id),
     onSuccess: async () => {
       // Zmazanie case vyprázdni case_id na technike, preto aj zoznam techniky.
       await queryClient.invalidateQueries({ queryKey: caseKeys.list(companyId) })
@@ -93,6 +98,7 @@ export function CaseDetailPage() {
     all.filter((item) => item.caseId !== id),
     { search, status: '', categoryId: '', locationId: '', caseId: '' },
   )
+  const spot = warehouse.data?.spots.find((item) => item.id === current.spotId)
   const caseName = (caseId: string | null) => cases.data.find((c) => c.id === caseId)?.name
   const info = [
     current.inventoryNumber,
@@ -108,6 +114,12 @@ export function CaseDetailPage() {
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight break-words">{current.name}</h1>
           {info.length > 0 && <p className="mt-1 text-sm text-muted-foreground">{info.join(' · ')}</p>}
+          {spot && (
+            <Link to={`/warehouse?spot=${spot.id}`} className="mt-1 inline-flex items-center gap-1 text-sm text-accent hover:underline">
+              <MapPin className="size-4" aria-hidden />
+              V sklade: {describeSpot(spot, current.spotLevel)}
+            </Link>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <LinkButton to={`/cases/${id}/label`} variant="outline" size="sm">
@@ -124,13 +136,13 @@ export function CaseDetailPage() {
               Upraviť
             </LinkButton>
           )}
-          {canDeleteInventory(company.role) && (
+          {can(company, 'cases.delete') && (
             <Button
               variant="destructive"
               size="sm"
               disabled={remove.isPending}
               onClick={() => {
-                const message = `Naozaj odstrániť case „${current.name}“? Technika v ňom ostane v evidencii, len nebude priradená.`
+                const message = `Presunúť case „${current.name}“ do koša? Technika v ňom ostane v evidencii bez case. Admin case 30 dní vie obnoviť aj s obsahom.`
                 if (window.confirm(message)) remove.mutate()
               }}
             >
@@ -150,6 +162,14 @@ export function CaseDetailPage() {
       {current.note && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{current.note}</p>}
 
       <CaseChecks companyId={companyId} caseId={id} canCheck={canEdit} />
+
+      <div className="mb-6">
+        <UsageHistory
+          companyId={companyId}
+          equipmentIds={(equipment.data ?? []).filter((item) => item.caseId === id).map((item) => item.id)}
+          caseId={id}
+        />
+      </div>
 
       <section aria-labelledby="content-heading">
         <div className="mb-2 flex items-center justify-between gap-3">

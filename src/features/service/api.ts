@@ -8,6 +8,8 @@ export const serviceKeys = {
 type Row = {
   id: string
   equipment_id: string
+  quantity: number
+  unit_numbers: number[]
   kind: ServiceKind
   status: ServiceStatus
   happened_on: string
@@ -23,13 +25,15 @@ const toNumber = (value: number | string | null) => (value === null ? null : Num
 export async function fetchServiceRecords(companyId: string): Promise<ServiceRecord[]> {
   const { data, error } = await getSupabase()
     .from('service_records')
-    .select('id, equipment_id, kind, status, happened_on, problem, work_done, hours, cost, technician')
+    .select('id, equipment_id, quantity, unit_numbers, kind, status, happened_on, problem, work_done, hours, cost, technician')
     .eq('company_id', companyId)
     .order('happened_on', { ascending: false })
   if (error) throw error
   return (data as Row[]).map((row) => ({
     id: row.id,
     equipmentId: row.equipment_id,
+    quantity: row.quantity,
+    unitNumbers: row.unit_numbers,
     kind: row.kind,
     status: row.status,
     happenedOn: row.happened_on,
@@ -43,6 +47,9 @@ export async function fetchServiceRecords(companyId: string): Promise<ServiceRec
 
 export async function saveServiceRecord(companyId: string, id: string | null, values: ServiceFormValues): Promise<string> {
   const fields = {
+    // Počet kusov si databáza odvodí z čísel; bez čísel ide o jediný kus.
+    unit_numbers: values.unitNumbers,
+    quantity: values.unitNumbers.length || values.quantity,
     kind: values.kind,
     status: values.status,
     happened_on: values.happenedOn,

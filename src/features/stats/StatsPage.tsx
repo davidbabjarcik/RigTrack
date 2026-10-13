@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { Check, SlidersHorizontal } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { formatNumber } from '@/features/equipment/model'
@@ -12,6 +14,7 @@ import { useVehicles } from '@/features/vehicles/useVehicles'
 import { formatMoney, todayIso } from '@/lib/format'
 import { addDays } from '@/features/calendar/model'
 import { buildStats, type Ranked } from './model'
+import { loadHidden, saveHidden, STAT_SECTIONS, STAT_WIDGETS, type StatWidgetId } from './widgets'
 
 function Tile({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
@@ -69,6 +72,17 @@ const money = (value: number) => formatMoney(value, 'EUR')
 export function StatsPage() {
   const companyId = useCompany().active!.companyId
   const today = todayIso()
+  const [editing, setEditing] = useState(false)
+  const [hidden, setHidden] = useState(() => loadHidden(companyId))
+  const toggle = (id: StatWidgetId) => {
+    const next = hidden.includes(id) ? hidden.filter((other) => other !== id) : [...hidden, id]
+    setHidden(next)
+    saveHidden(companyId, next)
+  }
+  const showAll = () => {
+    setHidden([])
+    saveHidden(companyId, [])
+  }
 
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const loans = useLoans(companyId)
@@ -94,47 +108,120 @@ export function StatsPage() {
     addDays(today, -365),
   )
 
+  // Jeden zápis pre každý widget zo zoznamu STAT_WIDGETS; chýbajúci by neprešiel kontrolou typov.
+  const render: Record<StatWidgetId, ReactNode> = {
+    'equipment.items': <Tile label="Položiek" value={String(stats.equipment.items)} hint={`${stats.equipment.pieces} kusov`} />,
+    'equipment.availability': (
+      <Tile label="Dostupnosť" value={`${Math.round(stats.equipment.availability * 100)} %`} hint="kusov pripravených na výdaj" />
+    ),
+    'equipment.packed': <Tile label="V cases" value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} mimo cases`} />,
+    'loans.open': (
+      <Tile
+        label="Otvorené výpožičky"
+        value={String(stats.loans.open)}
+        hint={stats.loans.overdue > 0 ? `${stats.loans.overdue} po termíne` : 'žiadna po termíne'}
+      />
+    ),
+    'equipment.byStatus': <Ranking title="Technika podľa stavu" rows={stats.equipment.byStatus} format={count} empty="Zatiaľ žiadna technika." />,
+    'loans.mostLent': (
+      <Ranking
+        title="Najviac požičiavaná technika (posledných 12 mesiacov)"
+        rows={stats.loans.mostLent}
+        format={daysLabel}
+        empty="Zatiaľ sa nič nepožičalo."
+      />
+    ),
+    'service.records': <Tile label="Servisné záznamy" value={String(stats.service.records)} hint={`${stats.service.open} rozpracovaných`} />,
+    'service.hours': <Tile label="Odpracované hodiny" value={`${formatNumber(stats.service.hours)} h`} />,
+    'service.cost': <Tile label="Servisné náklady" value={money(stats.service.cost)} />,
+    'service.byKind': <Ranking title="Záznamy podľa typu" rows={stats.service.byKind} format={count} empty="Zatiaľ žiadne servisné záznamy." />,
+    'service.costliest': <Ranking title="Najdrahšia technika na servis" rows={stats.service.costliest} format={money} empty="Žiadne zapísané náklady." />,
+    'vehicles.count': <Tile label="Aktívne vozidlá" value={String(stats.vehicles.count)} />,
+    'vehicles.due': <Tile label="Termíny na vybavenie" value={String(stats.vehicles.due)} hint="po termíne alebo do 30 dní" />,
+    'vehicles.costs': <Ranking title="Náklady na prevádzku podľa vozidla" rows={stats.vehicles.costs} format={money} empty="Žiadne zapísané náklady." />,
+  }
+  const shown = STAT_WIDGETS.filter((widget) => !hidden.includes(widget.id))
+
   return (
     <>
-      <PageHeader title="Štatistiky" description="Prehľad z údajov, ktoré sú v aplikácii zapísané" />
+      <PageHeader
+        title="Štatistiky"
+        description="Prehľad z údajov, ktoré sú v aplikácii zapísané"
+        action={
+          <Button variant="outline" onClick={() => setEditing(!editing)}>
+            {editing ? <Check className="size-4" aria-hidden /> : <SlidersHorizontal className="size-4" aria-hidden />}
+            {editing ? 'Hotovo' : 'Upraviť'}
+          </Button>
+        }
+      />
 
-      <Section title="Technika">
-        <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Tile label="Položiek" value={String(stats.equipment.items)} hint={`${stats.equipment.pieces} kusov`} />
-          <Tile label="Dostupnosť" value={`${Math.round(stats.equipment.availability * 100)} %`} hint="kusov pripravených na výdaj" />
-          <Tile label="V cases" value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} mimo cases`} />
-          <Tile label="Otvorené výpožičky" value={String(stats.loans.open)} hint={stats.loans.overdue > 0 ? `${stats.loans.overdue} po termíne` : 'žiadna po termíne'} />
-        </div>
-        <div className="grid gap-3 lg:grid-cols-2">
-          <Ranking title="Technika podľa stavu" rows={stats.equipment.byStatus} format={count} empty="Zatiaľ žiadna technika." />
-          <Ranking
-            title="Najviac požičiavaná technika (posledných 12 mesiacov)"
-            rows={stats.loans.mostLent}
-            format={daysLabel}
-            empty="Zatiaľ sa nič nepožičalo."
-          />
-        </div>
-      </Section>
+      {editing && (
+        <section aria-labelledby="stats-edit-heading" className="mb-8 rounded-xl border bg-surface p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 id="stats-edit-heading" className="font-medium">
+              Čo chcem vidieť
+            </h2>
+            {hidden.length > 0 && (
+              <button type="button" className="text-sm text-accent hover:underline" onClick={showAll}>
+                Zobraziť všetko
+              </button>
+            )}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {STAT_SECTIONS.map((section) => (
+              <fieldset key={section.id}>
+                <legend className="mb-1.5 text-sm font-medium text-muted-foreground">{section.label}</legend>
+                <div className="flex flex-col gap-1.5">
+                  {STAT_WIDGETS.filter((widget) => widget.section === section.id).map((widget) => (
+                    <label key={widget.id} className="flex cursor-pointer items-start gap-2 text-sm">
+                      <input type="checkbox" className="mt-0.5 size-4 shrink-0" checked={!hidden.includes(widget.id)} onChange={() => toggle(widget.id)} />
+                      {widget.label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ))}
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground">Výber sa pamätá v tomto prehliadači a platí len pre vás.</p>
+        </section>
+      )}
 
-      <Section title="Servis">
-        <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Tile label="Servisné záznamy" value={String(stats.service.records)} hint={`${stats.service.open} rozpracovaných`} />
-          <Tile label="Odpracované hodiny" value={`${formatNumber(stats.service.hours)} h`} />
-          <Tile label="Servisné náklady" value={money(stats.service.cost)} />
+      {shown.length === 0 && (
+        <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
+          <p className="font-medium">Všetky štatistiky sú skryté</p>
+          <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={showAll}>
+            Zobraziť všetko
+          </button>
         </div>
-        <div className="grid gap-3 lg:grid-cols-2">
-          <Ranking title="Záznamy podľa typu" rows={stats.service.byKind} format={count} empty="Zatiaľ žiadne servisné záznamy." />
-          <Ranking title="Najdrahšia technika na servis" rows={stats.service.costliest} format={money} empty="Žiadne zapísané náklady." />
-        </div>
-      </Section>
+      )}
 
-      <Section title="Vozidlá">
-        <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Tile label="Aktívne vozidlá" value={String(stats.vehicles.count)} />
-          <Tile label="Termíny na vybavenie" value={String(stats.vehicles.due)} hint="po termíne alebo do 30 dní" />
-        </div>
-        <Ranking title="Náklady na prevádzku podľa vozidla" rows={stats.vehicles.costs} format={money} empty="Žiadne zapísané náklady." />
-      </Section>
+      {STAT_SECTIONS.map((section) => {
+        const tiles = shown.filter((widget) => widget.section === section.id && widget.kind === 'tile')
+        const rankings = shown.filter((widget) => widget.section === section.id && widget.kind === 'ranking')
+        if (tiles.length + rankings.length === 0) return null
+        return (
+          <Section key={section.id} title={section.label}>
+            {tiles.length > 0 && (
+              <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {tiles.map((widget) => (
+                  <div key={widget.id} className="contents">
+                    {render[widget.id]}
+                  </div>
+                ))}
+              </div>
+            )}
+            {rankings.length > 0 && (
+              <div className={rankings.length > 1 ? 'grid gap-3 lg:grid-cols-2' : undefined}>
+                {rankings.map((widget) => (
+                  <div key={widget.id} className="contents">
+                    {render[widget.id]}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Section>
+        )
+      })}
     </>
   )
 }

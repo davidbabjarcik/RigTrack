@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { SERVICE_KIND_LABELS, SERVICE_STATUS_LABELS, type ServiceRecord } from './model'
+import { formatUnits, SERVICE_KIND_LABELS, SERVICE_STATUS_LABELS, type ServiceRecord } from './model'
 
 const STATUS_STYLES = {
   open: 'bg-red-500/15 text-red-700 dark:text-red-400',
@@ -24,7 +24,14 @@ export function ServiceRecordRow({ record, equipmentName }: Props) {
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{equipmentName ?? SERVICE_KIND_LABELS[record.kind]}</span>
         <span className="block truncate text-sm text-muted-foreground">
-          {[equipmentName && SERVICE_KIND_LABELS[record.kind], formatDate(record.happenedOn), record.technician].filter(Boolean).join(' · ')}
+          {[
+            equipmentName && SERVICE_KIND_LABELS[record.kind],
+            record.unitNumbers.length > 0 ? `kus ${formatUnits(record.unitNumbers)}` : record.quantity > 1 && `${record.quantity} ks`,
+            formatDate(record.happenedOn),
+            record.technician,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </span>
         {summary && <span className="block truncate text-sm">{summary}</span>}
       </span>

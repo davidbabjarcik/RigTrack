@@ -8,15 +8,16 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 import { formatDate, formatMoney } from '@/lib/format'
-import { canDeleteOrders, canManageOrders } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { deleteOrder, fetchOrder, orderKeys } from './api'
 import { supplierProductUrl } from './model'
+import { SupplierBadge } from './SupplierBadge'
 
 export function OrderDetailPage() {
   const { id = '' } = useParams()
   const company = useCompany().active!
   const companyId = company.companyId
-  const allowed = canManageOrders(company.role)
+  const allowed = can(company, 'orders.view')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -73,13 +74,16 @@ export function OrderDetailPage() {
     <>
       {back}
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight break-words">{data.supplier}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {[formatDate(data.orderedAt), data.orderNumber && `č. ${data.orderNumber}`].filter(Boolean).join(' · ')}
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <SupplierBadge supplier={data.supplier} />
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight break-words">{data.supplier}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {[formatDate(data.orderedAt), data.orderNumber && `č. ${data.orderNumber}`].filter(Boolean).join(' · ')}
+            </p>
+          </div>
         </div>
-        {canDeleteOrders(company.role) && (
+        {can(company, 'orders.delete') && (
           <Button
             variant="destructive"
             size="sm"

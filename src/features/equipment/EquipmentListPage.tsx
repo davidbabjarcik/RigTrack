@@ -8,13 +8,16 @@ import { LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
+import { formatUnits, piecesInService, unitsInService } from '@/features/service/model'
+import { useServiceRecords } from '@/features/service/useServiceRecords'
 import { todayIso } from '@/lib/format'
-import { canEditInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { equipmentKeys, fetchEquipmentList } from './api'
 import {
   describeAttributes,
   EQUIPMENT_STATUSES,
   filterEquipment,
+  hoursState,
   needsRestock,
   NO_CASE,
   serviceState,
@@ -30,7 +33,7 @@ const NO_FILTER: EquipmentFilter = { search: '', status: '', categoryId: '', loc
 
 export function EquipmentListPage() {
   const company = useCompany().active!
-  const canWrite = canEditInventory(company.role)
+  const canWrite = can(company, 'equipment.edit')
   // ?case=none otvorí zoznam rovno s technikou mimo cases (odkaz z prehľadu cases).
   const [params] = useSearchParams()
   const [filter, setFilter] = useState({ ...NO_FILTER, caseId: params.get('case') ?? '' })
@@ -44,6 +47,9 @@ export function EquipmentListPage() {
   const set = (patch: Partial<EquipmentFilter>) => setFilter((current) => ({ ...current, ...patch }))
   const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name
   const today = todayIso()
+  const serviceRecords = useServiceRecords(company.companyId).data ?? []
+  const inService = piecesInService(serviceRecords)
+  const unitsOut = unitsInService(serviceRecords)
   const all = list.data ?? []
   const visible = filterEquipment(all, filter)
   const thumbs = usePhotoThumbs(
@@ -152,6 +158,7 @@ export function EquipmentListPage() {
               item.quantity !== 1 && `${item.quantity} ks`,
             ].filter(Boolean)
             const service = serviceState(item, today).state
+            const servicing = inService.get(item.id) ?? 0
             return (
               <li key={item.id}>
                 <Link to={`/equipment/${item.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
@@ -161,7 +168,15 @@ export function EquipmentListPage() {
                     {details.length > 0 && (
                       <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
                     )}
+                    {servicing > 0 && item.status !== 'in_service' && (
+                      <span className="block text-sm text-sky-700 dark:text-sky-400">
+                        V servise {unitsOut.has(item.id) ? `kus ${formatUnits(unitsOut.get(item.id)!)}` : `${servicing} z ${item.quantity} ks`}
+                      </span>
+                    )}
                     {needsRestock(item) && <span className="block text-sm text-destructive">Treba dokúpiť</span>}
+                    {['overdue', 'unknown'].includes(hoursState(item, today).state) && (
+                      <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>
+                    )}
                     {service === 'overdue' && <span className="block text-sm text-destructive">Servis po termíne</span>}
                     {service === 'soon' && <span className="block text-sm text-accent">Servis do 30 dní</span>}
                   </span>

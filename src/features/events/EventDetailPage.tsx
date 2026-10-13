@@ -5,7 +5,8 @@ import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { formatDate } from '@/lib/format'
-import { canDeleteInventory, canEditInventory } from '@/lib/permissions'
+import { EventLoadingSection } from '@/features/loading/EventLoadingSection'
+import { can } from '@/lib/permissions'
 import { deleteEvent, eventKeys } from './api'
 import { EventCrewSection } from './EventCrewSection'
 import { EventDocumentsSection } from './EventDocumentsSection'
@@ -17,7 +18,7 @@ export function EventDetailPage() {
   const { id = '' } = useParams()
   const company = useCompany().active!
   const companyId = company.companyId
-  const canEdit = canEditInventory(company.role)
+  const canEdit = can(company, 'events.edit')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const events = useEvents(companyId)
@@ -69,7 +70,7 @@ export function EventDetailPage() {
               Upraviť
             </LinkButton>
           )}
-          {canDeleteInventory(company.role) && (
+          {can(company, 'events.delete') && (
             <Button
               variant="destructive"
               size="sm"
@@ -94,7 +95,8 @@ export function EventDetailPage() {
       {event.note && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{event.note}</p>}
 
       <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
-      <EventCrewSection companyId={companyId} event={event} canEdit={canEdit} />
+      {can(company, 'vehicles.view') && <EventLoadingSection companyId={companyId} event={event} />}
+      <EventCrewSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
       <EventDocumentsSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
     </>
   )

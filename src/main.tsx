@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router-dom'
 import { router } from './app/router'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { CompanyProvider } from './features/companies/CompanyProvider'
+import './lib/theme'
 import './styles/index.css'
 
 const queryClient = new QueryClient()

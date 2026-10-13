@@ -7,6 +7,7 @@ import { SelectField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { formatDateTime } from '@/lib/format'
 import { getSupabase } from '@/lib/supabase/client'
+import { can } from '@/lib/permissions'
 import { ACTION_LABELS, describeChanges, ENTITIES, entryLink, type AuditAction, type AuditEntry } from './model'
 
 const LIMIT = 200
@@ -45,7 +46,7 @@ async function fetchAudit(companyId: string, entity: string): Promise<AuditEntry
 
 export function AuditPage() {
   const company = useCompany().active!
-  const isAdmin = company.role === 'admin'
+  const isAdmin = can(company, 'audit.view')
   const [entity, setEntity] = useState('')
   const audit = useQuery({
     queryKey: ['company', company.companyId, 'audit', entity],

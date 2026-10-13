@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
-import { canDeleteInventory, canEditInventory } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { createCableSet } from './api'
 import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
@@ -208,7 +208,7 @@ export function CableSetPage() {
   const colors = useQuery({ queryKey: cableColorKeys.list(company.companyId), queryFn: () => fetchCableColors(company.companyId) })
 
   let body
-  if (!canEditInventory(company.role)) {
+  if (!can(company, 'equipment.edit')) {
     body = <ErrorBlock message="Na pridávanie techniky nemáte oprávnenie." />
   } else if (lookups.isPending) {
     body = <LoadingBlock />
@@ -221,7 +221,7 @@ export function CableSetPage() {
         categories={lookups.categories}
         locations={lookups.locations}
         colors={colors.data ?? []}
-        canEditColors={canDeleteInventory(company.role)}
+        canEditColors={can(company, 'lookups.manage')}
       />
     )
   }

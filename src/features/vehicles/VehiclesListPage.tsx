@@ -5,20 +5,26 @@ import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
+import { PhotoThumb } from '@/features/equipment/PhotoThumb'
+import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 import { todayIso } from '@/lib/format'
-import { canManageVehicles } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { fetchVehicles, vehicleKeys } from './api'
 import { DeadlineLine } from './DeadlineBadge'
 import { VEHICLE_STATUS_LABELS, vehicleDeadlines } from './model'
 
 export function VehiclesListPage() {
   const company = useCompany().active!
-  const canManage = canManageVehicles(company.role)
+  const canManage = can(company, 'vehicles.edit')
   const vehicles = useQuery({
     queryKey: vehicleKeys.list(company.companyId),
     queryFn: () => fetchVehicles(company.companyId),
   })
   const today = todayIso()
+  const thumbs = usePhotoThumbs(
+    company.companyId,
+    (vehicles.data ?? []).map((vehicle) => vehicle.photoPath),
+  )
 
   return (
     <>
@@ -54,6 +60,7 @@ export function VehiclesListPage() {
             return (
               <li key={vehicle.id}>
                 <Link to={`/vehicles/${vehicle.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
+                  <PhotoThumb url={thumbs[vehicle.photoPath]} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">
                       {vehicle.plate}

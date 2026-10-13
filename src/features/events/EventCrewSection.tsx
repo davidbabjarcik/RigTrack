@@ -1,18 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { addEventCrew, eventKeys, removeEventCrew } from './api'
-import type { CompanyEvent } from './model'
+import { previousEdition, type CompanyEvent, type EventCrew } from './model'
 
 const EXTERNAL = 'external'
 
-type Props = { companyId: string; event: CompanyEvent; canEdit: boolean }
+type Props = { companyId: string; event: CompanyEvent; events: CompanyEvent[]; canEdit: boolean }
 
 /** Posádka eventu: členovia firmy alebo externisti zapísaní menom, každý s úlohou na akcii. */
-export function EventCrewSection({ companyId, event, canEdit }: Props) {
+export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
   const queryClient = useQueryClient()
   const members = useMembers(companyId)
   const [who, setWho] = useState('')
@@ -31,6 +31,16 @@ export function EventCrewSection({ companyId, event, canEdit }: Props) {
     onSettled: refresh,
   })
   const remove = useMutation({ mutationFn: removeEventCrew, onSettled: refresh })
+  const again = useMutation({
+    mutationFn: (person: EventCrew) => addEventCrew(companyId, event.id, { memberId: person.memberId, name: person.name, role: person.role }),
+    onSettled: refresh,
+  })
+
+  // Kto bol na minulom ročníku tej istej akcie a tu ešte nie je.
+  const previous = previousEdition(events, event)
+  const here = new Set(event.crew.map((person) => person.memberId ?? `ext:${person.name.trim().toLowerCase()}`))
+  const returning = (previous?.crew ?? []).filter((person) => !here.has(person.memberId ?? `ext:${person.name.trim().toLowerCase()}`))
+  const labelOf = (person: EventCrew) => (person.memberId ? memberName(members.data, person.memberId) || 'Bývalý člen' : person.name)
 
   const valid = who === EXTERNAL ? name.trim() !== '' : who !== ''
   function handleSubmit(submit: FormEvent) {
@@ -73,6 +83,23 @@ export function EventCrewSection({ companyId, event, canEdit }: Props) {
         </ul>
       )}
 
+      {canEdit && previous && returning.length > 0 && (
+        <div className="mb-3 rounded-xl border border-accent/40 bg-accent/10 p-3">
+          <p className="mb-2 text-sm">
+            Minulý ročník ({previous.name}) robili aj títo ľudia. Kliknutím ich pridáte s rovnakou úlohou.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {returning.map((person) => (
+              <Button key={person.id} variant="outline" size="sm" disabled={again.isPending} onClick={() => again.mutate(person)}>
+                <Plus className="size-4" aria-hidden />
+                {labelOf(person)}
+                {person.role && <span className="font-normal text-muted-foreground">· {person.role}</span>}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {canEdit ? (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4 sm:flex-row sm:items-end">
           <SelectField label="Kto" className="sm:w-56" value={who} onChange={(e) => setWho(e.target.value)}>
@@ -107,7 +134,7 @@ export function EventCrewSection({ companyId, event, canEdit }: Props) {
         )
       )}
 
-      {(add.isError || remove.isError) && (
+      {(add.isError || remove.isError || again.isError) && (
         <p role="alert" className="mt-2 text-sm text-destructive">
           Zmena sa nepodarila.
         </p>

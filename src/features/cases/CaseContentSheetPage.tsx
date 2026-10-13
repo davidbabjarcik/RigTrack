@@ -5,7 +5,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
-import { brandingKeys, fetchBranding, fetchLogoBlob } from '@/features/companies/branding'
+import { brandingKeys, fetchBranding, fetchLogoBlob, logoForLightBackground } from '@/features/companies/branding'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { cableColorKeys, fetchCableColors } from '@/features/equipment/cableColors'
@@ -27,7 +27,8 @@ export function CaseContentSheetPage() {
   const logoPath = branding.data?.logoPath ?? ''
   const logo = useQuery({
     queryKey: brandingKeys.logo(companyId, logoPath),
-    queryFn: () => fetchLogoBlob(logoPath),
+    // Štítok aj hárok sú biele: svetlé logo sa na ne prefarbí na čierno.
+    queryFn: async () => logoForLightBackground(await fetchLogoBlob(logoPath)),
     enabled: Boolean(logoPath),
     staleTime: Infinity,
   })

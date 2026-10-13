@@ -10,19 +10,19 @@ const yearAgo = '2025-10-13'
 
 const equipment = (patch: Partial<Equipment>): Equipment => ({
   id: 'e1', name: 'Mixpult', kind: 'general', attributes: {}, categoryId: null, locationId: null, caseId: null, labelRole: null,
-  minQuantity: null, quantity: 1, manufacturer: '', model: '', serialNumber: '', inventoryNumber: '', macAddress: '', ipAddress: '',
-  serviceIntervalMonths: null, lastServiceOn: null, photoPath: '', status: 'available', note: '', updatedAt: '', ...patch,
+  minQuantity: null, trackUnits: false, unitIds: [], rentalPrice: null, quantity: 1, manufacturer: '', model: '', serialNumber: '', inventoryNumber: '', macAddress: '', ipAddress: '',
+  serviceIntervalMonths: null, lastServiceOn: null, hoursIntervalMonths: null, operatingHours: null, hoursReadOn: null, photoPath: '', status: 'available', note: '', updatedAt: '', ...patch,
 })
 const loan = (patch: Partial<Loan>): Loan => ({
-  id: 'l1', borrower: 'Klient', contact: '', startsOn: '2026-09-01', endsOn: '2026-09-03', status: 'returned', note: '',
-  issuedAt: null, returnedAt: null, items: [{ equipmentId: 'e1', quantity: 1, damaged: false }], ...patch,
+  id: 'l1', borrower: 'Klient', contact: '', borrowerIco: '', borrowerAddress: '', billedDays: null, price: null, deposit: null, startsOn: '2026-09-01', endsOn: '2026-09-03', status: 'returned', note: '',
+  issuedAt: null, returnedAt: null, issuedByName: '', returnedByName: '', items: [{ equipmentId: 'e1', quantity: 1, damaged: false, caseId: null, unitNumbers: [], damagedUnits: [], damagedQuantity: 0, unitPrice: null }], ...patch,
 })
 const service = (patch: Partial<ServiceRecord>): ServiceRecord => ({
-  id: 's1', equipmentId: 'e1', kind: 'repair', status: 'done', happenedOn: '2026-09-01', problem: '', workDone: '', hours: null,
+  id: 's1', equipmentId: 'e1', quantity: 1, unitNumbers: [], kind: 'repair', status: 'done', happenedOn: '2026-09-01', problem: '', workDone: '', hours: null,
   cost: null, technician: '', ...patch,
 })
 const vehicle = (patch: Partial<Vehicle>): Vehicle => ({
-  id: 'v1', plate: 'SP123AB', model: '', vin: '', status: 'active', driver: '', odometerKm: null, note: '',
+  id: 'v1', plate: 'SP123AB', model: '', vin: '', status: 'active', driver: '', odometerKm: null, photoPath: '', payloadKg: null, cargoLengthCm: null, cargoWidthCm: null, cargoHeightCm: null, cargoObstacles: [], note: '',
   stkUntil: null, ekUntil: null, vignetteUntil: null, pzpUntil: null, cascoUntil: null, leasingUntil: null, ...patch,
 })
 const none: StatsSources = { equipment: [], loans: [], service: [], vehicles: [], vehicleCosts: [] }
@@ -62,7 +62,7 @@ describe('buildStats', () => {
       equipment: [equipment({ id: 'e1', name: 'Mixpult' }), equipment({ id: 'e2', name: 'Reproduktor' })],
       loans: [
         loan({}),
-        loan({ id: 'l2', startsOn: '2026-08-01', endsOn: '2026-08-10', items: [{ equipmentId: 'e2', quantity: 1, damaged: false }] }),
+        loan({ id: 'l2', startsOn: '2026-08-01', endsOn: '2026-08-10', items: [{ equipmentId: 'e2', quantity: 1, damaged: false, caseId: null, unitNumbers: [], damagedUnits: [], damagedQuantity: 0, unitPrice: null }] }),
         loan({ id: 'l3', status: 'reserved', startsOn: '2026-10-01', endsOn: '2026-10-30' }),
         // vydané a nevrátené: ráta sa až po dnešok
         loan({ id: 'l4', status: 'issued', startsOn: '2026-10-10', endsOn: '2026-10-11' }),
