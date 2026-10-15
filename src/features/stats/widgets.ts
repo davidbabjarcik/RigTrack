@@ -1,14 +1,29 @@
 // Čo všetko vie stránka Štatistiky ukázať. Každý si vyberie, čo chce vidieť;
 // výber sa pamätá v prehliadači zvlášť pre každú firmu.
 
+import type { PermissionKey } from '@/features/permissions/catalog'
+
 export const STAT_SECTIONS = [
+  { id: 'money', label: 'Peniaze' },
   { id: 'equipment', label: 'Technika' },
   { id: 'service', label: 'Servis' },
   { id: 'vehicles', label: 'Vozidlá' },
 ] as const
 export type StatSectionId = (typeof STAT_SECTIONS)[number]['id']
 
+/** `needs` = oprávnenia, bez ktorých sa widget neponúka (údaje by aj tak neprišli). */
 export const STAT_WIDGETS = [
+  { id: 'money.income', section: 'money', kind: 'tile', label: 'Príjmy firmy z akcií', needs: ['payouts.manage'] },
+  { id: 'money.payouts', section: 'money', kind: 'tile', label: 'Odmeny členom', needs: ['payouts.view_all'] },
+  { id: 'money.balance', section: 'money', kind: 'tile', label: 'Zostáva po odmenách', needs: ['payouts.manage', 'payouts.view_all'] },
+  { id: 'money.mine', section: 'money', kind: 'tile', label: 'Moje zárobky' },
+  { id: 'money.incomeByMonth', section: 'money', kind: 'ranking', label: 'Príjmy firmy podľa mesiacov', needs: ['payouts.manage'] },
+  { id: 'money.incomeByMethod', section: 'money', kind: 'chart', label: 'Príjmy podľa spôsobu platby', needs: ['payouts.manage'] },
+  { id: 'money.payoutsByMember', section: 'money', kind: 'chart', label: 'Odmeny podľa členov', needs: ['payouts.view_all'] },
+  { id: 'money.payoutsByRole', section: 'money', kind: 'chart', label: 'Odmeny podľa role na evente', needs: ['payouts.view_all'] },
+  { id: 'money.mineByRole', section: 'money', kind: 'chart', label: 'Moje zárobky podľa role' },
+  { id: 'money.mineByMonth', section: 'money', kind: 'ranking', label: 'Moje najlepšie mesiace' },
+  { id: 'money.mineByYear', section: 'money', kind: 'ranking', label: 'Moje zárobky podľa rokov' },
   { id: 'equipment.items', section: 'equipment', kind: 'tile', label: 'Počet položiek a kusov' },
   { id: 'equipment.availability', section: 'equipment', kind: 'tile', label: 'Dostupnosť' },
   { id: 'equipment.packed', section: 'equipment', kind: 'tile', label: 'V cases a mimo nich' },
@@ -23,7 +38,7 @@ export const STAT_WIDGETS = [
   { id: 'vehicles.count', section: 'vehicles', kind: 'tile', label: 'Aktívne vozidlá' },
   { id: 'vehicles.due', section: 'vehicles', kind: 'tile', label: 'Termíny na vybavenie' },
   { id: 'vehicles.costs', section: 'vehicles', kind: 'ranking', label: 'Náklady na prevádzku podľa vozidla' },
-] as const satisfies readonly { id: string; section: StatSectionId; kind: 'tile' | 'ranking'; label: string }[]
+] as const satisfies readonly { id: string; section: StatSectionId; kind: 'tile' | 'ranking' | 'chart'; label: string; needs?: readonly PermissionKey[] }[]
 
 export type StatWidgetId = (typeof STAT_WIDGETS)[number]['id']
 

@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.1**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.2**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,16 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.2 – 15. 10. 2026
+
+- **Štatistiky → Peniaze** s výberom roka:
+  - pre firmu (kto má oprávnenie): príjmy z akcií s DPH aj bez, odmeny členom, koľko zostáva po odmenách,
+    príjmy podľa mesiacov, koláč podľa spôsobu platby, podľa členov a podľa role na evente;
+  - pre každého: **moje zárobky**, koláč podľa role (osvetľovač, zvukár…), najlepšie mesiace a zárobky podľa rokov.
+- Widgety, na ktoré člen nemá oprávnenie, sa v štatistikách ani neponúkajú.
+
+Nové migrácie: žiadne.
 
 ### 1.1 – 15. 10. 2026
 
@@ -113,7 +123,9 @@ Potrebné migrácie: do `0043`.
 ### 👥 Firma a ľudia
 
 - **Odmeny** – odmeny a zálohy členov, filter podľa rokov, koláčový graf; člen vidí len svoje.
-- **Úlohy, Návrhy, Kalendár** (zoznam aj mesačná mriežka), **Upozornenia**, **Štatistiky**, **História zmien**.
+- **Úlohy, Návrhy, Kalendár** (zoznam aj mesačná mriežka), **Upozornenia**, **História zmien**.
+- **Štatistiky** – technika, servis, vozidlá a **peniaze**: príjmy firmy, odmeny a zostatok (s oprávnením)
+  a každému jeho vlastné zárobky podľa role, mesiacov a rokov, s koláčovými grafmi.
 - **Záloha** – admin stiahne celú firmu ako ZIP s Excelmi (fotky a dokumenty v nej nie sú).
 - **Kôš** – zmazané veci sa dajú 30 dní obnoviť (`/admin/recycle-bin`, iba admin); kôš aj história zmien sa dajú exportovať do Excelu.
 

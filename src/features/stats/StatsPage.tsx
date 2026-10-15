@@ -13,6 +13,15 @@ import { fetchVehicleCosts, vehicleKeys } from '@/features/vehicles/api'
 import { useVehicles } from '@/features/vehicles/useVehicles'
 import { formatMoney, todayIso } from '@/lib/format'
 import { addDays } from '@/features/calendar/model'
+import { useAuth } from '@/features/auth/auth-context'
+import { memberName, useMembers } from '@/features/companies/useMembers'
+import { bothBases, fetchCompanyIncome, METHOD_LABELS, PAYMENT_METHODS } from '@/features/events/income'
+import { useEvents } from '@/features/events/useEvents'
+import { fetchPayments, payoutKeys } from '@/features/payouts/api'
+import { can } from '@/lib/permissions'
+import { SelectField } from '@/components/ui/field'
+import { DonutChart } from './DonutChart'
+import { byMonth, byRole, byYear, inYear, moneyYears, sum } from './money'
 import { buildStats, type Ranked } from './model'
 import { loadHidden, saveHidden, STAT_SECTIONS, STAT_WIDGETS, type StatWidgetId } from './widgets'
 
@@ -70,7 +79,10 @@ const daysLabel = (value: number) => `${value} ${value === 1 ? 'deň' : value <=
 const money = (value: number) => formatMoney(value, 'EUR')
 
 export function StatsPage() {
-  const companyId = useCompany().active!.companyId
+  const company = useCompany().active!
+  const companyId = company.companyId
+  const userId = useAuth().session!.user.id
+  const [year, setYear] = useState(() => todayIso().slice(0, 4))
   const today = todayIso()
   const [editing, setEditing] = useState(false)
   const [hidden, setHidden] = useState(() => loadHidden(companyId))
@@ -89,7 +101,13 @@ export function StatsPage() {
   const service = useServiceRecords(companyId)
   const vehicles = useVehicles(companyId)
   const vehicleCosts = useQuery({ queryKey: vehicleKeys.costs(companyId), queryFn: () => fetchVehicleCosts(companyId) })
-  const sources = [equipment, loans, service, vehicles, vehicleCosts]
+  const canIncome = can(company, 'payouts.manage')
+  // Odmeny: databáza vráti všetky (s oprávnením) alebo len moje.
+  const payments = useQuery({ queryKey: payoutKeys.list(companyId), queryFn: () => fetchPayments(companyId) })
+  const income = useQuery({ queryKey: ['company', companyId, 'income'], queryFn: () => fetchCompanyIncome(companyId), enabled: canIncome })
+  const events = useEvents(companyId)
+  const members = useMembers(companyId)
+  const sources = [equipment, loans, service, vehicles, vehicleCosts, payments, events]
 
   if (sources.some((source) => source.isPending)) return <LoadingBlock />
   if (sources.some((source) => source.isError)) {
@@ -108,8 +126,47 @@ export function StatsPage() {
     addDays(today, -365),
   )
 
+  // Peniaze vo zvolenom roku.
+  const allPayments = payments.data ?? []
+  const yearPayments = allPayments.filter((payment) => inYear(payment.happenedOn, year))
+  const myPayments = yearPayments.filter((payment) => payment.memberId === userId)
+  const yearIncome = (income.data ?? []).filter((payment) => inYear(payment.receivedOn, year))
+  const incomeGross = sum(yearIncome.map((payment) => ({ amount: bothBases(payment).gross ?? payment.amount })))
+  const incomeNet = sum(yearIncome.map((payment) => ({ amount: bothBases(payment).net ?? payment.amount })))
+  const payoutTotal = sum(yearPayments)
+  const payoutPaid = sum(yearPayments.filter((payment) => payment.paidAt))
+  const years = moneyYears([...allPayments.map((payment) => payment.happenedOn), ...(income.data ?? []).map((payment) => payment.receivedOn), todayIso()])
+  const amounts = (list: { happenedOn: string; amount: number }[]) => list.map((payment) => ({ date: payment.happenedOn, amount: payment.amount }))
+  const memberTotals = new Map<string, number>()
+  for (const payment of yearPayments) memberTotals.set(payment.memberId, (memberTotals.get(payment.memberId) ?? 0) + payment.amount)
+  const byMember: Ranked[] = [...memberTotals]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([id, value]) => ({ id, label: memberName(members.data, id) || 'Bývalý člen', value: Math.round(value * 100) / 100 }))
+  const byMethod: Ranked[] = PAYMENT_METHODS.map((method) => ({
+    id: method,
+    label: METHOD_LABELS[method],
+    value: sum(yearIncome.filter((payment) => payment.method === method).map((payment) => ({ amount: bothBases(payment).gross ?? payment.amount }))),
+  })).filter((row) => row.value > 0)
+  const period = year === 'all' ? 'spolu' : `v roku ${year}`
+
   // Jeden zápis pre každý widget zo zoznamu STAT_WIDGETS; chýbajúci by neprešiel kontrolou typov.
   const render: Record<StatWidgetId, ReactNode> = {
+    'money.income': <Tile label="Príjmy z akcií (s DPH)" value={money(incomeGross)} hint={`bez DPH ${money(incomeNet)} · ${period}`} />,
+    'money.payouts': <Tile label="Odmeny členom" value={money(payoutTotal)} hint={`vyplatené ${money(payoutPaid)} · ${period}`} />,
+    'money.balance': <Tile label="Zostáva po odmenách" value={money(Math.round((incomeNet - payoutTotal) * 100) / 100)} hint="príjmy bez DPH mínus odmeny" />,
+    'money.mine': <Tile label="Moje zárobky" value={money(sum(myPayments))} hint={`vyplatené ${money(sum(myPayments.filter((payment) => payment.paidAt)))} · ${period}`} />,
+    'money.incomeByMonth': (
+      <Ranking title="Príjmy firmy podľa mesiacov (s DPH)" rows={byMonth(yearIncome.map((payment) => ({ date: payment.receivedOn, amount: bothBases(payment).gross ?? payment.amount })))} format={money} empty="Žiadne zapísané príjmy z akcií." />
+    ),
+    'money.incomeByMethod': <DonutChart title="Príjmy podľa spôsobu platby" rows={byMethod} format={money} empty="Žiadne zapísané príjmy z akcií." />,
+    'money.payoutsByMember': <DonutChart title="Odmeny podľa členov" rows={byMember} format={money} empty="Žiadne zapísané odmeny." />,
+    'money.payoutsByRole': <DonutChart title="Odmeny podľa role na evente" rows={byRole(yearPayments, events.data ?? [])} format={money} empty="Žiadne zapísané odmeny." />,
+    'money.mineByRole': <DonutChart title="Moje zárobky podľa role" rows={byRole(myPayments, events.data ?? [])} format={money} empty="Zatiaľ nemáte zapísané žiadne odmeny." />,
+    'money.mineByMonth': <Ranking title="Moje najlepšie mesiace" rows={byMonth(amounts(myPayments))} format={money} empty="Zatiaľ nemáte zapísané žiadne odmeny." />,
+    'money.mineByYear': (
+      <Ranking title="Moje zárobky podľa rokov" rows={byYear(amounts(allPayments.filter((payment) => payment.memberId === userId)))} format={money} empty="Zatiaľ nemáte zapísané žiadne odmeny." />
+    ),
     'equipment.items': <Tile label="Položiek" value={String(stats.equipment.items)} hint={`${stats.equipment.pieces} kusov`} />,
     'equipment.availability': (
       <Tile label="Dostupnosť" value={`${Math.round(stats.equipment.availability * 100)} %`} hint="kusov pripravených na výdaj" />
@@ -140,7 +197,9 @@ export function StatsPage() {
     'vehicles.due': <Tile label="Termíny na vybavenie" value={String(stats.vehicles.due)} hint="po termíne alebo do 30 dní" />,
     'vehicles.costs': <Ranking title="Náklady na prevádzku podľa vozidla" rows={stats.vehicles.costs} format={money} empty="Žiadne zapísané náklady." />,
   }
-  const shown = STAT_WIDGETS.filter((widget) => !hidden.includes(widget.id))
+  // Widgety, na ktoré člen nemá oprávnenie, sa ani neponúkajú.
+  const allowed = STAT_WIDGETS.filter((widget) => !('needs' in widget) || widget.needs.every((permission) => can(company, permission)))
+  const shown = allowed.filter((widget) => !hidden.includes(widget.id))
 
   return (
     <>
@@ -167,12 +226,12 @@ export function StatsPage() {
               </button>
             )}
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {STAT_SECTIONS.map((section) => (
               <fieldset key={section.id}>
                 <legend className="mb-1.5 text-sm font-medium text-muted-foreground">{section.label}</legend>
                 <div className="flex flex-col gap-1.5">
-                  {STAT_WIDGETS.filter((widget) => widget.section === section.id).map((widget) => (
+                  {allowed.filter((widget) => widget.section === section.id).map((widget) => (
                     <label key={widget.id} className="flex cursor-pointer items-start gap-2 text-sm">
                       <input type="checkbox" className="mt-0.5 size-4 shrink-0" checked={!hidden.includes(widget.id)} onChange={() => toggle(widget.id)} />
                       {widget.label}
@@ -197,10 +256,20 @@ export function StatsPage() {
 
       {STAT_SECTIONS.map((section) => {
         const tiles = shown.filter((widget) => widget.section === section.id && widget.kind === 'tile')
-        const rankings = shown.filter((widget) => widget.section === section.id && widget.kind === 'ranking')
+        const rankings = shown.filter((widget) => widget.section === section.id && widget.kind !== 'tile')
         if (tiles.length + rankings.length === 0) return null
         return (
           <Section key={section.id} title={section.label}>
+            {section.id === 'money' && (
+              <SelectField label="Rok" hideLabel className="mb-3 w-40" value={year} onChange={(event) => setYear(event.target.value)}>
+                {years.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+                <option value="all">Všetky roky</option>
+              </SelectField>
+            )}
             {tiles.length > 0 && (
               <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {tiles.map((widget) => (

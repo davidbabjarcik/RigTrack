@@ -109,3 +109,24 @@ export async function deletePayment(id: string) {
   if (error) throw error
   if (data.length === 0) throw new Error('Not deleted')
 }
+
+/** Všetky príjmy firmy zo všetkých eventov (pre štatistiky). Bez oprávnenia vráti databáza prázdny zoznam. */
+export async function fetchCompanyIncome(companyId: string): Promise<(EventPayment & { eventId: string })[]> {
+  const { data, error } = await getSupabase()
+    .from('event_payments')
+    .select('id, event_id, amount, method, invoiced_by, vat, vat_rate, received_on, note, created_by_name')
+    .eq('company_id', companyId)
+  if (error) throw error
+  return (data as (Row & { event_id: string })[]).map((row) => ({
+    id: row.id,
+    eventId: row.event_id,
+    amount: Number(row.amount),
+    method: row.method,
+    invoicedBy: row.invoiced_by,
+    vat: row.vat,
+    vatRate: row.vat_rate === null ? null : Number(row.vat_rate),
+    receivedOn: row.received_on,
+    note: row.note,
+    createdByName: row.created_by_name,
+  }))
+}
