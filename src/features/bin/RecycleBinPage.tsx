@@ -1,14 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { RotateCcw, Trash2 } from 'lucide-react'
+import { FileSpreadsheet, RotateCcw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
-import { formatDateTime } from '@/lib/format'
+import { downloadTable } from '@/lib/excelExport'
+import { formatDateTime, todayIso } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { binKeys, fetchBin, purgeBin, restoreBinItem } from './api'
-import { BIN_DAYS, BIN_KIND_LABELS, BIN_KINDS, daysLeft, daysLeftLabel, type BinItem, type BinKind } from './model'
+import { BIN_DAYS, BIN_EXPORT_COLUMNS, BIN_KIND_LABELS, BIN_KINDS, binExportRow, daysLeft, daysLeftLabel, type BinItem, type BinKind } from './model'
 
 /** Kôš: zmazané záznamy, ktoré admin môže obnoviť alebo zmazať natrvalo. */
 export function RecycleBinPage() {
@@ -25,6 +26,15 @@ export function RecycleBinPage() {
   const purgeOne = useMutation({ mutationFn: (item: BinItem) => purgeBin(companyId, 'one', item), onSettled: refresh })
   const empty = useMutation({ mutationFn: () => purgeBin(companyId, 'all'), onSettled: refresh })
   const busy = restore.isPending || purgeOne.isPending || empty.isPending
+  // Exportuje to, čo je práve vidieť (aj s filtrom druhu).
+  const download = useMutation({
+    mutationFn: () => {
+      const all = bin.data ?? []
+      const shown = kind ? all.filter((item) => item.kind === kind) : all
+      const now = new Date()
+      return downloadTable(`kos-${todayIso()}.xlsx`, 'Kôš', BIN_EXPORT_COLUMNS, shown.map((item) => binExportRow(item, now, formatDateTime)))
+    },
+  })
 
   if (!isAdmin) return <ErrorBlock message="Kôš môže otvoriť iba admin firmy." />
 
@@ -40,16 +50,26 @@ export function RecycleBinPage() {
         description={`Zmazané záznamy sa dajú ${BIN_DAYS} dní obnoviť, potom sa zmažú natrvalo`}
         action={
           items.length > 0 && (
-            <Button
-              variant="destructive"
-              disabled={busy}
-              onClick={() => {
-                if (window.confirm(`Natrvalo zmazať všetkých ${items.length} položiek v koši? Tento krok sa nedá vrátiť.`)) empty.mutate()
-              }}
-            >
-              <Trash2 className="size-4" aria-hidden />
-              {empty.isPending ? 'Mažem…' : 'Vyprázdniť kôš'}
-            </Button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                variant="outline"
+                disabled={download.isPending}
+                onClick={() => download.mutate()}
+              >
+                <FileSpreadsheet className="size-4" aria-hidden />
+                Export do Excelu
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={busy}
+                onClick={() => {
+                  if (window.confirm(`Natrvalo zmazať všetkých ${items.length} položiek v koši? Tento krok sa nedá vrátiť.`)) empty.mutate()
+                }}
+              >
+                <Trash2 className="size-4" aria-hidden />
+                {empty.isPending ? 'Mažem…' : 'Vyprázdniť kôš'}
+              </Button>
+            </div>
           )
         }
       />

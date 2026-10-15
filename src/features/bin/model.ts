@@ -48,3 +48,17 @@ export function filesByBucket(files: { bucket: string; path: string }[]) {
   }
   return buckets
 }
+
+export const BIN_EXPORT_COLUMNS = [
+  { title: 'Druh', width: 18 },
+  { title: 'Názov', width: 32 },
+  { title: 'Podrobnosti', width: 36 },
+  { title: 'Zmazané', width: 20 },
+  { title: 'Zmazal', width: 26 },
+  { title: 'Zostáva dní', width: 12 },
+]
+
+/** Riadok koša do Excelu. */
+export function binExportRow(item: BinItem, now: Date, when: (iso: string) => string) {
+  return [BIN_KIND_LABELS[item.kind], item.label, item.detail, when(item.deletedAt), item.deletedByName, daysLeft(item.deletedAt, now)]
+}

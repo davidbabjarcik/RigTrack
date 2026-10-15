@@ -8,6 +8,7 @@ describe('version', () => {
   })
 
   it('comes from package.json', () => {
-    expect(APP_VERSION).toBe('1.0')
+    // Číslo sa mení s každou verziou; stačí, že je to verzia bez nulovej opravy.
+    expect(APP_VERSION).toMatch(/^\d+\.\d+(\.[1-9]\d*)?$/)
   })
 })

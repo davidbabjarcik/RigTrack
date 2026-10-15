@@ -82,3 +82,26 @@ export function entryLink(entry: Pick<AuditEntry, 'action' | 'entity' | 'entityI
   if (!path || !entry.entityId || entry.action === 'delete') return null
   return `${path}/${entry.entityId}`
 }
+
+export const AUDIT_EXPORT_COLUMNS = [
+  { title: 'Kedy', width: 20 },
+  { title: 'Kto', width: 26 },
+  { title: 'Čo urobil', width: 14 },
+  { title: 'Čo', width: 18 },
+  { title: 'Názov', width: 32 },
+  { title: 'Zmenené polia', width: 40 },
+  { title: 'ID záznamu', width: 38 },
+]
+
+/** Riadok histórie zmien do Excelu. `when` formátuje čas (v aplikácii podľa slovenského zápisu). */
+export function auditExportRow(entry: AuditEntry, when: (iso: string) => string) {
+  return [
+    when(entry.createdAt),
+    entry.actorName,
+    ACTION_LABELS[entry.action],
+    ENTITIES[entry.entity]?.label ?? entry.entity,
+    entry.label,
+    entry.action === 'update' ? describeChanges(entry.changed) : '',
+    entry.entityId ?? '',
+  ]
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { daysLeft, daysLeftLabel, filesByBucket } from './model'
+import { BIN_EXPORT_COLUMNS, binExportRow, daysLeft, daysLeftLabel, filesByBucket } from './model'
 
 describe('recycle bin', () => {
   const now = new Date('2026-10-31T12:00:00Z')
@@ -26,5 +26,17 @@ describe('recycle bin', () => {
     ])
     expect(buckets.get('equipment-photos')).toEqual(['c/a.jpg', 'c/a-thumb.jpg'])
     expect(buckets.get('event-documents')).toEqual(['c/e/rider.pdf'])
+  })
+})
+
+describe('bin export', () => {
+  it('turns a bin item into a row with the days left', () => {
+    const row = binExportRow(
+      { kind: 'case', id: 'c1', label: 'Audio case', detail: 'C-1', deletedAt: '2026-10-05T10:00:00Z', deletedByName: 'Peter' },
+      new Date('2026-10-15T12:00:00Z'),
+      () => 'kedysi',
+    )
+    expect(row).toEqual(['Case', 'Audio case', 'C-1', 'kedysi', 'Peter', 20])
+    expect(row.length).toBe(BIN_EXPORT_COLUMNS.length)
   })
 })
