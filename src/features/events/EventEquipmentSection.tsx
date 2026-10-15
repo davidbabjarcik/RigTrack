@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Package, Plus, TriangleAlert, X } from 'lucide-react'
+import { ClipboardCheck, FileUp, Package, Plus, TriangleAlert, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { Button } from '@/components/ui/button'
+import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
@@ -12,9 +12,9 @@ import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 import { LoanPicker } from '@/features/loans/LoanPicker'
 import { describeContent, groupByCase } from '@/features/loans/model'
 import { useLoans } from '@/features/loans/useLoans'
-import { todayIso } from '@/lib/format'
+import { formatDate, todayIso } from '@/lib/format'
 import { addEventCase, addEventEquipment, eventKeys, removeEventCase, removeEventEquipment, setEventEquipmentQuantity } from './api'
-import { busyElsewhere, type CompanyEvent } from './model'
+import { busyElsewhere, eventsSinceCheck, type CompanyEvent } from './model'
 
 type Props = { companyId: string; event: CompanyEvent; events: CompanyEvent[]; canEdit: boolean }
 
@@ -70,10 +70,16 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
           Technika ({grouped.cases.length + grouped.single.length})
         </h2>
         {canEdit && (
-          <Button variant="outline" size="sm" onClick={() => setAdding(!adding)}>
-            {!adding && <Plus className="size-4" aria-hidden />}
-            {adding ? 'Hotovo' : 'Pridať techniku'}
-          </Button>
+          <div className="flex flex-wrap justify-end gap-2">
+            <LinkButton to={`/events/${event.id}/import`} variant="outline" size="sm">
+              <FileUp className="size-4" aria-hidden />
+              Import z Capture
+            </LinkButton>
+            <Button variant="outline" size="sm" onClick={() => setAdding(!adding)}>
+              {!adding && <Plus className="size-4" aria-hidden />}
+              {adding ? 'Hotovo' : 'Pridať techniku'}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -88,7 +94,12 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {grouped.cases.map(({ caseId, content }) => {
-            const name = cases.data?.find((item) => item.id === caseId)?.name ?? 'Case'
+            const box = cases.data?.find((item) => item.id === caseId)
+            const name = box?.name ?? 'Case'
+            // Len upozornenie v aplikácii; do tlače eventu nejde.
+            const checkedOn = box?.lastCheck?.checkedAt.slice(0, 10) ?? null
+            const sinceCheck = eventsSinceCheck(caseId, checkedOn, events, event.id, today)
+            const unchecked = box && (checkedOn === null || sinceCheck > 0)
             const collision = content.some((item) => item.quantity > freeOf(item.equipmentId, itemOf(item.equipmentId)?.quantity ?? 0))
             return (
               <li key={caseId} className="px-4 py-3">
@@ -111,6 +122,17 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                   <p className="mt-2 flex items-center gap-2 text-sm text-destructive">
                     <TriangleAlert className="size-4 shrink-0" aria-hidden />
                     {COLLISION}
+                  </p>
+                )}
+                {unchecked && (
+                  <p className="mt-2 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
+                    <ClipboardCheck className="size-4 shrink-0" aria-hidden />
+                    {checkedOn === null
+                      ? 'Obsah tohto case ešte nikto neskontroloval.'
+                      : `Case nebol skontrolovaný od ${formatDate(checkedOn)}, odvtedy bol na ${sinceCheck} ${sinceCheck === 1 ? 'evente' : 'eventoch'}.`}{' '}
+                    <Link to={`/cases/${caseId}`} className="font-medium underline">
+                      Skontrolovať
+                    </Link>
                   </p>
                 )}
               </li>

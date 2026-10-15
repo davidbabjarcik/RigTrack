@@ -1,3 +1,4 @@
+import type { CategoryColor } from './categoryColors'
 import { getSupabase } from '@/lib/supabase/client'
 import {
   attributesFor,
@@ -122,7 +123,7 @@ export async function fetchEquipment(companyId: string, id: string): Promise<Equ
 }
 
 export async function fetchLookup(companyId: string, table: LookupTable): Promise<Lookup[]> {
-  const columns = table === 'equipment_categories' ? 'id, name, consumable' : 'id, name'
+  const columns = table === 'equipment_categories' ? 'id, name, consumable, color' : 'id, name'
   const { data, error } = await getSupabase().from(table).select(columns).eq('company_id', companyId).order('name')
   if (error) throw error
   return data as unknown as Lookup[]
@@ -148,6 +149,12 @@ export async function deleteLookup(table: LookupTable, id: string) {
   const { data, error } = await getSupabase().from(table).delete().eq('id', id).select('id')
   if (error) throw error
   if (data.length === 0) throw new Error('Not deleted')
+}
+
+export async function setCategoryColor(id: string, color: CategoryColor | null) {
+  const { data, error } = await getSupabase().from('equipment_categories').update({ color }).eq('id', id).select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
 }
 
 export async function setCategoryConsumable(id: string, consumable: boolean) {

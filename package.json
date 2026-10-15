@@ -1,7 +1,7 @@
 {
   "name": "rigtrack",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,7 +24,9 @@
     "react-dom": "^19.3.0",
     "react-hook-form": "^7.90.0",
     "react-router-dom": "^7.18.4",
+    "read-excel-file": "9.3.10",
     "tailwind-merge": "^3.7.0",
+    "write-excel-file": "4.1.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

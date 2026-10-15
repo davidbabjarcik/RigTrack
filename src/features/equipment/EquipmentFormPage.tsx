@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useId, useState, type ReactNode } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { Plus, Trash2 } from 'lucide-react'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -15,10 +16,14 @@ import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } fro
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import {
   asOptionalNumber,
+  AUDIO_TYPE_LABELS,
+  AUDIO_TYPES,
   COMMON_CONNECTORS,
   EQUIPMENT_KINDS,
   EQUIPMENT_STATUSES,
   equipmentSchema,
+  isAudio,
+  isLighting,
   isSimpleKind,
   KIND_LABELS,
   LIGHT_SOURCE_LABELS,
@@ -51,6 +56,8 @@ const EMPTY: EquipmentFormValues = {
   lengthM: undefined,
   powerW: undefined,
   lightSource: '',
+  audioType: '',
+  dmxModes: [],
   macAddress: '',
   ipAddress: '',
   serviceIntervalMonths: undefined,
@@ -80,6 +87,8 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     lengthM: equipment.attributes.lengthM,
     powerW: equipment.attributes.powerW,
     lightSource: equipment.attributes.lightSource ?? '',
+    audioType: equipment.attributes.audioType ?? '',
+    dmxModes: equipment.attributes.dmxModes ?? [],
     macAddress: equipment.macAddress,
     ipAddress: equipment.ipAddress,
     serviceIntervalMonths: equipment.serviceIntervalMonths ?? undefined,
@@ -127,6 +136,11 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
     defaultValues: equipment ? toFormValues(equipment, categories, locations) : EMPTY,
   })
   const kind = useWatch({ control, name: 'kind' })
+  const categoryText = useWatch({ control, name: 'category' })
+  // Časť Svetlo sa ukáže pri druhu Svetlo aj pri kategórii, ktorá je o svetlách.
+  const lighting = isLighting(kind, categoryText ?? '')
+  const audio = isAudio(kind, categoryText ?? '')
+  const dmxModes = useFieldArray({ control, name: 'dmxModes' })
   const trackUnits = useWatch({ control, name: 'trackUnits' })
   const unitIdsText = useWatch({ control, name: 'unitIds' })
   const lengthM = useWatch({ control, name: 'lengthM' })
@@ -201,7 +215,21 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         </Group>
       )}
 
-      {kind === 'light' && (
+      {kind === 'truss' && (
+        <Group title="Hliník / truss">
+          <Field
+            label="Dĺžka dielu (m)"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.5"
+            error={errors.lengthM?.message}
+            {...register('lengthM', asOptionalNumber)}
+          />
+        </Group>
+      )}
+
+      {lighting && (
         <Group title="Svetlo">
           <Field
             label="Výkon (W)"
@@ -219,11 +247,64 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               </option>
             ))}
           </SelectField>
+          <fieldset className="sm:col-span-2">
+            <legend className="mb-1.5 text-sm font-medium">DMX módy</legend>
+            {dmxModes.fields.length === 0 && (
+              <p className="mb-2 text-sm text-muted-foreground">Napríklad Basic 8 ch, Standard 16 ch, Extended 24 ch.</p>
+            )}
+            <ul className="flex flex-col gap-2">
+              {dmxModes.fields.map((field, index) => (
+                <li key={field.id} className="flex items-end gap-2">
+                  <Field
+                    label="Názov módu"
+                    hideLabel={index > 0}
+                    placeholder="napr. Standard"
+                    maxLength={40}
+                    className="flex-1"
+                    error={errors.dmxModes?.[index]?.name?.message}
+                    {...register(`dmxModes.${index}.name`)}
+                  />
+                  <Field
+                    label="Kanály"
+                    hideLabel={index > 0}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={512}
+                    step={1}
+                    className="w-24"
+                    error={errors.dmxModes?.[index]?.channels?.message}
+                    {...register(`dmxModes.${index}.channels`, { valueAsNumber: true })}
+                  />
+                  <Button variant="ghost" aria-label={`Odobrať mód ${index + 1}`} onClick={() => dmxModes.remove(index)}>
+                    <Trash2 className="size-4" aria-hidden />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+            {errors.dmxModes?.message && (
+              <p role="alert" className="mt-1.5 text-sm text-destructive">
+                {errors.dmxModes.message}
+              </p>
+            )}
+            <Button variant="outline" size="sm" className="mt-2" onClick={() => dmxModes.append({ name: '', channels: Number.NaN })}>
+              <Plus className="size-4" aria-hidden />
+              Pridať mód
+            </Button>
+          </fieldset>
         </Group>
       )}
 
-      {kind === 'audio' && (
+      {audio && (
         <Group title="Zvuk">
+          <SelectField label="Typ" error={errors.audioType?.message} {...register('audioType')}>
+            <option value="">— nezadané —</option>
+            {AUDIO_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {AUDIO_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </SelectField>
           <Field
             label="Výkon (W)"
             type="number"

@@ -15,9 +15,12 @@ import {
   removeMember,
   updateMemberRole,
 } from '@/features/companies/api'
+import { BackupSettings } from '@/features/backup/BackupSettings'
 import { CaseTemplateSettings } from '@/features/cases/CaseTemplateSettings'
+import { StageSettings } from '@/features/stage/StageSettings'
 import { useCompany, type Membership } from '@/features/companies/company-context'
 import { BrandingSettings } from '@/features/companies/BrandingSettings'
+import { DemoSettings } from '@/features/companies/DemoSettings'
 import { LookupSettings } from '@/features/equipment/LookupSettings'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { PermissionsSettings } from '@/features/permissions/PermissionsSettings'
@@ -25,6 +28,7 @@ import { can } from '@/lib/permissions'
 import { ROLE_LABELS, ROLES, type Role } from '@/lib/roles'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { APP_VERSION } from '@/lib/version'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -237,6 +241,7 @@ export function SettingsPage() {
     { id: 'members', label: 'Členovia', shown: true },
     { id: 'permissions', label: 'Oprávnenia', shown: isAdmin },
     { id: 'lists', label: 'Zoznamy', shown: can(company, 'lookups.manage') },
+    { id: 'stage', label: 'Nivtec', shown: can(company, 'lookups.manage') },
     { id: 'account', label: 'Účet', shown: true },
   ].filter((tab) => tab.shown)
   // Záložka je v adrese, aby sa na ňu dalo odkázať a aby ju prežilo obnovenie stránky.
@@ -282,6 +287,12 @@ export function SettingsPage() {
           {isAdmin && (
             <Section title="Logo a štítky na cases">
               <BrandingSettings companyId={company.companyId} />
+            </Section>
+          )}
+
+          {isAdmin && (
+            <Section title="Záloha a export všetkého">
+              <BackupSettings companyId={company.companyId} companyName={company.companyName} />
             </Section>
           )}
 
@@ -332,15 +343,31 @@ export function SettingsPage() {
 
       {tab === 'lists' && <InventoryLookups companyId={company.companyId} />}
 
-      {tab === 'account' && (
-        <Section title="Účet">
-          <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
-            <p className="min-w-0 truncate">{user.email}</p>
-            <Button variant="outline" size="sm" onClick={() => void getSupabase().auth.signOut()}>
-              Odhlásiť sa
-            </Button>
-          </div>
+      {tab === 'stage' && (
+        <Section title="Pódium Nivtec">
+          <StageSettings companyId={company.companyId} />
         </Section>
+      )}
+
+      {tab === 'account' && (
+        <>
+          <Section title="Účet">
+            <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
+              <p className="min-w-0 truncate">{user.email}</p>
+              <Button variant="outline" size="sm" onClick={() => void getSupabase().auth.signOut()}>
+                Odhlásiť sa
+              </Button>
+            </div>
+          </Section>
+          <Section title="Demo">
+            <DemoSettings userId={user.id} />
+          </Section>
+          <Section title="O aplikácii">
+            <p className="rounded-xl border bg-surface p-4 text-sm">
+              RigTrack <strong>verzia {APP_VERSION}</strong>
+            </p>
+          </Section>
+        </>
       )}
     </>
   )

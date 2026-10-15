@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Cable, ChevronRight, Plus, Search } from 'lucide-react'
+import { Cable, ChevronRight, FileSpreadsheet, Network, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -24,6 +24,7 @@ import {
   STATUS_LABELS,
   type EquipmentFilter,
 } from './model'
+import { colorOf, COLOR_CLASSES } from './categoryColors'
 import { PhotoThumb } from './PhotoThumb'
 import { StatusBadge } from './StatusBadge'
 import { useEquipmentLookups } from './useEquipmentLookups'
@@ -63,18 +64,28 @@ export function EquipmentListPage() {
         title="Technika"
         description={list.data ? `${visible.length} z ${all.length} položiek` : undefined}
         action={
-          canWrite && (
-            <div className="flex flex-wrap justify-end gap-2">
-              <LinkButton to="/equipment/new-cables" variant="outline">
-                <Cable className="size-4" aria-hidden />
-                Sada káblov
-              </LinkButton>
-              <LinkButton to="/equipment/new">
-                <Plus className="size-4" aria-hidden />
-                Pridať
-              </LinkButton>
-            </div>
-          )
+          <div className="flex flex-wrap justify-end gap-2">
+            <LinkButton to="/equipment/excel" variant="outline">
+              <FileSpreadsheet className="size-4" aria-hidden />
+              Excel
+            </LinkButton>
+            <LinkButton to="/equipment/network" variant="outline">
+              <Network className="size-4" aria-hidden />
+              IP / MAC
+            </LinkButton>
+            {canWrite && (
+              <>
+                <LinkButton to="/equipment/new-cables" variant="outline">
+                  <Cable className="size-4" aria-hidden />
+                  Sada káblov
+                </LinkButton>
+                <LinkButton to="/equipment/new">
+                  <Plus className="size-4" aria-hidden />
+                  Pridať
+                </LinkButton>
+              </>
+            )}
+          </div>
         }
       />
 
@@ -150,6 +161,7 @@ export function EquipmentListPage() {
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {visible.map((item) => {
+            const color = colorOf(item, categories)
             const details = [
               [item.manufacturer, item.model].filter(Boolean).join(' '),
               ...describeAttributes(item),
@@ -161,7 +173,9 @@ export function EquipmentListPage() {
             const servicing = inService.get(item.id) ?? 0
             return (
               <li key={item.id}>
-                <Link to={`/equipment/${item.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
+                <Link to={`/equipment/${item.id}`} className="relative flex min-h-16 items-center gap-3 py-3 pr-4 pl-5 hover:bg-muted">
+                  {/* Farba kategórie: prúžok úplne vľavo pred fotkou. */}
+                  {color && <span className={`absolute inset-y-0 left-0 w-1.5 ${COLOR_CLASSES[color]}`} aria-hidden />}
                   <PhotoThumb url={thumbs[item.photoPath]} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{item.name}</span>

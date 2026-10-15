@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { CREDITS, type CreditIcon } from '@/lib/credits'
 import { cn } from '@/lib/utils'
+import { APP_VERSION } from '@/lib/version'
 
 // Značky sietí nie sú v sade ikon aplikácie, preto sú tu ako vlastné SVG.
 const ICONS: Record<CreditIcon, { viewBox: string; filled: boolean; shape: ReactNode }> = {
@@ -51,6 +52,7 @@ export function Credits({ className }: { className?: string }) {
       <span>
         Made by {CREDITS.author} © {new Date().getFullYear()}
       </span>
+      <span>RigTrack v{APP_VERSION}</span>
       <span className="flex items-center gap-1">
         {links.map((link) => {
           const icon = ICONS[link.icon]

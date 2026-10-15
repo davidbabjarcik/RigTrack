@@ -34,6 +34,8 @@ export type ShoppingItem = {
   orderNumber: string
   note: string
   createdBy: string | null
+  /** Fotka položky (napr. z obchodu); prázdna = bez fotky. */
+  photoPath: string
 }
 
 const text = (max: number) => z.string().trim().max(max, `Najviac ${max} znakov`)

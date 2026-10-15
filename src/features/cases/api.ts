@@ -1,4 +1,5 @@
 import { resolveLookup } from '@/features/equipment/api'
+import { storeCompanyPhoto } from '@/features/equipment/photo'
 import type { Lookup } from '@/features/equipment/model'
 import { getSupabase } from '@/lib/supabase/client'
 import type { Case, CaseCheck, CaseFormValues } from './model'
@@ -17,6 +18,7 @@ type Row = {
   label_category: string
   label_title: string
   label_photo_path: string
+  photo_path: string
   weight_kg: number | null
   width_cm: number | null
   length_cm: number | null
@@ -27,7 +29,7 @@ type Row = {
   updated_at: string
 }
 
-const COLUMNS = 'id, name, inventory_number, location_id, label_number, label_category, label_title, label_photo_path, weight_kg, width_cm, length_cm, depth_cm, spot_id, spot_level, note, updated_at'
+const COLUMNS = 'id, name, inventory_number, location_id, label_number, label_category, label_title, label_photo_path, photo_path, weight_kg, width_cm, length_cm, depth_cm, spot_id, spot_level, note, updated_at'
 
 // PostgREST môže numeric vrátiť ako číslo aj ako text.
 const toNumber = (value: number | string | null) => (value === null ? null : Number(value))
@@ -57,6 +59,7 @@ export async function fetchCases(companyId: string): Promise<Case[]> {
     labelCategory: row.label_category,
     labelTitle: row.label_title,
     labelPhotoPath: row.label_photo_path,
+    photoPath: row.photo_path,
     weightKg: toNumber(row.weight_kg),
     widthCm: toNumber(row.width_cm),
     lengthCm: toNumber(row.length_cm),
@@ -128,6 +131,14 @@ export async function saveCaseLabelCustom(companyId: string, id: string, fields:
     .eq('company_id', companyId)
     .eq('id', id)
     .select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
+}
+
+/** Fotka case (nie štítku): uloží súbor aj s náhľadom a zapíše ho k case. */
+export async function setCasePhoto(companyId: string, caseId: string, file: File) {
+  const path = await storeCompanyPhoto(companyId, `case-${caseId}`, file, { thumb: true })
+  const { data, error } = await getSupabase().from('cases').update({ photo_path: path }).eq('company_id', companyId).eq('id', caseId).select('id')
   if (error) throw error
   if (data.length === 0) throw new Error('Not updated')
 }

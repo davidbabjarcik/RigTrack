@@ -6,7 +6,7 @@ const THUMB_SIDE = 240
 const SIGNED_URL_SECONDS = 3600
 
 /** Zmenší obrázok na najviac `maxSide` px a uloží ako JPEG, aby fotky z mobilu nemali niekoľko MB. */
-async function shrink(file: File, maxSide: number, quality: number): Promise<Blob> {
+export async function shrinkImage(file: File, maxSide: number, quality: number): Promise<Blob> {
   const bitmap = await createImageBitmap(file)
   const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height))
   const canvas = document.createElement('canvas')
@@ -33,7 +33,7 @@ export async function uploadEquipmentPhoto(companyId: string, equipmentId: strin
   const storage = getSupabase().storage.from(BUCKET)
   // Nový názov pri každom nahratí: prehliadač tak nikdy neukáže starú fotku z cache.
   const path = `${companyId}/${equipmentId}-${Date.now()}.jpg`
-  const [photo, thumb] = await Promise.all([shrink(file, MAX_SIDE, 0.85), shrink(file, THUMB_SIDE, 0.8)])
+  const [photo, thumb] = await Promise.all([shrinkImage(file, MAX_SIDE, 0.85), shrinkImage(file, THUMB_SIDE, 0.8)])
   const upload = await storage.upload(path, photo, { contentType: 'image/jpeg' })
   if (upload.error) throw upload.error
   // Náhľad je len zrýchlenie; ak sa nenahrá, zoznamy použijú veľkú fotku.
@@ -49,10 +49,10 @@ export async function uploadEquipmentPhoto(companyId: string, equipmentId: strin
 export async function storeCompanyPhoto(companyId: string, name: string, file: File, options: { thumb?: boolean } = {}): Promise<string> {
   const storage = getSupabase().storage.from(BUCKET)
   const path = `${companyId}/${name}-${Date.now()}.jpg`
-  const upload = await storage.upload(path, await shrink(file, MAX_SIDE, 0.85), { contentType: 'image/jpeg' })
+  const upload = await storage.upload(path, await shrinkImage(file, MAX_SIDE, 0.85), { contentType: 'image/jpeg' })
   if (upload.error) throw upload.error
   // Náhľad do zoznamov je len zrýchlenie; ak sa nenahrá, použije sa veľká fotka.
-  if (options.thumb) await storage.upload(thumbPath(path), await shrink(file, THUMB_SIDE, 0.8), { contentType: 'image/jpeg' })
+  if (options.thumb) await storage.upload(thumbPath(path), await shrinkImage(file, THUMB_SIDE, 0.8), { contentType: 'image/jpeg' })
   return path
 }
 
@@ -60,7 +60,7 @@ export async function storeCompanyPhoto(companyId: string, name: string, file: F
  * Odstráni fotku záznamu do koša: súbor ostáva v úložisku, kým ju admin neobnoví alebo kým
  * sa kôš nevyčistí. `owner` hovorí, čia fotka to je.
  */
-export async function trashPhoto(owner: 'equipment' | 'vehicles' | 'cases', ownerId: string) {
+export async function trashPhoto(owner: 'equipment' | 'vehicles' | 'cases' | 'orders' | 'case_photo' | 'shopping_items', ownerId: string) {
   const { error } = await getSupabase().rpc('trash_photo', { _owner_table: owner, _owner_id: ownerId })
   if (error) throw error
 }

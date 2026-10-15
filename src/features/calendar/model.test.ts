@@ -4,7 +4,7 @@ import type { Loan } from '@/features/loans/model'
 import type { ShoppingItem } from '@/features/shopping/model'
 import type { Task } from '@/features/tasks/model'
 import type { Vehicle } from '@/features/vehicles/model'
-import type { CompanyEvent } from '@/features/events/model'
+import { EMPTY_EVENT_DETAILS, type CompanyEvent } from '@/features/events/model'
 import { addDays, buildAgenda, entriesByDay, groupAgenda, monthGridDays, shiftMonth, type AgendaSources } from './model'
 
 const today = '2026-10-13'
@@ -27,7 +27,7 @@ const equipment = (patch: Partial<Equipment>): Equipment => ({
 })
 const shopping = (patch: Partial<ShoppingItem>): ShoppingItem => ({
   id: 's1', list: 'buy', name: 'Kvapalina', quantity: 1, unitPrice: null, supplier: '', url: '', priority: 'normal', dueOn: null,
-  status: 'planned', assigneeId: null, orderNumber: '', note: '', createdBy: null, ...patch,
+  status: 'planned', assigneeId: null, orderNumber: '', note: '', createdBy: null, photoPath: '', ...patch,
 })
 const none: AgendaSources = { events: [], loans: [], vehicles: [], tasks: [], equipment: [], shopping: [] }
 const agenda = (patch: Partial<AgendaSources>) => buildAgenda({ ...none, ...patch }, today).map((e) => `${e.date} ${e.kind} ${e.detail}`)
@@ -68,7 +68,7 @@ describe('buildAgenda', () => {
 describe('events in the agenda', () => {
   const event = (patch: object) => ({
     id: 'ev', name: 'Festival', client: '', venue: 'Amfiteáter', startsOn: '2026-11-01', endsOn: '2026-11-03', status: 'confirmed' as const,
-    note: '', equipment: [], crew: [], ...patch,
+    note: '', equipment: [], crew: [], ...EMPTY_EVENT_DETAILS, ...patch,
   })
 
   it('shows live events on their first day and skips cancelled or finished ones', () => {
@@ -122,7 +122,7 @@ describe('month grid', () => {
 
   it('puts events and loans on every day they last, clipped to the range', () => {
     const festival: CompanyEvent = {
-      id: 'e1', name: 'Festival', client: '', venue: 'Prešov', startsOn: '2026-09-29', endsOn: '2026-10-02', status: 'done', note: '', equipment: [], crew: [],
+      id: 'e1', name: 'Festival', client: '', venue: 'Prešov', startsOn: '2026-09-29', endsOn: '2026-10-02', status: 'done', note: '', equipment: [], crew: [], ...EMPTY_EVENT_DETAILS,
     }
     const days = entriesByDay(
       {

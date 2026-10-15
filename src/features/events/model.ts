@@ -16,7 +16,30 @@ export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
 export type EventEquipment = { equipmentId: string; quantity: number; caseId: string | null }
 export type EventCrew = { id: string; memberId: string | null; name: string; role: string }
 
-export type CompanyEvent = {
+/** Údaje eventu do tlače: organizátor, popis a časy prvého dňa („HH:MM“ alebo prázdne). */
+export type EventDetails = {
+  organizer: string
+  organizerPerson: string
+  organizerPhone: string
+  organizerEmail: string
+  description: string
+  getInTime: string
+  showTime: string
+  showEndTime: string
+}
+
+export const EMPTY_EVENT_DETAILS: EventDetails = {
+  organizer: '',
+  organizerPerson: '',
+  organizerPhone: '',
+  organizerEmail: '',
+  description: '',
+  getInTime: '',
+  showTime: '',
+  showEndTime: '',
+}
+
+export type CompanyEvent = EventDetails & {
   id: string
   name: string
   client: string
@@ -29,10 +52,12 @@ export type CompanyEvent = {
   crew: EventCrew[]
 }
 
-export type EventDocument = { id: string; name: string; path: string; sizeBytes: number; createdAt: string }
+/** Dokument eventu (rider, stage plot…) alebo fotka eventu. */
+export type EventDocument = { id: string; name: string; path: string; sizeBytes: number; createdAt: string; isPhoto: boolean }
 
 const text = (max: number) => z.string().trim().max(max, `Najviac ${max} znakov`)
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Zadajte dátum')
+const time = z.string().regex(/^(\d{2}:\d{2})?$/, 'Zadajte čas')
 
 export const eventSchema = z
   .object({
@@ -43,6 +68,14 @@ export const eventSchema = z
     endsOn: date,
     status: z.enum(EVENT_STATUSES),
     note: text(4000),
+    organizer: text(120),
+    organizerPerson: text(120),
+    organizerPhone: text(40),
+    organizerEmail: text(120).refine((email) => email === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email), 'Neplatný e-mail'),
+    description: text(8000),
+    getInTime: time,
+    showTime: time,
+    showEndTime: time,
   })
   .superRefine((event, ctx) => {
     if (event.startsOn && event.endsOn && event.endsOn < event.startsOn) {
@@ -50,6 +83,12 @@ export const eventSchema = z
     }
   })
 export type EventFormValues = z.infer<typeof eventSchema>
+
+/** Časy eventu jedným riadkom: „príchod 14:00 · program 19:30 – 23:00“. */
+export function describeTimes(event: Pick<EventDetails, 'getInTime' | 'showTime' | 'showEndTime'>) {
+  const program = event.showTime && event.showEndTime ? `${event.showTime} – ${event.showEndTime}` : event.showTime || (event.showEndTime && `do ${event.showEndTime}`)
+  return [event.getInTime && `príchod / stavba ${event.getInTime}`, program && `program ${program}`].filter(Boolean).join(' · ')
+}
 
 /** Event, ktorý ešte drží techniku: plánovaný alebo potvrdený. */
 export function isLive(event: Pick<CompanyEvent, 'status'>) {
@@ -89,6 +128,21 @@ export function busyElsewhere(
     plannedOnEvents(others, equipmentId, event.startsOn, event.endsOn) +
     busyQuantity(loans, equipmentId, event.startsOn, event.endsOn, today)
   )
+}
+
+/**
+ * Na koľkých eventoch bol case od poslednej kontroly obsahu (bez zrušených a bez tohto eventu).
+ * `checkedOn` je dátum poslednej kontroly; null = case ešte nikto nekontroloval.
+ */
+export function eventsSinceCheck(caseId: string, checkedOn: string | null, events: CompanyEvent[], currentEventId: string, today: string) {
+  return events.filter(
+    (event) =>
+      event.id !== currentEventId &&
+      event.status !== 'cancelled' &&
+      event.startsOn <= today &&
+      (checkedOn === null || event.startsOn > checkedOn) &&
+      event.equipment.some((item) => item.caseId === caseId),
+  ).length
 }
 
 /** 1536 → „1,5 kB“ */

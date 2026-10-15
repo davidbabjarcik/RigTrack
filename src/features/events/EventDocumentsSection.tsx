@@ -14,7 +14,12 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
   const fileInput = useRef<HTMLInputElement>(null)
   const [tooLarge, setTooLarge] = useState(false)
   const key = eventKeys.documents(companyId, eventId)
-  const documents = useQuery({ queryKey: key, queryFn: () => fetchEventDocuments(companyId, eventId) })
+  // Fotky eventu majú vlastnú sekciu; dotaz je spoločný.
+  const documents = useQuery({
+    queryKey: key,
+    queryFn: () => fetchEventDocuments(companyId, eventId),
+    select: (all) => all.filter((document) => !document.isPhoto),
+  })
   const refresh = () => queryClient.invalidateQueries({ queryKey: key })
 
   const upload = useMutation({ mutationFn: (file: File) => uploadEventDocument(companyId, eventId, file), onSettled: refresh })

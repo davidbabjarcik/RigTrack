@@ -8,6 +8,8 @@ import {
   equipmentSchema,
   filterEquipment,
   hoursState,
+  isAudio,
+  isLighting,
   isValidIp,
   needsRestock,
   NO_CASE,
@@ -110,6 +112,8 @@ describe('equipmentSchema', () => {
     quantity: 1,
     trackUnits: false,
     unitIds: '',
+    dmxModes: [],
+    audioType: '',
     status: 'available',
     connector: '',
     lightSource: '',
@@ -140,7 +144,7 @@ describe('network addresses', () => {
   })
 
   it('validates MAC and IP in the form', () => {
-    const base = { name: 'x', kind: 'general', category: '', location: '', caseId: '', manufacturer: '', model: '', serialNumber: '', inventoryNumber: '', quantity: 1, trackUnits: false, unitIds: '', status: 'available', connector: '', lightSource: '', lastServiceOn: '', note: '' }
+    const base = { name: 'x', kind: 'general', category: '', location: '', caseId: '', manufacturer: '', model: '', serialNumber: '', inventoryNumber: '', quantity: 1, trackUnits: false, unitIds: '', dmxModes: [], audioType: '', status: 'available', connector: '', lightSource: '', lastServiceOn: '', note: '' }
     const ok = (macAddress: string, ipAddress: string) => equipmentSchema.safeParse({ ...base, macAddress, ipAddress }).success
     expect(ok('00-1a-2b-3c-4d-5e', '192.168.1.10')).toBe(true)
     expect(ok('', '')).toBe(true)
@@ -160,9 +164,31 @@ describe('kind-specific data', () => {
     expect(attributesFor({ ...values, kind: 'general' })).toEqual({})
   })
 
+  it('treats a lighting category like a light and keeps its DMX modes', () => {
+    const modes = [{ name: ' Standard ', channels: 16 }, { name: 'Extended', channels: 24 }]
+    expect(attributesFor({ ...values, kind: 'light', dmxModes: modes })).toEqual({
+      powerW: 200,
+      lightSource: 'led',
+      dmxModes: [{ name: 'Standard', channels: 16 }, { name: 'Extended', channels: 24 }],
+    })
+    expect(attributesFor({ ...values, kind: 'general', category: 'Svetlá – hlavy', dmxModes: modes }).dmxModes).toHaveLength(2)
+    expect(attributesFor({ ...values, kind: 'general', category: 'Káble', dmxModes: modes })).toEqual({})
+    expect(isLighting('general', 'Moving Light')).toBe(true)
+    expect(isLighting('general', 'Káble')).toBe(false)
+  })
+
+  it('keeps the audio type for sound gear, also when only the category says so', () => {
+    expect(attributesFor({ ...values, kind: 'audio', audioType: 'microphone' }).audioType).toBe('microphone')
+    expect(attributesFor({ ...values, kind: 'general', category: 'Zvuk – mikrofóny', audioType: 'microphone' }).audioType).toBe('microphone')
+    expect(attributesFor({ ...values, kind: 'general', category: 'Káble', audioType: 'microphone' }).audioType).toBeUndefined()
+    expect(describeAttributes({ attributes: { audioType: 'amplifier', powerW: 2000 } })).toEqual(['Zosilňovač', '2000 W'])
+    expect(isAudio('general', 'Sound')).toBe(true)
+  })
+
   it('describes the data briefly', () => {
     expect(describeAttributes({ attributes: { connector: 'XLR', lengthM: 1.5 } })).toEqual(['XLR', '1,5 m'])
     expect(describeAttributes({ attributes: { powerW: 200, lightSource: 'discharge' } })).toEqual(['200 W', 'Výbojka'])
+    expect(describeAttributes({ attributes: { dmxModes: [{ name: 'Basic', channels: 8 }, { name: 'Full', channels: 24 }] } })).toEqual(['DMX 8/24 ch'])
     expect(describeAttributes({ attributes: {} })).toEqual([])
   })
 })

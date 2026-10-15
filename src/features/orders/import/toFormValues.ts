@@ -24,7 +24,9 @@ export function invoiceToFormValues(
   if (invoice.total !== null) noteParts.push(`Zaplatené podľa faktúry: ${formatMoney(invoice.total, currency)}.`)
 
   return {
+    source: 'shop',
     supplier: invoice.supplier,
+    seller: '',
     orderNumber: invoice.orderNumber,
     orderedAt: invoice.orderedAt ?? today,
     currency,

@@ -45,7 +45,11 @@ export function PurchaseHistory({ companyId, equipmentId }: { companyId: string;
                     <span className="ml-2 text-xs font-normal text-muted-foreground">posledný</span>
                   )}
                 </span>
-                <span className="block truncate text-sm text-muted-foreground">{purchase.supplier}</span>
+                <span className="block truncate text-sm text-muted-foreground">
+                  {purchase.source === 'marketplace'
+                    ? [`bazár ${purchase.supplier}`, purchase.seller].filter(Boolean).join(' · ')
+                    : purchase.supplier}
+                </span>
               </span>
               <span className="shrink-0 text-right">
                 <span className="block font-medium">

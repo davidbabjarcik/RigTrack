@@ -5,12 +5,14 @@ import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { discardPhotoFile } from '@/features/equipment/photo'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 import { formatDate, formatMoney } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { deleteOrder, fetchOrder, orderKeys } from './api'
-import { supplierProductUrl } from './model'
+import { SOURCE_LABELS, supplierProductUrl } from './model'
+import { OrderPhoto } from './OrderPhoto'
 import { SupplierBadge } from './SupplierBadge'
 
 export function OrderDetailPage() {
@@ -40,7 +42,12 @@ export function OrderDetailPage() {
   )
 
   const remove = useMutation({
-    mutationFn: () => deleteOrder(companyId, id),
+    mutationFn: async () => {
+      const photoPath = order.data?.photoPath
+      await deleteOrder(companyId, id)
+      // Súbor už nemá majiteľa; zlyhanie upratania nevadí.
+      if (photoPath) await discardPhotoFile(photoPath).catch(() => {})
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
       navigate('/orders', { replace: true })
@@ -75,11 +82,18 @@ export function OrderDetailPage() {
       {back}
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <SupplierBadge supplier={data.supplier} />
+          <SupplierBadge supplier={data.supplier} source={data.source} />
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight break-words">{data.supplier}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {[formatDate(data.orderedAt), data.orderNumber && `č. ${data.orderNumber}`].filter(Boolean).join(' · ')}
+              {[
+                data.source === 'marketplace' && `${SOURCE_LABELS.marketplace}, kúpené ${formatDate(data.orderedAt)}`,
+                data.source === 'shop' && formatDate(data.orderedAt),
+                data.seller && `predajca ${data.seller}`,
+                data.orderNumber && `č. ${data.orderNumber}`,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             </p>
           </div>
         </div>
@@ -104,6 +118,10 @@ export function OrderDetailPage() {
           Objednávku sa nepodarilo odstrániť.
         </p>
       )}
+
+      <div className="mb-6">
+        <OrderPhoto companyId={companyId} orderId={data.id} name={data.supplier} photoPath={data.photoPath} canEdit={can(company, 'orders.edit')} />
+      </div>
 
       {data.note && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{data.note}</p>}
 

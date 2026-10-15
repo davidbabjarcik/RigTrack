@@ -16,6 +16,7 @@ const item = (patch: Partial<ShoppingItem>): ShoppingItem => ({
   orderNumber: '',
   note: '',
   createdBy: null,
+  photoPath: '',
   ...patch,
 })
 

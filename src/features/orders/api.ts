@@ -1,7 +1,8 @@
 import { resolveLookup } from '@/features/equipment/api'
+import { storeCompanyPhoto } from '@/features/equipment/photo'
 import type { Lookup } from '@/features/equipment/model'
 import { getSupabase } from '@/lib/supabase/client'
-import type { FoundLine, ItemMode, OrderDetail, OrderFormValues, OrderSummary, Purchase } from './model'
+import type { FoundLine, ItemMode, OrderDetail, OrderFormValues, OrderSource, OrderSummary, Purchase } from './model'
 
 export const orderKeys = {
   list: (companyId: string) => ['company', companyId, 'orders'] as const,
@@ -10,11 +11,14 @@ export const orderKeys = {
   purchases: (companyId: string, equipmentId: string) => ['company', companyId, 'equipment', equipmentId, 'purchases'] as const,
 }
 
-const OVERVIEW_COLUMNS = 'id, supplier, order_number, ordered_at, currency, note, item_count, total'
+const OVERVIEW_COLUMNS = 'id, source, supplier, seller, photo_path, order_number, ordered_at, currency, note, item_count, total'
 
 type OverviewRow = {
   id: string
+  source: OrderSource
   supplier: string
+  seller: string
+  photo_path: string
   order_number: string
   ordered_at: string
   currency: string
@@ -26,7 +30,10 @@ type OverviewRow = {
 function toSummary(row: OverviewRow): OrderSummary {
   return {
     id: row.id,
+    source: row.source,
     supplier: row.supplier,
+    seller: row.seller,
+    photoPath: row.photo_path,
     orderNumber: row.order_number,
     orderedAt: row.ordered_at,
     currency: row.currency,
@@ -119,7 +126,10 @@ export async function createOrder(companyId: string, values: OrderFormValues, ca
   const { data, error } = await getSupabase().rpc('create_order', {
     _company_id: companyId,
     _order: {
+      source: values.source,
       supplier: values.supplier,
+      // Predajca patrí len k nákupu z bazáru.
+      seller: values.source === 'marketplace' ? values.seller : '',
       order_number: values.orderNumber,
       ordered_at: values.orderedAt,
       currency: values.currency,
@@ -131,6 +141,18 @@ export async function createOrder(companyId: string, values: OrderFormValues, ca
   return data as string
 }
 
+/** Nahrá fotku nákupu aj s náhľadom do zoznamu a zapíše ju k objednávke. */
+export async function saveOrderPhoto(companyId: string, orderId: string, file: File) {
+  const path = await storeCompanyPhoto(companyId, `order-${orderId}`, file, { thumb: true })
+  await setOrderPhoto(companyId, orderId, path)
+}
+
+async function setOrderPhoto(companyId: string, id: string, path: string) {
+  const { data, error } = await getSupabase().from('orders').update({ photo_path: path }).eq('company_id', companyId).eq('id', id).select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
+}
+
 export async function deleteOrder(companyId: string, id: string) {
   const { data, error } = await getSupabase().from('orders').delete().eq('company_id', companyId).eq('id', id).select('id')
   if (error) throw error
@@ -140,14 +162,16 @@ export async function deleteOrder(companyId: string, id: string) {
 export async function fetchPurchases(companyId: string, equipmentId: string): Promise<Purchase[]> {
   const { data, error } = await getSupabase()
     .from('equipment_purchases')
-    .select('order_id, supplier, ordered_at, currency, quantity, unit_price, article_number')
+    .select('order_id, source, supplier, seller, ordered_at, currency, quantity, unit_price, article_number')
     .eq('company_id', companyId)
     .eq('equipment_id', equipmentId)
     .order('ordered_at', { ascending: false })
   if (error) throw error
   const rows = data as {
     order_id: string
+    source: OrderSource
     supplier: string
+    seller: string
     ordered_at: string
     currency: string
     quantity: number
@@ -156,7 +180,9 @@ export async function fetchPurchases(companyId: string, equipmentId: string): Pr
   }[]
   return rows.map((row) => ({
     orderId: row.order_id,
+    source: row.source,
     supplier: row.supplier,
+    seller: row.seller,
     orderedAt: row.ordered_at,
     currency: row.currency,
     quantity: row.quantity,

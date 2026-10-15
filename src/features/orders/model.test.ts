@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { EMPTY_ITEM, orderSchema, orderTotal, supplierProductUrl } from './model'
 
 const order = (items: object[]) => ({
+  source: 'shop',
   supplier: 'Thomann',
+  seller: '',
   orderNumber: '',
   orderedAt: '2026-10-12',
   currency: 'EUR',
@@ -42,6 +44,8 @@ describe('orderSchema', () => {
   it('requires at least one item, a supplier and a date', () => {
     expect(orderSchema.safeParse(order([])).success).toBe(false)
     expect(orderSchema.safeParse({ ...order([item({})]), supplier: ' ' }).success).toBe(false)
+    expect(orderSchema.safeParse({ ...order([item({})]), source: 'marketplace', supplier: 'Bazoš.sk', seller: 'Jozef' }).success).toBe(true)
+    expect(orderSchema.safeParse({ ...order([item({})]), source: 'auction' }).success).toBe(false)
     expect(orderSchema.safeParse({ ...order([item({})]), orderedAt: '' }).success).toBe(false)
   })
 

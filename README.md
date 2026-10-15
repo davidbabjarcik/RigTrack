@@ -1,112 +1,142 @@
 # RigTrack
 
-Webová aplikácia (PWA) pre firmu z event/AV prostredia: evidencia techniky a cases, výpožičky,
-eventy, servis, vozidlá, sklad a interná agenda firmy na jednom mieste. Beží v prehliadači na
-počítači aj na mobile a dá sa nainštalovať ako aplikácia.
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.0**
 
-Jedna inštalácia obslúži viac firiem; každá vidí len svoje dáta.
+RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
+deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
+servis, vozidlá, nákupy aj interná agenda firmy. Beží v prehliadači na počítači aj na mobile a dá sa
+nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – každá vidí len svoje dáta.
 
-**Technológie:** React + TypeScript + Vite, Tailwind CSS, React Router, TanStack Query,
-Supabase (prihlásenie, databáza, súbory), `vite-plugin-pwa`.
+| | |
+|---|---|
+| **Frontend** | React · TypeScript · Vite · Tailwind CSS · React Router · TanStack Query |
+| **Backend** | Supabase – prihlásenie, Postgres s Row Level Security, úložisko súborov |
+| **Ďalej** | `vite-plugin-pwa`, `pdfjs-dist` (čítanie PDF), `read-excel-file` / `write-excel-file` |
 
-## Čo aplikácia dokáže
+**Obsah:** [Čo je nové](#čo-je-nové) · [Moduly](#moduly) · [Bezpečnosť](#bezpečnosť) ·
+[Obmedzenia](#obmedzenia) · [Spustenie](#spustenie) · [Supabase](#pripojenie-supabase) ·
+[Nasadenie](#nasadenie-na-vlastný-server) · [Pre vývojárov](#pre-vývojárov)
 
-### Technika
+---
 
-- Evidencia zariadení, káblov, svetiel, zvuku a spotrebného materiálu; každý druh má vlastné polia
-  (dĺžka a konektory kábla, výkon svetla…), plus výrobca, model, sériové a inventárne číslo, MAC a IP.
-- Fotky (aj vložením zo schránky cez Ctrl+V), náhľady v zoznamoch.
-- **Evidencia po kusoch** — svetlá či repráky môžu mať očíslované kusy (#1, #2… alebo vlastné čísla,
-  napr. 1, 4, 8). Každý kus má vlastnú históriu servisu a výpožičiek a prehľad, kde práve je.
-  Háky, káble či viazačky sa rátajú len na počet.
-- Servisný interval a interval odčítania prevádzkových hodín s pripomienkami.
-- Zásoby: upozornenie „treba dokúpiť“, keď počet klesne pod zadanú hranicu.
-- Hromadné pridanie sady káblov podľa dĺžok, farebné značenie dĺžok.
-- Cena prenájmu za kus a deň (cenník pre výpožičky).
+## Čo je nové
+
+### 1.0 – 15. 10. 2026
+
+Prvá ucelená verzia. Oproti predošlým priebežným verziám pribudlo:
+
+- **Technika:** DMX módy svetiel, typy zvuku (mixpult, mikrofón, reprobox…), druhy *Hliník / truss*
+  a *Pódium*, farebný prúžok podľa kategórie, tabuľka **IP / MAC adries** s hľadaním a kontrolou duplicít.
+- **Excel:** export a import techniky a cases v jednom súbore – hárok na každú kategóriu, prázdna šablóna
+  s vysvetlivkami, náhľad a kontrola chýb pred zápisom.
+- **Eventy:** organizátor, popis a časy, fotky, **tlač A4 / PDF** s checklistom techniky,
+  **príjmy z akcie** (hotovosť / účet / faktúra cez firmu, s DPH aj bez), **import techniky z Capture**
+  (Equipment Report v HTML alebo PDF), upozornenie na case bez kontroly obsahu.
+- **Pódium Nivtec** *(vo vývoji)*: kalkulačka dosiek, nôh, schodov, líšt, plachiet, zábradlia, výstuh
+  a príslušenstva s pôdorysom a pridaním na event.
+- **Objednávky:** nákupy z bazárov (Bazoš, Kleinanzeigen, Willhaben, eBay…) a fotka nákupu.
+- **Fotky** ku cases a k položkám „kúpiť / chceme časom“.
+- **Demo firma** pre každého používateľa s resetom do pôvodného stavu.
+- **Záloha celej firmy** ako ZIP s Excelmi.
+- Číslo verzie v pätičke a v nastaveniach.
+
+Potrebné migrácie: do `0043`.
+
+---
+
+## Moduly
+
+### 🎛️ Technika
+
+- Zariadenia, káble, svetlá, zvuk, hliník/truss, pódium a spotrebný materiál – každý druh má vlastné polia
+  (dĺžka a konektor kábla, výkon a zdroj svetla, **DMX módy**, typ zvuku, dĺžka trussu…).
+- Výrobca, model, sériové a inventárne číslo, MAC a IP; fotky aj cez Ctrl+V, náhľady v zoznamoch.
+- **Farebný prúžok** podľa kategórie (svetlá zelené, zvuk ružový, pódium žlté, truss červený) – nastaviteľný.
+- **Evidencia po kusoch** (#1, #2… alebo vlastné čísla 1, 4, 8) s vlastnou históriou každého kusu;
+  háky, káble či viazačky sa rátajú len na počet.
+- Servisné intervaly a odčítanie prevádzkových hodín s pripomienkami, hranica „treba dokúpiť“.
+- Sada káblov naraz podľa dĺžok s farebným značením, cenník prenájmu za deň.
+- **IP / MAC tabuľka** zoradená podľa IP, hľadanie v ľubovoľnom zápise, upozornenie na rovnakú IP.
+- **Excel** – export a import techniky aj cases (hárok na kategóriu, hárok „Cases“, prázdna šablóna).
 - Pri každej technike história nákupov, servisu, výpožičiek a eventov.
 
-### Cases
+### 📦 Cases a sklad
 
-- Obsah, hmotnosť, rozmery, umiestnenie, kontroly obsahu (kto a kedy kontroloval).
-- **Šablóny** — typ case s rozmermi sa zadá raz; nový case (aj viac kusov naraz) vznikne výberom šablóny.
-- **Flight case štítok** (PNG) s logom firmy, hlavným a vedľajšími prvkami alebo vlastným názvom a fotkou.
-- **Hárok FLIGHTCASE CONTENT** (A4) s farebne rozlíšenými dĺžkami káblov.
-- Upozornenie na techniku, ktorá nie je v žiadnom case.
+- Obsah, hmotnosť, rozmery, umiestnenie, fotka a kontroly obsahu (kto a kedy).
+- **Šablóny cases** – rozmery sa zadajú raz, nové cases (aj viac naraz) vzniknú výberom šablóny.
+- **Flight case štítok** (PNG) a hárok **FLIGHTCASE CONTENT** (A4) s farbami dĺžok káblov.
+- **Plán skladu** *(vo vývoji)* – regály, palety a zóny zhora, kde ktorý case leží.
 
-### Sklad
+### 🔁 Výpožičky
 
-- Pôdorys skladu zhora: regály (s poschodiami), palety a zóny nakreslené myšou alebo prstom.
-- Uloženie cases na miesta, vyhľadanie case na pláne, zoznam cases bez miesta.
+- Rezervácia → vydanie → vrátenie; kolízie termínov (aj s eventmi) stráži databáza.
+- Výber celých cases alebo jednotlivých kusov, pri technike po kusoch konkrétne čísla.
+- Ceny z cenníka, účtované dni, dohodnutá cena, kaucia, IČO a adresa.
+- Pri vrátení sa označia poškodenia; poškodeným kusom sa otvorí servisný záznam.
+- **Zapožičacia listina** na tlač / PDF s dátumami, menami a poškodeniami.
 
-### Výpožičky
+### 🎪 Eventy
 
-- Rezervácia → vydanie → vrátenie. Kolízie termínov stráži databáza, vrátane techniky na eventoch.
-- Výber cez **cases** (celý case, alebo jednotlivé kusy z neho) alebo cez zoznam **zariadení**.
-- Pri technike po kusoch sa vyberajú konkrétne kusy; ten istý kus nemôže byť naraz na dvoch výpožičkách.
-- **Ceny** — cena za kus a deň z cenníka, účtované dni, dohodnutá cena, kaucia; IČO a adresa vypožičiavateľa.
-- Rezerváciu možno upraviť, kým sa technika nevydá.
-- Pri vrátení sa označí, čo je poškodené (konkrétne kusy alebo počet); poškodeným kusom sa otvorí servisný záznam.
-- **Zapožičacia listina** na tlač alebo uloženie do PDF: po vydaní a vrátení sa doplní dátum, meno
-  toho, kto odovzdal a prijal, a zoznam poškodení.
+- Technika (aj celé cases), posádka, fotky a dokumenty (rider, stage plot…), kolízie s inými akciami.
+- Organizátor s kontaktom, popis, časy príchodu a programu.
+- **Tlač eventu** na A4 / PDF – technika ako checklist, obsah case malým sivým písmom.
+- **Príjmy z akcie** – hotovosť, na účet alebo faktúra (cez JEF, JEF Production…), s DPH / bez DPH.
+- **Import z Capture** – Equipment Report sa spáruje s technikou, neznáme veci treba rozhodnúť,
+  zapíše sa až po kontrole; priradenia si appka pamätá.
+- Upozornenie na case, ktorý od poslednej kontroly obsahu bol na eventoch.
+- **Opakované akcie** – návrh údajov, posádky a odmien z minulého ročníka.
+- **Plán nakladania** *(vo vývoji)* – koľko vozidiel treba a kam ktorý case uložiť, zhora aj v 3D.
+- **Pódium Nivtec** *(vo vývoji)* – z rozmerov a výšky spočíta dosky (aj 1 × 0,5 m a trojuholníky),
+  nohy (susedné dosky sa delia o nohu – sedí s papierovou tabuľkou), schody po 20 cm, lišty na pero /
+  drážku (každá na jednu dosku), plachty so štipcami, zábradlie s otvormi pre schody, výstuhy od 80 cm
+  a príslušenstvo; nakreslí pôdorys (pero vzadu a vpravo), porovná so skladom a pridá diely na event.
 
-### Eventy
+### 🔧 Servis a 🚐 vozidlá
 
-- Technika (aj celé cases), posádka a dokumenty k akcii; upozornenie na kolízie s inými eventmi a výpožičkami.
-- **Opakované akcie** — podľa názvu sa nájde minulý ročník: našepkávanie názvu, doplnenie klienta
-  a miesta, návrh posádky z minula.
-- **Plán nakladania** — z rozmerov cases a nákladného priestoru vozidiel sa vypočíta, koľko vozidiel
-  treba a kam ktorý case uložiť (aj na seba). Pohľad zhora aj 3D, poradie nakladania.
-  Je to výpočet podľa pravidiel, nie záruka; nepozná rozloženie váhy na nápravy.
+- Opravy, kontroly a údržba s prílohami, časom a nákladmi; do servisu môže ísť len časť kusov.
+- STK, EK, diaľničná známka, poistky a leasing s pripomienkami; tankovanie, servis, spotreba, fotka.
+- **Nákladný priestor** – nosnosť, rozmery a prekážky (podbehy), aj v grafickom editore.
 
-### Servis
+### 🛒 Objednávky a nákupy
 
-- Opravy, kontroly a údržba s prílohami, časom práce a nákladmi.
-- Do servisu môže ísť len časť kusov; stav „v servise“ dostane technika, až keď sú tam všetky.
+- Nákupy s položkami, z ktorých vzniká technika; **import faktúr z Thomannu** (PDF v prehliadači).
+- **Nákupy z bazárov** (Bazoš, Hudebnibazar, Kleinanzeigen, Willhaben, eBay, Reverb…) s predajcom.
+- Fotka nákupu; zoznamy „kúpiť“ a „chceme časom“ s fotkami.
 
-### Vozidlá
+### 👥 Firma a ľudia
 
-- Termíny STK, EK, diaľničnej známky, poistiek a leasingu s pripomienkami.
-- Záznamy o prevádzke (tankovanie, servis, pneumatiky…), spotreba, náklady, fotka, prílohy.
-- **Nákladný priestor** — nosnosť, rozmery a miesta, kam sa nedá nakladať (podbehy kolies);
-  zadávajú sa číslami alebo v grafickom editore.
+- **Odmeny** – odmeny a zálohy členov, filter podľa rokov, koláčový graf; člen vidí len svoje.
+- **Úlohy, Návrhy, Kalendár** (zoznam aj mesačná mriežka), **Upozornenia**, **Štatistiky**, **História zmien**.
+- **Záloha** – admin stiahne celú firmu ako ZIP s Excelmi (fotky a dokumenty v nej nie sú).
+- **Kôš** – zmazané veci sa dajú 30 dní obnoviť (`/admin/recycle-bin`, iba admin).
 
-### Objednávky a nákupy
+### ⚙️ Nastavenia
 
-- Nákupy s cenami a položkami; **import faktúr z Thomannu** (PDF sa číta priamo v prehliadači).
-- Z položiek objednávky vzniká technika; spotrebný materiál sa eviduje len ako nákup.
-- Zoznamy „kúpiť“ a „chceme časom“.
+- Členovia a pozvánky, roly admin / skladník / technik / len na čítanie.
+- **Oprávnenia** pre každú rolu aj výnimky pre jednotlivých členov.
+- Logo firmy (pozadie sa odstráni, logo sa prispôsobí svetlému aj tmavému podkladu), kategórie s farbami,
+  umiestnenia, šablóny cases, samostatná záložka **Nivtec**.
+- Svetlý / tmavý režim, **demo firma** s resetom, verzia aplikácie.
 
-### Firma a ľudia
-
-- **Odmeny** — odmeny a zálohy členov, vyplatené a nevyplatené, filter podľa rokov, koláčový graf.
-  Člen vidí len svoje. Pri opakovanej akcii sa navrhne suma z minulého ročníka a upozorní sa na nižšiu.
-- **Úlohy a Návrhy** — interná agenda firmy.
-- **Kalendár** — termíny zo všetkých modulov ako zoznam alebo mesačná mriežka, farebne podľa druhu.
-- **Upozornenia** a **Štatistiky** — čo treba riešiť a prehľady; v štatistikách si každý vyberie, čo chce vidieť.
-- **História zmien** — kto, kedy a čo zmenil.
-- **Kôš** — zmazaná technika, cases, fotky a dokumenty sa dajú 30 dní obnoviť (`/admin/recycle-bin`, iba admin).
-
-### Nastavenia a vzhľad
-
-- Členovia, pozvánky e-mailom, roly: admin, skladník, technik, len na čítanie.
-- **Oprávnenia** — admin určí, čo ktorá rola smie vidieť a robiť, a môže dať výnimku jednému členovi.
-- Logo firmy (pozadie sa odstráni samo, logo sa prispôsobí svetlému aj tmavému podkladu),
-  kategórie, umiestnenia, šablóny cases.
-- Svetlý a tmavý režim: podľa zariadenia, alebo prepínačom v hlavičke.
+---
 
 ## Bezpečnosť
 
-Oddelenie firiem a všetky oprávnenia stráži databáza (Row Level Security v Supabase).
-Kontroly v aplikácii iba skrývajú ovládanie, ktoré by aj tak neprešlo. Admin má vždy všetko,
-aby sa firma nemohla zamknúť. Tajný (service-role) kľúč Supabase do aplikácie nepatrí —
-používa sa len verejný publishable kľúč.
+Oddelenie firiem a všetky oprávnenia stráži databáza (Row Level Security v Supabase); aplikácia
+len skrýva ovládanie, ktoré by aj tak neprešlo. Admin má vždy všetko, aby sa firma nemohla zamknúť.
+Tajný (service-role) kľúč Supabase do aplikácie nepatrí – používa sa len verejný publishable kľúč.
 
-## Čo aplikácia nerobí
+## Obmedzenia
 
-- Bez internetu nefunguje: dáta sa načítavajú aj zapisujú priamo do databázy.
-- Notifikácie e-mailom a na telefón zatiaľ nie sú; upozornenia sú len v aplikácii.
-- Kôš sa po 30 dňoch nečistí na serveri sám — vyčistí sa, keď aplikáciu otvorí admin.
-- Plán nakladania aj plán skladu sú pomôcky; nič nemerajú ani nerozpoznávajú z fotiek.
+- Bez internetu nefunguje – dáta sa čítajú aj zapisujú priamo do databázy.
+- Notifikácie e-mailom a na telefón zatiaľ nie sú, upozornenia sú len v aplikácii.
+- Kôš sa po 30 dňoch vyčistí, až keď aplikáciu otvorí admin.
+- **Plán nakladania, plán skladu a pódium Nivtec sú vo fáze vývoja** a nemusia fungovať na 100 % –
+  výsledok treba skontrolovať.
+- Import techniky na event pozná zatiaľ len Equipment Report z Capture.
+- Fotky a dokumenty sú v úložisku Supabase (v databáze je len cesta k nim); presun na vlastný NAS zatiaľ nie je.
+
+---
 
 ## Spustenie
 
@@ -121,20 +151,19 @@ Aplikácia beží na `http://localhost:5173`. Bez databázy sa zobrazí iba kost
 
 1. Vytvor projekt na supabase.com.
 2. V SQL Editore spusti postupne **všetky** súbory zo `supabase/migrations/` podľa čísla (0001 až najvyššie).
-   Pri aktualizácii aplikácie spusti tie, ktoré pribudli. Súbor `0026` je prázdny, fotky vozidiel zakladá `0027`.
+   Pri aktualizácii spusti tie, ktoré pribudli – ktoré to sú, je v [Čo je nové](#čo-je-nové).
+   Súbor `0026` je prázdny (fotky vozidiel zakladá `0027`), `0037` sa dá spustiť aj opakovane.
 3. V Authentication → URL Configuration nastav Site URL (`http://localhost:5173`, neskôr produkčnú doménu)
    a medzi Redirect URLs pridaj `<adresa>/auth/update-password`.
-4. Potvrdzovanie e-mailu (Authentication → Sign In / Providers → Email → Confirm email) nechaj **zapnuté** —
+4. Potvrdzovanie e-mailu (Authentication → Sign In / Providers → Email → Confirm email) nechaj **zapnuté** –
    pozvánky do firmy sa viažu na potvrdenú adresu.
 5. Skopíruj `.env.example` do `.env.local` a doplň Project URL a publishable kľúč.
 
-Migrácie a pravidlá prístupu overujú testy v `supabase/tests/` (bežia v pamäti cez PGlite, bez Supabase).
+## Nasadenie na vlastný server
 
-## Nasadenie na vlastný server (Docker + Cloudflare Tunnel)
+Docker + Cloudflare Tunnel: netreba otvárať porty na routeri ani riešiť certifikát, HTTPS zabezpečí Cloudflare.
 
-Netreba otvárať porty na routeri ani riešiť certifikát — HTTPS zabezpečuje Cloudflare.
-
-### Hotový balík na NAS (odporúčané)
+**Hotový balík na NAS (odporúčané)**
 
 1. `npm run package` vytvorí priečinok `release/`.
 2. Skopíruj `release/` na NAS a spusti v ňom `docker compose up -d`. Aplikácia beží na porte 8080.
@@ -142,26 +171,29 @@ Netreba otvárať porty na routeri ani riešiť certifikát — HTTPS zabezpeču
 
 Aktualizácia: znova `npm run package` a prepíš na NAS priečinok `release/dist`.
 
-### Zostavenie priamo na serveri
+**Zostavenie priamo na serveri**
 
 Naklonuj repozitár, skopíruj `.env.example` do `.env` a spusti `docker compose up -d --build`.
 Ak ešte nemáš tunel, doplň `TUNNEL_TOKEN` a pridaj `--profile tunnel`; služba v tuneli je potom `http://web:80`.
 
-## Skripty
+---
 
-- `npm run dev` — vývojový server
-- `npm run build` — kontrola typov a produkčný build (vrátane service workera)
-- `npm run preview` — náhľad produkčného buildu, tu sa dá vyskúšať inštalácia PWA
-- `npm run package` — balík `release/` na nasadenie
-- `npm run lint` — ESLint
-- `npm run test` — testy (Vitest)
+## Pre vývojárov
 
-## Štruktúra
+| Príkaz | Čo robí |
+|---|---|
+| `npm run dev` | vývojový server |
+| `npm run build` | kontrola typov a produkčný build (vrátane service workera) |
+| `npm run preview` | náhľad produkčného buildu, skúška inštalácie PWA |
+| `npm run package` | balík `release/` na nasadenie |
+| `npm run lint` | ESLint |
+| `npm test` | testy (Vitest) vrátane testov databázy v PGlite |
 
-- `src/features/<modul>/` — každý modul má `model.ts` (pravidlá a výpočty, s testami), `api.ts` (dotazy) a obrazovky.
-- `src/lib/`, `src/components/` — spoločné veci: navigácia, oprávnenia, formátovanie, prvky rozhrania.
-- `supabase/migrations/` — schéma databázy a pravidlá prístupu; `supabase/tests/` — ich testy.
+- `src/features/<modul>/` – každý modul má `model.ts` (pravidlá a výpočty s testami), `api.ts` (dotazy) a obrazovky.
+- `src/lib/`, `src/components/` – navigácia, oprávnenia, formátovanie, prvky rozhrania, verzia, ZIP.
+- `supabase/migrations/` – schéma a pravidlá prístupu; `supabase/tests/` – ich testy (bežia v pamäti, bez Supabase).
+- Verzia sa berie z `package.json`; pri novej verzii sa zvýši tam a pribudne záznam v [Čo je nové](#čo-je-nové).
 
 ---
 
-Made by DejvoLD
+Made by **DejvoLD** © 2026

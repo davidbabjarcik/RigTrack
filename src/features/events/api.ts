@@ -1,3 +1,4 @@
+import { shrinkImage } from '@/features/equipment/photo'
 import { getSupabase } from '@/lib/supabase/client'
 import type { CompanyEvent, EventDocument, EventFormValues, EventStatus } from './model'
 
@@ -8,11 +9,17 @@ export const eventKeys = {
   documents: (companyId: string, eventId: string) => ['company', companyId, 'events', eventId, 'documents'] as const,
 }
 
+const EVENT_COLUMNS =
+  'id, name, client, venue, starts_on, ends_on, status, note, organizer, organizer_person, organizer_phone, organizer_email, description, get_in_time, show_time, show_end_time'
+
+/** Databáza vracia čas ako „14:00:00“. */
+const hhmm = (value: string | null) => (value ?? '').slice(0, 5)
+
 /** Všetky eventy firmy s technikou a posádkou. Tri dotazy, aby nezáviselo od vnárania cez zložené kľúče. */
 export async function fetchEvents(companyId: string): Promise<CompanyEvent[]> {
   const db = getSupabase()
   const [events, equipment, crew] = await Promise.all([
-    db.from('events').select('id, name, client, venue, starts_on, ends_on, status, note').eq('company_id', companyId),
+    db.from('events').select(EVENT_COLUMNS).eq('company_id', companyId),
     db.from('event_equipment').select('event_id, equipment_id, quantity, case_id').eq('company_id', companyId),
     db.from('event_crew').select('id, event_id, member_id, name, role').eq('company_id', companyId).order('created_at'),
   ])
@@ -30,6 +37,14 @@ export async function fetchEvents(companyId: string): Promise<CompanyEvent[]> {
     ends_on: string
     status: EventStatus
     note: string
+    organizer: string
+    organizer_person: string
+    organizer_phone: string
+    organizer_email: string
+    description: string
+    get_in_time: string | null
+    show_time: string | null
+    show_end_time: string | null
   }[]
   return rows.map((row) => ({
     id: row.id,
@@ -40,6 +55,14 @@ export async function fetchEvents(companyId: string): Promise<CompanyEvent[]> {
     endsOn: row.ends_on,
     status: row.status,
     note: row.note,
+    organizer: row.organizer,
+    organizerPerson: row.organizer_person,
+    organizerPhone: row.organizer_phone,
+    organizerEmail: row.organizer_email,
+    description: row.description,
+    getInTime: hhmm(row.get_in_time),
+    showTime: hhmm(row.show_time),
+    showEndTime: hhmm(row.show_end_time),
     equipment: equipmentRows
       .filter((item) => item.event_id === row.id)
       .map((item) => ({ equipmentId: item.equipment_id, quantity: item.quantity, caseId: item.case_id })),
@@ -58,6 +81,14 @@ export async function saveEvent(companyId: string, id: string | null, values: Ev
     ends_on: values.endsOn,
     status: values.status,
     note: values.note,
+    organizer: values.organizer,
+    organizer_person: values.organizerPerson,
+    organizer_phone: values.organizerPhone,
+    organizer_email: values.organizerEmail,
+    description: values.description,
+    get_in_time: values.getInTime || null,
+    show_time: values.showTime || null,
+    show_end_time: values.showEndTime || null,
   }
   const table = getSupabase().from('events')
   const { data, error } = id
@@ -148,13 +179,20 @@ export async function removeEventCrew(id: string) {
 export async function fetchEventDocuments(companyId: string, eventId: string): Promise<EventDocument[]> {
   const { data, error } = await getSupabase()
     .from('event_documents')
-    .select('id, name, path, size_bytes, created_at')
+    .select('id, name, path, size_bytes, created_at, is_photo')
     .eq('company_id', companyId)
     .eq('event_id', eventId)
     .order('created_at')
   if (error) throw error
-  const rows = data as { id: string; name: string; path: string; size_bytes: number; created_at: string }[]
-  return rows.map((row) => ({ id: row.id, name: row.name, path: row.path, sizeBytes: Number(row.size_bytes), createdAt: row.created_at }))
+  const rows = data as { id: string; name: string; path: string; size_bytes: number; created_at: string; is_photo: boolean }[]
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    path: row.path,
+    sizeBytes: Number(row.size_bytes),
+    createdAt: row.created_at,
+    isPhoto: row.is_photo,
+  }))
 }
 
 export async function uploadEventDocument(companyId: string, eventId: string, file: File) {
@@ -171,6 +209,32 @@ export async function uploadEventDocument(companyId: string, eventId: string, fi
     await db.storage.from(BUCKET).remove([path])
     throw error
   }
+}
+
+/** Nahrá fotku eventu zmenšenú na rozumnú veľkosť (fotky z mobilu majú niekoľko MB). */
+export async function uploadEventPhoto(companyId: string, eventId: string, file: File) {
+  const db = getSupabase()
+  const photo = await shrinkImage(file, 1600, 0.85)
+  const path = `${companyId}/${eventId}/${crypto.randomUUID()}.jpg`
+  const upload = await db.storage.from(BUCKET).upload(path, photo, { contentType: 'image/jpeg' })
+  if (upload.error) throw upload.error
+  const { error } = await db
+    .from('event_documents')
+    .insert({ company_id: companyId, event_id: eventId, name: file.name.slice(0, 200) || 'fotka.jpg', path, size_bytes: photo.size, is_photo: true })
+  if (error) {
+    await db.storage.from(BUCKET).remove([path])
+    throw error
+  }
+}
+
+/** Odkazy na zobrazenie fotiek eventu (platia hodinu); kľúčom je cesta súboru. */
+export async function eventPhotoUrls(paths: string[]): Promise<Record<string, string>> {
+  if (paths.length === 0) return {}
+  const { data, error } = await getSupabase().storage.from(BUCKET).createSignedUrls(paths, 3600)
+  if (error) throw error
+  const urls: Record<string, string> = {}
+  for (const item of data) if (item.path && item.signedUrl && !item.error) urls[item.path] = item.signedUrl
+  return urls
 }
 
 /** Presunie dokument do koša; súbor ostáva, kým ho admin neobnoví alebo kým sa kôš nevyčistí. */

@@ -19,6 +19,7 @@ import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { caseKeys, deleteCase } from './api'
 import { CaseChecks } from './CaseChecks'
+import { CasePhoto } from './CasePhoto'
 import { formatWeight } from './label'
 import { formatDimensions } from './model'
 import { useCases } from './useCases'
@@ -160,6 +161,10 @@ export function CaseDetailPage() {
       )}
 
       {current.note && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{current.note}</p>}
+
+      <div className="mb-6">
+        <CasePhoto companyId={companyId} caseId={id} name={current.name} photoPath={current.photoPath} canEdit={canEdit} />
+      </div>
 
       <CaseChecks companyId={companyId} caseId={id} canCheck={canEdit} />
 

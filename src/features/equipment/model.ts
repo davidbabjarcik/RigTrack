@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { CategoryColor } from './categoryColors'
 
 export const EQUIPMENT_STATUSES = ['available', 'loaned', 'in_service', 'damaged', 'retired'] as const
 export type EquipmentStatus = (typeof EQUIPMENT_STATUSES)[number]
@@ -12,7 +13,7 @@ export const STATUS_LABELS: Record<EquipmentStatus, string> = {
 }
 
 // Druh určuje, na čo sa formulár pýta. Zodpovedá check constraint v 0007_equipment_details.sql.
-export const EQUIPMENT_KINDS = ['general', 'cable', 'light', 'audio', 'consumable'] as const
+export const EQUIPMENT_KINDS = ['general', 'cable', 'light', 'audio', 'truss', 'stage', 'consumable'] as const
 export type EquipmentKind = (typeof EQUIPMENT_KINDS)[number]
 
 export const KIND_LABELS: Record<EquipmentKind, string> = {
@@ -20,6 +21,8 @@ export const KIND_LABELS: Record<EquipmentKind, string> = {
   cable: 'Kábel',
   light: 'Svetlo',
   audio: 'Zvuk',
+  truss: 'Hliník / truss',
+  stage: 'Pódium (Nivtec a príslušenstvo)',
   consumable: 'Spotrebný materiál',
 }
 
@@ -31,6 +34,25 @@ export const LIGHT_SOURCE_LABELS: Record<LightSource, string> = {
   discharge: 'Výbojka',
   halogen: 'Halogén',
   laser: 'Laser',
+  other: 'Iné',
+}
+
+/** Čo je to za zvukovú techniku; podľa toho sa dá v zozname hľadať aj triediť. */
+export const AUDIO_TYPES = ['mixer', 'microphone', 'speaker', 'subwoofer', 'monitor', 'amplifier', 'processor', 'di', 'stagebox', 'wireless', 'iem', 'other'] as const
+export type AudioType = (typeof AUDIO_TYPES)[number]
+
+export const AUDIO_TYPE_LABELS: Record<AudioType, string> = {
+  mixer: 'Mixpult',
+  microphone: 'Mikrofón',
+  speaker: 'Reprobox',
+  subwoofer: 'Subwoofer',
+  monitor: 'Odposluch',
+  amplifier: 'Zosilňovač',
+  processor: 'Procesor / DSP',
+  di: 'DI box',
+  stagebox: 'Stagebox',
+  wireless: 'Bezdrôtový systém',
+  iem: 'In-ear',
   other: 'Iné',
 }
 
@@ -57,11 +79,17 @@ export type EquipmentAttributes = {
   lengthM?: number
   powerW?: number
   lightSource?: LightSource
+  /** Typ zvukovej techniky (mixpult, mikrofón…). */
+  audioType?: AudioType
+  /** DMX módy svetla: názov a počet kanálov, napr. Standard 16 ch. */
+  dmxModes?: DmxMode[]
 }
+
+export type DmxMode = { name: string; channels: number }
 
 export type LabelRole = 'main' | 'secondary'
 
-export type Lookup = { id: string; name: string; consumable?: boolean }
+export type Lookup = { id: string; name: string; consumable?: boolean; color?: CategoryColor | null }
 
 export type Equipment = {
   id: string
@@ -151,6 +179,15 @@ export const equipmentSchema = z.object({
   lengthM: optionalNumber(1000),
   powerW: optionalNumber(100000),
   lightSource: z.enum([...LIGHT_SOURCES, '']),
+  audioType: z.enum([...AUDIO_TYPES, '']),
+  dmxModes: z
+    .array(
+      z.object({
+        name: text(40).min(1, 'Zadajte názov módu'),
+        channels: z.number('Zadajte počet kanálov').int('Celé číslo').min(1, 'Aspoň 1 kanál').max(512, 'Najviac 512 kanálov'),
+      }),
+    )
+    .max(20, 'Najviac 20 módov'),
   macAddress: z
     .string()
     .trim()
@@ -177,17 +214,41 @@ export function needsRestock(item: Pick<Equipment, 'quantity' | 'minQuantity'>) 
   return item.minQuantity !== null && item.quantity <= item.minQuantity
 }
 
+/**
+ * Je to svetlo? Podľa druhu, alebo podľa kategórie, ktorej názov hovorí o svetlách
+ * („Svetlá“, „Svetlo – hlavy“, „Light“). Vtedy sa formulár pýta aj na zdroj a DMX módy.
+ */
+export function isLighting(kind: EquipmentKind, category: string) {
+  const plain = category.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+  return kind === 'light' || /svetl|light/.test(plain)
+}
+
+/** Je to zvuk? Podľa druhu, alebo podľa kategórie („Zvuk“, „Audio“, „Sound“). */
+export function isAudio(kind: EquipmentKind, category: string) {
+  const plain = category.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+  return kind === 'audio' || /zvuk|audio|sound/.test(plain)
+}
+
 /** Z formulára vyberie iba údaje, ktoré k zvolenému druhu patria. */
-export function attributesFor(values: Pick<EquipmentFormValues, 'kind' | 'connector' | 'lengthM' | 'powerW' | 'lightSource'>) {
+export function attributesFor(
+  values: Pick<EquipmentFormValues, 'kind' | 'connector' | 'lengthM' | 'powerW' | 'lightSource'> &
+    Partial<Pick<EquipmentFormValues, 'category' | 'dmxModes' | 'audioType'>>,
+) {
   const attributes: EquipmentAttributes = {}
+  const lighting = isLighting(values.kind, values.category ?? '')
+  const audio = isAudio(values.kind, values.category ?? '')
   if (values.kind === 'cable') {
     if (values.connector) attributes.connector = values.connector
     if (values.lengthM !== undefined) attributes.lengthM = values.lengthM
   }
-  if (values.kind === 'light' || values.kind === 'audio') {
+  // Truss sa delí podľa dĺžky dielu (0,5 / 1 / 2 / 3 m).
+  if (values.kind === 'truss' && values.lengthM !== undefined) attributes.lengthM = values.lengthM
+  if (lighting || audio) {
     if (values.powerW !== undefined) attributes.powerW = values.powerW
   }
-  if (values.kind === 'light' && values.lightSource) attributes.lightSource = values.lightSource
+  if (lighting && values.lightSource) attributes.lightSource = values.lightSource
+  if (audio && values.audioType) attributes.audioType = values.audioType
+  if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels }))
   return attributes
 }
 
@@ -200,10 +261,12 @@ export function formatNumber(value: number) {
 export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
   const a = item.attributes
   return [
+    a.audioType && AUDIO_TYPE_LABELS[a.audioType],
     a.connector,
     a.lengthM !== undefined && `${formatNumber(a.lengthM)} m`,
     a.powerW !== undefined && `${formatNumber(a.powerW)} W`,
     a.lightSource && LIGHT_SOURCE_LABELS[a.lightSource],
+    a.dmxModes?.length && `DMX ${a.dmxModes.map((mode) => mode.channels).join('/')} ch`,
   ].filter(Boolean) as string[]
 }
 
@@ -284,6 +347,7 @@ export function filterEquipment(items: Equipment[], filter: EquipmentFilter) {
         item.macAddress,
         item.ipAddress,
         item.attributes.connector,
+        item.attributes.audioType && AUDIO_TYPE_LABELS[item.attributes.audioType],
       ].join(' '),
     )
     return words.every((word) => haystack.includes(word))

@@ -6,6 +6,8 @@ import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
+import { PhotoThumb } from '@/features/equipment/PhotoThumb'
+import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { NO_CASE, unpackedEquipment } from '@/features/equipment/model'
@@ -43,6 +45,10 @@ export function CasesListPage() {
   }
 
   const unpacked = unpackedEquipment(equipment.data ?? [])
+  const thumbs = usePhotoThumbs(
+    company.companyId,
+    (cases.data ?? []).map((item) => item.photoPath),
+  )
   const all = cases.data ?? []
   const needle = search.trim().toLowerCase()
   const visible = all.filter((c) => `${c.name} ${c.inventoryNumber}`.toLowerCase().includes(needle))
@@ -113,6 +119,7 @@ export function CasesListPage() {
             return (
               <li key={item.id}>
                 <Link to={`/cases/${item.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
+                  {item.photoPath && <PhotoThumb url={thumbs[item.photoPath]} />}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{item.name}</span>
                     <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>

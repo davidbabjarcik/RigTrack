@@ -141,3 +141,49 @@ describe('orders access', () => {
     await expect(t.as('admin', 'delete from public.order_items')).rejects.toThrow(/permission denied/)
   })
 })
+
+describe('second-hand purchases', () => {
+  let usedOrder: string
+
+  it('keep the marketplace and the seller, and show them in the equipment history', async () => {
+    usedOrder = (
+      await createOrder('skladnik', companyA, [{ name: 'Moving head', quantity: 1, unit_price: 450, mode: 'separate' }], {
+        supplier: 'Bazoš.sk',
+        ordered_at: '2026-09-12',
+        source: 'marketplace',
+        seller: 'Jozef M.',
+      })
+    )[0].id
+    expect(await t.as('admin', 'select source, seller, photo_path from public.orders_overview where id = $1', [usedOrder])).toEqual([
+      { source: 'marketplace', seller: 'Jozef M.', photo_path: '' },
+    ])
+    expect(await t.as('admin', `select source, seller, ordered_at::text from public.equipment_purchases where order_id = $1`, [usedOrder])).toEqual([
+      { source: 'marketplace', seller: 'Jozef M.', ordered_at: '2026-09-12' },
+    ])
+  })
+
+  it('default to a shop and reject unknown sources', async () => {
+    const [{ id }] = await createOrder('admin', companyA, [{ name: 'x', quantity: 1, unit_price: 1, mode: 'none' }])
+    expect(await t.as('admin', 'select source, seller from public.orders where id = $1', [id])).toEqual([{ source: 'shop', seller: '' }])
+    const line = [{ name: 'x', quantity: 1, unit_price: 1, mode: 'none' }]
+    await expect(createOrder('admin', companyA, line, { supplier: 'X', source: 'auction' })).rejects.toThrow(/check constraint/)
+  })
+
+  it('may have a photo that goes to the bin and comes back', async () => {
+    const photo = `${companyA}/order-1.jpg`
+    // fotku mení len ten, kto smie upravovať objednávky
+    expect(await t.as('technik', 'update public.orders set photo_path = $1 where id = $2 returning id', [photo, usedOrder])).toEqual([])
+    await t.as('skladnik', 'update public.orders set photo_path = $1 where id = $2', [photo, usedOrder])
+    await expect(t.as('skladnik', `update public.orders set supplier = 'x', source = 'shop' where id = $1`, [usedOrder])).rejects.toThrow(
+      /permission denied/,
+    )
+
+    await expect(t.as('technik', `select public.trash_photo('orders', $1)`, [usedOrder])).rejects.toThrow(/nepodarilo zmazať/)
+    await t.as('skladnik', `select public.trash_photo('orders', $1)`, [usedOrder])
+    expect(await t.as('admin', 'select photo_path from public.orders where id = $1', [usedOrder])).toEqual([{ photo_path: '' }])
+    const [item] = await t.as('admin', 'select id, kind, label, detail from public.recycle_bin_items($1)', [companyA])
+    expect(item).toMatchObject({ kind: 'photo', label: 'Bazoš.sk', detail: 'fotka nákupu' })
+    await t.as('admin', 'select public.restore_bin_item($1, $2, $3)', [companyA, 'photo', item.id])
+    expect(await t.as('admin', 'select photo_path from public.orders where id = $1', [usedOrder])).toEqual([{ photo_path: photo }])
+  })
+})

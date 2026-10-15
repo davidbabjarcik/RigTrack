@@ -79,6 +79,7 @@ export function EquipmentDetailPage() {
   const rows: [string, ReactNode][] = [
     ['Druh', [KIND_LABELS[equipment.kind], ...describeAttributes(equipment)].join(' · ')],
     ['Kategória', categories.find((c) => c.id === equipment.categoryId)?.name],
+    ['DMX módy', equipment.attributes.dmxModes?.map((mode) => `${mode.name} ${mode.channels} ch`).join(' · ')],
     ['Umiestnenie', locations.find((l) => l.id === equipment.locationId)?.name],
     [
       'Case',

@@ -19,6 +19,30 @@ export const MAX_SEPARATE = 200
 
 const text = (max: number) => z.string().trim().max(max, `Najviac ${max} znakov`)
 
+/** Odkiaľ je nákup: z obchodu, alebo z bazáru či inzerátu (aj zahraničného). */
+export const ORDER_SOURCES = ['shop', 'marketplace'] as const
+export type OrderSource = (typeof ORDER_SOURCES)[number]
+
+export const SOURCE_LABELS: Record<OrderSource, string> = { shop: 'Obchod', marketplace: 'Bazár / inzerát' }
+
+/** Bazáre a inzertné portály, ktoré formulár ponúkne; dá sa napísať aj iný. */
+export const MARKETPLACES = [
+  'Bazoš.sk',
+  'Bazoš.cz',
+  'Bazoš.at',
+  'Bazoš.pl',
+  'Hudebnibazar.cz',
+  'Sbazar.cz',
+  'Kleinanzeigen',
+  'Willhaben',
+  'eBay',
+  'Reverb',
+  'Marktplaats',
+  'Allegro',
+  'OLX',
+  'Facebook Marketplace',
+]
+
 const itemSchema = z
   .object({
     name: text(200).min(1, 'Zadajte názov'),
@@ -46,7 +70,10 @@ const itemSchema = z
   })
 
 export const orderSchema = z.object({
+  source: z.enum(ORDER_SOURCES),
   supplier: text(120).min(1, 'Zadajte dodávateľa'),
+  /** Meno predajcu pri bazári. */
+  seller: text(120),
   orderNumber: text(80),
   orderedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Zadajte dátum'),
   currency: z.enum(CURRENCIES),
@@ -99,7 +126,11 @@ export type RememberedArticle = {
 
 export type OrderSummary = {
   id: string
+  source: OrderSource
   supplier: string
+  seller: string
+  /** Nepovinná fotka nákupu (tovar, inzerát, bloček). */
+  photoPath: string
   orderNumber: string
   orderedAt: string
   currency: string
@@ -122,7 +153,9 @@ export type OrderDetail = OrderSummary & { lines: OrderLine[] }
 
 export type Purchase = {
   orderId: string
+  source: OrderSource
   supplier: string
+  seller: string
   orderedAt: string
   currency: string
   quantity: number

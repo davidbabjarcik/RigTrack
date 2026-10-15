@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ExternalLink, FileUp, Plus, Trash2 } from 'lucide-react'
+import { Camera, ExternalLink, FileUp, ImageOff, Plus, Store, Tag, Trash2 } from 'lucide-react'
 import { useId, useRef, useState, type DragEvent } from 'react'
 import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
@@ -15,15 +15,18 @@ import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { createOrder, fetchArticleMemory } from './api'
+import { createOrder, fetchArticleMemory, saveOrderPhoto } from './api'
 import { invoiceToFormValues } from './import/toFormValues'
 import {
   CURRENCIES,
   EMPTY_ITEM,
   ITEM_MODES,
+  MARKETPLACES,
   MODE_LABELS,
+  ORDER_SOURCES,
   orderSchema,
   orderTotal,
+  SOURCE_LABELS,
   supplierProductUrl,
   type OrderFormValues,
   type RememberedArticle,
@@ -37,24 +40,42 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const categoryListId = useId()
+  const marketListId = useId()
 
   const {
     register,
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
-    defaultValues: { supplier: '', orderNumber: '', orderedAt: todayIso(), currency: 'EUR', note: '', items: [EMPTY_ITEM] },
+    defaultValues: {
+      source: 'shop',
+      supplier: '',
+      seller: '',
+      orderNumber: '',
+      orderedAt: todayIso(),
+      currency: 'EUR',
+      note: '',
+      items: [EMPTY_ITEM],
+    },
   })
   const { fields, append, remove } = useFieldArray({ control, name: 'items' })
   const items = useWatch({ control, name: 'items' })
   const currency = useWatch({ control, name: 'currency' })
   const supplier = useWatch({ control, name: 'supplier' })
+  const source = useWatch({ control, name: 'source' })
+  const marketplace = source === 'marketplace'
 
   const save = useMutation({
-    mutationFn: (values: OrderFormValues) => createOrder(companyId, values, categories),
+    mutationFn: async (values: OrderFormValues) => {
+      const id = await createOrder(companyId, values, categories)
+      // Objednávka je uložená aj bez fotky; nepodarenú fotku možno pridať v detaile.
+      if (photo) await saveOrderPhoto(companyId, id, photo.file).catch(() => {})
+      return id
+    },
     onSuccess: async (id) => {
       // Objednávka zakladá a dopĺňa techniku aj kategórie, preto celý strom firmy.
       await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
@@ -63,6 +84,13 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
   })
 
   const fileInput = useRef<HTMLInputElement>(null)
+  const photoInput = useRef<HTMLInputElement>(null)
+  const [photo, setPhoto] = useState<{ file: File; url: string } | null>(null)
+
+  function choosePhoto(file: File | null) {
+    if (photo) URL.revokeObjectURL(photo.url)
+    setPhoto(file ? { file, url: URL.createObjectURL(file) } : null)
+  }
   const [dragging, setDragging] = useState(false)
   const [importState, setImportState] = useState<ImportState>({ busy: false, message: null, failed: false })
 
@@ -123,49 +151,87 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
 
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
-      <div
-        onDragOver={(event) => {
-          event.preventDefault()
-          setDragging(true)
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={handleDrop}
-        className={cn(
-          'rounded-xl border-2 border-dashed bg-surface p-5 text-center transition-colors',
-          dragging && 'border-accent bg-accent/10',
-        )}
-      >
-        <input
-          ref={fileInput}
-          type="file"
-          accept="application/pdf,.pdf"
-          className="sr-only"
-          tabIndex={-1}
-          onChange={(event) => {
-            const file = event.target.files?.[0]
-            event.target.value = ''
-            if (file) void importFile(file)
-          }}
-        />
-        <FileUp className="mx-auto size-7 text-muted-foreground" aria-hidden />
-        <p className="mt-2 font-medium">{dragging ? 'Pustite faktúru sem' : 'Pretiahnite sem PDF faktúru z Thomannu'}</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Formulár sa vyplní sám. Súbor sa číta vo vašom prehliadači a nikam sa neodosiela.
-        </p>
-        <Button variant="outline" size="sm" className="mt-3" disabled={importState.busy} onClick={() => fileInput.current?.click()}>
-          {importState.busy ? 'Čítam…' : 'alebo vybrať súbor'}
-        </Button>
-        {importState.message && (
-          <p role={importState.failed ? 'alert' : 'status'} className={cn('mt-3 text-sm', importState.failed && 'text-destructive')}>
-            {importState.message}
-          </p>
-        )}
+      <div role="group" aria-label="Odkiaľ je nákup" className="flex flex-wrap gap-2">
+        {ORDER_SOURCES.map((option) => {
+          const Icon = option === 'shop' ? Store : Tag
+          return (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={source === option}
+              onClick={() => setValue('source', option)}
+              className={cn(
+                'inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium',
+                source === option ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
+              )}
+            >
+              <Icon className="size-4" aria-hidden />
+              {SOURCE_LABELS[option]}
+            </button>
+          )
+        })}
       </div>
 
+      {!marketplace && (
+        <div
+          onDragOver={(event) => {
+            event.preventDefault()
+            setDragging(true)
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={handleDrop}
+          className={cn(
+            'rounded-xl border-2 border-dashed bg-surface p-5 text-center transition-colors',
+            dragging && 'border-accent bg-accent/10',
+          )}
+        >
+          <input
+            ref={fileInput}
+            type="file"
+            accept="application/pdf,.pdf"
+            className="sr-only"
+            tabIndex={-1}
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) void importFile(file)
+            }}
+          />
+          <FileUp className="mx-auto size-7 text-muted-foreground" aria-hidden />
+          <p className="mt-2 font-medium">{dragging ? 'Pustite faktúru sem' : 'Pretiahnite sem PDF faktúru z Thomannu'}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Formulár sa vyplní sám. Súbor sa číta vo vašom prehliadači a nikam sa neodosiela.
+          </p>
+          <Button variant="outline" size="sm" className="mt-3" disabled={importState.busy} onClick={() => fileInput.current?.click()}>
+            {importState.busy ? 'Čítam…' : 'alebo vybrať súbor'}
+          </Button>
+          {importState.message && (
+            <p role={importState.failed ? 'alert' : 'status'} className={cn('mt-3 text-sm', importState.failed && 'text-destructive')}>
+              {importState.message}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Dodávateľ *" placeholder="napr. Thomann" error={errors.supplier?.message} {...register('supplier')} />
-        <Field label="Číslo objednávky / faktúry" autoComplete="off" error={errors.orderNumber?.message} {...register('orderNumber')} />
-        <Field label="Dátum *" type="date" error={errors.orderedAt?.message} {...register('orderedAt')} />
+        <Field
+          label={marketplace ? 'Bazár / portál *' : 'Dodávateľ *'}
+          placeholder={marketplace ? 'napr. Bazoš.sk, Kleinanzeigen' : 'napr. Thomann'}
+          list={marketplace ? marketListId : undefined}
+          autoComplete="off"
+          error={errors.supplier?.message}
+          {...register('supplier')}
+        />
+        {marketplace && (
+          <Field label="Predajca" placeholder="meno alebo prezývka" autoComplete="off" error={errors.seller?.message} {...register('seller')} />
+        )}
+        <Field
+          label={marketplace ? 'Číslo inzerátu' : 'Číslo objednávky / faktúry'}
+          autoComplete="off"
+          error={errors.orderNumber?.message}
+          {...register('orderNumber')}
+        />
+        <Field label="Dátum kúpy *" type="date" error={errors.orderedAt?.message} {...register('orderedAt')} />
         <SelectField label="Mena" error={errors.currency?.message} {...register('currency')}>
           {CURRENCIES.map((code) => (
             <option key={code} value={code}>
@@ -174,6 +240,49 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
           ))}
         </SelectField>
       </div>
+
+      <div className="flex items-center gap-3">
+        {photo ? (
+          <img src={photo.url} alt="Fotka nákupu" className="size-16 shrink-0 rounded-lg border object-cover" />
+        ) : (
+          <span className="flex size-16 shrink-0 items-center justify-center rounded-lg border bg-muted">
+            <ImageOff className="size-5 text-muted-foreground" aria-hidden />
+          </span>
+        )}
+        <div className="flex flex-col items-start gap-1">
+          <span className="text-sm font-medium">Fotka (nepovinné)</span>
+          <span className="text-sm text-muted-foreground">Napr. tovar, inzerát alebo bloček.</span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => photoInput.current?.click()}>
+              <Camera className="size-4" aria-hidden />
+              {photo ? 'Zmeniť' : 'Pridať fotku'}
+            </Button>
+            {photo && (
+              <Button variant="ghost" size="sm" onClick={() => choosePhoto(null)}>
+                Odobrať
+              </Button>
+            )}
+          </div>
+        </div>
+        <input
+          ref={photoInput}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          tabIndex={-1}
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            event.target.value = ''
+            if (file) choosePhoto(file)
+          }}
+        />
+      </div>
+
+      <datalist id={marketListId}>
+        {MARKETPLACES.map((market) => (
+          <option key={market} value={market} />
+        ))}
+      </datalist>
 
       <datalist id={categoryListId}>
         {categories.map((category) => (

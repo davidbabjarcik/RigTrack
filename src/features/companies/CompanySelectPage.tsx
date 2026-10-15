@@ -8,6 +8,7 @@ import { getSupabase } from '@/lib/supabase/client'
 import { acceptInvitation, companyKeys, deleteInvitation, fetchMyInvitations } from './api'
 import { useCompany } from './company-context'
 import { CompanyLogo } from './CompanyLogo'
+import { DemoSettings } from './DemoSettings'
 
 export function CompanySelectPage() {
   const { session } = useAuth()
@@ -133,6 +134,7 @@ export function CompanySelectPage() {
           <Plus className="size-4" aria-hidden />
           Vytvoriť novú firmu
         </Link>
+        <DemoSettings userId={user.id} />
         <Button variant="ghost" onClick={() => void getSupabase().auth.signOut()}>
           Odhlásiť sa
         </Button>

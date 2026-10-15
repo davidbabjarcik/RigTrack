@@ -91,6 +91,29 @@ describe('events', () => {
     expect(await t.as('outsider', 'select 1 from public.event_documents')).toEqual([])
   })
 
+  it('keep the organizer, description, times and photos for the printout', async () => {
+    await t.as(
+      'technik',
+      `update public.events set organizer = 'Mesto Stropkov', organizer_phone = '+421 900 000 000', description = 'Open air',
+        get_in_time = '14:00', show_time = '19:30' where id = $1`,
+      [event],
+    )
+    await expect(t.as('viewer', `update public.events set organizer = 'x' where id = $1 returning id`, [event])).resolves.toEqual([])
+    expect(await t.as('viewer', 'select organizer, description, get_in_time::text, show_time::text, show_end_time from public.events where id = $1', [event])).toEqual([
+      { organizer: 'Mesto Stropkov', description: 'Open air', get_in_time: '14:00:00', show_time: '19:30:00', show_end_time: null },
+    ])
+
+    const [photo] = await t.as(
+      'technik',
+      `insert into public.event_documents (company_id, event_id, name, path, is_photo) values ($1, $2, 'podium.jpg', $3, true) returning id`,
+      [companyA, event, `${companyA}/${event}/p.jpg`],
+    )
+    await t.as('technik', 'select public.trash_event_document($1)', [photo.id])
+    const bin = await t.as('admin', 'select label, detail from public.recycle_bin_items($1)', [companyA])
+    expect(bin).toContainEqual({ label: 'podium.jpg', detail: 'fotka eventu: Festival' })
+    await t.as('admin', 'select public.restore_bin_item($1, $2, $3)', [companyA, 'event_document', photo.id])
+  })
+
   it('can be deleted by admin and skladnik only, taking everything attached along', async () => {
     expect(await t.as('technik', 'delete from public.events where id = $1 returning id', [event])).toEqual([])
     expect(await t.as('admin', 'delete from public.events where id = $1 returning id', [event])).toHaveLength(1)

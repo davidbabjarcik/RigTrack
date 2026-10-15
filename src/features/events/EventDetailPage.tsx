@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, LayoutGrid, Pencil, Printer, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -10,8 +10,11 @@ import { can } from '@/lib/permissions'
 import { deleteEvent, eventKeys } from './api'
 import { EventCrewSection } from './EventCrewSection'
 import { EventDocumentsSection } from './EventDocumentsSection'
+import { EventIncomeSection } from './EventIncomeSection'
+import { EventPhotosSection } from './EventPhotosSection'
 import { EventEquipmentSection } from './EventEquipmentSection'
 import { EventStatusBadge } from './EventStatusBadge'
+import { describeTimes } from './model'
 import { useEvents } from './useEvents'
 
 export function EventDetailPage() {
@@ -50,6 +53,8 @@ export function EventDetailPage() {
     )
   }
 
+  const times = describeTimes(event)
+  const organizer = [event.organizer, event.organizerPerson, event.organizerPhone, event.organizerEmail].filter(Boolean)
   const when = event.startsOn === event.endsOn ? formatDate(event.startsOn) : `${formatDate(event.startsOn)} – ${formatDate(event.endsOn)}`
 
   return (
@@ -63,7 +68,17 @@ export function EventDetailPage() {
             <EventStatusBadge status={event.status} />
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <LinkButton to={`/events/${id}/print`} variant="outline" size="sm">
+            <Printer className="size-4" aria-hidden />
+            Tlač / PDF
+          </LinkButton>
+          {canEdit && (
+            <LinkButton to={`/stage?event=${id}`} variant="outline" size="sm">
+              <LayoutGrid className="size-4" aria-hidden />
+              Pódium
+            </LinkButton>
+          )}
           {canEdit && (
             <LinkButton to={`/events/${id}/edit`} variant="outline" size="sm">
               <Pencil className="size-4" aria-hidden />
@@ -92,11 +107,49 @@ export function EventDetailPage() {
         </p>
       )}
 
-      {event.note && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{event.note}</p>}
+      {(times || organizer.length > 0) && (
+        <dl className="mb-6 grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
+          {times && (
+            <div>
+              <dt className="text-sm text-muted-foreground">Časy (prvý deň)</dt>
+              <dd className="font-medium">{times}</dd>
+            </div>
+          )}
+          {organizer.length > 0 && (
+            <div className="min-w-0">
+              <dt className="text-sm text-muted-foreground">Organizátor</dt>
+              <dd className="font-medium break-words">{event.organizer || event.organizerPerson}</dd>
+              <dd className="flex flex-wrap gap-x-3 text-sm break-all">
+                {event.organizer && event.organizerPerson && <span>{event.organizerPerson}</span>}
+                {event.organizerPhone && (
+                  <a href={`tel:${event.organizerPhone.replace(/\s/g, '')}`} className="text-accent hover:underline">
+                    {event.organizerPhone}
+                  </a>
+                )}
+                {event.organizerEmail && (
+                  <a href={`mailto:${event.organizerEmail}`} className="text-accent hover:underline">
+                    {event.organizerEmail}
+                  </a>
+                )}
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
+
+      {event.description && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{event.description}</p>}
+      {event.note && (
+        <div className="mb-6 rounded-xl border border-dashed bg-surface p-4">
+          <p className="mb-1 text-sm text-muted-foreground">Interná poznámka</p>
+          <p className="whitespace-pre-wrap">{event.note}</p>
+        </div>
+      )}
 
       <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
       {can(company, 'vehicles.view') && <EventLoadingSection companyId={companyId} event={event} />}
       <EventCrewSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+      {can(company, 'payouts.manage') && <EventIncomeSection companyId={companyId} eventId={event.id} />}
+      <EventPhotosSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
       <EventDocumentsSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
     </>
   )

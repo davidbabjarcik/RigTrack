@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { Loan } from '@/features/loans/model'
-import { busyElsewhere, eventSchema, formatFileSize, pastEventNames, plannedOnEvents, previousEdition, seriesKey, sortEvents, type CompanyEvent } from './model'
+import { busyElsewhere, describeTimes, eventsSinceCheck, EMPTY_EVENT_DETAILS, eventSchema, formatFileSize, pastEventNames, plannedOnEvents, previousEdition, seriesKey, sortEvents, type CompanyEvent } from './model'
 
 const today = '2026-10-13'
 
 const event = (patch: Partial<CompanyEvent>): CompanyEvent => ({
   id: 'e1', name: 'Festival', client: '', venue: '', startsOn: '2026-11-01', endsOn: '2026-11-02', status: 'planned', note: '',
-  equipment: [], crew: [], ...patch,
+  equipment: [], crew: [], ...EMPTY_EVENT_DETAILS, ...patch,
 })
 const loan = (patch: Partial<Loan>): Loan => ({
   id: 'l1', borrower: 'Klient', contact: '', borrowerIco: '', borrowerAddress: '', billedDays: null, price: null, deposit: null, startsOn: '2026-11-02', endsOn: '2026-11-03', status: 'reserved', note: '',
@@ -59,12 +59,26 @@ describe('plannedOnEvents', () => {
 })
 
 describe('eventSchema', () => {
-  const valid = { name: 'Festival', client: '', venue: '', startsOn: '2026-11-01', endsOn: '2026-11-02', status: 'planned', note: '' }
+  const valid = { name: 'Festival', client: '', venue: '', startsOn: '2026-11-01', endsOn: '2026-11-02', status: 'planned', note: '', ...EMPTY_EVENT_DETAILS }
 
   it('requires a name and a sensible date range', () => {
     expect(eventSchema.safeParse(valid).success).toBe(true)
     expect(eventSchema.safeParse({ ...valid, name: ' ' }).success).toBe(false)
     expect(eventSchema.safeParse({ ...valid, endsOn: '2026-10-31' }).success).toBe(false)
+  })
+
+  it('accepts organizer contacts and times, but not a broken e-mail or time', () => {
+    expect(eventSchema.safeParse({ ...valid, organizerEmail: 'info@mesto.sk', getInTime: '14:00', showTime: '19:30' }).success).toBe(true)
+    expect(eventSchema.safeParse({ ...valid, organizerEmail: 'info@' }).success).toBe(false)
+    expect(eventSchema.safeParse({ ...valid, showTime: '7' }).success).toBe(false)
+  })
+})
+
+describe('describeTimes', () => {
+  it('lists only the times that are filled in', () => {
+    expect(describeTimes({ getInTime: '14:00', showTime: '19:30', showEndTime: '23:00' })).toBe('príchod / stavba 14:00 · program 19:30 – 23:00')
+    expect(describeTimes({ getInTime: '', showTime: '20:00', showEndTime: '' })).toBe('program 20:00')
+    expect(describeTimes({ getInTime: '', showTime: '', showEndTime: '' })).toBe('')
   })
 })
 
@@ -78,7 +92,7 @@ describe('formatFileSize', () => {
 
 describe('recurring events', () => {
   const edition = (id: string, name: string, startsOn: string, patch: Partial<CompanyEvent> = {}): CompanyEvent => ({
-    id, name, client: '', venue: '', startsOn, endsOn: startsOn, status: 'done', note: '', equipment: [], crew: [], ...patch,
+    id, name, client: '', venue: '', startsOn, endsOn: startsOn, status: 'done', note: '', equipment: [], crew: [], ...EMPTY_EVENT_DETAILS, ...patch,
   })
   const events = [
     edition('j24', 'JESKO Medzilaborce 2024', '2024-08-10'),
@@ -102,5 +116,24 @@ describe('recurring events', () => {
 
   it('offers each past event once, newest first', () => {
     expect(pastEventNames(events)).toEqual(['Deň kapusty 2025', 'Jesko – Medzilaborce 2025'])
+  })
+})
+
+describe('eventsSinceCheck', () => {
+  const withCase = (id: string, startsOn: string, patch: Partial<CompanyEvent> = {}) =>
+    event({ id, startsOn, endsOn: startsOn, status: 'done', equipment: [{ equipmentId: 'mix', quantity: 1, caseId: 'box' }], ...patch })
+  const events = [
+    withCase('old', '2026-08-01'),
+    withCase('a', '2026-09-10'),
+    withCase('b', '2026-10-01'),
+    withCase('cancelled', '2026-10-05', { status: 'cancelled' }),
+    withCase('future', '2026-12-01', { status: 'planned' }),
+    event({ id: 'other', startsOn: '2026-10-02', endsOn: '2026-10-02', status: 'done' }),
+  ]
+
+  it('counts past events with the case after its last check, not this one', () => {
+    expect(eventsSinceCheck('box', '2026-09-01', events, 'future', today)).toBe(2)
+    expect(eventsSinceCheck('box', '2026-10-01', events, 'future', today)).toBe(0)
+    expect(eventsSinceCheck('box', null, events, 'b', today)).toBe(2)
   })
 })

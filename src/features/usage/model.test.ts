@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CompanyEvent } from '@/features/events/model'
+import { EMPTY_EVENT_DETAILS, type CompanyEvent } from '@/features/events/model'
 import type { Loan } from '@/features/loans/model'
 import { unitSummaries, usageHistory } from './model'
 
@@ -9,7 +9,7 @@ const loan = (patch: Partial<Loan>): Loan => ({
 })
 const event = (patch: Partial<CompanyEvent>): CompanyEvent => ({
   id: 'e1', name: 'Festival', client: '', venue: '', startsOn: '2026-10-01', endsOn: '2026-10-03', status: 'done', note: '',
-  equipment: [{ equipmentId: 'di', quantity: 1, caseId: null }], crew: [], ...patch,
+  equipment: [{ equipmentId: 'di', quantity: 1, caseId: null }], crew: [], ...EMPTY_EVENT_DETAILS, ...patch,
 })
 
 describe('usageHistory', () => {

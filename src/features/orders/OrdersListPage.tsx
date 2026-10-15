@@ -11,6 +11,8 @@ import { can } from '@/lib/permissions'
 import { fetchOrders, orderKeys } from './api'
 import { OrderLineSearch } from './OrderLineSearch'
 import { SupplierBadge } from './SupplierBadge'
+import { PhotoThumb } from '@/features/equipment/PhotoThumb'
+import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 
 function itemsLabel(count: number) {
   if (count === 1) return '1 položka'
@@ -26,6 +28,10 @@ export function OrdersListPage() {
     queryFn: () => fetchOrders(company.companyId),
     enabled: allowed,
   })
+  const thumbs = usePhotoThumbs(
+    company.companyId,
+    (orders.data ?? []).map((order) => order.photoPath),
+  )
 
   if (!allowed) {
     return (
@@ -67,11 +73,21 @@ export function OrdersListPage() {
           {orders.data.map((order) => (
             <li key={order.id}>
               <Link to={`/orders/${order.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
-                <SupplierBadge supplier={order.supplier} />
+                {order.photoPath ? (
+                  <PhotoThumb url={thumbs[order.photoPath]} />
+                ) : (
+                  <SupplierBadge supplier={order.supplier} source={order.source} />
+                )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{order.supplier}</span>
                   <span className="block truncate text-sm text-muted-foreground">
-                    {[formatDate(order.orderedAt), order.orderNumber, itemsLabel(order.itemCount)].filter(Boolean).join(' · ')}
+                    {[
+                      formatDate(order.orderedAt),
+                      order.source === 'marketplace' ? ['bazár', order.seller].filter(Boolean).join(': ') : order.orderNumber,
+                      itemsLabel(order.itemCount),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </span>
                 </span>
                 <span className="shrink-0 font-medium">{formatMoney(order.total, order.currency)}</span>

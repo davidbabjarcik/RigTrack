@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CompanyEvent } from '@/features/events/model'
+import { EMPTY_EVENT_DETAILS, type CompanyEvent } from '@/features/events/model'
 import { inYear, lastEditionPayout, paymentSchema, paymentTotals, paymentYears, shareByMember, sortPayments, unpaidByMember, type Payment } from './model'
 
 const payment = (patch: Partial<Payment>): Payment => ({
@@ -94,7 +94,7 @@ describe('years', () => {
 
 describe('lastEditionPayout', () => {
   const edition = (id: string, name: string, startsOn: string): CompanyEvent => ({
-    id, name, client: '', venue: '', startsOn, endsOn: startsOn, status: 'done', note: '', equipment: [], crew: [],
+    id, name, client: '', venue: '', startsOn, endsOn: startsOn, status: 'done', note: '', equipment: [], crew: [], ...EMPTY_EVENT_DETAILS,
   })
   const events = [edition('j25', 'JESKO Medzilaborce 2025', '2025-08-09'), edition('j26', 'JESKO Medzilaborce 2026', '2026-08-08'), edition('new', 'Nová akcia', '2026-09-01')]
   const payments = [

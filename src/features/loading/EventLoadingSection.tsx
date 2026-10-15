@@ -13,6 +13,7 @@ import { LoadDiagram3D } from './LoadDiagram3D'
 import { ObstacleLegend } from './ObstacleLegend'
 import { describePlace, loadingOrder, planLoading, type Unplaced } from './model'
 import { byCapacity, cargoSpaceOf, parcelOf } from './sources'
+import { DevNotice } from '@/components/feedback/DevNotice'
 
 const REASONS: Record<Unplaced['reason'], string> = {
   'too-big': 'nezmestí sa do žiadneho vozidla',
@@ -57,6 +58,7 @@ export function EventLoadingSection({ companyId, event }: Props) {
       <h2 id="event-loading-heading" className="mb-2 text-sm font-medium text-muted-foreground">
         Nakladanie
       </h2>
+      <DevNotice className="mb-3" />
 
       {cases.isPending || vehicles.isPending ? (
         <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Počítam…</p>

@@ -33,6 +33,8 @@ const lazyPage = (load: () => Promise<ComponentType>, permission?: PermissionKey
 const equipmentList = lazyPage(() => import('@/features/equipment/EquipmentListPage').then((m) => m.EquipmentListPage), 'equipment.view')
 const equipmentDetail = lazyPage(() => import('@/features/equipment/EquipmentDetailPage').then((m) => m.EquipmentDetailPage), 'equipment.view')
 const equipmentForm = lazyPage(() => import('@/features/equipment/EquipmentFormPage').then((m) => m.EquipmentFormPage), 'equipment.view')
+const equipmentExcel = lazyPage(() => import('@/features/equipment/EquipmentExcelPage').then((m) => m.EquipmentExcelPage), 'equipment.view')
+const network = lazyPage(() => import('@/features/network/NetworkPage').then((m) => m.NetworkPage), 'equipment.view')
 const cableSet = lazyPage(() => import('@/features/equipment/CableSetPage').then((m) => m.CableSetPage), 'equipment.view')
 const casesList = lazyPage(() => import('@/features/cases/CasesListPage').then((m) => m.CasesListPage), 'cases.view')
 const caseDetail = lazyPage(() => import('@/features/cases/CaseDetailPage').then((m) => m.CaseDetailPage), 'cases.view')
@@ -56,8 +58,11 @@ const notifications = lazyPage(() => import('@/features/notifications/Notificati
 const stats = lazyPage(() => import('@/features/stats/StatsPage').then((m) => m.StatsPage))
 const eventsList = lazyPage(() => import('@/features/events/EventsListPage').then((m) => m.EventsListPage), 'events.view')
 const eventDetail = lazyPage(() => import('@/features/events/EventDetailPage').then((m) => m.EventDetailPage), 'events.view')
+const eventImport = lazyPage(() => import('@/features/events/import/EventImportPage').then((m) => m.EventImportPage), 'events.view')
+const eventPrint = lazyPage(() => import('@/features/events/EventPrintPage').then((m) => m.EventPrintPage), 'events.view')
 const eventForm = lazyPage(() => import('@/features/events/EventFormPage').then((m) => m.EventFormPage), 'events.view')
 const audit = lazyPage(() => import('@/features/audit/AuditPage').then((m) => m.AuditPage), 'audit.view')
+const stage = lazyPage(() => import('@/features/stage/StagePage').then((m) => m.StagePage), 'events.view')
 const warehouse = lazyPage(() => import('@/features/warehouse/WarehousePage').then((m) => m.WarehousePage), 'cases.view')
 const recycleBin = lazyPage(() => import('@/features/bin/RecycleBinPage').then((m) => m.RecycleBinPage))
 const payouts = lazyPage(() => import('@/features/payouts/PayoutsPage').then((m) => m.PayoutsPage))
@@ -90,6 +95,7 @@ export const routes: RouteObject[] = [
         children: [
           // Tlačová listina stojí mimo rozloženia aplikácie, aby sa netlačilo menu.
           { path: 'loans/:id/sheet', lazy: loanSheet },
+          { path: 'events/:id/print', lazy: eventPrint },
           {
             path: '/',
             element: <AppLayout />,
@@ -99,6 +105,8 @@ export const routes: RouteObject[] = [
               { path: 'equipment', lazy: equipmentList },
               { path: 'equipment/new', lazy: equipmentForm },
               { path: 'equipment/new-cables', lazy: cableSet },
+              { path: 'equipment/network', lazy: network },
+              { path: 'equipment/excel', lazy: equipmentExcel },
               { path: 'equipment/:id', lazy: equipmentDetail },
               { path: 'equipment/:id/edit', lazy: equipmentForm },
               { path: 'cases', lazy: casesList },
@@ -128,10 +136,12 @@ export const routes: RouteObject[] = [
               { path: 'events/new', lazy: eventForm },
               { path: 'events/:id', lazy: eventDetail },
               { path: 'events/:id/edit', lazy: eventForm },
+              { path: 'events/:id/import', lazy: eventImport },
               { path: 'audit', lazy: audit },
               { path: 'payouts', lazy: payouts },
               { path: 'admin/recycle-bin', lazy: recycleBin },
               { path: 'warehouse', lazy: warehouse },
+              { path: 'stage', lazy: stage },
               { path: 'orders', lazy: ordersList },
               { path: 'orders/new', lazy: orderForm },
               { path: 'orders/:id', lazy: orderDetail },

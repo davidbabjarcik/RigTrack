@@ -11,7 +11,7 @@ import { RestockList } from '@/features/equipment/RestockList'
 import { formatDate, formatMoney } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { fetchShoppingItems, patchShoppingItem, shoppingKeys } from './api'
+import { fetchShoppingItems, patchShoppingItem, setShoppingPhoto, shoppingKeys } from './api'
 import {
   SHOPPING_LIST_LABELS,
   SHOPPING_LISTS,
@@ -23,6 +23,9 @@ import {
   type ShoppingStatus,
 } from './model'
 import { ShoppingEditor } from './ShoppingEditor'
+import { CompactPhoto } from '@/features/equipment/CompactPhoto'
+import { discardPhotoFile, trashPhoto } from '@/features/equipment/photo'
+import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 
 const NEXT_STATUS: Partial<Record<ShoppingStatus, { status: ShoppingStatus; label: string }>> = {
   planned: { status: 'ordered', label: 'Objednané' },
@@ -48,6 +51,10 @@ export function ShoppingPage() {
   })
 
   const all = items.data ?? []
+  const thumbs = usePhotoThumbs(
+    companyId,
+    all.map((item) => item.photoPath),
+  )
   const visible = sortShopping(all.filter((item) => item.list === list))
   const pending = visible.filter((item) => item.status !== 'delivered')
   const count = (which: ShoppingList) => all.filter((item) => item.list === which && item.status !== 'delivered').length
@@ -136,6 +143,20 @@ export function ShoppingPage() {
             return (
               <li key={item.id} className="rounded-xl border bg-surface px-4 py-3">
                 <div className="flex items-start gap-3">
+                  {(item.photoPath || canEdit) && (
+                    <CompactPhoto
+                      name={item.name}
+                      photoPath={item.photoPath}
+                      thumbUrl={thumbs[item.photoPath]}
+                      canEdit={canEdit}
+                      onUpload={async (file) => {
+                        await setShoppingPhoto(companyId, item.id, file)
+                        if (item.photoPath) await discardPhotoFile(item.photoPath).catch(() => {})
+                      }}
+                      onRemove={() => trashPhoto('shopping_items', item.id)}
+                      onChanged={() => queryClient.invalidateQueries({ queryKey: shoppingKeys.list(companyId) })}
+                    />
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className={cn('font-medium break-words', item.status === 'delivered' && 'text-muted-foreground line-through')}>
                       {item.quantity > 1 && `${item.quantity}× `}

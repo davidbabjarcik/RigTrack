@@ -23,6 +23,8 @@ export type Case = {
   note: string
   updatedAt: string
   lastCheck: CaseCheck | null
+  /** Fotka case; prázdna = bez fotky. */
+  photoPath: string
 }
 
 export type CaseCheck = {

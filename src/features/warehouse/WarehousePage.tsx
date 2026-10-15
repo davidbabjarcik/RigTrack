@@ -27,6 +27,7 @@ import {
   type Warehouse,
 } from './model'
 import { WarehousePlan } from './WarehousePlan'
+import { DevNotice } from '@/components/feedback/DevNotice'
 
 function SizeForm({ companyId, current, onDone }: { companyId: string; current: Warehouse | null; onDone: () => void }) {
   const queryClient = useQueryClient()
@@ -126,6 +127,7 @@ export function WarehousePage() {
           )
         }
       />
+      <DevNotice className="mb-4" />
 
       {!warehouse &&
         (canPlan ? (

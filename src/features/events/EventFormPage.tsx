@@ -44,6 +44,14 @@ function EventForm({ companyId, current, events }: FormProps) {
       endsOn: current?.endsOn ?? today,
       status: current?.status ?? 'planned',
       note: current?.note ?? '',
+      organizer: current?.organizer ?? '',
+      organizerPerson: current?.organizerPerson ?? '',
+      organizerPhone: current?.organizerPhone ?? '',
+      organizerEmail: current?.organizerEmail ?? '',
+      description: current?.description ?? '',
+      getInTime: current?.getInTime ?? '',
+      showTime: current?.showTime ?? '',
+      showEndTime: current?.showEndTime ?? '',
     },
   })
 
@@ -53,7 +61,7 @@ function EventForm({ companyId, current, events }: FormProps) {
   const previous = previousEdition(events, { id: current?.id, name, startsOn })
   const copyPrevious = () => {
     if (!previous) return
-    for (const key of ['client', 'venue', 'note'] as const) {
+    for (const key of ['client', 'venue', 'note', 'organizer', 'organizerPerson', 'organizerPhone', 'organizerEmail', 'description'] as const) {
       if (!getValues(key).trim() && previous[key]) setValue(key, previous[key], { shouldDirty: true })
     }
   }
@@ -80,9 +88,9 @@ function EventForm({ companyId, current, events }: FormProps) {
             Vyzerá to ako ďalší ročník akcie <strong>{previous.name}</strong> ({formatDate(previous.startsOn)}
             {previous.venue && `, ${previous.venue}`}). Posádka vtedy: {previous.crew.length}, položiek techniky: {previous.equipment.length}.
           </span>
-          {(previous.client || previous.venue || previous.note) && (
+          {(previous.client || previous.venue || previous.note || previous.organizer || previous.description) && (
             <Button variant="outline" size="sm" onClick={copyPrevious}>
-              Doplniť klienta, miesto a poznámku
+              Doplniť údaje z minula
             </Button>
           )}
         </div>
@@ -100,7 +108,28 @@ function EventForm({ companyId, current, events }: FormProps) {
           ))}
         </SelectField>
       </div>
-      <TextareaField label="Poznámka" error={errors.note?.message} {...register('note')} />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Príchod / stavba" type="time" error={errors.getInTime?.message} {...register('getInTime')} />
+        <Field label="Začiatok programu" type="time" error={errors.showTime?.message} {...register('showTime')} />
+        <Field label="Koniec programu" type="time" error={errors.showEndTime?.message} {...register('showEndTime')} />
+      </div>
+
+      <fieldset className="grid gap-4 rounded-xl border p-4 sm:grid-cols-2">
+        <legend className="px-1 text-sm font-medium">Organizátor</legend>
+        <Field label="Organizátor" placeholder="napr. Mesto Stropkov" error={errors.organizer?.message} {...register('organizer')} />
+        <Field label="Kontaktná osoba" error={errors.organizerPerson?.message} {...register('organizerPerson')} />
+        <Field label="Telefón" type="tel" autoComplete="off" error={errors.organizerPhone?.message} {...register('organizerPhone')} />
+        <Field label="E-mail" type="email" autoComplete="off" error={errors.organizerEmail?.message} {...register('organizerEmail')} />
+      </fieldset>
+
+      <TextareaField
+        label="Popis eventu"
+        placeholder="Program, pódium, prípojka elektriny, príjazd, parkovanie…"
+        rows={6}
+        error={errors.description?.message}
+        {...register('description')}
+      />
+      <TextareaField label="Interná poznámka" error={errors.note?.message} {...register('note')} />
 
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
@@ -117,7 +146,7 @@ function EventForm({ companyId, current, events }: FormProps) {
         </LinkButton>
       </div>
       {!current && (
-        <p className="text-sm text-muted-foreground">Techniku, posádku a dokumenty pridáte po uložení v detaile eventu.</p>
+        <p className="text-sm text-muted-foreground">Techniku, posádku, fotky a dokumenty (napr. rider) pridáte po uložení v detaile eventu.</p>
       )}
     </form>
   )

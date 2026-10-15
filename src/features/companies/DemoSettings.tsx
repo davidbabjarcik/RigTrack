@@ -1,0 +1,96 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { FlaskConical, RotateCcw, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { companyKeys } from './api'
+import { useCompany } from './company-context'
+import { createDemo, deleteDemo, demoKeys, fetchMyDemo, resetDemo } from './demo'
+
+/** Vlastná demo firma používateľa: založiť, otvoriť, vrátiť do pôvodného stavu, zmazať. */
+export function DemoSettings({ userId }: { userId: string }) {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const { active, setActive } = useCompany()
+  const demo = useQuery({ queryKey: demoKeys.mine(userId), queryFn: fetchMyDemo })
+
+  const refresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: companyKeys.memberships(userId) }),
+      queryClient.invalidateQueries({ queryKey: demoKeys.mine(userId) }),
+    ])
+  const open = async (companyId: string) => {
+    await refresh()
+    // Údaje starej demo firmy v pamäti už neplatia.
+    queryClient.removeQueries({ queryKey: ['company', companyId] })
+    setActive(companyId)
+    navigate('/')
+  }
+  const create = useMutation({ mutationFn: createDemo, onSuccess: open })
+  const reset = useMutation({ mutationFn: resetDemo, onSuccess: open })
+  const remove = useMutation({
+    mutationFn: deleteDemo,
+    onSuccess: async () => {
+      await refresh()
+      if (active?.companyId === demo.data) navigate('/company/select')
+    },
+  })
+  const busy = create.isPending || reset.isPending || remove.isPending
+  const failed = create.isError || reset.isError || remove.isError || demo.isError
+
+  return (
+    <div className="rounded-xl border bg-surface p-4">
+      <div className="flex items-start gap-3">
+        <FlaskConical className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">Demo firma</p>
+          <p className="text-sm text-muted-foreground">
+            Vaša vlastná ukážková firma s vymyslenou technikou, cases, eventmi a výpožičkou. Môžete v nej skúšať čokoľvek; reset ju vráti
+            do pôvodného stavu. Vaše skutočné firmy to neovplyvní.
+          </p>
+        </div>
+      </div>
+      {failed && (
+        <p role="alert" className="mt-3 text-sm text-destructive">
+          Nepodarilo sa. Ak ste ešte nespustili migráciu 0041, urobte to.
+        </p>
+      )}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {demo.data ? (
+          <>
+            {active?.companyId !== demo.data && (
+              <Button size="sm" disabled={busy} onClick={() => void open(demo.data!)}>
+                Otvoriť demo
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              onClick={() => {
+                if (window.confirm('Resetovať demo firmu? Všetko, čo ste v nej zmenili, sa stratí a nahradí ukážkovými dátami.')) reset.mutate()
+              }}
+            >
+              <RotateCcw className="size-4" aria-hidden />
+              {reset.isPending ? 'Resetujem…' : 'Resetovať demo'}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={busy}
+              onClick={() => {
+                if (window.confirm('Zmazať demo firmu aj so všetkým, čo v nej je?')) remove.mutate()
+              }}
+            >
+              <Trash2 className="size-4" aria-hidden />
+              Zmazať demo
+            </Button>
+          </>
+        ) : (
+          <Button size="sm" disabled={busy || demo.isPending} onClick={() => create.mutate()}>
+            {create.isPending ? 'Zakladám…' : 'Vytvoriť demo firmu'}
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
