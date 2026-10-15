@@ -217,6 +217,9 @@ function Editor({ companyId, initial, equipment }: { companyId: string; initial:
           {select('Spojka schodov k pódiu (110 mm)', config.stairs.connector.equipmentId, (equipmentId) =>
             set({ stairs: { ...config.stairs, connector: { ...config.stairs.connector, equipmentId } } }),
           )}
+          {select(config.riserWheel.label || 'Noha s kolieskom (pojazdný rizer)', config.riserWheel.equipmentId, (equipmentId) =>
+            set({ riserWheel: { ...config.riserWheel, equipmentId } }),
+          )}
           <NumberField
             label="Spojok na jedny schody"
             value={config.stairs.connector.perStairs}

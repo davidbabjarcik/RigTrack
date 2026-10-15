@@ -15,6 +15,8 @@ const request = (patch: Partial<StageRequest>): StageRequest => ({
   lathSides: [],
   stairs: [],
   extraDecks: [],
+  catwalk: null,
+  risers: [],
   stairsToTop: false,
   stairsRailingSides: 0,
   ...patch,
@@ -104,6 +106,23 @@ describe('planStage', () => {
 
   it('counts decks added by hand, such as triangles', () => {
     expect(quantities({ extraDecks: [{ deckId: 'tri', count: 2 }] })).toMatchObject({ 'deck-tri': 2 })
+  })
+
+  it('adds a catwalk that shares legs with the stage and leaves an opening in the stage skirt', () => {
+    const catwalk = { side: 'front' as const, positionM: 2, widthM: 2, lengthM: 4, skirt: true }
+    // pódium 21 nôh + molo 3 × 3 body, z toho 3 na prednej hrane pódia spoločné
+    expect(quantities({ orientation: 'deep', catwalk })).toMatchObject({ 'deck-d2x1': 16, 'leg-60': 27, 'skirt-2': 5, skirtClip: 30 })
+    // plachta vpredu: 6 m mínus 2 m pri mole, plus 10 m okolo mola
+    expect(quantities({ orientation: 'deep', catwalk, skirtSides: ['front'] })).toMatchObject({ 'skirt-2': 7 })
+    expect(plan({ orientation: 'deep', catwalk }).catwalkDecks.every((deck) => deck.y < 0)).toBe(true)
+    expect(plan({ catwalk: { ...catwalk, positionM: 5 } }).warnings).toContain('Molo je mimo hrany pódia.')
+  })
+
+  it('builds risers on legs or on wheels, with their own skirt height', () => {
+    const riser = { widthM: 2, depthM: 2, heightCm: 40, wheels: true, skirt: true, xM: 2, yM: 2 }
+    expect(quantities({ orientation: 'deep', risers: [riser] })).toMatchObject({ riserWheel: 6, 'skirt-2-40': 4, 'deck-d2x1': 14 })
+    expect(quantities({ orientation: 'deep', risers: [{ ...riser, wheels: false, skirt: false }, { ...riser, wheels: false, skirt: false, xM: 0 }] })).toMatchObject({ 'leg-40': 12 })
+    expect(plan({ risers: [{ ...riser, xM: 5 }] }).warnings).toContain('Rizer presahuje pódium.')
   })
 
   it('adds diagonals from 80 cm on the perimeter fields', () => {

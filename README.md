@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.2**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.3**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,19 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.3 – 15. 10. 2026
+
+- **Štatistiky:** okrem toho, čo chcem vidieť, sa dá aj **preskladať poradie** – sekcie aj jednotlivé
+  štatistiky šípkami hore/dole; „Pôvodné poradie“ ich vráti.
+- **Pódium Nivtec** *(vo vývoji)*:
+  - **molo** – výbežok z pódia (strana, poloha, šírka, dĺžka) v rovnakej výške, so spoločnými nohami
+    s pódiom, voliteľnou plachtou a otvorom v plachte, lištách a zábradlí pódia;
+  - **rizery** – jeden alebo viac (napr. pre bicie), rozmer, výška, poloha na pódiu, **pevné na nohách alebo
+    na kolieskach**, voliteľná plachta vo výške rizera;
+  - v nastavení Nivtec pribudla noha s kolieskom pre pojazdné rizery.
+
+Nové migrácie: žiadne.
 
 ### 1.2 – 15. 10. 2026
 
@@ -105,7 +118,8 @@ Potrebné migrácie: do `0043`.
 - **Plán nakladania** *(vo vývoji)* – koľko vozidiel treba a kam ktorý case uložiť, zhora aj v 3D.
 - **Pódium Nivtec** *(vo vývoji)* – z rozmerov a výšky spočíta dosky (aj 1 × 0,5 m a trojuholníky),
   nohy (susedné dosky sa delia o nohu – sedí s papierovou tabuľkou), schody po 20 cm, lišty na pero /
-  drážku (každá na jednu dosku), plachty so štipcami, zábradlie s otvormi pre schody, výstuhy od 80 cm
+  drážku (každá na jednu dosku), plachty so štipcami, zábradlie s otvormi pre schody, výstuhy od 80 cm,
+  **molo**, **rizery** (pevné alebo na kolieskach)
   a príslušenstvo; nakreslí pôdorys (pero vzadu a vpravo), porovná so skladom a pridá diely na event.
 
 ### 🔧 Servis a 🚐 vozidlá
@@ -124,7 +138,7 @@ Potrebné migrácie: do `0043`.
 
 - **Odmeny** – odmeny a zálohy členov, filter podľa rokov, koláčový graf; člen vidí len svoje.
 - **Úlohy, Návrhy, Kalendár** (zoznam aj mesačná mriežka), **Upozornenia**, **História zmien**.
-- **Štatistiky** – technika, servis, vozidlá a **peniaze**: príjmy firmy, odmeny a zostatok (s oprávnením)
+- **Štatistiky** (čo vidieť aj v akom poradí si nastaví každý sám) – technika, servis, vozidlá a **peniaze**: príjmy firmy, odmeny a zostatok (s oprávnením)
   a každému jeho vlastné zárobky podľa role, mesiacov a rokov, s koláčovými grafmi.
 - **Záloha** – admin stiahne celú firmu ako ZIP s Excelmi (fotky a dokumenty v nej nie sú).
 - **Kôš** – zmazané veci sa dajú 30 dní obnoviť (`/admin/recycle-bin`, iba admin); kôš aj história zmien sa dajú exportovať do Excelu.

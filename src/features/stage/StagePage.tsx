@@ -22,7 +22,9 @@ import {
   SIDE_LABELS,
   sideLength,
   SIDES,
+  type Catwalk,
   type Orientation,
+  type Riser,
   type Segment,
   type Side,
   type Stairs,
@@ -41,6 +43,7 @@ const GROUP_ICONS: Record<string, PartKind> = {
   Zábradlie: 'railing',
   Výstuhy: 'diagonal',
   Schody: 'stairs',
+  Rizery: 'leg',
   Príslušenstvo: 'accessory',
 }
 
@@ -50,7 +53,7 @@ const GROUP_ICONS: Record<string, PartKind> = {
  */
 export function StageDrawing({ request, plan, mainId }: { request: StageRequest; plan: StagePlan; mainId: string }) {
   const { widthM: w, depthM: d } = request
-  const longest = Math.max(0, ...plan.stairs.map((item) => item.steps * item.stepDepthM))
+  const longest = Math.max(0, ...plan.stairs.map((item) => item.steps * item.stepDepthM), request.catwalk?.lengthM ?? 0)
   const pad = 28 + longest * PX
   const width = w * PX + pad * 2
   const height = d * PX + pad * 2
@@ -74,7 +77,7 @@ export function StageDrawing({ request, plan, mainId }: { request: StageRequest;
   }
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full max-w-xl" role="img" aria-label={`Pôdorys pódia ${w} × ${d} m`}>
-      {plan.decks.map((deck, index) => {
+      {[...plan.decks, ...plan.catwalkDecks].map((deck, index) => {
         const x = X(deck.x) + 1.5
         const y = Y(deck.y + deck.d) + 1.5
         const dw = deck.w * PX - 3
@@ -127,6 +130,23 @@ export function StageDrawing({ request, plan, mainId }: { request: StageRequest;
         const [x1, y1, x2, y2] = line(segment, 7)
         return <line key={`r-${index}`} x1={x1} y1={y1} x2={x2} y2={y2} className="stroke-sky-600" strokeWidth={5} strokeLinecap="round" />
       })}
+      {plan.risers.map((riser, index) => (
+        <g key={`ri-${index}`}>
+          <rect
+            x={X(riser.xM) + 4}
+            y={Y(riser.yM + riser.depthM) + 4}
+            width={riser.widthM * PX - 8}
+            height={riser.depthM * PX - 8}
+            rx={4}
+            className="fill-violet-400/30 stroke-violet-500"
+            strokeWidth={2.5}
+            strokeDasharray={riser.wheels ? '5 3' : undefined}
+          />
+          <text x={X(riser.xM + riser.widthM / 2)} y={Y(riser.yM + riser.depthM / 2) + 4} textAnchor="middle" className="fill-violet-700 text-[11px] font-semibold dark:fill-violet-200">
+            Rizer {riser.heightCm} cm
+          </text>
+        </g>
+      ))}
       <text x={width / 2} y={height - 6} textAnchor="middle" className="fill-muted-foreground text-[11px]">
         predná strana (publikum) · {w} m
       </text>
@@ -161,6 +181,9 @@ function SideChoice({ label, sides, onChange }: { label: string; sides: Side[]; 
   )
 }
 
+/** Rozmer mola či rizera po 0,5 m, aspoň 0,5 m. */
+const halfMeters = (text: string) => Math.max(0.5, Math.round((Number(text) || 0.5) * 2) / 2)
+
 /** Rozmer po 0,5 m, od 1 m do maxima. */
 const clampSize = (value: number) => (Number.isFinite(value) ? Math.min(MAX_STAGE_M, Math.max(1, Math.round(value * 2) / 2)) : 1)
 
@@ -186,6 +209,8 @@ export function StagePage() {
   const [laths, setLaths] = useState(false)
   const [lathSides, setLathSides] = useState<Side[]>(['front', 'left', 'right'])
   const [extraDecks, setExtraDecks] = useState<{ deckId: string; count: number }[]>([])
+  const [catwalk, setCatwalk] = useState<Catwalk | null>(null)
+  const [risers, setRisers] = useState<Riser[]>([])
   const [stairsToTop, setStairsToTop] = useState(false)
   const [stairsRailingSides, setStairsRailingSides] = useState(0)
   const [eventId, setEventId] = useState(params.get('event') ?? '')
@@ -205,6 +230,8 @@ export function StagePage() {
     lathSides: laths ? lathSides : [],
     stairs,
     extraDecks,
+    catwalk,
+    risers,
     stairsToTop,
     stairsRailingSides,
   }
@@ -338,6 +365,108 @@ export function StagePage() {
             )}
           </fieldset>
 
+          <fieldset className="flex flex-col gap-2 rounded-xl border p-3">
+            <legend className="px-1 text-sm font-medium">Molo</legend>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="size-4"
+                checked={catwalk !== null}
+                onChange={(event) =>
+                  setCatwalk(event.target.checked ? { side: 'front', positionM: Math.max(0, Math.floor(request.widthM / 2) - 1), widthM: 2, lengthM: 4, skirt: false } : null)
+                }
+              />
+              Chcem molo (výbežok z pódia v rovnakej výške)
+            </label>
+            {catwalk && (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <SelectField label="Strana" value={catwalk.side} onChange={(event) => setCatwalk({ ...catwalk, side: event.target.value as Side, positionM: 0 })}>
+                    {SIDES.map((side) => (
+                      <option key={side} value={side}>
+                        {SIDE_LABELS[side]}
+                      </option>
+                    ))}
+                  </SelectField>
+                  <Field
+                    label={catwalk.side === 'front' || catwalk.side === 'back' ? 'Od ľava (m)' : 'Od predu (m)'}
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    value={catwalk.positionM}
+                    onChange={(event) => setCatwalk({ ...catwalk, positionM: Number(event.target.value) || 0 })}
+                  />
+                  <Field label="Šírka (m)" type="number" min={0.5} step={0.5} value={catwalk.widthM} onChange={(event) => setCatwalk({ ...catwalk, widthM: halfMeters(event.target.value) })} />
+                  <Field label="Dĺžka (m)" type="number" min={0.5} step={0.5} value={catwalk.lengthM} onChange={(event) => setCatwalk({ ...catwalk, lengthM: halfMeters(event.target.value) })} />
+                </div>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" className="size-4" checked={catwalk.skirt} onChange={(event) => setCatwalk({ ...catwalk, skirt: event.target.checked })} />
+                  Plachta okolo mola
+                </label>
+              </>
+            )}
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-2 rounded-xl border p-3">
+            <legend className="px-1 text-sm font-medium">Rizery</legend>
+            {risers.map((riser, index) => {
+              const change = (patch: Partial<Riser>) => setRisers(risers.map((other, i) => (i === index ? { ...other, ...patch } : other)))
+              return (
+                <div key={index} className="flex flex-col gap-2 rounded-lg border p-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Rizer {index + 1}</span>
+                    <Button variant="ghost" size="sm" aria-label={`Odobrať rizer ${index + 1}`} onClick={() => setRisers(risers.filter((_, i) => i !== index))}>
+                      <Trash2 className="size-4" aria-hidden />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field label="Šírka (m)" type="number" min={0.5} step={0.5} value={riser.widthM} onChange={(event) => change({ widthM: halfMeters(event.target.value) })} />
+                    <Field label="Hĺbka (m)" type="number" min={0.5} step={0.5} value={riser.depthM} onChange={(event) => change({ depthM: halfMeters(event.target.value) })} />
+                    <SelectField label="Výška" value={riser.heightCm} onChange={(event) => change({ heightCm: Number(event.target.value) })}>
+                      {(heights.length > 0 ? heights : [20, 40, 60]).map((value) => (
+                        <option key={value} value={value}>
+                          {value} cm
+                        </option>
+                      ))}
+                    </SelectField>
+                    <SelectField label="Uloženie" value={riser.wheels ? 'wheels' : 'fixed'} onChange={(event) => change({ wheels: event.target.value === 'wheels' })}>
+                      <option value="fixed">Pevný na nohách</option>
+                      <option value="wheels">Na kolieskach</option>
+                    </SelectField>
+                    <Field label="Od ľava (m)" type="number" min={0} step={0.5} value={riser.xM} onChange={(event) => change({ xM: Number(event.target.value) || 0 })} />
+                    <Field label="Od predu (m)" type="number" min={0} step={0.5} value={riser.yM} onChange={(event) => change({ yM: Number(event.target.value) || 0 })} />
+                  </div>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" className="size-4" checked={riser.skirt} onChange={(event) => change({ skirt: event.target.checked })} />
+                    Plachta okolo rizera
+                  </label>
+                </div>
+              )
+            })}
+            <Button
+              variant="outline"
+              size="sm"
+              className="self-start"
+              onClick={() =>
+                setRisers([
+                  ...risers,
+                  {
+                    widthM: 2,
+                    depthM: 2,
+                    heightCm: heights.find((value) => value >= 40 && value < heightCm) ?? heights[0] ?? 40,
+                    wheels: false,
+                    skirt: true,
+                    xM: Math.max(0, Math.floor(request.widthM / 2) - 1),
+                    yM: Math.max(0, request.depthM - 2),
+                  },
+                ])
+              }
+            >
+              <Plus className="size-4" aria-hidden />
+              {risers.length === 0 ? 'Pridať rizer' : 'Pridať ďalší rizer'}
+            </Button>
+          </fieldset>
+
           {triangles.length > 0 && (
             <fieldset className="flex flex-col gap-2 rounded-xl border p-3">
               <legend className="px-1 text-sm font-medium">Dosky navyše (trojuholníky a pod.)</legend>
@@ -384,6 +513,7 @@ export function StagePage() {
               <span className="text-yellow-700 dark:text-yellow-300">━ pero dosky</span>
               <span className="text-amber-700 dark:text-amber-300">■ menšia doska</span>
               {plan.lathEdges.length > 0 && <span className="text-emerald-600">━ lišty</span>}
+              {plan.risers.length > 0 && <span className="text-violet-600 dark:text-violet-300">▭ rizer (prerušovane na kolieskach)</span>}
               {plan.skirtMeters > 0 && <span className="text-rose-600">- - plachta {plan.skirtMeters} m</span>}
               {plan.railingMeters > 0 && <span className="text-sky-700 dark:text-sky-300">━ zábradlie {plan.railingMeters} m</span>}
             </p>

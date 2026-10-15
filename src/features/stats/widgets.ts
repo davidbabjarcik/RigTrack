@@ -71,3 +71,63 @@ export function saveHidden(companyId: string, hidden: StatWidgetId[]) {
     // Úložisko nedostupné (súkromné okno) — výber platí len do zatvorenia karty.
   }
 }
+
+// ---------------------------------------------------------------------------
+// Poradie: kde ktorá sekcia a ktorý widget je. Pamätá sa v prehliadači pre každú firmu.
+// ---------------------------------------------------------------------------
+
+export type StatsOrder = { sections: StatSectionId[]; widgets: StatWidgetId[] }
+
+export const DEFAULT_ORDER: StatsOrder = {
+  sections: STAT_SECTIONS.map((section) => section.id),
+  widgets: STAT_WIDGETS.map((widget) => widget.id),
+}
+
+/** Zachová uložené poradie známych položiek a nové (pribudnuté vo verzii) pridá na koniec. */
+function mergeOrder<T extends string>(stored: unknown, known: readonly T[]): T[] {
+  const kept = Array.isArray(stored) ? (stored.filter((id, index) => known.includes(id as T) && stored.indexOf(id) === index) as T[]) : []
+  return [...kept, ...known.filter((id) => !kept.includes(id))]
+}
+
+export function parseOrder(raw: string | null): StatsOrder {
+  try {
+    const parsed = JSON.parse(raw ?? 'null') as { sections?: unknown; widgets?: unknown } | null
+    return {
+      sections: mergeOrder(parsed?.sections, DEFAULT_ORDER.sections),
+      widgets: mergeOrder(parsed?.widgets, DEFAULT_ORDER.widgets),
+    }
+  } catch {
+    return DEFAULT_ORDER
+  }
+}
+
+const orderKey = (companyId: string) => `rigtrack:stats-order:${companyId}`
+
+export function loadOrder(companyId: string): StatsOrder {
+  try {
+    return parseOrder(localStorage.getItem(orderKey(companyId)))
+  } catch {
+    return DEFAULT_ORDER
+  }
+}
+
+export function saveOrder(companyId: string, order: StatsOrder) {
+  try {
+    localStorage.setItem(orderKey(companyId), JSON.stringify(order))
+  } catch {
+    // bez úložiska platí poradie len do zatvorenia karty
+  }
+}
+
+/** Posunie položku o jedno miesto hore (-1) alebo dole (+1) medzi položkami, ktoré spĺňajú `among`. */
+export function move<T>(list: T[], item: T, direction: -1 | 1, among: (other: T) => boolean = () => true): T[] {
+  const peers = list.filter(among)
+  const index = peers.indexOf(item)
+  const neighbour = peers[index + direction]
+  if (index < 0 || neighbour === undefined) return list
+  const result = [...list]
+  const a = result.indexOf(item)
+  const b = result.indexOf(neighbour)
+  ;[result[a], result[b]] = [result[b], result[a]]
+  return result
+}

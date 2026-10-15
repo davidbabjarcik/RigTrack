@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Check, SlidersHorizontal } from 'lucide-react'
+import { ArrowDown, ArrowUp, Check, SlidersHorizontal } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -23,7 +23,19 @@ import { SelectField } from '@/components/ui/field'
 import { DonutChart } from './DonutChart'
 import { byMonth, byRole, byYear, inYear, moneyYears, sum } from './money'
 import { buildStats, type Ranked } from './model'
-import { loadHidden, saveHidden, STAT_SECTIONS, STAT_WIDGETS, type StatWidgetId } from './widgets'
+import {
+  DEFAULT_ORDER,
+  loadHidden,
+  loadOrder,
+  move,
+  saveHidden,
+  saveOrder,
+  STAT_SECTIONS,
+  STAT_WIDGETS,
+  type StatSectionId,
+  type StatsOrder,
+  type StatWidgetId,
+} from './widgets'
 
 function Tile({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
@@ -74,6 +86,21 @@ function Ranking({ title, rows, format, empty }: { title: string; rows: Ranked[]
   )
 }
 
+/** Dve malé šípky na posun položky hore a dole. */
+function MoveButtons({ label, canUp, canDown, onMove }: { label: string; canUp: boolean; canDown: boolean; onMove: (direction: -1 | 1) => void }) {
+  const button = 'flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted disabled:opacity-30'
+  return (
+    <span className="flex shrink-0">
+      <button type="button" className={button} disabled={!canUp} aria-label={`Posunúť vyššie: ${label}`} onClick={() => onMove(-1)}>
+        <ArrowUp className="size-4" aria-hidden />
+      </button>
+      <button type="button" className={button} disabled={!canDown} aria-label={`Posunúť nižšie: ${label}`} onClick={() => onMove(1)}>
+        <ArrowDown className="size-4" aria-hidden />
+      </button>
+    </span>
+  )
+}
+
 const count = (value: number) => String(value)
 const daysLabel = (value: number) => `${value} ${value === 1 ? 'deň' : value <= 4 ? 'dni' : 'dní'}`
 const money = (value: number) => formatMoney(value, 'EUR')
@@ -86,6 +113,15 @@ export function StatsPage() {
   const today = todayIso()
   const [editing, setEditing] = useState(false)
   const [hidden, setHidden] = useState(() => loadHidden(companyId))
+  const [order, setOrder] = useState(() => loadOrder(companyId))
+  const reorder = (next: StatsOrder) => {
+    setOrder(next)
+    saveOrder(companyId, next)
+  }
+  const moveSection = (id: StatSectionId, direction: -1 | 1) => reorder({ ...order, sections: move(order.sections, id, direction) })
+  const sectionOf = (id: StatWidgetId) => STAT_WIDGETS.find((widget) => widget.id === id)!.section
+  const moveWidget = (id: StatWidgetId, direction: -1 | 1, visible: Set<StatWidgetId>) =>
+    reorder({ ...order, widgets: move(order.widgets, id, direction, (other) => visible.has(other) && sectionOf(other) === sectionOf(id)) })
   const toggle = (id: StatWidgetId) => {
     const next = hidden.includes(id) ? hidden.filter((other) => other !== id) : [...hidden, id]
     setHidden(next)
@@ -199,7 +235,11 @@ export function StatsPage() {
   }
   // Widgety, na ktoré člen nemá oprávnenie, sa ani neponúkajú.
   const allowed = STAT_WIDGETS.filter((widget) => !('needs' in widget) || widget.needs.every((permission) => can(company, permission)))
-  const shown = allowed.filter((widget) => !hidden.includes(widget.id))
+  const position = (id: StatWidgetId) => order.widgets.indexOf(id)
+  const sortedAllowed = [...allowed].sort((a, b) => position(a.id) - position(b.id))
+  const allowedIds = new Set<StatWidgetId>(allowed.map((widget) => widget.id))
+  const sections = order.sections.map((id) => STAT_SECTIONS.find((section) => section.id === id)!)
+  const shown = sortedAllowed.filter((widget) => !hidden.includes(widget.id))
 
   return (
     <>
@@ -220,28 +260,51 @@ export function StatsPage() {
             <h2 id="stats-edit-heading" className="font-medium">
               Čo chcem vidieť
             </h2>
-            {hidden.length > 0 && (
-              <button type="button" className="text-sm text-accent hover:underline" onClick={showAll}>
-                Zobraziť všetko
+            <span className="flex gap-3">
+              {hidden.length > 0 && (
+                <button type="button" className="text-sm text-accent hover:underline" onClick={showAll}>
+                  Zobraziť všetko
+                </button>
+              )}
+              <button type="button" className="text-sm text-accent hover:underline" onClick={() => reorder(DEFAULT_ORDER)}>
+                Pôvodné poradie
               </button>
-            )}
+            </span>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {STAT_SECTIONS.map((section) => (
-              <fieldset key={section.id}>
-                <legend className="mb-1.5 text-sm font-medium text-muted-foreground">{section.label}</legend>
-                <div className="flex flex-col gap-1.5">
-                  {allowed.filter((widget) => widget.section === section.id).map((widget) => (
-                    <label key={widget.id} className="flex cursor-pointer items-start gap-2 text-sm">
-                      <input type="checkbox" className="mt-0.5 size-4 shrink-0" checked={!hidden.includes(widget.id)} onChange={() => toggle(widget.id)} />
-                      {widget.label}
-                    </label>
-                  ))}
+            {sections.map((section, sectionIndex) => (
+              <fieldset key={section.id} className="rounded-lg border p-3">
+                <legend className="flex items-center gap-1 px-1 text-sm font-medium">
+                  {section.label}
+                  <MoveButtons
+                    label={section.label}
+                    canUp={sectionIndex > 0}
+                    canDown={sectionIndex < sections.length - 1}
+                    onMove={(direction) => moveSection(section.id, direction)}
+                  />
+                </legend>
+                <div className="flex flex-col gap-1">
+                  {sortedAllowed
+                    .filter((widget) => widget.section === section.id)
+                    .map((widget, index, peers) => (
+                      <div key={widget.id} className="flex items-start gap-1">
+                        <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-2 py-1 text-sm">
+                          <input type="checkbox" className="mt-0.5 size-4 shrink-0" checked={!hidden.includes(widget.id)} onChange={() => toggle(widget.id)} />
+                          {widget.label}
+                        </label>
+                        <MoveButtons
+                          label={widget.label}
+                          canUp={index > 0}
+                          canDown={index < peers.length - 1}
+                          onMove={(direction) => moveWidget(widget.id, direction, allowedIds)}
+                        />
+                      </div>
+                    ))}
                 </div>
               </fieldset>
             ))}
           </div>
-          <p className="mt-3 text-sm text-muted-foreground">Výber sa pamätá v tomto prehliadači a platí len pre vás.</p>
+          <p className="mt-3 text-sm text-muted-foreground">Šípkami zmeníte poradie sekcií aj štatistík v nich. Výber a poradie sa pamätajú v tomto prehliadači a platia len pre vás.</p>
         </section>
       )}
 
@@ -254,7 +317,7 @@ export function StatsPage() {
         </div>
       )}
 
-      {STAT_SECTIONS.map((section) => {
+      {sections.map((section) => {
         const tiles = shown.filter((widget) => widget.section === section.id && widget.kind === 'tile')
         const rankings = shown.filter((widget) => widget.section === section.id && widget.kind !== 'tile')
         if (tiles.length + rankings.length === 0) return null

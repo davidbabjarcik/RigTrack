@@ -85,6 +85,8 @@ const configShape = {
     /** Spojky schodov k pódiu, keď posledný stupeň končí pod úrovňou pódia (110 mm). */
     connector: part.extend({ perStairs: ratio }),
   }),
+  /** Pojazdný rizer: namiesto nohy noha s kolieskom (jedna v každom rohu dosiek). */
+  riserWheel: part.extend({ label: z.string().trim().max(60) }),
   /** Ďalšie drobnosti (čapové spojky, podložky, rohové spojky…) a podľa čoho sa rátajú. */
   accessories: z
     .array(part.extend({ label: z.string().trim().min(1).max(80), basis: z.enum(ACCESSORY_BASES), quantity: ratio }))
@@ -136,6 +138,7 @@ export const DEFAULT_STAGE_CONFIG: StageConfig = {
   ],
   diagonalEvery: 1,
   stairs: { stepDeckId: 'd1x05', stairLeg: none, railing: none, connector: { equipmentId: '', perStairs: 2 } },
+  riserWheel: { equipmentId: '', label: 'Noha s kolieskom' },
   accessories: [
     { label: 'Čapová spojka pre zábradlie', basis: 'railing', quantity: 2, equipmentId: '' },
     { label: 'Podložka pre čapovú spojku', basis: 'railing', quantity: 2, equipmentId: '' },
@@ -188,6 +191,12 @@ export type Orientation = 'auto' | 'wide' | 'deep'
 /** Schody: na ktorej strane a kde (metre od ľavého, resp. predného rohu). */
 export type Stairs = { side: Side; positionM: number }
 
+/** Molo: výbežok z pódia (napr. dopredu do publika) v rovnakej výške. */
+export type Catwalk = { side: Side; positionM: number; widthM: number; lengthM: number; skirt: boolean }
+
+/** Rizer: menšie vyvýšenie na pódiu (napr. pre bicie), pevné na nohách alebo na kolieskach. */
+export type Riser = { widthM: number; depthM: number; heightCm: number; wheels: boolean; skirt: boolean; xM: number; yM: number }
+
 export type StageRequest = {
   /** Šírka (pozdĺž prednej hrany) a hĺbka v metroch, po 0,5 m. */
   widthM: number
@@ -205,6 +214,8 @@ export type StageRequest = {
   stairsRailingSides: number
   /** Dosky navyše, ktoré sa do obdĺžnika neskladajú (trojuholníky a pod.). */
   extraDecks: { deckId: string; count: number }[]
+  catwalk: Catwalk | null
+  risers: Riser[]
 }
 
 /** Doska v pôdoryse; x doprava od ľavého predného rohu, y dozadu, v metroch. */
@@ -224,6 +235,9 @@ export type StagePlan = {
   railingSegments: Segment[]
   lathEdges: Segment[]
   stairs: (Stairs & { steps: number; widthM: number; stepDepthM: number })[]
+  /** Dosky mola v súradniciach pódia (môžu byť mimo neho, napr. pred prednou hranou). */
+  catwalkDecks: Deck[]
+  risers: (Riser & { decks: Deck[] })[]
   skirtMeters: number
   railingMeters: number
 }
@@ -401,12 +415,52 @@ export function planStage(request: StageRequest, config: StageConfig): StagePlan
   }
   const deckType = (id: string) => config.decks.find((item) => item.id === id)
 
-  // Dosky a nohy
-  for (const type of config.decks) {
-    add(`deck-${type.id}`, 'Dosky', type.label || `Doska ${formatM(type.widthM)} × ${formatM(type.depthM)}`, decks.filter((item) => item.typeId === type.id).length, type.equipmentId)
+  // Molo: rozloženie dosiek v jeho vlastnom smere (dlhšou stranou von z pódia), potom do súradníc pódia.
+  const catwalk = request.catwalk
+  let catwalkDecks: Deck[] = []
+  let catwalkFields: number[] = []
+  if (catwalk) {
+    const along = sideLength(catwalk.side, widthM, depthM)
+    if (catwalk.positionM < 0 || catwalk.positionM + catwalk.widthM > along + EPS) warnings.push('Molo je mimo hrany pódia.')
+    const local = layout(catwalk.widthM, catwalk.lengthM, 'deep', config)
+    if (Math.abs(covered(local) - catwalk.widthM * catwalk.lengthM) > EPS) warnings.push('Z nastavených dosiek sa molo poskladať nedá.')
+    const p = catwalk.positionM
+    catwalkDecks = local.map((deck) => {
+      if (catwalk.side === 'front') return { ...deck, x: p + deck.x, y: -(deck.y + deck.d) }
+      if (catwalk.side === 'back') return { ...deck, x: p + deck.x, y: depthM + deck.y }
+      if (catwalk.side === 'left') return { ...deck, x: -(deck.y + deck.d), y: p + deck.x, w: deck.d, d: deck.w }
+      return { ...deck, x: widthM + deck.y, y: p + deck.x, w: deck.d, d: deck.w }
+    })
+    // Polia po obvode mola okrem strany pripojenej k pódiu.
+    catwalkFields = perimeterEdges(local, catwalk.widthM, catwalk.lengthM)
+      .filter((edge) => edge.side !== 'front')
+      .map((edge) => edge.toM - edge.fromM)
   }
-  const legs = legPoints(decks)
-  addLegs(heightCm, legs)
+
+  // Rizery: vlastné malé pódiá na pódiu.
+  const risers = request.risers.map((riser) => {
+    if (riser.xM < 0 || riser.yM < 0 || riser.xM + riser.widthM > widthM + EPS || riser.yM + riser.depthM > depthM + EPS) {
+      warnings.push('Rizer presahuje pódium.')
+    }
+    const riserDecks = layout(riser.widthM, riser.depthM, 'wide', config).map((deck) => ({ ...deck, x: riser.xM + deck.x, y: riser.yM + deck.y }))
+    if (Math.abs(covered(riserDecks) - riser.widthM * riser.depthM) > EPS) warnings.push('Z nastavených dosiek sa rizer poskladať nedá.')
+    return { ...riser, decks: riserDecks }
+  })
+
+  // Dosky a nohy (pódium aj molo stoja na spoločných nohách, rizery majú vlastné)
+  const allDecks = [...decks, ...catwalkDecks, ...risers.flatMap((riser) => riser.decks)]
+  for (const type of config.decks) {
+    add(`deck-${type.id}`, 'Dosky', type.label || `Doska ${formatM(type.widthM)} × ${formatM(type.depthM)}`, allDecks.filter((item) => item.typeId === type.id).length, type.equipmentId)
+  }
+  const stageLegs = legPoints([...decks, ...catwalkDecks])
+  addLegs(heightCm, stageLegs)
+  let legs = stageLegs
+  for (const riser of risers) {
+    const points = legPoints(riser.decks)
+    legs += points
+    if (riser.wheels) add('riserWheel', 'Rizery', config.riserWheel.label || 'Noha s kolieskom', points, config.riserWheel.equipmentId)
+    else addLegs(riser.heightCm, points)
+  }
   let extraDecks = 0
   for (const extra of request.extraDecks) {
     const type = deckType(extra.deckId)
@@ -436,10 +490,12 @@ export function planStage(request: StageRequest, config: StageConfig): StagePlan
     if (!request.stairsToTop) add('stairConnector', 'Schody', 'Spojka schodov k pódiu (110 mm)', config.stairs.connector.perStairs, config.stairs.connector.equipmentId)
   })
 
+  // Kde sú pripojené schody alebo molo, nejde lišta, plachta ani zábradlie.
+  const gaps = [...stairs, ...(catwalk ? [{ side: catwalk.side, positionM: catwalk.positionM, widthM: catwalk.widthM }] : [])]
+
   // Lišty: na každú hranu dosky na zvolenej strane lišta jej dĺžky (alebo kratšie, nie cez dve dosky).
-  // Kde sú pripojené schody, lišta nejde.
   const underStairs = (edge: Segment) =>
-    stairs.some((item) => item.side === edge.side && item.positionM < edge.toM - EPS && item.positionM + item.widthM > edge.fromM + EPS)
+    gaps.some((item) => item.side === edge.side && item.positionM < edge.toM - EPS && item.positionM + item.widthM > edge.fromM + EPS)
   const lathEdges = perimeterEdges(decks, widthM, depthM).filter((edge) => request.lathSides.includes(edge.side) && !underStairs(edge))
   for (const edge of lathEdges) {
     const profile = SIDE_PROFILE[edge.side]
@@ -455,25 +511,31 @@ export function planStage(request: StageRequest, config: StageConfig): StagePlan
     }
   }
 
-  // Plachta: celé zvolené strany okrem miest, kde sú schody.
-  const skirts = config.skirts.filter((skirt) => skirt.heightCm === 0 || skirt.heightCm === heightCm)
-  const skirtSegments = request.skirtSides.flatMap((side) => openSegments(side, sideLength(side, widthM, depthM), stairs))
-  const skirtMeters = skirtSegments.reduce((sum, segment) => sum + segment.toM - segment.fromM, 0)
-  if (skirtSegments.length > 0) {
-    if (skirts.length === 0) warnings.push(`Pre výšku ${heightCm} cm nie sú v nastavení plachty.`)
+  // Plachta: zvolené strany pódia okrem schodov a mola, obvod mola a rizerov, ak ju chcú.
+  const skirtSegments = request.skirtSides.flatMap((side) => openSegments(side, sideLength(side, widthM, depthM), gaps))
+  const skirtRuns: { lengthM: number; heightCm: number }[] = skirtSegments.map((segment) => ({ lengthM: segment.toM - segment.fromM, heightCm }))
+  if (catwalk?.skirt) skirtRuns.push(...[catwalk.lengthM, catwalk.lengthM, catwalk.widthM].map((lengthM) => ({ lengthM, heightCm })))
+  for (const riser of risers) {
+    if (riser.skirt) skirtRuns.push(...[riser.widthM, riser.widthM, riser.depthM, riser.depthM].map((lengthM) => ({ lengthM, heightCm: riser.heightCm })))
+  }
+  const skirtMeters = skirtRuns.reduce((sum, run) => sum + run.lengthM, 0)
+  for (const height of [...new Set(skirtRuns.map((run) => run.heightCm))]) {
+    const skirts = config.skirts.filter((skirt) => skirt.heightCm === 0 || skirt.heightCm === height)
+    if (skirts.length === 0) warnings.push(`Pre výšku ${height} cm nie sú v nastavení plachty.`)
     const pieces = new Map<number, number>()
-    for (const segment of skirtSegments) {
-      for (const [size, count] of coverLength(segment.toM - segment.fromM, skirts.map((skirt) => skirt.coversM))) pieces.set(size, (pieces.get(size) ?? 0) + count)
+    for (const run of skirtRuns.filter((candidate) => candidate.heightCm === height)) {
+      for (const [size, count] of coverLength(run.lengthM, skirts.map((skirt) => skirt.coversM))) pieces.set(size, (pieces.get(size) ?? 0) + count)
     }
     for (const [size, count] of [...pieces].sort((a, b) => b[0] - a[0])) {
-      const skirt = skirts.find((candidate) => candidate.coversM === size && candidate.heightCm === heightCm) ?? skirts.find((candidate) => candidate.coversM === size)
-      add(`skirt-${size}`, 'Plachta', `Plachta na ${formatM(size)}`, count, skirt?.equipmentId ?? '')
+      const skirt = skirts.find((candidate) => candidate.coversM === size && candidate.heightCm === height) ?? skirts.find((candidate) => candidate.coversM === size)
+      const own = height === heightCm
+      add(own ? `skirt-${size}` : `skirt-${size}-${height}`, 'Plachta', `Plachta na ${formatM(size)}${own ? '' : ` (rizer ${height} cm)`}`, count, skirt?.equipmentId ?? '')
     }
-    add('skirtClip', 'Plachta', 'Štipec na plachtu', skirtMeters * config.skirtClip.perMeter, config.skirtClip.equipmentId)
   }
+  if (skirtMeters > 0) add('skirtClip', 'Plachta', 'Štipec na plachtu', skirtMeters * config.skirtClip.perMeter, config.skirtClip.equipmentId)
 
   // Zábradlie: zvolené strany bez otvorov pre schody; spoje medzi dielmi a rohy.
-  const railingSegments = request.railingSides.flatMap((side) => openSegments(side, sideLength(side, widthM, depthM), stairs))
+  const railingSegments = request.railingSides.flatMap((side) => openSegments(side, sideLength(side, widthM, depthM), gaps))
   const railingMeters = railingSegments.reduce((sum, segment) => sum + segment.toM - segment.fromM, 0)
   let railingPieces = 0
   let joints = 0
@@ -502,7 +564,7 @@ export function planStage(request: StageRequest, config: StageConfig): StagePlan
   // Výstuhy („vrtule“) od výšky, pre ktorú sú v nastavení.
   const needsDiagonals = config.diagonals.some((item) => heightCm >= item.minHeightCm)
   if (needsDiagonals) {
-    const fields = perimeterEdges(decks, widthM, depthM).map((edge) => edge.toM - edge.fromM)
+    const fields = [...perimeterEdges(decks, widthM, depthM).map((edge) => edge.toM - edge.fromM), ...catwalkFields]
     for (const fieldM of [...new Set(fields)].sort((a, b) => b - a)) {
       const count = Math.ceil(fields.filter((field) => field === fieldM).length / config.diagonalEvery)
       const item = config.diagonals.find((candidate) => candidate.fieldM === fieldM && heightCm >= candidate.minHeightCm && heightCm <= candidate.maxHeightCm)
@@ -513,7 +575,7 @@ export function planStage(request: StageRequest, config: StageConfig): StagePlan
 
   // Drobnosti podľa toho, na čo sa viažu.
   const basisCount: Record<AccessoryBasis, number> = {
-    deck: decks.length + extraDecks,
+    deck: allDecks.length + extraDecks,
     leg: legs,
     railing: railingPieces,
     railingJoint: joints,
@@ -541,6 +603,8 @@ export function planStage(request: StageRequest, config: StageConfig): StagePlan
     railingSegments,
     lathEdges,
     stairs,
+    catwalkDecks,
+    risers,
     skirtMeters,
     railingMeters,
   }
