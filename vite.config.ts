@@ -12,6 +12,19 @@ export default defineConfig({
   // Verzia z package.json, aby sa v aplikácii ukazovala tá istá ako pri vydaní.
   define: { __APP_VERSION__: JSON.stringify(version) },
   plugins: [
+    // Verzia sa číta pri štarte; po zmene package.json sa vývojový server reštartuje, aby pätička nebola zastaraná.
+    {
+      name: 'restart-on-version-change',
+      configureServer(server) {
+        const file = fileURLToPath(new URL('./package.json', import.meta.url))
+        // Na Windows môžu cesty prísť s opačnými lomkami.
+        const same = (path: string) => path.replace(/\\/g, '/').toLowerCase() === file.replace(/\\/g, '/').toLowerCase()
+        server.watcher.add(file)
+        server.watcher.on('change', (changed) => {
+          if (same(changed)) void server.restart()
+        })
+      },
+    },
     react(),
     tailwindcss(),
     VitePWA({

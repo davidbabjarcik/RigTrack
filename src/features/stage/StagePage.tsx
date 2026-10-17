@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, Info, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -564,15 +564,6 @@ export function StagePage() {
               {plan.railingMeters > 0 && <span className="text-sky-700 dark:text-sky-300">━ zábradlie {plan.railingMeters} m</span>}
             </p>
           </div>
-
-          <ul className="flex flex-col gap-1 rounded-xl border border-yellow-400/50 bg-yellow-100/50 p-3 text-sm dark:bg-yellow-950/30">
-            {plan.tips.map((tip) => (
-              <li key={tip} className="flex items-start gap-2">
-                <Info className="mt-0.5 size-4 shrink-0 text-yellow-700 dark:text-yellow-300" aria-hidden />
-                {tip}
-              </li>
-            ))}
-          </ul>
 
           {plan.warnings.map((warning) => (
             <p key={warning} role="alert" className="flex items-start gap-2 rounded-xl border border-amber-400/50 bg-amber-100/60 p-3 text-sm dark:bg-amber-950/40">
