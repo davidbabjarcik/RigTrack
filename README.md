@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.6**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.7**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,20 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.7 – 17. 10. 2026
+
+- **Zamestnanci** – nový modul: tím s fotkou, pozíciou, telefónom, e-mailom, zručnosťami a poznámkou,
+  stav na dnes (voľný / na evente / nemôže), **kedy nemôže** (dovolenka, škola…) a najbližšie eventy.
+  Členovia sa zobrazujú sami, brigádnici bez účtu sa dajú pridať menom. Svoju kartu a svoje „kedy nemôžem“
+  si upraví každý sám; ostatných spravuje ten, kto má nové oprávnenie *Zamestnanci – spravovať*.
+- V posádke eventu sa ukáže, keď niekto v termíne nemôže.
+- **Pódium Nivtec:** na pôdoryse je označená doska, ktorou začať stavať (1), a pero sa kreslí podľa otočenia
+  dosiek (dlhšou stranou dozadu: pero dozadu a doprava, začína sa vľavo vzadu; dlhšou stranou dopredu:
+  pero dozadu a doľava, začína sa vpravo vzadu). V kalkulačke sa dá vybrať, ktorými menšími doskami doplniť
+  zvyšok (napr. len 2 × 0,5 m alebo len 1 × 0,5 m); doska 2 × 0,5 m pribudla medzi predvolené.
+
+Nové migrácie: `0046`.
 
 ### 1.6 – 17. 10. 2026
 
@@ -168,6 +182,8 @@ Potrebné migrácie: do `0043`.
 
 ### 👥 Firma a ľudia
 
+- **Zamestnanci** – tím s fotkou, pozíciou, kontaktom a zručnosťami, kto kedy nemôže a na ktorých eventoch je;
+  upozornenie v posádke eventu, keď niekto v termíne nemôže.
 - **Odmeny** – odmeny a zálohy členov, filter podľa rokov, koláčový graf; člen vidí len svoje.
 - **Úlohy, Návrhy, Kalendár** (zoznam aj mesačná mriežka), **Upozornenia**, **História zmien**.
 - **Štatistiky** (čo vidieť aj v akom poradí si nastaví každý sám) – technika, servis, vozidlá a **peniaze**: príjmy firmy, odmeny a zostatok (s oprávnením)

@@ -1,11 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, X } from 'lucide-react'
+import { CalendarX, Plus, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { addEventCrew, eventKeys, removeEventCrew } from './api'
 import { previousEdition, type CompanyEvent, type EventCrew } from './model'
+import { clashes } from '@/features/staff/model'
+import { useStaff } from '@/features/staff/useStaff'
+import { formatDate } from '@/lib/format'
 
 const EXTERNAL = 'external'
 
@@ -15,6 +18,14 @@ type Props = { companyId: string; event: CompanyEvent; events: CompanyEvent[]; c
 export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
   const queryClient = useQueryClient()
   const members = useMembers(companyId)
+  const staff = useStaff(companyId)
+  // Kedy človek z posádky v termíne eventu nemôže (podľa karty v Zamestnancoch).
+  const awayDuring = (person: EventCrew) => {
+    const card = staff.people.find((candidate) =>
+      person.memberId ? candidate.memberId === person.memberId : !candidate.isMember && candidate.name.trim().toLowerCase() === person.name.trim().toLowerCase(),
+    )
+    return card ? clashes(staff.unavailability, card.staffId, event.startsOn, event.endsOn) : []
+  }
   const [who, setWho] = useState('')
   const [name, setName] = useState('')
   const [role, setRole] = useState('')
@@ -65,6 +76,13 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
                   <span className="block truncate text-sm text-muted-foreground">
                     {[person.role, !person.memberId && 'externista'].filter(Boolean).join(' · ')}
                   </span>
+                  {awayDuring(person).map((period) => (
+                    <span key={period.id} className="mt-0.5 flex items-center gap-1 text-sm text-destructive">
+                      <CalendarX className="size-4 shrink-0" aria-hidden />
+                      V termíne nemôže: {period.startsOn === period.endsOn ? formatDate(period.startsOn) : `${formatDate(period.startsOn)} – ${formatDate(period.endsOn)}`}
+                      {period.note && ` (${period.note})`}
+                    </span>
+                  ))}
                 </span>
                 {canEdit && (
                   <Button

@@ -70,6 +70,13 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
   { file: 'Úlohy.xlsx', tables: [{ table: 'tasks', sheet: 'Úlohy' }] },
   { file: 'Odmeny.xlsx', tables: [{ table: 'member_payments', sheet: 'Odmeny' }] },
   {
+    file: 'Zamestnanci.xlsx',
+    tables: [
+      { table: 'staff', sheet: 'Zamestnanci' },
+      { table: 'staff_unavailability', sheet: 'Kedy nemôžu' },
+    ],
+  },
+  {
     file: 'Návrhy.xlsx',
     tables: [
       { table: 'suggestions', sheet: 'Návrhy' },

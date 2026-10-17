@@ -111,6 +111,7 @@ export const DEFAULT_STAGE_CONFIG: StageConfig = {
   decks: [
     deck('d2x1', 'Doska 2 × 1 m', 2, 1),
     deck('d1x1', 'Doska 1 × 1 m', 1, 1),
+    deck('d2x05', 'Doska 2 × 0,5 m', 2, 0.5),
     deck('d1x05', 'Doska 1 × 0,5 m', 1, 0.5),
     deck('tri', 'Trojuholník', 2, 1, true),
   ],
@@ -216,6 +217,8 @@ export type StageRequest = {
   extraDecks: { deckId: string; count: number }[]
   catwalk: Catwalk | null
   risers: Riser[]
+  /** Ktorými menšími doskami doplniť zvyšok (id z nastavenia); bez zadania všetkými. */
+  fillerIds?: string[]
 }
 
 /** Doska v pôdoryse; x doprava od ľavého predného rohu, y dozadu, v metroch. */
@@ -238,6 +241,8 @@ export type StagePlan = {
   /** Dosky mola v súradniciach pódia (môžu byť mimo neho, napr. pred prednou hranou). */
   catwalkDecks: Deck[]
   risers: (Riser & { decks: Deck[] })[]
+  /** Doska, ktorou sa začína stavať (označí sa 1). */
+  firstDeck: Deck | null
   skirtMeters: number
   railingMeters: number
 }
@@ -248,10 +253,16 @@ const GRID = 0.5
 const EPS = 1e-9
 
 /** Obdĺžnikové dosky od najväčšej; hlavná je prvá obdĺžniková v nastavení. */
-function rectDecks(config: StageConfig) {
+function rectDecks(config: StageConfig, allowed?: string[]) {
   const rects = config.decks.filter((item) => !item.triangle)
   const [main, ...rest] = rects
-  return { main, fillers: rest.sort((a, b) => b.widthM * b.depthM - a.widthM * a.depthM) }
+  const fillers = rest.filter((item) => !allowed || allowed.includes(item.id))
+  return { main, fillers: fillers.sort((a, b) => b.widthM * b.depthM - a.widthM * a.depthM) }
+}
+
+/** Menšie dosky, ktorými sa dá doplniť zvyšok pódia (všetky obdĺžnikové okrem hlavnej). */
+export function fillerDecks(config: StageConfig) {
+  return config.decks.filter((item) => !item.triangle).slice(1)
 }
 
 /**
@@ -259,8 +270,8 @@ function rectDecks(config: StageConfig) {
  * najväčšia doska, ktorá sa zmestí. Hlavná doska je vždy otočená rovnako (kvôli peru),
  * menšie dosky sa môžu otočiť.
  */
-function layout(widthM: number, depthM: number, orientation: 'wide' | 'deep', config: StageConfig): Deck[] {
-  const { main, fillers } = rectDecks(config)
+function layout(widthM: number, depthM: number, orientation: 'wide' | 'deep', config: StageConfig, allowed?: string[]): Deck[] {
+  const { main, fillers } = rectDecks(config, allowed)
   if (!main) return []
   const nx = Math.round(widthM / GRID)
   const ny = Math.round(depthM / GRID)
@@ -395,8 +406,8 @@ const formatM = (value: number) => `${String(value).replace('.', ',')} m`
 export function planStage(request: StageRequest, config: StageConfig): StagePlan {
   const { widthM, depthM, heightCm } = request
   const warnings: string[] = []
-  const wide = layout(widthM, depthM, 'wide', config)
-  const deep = layout(widthM, depthM, 'deep', config)
+  const wide = layout(widthM, depthM, 'wide', config, request.fillerIds)
+  const deep = layout(widthM, depthM, 'deep', config, request.fillerIds)
   const orientation =
     request.orientation === 'auto' ? (fillerCount(deep, config) < fillerCount(wide, config) ? 'deep' : 'wide') : request.orientation
   const decks = orientation === 'wide' ? wide : deep
@@ -422,7 +433,7 @@ export function planStage(request: StageRequest, config: StageConfig): StagePlan
   if (catwalk) {
     const along = sideLength(catwalk.side, widthM, depthM)
     if (catwalk.positionM < 0 || catwalk.positionM + catwalk.widthM > along + EPS) warnings.push('Molo je mimo hrany pódia.')
-    const local = layout(catwalk.widthM, catwalk.lengthM, 'deep', config)
+    const local = layout(catwalk.widthM, catwalk.lengthM, 'deep', config, request.fillerIds)
     if (Math.abs(covered(local) - catwalk.widthM * catwalk.lengthM) > EPS) warnings.push('Z nastavených dosiek sa molo poskladať nedá.')
     const p = catwalk.positionM
     catwalkDecks = local.map((deck) => {
@@ -442,7 +453,7 @@ export function planStage(request: StageRequest, config: StageConfig): StagePlan
     if (riser.xM < 0 || riser.yM < 0 || riser.xM + riser.widthM > widthM + EPS || riser.yM + riser.depthM > depthM + EPS) {
       warnings.push('Rizer presahuje pódium.')
     }
-    const riserDecks = layout(riser.widthM, riser.depthM, 'wide', config).map((deck) => ({ ...deck, x: riser.xM + deck.x, y: riser.yM + deck.y }))
+    const riserDecks = layout(riser.widthM, riser.depthM, 'wide', config, request.fillerIds).map((deck) => ({ ...deck, x: riser.xM + deck.x, y: riser.yM + deck.y }))
     if (Math.abs(covered(riserDecks) - riser.widthM * riser.depthM) > EPS) warnings.push('Z nastavených dosiek sa rizer poskladať nedá.')
     return { ...riser, decks: riserDecks }
   })
@@ -587,9 +598,21 @@ export function planStage(request: StageRequest, config: StageConfig): StagePlan
     add(`accessory-${index}`, 'Príslušenstvo', accessory.label, basisCount[accessory.basis] * accessory.quantity, accessory.equipmentId)
   })
 
+  // Pero je na dlhšej a kratšej hrane dosky: pri doskách dlhšou stranou dozadu smeruje dozadu a doprava
+  // a stavia sa od dosky vľavo vzadu; pri doskách dlhšou stranou dopredu dozadu a doľava, od dosky vpravo vzadu.
+  const back = Math.max(...decks.map((deck) => deck.y + deck.d))
+  const backRow = decks.filter((deck) => Math.abs(deck.y + deck.d - back) < EPS)
+  const firstDeck =
+    backRow.length === 0
+      ? null
+      : orientation === 'deep'
+        ? backRow.reduce((best, deck) => (deck.x < best.x ? deck : best))
+        : backRow.reduce((best, deck) => (deck.x + deck.w > best.x + best.w ? deck : best))
   const tips = [
     'Dosky sa spájajú do seba brzdou, spojky medzi doskami netreba.',
-    'Pero dosiek otočte dozadu a doprava (pri pohľade zhora), aby do seba pekne zapadli.',
+    orientation === 'deep'
+      ? 'Pero dosiek otočte dozadu a doprava (pri pohľade zhora). Stavať začnite doskou vľavo vzadu (na pôdoryse 1).'
+      : 'Pero dosiek otočte dozadu a doľava (pri pohľade zhora). Stavať začnite doskou vpravo vzadu (na pôdoryse 1).',
   ]
   if (needsDiagonals) tips.push('Od výšky 80 cm pódium vystužte diagonálami (vrtuľami).')
 
@@ -605,6 +628,7 @@ export function planStage(request: StageRequest, config: StageConfig): StagePlan
     stairs,
     catwalkDecks,
     risers,
+    firstDeck,
     skirtMeters,
     railingMeters,
   }

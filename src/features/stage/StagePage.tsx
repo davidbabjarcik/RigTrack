@@ -22,7 +22,9 @@ import {
   SIDE_LABELS,
   sideLength,
   SIDES,
+  fillerDecks,
   type Catwalk,
+  type Deck,
   type Orientation,
   type Riser,
   type Segment,
@@ -58,6 +60,7 @@ export function StageDrawing({ request, plan, mainId }: { request: StageRequest;
   const width = w * PX + pad * 2
   const height = d * PX + pad * 2
   const X = (m: number) => pad + m * PX
+  const tongueRight = (deck: Deck) => (deck.d === deck.w ? plan.orientation === 'deep' : deck.d > deck.w)
   const Y = (m: number) => pad + (d - m) * PX
   // Úsek hrany ako čiara; posun von z pódia, aby sa plachta a zábradlie neprekrývali s doskami.
   const line = (segment: Segment, shift: number) => {
@@ -85,8 +88,14 @@ export function StageDrawing({ request, plan, mainId }: { request: StageRequest;
         return (
           <g key={index}>
             <rect x={x} y={y} width={dw} height={dh} rx={3} className={deck.typeId !== mainId ? 'fill-amber-200 stroke-amber-600 dark:fill-amber-900' : 'fill-muted stroke-foreground/50'} strokeWidth={1.5} />
-            {/* pero: vzadu (hore) a vpravo */}
-            <path d={`M${x + 3} ${y + 3} H${x + dw - 3} V${y + dh - 3}`} className="fill-none stroke-yellow-600" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+            {/* pero: vzadu (hore) a vpravo pri doskách dlhšou stranou dozadu, inak vzadu a vľavo */}
+            <path
+              d={tongueRight(deck) ? `M${x + 3} ${y + 3} H${x + dw - 3} V${y + dh - 3}` : `M${x + dw - 3} ${y + 3} H${x + 3} V${y + dh - 3}`}
+              className="fill-none stroke-yellow-600"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </g>
         )
       })}
@@ -130,6 +139,14 @@ export function StageDrawing({ request, plan, mainId }: { request: StageRequest;
         const [x1, y1, x2, y2] = line(segment, 7)
         return <line key={`r-${index}`} x1={x1} y1={y1} x2={x2} y2={y2} className="stroke-sky-600" strokeWidth={5} strokeLinecap="round" />
       })}
+      {plan.firstDeck && (
+        <g>
+          <circle cx={X(plan.firstDeck.x + plan.firstDeck.w / 2)} cy={Y(plan.firstDeck.y + plan.firstDeck.d / 2)} r={11} className="fill-emerald-600" />
+          <text x={X(plan.firstDeck.x + plan.firstDeck.w / 2)} y={Y(plan.firstDeck.y + plan.firstDeck.d / 2) + 4.5} textAnchor="middle" className="fill-white text-[13px] font-bold">
+            1
+          </text>
+        </g>
+      )}
       {plan.risers.map((riser, index) => (
         <g key={`ri-${index}`}>
           <rect
@@ -211,6 +228,7 @@ export function StagePage() {
   const [extraDecks, setExtraDecks] = useState<{ deckId: string; count: number }[]>([])
   const [catwalk, setCatwalk] = useState<Catwalk | null>(null)
   const [risers, setRisers] = useState<Riser[]>([])
+  const [fillerIds, setFillerIds] = useState<string[] | null>(null)
   const [stairsToTop, setStairsToTop] = useState(false)
   const [stairsRailingSides, setStairsRailingSides] = useState(0)
   const [eventId, setEventId] = useState(params.get('event') ?? '')
@@ -232,6 +250,7 @@ export function StagePage() {
     extraDecks,
     catwalk,
     risers,
+    fillerIds: fillerIds ?? undefined,
     stairsToTop,
     stairsRailingSides,
   }
@@ -292,6 +311,32 @@ export function StagePage() {
             </SelectField>
           ) : (
             <Field label="Výška pódia (cm)" type="number" min={1} value={heightCm} onChange={(event) => setHeight(Number(event.target.value))} />
+          )}
+          {config.data && fillerDecks(config.data).length > 0 && (
+            <fieldset>
+              <legend className="mb-1.5 text-sm font-medium">Menšie dosky na doplnenie</legend>
+              <div className="flex flex-wrap gap-2">
+                {fillerDecks(config.data).map((deck) => {
+                  const chosen = fillerIds === null || fillerIds.includes(deck.id)
+                  const all = fillerDecks(config.data!).map((item) => item.id)
+                  return (
+                    <button
+                      key={deck.id}
+                      type="button"
+                      aria-pressed={chosen}
+                      onClick={() => {
+                        const current = fillerIds ?? all
+                        setFillerIds(chosen ? current.filter((id) => id !== deck.id) : [...current, deck.id])
+                      }}
+                      className={cn('h-9 rounded-lg border px-3 text-sm font-medium', chosen ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
+                    >
+                      {deck.label || `${deck.widthM} × ${deck.depthM} m`}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Napr. pri šírke 5,5 m: len 2 × 0,5 m alebo len 1 × 0,5 m. Ďalšie rozmery pridáte v Nastaveniach → Nivtec.</p>
+            </fieldset>
           )}
           <SelectField label="Otočenie dosiek" value={orientation} onChange={(event) => setOrientation(event.target.value as Orientation)}>
             <option value="auto">Automaticky (najmenej dosiek 1 × 1)</option>
@@ -511,6 +556,7 @@ export function StagePage() {
                 {request.widthM} × {request.depthM} m = {request.widthM * request.depthM} m², výška {heightCm} cm
               </span>
               <span className="text-yellow-700 dark:text-yellow-300">━ pero dosky</span>
+              <span className="text-emerald-600">● 1 – tu začať stavať</span>
               <span className="text-amber-700 dark:text-amber-300">■ menšia doska</span>
               {plan.lathEdges.length > 0 && <span className="text-emerald-600">━ lišty</span>}
               {plan.risers.length > 0 && <span className="text-violet-600 dark:text-violet-300">▭ rizer (prerušovane na kolieskach)</span>}

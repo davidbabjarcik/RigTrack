@@ -90,7 +90,10 @@ describe('planStage', () => {
   })
 
   it('fills half metres with smaller decks and warns when it cannot cover the stage', () => {
-    expect(quantities({ widthM: 2, depthM: 1.5, orientation: 'wide' })).toMatchObject({ 'deck-d2x1': 1, 'deck-d1x05': 2 })
+    expect(quantities({ widthM: 2, depthM: 1.5, orientation: 'wide' })).toMatchObject({ 'deck-d2x1': 1, 'deck-d2x05': 1 })
+    // len vybrané menšie dosky: 5,5 × 4 m doplnené pásom 0,5 m
+    expect(quantities({ widthM: 5.5, depthM: 4, orientation: 'deep', fillerIds: ['d1x05'] })).toMatchObject({ 'deck-d2x1': 10, 'deck-d1x05': 4 })
+    expect(quantities({ widthM: 5.5, depthM: 4, orientation: 'deep', fillerIds: ['d2x05'] })).toMatchObject({ 'deck-d2x1': 10, 'deck-d2x05': 2 })
     const onlyBig = { ...config, decks: config.decks.filter((item) => item.id === 'd2x1') }
     expect(planStage(request({ widthM: 3, depthM: 2 }), onlyBig).warnings).toContain('Z nastavených dosiek sa celé pódium poskladať nedá; pridajte menšiu dosku.')
   })
@@ -123,6 +126,13 @@ describe('planStage', () => {
     expect(quantities({ orientation: 'deep', risers: [riser] })).toMatchObject({ riserWheel: 6, 'skirt-2-40': 4, 'deck-d2x1': 14 })
     expect(quantities({ orientation: 'deep', risers: [{ ...riser, wheels: false, skirt: false }, { ...riser, wheels: false, skirt: false, xM: 0 }] })).toMatchObject({ 'leg-40': 12 })
     expect(plan({ risers: [{ ...riser, xM: 5 }] }).warnings).toContain('Rizer presahuje pódium.')
+  })
+
+  it('says which deck to start building with', () => {
+    // dlhšou stranou dozadu: vľavo vzadu; dlhšou stranou dopredu: vpravo vzadu
+    expect(plan({ widthM: 5, depthM: 4, orientation: 'deep' }).firstDeck).toMatchObject({ x: 0, y: 2 })
+    expect(plan({ widthM: 6, depthM: 4, orientation: 'wide' }).firstDeck).toMatchObject({ x: 4, y: 3 })
+    expect(plan({ orientation: 'wide' }).tips[1]).toContain('vpravo vzadu')
   })
 
   it('adds diagonals from 80 cm on the perimeter fields', () => {

@@ -58,6 +58,10 @@ export const PERMISSION_GROUPS = [
     { key: 'payouts.manage', label: 'Zapisovať a vyplácať odmeny', roles: NOBODY },
   ]),
   group('audit', 'História zmien', [{ key: 'audit.view', label: 'Vidieť', roles: NOBODY }]),
+  group('staff', 'Zamestnanci', [
+    { key: 'staff.view', label: 'Vidieť tím a kontakty', roles: ALL },
+    { key: 'staff.manage', label: 'Spravovať karty a dostupnosť všetkých', roles: KEEPER },
+  ]),
 ]
 
 export type PermissionKey = (typeof PERMISSION_GROUPS)[number]['permissions'][number]['key']
