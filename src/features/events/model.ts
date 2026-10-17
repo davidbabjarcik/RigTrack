@@ -17,7 +17,32 @@ export type EventEquipment = { equipmentId: string; quantity: number; caseId: st
 export type EventCrew = { id: string; memberId: string | null; name: string; role: string }
 
 /** Údaje eventu do tlače: organizátor, popis a časy prvého dňa („HH:MM“ alebo prázdne). */
+export const EVENT_SETTINGS = ['indoor', 'outdoor', 'mixed'] as const
+export type EventSetting = (typeof EVENT_SETTINGS)[number]
+export const SETTING_LABELS: Record<EventSetting, string> = { indoor: 'Interiér', outdoor: 'Exteriér', mixed: 'Interiér aj exteriér' }
+
+/** Elektrická prípojka na mieste. Zodpovedá check constraint v 0047. */
+export const POWER_TYPES = ['schuko16', 'cee16', 'cee32', 'cee63', 'cee125', 'generator', 'none'] as const
+export type PowerType = (typeof POWER_TYPES)[number]
+export const POWER_LABELS: Record<PowerType, string> = {
+  schuko16: 'Zásuvka 230 V (16 A)',
+  cee16: 'CEE 16 A – 5 pin (400 V)',
+  cee32: 'CEE 32 A – 5 pin (400 V)',
+  cee63: 'CEE 63 A – 5 pin (400 V)',
+  cee125: 'CEE 125 A – 5 pin (400 V)',
+  generator: 'Generátor (zabezpečíme)',
+  none: 'Bez prípojky',
+}
+
 export type EventDetails = {
+  /** Interiér / exteriér; prázdne = nezadané. */
+  setting: EventSetting | ''
+  /** Prípojka elektriny; prázdne = ešte nevieme. */
+  power: PowerType | ''
+  powerCount: number | null
+  powerNote: string
+  /** Miesto pre počasie, ak sa líši od miesta konania. */
+  weatherPlace: string
   organizer: string
   organizerPerson: string
   organizerPhone: string
@@ -29,6 +54,11 @@ export type EventDetails = {
 }
 
 export const EMPTY_EVENT_DETAILS: EventDetails = {
+  setting: '',
+  power: '',
+  powerCount: null,
+  powerNote: '',
+  weatherPlace: '',
   organizer: '',
   organizerPerson: '',
   organizerPhone: '',
@@ -68,6 +98,11 @@ export const eventSchema = z
     endsOn: date,
     status: z.enum(EVENT_STATUSES),
     note: text(4000),
+    setting: z.enum([...EVENT_SETTINGS, '']),
+    power: z.enum([...POWER_TYPES, '']),
+    powerCount: z.number('Zadajte počet').int('Celé číslo').min(1, 'Aspoň 1').max(50).nullable(),
+    powerNote: text(200),
+    weatherPlace: text(120),
     organizer: text(120),
     organizerPerson: text(120),
     organizerPhone: text(40),

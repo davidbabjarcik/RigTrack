@@ -13,7 +13,7 @@ import { PHOTO_URL_STALE_MS } from '@/features/equipment/photo'
 import { describeContent, groupByCase } from '@/features/loans/model'
 import { formatDate, todayIso } from '@/lib/format'
 import { eventKeys, eventPhotoUrls, fetchEventDocuments } from './api'
-import { describeTimes, EVENT_STATUS_LABELS } from './model'
+import { describeTimes, EVENT_STATUS_LABELS, POWER_LABELS, SETTING_LABELS } from './model'
 import { useEvents } from './useEvents'
 
 // Tlačí sa z prehliadača (Tlačiť → Uložiť ako PDF), preto vždy čierna na bielom a mimo rozloženia aplikácie.
@@ -157,12 +157,20 @@ export function EventPrintPage() {
               <p className="mt-1 font-semibold">{when}</p>
               {times && <p className="text-neutral-700">{times}</p>}
             </div>
-            {event.venue && (
+            {(event.venue || event.setting) && (
               <div>
                 <Heading>Miesto</Heading>
-                <p className="mt-1 font-semibold break-words">{event.venue}</p>
+                {event.venue && <p className="mt-1 font-semibold break-words">{event.venue}</p>}
+                {event.setting && <p className="text-neutral-700">{SETTING_LABELS[event.setting]}</p>}
               </div>
             )}
+            <div>
+              <Heading>Elektrina</Heading>
+              <p className="mt-1">
+                {event.power ? `${event.powerCount && event.powerCount > 1 ? `${event.powerCount} × ` : ''}${POWER_LABELS[event.power]}` : 'nezistené'}
+              </p>
+              {event.powerNote && <p className="text-neutral-700">{event.powerNote}</p>}
+            </div>
             {event.client && (
               <div>
                 <Heading>Klient</Heading>

@@ -114,6 +114,14 @@ describe('events', () => {
     await t.as('admin', 'select public.restore_bin_item($1, $2, $3)', [companyA, 'event_document', photo.id])
   })
 
+  it('keep indoor or outdoor, the power connection and the weather place', async () => {
+    await t.as('technik', `update public.events set setting = 'outdoor', power = 'cee32', power_count = 2, power_note = '30 m od pódia', weather_place = 'Stropkov' where id = $1`, [event])
+    expect(await t.as('viewer', 'select setting, power, power_count, power_note, weather_place from public.events where id = $1', [event])).toEqual([
+      { setting: 'outdoor', power: 'cee32', power_count: 2, power_note: '30 m od pódia', weather_place: 'Stropkov' },
+    ])
+    await expect(t.as('technik', `update public.events set power = '400V' where id = $1`, [event])).rejects.toThrow(/check constraint/)
+  })
+
   it('can be deleted by admin and skladnik only, taking everything attached along', async () => {
     expect(await t.as('technik', 'delete from public.events where id = $1 returning id', [event])).toEqual([])
     expect(await t.as('admin', 'delete from public.events where id = $1 returning id', [event])).toHaveLength(1)

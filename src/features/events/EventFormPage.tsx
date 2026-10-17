@@ -11,11 +11,15 @@ import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { eventKeys, saveEvent } from './api'
 import {
+  EVENT_SETTINGS,
   EVENT_STATUS_LABELS,
   EVENT_STATUSES,
   eventSchema,
   pastEventNames,
+  POWER_LABELS,
+  POWER_TYPES,
   previousEdition,
+  SETTING_LABELS,
   type CompanyEvent,
   type EventFormValues,
 } from './model'
@@ -52,12 +56,19 @@ function EventForm({ companyId, current, events }: FormProps) {
       getInTime: current?.getInTime ?? '',
       showTime: current?.showTime ?? '',
       showEndTime: current?.showEndTime ?? '',
+      setting: current?.setting ?? '',
+      power: current?.power ?? '',
+      powerCount: current?.powerCount ?? null,
+      powerNote: current?.powerNote ?? '',
+      weatherPlace: current?.weatherPlace ?? '',
     },
   })
 
   // Opakovaná akcia: podľa názvu nájdeme minulý ročník a ponúkneme jeho údaje.
   const name = useWatch({ control, name: 'name' })
   const startsOn = useWatch({ control, name: 'startsOn' })
+  const setting = useWatch({ control, name: 'setting' })
+  const venue = useWatch({ control, name: 'venue' })
   const previous = previousEdition(events, { id: current?.id, name, startsOn })
   const copyPrevious = () => {
     if (!previous) return
@@ -113,6 +124,51 @@ function EventForm({ companyId, current, events }: FormProps) {
         <Field label="Začiatok programu" type="time" error={errors.showTime?.message} {...register('showTime')} />
         <Field label="Koniec programu" type="time" error={errors.showEndTime?.message} {...register('showEndTime')} />
       </div>
+
+      <fieldset className="grid gap-4 rounded-xl border p-4 sm:grid-cols-2">
+        <legend className="px-1 text-sm font-medium">Miesto a elektrina</legend>
+        <SelectField label="Interiér / exteriér" error={errors.setting?.message} {...register('setting')}>
+          <option value="">— nezadané —</option>
+          {EVENT_SETTINGS.map((setting) => (
+            <option key={setting} value={setting}>
+              {SETTING_LABELS[setting]}
+            </option>
+          ))}
+        </SelectField>
+        {(setting === 'outdoor' || setting === 'mixed') && (
+          <Field
+            label="Miesto pre počasie"
+            placeholder={venue ? `ak nie ${venue}` : 'napr. Stropkov'}
+            maxLength={120}
+            error={errors.weatherPlace?.message}
+            {...register('weatherPlace')}
+          />
+        )}
+        <SelectField label="Elektrická prípojka" error={errors.power?.message} {...register('power')}>
+          <option value="">— ešte nevieme —</option>
+          {POWER_TYPES.map((power) => (
+            <option key={power} value={power}>
+              {POWER_LABELS[power]}
+            </option>
+          ))}
+        </SelectField>
+        <Field
+          label="Počet prípojok"
+          type="number"
+          min={1}
+          max={50}
+          error={errors.powerCount?.message}
+          {...register('powerCount', { setValueAs: (value) => (value === '' || value == null ? null : Number(value)) })}
+        />
+        <Field
+          label="Poznámka k elektrine"
+          className="sm:col-span-2"
+          placeholder="napr. 30 m od pódia, istič v kotolni, kontakt na elektrikára"
+          maxLength={200}
+          error={errors.powerNote?.message}
+          {...register('powerNote')}
+        />
+      </fieldset>
 
       <fieldset className="grid gap-4 rounded-xl border p-4 sm:grid-cols-2">
         <legend className="px-1 text-sm font-medium">Organizátor</legend>

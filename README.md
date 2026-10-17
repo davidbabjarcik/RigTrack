@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.7.1**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.8**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,17 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.8 – 17. 10. 2026
+
+- **Miesto a elektrina pri evente:** interiér / exteriér / oboje, elektrická prípojka (zásuvka 230 V,
+  CEE 16 / **32** / 63 / 125 A päťpól, generátor, bez prípojky), počet prípojok a poznámka. Kým prípojka
+  nie je zistená, detail eventu to zvýrazní. Je to aj v tlači eventu.
+- **Počasie pri akcii vonku:** predpoveď z Open-Meteo na dni eventu (do 16 dní dopredu) – teploty, dážď,
+  nárazy vetra – a upozornenia na búrku, dážď, silný vietor (truss, plachty) a mráz. Miesto sa hľadá podľa
+  „Miesta pre počasie“, inak podľa miesta konania.
+
+Nové migrácie: `0047`.
 
 ### 1.7.1 – 17. 10. 2026
 
@@ -159,6 +170,8 @@ Potrebné migrácie: do `0043`.
 
 - Technika (aj celé cases), posádka, fotky a dokumenty (rider, stage plot…), kolízie s inými akciami.
 - Organizátor s kontaktom, popis, časy príchodu a programu.
+- **Interiér / exteriér a elektrina** (napr. CEE 32 A päťpól, počet prípojok), pri akcii vonku **predpoveď počasia**
+  s upozornením na dážď, búrku a vietor.
 - **Tlač eventu** na A4 / PDF – technika ako checklist, obsah case malým sivým písmom.
 - **Príjmy z akcie** – hotovosť, na účet alebo faktúra (cez JEF, JEF Production…), s DPH / bez DPH.
 - **Import z Capture** – Equipment Report sa spáruje s technikou, neznáme veci treba rozhodnúť,
@@ -222,6 +235,7 @@ Tajný (service-role) kľúč Supabase do aplikácie nepatrí – používa sa l
 - **Plán nakladania, plán skladu a pódium Nivtec sú vo fáze vývoja** a nemusia fungovať na 100 % –
   výsledok treba skontrolovať.
 - Import techniky na event pozná zatiaľ len Equipment Report z Capture.
+- Počasie poskytuje Open-Meteo (open-meteo.com); posiela sa mu len názov miesta a dátumy akcie.
 - Fotky a dokumenty sú v úložisku Supabase (v databáze je len cesta k nim); presun na vlastný NAS zatiaľ nie je.
 
 ---

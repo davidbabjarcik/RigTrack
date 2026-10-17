@@ -1,6 +1,6 @@
 import { shrinkImage } from '@/features/equipment/photo'
 import { getSupabase } from '@/lib/supabase/client'
-import type { CompanyEvent, EventDocument, EventFormValues, EventStatus } from './model'
+import type { CompanyEvent, EventDocument, EventFormValues, EventSetting, EventStatus, PowerType } from './model'
 
 const BUCKET = 'event-documents'
 
@@ -10,7 +10,7 @@ export const eventKeys = {
 }
 
 const EVENT_COLUMNS =
-  'id, name, client, venue, starts_on, ends_on, status, note, organizer, organizer_person, organizer_phone, organizer_email, description, get_in_time, show_time, show_end_time'
+  'id, name, client, venue, starts_on, ends_on, status, note, organizer, organizer_person, organizer_phone, organizer_email, description, get_in_time, show_time, show_end_time, setting, power, power_count, power_note, weather_place'
 
 /** Databáza vracia čas ako „14:00:00“. */
 const hhmm = (value: string | null) => (value ?? '').slice(0, 5)
@@ -45,6 +45,11 @@ export async function fetchEvents(companyId: string): Promise<CompanyEvent[]> {
     get_in_time: string | null
     show_time: string | null
     show_end_time: string | null
+    setting: EventSetting | ''
+    power: PowerType | ''
+    power_count: number | null
+    power_note: string
+    weather_place: string
   }[]
   return rows.map((row) => ({
     id: row.id,
@@ -63,6 +68,11 @@ export async function fetchEvents(companyId: string): Promise<CompanyEvent[]> {
     getInTime: hhmm(row.get_in_time),
     showTime: hhmm(row.show_time),
     showEndTime: hhmm(row.show_end_time),
+    setting: row.setting,
+    power: row.power,
+    powerCount: row.power_count,
+    powerNote: row.power_note,
+    weatherPlace: row.weather_place,
     equipment: equipmentRows
       .filter((item) => item.event_id === row.id)
       .map((item) => ({ equipmentId: item.equipment_id, quantity: item.quantity, caseId: item.case_id })),
@@ -89,6 +99,11 @@ export async function saveEvent(companyId: string, id: string | null, values: Ev
     get_in_time: values.getInTime || null,
     show_time: values.showTime || null,
     show_end_time: values.showEndTime || null,
+    setting: values.setting,
+    power: values.power,
+    power_count: values.power ? values.powerCount : null,
+    power_note: values.powerNote,
+    weather_place: values.weatherPlace,
   }
   const table = getSupabase().from('events')
   const { data, error } = id

@@ -14,7 +14,8 @@ import { EventIncomeSection } from './EventIncomeSection'
 import { EventPhotosSection } from './EventPhotosSection'
 import { EventEquipmentSection } from './EventEquipmentSection'
 import { EventStatusBadge } from './EventStatusBadge'
-import { describeTimes } from './model'
+import { describeTimes, POWER_LABELS, SETTING_LABELS } from './model'
+import { EventWeather } from './EventWeather'
 import { useEvents } from './useEvents'
 
 export function EventDetailPage() {
@@ -107,8 +108,21 @@ export function EventDetailPage() {
         </p>
       )}
 
-      {(times || organizer.length > 0) && (
+      {(times || organizer.length > 0 || event.setting || event.power) && (
         <dl className="mb-6 grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
+          {event.setting && (
+            <div>
+              <dt className="text-sm text-muted-foreground">Miesto</dt>
+              <dd className="font-medium">{SETTING_LABELS[event.setting]}</dd>
+            </div>
+          )}
+          <div>
+            <dt className="text-sm text-muted-foreground">Elektrina</dt>
+            <dd className={event.power ? 'font-medium' : 'font-medium text-amber-700 dark:text-amber-300'}>
+              {event.power ? `${event.powerCount && event.powerCount > 1 ? `${event.powerCount} × ` : ''}${POWER_LABELS[event.power]}` : 'Prípojka ešte nie je zistená'}
+            </dd>
+            {event.powerNote && <dd className="text-sm text-muted-foreground">{event.powerNote}</dd>}
+          </div>
           {times && (
             <div>
               <dt className="text-sm text-muted-foreground">Časy (prvý deň)</dt>
@@ -136,6 +150,8 @@ export function EventDetailPage() {
           )}
         </dl>
       )}
+
+      {(event.setting === 'outdoor' || event.setting === 'mixed') && <EventWeather event={event} />}
 
       {event.description && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{event.description}</p>}
       {event.note && (
