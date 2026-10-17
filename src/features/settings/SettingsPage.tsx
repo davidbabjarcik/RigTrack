@@ -19,6 +19,7 @@ import { BackupSettings } from '@/features/backup/BackupSettings'
 import { CaseTemplateSettings } from '@/features/cases/CaseTemplateSettings'
 import { StageSettings } from '@/features/stage/StageSettings'
 import { RulesSettings } from '@/features/events/RulesSettings'
+import { PackagesSettings } from '@/features/packages/PackagesSettings'
 import { useCompany, type Membership } from '@/features/companies/company-context'
 import { BrandingSettings } from '@/features/companies/BrandingSettings'
 import { DemoSettings } from '@/features/companies/DemoSettings'
@@ -243,6 +244,7 @@ export function SettingsPage() {
     { id: 'permissions', label: 'Oprávnenia', shown: isAdmin },
     { id: 'lists', label: 'Zoznamy', shown: can(company, 'lookups.manage') },
     { id: 'stage', label: 'Nivtec', shown: can(company, 'lookups.manage') },
+    { id: 'packages', label: 'Balíky', shown: can(company, 'lookups.manage') },
     { id: 'reminders', label: 'Pripomienky', shown: can(company, 'lookups.manage') },
     { id: 'account', label: 'Účet', shown: true },
   ].filter((tab) => tab.shown)
@@ -344,6 +346,12 @@ export function SettingsPage() {
       )}
 
       {tab === 'lists' && <InventoryLookups companyId={company.companyId} />}
+
+      {tab === 'packages' && (
+        <Section title="Balíky techniky">
+          <PackagesSettings companyId={company.companyId} />
+        </Section>
+      )}
 
       {tab === 'reminders' && (
         <Section title="Pripomienky pri eventoch">

@@ -22,6 +22,7 @@ import { can } from '@/lib/permissions'
 import { createLoan, updateLoan } from './api'
 import { LoanPicker } from './LoanPicker'
 import { EventReminders } from '@/features/events/EventReminders'
+import { PackagePicker } from '@/features/packages/PackagePicker'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { busyQuantity, busyUnits, describeContent, linePerDay, loanDays, loanPricing, groupByCase, loanSchema, type Loan, type LoanFormValues } from './model'
 import { useLoans } from './useLoans'
@@ -300,6 +301,19 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
       </section>
 
       <div id="loan-picker" />
+      <PackagePicker
+        companyId={companyId}
+        equipment={lendable}
+        cases={cases}
+        disabled={false}
+        onAdd={(additions) => {
+          additions.cases.forEach(addCase)
+          for (const item of additions.items) {
+            // Technika z pridaného celého case už vo výpožičke je.
+            if (!additions.cases.some((caseId) => itemOf(item.equipmentId)?.caseId === caseId)) addCount(item.equipmentId, item.quantity)
+          }
+        }}
+      />
       <LoanPicker
         equipment={lendable}
         cases={cases}

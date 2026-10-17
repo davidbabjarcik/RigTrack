@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.5**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.6**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,16 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.6 – 17. 10. 2026
+
+- **Balíky techniky** – v Nastaveniach → Balíky sa poskladajú sady z celých cases a techniky s počtami
+  (napr. „Malý zvukový balík“, „Veľký svetelný balík“), zoradené podľa kategórie.
+- Pri evente aj výpožičke sa balík pridá jedným klikom; počty sa pripočítajú k tomu, čo už je vybrané,
+  a technika, ktorá už je v pridanom case, sa nepridá druhýkrát.
+- Balíky sú aj v zálohe firmy.
+
+Nové migrácie: `0045`.
 
 ### 1.5 – 17. 10. 2026
 
@@ -134,6 +144,7 @@ Potrebné migrácie: do `0043`.
   zapíše sa až po kontrole; priradenia si appka pamätá.
 - Upozornenie na case, ktorý od poslednej kontroly obsahu bol na eventoch.
 - **Opakované akcie** – návrh údajov, posádky a odmien z minulého ročníka.
+- **Balíky** – vopred poskladané sady (malý / veľký zvukový, svetelný…) sa na event aj do výpožičky pridajú jedným klikom.
 - **Pripomienky** – podľa pravidiel z nastavení upozorní pri evente aj výpožičke, čo k technike ešte chýba
   (napr. 4 repráky → 4 káble NL4, svetlá → case s hákmi).
 - **Plán nakladania** *(vo vývoji)* – koľko vozidiel treba a kam ktorý case uložiť, zhora aj v 3D.
@@ -169,7 +180,7 @@ Potrebné migrácie: do `0043`.
 - Členovia a pozvánky, roly admin / skladník / technik / len na čítanie.
 - **Oprávnenia** pre každú rolu aj výnimky pre jednotlivých členov.
 - Logo firmy (pozadie sa odstráni, logo sa prispôsobí svetlému aj tmavému podkladu), kategórie s farbami,
-  umiestnenia, šablóny cases, záložky **Nivtec** a **Pripomienky**.
+  umiestnenia, šablóny cases, záložky **Nivtec**, **Balíky** a **Pripomienky**.
 - Svetlý / tmavý režim, **demo firma** s resetom, verzia aplikácie.
 
 ---

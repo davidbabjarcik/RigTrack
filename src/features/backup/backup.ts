@@ -15,6 +15,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'cable_colors', sheet: 'Farby káblov' },
       { table: 'equipment_hour_readings', sheet: 'Prevádzkové hodiny' },
       { table: 'equipment_aliases', sheet: 'Zapamätané názvy' },
+      { table: 'equipment_packages', sheet: 'Balíky' },
     ],
   },
   {

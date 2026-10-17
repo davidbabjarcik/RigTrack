@@ -15,6 +15,7 @@ import { useLoans } from '@/features/loans/useLoans'
 import { formatDate, todayIso } from '@/lib/format'
 import { addEventCase, addEventEquipment, eventKeys, removeEventCase, removeEventEquipment, setEventEquipmentQuantity } from './api'
 import { EventReminders } from './EventReminders'
+import { PackagePicker } from '@/features/packages/PackagePicker'
 import { busyElsewhere, eventsSinceCheck, type CompanyEvent } from './model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 
@@ -70,7 +71,25 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
     },
     onSettled: refresh,
   })
-  const mutations = [add, addCase, remove, removeCase, quantity, addCount]
+  // Balík: celé cases a technika (počty sa pripočítajú k tomu, čo už na evente je).
+  const addPackage = useMutation({
+    mutationFn: async (additions: { items: { equipmentId: string; quantity: number }[]; cases: string[] }) => {
+      for (const caseId of additions.cases) {
+        const content = lendable.filter((item) => item.caseId === caseId && item.quantity > 0).map((item) => ({ equipmentId: item.id, quantity: item.quantity }))
+        if (content.length > 0) await addEventCase(companyId, event.id, caseId, content)
+      }
+      for (const { equipmentId, quantity: count } of additions.items) {
+        const existing = event.equipment.find((item) => item.equipmentId === equipmentId)
+        if (existing) await setEventEquipmentQuantity(event.id, equipmentId, existing.quantity + count)
+        else if (!additions.cases.some((caseId) => lendable.some((item) => item.id === equipmentId && item.caseId === caseId))) {
+          await addEventEquipment(companyId, event.id, equipmentId)
+          if (count > 1) await setEventEquipmentQuantity(event.id, equipmentId, count)
+        }
+      }
+    },
+    onSettled: refresh,
+  })
+  const mutations = [add, addCase, remove, removeCase, quantity, addCount, addPackage]
   const busy = mutations.some((mutation) => mutation.isPending)
 
   const freeOf = (equipmentId: string, total: number) => total - busyElsewhere(event, equipmentId, events, loans.data ?? [], today)
@@ -236,6 +255,7 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
 
       {adding && (
         <div className="mt-4">
+          <PackagePicker companyId={companyId} equipment={lendable} cases={cases.data ?? []} disabled={busy} onAdd={(additions) => addPackage.mutate(additions)} />
           <LoanPicker
             title="Pridať techniku na event"
             equipment={lendable}
