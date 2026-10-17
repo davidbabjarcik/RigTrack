@@ -60,7 +60,17 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
     mutationFn: ({ equipmentId, value }: { equipmentId: string; value: number }) => setEventEquipmentQuantity(event.id, equipmentId, value),
     onSettled: refresh,
   })
-  const mutations = [add, addCase, remove, removeCase, quantity]
+  // Z pripomienky: pridá chýbajúci počet kusov (k technike, ktorá už na evente je, pripočíta).
+  const addCount = useMutation({
+    mutationFn: async ({ equipmentId, count }: { equipmentId: string; count: number }) => {
+      const existing = event.equipment.find((item) => item.equipmentId === equipmentId)
+      if (existing) return setEventEquipmentQuantity(event.id, equipmentId, existing.quantity + count)
+      await addEventEquipment(companyId, event.id, equipmentId)
+      if (count > 1) await setEventEquipmentQuantity(event.id, equipmentId, count)
+    },
+    onSettled: refresh,
+  })
+  const mutations = [add, addCase, remove, removeCase, quantity, addCount]
   const busy = mutations.some((mutation) => mutation.isPending)
 
   const freeOf = (equipmentId: string, total: number) => total - busyElsewhere(event, equipmentId, events, loans.data ?? [], today)
@@ -89,13 +99,15 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
       {equipment.data && (
         <EventReminders
           companyId={companyId}
-          event={event}
+          lines={event.equipment}
+          where="na evente"
+          storageKey={event.id}
           equipment={all}
           categories={categories}
           cases={cases.data ?? []}
           canEdit={canEdit}
           busy={busy}
-          onAddEquipment={(equipmentId) => add.mutate(equipmentId)}
+          onAddEquipment={(equipmentId, count) => addCount.mutate({ equipmentId, count })}
           onAddCase={(caseId) => addCase.mutate(caseId)}
           onOpenPicker={() => setAdding(true)}
         />

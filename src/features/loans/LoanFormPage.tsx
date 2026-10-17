@@ -21,6 +21,8 @@ import { formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { createLoan, updateLoan } from './api'
 import { LoanPicker } from './LoanPicker'
+import { EventReminders } from '@/features/events/EventReminders'
+import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { busyQuantity, busyUnits, describeContent, linePerDay, loanDays, loanPricing, groupByCase, loanSchema, type Loan, type LoanFormValues } from './model'
 import { useLoans } from './useLoans'
 
@@ -38,6 +40,7 @@ type FormProps = {
 function LoanForm({ companyId, current, equipment, cases, loans, events }: FormProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { categories } = useEquipmentLookups(companyId)
   const today = todayIso()
 
   const {
@@ -137,6 +140,16 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
     ])
   }
   const removeCase = (caseId: string) => replace(getValues('items').filter((item) => item.caseId !== caseId))
+  // Z pripomienky: pridá chýbajúci počet kusov; k technike vybranej jednotlivo ho pripočíta.
+  const addCount = (equipmentId: string, count: number) => {
+    const items = getValues('items')
+    const index = items.findIndex((item) => item.equipmentId === equipmentId && !item.caseId)
+    if (index >= 0) update(index, { ...items[index], quantity: items[index].quantity + count })
+    else {
+      const item = itemOf(equipmentId)
+      append({ equipmentId, quantity: count, caseId: '', unitNumbers: [], unitPrice: item?.rentalPrice ?? undefined })
+    }
+  }
 
   return (
     <form
@@ -164,6 +177,20 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
         <h2 id="loan-items-heading" className="mb-2 text-sm font-medium text-muted-foreground">
           Vo výpožičke ({wholeCases.length + single.length})
         </h2>
+        <EventReminders
+          companyId={companyId}
+          lines={(liveItems ?? []).map((item) => ({ equipmentId: item.equipmentId, quantity: Number(item.quantity) || 0, caseId: item.caseId || null }))}
+          where="vo výpožičke"
+          storageKey={`loan:${current?.id ?? 'new'}`}
+          equipment={equipment}
+          categories={categories}
+          cases={cases}
+          canEdit
+          busy={false}
+          onAddEquipment={addCount}
+          onAddCase={addCase}
+          onOpenPicker={() => document.getElementById('loan-picker')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        />
         {fields.length === 0 ? (
           <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
             Zatiaľ nič. Vyberte case alebo techniku zo zoznamu nižšie.
@@ -272,6 +299,7 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
         )}
       </section>
 
+      <div id="loan-picker" />
       <LoanPicker
         equipment={lendable}
         cases={cases}

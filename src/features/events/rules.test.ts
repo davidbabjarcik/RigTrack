@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Equipment } from '@/features/equipment/model'
-import { eventReminders, readRules, type EventRule, type Matcher } from './rules'
+import { eventReminders, readRules, reminders, type EventRule, type Matcher } from './rules'
 
 const item = (id: string, patch: Partial<Equipment> = {}) =>
   ({ id, name: id, manufacturer: '', model: '', kind: 'general', categoryId: null, caseId: null, attributes: {}, ...patch }) as Equipment
@@ -12,7 +12,7 @@ const equipment = [
   item('sharpy', { name: 'Sharpy', kind: 'light', categoryId: 'svetla' }),
   item('hak', { name: 'Hák', caseId: 'hooks' }),
 ]
-const rule = (id: string, when: Matcher, need: Matcher, message = ''): EventRule => ({ id, when, need, message })
+const rule = (id: string, when: Matcher, need: Matcher, message = ''): EventRule => ({ id, when, need, message, amount: { mode: 'any', factor: 1 } })
 const rules = [
   rule('nl4', { type: 'audioType', value: 'amplifier' }, { type: 'name', value: 'nl4' }),
   rule('hooks', { type: 'category', value: 'svetla' }, { type: 'case', value: 'hooks' }, 'Svetlá bez hákov?'),
@@ -32,8 +32,22 @@ describe('event reminders', () => {
     expect(eventReminders(on([{ equipmentId: 'repro' }]), rules, equipment, describeMatcher)).toEqual([])
   })
 
-  it('drops broken stored rules', () => {
-    expect(readRules([rules[0], { id: 'x' }, 'nonsense'])).toEqual([rules[0]])
+  it('can ask for a number of pieces per triggering piece, also on a loan', () => {
+    const perPiece = { ...rule('cable', { type: 'audioType', value: 'speaker' }, { type: 'equipment', value: 'nl4' }), amount: { mode: 'perPiece' as const, factor: 1 } }
+    const lines = [
+      { equipmentId: 'repro', quantity: 4, caseId: null },
+      { equipmentId: 'nl4', quantity: 1, caseId: null },
+    ]
+    expect(reminders(lines, [perPiece], equipment, describeMatcher, 'vo výpožičke')).toEqual([
+      { rule: perPiece, missing: 3, text: 'Vo výpožičke je 4 × audioType:speaker, treba 4 × equipment:nl4, je 1.' },
+    ])
+    expect(reminders([{ ...lines[0] }, { ...lines[1], quantity: 4 }], [perPiece], equipment, describeMatcher)).toEqual([])
+  })
+
+  it('drops broken stored rules and fills in the amount of older ones', () => {
+    const older: Partial<EventRule> = { ...rules[0] }
+    delete older.amount
+    expect(readRules([older, { id: 'x' }, 'nonsense'])).toEqual([rules[0]])
     expect(readRules(null)).toEqual([])
   })
 })

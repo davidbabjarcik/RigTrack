@@ -7,7 +7,7 @@ import { useCases } from '@/features/cases/useCases'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { AUDIO_TYPE_LABELS, AUDIO_TYPES, EQUIPMENT_KINDS, KIND_LABELS, type Equipment, type Lookup } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
-import { fetchRules, MATCHER_LABELS, MATCHER_TYPES, ruleKeys, rulesSchema, saveRules, type EventRule, type Matcher, type MatcherType } from './rules'
+import { fetchRules, MATCHER_LABELS, MATCHER_TYPES, ruleKeys, rulesSchema, saveRules, type AmountMode, type EventRule, type Matcher, type MatcherType } from './rules'
 
 type Options = { equipment: Equipment[]; categories: Lookup[]; cases: { id: string; name: string }[] }
 
@@ -66,16 +66,36 @@ function Editor({ companyId, initial, options }: { companyId: string; initial: E
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-muted-foreground">
-        Keď je na evente niečo, čo pravidlo spúšťa, a chýba to, čo k tomu treba, ukáže sa pri technike eventu pripomienka. Napríklad:
-        typ zvuku Zosilňovač → názov obsahuje „NL4“; kategória Svetlá → case Háky.
+        Keď je na evente alebo vo výpožičke niečo, čo pravidlo spúšťa, a chýba to, čo k tomu treba, ukáže sa pripomienka. Napríklad:
+        typ zvuku Reprobox → technika Kábel NL4, na každý kus 1 (4 repráky = 4 káble); kategória Svetlá → case Háky, aspoň jeden.
       </p>
       {rules.map((rule, index) => (
         <div key={rule.id} className="flex flex-col gap-3 rounded-xl border bg-surface p-3">
           <div className="flex flex-col gap-3 md:flex-row">
-            <MatcherField label="Keď je na evente" value={rule.when} options={options} onChange={(when) => change(index, { when })} />
+            <MatcherField label="Keď je na evente / vo výpožičke" value={rule.when} options={options} onChange={(when) => change(index, { when })} />
             <MatcherField label="pripomeň, ak chýba" value={rule.need} options={options} onChange={(need) => change(index, { need })} />
           </div>
-          <div className="flex items-end gap-2">
+          <div className="flex flex-wrap items-end gap-2">
+            <SelectField
+              label="Koľko treba"
+              className="w-48"
+              value={rule.amount.mode}
+              onChange={(event) => change(index, { amount: { ...rule.amount, mode: event.target.value as AmountMode } })}
+            >
+              <option value="any">aspoň jeden kus</option>
+              <option value="perPiece">na každý kus</option>
+            </SelectField>
+            {rule.amount.mode === 'perPiece' && (
+              <Field
+                label="Koľko na kus"
+                type="number"
+                min={0.1}
+                step={0.5}
+                className="w-28"
+                value={Number.isFinite(rule.amount.factor) ? rule.amount.factor : ''}
+                onChange={(event) => change(index, { amount: { ...rule.amount, factor: event.target.value === '' ? Number.NaN : Number(event.target.value) } })}
+              />
+            )}
             <Field
               label="Vlastný text (nepovinné)"
               className="flex-1"
@@ -94,12 +114,12 @@ function Editor({ companyId, initial, options }: { companyId: string; initial: E
         variant="outline"
         size="sm"
         className="self-start"
-        onClick={() => setRules([...rules, { id: newId(), when: { type: 'audioType', value: 'amplifier' }, need: { type: 'name', value: '' }, message: '' }])}
+        onClick={() => setRules([...rules, { id: newId(), when: { type: 'audioType', value: 'amplifier' }, need: { type: 'name', value: '' }, amount: { mode: 'perPiece', factor: 1 }, message: '' }])}
       >
         <Plus className="size-4" aria-hidden />
         Pridať pravidlo
       </Button>
-      {!valid && rules.length > 0 && <p className="text-sm text-destructive">Pri každom pravidle vyberte obe hodnoty.</p>}
+      {!valid && rules.length > 0 && <p className="text-sm text-destructive">Pri každom pravidle vyberte obe hodnoty a pri „na každý kus“ zadajte počet.</p>}
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
           Uloženie zlyhalo. Ak ste ešte nespustili migráciu 0044, urobte to.

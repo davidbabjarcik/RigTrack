@@ -3,8 +3,8 @@ import { AUDIO_TYPE_LABELS, KIND_LABELS, type AudioType, type Equipment, type Eq
 import { getSupabase } from '@/lib/supabase/client'
 import type { CompanyEvent } from './model'
 
-// Pripomienky pri eventoch: pravidlá „keď je na evente X, pripomeň Y“.
-// Napr. pasívne repro alebo zosilňovač → kabeláž NL4; svetlá → case s hákmi.
+// Pripomienky pri eventoch a výpožičkách: pravidlá „keď je tam X, pripomeň Y“.
+// Napr. pasívne repro alebo zosilňovač → kabeláž NL4 (na každý kus jeden kábel); svetlá → case s hákmi.
 
 export const MATCHER_TYPES = ['equipment', 'category', 'case', 'kind', 'audioType', 'name'] as const
 export type MatcherType = (typeof MATCHER_TYPES)[number]
@@ -20,10 +20,16 @@ export const MATCHER_LABELS: Record<MatcherType, string> = {
 const matcher = z.object({ type: z.enum(MATCHER_TYPES), value: z.string().trim().min(1).max(120) })
 export type Matcher = z.infer<typeof matcher>
 
+/** Koľko treba: aspoň jeden kus, alebo `factor` kusov na každý kus toho, čo pravidlo spúšťa. */
+export const AMOUNT_MODES = ['any', 'perPiece'] as const
+export type AmountMode = (typeof AMOUNT_MODES)[number]
+const amount = z.object({ mode: z.enum(AMOUNT_MODES), factor: z.number().min(0.1).max(100) })
+
 export const ruleSchema = z.object({
   id: z.string().min(1).max(40),
   when: matcher,
   need: matcher,
+  amount: amount.default({ mode: 'any', factor: 1 }),
   /** Vlastný text pripomienky; prázdny = zostaví sa sám. */
   message: z.string().trim().max(200),
 })
@@ -63,23 +69,44 @@ export function matches(item: Equipment, rule: Matcher, viaCase: string | null =
   }
 }
 
-export type Reminder = { rule: EventRule; text: string }
+/** `missing` = koľko kusov chýba (pri „na každý kus“), inak 1. */
+export type Reminder = { rule: EventRule; text: string; missing: number }
+export type Line = { equipmentId: string; quantity: number; caseId: string | null }
 
-/** Pripomienky, ktoré na evente platia: niečo spúšťa pravidlo a to, čo k tomu treba, na evente chýba. */
-export function eventReminders(
-  event: Pick<CompanyEvent, 'equipment'>,
-  rules: EventRule[],
-  equipment: Equipment[],
-  describe: (matcher: Matcher) => string,
-): Reminder[] {
-  const items = event.equipment.flatMap((line) => {
+/**
+ * Pripomienky, ktoré platia pre zoznam techniky (event alebo výpožička): niečo spúšťa pravidlo
+ * a to, čo k tomu treba, chýba úplne – alebo pri „na každý kus“ ho je menej, ako treba.
+ * `where` je slovo do textu: „na evente“, „vo výpožičke“.
+ */
+export function reminders(lines: Line[], rules: EventRule[], equipment: Equipment[], describe: (matcher: Matcher) => string, where = 'na evente'): Reminder[] {
+  const items = lines.flatMap((line) => {
     const item = equipment.find((candidate) => candidate.id === line.equipmentId)
-    return item ? [{ item, viaCase: line.caseId }] : []
+    return item ? [{ item, quantity: line.quantity, viaCase: line.caseId }] : []
   })
-  return rules
-    .filter((rule) => items.some(({ item, viaCase }) => matches(item, rule.when, viaCase)))
-    .filter((rule) => !items.some(({ item, viaCase }) => matches(item, rule.need, viaCase)))
-    .map((rule) => ({ rule, text: rule.message || `Na evente je ${describe(rule.when)} – netreba aj ${describe(rule.need)}?` }))
+  const count = (matcher: Matcher) => items.filter(({ item, viaCase }) => matches(item, matcher, viaCase)).reduce((sum, line) => sum + line.quantity, 0)
+  const result: Reminder[] = []
+  for (const rule of rules) {
+    const triggers = count(rule.when)
+    if (triggers === 0) continue
+    const have = count(rule.need)
+    if (rule.amount.mode === 'any') {
+      if (have > 0) continue
+      result.push({ rule, missing: 1, text: rule.message || `${capitalize(where)} je ${describe(rule.when)} – netreba aj ${describe(rule.need)}?` })
+      continue
+    }
+    const needed = Math.ceil(triggers * rule.amount.factor - 1e-9)
+    if (have >= needed) continue
+    const detail = `${where} je ${triggers} × ${describe(rule.when)}, treba ${needed} × ${describe(rule.need)}, je ${have}`
+    result.push({ rule, missing: needed - have, text: rule.message ? `${rule.message} (${detail})` : `${capitalize(detail)}.` })
+  }
+  return result
+}
+
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+
+/** Pripomienky pre event. */
+export function eventReminders(event: Pick<CompanyEvent, 'equipment'>, rules: EventRule[], equipment: Equipment[], describe: (matcher: Matcher) => string) {
+  return reminders(event.equipment, rules, equipment, describe, 'na evente')
 }
 
 /** Čitateľný popis podmienky: „kategória Zvuk“, „technika Kábel NL4 10 m“. */
@@ -123,6 +150,7 @@ export async function saveRules(companyId: string, rules: EventRule[]) {
 }
 
 // Pripomienku, ktorú niekto pri evente odklikol „Netreba“, si pamätá tento prehliadač.
+/** Kľúč je id eventu, alebo „loan:id“ pri výpožičke. */
 const dismissKey = (eventId: string) => `rigtrack:event-reminders-dismissed:${eventId}`
 
 export function loadDismissed(eventId: string): string[] {

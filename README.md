@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.4**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.5**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,15 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.5 – 17. 10. 2026
+
+- **Pripomienky aj pri výpožičkách** – rovnaké pravidlá sa ukazujú pri vytváraní a úprave výpožičky.
+- **Koľko treba:** pravidlo môže chcieť aspoň jeden kus, alebo **daný počet na každý kus** (napr. 4 repráky =
+  4 káble NL4). Pripomienka napíše, koľko chýba, a tlačidlo **Pridať 3 ks** pridá presne toľko
+  (pri technike, ktorá už je vybraná, počet navýši).
+
+Nové migrácie: žiadne.
 
 ### 1.4 – 17. 10. 2026
 
@@ -125,7 +134,8 @@ Potrebné migrácie: do `0043`.
   zapíše sa až po kontrole; priradenia si appka pamätá.
 - Upozornenie na case, ktorý od poslednej kontroly obsahu bol na eventoch.
 - **Opakované akcie** – návrh údajov, posádky a odmien z minulého ročníka.
-- **Pripomienky** – podľa pravidiel z nastavení upozorní, čo k technike ešte chýba (napr. zosilňovač → kabeláž NL4).
+- **Pripomienky** – podľa pravidiel z nastavení upozorní pri evente aj výpožičke, čo k technike ešte chýba
+  (napr. 4 repráky → 4 káble NL4, svetlá → case s hákmi).
 - **Plán nakladania** *(vo vývoji)* – koľko vozidiel treba a kam ktorý case uložiť, zhora aj v 3D.
 - **Pódium Nivtec** *(vo vývoji)* – z rozmerov a výšky spočíta dosky (aj 1 × 0,5 m a trojuholníky),
   nohy (susedné dosky sa delia o nohu – sedí s papierovou tabuľkou), schody po 20 cm, lišty na pero /
