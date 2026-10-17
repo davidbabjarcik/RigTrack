@@ -14,7 +14,9 @@ import { describeContent, groupByCase } from '@/features/loans/model'
 import { useLoans } from '@/features/loans/useLoans'
 import { formatDate, todayIso } from '@/lib/format'
 import { addEventCase, addEventEquipment, eventKeys, removeEventCase, removeEventEquipment, setEventEquipmentQuantity } from './api'
+import { EventReminders } from './EventReminders'
 import { busyElsewhere, eventsSinceCheck, type CompanyEvent } from './model'
+import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 
 type Props = { companyId: string; event: CompanyEvent; events: CompanyEvent[]; canEdit: boolean }
 
@@ -28,6 +30,7 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
 
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const cases = useCases(companyId)
+  const { categories } = useEquipmentLookups(companyId)
   const loans = useLoans(companyId)
   const all = equipment.data ?? []
   const lendable = all.filter((item) => item.status !== 'retired' && item.kind !== 'consumable')
@@ -82,6 +85,21 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
           </div>
         )}
       </div>
+
+      {equipment.data && (
+        <EventReminders
+          companyId={companyId}
+          event={event}
+          equipment={all}
+          categories={categories}
+          cases={cases.data ?? []}
+          canEdit={canEdit}
+          busy={busy}
+          onAddEquipment={(equipmentId) => add.mutate(equipmentId)}
+          onAddCase={(caseId) => addCase.mutate(caseId)}
+          onOpenPicker={() => setAdding(true)}
+        />
+      )}
 
       {equipment.isPending ? (
         <LoadingBlock />

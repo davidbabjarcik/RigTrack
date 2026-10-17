@@ -18,6 +18,7 @@ import {
 import { BackupSettings } from '@/features/backup/BackupSettings'
 import { CaseTemplateSettings } from '@/features/cases/CaseTemplateSettings'
 import { StageSettings } from '@/features/stage/StageSettings'
+import { RulesSettings } from '@/features/events/RulesSettings'
 import { useCompany, type Membership } from '@/features/companies/company-context'
 import { BrandingSettings } from '@/features/companies/BrandingSettings'
 import { DemoSettings } from '@/features/companies/DemoSettings'
@@ -242,6 +243,7 @@ export function SettingsPage() {
     { id: 'permissions', label: 'Oprávnenia', shown: isAdmin },
     { id: 'lists', label: 'Zoznamy', shown: can(company, 'lookups.manage') },
     { id: 'stage', label: 'Nivtec', shown: can(company, 'lookups.manage') },
+    { id: 'reminders', label: 'Pripomienky', shown: can(company, 'lookups.manage') },
     { id: 'account', label: 'Účet', shown: true },
   ].filter((tab) => tab.shown)
   // Záložka je v adrese, aby sa na ňu dalo odkázať a aby ju prežilo obnovenie stránky.
@@ -342,6 +344,12 @@ export function SettingsPage() {
       )}
 
       {tab === 'lists' && <InventoryLookups companyId={company.companyId} />}
+
+      {tab === 'reminders' && (
+        <Section title="Pripomienky pri eventoch">
+          <RulesSettings companyId={company.companyId} />
+        </Section>
+      )}
 
       {tab === 'stage' && (
         <Section title="Pódium Nivtec">

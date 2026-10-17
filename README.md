@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.3**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.4**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,16 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.4 – 17. 10. 2026
+
+- **Pripomienky pri eventoch** – v Nastaveniach → Pripomienky sa zadajú pravidlá „keď je na evente X,
+  pripomeň Y“ (podľa techniky, kategórie, case, druhu, typu zvuku alebo textu v názve). Napr. zosilňovač →
+  kabeláž NL4, svetlá → case s hákmi. Keď na evente chýba, pri technike sa ukáže pripomienka
+  s tlačidlom **Pridať** (alebo výber techniky) a **Netreba**.
+- Pravidlá sú aj v zálohe firmy.
+
+Nové migrácie: `0044`.
 
 ### 1.3 – 15. 10. 2026
 
@@ -115,6 +125,7 @@ Potrebné migrácie: do `0043`.
   zapíše sa až po kontrole; priradenia si appka pamätá.
 - Upozornenie na case, ktorý od poslednej kontroly obsahu bol na eventoch.
 - **Opakované akcie** – návrh údajov, posádky a odmien z minulého ročníka.
+- **Pripomienky** – podľa pravidiel z nastavení upozorní, čo k technike ešte chýba (napr. zosilňovač → kabeláž NL4).
 - **Plán nakladania** *(vo vývoji)* – koľko vozidiel treba a kam ktorý case uložiť, zhora aj v 3D.
 - **Pódium Nivtec** *(vo vývoji)* – z rozmerov a výšky spočíta dosky (aj 1 × 0,5 m a trojuholníky),
   nohy (susedné dosky sa delia o nohu – sedí s papierovou tabuľkou), schody po 20 cm, lišty na pero /
@@ -148,7 +159,7 @@ Potrebné migrácie: do `0043`.
 - Členovia a pozvánky, roly admin / skladník / technik / len na čítanie.
 - **Oprávnenia** pre každú rolu aj výnimky pre jednotlivých členov.
 - Logo firmy (pozadie sa odstráni, logo sa prispôsobí svetlému aj tmavému podkladu), kategórie s farbami,
-  umiestnenia, šablóny cases, samostatná záložka **Nivtec**.
+  umiestnenia, šablóny cases, záložky **Nivtec** a **Pripomienky**.
 - Svetlý / tmavý režim, **demo firma** s resetom, verzia aplikácie.
 
 ---

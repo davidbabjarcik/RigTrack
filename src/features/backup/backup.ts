@@ -80,6 +80,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
     tables: [
       { table: 'attachments', sheet: 'Prílohy' },
       { table: 'stage_settings', sheet: 'Nastavenie Nivtec' },
+      { table: 'event_rules', sheet: 'Pripomienky' },
     ],
   },
 ]
