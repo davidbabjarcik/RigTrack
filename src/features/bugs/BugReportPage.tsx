@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bug, Camera, CheckCircle2, X } from 'lucide-react'
+import { Bug, Camera, CheckCircle2, List, X } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Button } from '@/components/ui/button'
+import { Button, LinkButton } from '@/components/ui/button'
 import { Field, TextareaField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { APP_VERSION } from '@/lib/version'
@@ -77,7 +77,16 @@ export function BugReportPage() {
 
   return (
     <>
-      <PageHeader title="Nahlásiť chybu" description="Čo nefunguje alebo čo by malo fungovať inak" />
+      <PageHeader
+        title="Nahlásiť chybu"
+        description="Čo nefunguje alebo čo by malo fungovať inak"
+        action={
+          <LinkButton to="/bugs" variant="outline">
+            <List className="size-4" aria-hidden />
+            Hlásenia chýb
+          </LinkButton>
+        }
+      />
       <form onSubmit={submit} className="flex flex-col gap-4">
         <Field label="Čo sa stalo? *" placeholder="napr. Po uložení eventu sa nezobrazí technika" maxLength={160} autoFocus value={title} onChange={(event) => setTitle(event.target.value)} />
         <TextareaField
