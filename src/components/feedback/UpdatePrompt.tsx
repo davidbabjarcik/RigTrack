@@ -5,7 +5,19 @@ export function UpdatePrompt() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
-  } = useRegisterSW()
+  } = useRegisterSW({
+    // Nainštalovaná aplikácia beží dlho bez znovunačítania – novú verziu hľadáme pri návrate do nej a každú hodinu.
+    onRegisteredSW(_url, registration) {
+      if (!registration) return
+      const check = () => {
+        if (navigator.onLine) void registration.update().catch(() => {})
+      }
+      setInterval(check, 60 * 60 * 1000)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') check()
+      })
+    },
+  })
 
   if (!needRefresh) return null
   return (

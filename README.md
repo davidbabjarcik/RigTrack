@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.10.1**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.10.2**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,12 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.10.2 – 18. 10. 2026
+
+- Nainštalovaná aplikácia sama hľadá novú verziu (pri návrate do aplikácie a každú hodinu) a ponúkne „Aktualizovať“.
+
+Nové migrácie: žiadne.
 
 ### 1.10.1 – 18. 10. 2026
 
