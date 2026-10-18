@@ -24,7 +24,7 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ### 1.10.3 – 18. 10. 2026
 
 - V pätičke je už len „Nahlásiť chybu“; zoznam „Hlásenia chýb“ je tlačidlo na stránke hlásenia (a admin ho má aj v Upozorneniach).
-- Nasadenie na GitHub Pages sa zastaví s jasnou chybou, keď chýbajú premenné Supabase.
+- Nasadenie na GitHub Pages vidí premenné Supabase aj z prostredia github-pages a bez nich sa zastaví s jasnou chybou.
 
 Nové migrácie: žiadne.
 

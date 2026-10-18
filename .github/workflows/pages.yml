@@ -3,7 +3,8 @@
 #
 # V repozitári treba raz nastaviť:
 #   Settings → Pages → Source: GitHub Actions
-#   Settings → Secrets and variables → Actions → Variables:
+#   premenné (v Settings → Environments → github-pages → Environment variables
+#   alebo v Settings → Secrets and variables → Actions → Variables):
 #     VITE_SUPABASE_URL              (Project URL zo Supabase)
 #     VITE_SUPABASE_PUBLISHABLE_KEY  (verejný publishable/anon kľúč – service-role sem nikdy!)
 name: GitHub Pages
@@ -24,8 +25,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  # Jeden job v prostredí github-pages, aby videl aj premenné nastavené v tomto prostredí.
+  deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -43,7 +48,7 @@ jobs:
       - name: Kontrola premenných
         run: |
           if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
-            echo "::error::Chýba VITE_SUPABASE_URL alebo VITE_SUPABASE_PUBLISHABLE_KEY v Settings → Secrets and variables → Actions → Variables (Repository variables)."
+            echo "::error::Chýba VITE_SUPABASE_URL alebo VITE_SUPABASE_PUBLISHABLE_KEY v Settings → Environments → github-pages alebo Settings → Secrets and variables → Actions → Variables."
             exit 1
           fi
         env:
@@ -67,12 +72,5 @@ jobs:
         with:
           path: dist
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
