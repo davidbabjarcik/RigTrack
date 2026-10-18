@@ -5,7 +5,8 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'dev-dist'] },
+  // Edge Functions bežia v Deno (iné importy a globálne objekty), lintujú sa tam.
+  { ignores: ['dist', 'dev-dist', 'supabase/functions'] },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

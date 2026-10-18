@@ -1,5 +1,5 @@
 import { Menu } from 'lucide-react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { OfflineBanner } from '@/components/feedback/OfflineBanner'
 import { UpdatePrompt } from '@/components/feedback/UpdatePrompt'
 import { BinAutoPurge } from '@/features/bin/BinAutoPurge'
@@ -49,6 +49,19 @@ function TabLink({ item }: { item: Pick<NavItem, 'label' | 'to' | 'icon'> }) {
   )
 }
 
+/** Odkaz na nahlásenie chyby; pošle so sebou stránku, na ktorej človek práve je. */
+function ReportBugLink() {
+  const location = useLocation()
+  if (location.pathname.startsWith('/bugs')) return null
+  return (
+    <p className="px-4 pb-2 text-center text-xs print:hidden">
+      <Link to={`/bugs/new?from=${encodeURIComponent(location.pathname + location.search)}`} className="text-muted-foreground hover:text-foreground hover:underline">
+        Niečo nefunguje? Nahlásiť chybu
+      </Link>
+    </p>
+  )
+}
+
 export function AppLayout() {
   const { pinned } = usePinnedNav()
   const { active } = useCompany()
@@ -91,6 +104,7 @@ export function AppLayout() {
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-10 md:px-8">
           <Outlet />
         </main>
+        <ReportBugLink />
         {/* Na mobile leží pod pätičkou spodná navigácia, preto väčší spodný okraj. */}
         <Credits className="px-4 pb-24 md:pb-6" />
       </div>

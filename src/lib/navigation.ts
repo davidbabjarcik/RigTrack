@@ -1,6 +1,7 @@
 import {
   Bell,
   Briefcase,
+  Bug,
   CalendarDays,
   ChartColumn,
   Car,
@@ -51,6 +52,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'suggestions', permission: 'suggestions.view', label: 'Návrhy', to: '/suggestions', icon: Lightbulb, description: 'Návrhy na zlepšenie' },
   { id: 'staff', permission: 'staff.view', label: 'Zamestnanci', to: '/staff', icon: Users, description: 'Tím, kontakty a kto kedy môže' },
   { id: 'payouts', label: 'Odmeny', to: '/payouts', icon: Wallet, description: 'Odmeny a zálohy za akcie' },
+  { id: 'bugs', label: 'Hlásenia chýb', to: '/bugs', icon: Bug, description: 'Nahlásené chyby a ich stav' },
   { id: 'stats', label: 'Štatistiky', to: '/stats', icon: ChartColumn, description: 'Dostupnosť, vyťaženie a náklady' },
   { id: 'settings', label: 'Nastavenia', to: '/settings', icon: Settings, description: 'Firma a používatelia' },
 ]

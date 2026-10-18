@@ -64,6 +64,8 @@ const eventForm = lazyPage(() => import('@/features/events/EventFormPage').then(
 const audit = lazyPage(() => import('@/features/audit/AuditPage').then((m) => m.AuditPage), 'audit.view')
 const staffList = lazyPage(() => import('@/features/staff/StaffPage').then((m) => m.StaffPage), 'staff.view')
 const staffDetail = lazyPage(() => import('@/features/staff/StaffDetailPage').then((m) => m.StaffDetailPage), 'staff.view')
+const bugsList = lazyPage(() => import('@/features/bugs/BugsPage').then((m) => m.BugsPage))
+const bugReport = lazyPage(() => import('@/features/bugs/BugReportPage').then((m) => m.BugReportPage))
 const stage = lazyPage(() => import('@/features/stage/StagePage').then((m) => m.StagePage), 'events.view')
 const warehouse = lazyPage(() => import('@/features/warehouse/WarehousePage').then((m) => m.WarehousePage), 'cases.view')
 const recycleBin = lazyPage(() => import('@/features/bin/RecycleBinPage').then((m) => m.RecycleBinPage))
@@ -144,6 +146,8 @@ export const routes: RouteObject[] = [
               { path: 'admin/recycle-bin', lazy: recycleBin },
               { path: 'warehouse', lazy: warehouse },
               { path: 'stage', lazy: stage },
+              { path: 'bugs', lazy: bugsList },
+              { path: 'bugs/new', lazy: bugReport },
               { path: 'staff', lazy: staffList },
               { path: 'staff/:key', lazy: staffDetail },
               { path: 'orders', lazy: ordersList },

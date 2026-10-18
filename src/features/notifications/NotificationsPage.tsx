@@ -12,6 +12,8 @@ import { useTasks } from '@/features/tasks/useTasks'
 import { useVehicles } from '@/features/vehicles/useVehicles'
 import { todayIso } from '@/lib/format'
 import { buildNotifications, type Notification } from './model'
+import { bugKeys, fetchBugReports } from '@/features/bugs/api'
+import { openReports } from '@/features/bugs/model'
 
 function NotificationList({ title, items }: { title: string; items: Notification[] }) {
   if (items.length === 0) return null
@@ -54,6 +56,9 @@ export function NotificationsPage() {
     queryFn: () => fetchMyInvitations(user.email!),
   })
   const sources = [equipment, loans, tasks, vehicles, invitations]
+  // Nové hlásenia chýb od iných (vidí ich admin firmy a vývojár; ostatní len svoje, tie sa nerátajú).
+  const bugs = useQuery({ queryKey: bugKeys.list(companyId), queryFn: fetchBugReports, retry: false })
+  const newBugs = openReports(bugs.data ?? [], user.id).length
 
   const all = buildNotifications(
     {
@@ -70,6 +75,15 @@ export function NotificationsPage() {
   return (
     <>
       <PageHeader title="Upozornenia" description="Čo práve potrebuje vašu pozornosť" />
+      {newBugs > 0 && (
+        <Link to="/bugs" className="mb-4 flex items-center gap-3 rounded-xl border border-red-300 bg-red-50 p-4 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/40">
+          <CircleAlert className="size-5 shrink-0 text-red-600" aria-hidden />
+          <span className="flex-1 font-medium">
+            {newBugs === 1 ? '1 nové hlásenie chyby' : newBugs < 5 ? `${newBugs} nové hlásenia chýb` : `${newBugs} nových hlásení chýb`}
+          </span>
+          <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+        </Link>
+      )}
       {sources.some((source) => source.isPending) ? (
         <LoadingBlock />
       ) : sources.some((source) => source.isError) ? (

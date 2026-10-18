@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.9**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.10**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,17 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.10 – 18. 10. 2026
+
+- **Nahlásenie chyby** – odkaz „Niečo nefunguje? Nahlásiť chybu“ pod každou stránkou: popis, voliteľný
+  screenshot (aj Ctrl+V); stránka, verzia, firma a prehliadač sa priložia samy.
+- **Hlásenia chýb** v menu – autor vidí svoje, admin firmy hlásenia svojej firmy, vývojár aplikácie všetky.
+  Admin a vývojár menia stav (nové / rieši sa / vyriešené / nebude sa riešiť) a píšu odpoveď autorovi.
+- Nové hlásenia sú v **Upozorneniach** a prídu **e-mailom** vývojárovi a adminovi firmy
+  (Supabase Edge Function `notify-bug-report` + Resend – návod v časti Nahlasovanie chýb).
+
+Nové migrácie: `0048`.
 
 ### 1.9 – 18. 10. 2026
 
@@ -217,6 +228,7 @@ Potrebné migrácie: do `0043`.
 - **Štatistiky** (čo vidieť aj v akom poradí si nastaví každý sám) – technika, servis, vozidlá a **peniaze**: príjmy firmy, odmeny a zostatok (s oprávnením)
   a každému jeho vlastné zárobky podľa role, mesiacov a rokov, s koláčovými grafmi.
 - **Záloha** – admin stiahne celú firmu ako ZIP s Excelmi (fotky a dokumenty v nej nie sú).
+- **Hlásenia chýb** – ktokoľvek nahlási chybu (aj so screenshotom), admin a vývojár ju riešia; upozornenie v appke aj e-mailom.
 - **Kôš** – zmazané veci sa dajú 30 dní obnoviť (`/admin/recycle-bin`, iba admin); kôš aj história zmien sa dajú exportovať do Excelu.
 
 ### ⚙️ Nastavenia
@@ -268,6 +280,24 @@ Aplikácia beží na `http://localhost:5173`. Bez databázy sa zobrazí iba kost
 4. Potvrdzovanie e-mailu (Authentication → Sign In / Providers → Email → Confirm email) nechaj **zapnuté** –
    pozvánky do firmy sa viažu na potvrdenú adresu.
 5. Skopíruj `.env.example` do `.env.local` a doplň Project URL a publishable kľúč.
+
+## Nahlasovanie chýb – e-maily
+
+Hlásenia fungujú v aplikácii hneď po migrácii `0048`. Aby chodili aj e-mailom:
+
+1. **Označ seba ako vývojára** (v SQL Editore, raz):
+   `insert into public.app_developers (user_id) select id from auth.users where email = 'tvoj@email';`
+2. **Resend** (resend.com, do 3 000 e-mailov mesačne zadarmo): založ účet, over doménu odosielateľa
+   (bez overenej domény ide z `onboarding@resend.dev` len na tvoj vlastný e-mail) a vytvor API kľúč.
+3. **Nasaď funkciu** cez Supabase CLI z koreňa repozitára:
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref <ref-projektu>
+   npx supabase functions deploy notify-bug-report
+   npx supabase secrets set RESEND_API_KEY=re_... BUG_REPORT_FROM="RigTrack <chyby@tvoja-domena.sk>" APP_URL=https://<používateľ>.github.io/RigTrack
+   ```
+E-mail dostanú vývojári a admini firmy, v ktorej bola chyba nahlásená. Kým funkcia nie je nasadená,
+hlásenia sa len uložia a ukážu v aplikácii.
 
 ## Nasadenie na GitHub Pages
 
