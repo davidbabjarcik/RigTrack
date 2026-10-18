@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
@@ -16,6 +17,10 @@ import { cargoSpaceOf } from '@/features/loading/sources'
 import { asOptionalNumber, formatNumber } from '@/features/equipment/model'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
+import { useTechnicians } from '@/features/technicians/api'
+import { technicianLabel } from '@/features/technicians/model'
+import { TechnicianCard } from '@/features/technicians/TechnicianCard'
+import { TechnicianSelect } from '@/features/technicians/TechnicianSelect'
 import { addVehicleRecord, deleteVehicle, deleteVehicleRecord, fetchVehicleRecords, vehicleKeys } from './api'
 import { DeadlineLine } from './DeadlineBadge'
 import {
@@ -31,7 +36,7 @@ import {
 import { useVehicles } from './useVehicles'
 import { VehiclePhoto } from './VehiclePhoto'
 
-function RecordForm({ companyId, vehicleId, onDone }: { companyId: string; vehicleId: string; onDone: () => void }) {
+function RecordForm({ companyId, vehicleId, defaultTechnicianId, onDone }: { companyId: string; vehicleId: string; defaultTechnicianId: string; onDone: () => void }) {
   const queryClient = useQueryClient()
   const {
     register,
@@ -40,7 +45,7 @@ function RecordForm({ companyId, vehicleId, onDone }: { companyId: string; vehic
     formState: { errors },
   } = useForm<RecordFormValues>({
     resolver: zodResolver(recordSchema),
-    defaultValues: { kind: 'fuel', happenedOn: todayIso(), odometerKm: undefined, cost: undefined, liters: undefined, description: '' },
+    defaultValues: { kind: 'fuel', happenedOn: todayIso(), odometerKm: undefined, cost: undefined, liters: undefined, description: '', technicianId: defaultTechnicianId },
   })
   const kind = useWatch({ control, name: 'kind' })
 
@@ -99,6 +104,7 @@ function RecordForm({ companyId, vehicleId, onDone }: { companyId: string; vehic
         )}
       </div>
       <Field label="Popis" placeholder="napr. čo sa robilo, kde" error={errors.description?.message} {...register('description')} />
+      {kind !== 'fuel' && <TechnicianSelect companyId={companyId} kind="vehicles" label="Kto robil (servis)" {...register('technicianId')} />}
       {add.isError && (
         <p role="alert" className="text-sm text-destructive">
           Záznam sa nepodarilo uložiť.
@@ -125,6 +131,7 @@ export function VehicleDetailPage() {
   const [adding, setAdding] = useState(false)
 
   const vehicles = useVehicles(companyId)
+  const technicians = useTechnicians(companyId)
   const records = useQuery({
     queryKey: vehicleKeys.records(companyId, id),
     queryFn: () => fetchVehicleRecords(companyId, id),
@@ -177,6 +184,8 @@ export function VehicleDetailPage() {
   ]
 
   const space = cargoSpaceOf(vehicle)
+  const technicianById = new Map((technicians.data ?? []).map((technician) => [technician.id, technician]))
+  const garage = vehicle.technicianId ? technicianById.get(vehicle.technicianId) : undefined
 
   return (
     <>
@@ -218,10 +227,7 @@ export function VehicleDetailPage() {
       />
 
       {space && (
-        <section className="mb-6" aria-labelledby="cargo-heading">
-          <h2 id="cargo-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-            Nákladný priestor
-          </h2>
+        <CollapsibleSection id="vehicle.cargo" title="Nákladný priestor">
           <div className="rounded-xl border bg-surface p-4">
             <p className="mb-3 font-medium">
               {space.length} × {space.width} × {space.height} cm
@@ -236,7 +242,7 @@ export function VehicleDetailPage() {
             <ObstacleLegend obstacles={space.obstacles} />
             <p className="mt-2 text-sm text-muted-foreground">Pohľad zhora, ľavá stena je hore; farebné šrafované plochy sú miesta, kam sa nakladať nedá.</p>
           </div>
-        </section>
+        </CollapsibleSection>
       )}
 
       {(remove.isError || removeRecord.isError) && (
@@ -245,8 +251,7 @@ export function VehicleDetailPage() {
         </p>
       )}
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-sm font-medium text-muted-foreground">Termíny</h2>
+      <CollapsibleSection id="vehicle.deadlines" title="Termíny">
         {deadlines.length === 0 ? (
           <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
             Žiadne termíny nie sú zadané. Doplníte ich v úprave vozidla.
@@ -260,7 +265,7 @@ export function VehicleDetailPage() {
             ))}
           </ul>
         )}
-      </section>
+      </CollapsibleSection>
 
       <dl className="mb-6 divide-y overflow-hidden rounded-xl border bg-surface">
         {facts
@@ -275,6 +280,12 @@ export function VehicleDetailPage() {
 
       {vehicle.note && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{vehicle.note}</p>}
 
+      {garage && (
+        <CollapsibleSection id="vehicle.garage" title="Stály servis">
+          <TechnicianCard technician={garage} />
+        </CollapsibleSection>
+      )}
+
       <Attachments
         companyId={companyId}
         entity="vehicle"
@@ -284,20 +295,18 @@ export function VehicleDetailPage() {
         empty="Žiadne dokumenty. Sem patrí technický preukaz, poistné zmluvy a faktúry."
       />
 
-      <section aria-labelledby="records-heading">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <h2 id="records-heading" className="text-sm font-medium text-muted-foreground">
-            Záznamy o prevádzke
-          </h2>
+      <CollapsibleSection id="vehicle.records" title="Záznamy o prevádzke" actions={
+          <>
           {can(company, 'vehicles.log') && !adding && (
             <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
               <Plus className="size-4" aria-hidden />
               Pridať záznam
             </Button>
           )}
-        </div>
+          </>
+        }>
 
-        {adding && <RecordForm companyId={companyId} vehicleId={id} onDone={() => setAdding(false)} />}
+        {adding && <RecordForm companyId={companyId} vehicleId={id} defaultTechnicianId={vehicle.technicianId ?? ''} onDone={() => setAdding(false)} />}
 
         {records.isPending ? (
           <LoadingBlock />
@@ -321,6 +330,9 @@ export function VehicleDetailPage() {
                     <p className="font-medium">{RECORD_KIND_LABELS[record.kind]}</p>
                     <p className="text-sm text-muted-foreground">{details.join(' · ')}</p>
                     {record.description && <p className="mt-1 text-sm whitespace-pre-wrap">{record.description}</p>}
+                    {record.technicianId && technicianById.get(record.technicianId) && (
+                      <p className="mt-1 text-sm text-muted-foreground">Robil: {technicianLabel(technicianById.get(record.technicianId)!)}</p>
+                    )}
                   </div>
                   {record.cost !== null && <p className="shrink-0 font-medium">{formatMoney(record.cost, 'EUR')}</p>}
                   {can(company, 'vehicles.edit') && (
@@ -341,7 +353,7 @@ export function VehicleDetailPage() {
             })}
           </ul>
         )}
-      </section>
+      </CollapsibleSection>
     </>
   )
 }

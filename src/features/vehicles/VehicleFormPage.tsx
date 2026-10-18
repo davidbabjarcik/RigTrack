@@ -14,6 +14,7 @@ import { LoadDiagram } from '@/features/loading/LoadDiagram'
 import type { CargoSpace } from '@/features/loading/model'
 import { asOptionalNumber } from '@/features/equipment/model'
 import { can } from '@/lib/permissions'
+import { TechnicianSelect } from '@/features/technicians/TechnicianSelect'
 import { saveVehicle, vehicleKeys } from './api'
 import { CargoEditor } from './CargoEditor'
 import { DEADLINES, VEHICLE_STATUS_LABELS, VEHICLE_STATUSES, vehicleSchema, type CargoObstacle, type Vehicle, type VehicleFormValues } from './model'
@@ -62,6 +63,7 @@ function VehicleForm({ companyId, current }: { companyId: string; current: Vehic
       cargoWidthCm: current?.cargoWidthCm ?? undefined,
       cargoHeightCm: current?.cargoHeightCm ?? undefined,
       cargoObstacles: current?.cargoObstacles ?? [],
+      technicianId: current?.technicianId ?? '',
       note: current?.note ?? '',
     },
   })
@@ -107,6 +109,7 @@ function VehicleForm({ companyId, current }: { companyId: string; current: Vehic
           ))}
         </SelectField>
         <Field label="Vodič / komu je pridelené" error={errors.driver?.message} {...register('driver')} />
+        <TechnicianSelect companyId={companyId} kind="vehicles" label="Stály servis" current={current?.technicianId} {...register('technicianId')} />
         <Field
           label="Stav tachometra (km)"
           type="number"

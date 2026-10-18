@@ -66,7 +66,13 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'event_documents', sheet: 'Dokumenty a fotky' },
     ],
   },
-  { file: 'Servis.xlsx', tables: [{ table: 'service_records', sheet: 'Servis' }] },
+  {
+    file: 'Servis.xlsx',
+    tables: [
+      { table: 'service_records', sheet: 'Servis' },
+      { table: 'service_technicians', sheet: 'Servisní technici' },
+    ],
+  },
   { file: 'Úlohy.xlsx', tables: [{ table: 'tasks', sheet: 'Úlohy' }] },
   { file: 'Odmeny.xlsx', tables: [{ table: 'member_payments', sheet: 'Odmeny' }] },
   {
@@ -74,6 +80,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
     tables: [
       { table: 'staff', sheet: 'Zamestnanci' },
       { table: 'staff_unavailability', sheet: 'Kedy nemôžu' },
+      { table: 'member_devices', sheet: 'Zariadenia členov' },
     ],
   },
   {

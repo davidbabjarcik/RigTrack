@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { CREDITS, type CreditIcon } from '@/lib/credits'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -52,7 +53,9 @@ export function Credits({ className }: { className?: string }) {
       <span>
         Made by {CREDITS.author} © {new Date().getFullYear()}
       </span>
-      <span>RigTrack v{APP_VERSION}</span>
+      <Link to="/changelog" className="hover:text-foreground hover:underline" title="Čo je nové v jednotlivých verziách">
+        RigTrack v{APP_VERSION}
+      </Link>
       <span className="flex items-center gap-1">
         {links.map((link) => {
           const icon = ICONS[link.icon]

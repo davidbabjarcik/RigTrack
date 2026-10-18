@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeftRight, CalendarDays, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, CalendarDays, CalendarPlus, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { useEvents } from '@/features/events/useEvents'
@@ -12,8 +13,10 @@ import { fetchShoppingItems, shoppingKeys } from '@/features/shopping/api'
 import { useTasks } from '@/features/tasks/useTasks'
 import { useVehicles } from '@/features/vehicles/useVehicles'
 import { formatDate, todayIso } from '@/lib/format'
+import { downloadIcs } from '@/lib/ics'
 import { cn } from '@/lib/utils'
 import { CalendarGrid } from './CalendarGrid'
+import { calendarExport } from './export'
 import { KIND_STYLES } from './kindStyles'
 import {
   addDays,
@@ -109,7 +112,21 @@ export function CalendarPage() {
 
   return (
     <>
-      <PageHeader title="Kalendár" description="Termíny zo všetkých častí aplikácie na jednom mieste" />
+      <PageHeader
+        title="Kalendár"
+        description="Termíny zo všetkých častí aplikácie na jednom mieste"
+        action={
+          <Button
+            variant="outline"
+            disabled={events.isPending || loans.isPending}
+            title="Stiahne eventy a výpožičky (od minulého mesiaca) ako .ics – otvoríte ho v telefóne, Google Kalendári alebo Outlooku"
+            onClick={() => downloadIcs(`rigtrack-kalendar-${today}`, calendarExport(data.events, data.loans, addDays(today, -30)))}
+          >
+            <CalendarPlus className="size-4" aria-hidden />
+            Export do kalendára
+          </Button>
+        }
+      />
 
       <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Zobrazenie">
         {(

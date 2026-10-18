@@ -66,6 +66,10 @@ const staffList = lazyPage(() => import('@/features/staff/StaffPage').then((m) =
 const staffDetail = lazyPage(() => import('@/features/staff/StaffDetailPage').then((m) => m.StaffDetailPage), 'staff.view')
 const bugsList = lazyPage(() => import('@/features/bugs/BugsPage').then((m) => m.BugsPage))
 const bugReport = lazyPage(() => import('@/features/bugs/BugReportPage').then((m) => m.BugReportPage))
+const technicians = lazyPage(() => import('@/features/technicians/TechniciansPage').then((m) => m.TechniciansPage))
+const delay = lazyPage(() => import('@/features/delay/DelayPage').then((m) => m.DelayPage))
+// Verejná stránka (aj bez prihlásenia a firmy), preto bez lazyPage.
+const changelog = async () => ({ Component: (await import('@/features/changelog/ChangelogPage')).ChangelogPage })
 const stage = lazyPage(() => import('@/features/stage/StagePage').then((m) => m.StagePage), 'events.view')
 const warehouse = lazyPage(() => import('@/features/warehouse/WarehousePage').then((m) => m.WarehousePage), 'cases.view')
 const recycleBin = lazyPage(() => import('@/features/bin/RecycleBinPage').then((m) => m.RecycleBinPage))
@@ -81,6 +85,7 @@ export const routes: RouteObject[] = [
     children: [
       { path: 'auth', element: <AuthPage /> },
       { path: 'auth/update-password', element: <UpdatePasswordPage /> },
+      { path: 'changelog', lazy: changelog },
     ],
   },
   {
@@ -146,6 +151,8 @@ export const routes: RouteObject[] = [
               { path: 'admin/recycle-bin', lazy: recycleBin },
               { path: 'warehouse', lazy: warehouse },
               { path: 'stage', lazy: stage },
+              { path: 'technicians', lazy: technicians },
+              { path: 'delay', lazy: delay },
               { path: 'bugs', lazy: bugsList },
               { path: 'bugs/new', lazy: bugReport },
               { path: 'staff', lazy: staffList },

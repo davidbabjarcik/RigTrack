@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.10.3**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.11.0**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,28 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.11 – 18. 10. 2026
+
+- **Servisní technici** – adresár ľudí a servisov pre techniku aj autá (firma, telefón, e-mail, adresa, na čo sú).
+  Vyberajú sa pri servise techniky, pri zázname auta a ako **stály servis** auta.
+- **Do kontaktov** – organizátor eventu, zákazník výpožičky, servisný technik aj zamestnanec sa dá jedným klikom
+  uložiť do telefónu (.vcf).
+- **Do kalendára** – event aj výpožička sa pridá do telefónu / Outlooku (.ics) alebo rovno do Google Kalendára;
+  v Kalendári export všetkých eventov a výpožičiek naraz.
+- **Zbaľovanie sekcií** – technika, posádka, počasie, fotky, dokumenty… pri evente, výpožičke, aute, technike
+  aj zamestnancovi sa dajú zbaliť kliknutím na nadpis; prehliadač si to pamätá.
+- **Počasie** – klik na deň ukáže hodinovú predpoveď (dážď, vietor), odkazy na Windy a Meteoblue.
+- **Delay kalkulačka** – zarovnanie topov a subov, delay veža, **cardioid** (za sebou, vedľa seba v rade, stack),
+  **end-fire**, rovný rad a **arc delay**; teplota vzduchu, výber subu z techniky s rozmermi boxu,
+  odhad dopredu / dozadu podľa frekvencie, nákres zhora.
+- **Rozmery boxu** pri reproboxoch, suboch a odposluchoch.
+- **Moje zariadenia** – každý si v Nastaveniach → Účet zapíše mobil, notebook či iPad s MAC adresou;
+  admin a skladník ich vidia v tabuľke IP / MAC.
+- **Zmazanie firmy** – admin v Nastaveniach natrvalo zmaže firmu so všetkými údajmi aj súbormi (potvrdí sa názvom).
+- **Čo je nové** – klik na „RigTrack v…“ v pätičke otvorí prehľad zmien po verziách.
+
+Nové migrácie: `0049`, `0050`, `0051`.
 
 ### 1.10.3 – 18. 10. 2026
 
@@ -185,7 +207,9 @@ Potrebné migrácie: do `0043`.
   háky, káble či viazačky sa rátajú len na počet.
 - Servisné intervaly a odčítanie prevádzkových hodín s pripomienkami, hranica „treba dokúpiť“.
 - Sada káblov naraz podľa dĺžok s farebným značením, cenník prenájmu za deň.
-- **IP / MAC tabuľka** zoradená podľa IP, hľadanie v ľubovoľnom zápise, upozornenie na rovnakú IP.
+- **IP / MAC tabuľka** zoradená podľa IP, hľadanie v ľubovoľnom zápise, upozornenie na rovnakú IP;
+  pod ňou zariadenia členov (mobily, notebooky, tablety).
+- **Rozmery boxu** reproboxov a subov (pre delay kalkulačku).
 - **Excel** – export a import techniky aj cases (hárok na kategóriu, hárok „Cases“, prázdna šablóna).
 - Pri každej technike história nákupov, servisu, výpožičiek a eventov.
 
@@ -225,10 +249,14 @@ Potrebné migrácie: do `0043`.
   drážku (každá na jednu dosku), plachty so štipcami, zábradlie s otvormi pre schody, výstuhy od 80 cm,
   **molo**, **rizery** (pevné alebo na kolieskach)
   a príslušenstvo; nakreslí pôdorys (pero vzadu a vpravo), porovná so skladom a pridá diely na event.
+- **Delay kalkulačka** – topy ↔ suby, delay veža, cardioid, end-fire, rovný rad a arc delay s nákresom a odhadom
+  smerovosti; počíta s teplotou a rozmermi subu.
+- **Do kalendára** (.ics / Google) a **do kontaktov** (.vcf) pri evente aj výpožičke; sekcie sa dajú zbaliť.
 
 ### 🔧 Servis a 🚐 vozidlá
 
 - Opravy, kontroly a údržba s prílohami, časom a nákladmi; do servisu môže ísť len časť kusov.
+- **Servisní technici** – adresár servisov pre techniku a autá, stály servis auta, uloženie do kontaktov.
 - STK, EK, diaľničná známka, poistky a leasing s pripomienkami; tankovanie, servis, spotreba, fotka.
 - **Nákladný priestor** – nosnosť, rozmery a prekážky (podbehy), aj v grafickom editore.
 
@@ -243,7 +271,7 @@ Potrebné migrácie: do `0043`.
 - **Zamestnanci** – tím s fotkou, pozíciou, kontaktom a zručnosťami, kto kedy nemôže a na ktorých eventoch je;
   upozornenie v posádke eventu, keď niekto v termíne nemôže.
 - **Odmeny** – odmeny a zálohy členov, filter podľa rokov, koláčový graf; člen vidí len svoje.
-- **Úlohy, Návrhy, Kalendár** (zoznam aj mesačná mriežka), **Upozornenia**, **História zmien**.
+- **Úlohy, Návrhy, Kalendár** (zoznam aj mesačná mriežka, export do .ics), **Upozornenia**, **História zmien**.
 - **Štatistiky** (čo vidieť aj v akom poradí si nastaví každý sám) – technika, servis, vozidlá a **peniaze**: príjmy firmy, odmeny a zostatok (s oprávnením)
   a každému jeho vlastné zárobky podľa role, mesiacov a rokov, s koláčovými grafmi.
 - **Záloha** – admin stiahne celú firmu ako ZIP s Excelmi (fotky a dokumenty v nej nie sú).
@@ -256,7 +284,8 @@ Potrebné migrácie: do `0043`.
 - **Oprávnenia** pre každú rolu aj výnimky pre jednotlivých členov.
 - Logo firmy (pozadie sa odstráni, logo sa prispôsobí svetlému aj tmavému podkladu), kategórie s farbami,
   umiestnenia, šablóny cases, záložky **Nivtec**, **Balíky** a **Pripomienky**.
-- Svetlý / tmavý režim, **demo firma** s resetom, verzia aplikácie.
+- Svetlý / tmavý režim, **demo firma** s resetom, verzia aplikácie a **Čo je nové**.
+- **Moje zariadenia** (MAC adresy) a **zmazanie firmy** so všetkými údajmi a súbormi.
 
 ---
 

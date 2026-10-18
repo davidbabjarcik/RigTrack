@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Download, FileText, Trash2, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -32,11 +33,8 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
   })
 
   return (
-    <section aria-labelledby="event-documents-heading" className="mb-6">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 id="event-documents-heading" className="text-sm font-medium text-muted-foreground">
-          Dokumenty ({documents.data?.length ?? 0})
-        </h2>
+    <CollapsibleSection id="event.documents" title={<>Dokumenty ({documents.data?.length ?? 0})</>} actions={
+        <>
         {canEdit && (
           <>
             <input
@@ -59,7 +57,8 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
             </Button>
           </>
         )}
-      </div>
+        </>
+      }>
 
       {tooLarge && (
         <p role="alert" className="mb-2 text-sm text-destructive">
@@ -115,6 +114,6 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
           </p>
         )
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

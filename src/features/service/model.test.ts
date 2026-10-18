@@ -14,6 +14,7 @@ const record = (patch: Partial<ServiceRecord>): ServiceRecord => ({
   hours: null,
   cost: null,
   technician: '',
+  technicianId: null,
   ...patch,
 })
 
@@ -64,7 +65,7 @@ describe('serviceTotals', () => {
 })
 
 describe('serviceSchema', () => {
-  const valid = { equipmentId: 'e', unitNumbers: [], quantity: 1, kind: 'repair', status: 'open', happenedOn: '2026-10-13', problem: '', workDone: '', technician: '' }
+  const valid = { equipmentId: 'e', unitNumbers: [], quantity: 1, kind: 'repair', status: 'open', happenedOn: '2026-10-13', problem: '', workDone: '', technician: '', technicianId: '' }
 
   it('accepts a minimal record and rejects one without equipment or with negative hours', () => {
     expect(serviceSchema.safeParse(valid).success).toBe(true)

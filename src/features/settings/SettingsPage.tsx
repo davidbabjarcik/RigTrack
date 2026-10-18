@@ -22,7 +22,9 @@ import { RulesSettings } from '@/features/events/RulesSettings'
 import { PackagesSettings } from '@/features/packages/PackagesSettings'
 import { useCompany, type Membership } from '@/features/companies/company-context'
 import { BrandingSettings } from '@/features/companies/BrandingSettings'
+import { DeleteCompanySettings } from '@/features/companies/DeleteCompanySettings'
 import { DemoSettings } from '@/features/companies/DemoSettings'
+import { MyDevicesSettings } from '@/features/devices/MyDevicesSettings'
 import { LookupSettings } from '@/features/equipment/LookupSettings'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { PermissionsSettings } from '@/features/permissions/PermissionsSettings'
@@ -323,6 +325,12 @@ export function SettingsPage() {
               </Link>
             </Section>
           )}
+
+          {isAdmin && (
+            <Section title="Nebezpečná zóna">
+              <DeleteCompanySettings userId={user.id} />
+            </Section>
+          )}
         </>
       )}
 
@@ -374,6 +382,9 @@ export function SettingsPage() {
                 Odhlásiť sa
               </Button>
             </div>
+          </Section>
+          <Section title={`Moje zariadenia (${company.companyName})`}>
+            <MyDevicesSettings companyId={company.companyId} userId={user.id} />
           </Section>
           <Section title="Demo">
             <DemoSettings userId={user.id} />

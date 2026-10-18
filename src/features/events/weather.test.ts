@@ -29,3 +29,12 @@ describe('weather', () => {
     ])
   })
 })
+
+describe('forecast links', () => {
+  it('point to the place coordinates', async () => {
+    const { forecastLinks } = await import('./weather')
+    const [windy, meteoblue] = forecastLinks({ latitude: 49.2063, longitude: 21.6523 })
+    expect(windy.url).toBe('https://www.windy.com/49.206/21.652?49.206,21.652,11')
+    expect(meteoblue.url).toBe('https://www.meteoblue.com/en/weather/week/49.206N21.652E')
+  })
+})

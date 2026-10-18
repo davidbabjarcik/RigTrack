@@ -18,6 +18,7 @@ type Row = {
   hours: number | string | null
   cost: number | string | null
   technician: string
+  technician_id: string | null
 }
 
 const toNumber = (value: number | string | null) => (value === null ? null : Number(value))
@@ -25,7 +26,7 @@ const toNumber = (value: number | string | null) => (value === null ? null : Num
 export async function fetchServiceRecords(companyId: string): Promise<ServiceRecord[]> {
   const { data, error } = await getSupabase()
     .from('service_records')
-    .select('id, equipment_id, quantity, unit_numbers, kind, status, happened_on, problem, work_done, hours, cost, technician')
+    .select('id, equipment_id, quantity, unit_numbers, kind, status, happened_on, problem, work_done, hours, cost, technician, technician_id')
     .eq('company_id', companyId)
     .order('happened_on', { ascending: false })
   if (error) throw error
@@ -42,6 +43,7 @@ export async function fetchServiceRecords(companyId: string): Promise<ServiceRec
     hours: toNumber(row.hours),
     cost: toNumber(row.cost),
     technician: row.technician,
+    technicianId: row.technician_id,
   }))
 }
 
@@ -58,6 +60,7 @@ export async function saveServiceRecord(companyId: string, id: string | null, va
     hours: values.hours ?? null,
     cost: values.cost ?? null,
     technician: values.technician,
+    technician_id: values.technicianId || null,
   }
   const table = getSupabase().from('service_records')
   // Technika sa po vytvorení záznamu nemení: záznam patrí kusu, ktorý sa opravoval.

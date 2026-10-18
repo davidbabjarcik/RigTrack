@@ -1,8 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { ArrowLeft, FileText, Package, PackageCheck, PackageOpen, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
+import { AddToCalendarButtons, AddToContactsButton } from '@/components/share/ShareButtons'
+import { loanCalendarItem } from '@/features/calendar/export'
+import { splitContact } from '@/lib/vcard'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
@@ -97,6 +101,10 @@ export function LoanDetailPage() {
           </p>
           <div className="mt-2">
             <LoanStatusBadge loan={loan} today={today} />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <AddToCalendarButtons item={loanCalendarItem(loan)} />
+            <AddToContactsButton contact={{ name: loan.borrower, ...splitContact(loan.contact), address: loan.borrowerAddress, note: loan.borrowerIco && `IČO ${loan.borrowerIco}` }} />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -210,10 +218,7 @@ export function LoanDetailPage() {
         </section>
       )}
 
-      <section aria-labelledby="loan-content-heading" className="mb-6">
-        <h2 id="loan-content-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-          Technika ({grouped.cases.length + grouped.single.length})
-        </h2>
+      <CollapsibleSection id="loan.content" title={<>Technika ({grouped.cases.length + grouped.single.length})</>}>
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {grouped.cases.map(({ caseId, content }) => (
             <li key={caseId} className="flex items-center gap-3 px-4 py-3">
@@ -263,7 +268,7 @@ export function LoanDetailPage() {
             )
           })}
         </ul>
-      </section>
+      </CollapsibleSection>
 
       <dl className="mb-6 divide-y overflow-hidden rounded-xl border bg-surface">
         {([

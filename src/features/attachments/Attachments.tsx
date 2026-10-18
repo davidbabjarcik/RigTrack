@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Download, FileText, Trash2, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Button } from '@/components/ui/button'
 import { formatFileSize, MAX_DOCUMENT_BYTES } from '@/features/events/model'
 import { formatDate } from '@/lib/format'
@@ -43,12 +44,11 @@ export function Attachments({ companyId, entity, entityId, canEdit, title, empty
   })
 
   return (
-    <section className="mb-6">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium text-muted-foreground">
-          {title} ({attachments.data?.length ?? 0})
-        </h2>
-        {canEdit && (
+    <CollapsibleSection
+      id={`attachments.${entity}`}
+      title={`${title} (${attachments.data?.length ?? 0})`}
+      actions={
+        canEdit && (
           <>
             <input
               ref={fileInput}
@@ -69,8 +69,9 @@ export function Attachments({ companyId, entity, entityId, canEdit, title, empty
               {upload.isPending ? 'Nahrávam…' : 'Nahrať súbor'}
             </Button>
           </>
-        )}
-      </div>
+        )
+      }
+    >
 
       {tooLarge && (
         <p role="alert" className="mb-2 text-sm text-destructive">
@@ -124,6 +125,6 @@ export function Attachments({ companyId, entity, entityId, canEdit, title, empty
           <p className="rounded-xl border border-dashed bg-surface px-6 py-8 text-center text-sm text-muted-foreground">{empty}</p>
         )
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

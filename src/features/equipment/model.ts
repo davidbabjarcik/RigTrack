@@ -81,6 +81,10 @@ export type EquipmentAttributes = {
   lightSource?: LightSource
   /** Typ zvukovej techniky (mixpult, mikrofón…). */
   audioType?: AudioType
+  /** Vonkajšie rozmery boxu (reprobox, sub, odposluch) v cm – napr. pre delay kalkulačku subov. */
+  boxWidthCm?: number
+  boxDepthCm?: number
+  boxHeightCm?: number
   /** DMX módy svetla: názov a počet kanálov, napr. Standard 16 ch. */
   dmxModes?: DmxMode[]
 }
@@ -180,6 +184,9 @@ export const equipmentSchema = z.object({
   powerW: optionalNumber(100000),
   lightSource: z.enum([...LIGHT_SOURCES, '']),
   audioType: z.enum([...AUDIO_TYPES, '']),
+  boxWidthCm: optionalNumber(1000),
+  boxDepthCm: optionalNumber(1000),
+  boxHeightCm: optionalNumber(1000),
   dmxModes: z
     .array(
       z.object({
@@ -229,10 +236,15 @@ export function isAudio(kind: EquipmentKind, category: string) {
   return kind === 'audio' || /zvuk|audio|sound/.test(plain)
 }
 
+/** Reprobox, sub a odposluch majú rozmery boxu. */
+export function hasBox(audioType: AudioType | '' | undefined) {
+  return audioType === 'speaker' || audioType === 'subwoofer' || audioType === 'monitor'
+}
+
 /** Z formulára vyberie iba údaje, ktoré k zvolenému druhu patria. */
 export function attributesFor(
   values: Pick<EquipmentFormValues, 'kind' | 'connector' | 'lengthM' | 'powerW' | 'lightSource'> &
-    Partial<Pick<EquipmentFormValues, 'category' | 'dmxModes' | 'audioType'>>,
+    Partial<Pick<EquipmentFormValues, 'category' | 'dmxModes' | 'audioType' | 'boxWidthCm' | 'boxDepthCm' | 'boxHeightCm'>>,
 ) {
   const attributes: EquipmentAttributes = {}
   const lighting = isLighting(values.kind, values.category ?? '')
@@ -248,6 +260,11 @@ export function attributesFor(
   }
   if (lighting && values.lightSource) attributes.lightSource = values.lightSource
   if (audio && values.audioType) attributes.audioType = values.audioType
+  if (audio && hasBox(values.audioType)) {
+    if (values.boxWidthCm !== undefined) attributes.boxWidthCm = values.boxWidthCm
+    if (values.boxDepthCm !== undefined) attributes.boxDepthCm = values.boxDepthCm
+    if (values.boxHeightCm !== undefined) attributes.boxHeightCm = values.boxHeightCm
+  }
   if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels }))
   return attributes
 }
@@ -266,6 +283,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.lengthM !== undefined && `${formatNumber(a.lengthM)} m`,
     a.powerW !== undefined && `${formatNumber(a.powerW)} W`,
     a.lightSource && LIGHT_SOURCE_LABELS[a.lightSource],
+    a.boxWidthCm !== undefined && a.boxDepthCm !== undefined && `${formatNumber(a.boxWidthCm)}×${formatNumber(a.boxDepthCm)}${a.boxHeightCm !== undefined ? `×${formatNumber(a.boxHeightCm)}` : ''} cm`,
     a.dmxModes?.length && `DMX ${a.dmxModes.map((mode) => mode.channels).join('/')} ch`,
   ].filter(Boolean) as string[]
 }

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { ClipboardCheck, FileUp, Package, Plus, TriangleAlert, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -96,11 +97,8 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
   const grouped = groupByCase(event.equipment)
 
   return (
-    <section aria-labelledby="event-equipment-heading" className="mb-6">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 id="event-equipment-heading" className="text-sm font-medium text-muted-foreground">
-          Technika ({grouped.cases.length + grouped.single.length})
-        </h2>
+    <CollapsibleSection id="event.equipment" title={<>Technika ({grouped.cases.length + grouped.single.length})</>} actions={
+        <>
         {canEdit && (
           <div className="flex flex-wrap justify-end gap-2">
             <LinkButton to={`/events/${event.id}/import`} variant="outline" size="sm">
@@ -113,7 +111,8 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
             </Button>
           </div>
         )}
-      </div>
+        </>
+      }>
 
       {equipment.data && (
         <EventReminders
@@ -270,6 +269,6 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
           />
         </div>
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { ArrowLeft, Mail, Phone, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
+import { AddToContactsButton } from '@/components/share/ShareButtons'
 import { Button } from '@/components/ui/button'
 import { Field, TextareaField } from '@/components/ui/field'
 import { useAuth } from '@/features/auth/auth-context'
@@ -118,8 +120,7 @@ function Availability({ companyId, person, canEdit }: { companyId: string; perso
   const periods = upcomingPeriods(staff.unavailability, person.staffId, today)
 
   return (
-    <section className="mb-6">
-      <h2 className="mb-2 text-sm font-medium text-muted-foreground">Kedy nemôže</h2>
+    <CollapsibleSection id="staff.unavailability" title="Kedy nemôže">
       {periods.length > 0 ? (
         <ul className="mb-3 divide-y overflow-hidden rounded-xl border bg-surface">
           {periods.map((item) => (
@@ -150,7 +151,7 @@ function Availability({ companyId, person, canEdit }: { companyId: string; perso
           {add.isError && <p className="w-full text-sm text-destructive">Zápis sa nepodaril.</p>}
         </div>
       )}
-    </section>
+    </CollapsibleSection>
   )
 }
 
@@ -237,6 +238,10 @@ export function StaffDetailPage() {
                 {person.email || person.accountEmail}
               </a>
             )}
+            <AddToContactsButton
+              className="mt-1 self-start"
+              contact={{ name: person.name, title: person.position, phone: person.phone, email: person.email || person.accountEmail, note: person.skills }}
+            />
           </div>
         </div>
         {canManage && person.staffId && !person.isMember && (
@@ -261,8 +266,7 @@ export function StaffDetailPage() {
       <Availability companyId={companyId} person={person} canEdit={canEdit} />
 
       {person.memberId && (
-        <section className="mb-6">
-          <h2 className="mb-2 text-sm font-medium text-muted-foreground">Najbližšie eventy</h2>
+        <CollapsibleSection id="staff.events" title="Najbližšie eventy">
           {assigned.length === 0 ? (
             <p className="text-sm text-muted-foreground">Zatiaľ nie je v posádke žiadneho nadchádzajúceho eventu.</p>
           ) : (
@@ -280,7 +284,7 @@ export function StaffDetailPage() {
               ))}
             </ul>
           )}
-        </section>
+        </CollapsibleSection>
       )}
     </>
   )

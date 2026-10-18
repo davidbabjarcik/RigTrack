@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Link } from 'react-router-dom'
 import { formatDate, formatMoney } from '@/lib/format'
 import { ExternalLink } from 'lucide-react'
@@ -19,9 +20,8 @@ export function PurchaseHistory({ companyId, equipmentId }: { companyId: string;
     purchases.data.map((purchase) => supplierProductUrl(purchase.supplier, purchase.articleNumber)).find(Boolean) ?? null
 
   return (
-    <section className="mt-6">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Nákupy</h2>
+    <CollapsibleSection id="equipment.purchases" title="Nákupy" className="mt-6" actions={
+      <>
         {productUrl && (
           <a
             href={productUrl}
@@ -33,7 +33,8 @@ export function PurchaseHistory({ companyId, equipmentId }: { companyId: string;
             <ExternalLink className="size-3.5" aria-hidden />
           </a>
         )}
-      </div>
+      </>
+    }>
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
         {purchases.data.map((purchase, index) => (
           <li key={purchase.orderId}>
@@ -65,6 +66,6 @@ export function PurchaseHistory({ companyId, equipmentId }: { companyId: string;
           </li>
         ))}
       </ul>
-    </section>
+    </CollapsibleSection>
   )
 }

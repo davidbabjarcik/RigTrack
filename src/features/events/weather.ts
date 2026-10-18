@@ -116,3 +116,49 @@ export async function fetchForecast(place: Place, from: string, to: string): Pro
     gustKmh: daily.wind_gusts_10m_max[index] ?? 0,
   }))
 }
+
+export type HourForecast = { time: string; code: number; temp: number; rainChance: number; rainMm: number; gustKmh: number }
+
+/** Hodinová predpoveď na jeden deň (po kliknutí na deň v evente). */
+export async function fetchHourly(place: Place, date: string): Promise<HourForecast[]> {
+  const params = new URLSearchParams({
+    latitude: String(place.latitude),
+    longitude: String(place.longitude),
+    hourly: 'weather_code,temperature_2m,precipitation_probability,precipitation,wind_gusts_10m',
+    timezone: 'Europe/Bratislava',
+    start_date: date,
+    end_date: date,
+  })
+  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`)
+  if (!response.ok) throw new Error('Forecast failed')
+  const data = (await response.json()) as {
+    hourly: {
+      time: string[]
+      weather_code: number[]
+      temperature_2m: number[]
+      precipitation_probability: (number | null)[]
+      precipitation: (number | null)[]
+      wind_gusts_10m: (number | null)[]
+    }
+  }
+  const hourly = data.hourly
+  return hourly.time.map((time, index) => ({
+    time: time.slice(11, 16),
+    code: hourly.weather_code[index],
+    temp: hourly.temperature_2m[index],
+    rainChance: hourly.precipitation_probability[index] ?? 0,
+    rainMm: hourly.precipitation[index] ?? 0,
+    gustKmh: hourly.wind_gusts_10m[index] ?? 0,
+  }))
+}
+
+/** Odkazy na podrobnú predpoveď (radar, vietor, zrážky) pre miesto. */
+export function forecastLinks(place: Pick<Place, 'latitude' | 'longitude'>) {
+  const lat = place.latitude.toFixed(3)
+  const lon = place.longitude.toFixed(3)
+  const meteoblue = `${Math.abs(place.latitude).toFixed(3)}${place.latitude >= 0 ? 'N' : 'S'}${Math.abs(place.longitude).toFixed(3)}${place.longitude >= 0 ? 'E' : 'W'}`
+  return [
+    { label: 'Windy (radar, vietor)', url: `https://www.windy.com/${lat}/${lon}?${lat},${lon},11` },
+    { label: 'Meteoblue', url: `https://www.meteoblue.com/en/weather/week/${meteoblue}` },
+  ]
+}

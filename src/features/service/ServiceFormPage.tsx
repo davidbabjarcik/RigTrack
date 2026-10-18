@@ -16,6 +16,7 @@ import { asOptionalNumber, unitIdsOf, type Equipment } from '@/features/equipmen
 import { UnitPicker } from '@/features/equipment/UnitPicker'
 import { todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
+import { TechnicianSelect } from '@/features/technicians/TechnicianSelect'
 import { deleteServiceRecord, saveServiceRecord } from './api'
 import {
   SERVICE_KIND_LABELS,
@@ -66,6 +67,7 @@ function ServiceForm({ companyId, current, equipment, records, presetEquipmentId
       hours: current?.hours ?? undefined,
       cost: current?.cost ?? undefined,
       technician: current?.technician ?? defaultTechnician,
+      technicianId: current?.technicianId ?? '',
     },
   })
   const equipmentId = current?.equipmentId ?? presetEquipmentId
@@ -198,8 +200,10 @@ function ServiceForm({ companyId, current, equipment, records, presetEquipmentId
       <TextareaField label="Popis problému" error={errors.problem?.message} {...register('problem')} />
       <TextareaField label="Vykonané úkony" error={errors.workDone?.message} {...register('workDone')} />
 
+      <TechnicianSelect companyId={companyId} kind="equipment" label="Externý servis / technik" current={current?.technicianId} {...register('technicianId')} />
+
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Technik" error={errors.technician?.message} {...register('technician')} />
+        <Field label="Kto robil (meno)" error={errors.technician?.message} {...register('technician')} />
         <Field
           label="Čas práce (h)"
           type="number"

@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { CalendarX, Plus, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
@@ -60,10 +61,7 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
   }
 
   return (
-    <section aria-labelledby="event-crew-heading" className="mb-6">
-      <h2 id="event-crew-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-        Posádka ({event.crew.length})
-      </h2>
+    <CollapsibleSection id="event.crew" title={<>Posádka ({event.crew.length})</>}>
 
       {event.crew.length > 0 && (
         <ul className="mb-3 divide-y overflow-hidden rounded-xl border bg-surface">
@@ -157,6 +155,6 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
           Zmena sa nepodarila.
         </p>
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

@@ -22,6 +22,7 @@ import {
   EQUIPMENT_KINDS,
   EQUIPMENT_STATUSES,
   equipmentSchema,
+  hasBox,
   isAudio,
   isLighting,
   isSimpleKind,
@@ -57,6 +58,9 @@ const EMPTY: EquipmentFormValues = {
   powerW: undefined,
   lightSource: '',
   audioType: '',
+  boxWidthCm: undefined,
+  boxDepthCm: undefined,
+  boxHeightCm: undefined,
   dmxModes: [],
   macAddress: '',
   ipAddress: '',
@@ -88,6 +92,9 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     powerW: equipment.attributes.powerW,
     lightSource: equipment.attributes.lightSource ?? '',
     audioType: equipment.attributes.audioType ?? '',
+    boxWidthCm: equipment.attributes.boxWidthCm,
+    boxDepthCm: equipment.attributes.boxDepthCm,
+    boxHeightCm: equipment.attributes.boxHeightCm,
     dmxModes: equipment.attributes.dmxModes ?? [],
     macAddress: equipment.macAddress,
     ipAddress: equipment.ipAddress,
@@ -140,6 +147,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   // Časť Svetlo sa ukáže pri druhu Svetlo aj pri kategórii, ktorá je o svetlách.
   const lighting = isLighting(kind, categoryText ?? '')
   const audio = isAudio(kind, categoryText ?? '')
+  const audioType = useWatch({ control, name: 'audioType' })
   const dmxModes = useFieldArray({ control, name: 'dmxModes' })
   const trackUnits = useWatch({ control, name: 'trackUnits' })
   const unitIdsText = useWatch({ control, name: 'unitIds' })
@@ -313,6 +321,17 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
             error={errors.powerW?.message}
             {...register('powerW', asOptionalNumber)}
           />
+          {hasBox(audioType) && (
+            <fieldset className="sm:col-span-2">
+              <legend className="mb-1 text-sm font-medium">Rozmery boxu (cm)</legend>
+              <div className="grid grid-cols-3 gap-3">
+                <Field label="Šírka" type="number" inputMode="decimal" min={0} error={errors.boxWidthCm?.message} {...register('boxWidthCm', asOptionalNumber)} />
+                <Field label="Hĺbka" type="number" inputMode="decimal" min={0} error={errors.boxDepthCm?.message} {...register('boxDepthCm', asOptionalNumber)} />
+                <Field label="Výška" type="number" inputMode="decimal" min={0} error={errors.boxHeightCm?.message} {...register('boxHeightCm', asOptionalNumber)} />
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Použije sa v delay kalkulačke (rozostup subov, cardioid, šírka radu).</p>
+            </fieldset>
+          )}
         </Group>
       )}
 

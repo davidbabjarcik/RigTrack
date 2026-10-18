@@ -2,7 +2,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, LayoutGrid, Pencil, Printer, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
+import { AddToCalendarButtons, AddToContactsButton } from '@/components/share/ShareButtons'
 import { Button, LinkButton } from '@/components/ui/button'
+import { eventCalendarItem } from '@/features/calendar/export'
 import { useCompany } from '@/features/companies/company-context'
 import { formatDate } from '@/lib/format'
 import { EventLoadingSection } from '@/features/loading/EventLoadingSection'
@@ -68,6 +71,7 @@ export function EventDetailPage() {
           <div className="mt-2">
             <EventStatusBadge status={event.status} />
           </div>
+          <AddToCalendarButtons item={eventCalendarItem(event)} className="mt-3" />
         </div>
         <div className="flex flex-wrap gap-2">
           <LinkButton to={`/events/${id}/print`} variant="outline" size="sm">
@@ -109,56 +113,73 @@ export function EventDetailPage() {
       )}
 
       {(times || organizer.length > 0 || event.setting || event.power) && (
-        <dl className="mb-6 grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
-          {event.setting && (
+        <CollapsibleSection id="event.details" title="Miesto, elektrina a organizátor">
+          <dl className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
+            {event.setting && (
+              <div>
+                <dt className="text-sm text-muted-foreground">Miesto</dt>
+                <dd className="font-medium">{SETTING_LABELS[event.setting]}</dd>
+              </div>
+            )}
             <div>
-              <dt className="text-sm text-muted-foreground">Miesto</dt>
-              <dd className="font-medium">{SETTING_LABELS[event.setting]}</dd>
-            </div>
-          )}
-          <div>
-            <dt className="text-sm text-muted-foreground">Elektrina</dt>
-            <dd className={event.power ? 'font-medium' : 'font-medium text-amber-700 dark:text-amber-300'}>
-              {event.power ? `${event.powerCount && event.powerCount > 1 ? `${event.powerCount} × ` : ''}${POWER_LABELS[event.power]}` : 'Prípojka ešte nie je zistená'}
-            </dd>
-            {event.powerNote && <dd className="text-sm text-muted-foreground">{event.powerNote}</dd>}
-          </div>
-          {times && (
-            <div>
-              <dt className="text-sm text-muted-foreground">Časy (prvý deň)</dt>
-              <dd className="font-medium">{times}</dd>
-            </div>
-          )}
-          {organizer.length > 0 && (
-            <div className="min-w-0">
-              <dt className="text-sm text-muted-foreground">Organizátor</dt>
-              <dd className="font-medium break-words">{event.organizer || event.organizerPerson}</dd>
-              <dd className="flex flex-wrap gap-x-3 text-sm break-all">
-                {event.organizer && event.organizerPerson && <span>{event.organizerPerson}</span>}
-                {event.organizerPhone && (
-                  <a href={`tel:${event.organizerPhone.replace(/\s/g, '')}`} className="text-accent hover:underline">
-                    {event.organizerPhone}
-                  </a>
-                )}
-                {event.organizerEmail && (
-                  <a href={`mailto:${event.organizerEmail}`} className="text-accent hover:underline">
-                    {event.organizerEmail}
-                  </a>
-                )}
+              <dt className="text-sm text-muted-foreground">Elektrina</dt>
+              <dd className={event.power ? 'font-medium' : 'font-medium text-amber-700 dark:text-amber-300'}>
+                {event.power ? `${event.powerCount && event.powerCount > 1 ? `${event.powerCount} × ` : ''}${POWER_LABELS[event.power]}` : 'Prípojka ešte nie je zistená'}
               </dd>
+              {event.powerNote && <dd className="text-sm text-muted-foreground">{event.powerNote}</dd>}
             </div>
-          )}
-        </dl>
+            {times && (
+              <div>
+                <dt className="text-sm text-muted-foreground">Časy (prvý deň)</dt>
+                <dd className="font-medium">{times}</dd>
+              </div>
+            )}
+            {organizer.length > 0 && (
+              <div className="min-w-0">
+                <dt className="text-sm text-muted-foreground">Organizátor</dt>
+                <dd className="font-medium break-words">{event.organizer || event.organizerPerson}</dd>
+                <dd className="flex flex-wrap gap-x-3 text-sm break-all">
+                  {event.organizer && event.organizerPerson && <span>{event.organizerPerson}</span>}
+                  {event.organizerPhone && (
+                    <a href={`tel:${event.organizerPhone.replace(/\s/g, '')}`} className="text-accent hover:underline">
+                      {event.organizerPhone}
+                    </a>
+                  )}
+                  {event.organizerEmail && (
+                    <a href={`mailto:${event.organizerEmail}`} className="text-accent hover:underline">
+                      {event.organizerEmail}
+                    </a>
+                  )}
+                </dd>
+                <dd className="mt-2">
+                  <AddToContactsButton
+                    contact={{
+                      name: event.organizerPerson || event.organizer,
+                      org: event.organizerPerson ? event.organizer : '',
+                      title: 'Organizátor',
+                      phone: event.organizerPhone,
+                      email: event.organizerEmail,
+                      note: `Event: ${event.name}`,
+                    }}
+                  />
+                </dd>
+              </div>
+            )}
+          </dl>
+        </CollapsibleSection>
       )}
 
       {(event.setting === 'outdoor' || event.setting === 'mixed') && <EventWeather event={event} />}
 
-      {event.description && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{event.description}</p>}
+      {event.description && (
+        <CollapsibleSection id="event.description" title="Popis">
+          <p className="rounded-xl border bg-surface p-4 whitespace-pre-wrap">{event.description}</p>
+        </CollapsibleSection>
+      )}
       {event.note && (
-        <div className="mb-6 rounded-xl border border-dashed bg-surface p-4">
-          <p className="mb-1 text-sm text-muted-foreground">Interná poznámka</p>
-          <p className="whitespace-pre-wrap">{event.note}</p>
-        </div>
+        <CollapsibleSection id="event.note" title="Interná poznámka">
+          <p className="rounded-xl border border-dashed bg-surface p-4 whitespace-pre-wrap">{event.note}</p>
+        </CollapsibleSection>
       )}
 
       <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />

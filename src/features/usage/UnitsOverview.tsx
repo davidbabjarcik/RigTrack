@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { unitIdsOf, type Equipment } from '@/features/equipment/model'
 import { useLoans } from '@/features/loans/useLoans'
 import { useServiceRecords } from '@/features/service/useServiceRecords'
@@ -23,10 +24,7 @@ export function UnitsOverview({ companyId, equipment }: Props) {
   const units = unitSummaries(equipment.id, unitIdsOf(equipment), loans.data ?? [], records.data ?? [], todayIso())
 
   return (
-    <section className="mt-6" aria-labelledby="units-heading">
-      <h2 id="units-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-        Kusy ({units.length})
-      </h2>
+    <CollapsibleSection id="equipment.units" title={<>Kusy ({units.length})</>} className="mt-6">
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
         {units.map((unit) => (
           <li key={unit.unit} className="flex items-center gap-3 px-4 py-2.5">
@@ -53,6 +51,6 @@ export function UnitsOverview({ companyId, equipment }: Props) {
           </li>
         ))}
       </ul>
-    </section>
+    </CollapsibleSection>
   )
 }

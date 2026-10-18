@@ -10,6 +10,8 @@ import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { cn } from '@/lib/utils'
+import { can } from '@/lib/permissions'
+import { MemberDevicesSection } from '@/features/devices/MemberDevicesSection'
 import { matchesNetwork, networkRows } from './model'
 
 /** Tabuľka IP a MAC adries techniky s vyhľadávaním a upozornením na rovnaké adresy. */
@@ -100,6 +102,8 @@ export function NetworkPage() {
           {visible.length === 0 && <p className="px-4 py-6 text-center text-sm text-muted-foreground">Nič sa nenašlo.</p>}
         </div>
       )}
+
+      <MemberDevicesSection companyId={companyId} query={query} canManage={can(company, 'staff.manage')} />
     </>
   )
 }

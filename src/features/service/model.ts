@@ -36,6 +36,8 @@ export type ServiceRecord = {
   hours: number | null
   cost: number | null
   technician: string
+  /** Servisný technik z adresára (externý servis), ak je vybraný. */
+  technicianId: string | null
 }
 
 const text = (max: number) => z.string().trim().max(max, `Najviac ${max} znakov`)
@@ -53,6 +55,8 @@ export const serviceSchema = z.object({
   hours: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(1000).optional(),
   cost: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(10_000_000).optional(),
   technician: text(80),
+  /** Id technika z adresára alebo prázdne. */
+  technicianId: z.string(),
 })
 export type ServiceFormValues = z.infer<typeof serviceSchema>
 

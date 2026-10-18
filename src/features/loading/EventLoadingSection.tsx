@@ -1,4 +1,5 @@
 import { Rotate3d, Truck } from 'lucide-react'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCases } from '@/features/cases/useCases'
@@ -54,10 +55,7 @@ export function EventLoadingSection({ companyId, event }: Props) {
   const vehicleWord = (count: number) => (count === 1 ? 'vozidlo' : count < 5 ? 'vozidlá' : 'vozidiel')
 
   return (
-    <section aria-labelledby="event-loading-heading" className="mb-6">
-      <h2 id="event-loading-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-        Nakladanie
-      </h2>
+    <CollapsibleSection id="event.loading" title="Nakladanie">
       <DevNotice className="mb-3" />
 
       {cases.isPending || vehicles.isPending ? (
@@ -218,6 +216,6 @@ export function EventLoadingSection({ companyId, event }: Props) {
           </p>
         </div>
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

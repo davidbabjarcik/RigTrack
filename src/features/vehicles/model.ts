@@ -37,6 +37,8 @@ export type Vehicle = {
   cargoWidthCm: number | null
   cargoHeightCm: number | null
   cargoObstacles: CargoObstacle[]
+  /** Stály servis auta (servisný technik z adresára). */
+  technicianId: string | null
   note: string
 } & Record<DeadlineKey, string | null>
 
@@ -81,6 +83,8 @@ export const vehicleSchema = z.object({
       }),
     )
     .max(20, 'Najviac 20 prekážok'),
+  /** Id technika z adresára alebo prázdne. */
+  technicianId: z.string(),
   note: text(2000),
 })
 export type VehicleFormValues = z.infer<typeof vehicleSchema>
@@ -154,6 +158,8 @@ export type VehicleRecord = {
   cost: number | null
   liters: number | null
   description: string
+  /** Kto robil servis / opravu (technik z adresára). */
+  technicianId: string | null
 }
 
 export const recordSchema = z.object({
@@ -163,6 +169,7 @@ export const recordSchema = z.object({
   cost: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(10_000_000).optional(),
   liters: z.number('Zadajte číslo').positive('Musí byť viac ako 0').max(10_000).optional(),
   description: text(1000),
+  technicianId: z.string(),
 })
 export type RecordFormValues = z.infer<typeof recordSchema>
 

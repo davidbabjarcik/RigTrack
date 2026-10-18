@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Camera, Trash2 } from 'lucide-react'
 import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
@@ -41,11 +42,8 @@ export function EventPhotosSection({ companyId, eventId, canEdit }: Props) {
   if (!canEdit && count === 0) return null
 
   return (
-    <section aria-labelledby="event-photos-heading" className="mb-6">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 id="event-photos-heading" className="text-sm font-medium text-muted-foreground">
-          Fotky ({count})
-        </h2>
+    <CollapsibleSection id="event.photos" title={<>Fotky ({count})</>} actions={
+        <>
         {canEdit && (
           <>
             <input
@@ -67,7 +65,8 @@ export function EventPhotosSection({ companyId, eventId, canEdit }: Props) {
             </Button>
           </>
         )}
-      </div>
+        </>
+      }>
 
       {(upload.isError || remove.isError || photos.isError) && (
         <p role="alert" className="mb-2 text-sm text-destructive">
@@ -111,6 +110,6 @@ export function EventPhotosSection({ companyId, eventId, canEdit }: Props) {
           </p>
         )
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

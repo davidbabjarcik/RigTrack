@@ -1,4 +1,5 @@
 import { ChevronRight } from 'lucide-react'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useEvents } from '@/features/events/useEvents'
@@ -27,10 +28,7 @@ export function UsageHistory({ companyId, equipmentIds, caseId }: Props) {
   const visible = showAll ? entries : entries.slice(0, SHOWN)
 
   return (
-    <section className="mt-6" aria-labelledby="usage-heading">
-      <h2 id="usage-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-        Výpožičky a eventy ({entries.length})
-      </h2>
+    <CollapsibleSection id="equipment.usage" title={<>Výpožičky a eventy ({entries.length})</>} className="mt-6">
       {loans.isPending || events.isPending ? (
         <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Načítavam…</p>
       ) : loans.isError || events.isError ? (
@@ -68,6 +66,6 @@ export function UsageHistory({ companyId, equipmentIds, caseId }: Props) {
           )}
         </>
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

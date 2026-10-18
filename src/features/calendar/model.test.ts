@@ -14,7 +14,7 @@ const loan = (patch: Partial<Loan>): Loan => ({
   issuedAt: null, returnedAt: null, issuedByName: '', returnedByName: '', items: [], ...patch,
 })
 const vehicle = (patch: Partial<Vehicle>): Vehicle => ({
-  id: 'v1', plate: 'SP123AB', model: '', vin: '', status: 'active', driver: '', odometerKm: null, photoPath: '', payloadKg: null, cargoLengthCm: null, cargoWidthCm: null, cargoHeightCm: null, cargoObstacles: [], note: '',
+  id: 'v1', plate: 'SP123AB', model: '', vin: '', status: 'active', driver: '', odometerKm: null, photoPath: '', payloadKg: null, cargoLengthCm: null, cargoWidthCm: null, cargoHeightCm: null, cargoObstacles: [], technicianId: null, note: '',
   stkUntil: null, ekUntil: null, vignetteUntil: null, pzpUntil: null, cascoUntil: null, leasingUntil: null, ...patch,
 })
 const task = (patch: Partial<Task>): Task => ({

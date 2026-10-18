@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Plus, Trash2 } from 'lucide-react'
 import { useId, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
@@ -68,16 +69,14 @@ export function EventIncomeSection({ companyId, eventId }: { companyId: string; 
   const invoicers = [...new Set([company.companyName, ...list.map((payment) => payment.invoicedBy).filter(Boolean)])]
 
   return (
-    <section aria-labelledby="event-income-heading" className="mb-6">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 id="event-income-heading" className="text-sm font-medium text-muted-foreground">
-          Príjmy z akcie
-        </h2>
+    <CollapsibleSection id="event.income" title="Príjmy z akcie" actions={
+        <>
         <Button variant="outline" size="sm" onClick={() => setOpen(!open)}>
           {!open && <Plus className="size-4" aria-hidden />}
           {open ? 'Zavrieť' : 'Zapísať príjem'}
         </Button>
-      </div>
+        </>
+      }>
 
       {payments.isError && (
         <p role="alert" className="mb-2 text-sm text-destructive">
@@ -195,6 +194,6 @@ export function EventIncomeSection({ companyId, eventId }: { companyId: string; 
         !payments.isPending &&
         !open && <p className="rounded-xl border border-dashed bg-surface px-6 py-6 text-center text-sm text-muted-foreground">Zatiaľ nič zapísané.</p>
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

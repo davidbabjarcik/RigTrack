@@ -8,7 +8,7 @@ export const vehicleKeys = {
 }
 
 const COLUMNS =
-  'id, plate, model, vin, status, driver, odometer_km, stk_until, ek_until, vignette_until, pzp_until, casco_until, leasing_until, photo_path, payload_kg, cargo_length_cm, cargo_width_cm, cargo_height_cm, cargo_obstacles, note'
+  'id, plate, model, vin, status, driver, odometer_km, stk_until, ek_until, vignette_until, pzp_until, casco_until, leasing_until, photo_path, payload_kg, cargo_length_cm, cargo_width_cm, cargo_height_cm, cargo_obstacles, technician_id, note'
 
 type Row = {
   id: string
@@ -30,6 +30,7 @@ type Row = {
   cargo_width_cm: number | null
   cargo_height_cm: number | null
   cargo_obstacles: unknown
+  technician_id: string | null
   note: string
 }
 
@@ -72,6 +73,7 @@ export async function fetchVehicles(companyId: string): Promise<Vehicle[]> {
     cargoWidthCm: row.cargo_width_cm,
     cargoHeightCm: row.cargo_height_cm,
     cargoObstacles: readObstacles(row.cargo_obstacles),
+    technicianId: row.technician_id,
     note: row.note,
   }))
 }
@@ -95,6 +97,7 @@ export async function saveVehicle(companyId: string, id: string | null, values: 
     cargo_width_cm: values.cargoWidthCm ?? null,
     cargo_height_cm: values.cargoHeightCm ?? null,
     cargo_obstacles: values.cargoObstacles,
+    technician_id: values.technicianId || null,
     note: values.note,
   }
   const table = getSupabase().from('vehicles')
@@ -120,7 +123,7 @@ export async function deleteVehicle(companyId: string, id: string) {
 export async function fetchVehicleRecords(companyId: string, vehicleId: string): Promise<VehicleRecord[]> {
   const { data, error } = await getSupabase()
     .from('vehicle_records')
-    .select('id, kind, happened_on, odometer_km, cost, liters, description')
+    .select('id, kind, happened_on, odometer_km, cost, liters, description, technician_id')
     .eq('company_id', companyId)
     .eq('vehicle_id', vehicleId)
     .order('happened_on', { ascending: false })
@@ -134,6 +137,7 @@ export async function fetchVehicleRecords(companyId: string, vehicleId: string):
     cost: number | string | null
     liters: number | string | null
     description: string
+    technician_id: string | null
   }[]
   return rows.map((row) => ({
     id: row.id,
@@ -143,6 +147,7 @@ export async function fetchVehicleRecords(companyId: string, vehicleId: string):
     cost: row.cost === null ? null : Number(row.cost),
     liters: row.liters === null ? null : Number(row.liters),
     description: row.description,
+    technicianId: row.technician_id,
   }))
 }
 
@@ -167,6 +172,7 @@ export async function addVehicleRecord(companyId: string, vehicleId: string, val
       // Litre dávajú zmysel len pri tankovaní.
       liters: values.kind === 'fuel' ? (values.liters ?? null) : null,
       description: values.description,
+      technician_id: values.technicianId || null,
     })
   if (error) throw error
 }

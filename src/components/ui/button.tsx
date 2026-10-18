@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from 'class-variance-authority'
-import type { ButtonHTMLAttributes } from 'react'
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react'
 import { Link, type LinkProps } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
@@ -37,4 +37,9 @@ export function Button({
 /** Odkaz, ktorý vyzerá ako tlačidlo. */
 export function LinkButton({ className, variant, size, ...props }: LinkProps & Variants) {
   return <Link className={cn(buttonVariants({ variant, size }), className)} {...props} />
+}
+
+/** Odkaz mimo aplikácie (nové okno), ktorý vyzerá ako tlačidlo. */
+export function AnchorButton({ className, variant, size, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & Variants) {
+  return <a target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant, size }), className)} {...props} />
 }

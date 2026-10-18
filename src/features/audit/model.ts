@@ -28,6 +28,7 @@ export const ENTITIES: Record<string, { label: string; path?: string }> = {
   vehicles: { label: 'vozidlo', path: '/vehicles' },
   service_records: { label: 'servisný záznam', path: '/service' },
   events: { label: 'event', path: '/events' },
+  service_technicians: { label: 'servisného technika' },
 }
 
 // Stĺpce, ktoré sa menia najčastejšie; ostatné sa vypíšu technickým názvom.

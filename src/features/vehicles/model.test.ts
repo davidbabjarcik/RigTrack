@@ -17,6 +17,7 @@ const vehicle = (patch: Partial<Vehicle>): Vehicle => ({
   cargoWidthCm: null,
   cargoHeightCm: null,
   cargoObstacles: [],
+  technicianId: null,
   note: '',
   stkUntil: null,
   ekUntil: null,

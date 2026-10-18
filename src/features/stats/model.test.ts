@@ -19,10 +19,10 @@ const loan = (patch: Partial<Loan>): Loan => ({
 })
 const service = (patch: Partial<ServiceRecord>): ServiceRecord => ({
   id: 's1', equipmentId: 'e1', quantity: 1, unitNumbers: [], kind: 'repair', status: 'done', happenedOn: '2026-09-01', problem: '', workDone: '', hours: null,
-  cost: null, technician: '', ...patch,
+  cost: null, technician: '', technicianId: null, ...patch,
 })
 const vehicle = (patch: Partial<Vehicle>): Vehicle => ({
-  id: 'v1', plate: 'SP123AB', model: '', vin: '', status: 'active', driver: '', odometerKm: null, photoPath: '', payloadKg: null, cargoLengthCm: null, cargoWidthCm: null, cargoHeightCm: null, cargoObstacles: [], note: '',
+  id: 'v1', plate: 'SP123AB', model: '', vin: '', status: 'active', driver: '', odometerKm: null, photoPath: '', payloadKg: null, cargoLengthCm: null, cargoWidthCm: null, cargoHeightCm: null, cargoObstacles: [], technicianId: null, note: '',
   stkUntil: null, ekUntil: null, vignetteUntil: null, pzpUntil: null, cascoUntil: null, leasingUntil: null, ...patch,
 })
 const none: StatsSources = { equipment: [], loans: [], service: [], vehicles: [], vehicleCosts: [] }
