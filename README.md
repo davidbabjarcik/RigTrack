@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.10**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.10.1**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -21,11 +21,17 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 1.10.1 – 18. 10. 2026
+
+- „Hlásenia chýb“ už nie sú v menu, ale v pätičke vedľa „Nahlásiť chybu“.
+
+Nové migrácie: žiadne.
+
 ### 1.10 – 18. 10. 2026
 
 - **Nahlásenie chyby** – odkaz „Niečo nefunguje? Nahlásiť chybu“ pod každou stránkou: popis, voliteľný
   screenshot (aj Ctrl+V); stránka, verzia, firma a prehliadač sa priložia samy.
-- **Hlásenia chýb** v menu – autor vidí svoje, admin firmy hlásenia svojej firmy, vývojár aplikácie všetky.
+- **Hlásenia chýb** (odkaz v pätičke) – autor vidí svoje, admin firmy hlásenia svojej firmy, vývojár aplikácie všetky.
   Admin a vývojár menia stav (nové / rieši sa / vyriešené / nebude sa riešiť) a píšu odpoveď autorovi.
 - Nové hlásenia sú v **Upozorneniach** a prídu **e-mailom** vývojárovi a adminovi firmy
   (Supabase Edge Function `notify-bug-report` + Resend – návod v časti Nahlasovanie chýb).

@@ -49,15 +49,21 @@ function TabLink({ item }: { item: Pick<NavItem, 'label' | 'to' | 'icon'> }) {
   )
 }
 
-/** Odkaz na nahlásenie chyby; pošle so sebou stránku, na ktorej človek práve je. */
+/** Pätička: nahlásenie chyby (pošle so sebou aktuálnu stránku) a zoznam hlásení. */
 function ReportBugLink() {
   const location = useLocation()
-  if (location.pathname.startsWith('/bugs')) return null
   return (
-    <p className="px-4 pb-2 text-center text-xs print:hidden">
-      <Link to={`/bugs/new?from=${encodeURIComponent(location.pathname + location.search)}`} className="text-muted-foreground hover:text-foreground hover:underline">
-        Niečo nefunguje? Nahlásiť chybu
-      </Link>
+    <p className="flex flex-wrap justify-center gap-x-3 gap-y-1 px-4 pb-2 text-center text-xs print:hidden">
+      {location.pathname !== '/bugs/new' && (
+        <Link to={`/bugs/new?from=${encodeURIComponent(location.pathname + location.search)}`} className="text-muted-foreground hover:text-foreground hover:underline">
+          Niečo nefunguje? Nahlásiť chybu
+        </Link>
+      )}
+      {location.pathname !== '/bugs' && (
+        <Link to="/bugs" className="text-muted-foreground hover:text-foreground hover:underline">
+          Hlásenia chýb
+        </Link>
+      )}
     </p>
   )
 }
