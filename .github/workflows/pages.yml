@@ -39,6 +39,17 @@ jobs:
       - name: Testy
         run: npm test
 
+      # Bez týchto dvoch premenných by sa nasadila appka s hláškou „Databáza zatiaľ nie je pripojená“.
+      - name: Kontrola premenných
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::Chýba VITE_SUPABASE_URL alebo VITE_SUPABASE_PUBLISHABLE_KEY v Settings → Secrets and variables → Actions → Variables (Repository variables)."
+            exit 1
+          fi
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
       - name: Build
         run: npm run build
         env:
