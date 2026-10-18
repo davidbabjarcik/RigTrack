@@ -59,7 +59,7 @@ export function AppLayout() {
     <div className="flex min-h-dvh flex-col md:flex-row">
       <aside className="hidden w-60 shrink-0 flex-col border-r bg-surface md:flex">
         <div className="flex h-16 items-center gap-2 px-5">
-          <img src="/icons/icon.svg" alt="" className="size-8 rounded-lg" />
+          <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8 rounded-lg" />
           <span className="flex-1 text-lg font-semibold tracking-tight">RigTrack</span>
           <ThemeToggle className="-mr-2" />
         </div>
@@ -84,7 +84,7 @@ export function AppLayout() {
         <OfflineBanner />
         {/* Na mobile nie je bočný panel, preto má vlastnú úzku hlavičku. */}
         <header className="flex h-12 items-center gap-2 border-b bg-surface px-4 md:hidden">
-          <img src="/icons/icon.svg" alt="" className="size-6 rounded-md" />
+          <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-6 rounded-md" />
           <span className="flex-1 font-semibold tracking-tight">RigTrack</span>
           <ThemeToggle className="-mr-2" />
         </header>

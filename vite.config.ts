@@ -6,9 +6,13 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Podpriečinok, z ktorého sa appka servíruje: „/“ na vlastnej doméne či NAS, „/RigTrack/“ na GitHub Pages.
+const base = process.env.BASE_PATH || '/'
+
 const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8')) as { version: string }
 
 export default defineConfig({
+  base,
   // Verzia z package.json, aby sa v aplikácii ukazovala tá istá ako pri vydaní.
   define: { __APP_VERSION__: JSON.stringify(version) },
   plugins: [
@@ -36,8 +40,8 @@ export default defineConfig({
         short_name: 'RigTrack',
         description: 'Evidencia techniky, kufrov, výpožičiek, servisu a eventov.',
         lang: 'sk',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         display: 'standalone',
         theme_color: '#0f172a',
         background_color: '#0f172a',
@@ -53,7 +57,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         // Čítanie PDF sa sťahuje až pri importe faktúry; do offline shellu nepatrí.
         globIgnores: ['**/pdf-*.js'],
-        navigateFallback: '/index.html',
+        navigateFallback: `${base}index.html`,
         cleanupOutdatedCaches: true,
       },
     }),

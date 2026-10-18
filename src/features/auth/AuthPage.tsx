@@ -41,7 +41,8 @@ function AuthForm() {
     setError(null)
     setNotice(null)
     const auth = getSupabase().auth
-    const origin = window.location.origin
+    // Adresa appky vrátane podpriečinka (GitHub Pages), kam má e-mail z prihlásenia viesť.
+    const origin = `${window.location.origin}${import.meta.env.BASE_URL}`.replace(/\/$/, '')
 
     // Hlásenia zámerne neprezrádzajú, či účet s daným e-mailom existuje.
     if (mode === 'signin') {

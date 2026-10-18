@@ -10,7 +10,7 @@ export function RouteErrorPage() {
       </p>
       <div className="flex gap-3">
         <Button onClick={() => window.location.reload()}>Obnoviť stránku</Button>
-        <Button variant="outline" onClick={() => window.location.assign('/')}>
+        <Button variant="outline" onClick={() => window.location.assign(import.meta.env.BASE_URL)}>
           Na prehľad
         </Button>
       </div>

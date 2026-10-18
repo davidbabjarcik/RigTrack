@@ -1,0 +1,67 @@
+# Nasadenie RigTracku na GitHub Pages (https://<používateľ>.github.io/RigTrack/).
+# Spustí sa pri každom pushe do main alebo ručne v záložke Actions.
+#
+# V repozitári treba raz nastaviť:
+#   Settings → Pages → Source: GitHub Actions
+#   Settings → Secrets and variables → Actions → Variables:
+#     VITE_SUPABASE_URL              (Project URL zo Supabase)
+#     VITE_SUPABASE_PUBLISHABLE_KEY  (verejný publishable/anon kľúč – service-role sem nikdy!)
+name: GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Naraz beží len jedno nasadenie; staršie čakajúce sa zruší.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Testy
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Appka beží v podpriečinku s názvom repozitára.
+          BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      # GitHub Pages nevie presmerovať podstránky na index.html; 404.html je jeho kópia,
+      # takže priamo otvorená adresa (napr. /RigTrack/events/123) appku normálne načíta.
+      - name: Záložná stránka pre podstránky
+        run: cp dist/index.html dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

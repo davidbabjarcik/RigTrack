@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.8**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.9**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,14 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.9 – 18. 10. 2026
+
+- **Nasadenie na GitHub Pages** – pri každom pushe do `main` sa appka otestuje, zbuilduje a nasadí na
+  `https://<používateľ>.github.io/RigTrack/` (návod v časti Nasadenie).
+- Appka vie bežať v podpriečinku (adresy, ikonky, PWA, odkazy z e-mailov); priamo otvorená podstránka funguje.
+
+Nové migrácie: žiadne.
 
 ### 1.8 – 17. 10. 2026
 
@@ -260,6 +268,21 @@ Aplikácia beží na `http://localhost:5173`. Bez databázy sa zobrazí iba kost
 4. Potvrdzovanie e-mailu (Authentication → Sign In / Providers → Email → Confirm email) nechaj **zapnuté** –
    pozvánky do firmy sa viažu na potvrdenú adresu.
 5. Skopíruj `.env.example` do `.env.local` a doplň Project URL a publishable kľúč.
+
+## Nasadenie na GitHub Pages
+
+Najjednoduchšie: bez servera, HTTPS zabezpečí GitHub. Workflow `.github/workflows/pages.yml` pri každom
+pushe do `main` spustí testy, zbuilduje appku a nasadí ju.
+
+1. V repozitári: **Settings → Pages → Source: GitHub Actions**.
+2. **Settings → Secrets and variables → Actions → Variables** – pridaj `VITE_SUPABASE_URL`
+   a `VITE_SUPABASE_PUBLISHABLE_KEY` (verejný kľúč; service-role sem nikdy).
+3. V Supabase → Authentication → URL Configuration pridaj `https://<používateľ>.github.io/RigTrack/`
+   do Site URL (alebo Redirect URLs) a `https://<používateľ>.github.io/RigTrack/auth/update-password` do Redirect URLs.
+4. Spusti workflow (push do `main` alebo Actions → GitHub Pages → Run workflow).
+
+Appka beží v podpriečinku `/RigTrack/` (nastavuje ho premenná `BASE_PATH` pri builde). GitHub Pages zo
+súkromného repozitára vyžaduje platený plán GitHubu.
 
 ## Nasadenie na vlastný server
 

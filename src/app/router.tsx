@@ -160,4 +160,5 @@ export const routes: RouteObject[] = [
   },
 ]
 
-export const router = createBrowserRouter(routes)
+// Na GitHub Pages beží appka v podpriečinku (BASE_URL = „/RigTrack/“); router ho potrebuje bez koncovej lomky.
+export const router = createBrowserRouter(routes, { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' })
