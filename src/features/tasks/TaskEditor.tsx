@@ -1,13 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Trash2 } from 'lucide-react'
-import { useForm } from 'react-hook-form'
+import { useId } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import type { Member } from '@/features/companies/api'
 import { PRIORITIES, PRIORITY_LABELS } from '@/lib/priority'
 import { deleteTask, saveTask, taskKeys } from './api'
-import { TASK_STATUS_LABELS, TASK_STATUSES, taskSchema, type Task, type TaskFormValues } from './model'
+import { cn } from '@/lib/utils'
+import { assigneesOf, TASK_CATEGORIES, TASK_STATUS_LABELS, TASK_STATUSES, taskSchema, type Task, type TaskFormValues } from './model'
 
 type Props = {
   companyId: string
@@ -23,9 +25,12 @@ type Props = {
 /** Formulár na novú úlohu alebo úpravu existujúcej, zobrazený priamo v zozname. */
 export function TaskEditor({ companyId, task, members, defaultAssigneeId, canDelete, onClose }: Props) {
   const queryClient = useQueryClient()
+  const categoryList = useId()
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
     formState: { errors },
   } = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -33,12 +38,16 @@ export function TaskEditor({ companyId, task, members, defaultAssigneeId, canDel
       title: task?.title ?? '',
       note: task?.note ?? '',
       assigneeId: task ? (task.assigneeId ?? '') : defaultAssigneeId,
+      assigneeIds: task ? assigneesOf(task) : defaultAssigneeId ? [defaultAssigneeId] : [],
+      category: task?.category ?? '',
       priority: task?.priority ?? 'normal',
       dueOn: task?.dueOn ?? '',
       status: task?.status ?? 'open',
     },
   })
 
+  const chosen = useWatch({ control, name: 'assigneeIds' }) ?? []
+  const toggle = (userId: string) => setValue('assigneeIds', chosen.includes(userId) ? chosen.filter((id) => id !== userId) : [...chosen, userId], { shouldDirty: true })
   const refresh = () => queryClient.invalidateQueries({ queryKey: taskKeys.list(companyId) })
   const save = useMutation({
     mutationFn: (values: TaskFormValues) => saveTask(companyId, task?.id ?? null, values),
@@ -62,15 +71,33 @@ export function TaskEditor({ companyId, task, members, defaultAssigneeId, canDel
       className="flex flex-col gap-3 rounded-xl border bg-surface p-4"
     >
       <Field label="Čo treba spraviť *" autoFocus error={errors.title?.message} {...register('title')} />
+      <fieldset>
+        <legend className="mb-1.5 text-sm font-medium">Kto (aj viac ľudí)</legend>
+        <div className="flex flex-wrap gap-2">
+          {members.map((member) => {
+            const on = chosen.includes(member.userId)
+            return (
+              <button
+                key={member.userId}
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggle(member.userId)}
+                className={cn('h-9 rounded-lg border px-3 text-sm font-medium', on ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
+              >
+                {member.fullName || member.email}
+              </button>
+            )
+          })}
+        </div>
+        {errors.assigneeIds?.message && <p className="mt-1 text-sm text-destructive">{errors.assigneeIds.message}</p>}
+      </fieldset>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <SelectField label="Kto" error={errors.assigneeId?.message} {...register('assigneeId')}>
-          <option value="">— nikto konkrétny —</option>
-          {members.map((member) => (
-            <option key={member.userId} value={member.userId}>
-              {member.fullName || member.email}
-            </option>
+        <Field label="Kategória" list={categoryList} placeholder="napr. Web, Soc. siete" autoComplete="off" error={errors.category?.message} {...register('category')} />
+        <datalist id={categoryList}>
+          {TASK_CATEGORIES.map((category) => (
+            <option key={category} value={category} />
           ))}
-        </SelectField>
+        </datalist>
         <SelectField label="Priorita" error={errors.priority?.message} {...register('priority')}>
           {PRIORITIES.map((value) => (
             <option key={value} value={value}>

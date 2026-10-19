@@ -1,17 +1,20 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
+import { SelectField } from '@/components/ui/field'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { setTaskStatus, taskKeys } from './api'
-import { isTaskOverdue, sortTasks, TASK_STATUS_LABELS } from './model'
+import { createPostEventTasks, setTaskStatus, taskKeys } from './api'
+import { assigneesOf, isAssignedTo, isTaskOverdue, isTaskStale, sortTasks, TASK_STATUS_LABELS } from './model'
+import { TaskTemplatesSection } from './TaskTemplatesSection'
 import { TaskEditor } from './TaskEditor'
 import { useTasks } from './useTasks'
 
@@ -27,6 +30,18 @@ export function TodosPage() {
   const members = useMembers(companyId)
   const [scope, setScope] = useState<Scope>('mine')
   const [showDone, setShowDone] = useState(false)
+  const [category, setCategory] = useState('')
+  // Po skončených eventoch sa úlohy zo šablón založia samé (raz za načítanie stránky).
+  const postEvent = useQuery({
+    queryKey: ['company', companyId, 'tasks', 'post-event'],
+    queryFn: async () => {
+      const created = await createPostEventTasks(companyId)
+      if (created > 0) await queryClient.invalidateQueries({ queryKey: taskKeys.list(companyId) })
+      return created
+    },
+    retry: false,
+    staleTime: 10 * 60_000,
+  })
   // 'new' = formulár novej úlohy, inak id upravovanej úlohy
   const [editing, setEditing] = useState<string | null>(null)
   const today = todayIso()
@@ -37,7 +52,9 @@ export function TodosPage() {
   })
 
   const all = sortTasks(tasks.data ?? [], today)
-  const scoped = scope === 'mine' ? all.filter((task) => task.assigneeId === userId) : all
+  const categories = [...new Set(all.map((task) => task.category ?? '').filter(Boolean))].sort((a, b) => a.localeCompare(b, 'sk'))
+  const scoped = (scope === 'mine' ? all.filter((task) => isAssignedTo(task, userId)) : all).filter((task) => !category || task.category === category)
+  const stale = scoped.filter((task) => isTaskStale(task, today))
   const open = scoped.filter((task) => task.status !== 'done')
   const done = scoped.filter((task) => task.status === 'done')
   const visible = showDone ? scoped : open
@@ -94,11 +111,32 @@ export function TodosPage() {
             </button>
           ))}
         </div>
+        {categories.length > 0 && (
+          <SelectField label="Kategória" hideLabel className="w-44" value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="">Všetky kategórie</option>
+            {categories.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </SelectField>
+        )}
         <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
           <input type="checkbox" className="size-4 accent-(--accent)" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} />
           aj hotové ({done.length})
         </label>
       </div>
+
+      {stale.length > 0 && (
+        <p role="status" className="mb-4 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm">
+          <strong>{stale.length === 1 ? '1 úloha visí' : `${stale.length} úlohy visia`} dlhšie ako mesiac.</strong> Dokončite ich, posuňte termín alebo ich zrušte.
+        </p>
+      )}
+      {(postEvent.data ?? 0) > 0 && (
+        <p role="status" className="mb-4 text-sm text-muted-foreground">
+          Po skončených eventoch pribudlo úloh: {postEvent.data}.
+        </p>
+      )}
 
       {tasks.isPending ? (
         <LoadingBlock />
@@ -134,7 +172,11 @@ export function TodosPage() {
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {[
-                      memberName(members.data, task.assigneeId),
+                      assigneesOf(task)
+                        .map((id) => memberName(members.data, id))
+                        .filter(Boolean)
+                        .join(', '),
+                      task.category,
                       task.status === 'in_progress' && TASK_STATUS_LABELS.in_progress,
                       task.priority === 'high' && 'vysoká priorita',
                     ]
@@ -148,6 +190,12 @@ export function TodosPage() {
                       </span>
                     )}
                   </p>
+                  {isTaskStale(task, today) && <p className="text-sm text-accent">Visí viac ako mesiac</p>}
+                  {task.eventId && (
+                    <Link to={`/events/${task.eventId}`} className="text-sm text-accent hover:underline">
+                      Otvoriť event
+                    </Link>
+                  )}
                   {task.note && <p className="mt-1 text-sm whitespace-pre-wrap">{task.note}</p>}
                 </div>
                 {canEdit && (
@@ -166,6 +214,10 @@ export function TodosPage() {
           Zmena sa nepodarila.
         </p>
       )}
+
+      <div className="mt-8">
+        <TaskTemplatesSection companyId={companyId} canEdit={canEdit} />
+      </div>
     </>
   )
 }

@@ -2,11 +2,13 @@ import { Link } from 'react-router-dom'
 import { InstallHint } from '@/components/feedback/InstallGuide'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useCompany } from '@/features/companies/company-context'
+import { MigrationBanner } from '@/features/companies/MigrationStatus'
 import { RestockList } from '@/features/equipment/RestockList'
 import { LoanAlerts } from '@/features/loans/LoanAlerts'
 import { MyTasks } from '@/features/tasks/MyTasks'
 import { VehicleDeadlineAlerts } from '@/features/vehicles/VehicleDeadlineAlerts'
 import { NAV_ITEMS } from '@/lib/navigation'
+import { isAdminRole } from '@/lib/roles'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
 
 export function DashboardPage() {
@@ -15,7 +17,8 @@ export function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="Prehľad" description="Evidencia techniky a jej prevádzky" />
+      {/* Na mobile chýba bočný panel s firmou – názov firmy je preto v popise. */}
+      <PageHeader title="Prehľad" description={active ? active.companyName : 'Evidencia techniky a jej prevádzky'} />
       <InstallHint />
 
       {!isSupabaseConfigured && (
@@ -30,6 +33,7 @@ export function DashboardPage() {
 
       {isSupabaseConfigured && active && (
         <>
+          {isAdminRole(active.role) && <MigrationBanner />}
           <MyTasks companyId={active.companyId} />
           <LoanAlerts companyId={active.companyId} />
           <VehicleDeadlineAlerts companyId={active.companyId} />

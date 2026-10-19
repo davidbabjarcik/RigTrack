@@ -427,7 +427,7 @@ export const SORT_LABELS: Record<EquipmentSort, string> = {
 
 /** Počet zapnutých rozšírených filtrov (na odznak pri tlačidle). */
 export function advancedFilterCount(filter: EquipmentFilter) {
-  return [filter.kind, filter.audioType, filter.owner, filter.manufacturer, filter.attention, filter.capture, filter.purchasedYear, filter.withNetwork, filter.withLinks].filter(Boolean).length
+  return [filter.status, filter.categoryId, filter.locationId, filter.caseId, filter.kind, filter.audioType, filter.owner, filter.manufacturer, filter.attention, filter.capture, filter.purchasedYear, filter.withNetwork, filter.withLinks].filter(Boolean).length
 }
 
 /** Všetky dátumy nákupu techniky (celá položka aj kusy). */

@@ -2,7 +2,7 @@ import { ListTodo } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/features/auth/auth-context'
 import { formatDate, todayIso } from '@/lib/format'
-import { isTaskOverdue, sortTasks } from './model'
+import { isAssignedTo, isTaskOverdue, sortTasks } from './model'
 import { useTasks } from './useTasks'
 
 const SHOWN = 5
@@ -13,7 +13,7 @@ export function MyTasks({ companyId }: { companyId: string }) {
   const tasks = useTasks(companyId)
   const today = todayIso()
   const mine = sortTasks(
-    (tasks.data ?? []).filter((task) => task.assigneeId === userId && task.status !== 'done'),
+    (tasks.data ?? []).filter((task) => isAssignedTo(task, userId) && task.status !== 'done'),
     today,
   )
   if (mine.length === 0) return null

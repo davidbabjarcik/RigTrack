@@ -21,6 +21,22 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 1.16 – 19. 10. 2026
+
+- **Úlohy** – viac ľudí na jednu úlohu, kategórie (web, soc. siete…), filter podľa kategórie; **úlohy po evente**
+  (šablóny, ktoré sa po skončení akcie založia samé) a upozornenie na úlohy, ktoré visia viac ako mesiac.
+- **Kancelária** – voda, káva, poháre, cukor, mlieko, čaj…: zásoba, kto čo kúpil (aj veľkosť balenia, napr. 1 kg kávy)
+  a štatistiky (kto koľko minul, čoho sa koľko kúpilo).
+- **Škody a úrazy** – zápis s človekom, eventom, technikou, nákladmi a kto platí; štatistiky po ľuďoch. Úrazy vidí
+  len admin, dotknutý a ten, kto ich zapísal.
+- **Sociálne siete** na karte zamestnanca; meno v profile a na karte sa zosynchronizuje.
+- **Nová firma** prevezme tvoje osobné údaje (telefón, narodenie, vodičák…) z predošlej firmy.
+- **Stav databázy** v Nastaveniach (a upozornenie adminovi na Prehľade) – ktoré migrácie chýbajú.
+- Oznam o novej verzii s odkazom na Čo je nové; názov firmy na Prehľade; logo v Čo je nové vedie na Prehľad;
+  filtre techniky sú všetky pod „Viac filtrov“; pri chybe demo firmy sa ukáže presný dôvod.
+
+Nové migrácie: `0061`.
+
 ### 1.15 – 19. 10. 2026
 
 - **Veľký filter techniky** – druh, typ zvuku, vlastník, výrobca, upozornenia (servis, dokúpiť, hodiny), zhoda s Capture,

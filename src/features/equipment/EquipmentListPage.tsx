@@ -128,45 +128,46 @@ export function EquipmentListPage() {
             onChange={(e) => set({ search: e.target.value })}
           />
         </div>
-        <SelectField
-          label="Stav"
-          hideLabel
-          value={filter.status}
-          onChange={(e) => set({ status: e.target.value as EquipmentFilter['status'] })}
+        <AdvancedFilter
+          filter={filter}
+          onChange={set}
+          items={all}
+          owners={staff.people.filter((person) => person.staffId).map((person) => ({ staffId: person.staffId!, name: person.name }))}
         >
-          <option value="">Všetky stavy</option>
-          {EQUIPMENT_STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {STATUS_LABELS[status]}
-            </option>
-          ))}
-        </SelectField>
-        <SelectField label="Kategória" hideLabel value={filter.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>
-          <option value="">Všetky kategórie</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </SelectField>
-        <SelectField label="Umiestnenie" hideLabel value={filter.locationId} onChange={(e) => set({ locationId: e.target.value })}>
-          <option value="">Všetky umiestnenia</option>
-          {locations.map((location) => (
-            <option key={location.id} value={location.id}>
-              {location.name}
-            </option>
-          ))}
-        </SelectField>
-        <SelectField label="Case" hideLabel value={filter.caseId} onChange={(e) => set({ caseId: e.target.value })}>
-          <option value="">Všetky cases</option>
-          <option value={NO_CASE}>Mimo cases</option>
-          {(cases.data ?? []).map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </SelectField>
-        <AdvancedFilter filter={filter} onChange={set} items={all} owners={staff.people.filter((person) => person.staffId).map((person) => ({ staffId: person.staffId!, name: person.name }))} />
+          <SelectField label="Stav" value={filter.status} onChange={(e) => set({ status: e.target.value as EquipmentFilter['status'] })}>
+            <option value="">Všetky stavy</option>
+            {EQUIPMENT_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {STATUS_LABELS[status]}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField label="Kategória" value={filter.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>
+            <option value="">Všetky kategórie</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField label="Umiestnenie" value={filter.locationId} onChange={(e) => set({ locationId: e.target.value })}>
+            <option value="">Všetky umiestnenia</option>
+            {locations.map((location) => (
+              <option key={location.id} value={location.id}>
+                {location.name}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField label="Case" value={filter.caseId} onChange={(e) => set({ caseId: e.target.value })}>
+            <option value="">Všetky cases</option>
+            <option value={NO_CASE}>Mimo cases</option>
+            {(cases.data ?? []).map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </SelectField>
+        </AdvancedFilter>
       </div>
 
       {list.isPending ? (
@@ -207,9 +208,7 @@ export function EquipmentListPage() {
                   <PhotoThumb url={thumbs[item.photoPath]} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{item.name}</span>
-                    {details.length > 0 && (
-                      <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
-                    )}
+                    {details.length > 0 && <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>}
                     {servicing > 0 && item.status !== 'in_service' && (
                       <span className="block text-sm text-sky-700 dark:text-sky-400">
                         V servise {unitsOut.has(item.id) ? `kus ${formatUnits(unitsOut.get(item.id)!)}` : `${servicing} z ${item.quantity} ks`}

@@ -43,7 +43,8 @@ with checks (migration, ok) as (
     ('0057 ľudia (narodeniny, novinky)', to_regclass('public.company_news') is not null),
     ('0058 bohatšie demo', exists (select 1 from pg_proc where proname = 'seed_demo_extras')),
     ('0059 eventy (program, doprava)', to_regclass('public.event_days') is not null),
-    ('0060 technika a objednávky', to_regclass('public.service_requests') is not null)
+    ('0060 technika a objednávky', to_regclass('public.service_requests') is not null),
+    ('0061 kancelária, škody, úlohy', to_regclass('public.incidents') is not null)
 )
 select migration, case when ok then 'OK' else 'chýba' end as stav
 from checks

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bell, CheckCheck, Gift, Smartphone, UserRoundPen, X } from 'lucide-react'
+import { Bell, CheckCheck, Gift, Smartphone, Sparkles, UserRoundPen, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { markNewsRead, newsKeys, useNews } from '@/features/news/api'
 import { describeCelebration, upcomingCelebrations } from '@/features/staff/celebrations'
 import { useStaff } from '@/features/staff/useStaff'
 import { formatDateTime, todayIso } from '@/lib/format'
+import { APP_VERSION } from '@/lib/version'
 
 /** Novinky vo firme (nový event, priradenie do posádky) s tlačidlom „prečítané“. */
 function NewsBell({ companyId, userId }: { companyId: string; userId: string }) {
@@ -51,6 +52,53 @@ function NewsBell({ companyId, userId }: { companyId: string; userId: string }) 
   )
 }
 
+const SEEN_VERSION_KEY = 'rigtrack.seenVersion'
+
+function readSeenVersion() {
+  try {
+    return localStorage.getItem(SEEN_VERSION_KEY)
+  } catch {
+    return APP_VERSION
+  }
+}
+
+function saveSeenVersion() {
+  try {
+    localStorage.setItem(SEEN_VERSION_KEY, APP_VERSION)
+  } catch {
+    // Bez úložiska sa oznam len znova ukáže po ďalšom načítaní.
+  }
+}
+
+/** Po aktualizácii appky: „Nová verzia – pozrite, čo je nové“, kým ho človek nezavrie alebo neotvorí. */
+function UpdateNotice() {
+  const [seen, setSeen] = useState(readSeenVersion)
+  // Prvé spustenie (nič uložené) nie je aktualizácia – len si verziu zapamätá.
+  if (seen === null) {
+    saveSeenVersion()
+    return null
+  }
+  if (seen === APP_VERSION) return null
+  const close = () => {
+    saveSeenVersion()
+    setSeen(APP_VERSION)
+  }
+  return (
+    <div role="status" className="flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm dark:border-emerald-900 dark:bg-emerald-950/40">
+      <Sparkles className="size-5 shrink-0 text-emerald-600" aria-hidden />
+      <span className="flex-1">
+        <span className="font-medium">RigTrack má novú verziu {APP_VERSION}.</span>{' '}
+        <Link to="/changelog" className="text-accent hover:underline" onClick={close}>
+          Pozrite, čo je nové
+        </Link>
+      </span>
+      <button type="button" aria-label="Zavrieť" className="rounded p-1 text-muted-foreground hover:bg-emerald-100 dark:hover:bg-emerald-900/40" onClick={close}>
+        <X className="size-4" aria-hidden />
+      </button>
+    </div>
+  )
+}
+
 /**
  * Pás upozornení nad obsahom stránky: úvodný dotazník, chýbajúce zariadenia (červené),
  * narodeniny a meniny kolegov a novinky vo firme.
@@ -78,6 +126,7 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-4 pt-4 empty:hidden md:px-8 print:hidden">
+      <UpdateNotice />
       {me && !me.onboarded && !onWelcome && (
         <Link to="/welcome" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
           <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />

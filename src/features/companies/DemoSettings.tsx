@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FlaskConical, RotateCcw, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { errorDetail } from '@/lib/supabase/errors'
 import { companyKeys } from './api'
 import { useCompany } from './company-context'
 import { createDemo, deleteDemo, demoKeys, fetchMyDemo, resetDemo } from './demo'
@@ -51,7 +52,10 @@ export function DemoSettings({ userId }: { userId: string }) {
       </div>
       {failed && (
         <p role="alert" className="mt-3 text-sm text-destructive">
-          Nepodarilo sa. Ak ste ešte nespustili migráciu 0041, urobte to.
+          Nepodarilo sa. {errorDetail(create.error ?? reset.error ?? remove.error ?? demo.error)}
+          <span className="block text-muted-foreground">
+            Najčastejšie chýba niektorá migrácia – v Supabase spustite <code>supabase/check-migrations.sql</code> a doplňte riadky „chýba“.
+          </span>
         </p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">

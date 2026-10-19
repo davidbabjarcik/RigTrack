@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { MigrationStatus } from '@/features/companies/MigrationStatus'
 import { Trash2 } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -336,6 +337,12 @@ export function SettingsPage() {
           {isAdmin && (
             <Section title="Logo a štítky na cases">
               <BrandingSettings companyId={company.companyId} />
+            </Section>
+          )}
+
+          {isAdmin && (
+            <Section title="Stav databázy">
+              <MigrationStatus />
             </Section>
           )}
 

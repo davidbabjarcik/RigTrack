@@ -38,6 +38,8 @@ const networks = lazyPage(() => import('@/features/networks/NetworksPage').then(
 const capsules = lazyPage(() => import('@/features/capsules/CapsulesPage').then((m) => m.CapsulesPage), 'equipment.view')
 const serviceRequests = lazyPage(() => import('@/features/requests/ServiceRequestsPage').then((m) => m.ServiceRequestsPage))
 const serviceRequestForm = lazyPage(() => import('@/features/requests/ServiceRequestFormPage').then((m) => m.ServiceRequestFormPage))
+const office = lazyPage(() => import('@/features/office/OfficePage').then((m) => m.OfficePage))
+const incidents = lazyPage(() => import('@/features/incidents/IncidentsPage').then((m) => m.IncidentsPage))
 const orderStats = lazyPage(() => import('@/features/orders/OrderStatsPage').then((m) => m.OrderStatsPage), 'orders.view')
 const cableSet = lazyPage(() => import('@/features/equipment/CableSetPage').then((m) => m.CableSetPage), 'equipment.view')
 const casesList = lazyPage(() => import('@/features/cases/CasesListPage').then((m) => m.CasesListPage), 'cases.view')
@@ -149,6 +151,8 @@ export const routes: RouteObject[] = [
               { path: 'service/requests/new', lazy: serviceRequestForm },
               { path: 'service/:id', lazy: serviceForm },
               { path: 'todos', lazy: todos },
+              { path: 'office', lazy: office },
+              { path: 'incidents', lazy: incidents },
               { path: 'shopping', lazy: shopping },
               { path: 'calendar', lazy: calendar },
               { path: 'suggestions', lazy: suggestions },

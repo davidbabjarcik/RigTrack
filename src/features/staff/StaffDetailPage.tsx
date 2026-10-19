@@ -21,6 +21,7 @@ import { LICENCES, upcomingEvents, upcomingPeriods, type Person } from './model'
 import { NameDayField } from './NameDayField'
 import { formatNameDay } from './celebrations'
 import { cn } from '@/lib/utils'
+import { SocialLinks } from './SocialLinks'
 import { StaffDevices, StaffOverview, StaffOwnGear, StaffPastEvents } from './StaffExtras'
 import { useStaff } from './useStaff'
 
@@ -320,6 +321,7 @@ export function StaffDetailPage() {
         </CollapsibleSection>
       )}
 
+      {person.staffId && <SocialLinks companyId={companyId} staffId={person.staffId} canEdit={canEdit} />}
       <StaffOverview companyId={companyId} person={person} events={events.data ?? []} userId={userId} />
       <StaffPastEvents person={person} events={events.data ?? []} />
       <StaffDevices companyId={companyId} person={person} userId={userId} />

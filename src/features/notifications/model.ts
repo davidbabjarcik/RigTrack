@@ -1,6 +1,6 @@
 import { hoursState, needsRestock, serviceState, type Equipment } from '@/features/equipment/model'
 import { isAwaitingIssue, isOverdue, type Loan } from '@/features/loans/model'
-import { isTaskOverdue, type Task } from '@/features/tasks/model'
+import { isAssignedTo, isTaskOverdue, isTaskStale, type Task } from '@/features/tasks/model'
 import { describeDays, upcomingDeadlines, type Vehicle } from '@/features/vehicles/model'
 
 // Upozornenia sú odvodené: vznikajú z aktuálneho stavu údajov a zmiznú, keď sa vec vybaví.
@@ -83,8 +83,10 @@ export function buildNotifications(sources: NotificationSources, today: string, 
 
   // Úlohy iba vlastné: cudzie termíny nie sú moje upozornenie.
   for (const task of sources.tasks) {
-    if (task.assigneeId === userId && isTaskOverdue(task, today)) {
+    if (isAssignedTo(task, userId) && isTaskOverdue(task, today)) {
       list.push({ id: `task-${task.id}`, severity: 'urgent', title: task.title, detail: 'vaša úloha je po termíne', to: '/todos' })
+    } else if (isAssignedTo(task, userId) && isTaskStale(task, today)) {
+      list.push({ id: `task-stale-${task.id}`, severity: 'soon', title: task.title, detail: 'vaša úloha visí viac ako mesiac', to: '/todos' })
     }
   }
 

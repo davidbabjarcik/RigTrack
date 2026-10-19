@@ -1,5 +1,5 @@
 import { SlidersHorizontal } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { SelectField } from '@/components/ui/field'
 import {
@@ -23,10 +23,12 @@ type Props = {
   onChange: (patch: Partial<EquipmentFilter>) => void
   items: Equipment[]
   owners: { staffId: string; name: string }[]
+  /** Základné filtre (stav, kategória, umiestnenie, case) – zobrazia sa na začiatku panela. */
+  children?: ReactNode
 }
 
 /** Veľký filter techniky: druh, typ, vlastník, výrobca, upozornenia, Capture, rok nákupu, sieť, odkazy a triedenie. */
-export function AdvancedFilter({ filter, onChange, items, owners }: Props) {
+export function AdvancedFilter({ filter, onChange, items, owners, children }: Props) {
   const count = advancedFilterCount(filter)
   const [open, setOpen] = useState(count > 0)
   const manufacturers = [...new Set(items.map((item) => item.manufacturer.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'sk'))
@@ -53,14 +55,15 @@ export function AdvancedFilter({ filter, onChange, items, owners }: Props) {
           <button
             type="button"
             className="px-2 py-2 text-sm text-accent hover:underline"
-            onClick={() => onChange({ kind: '', audioType: '', owner: '', manufacturer: '', attention: '', capture: '', purchasedYear: '', withNetwork: false, withLinks: false })}
+            onClick={() => onChange({ status: '', categoryId: '', locationId: '', caseId: '', kind: '', audioType: '', owner: '', manufacturer: '', attention: '', capture: '', purchasedYear: '', withNetwork: false, withLinks: false })}
           >
-            Zrušiť rozšírené filtre
+            Zrušiť filtre
           </button>
         )}
       </div>
       {open && (
         <div className="mt-3 grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
+          {children}
           <SelectField label="Druh" value={filter.kind ?? ''} onChange={(e) => onChange({ kind: e.target.value as EquipmentFilter['kind'] })}>
             <option value="">Všetky druhy</option>
             {EQUIPMENT_KINDS.map((kind) => (
