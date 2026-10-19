@@ -35,6 +35,10 @@ const equipmentDetail = lazyPage(() => import('@/features/equipment/EquipmentDet
 const equipmentForm = lazyPage(() => import('@/features/equipment/EquipmentFormPage').then((m) => m.EquipmentFormPage), 'equipment.view')
 const equipmentExcel = lazyPage(() => import('@/features/equipment/EquipmentExcelPage').then((m) => m.EquipmentExcelPage), 'equipment.view')
 const networks = lazyPage(() => import('@/features/networks/NetworksPage').then((m) => m.NetworksPage))
+const capsules = lazyPage(() => import('@/features/capsules/CapsulesPage').then((m) => m.CapsulesPage), 'equipment.view')
+const serviceRequests = lazyPage(() => import('@/features/requests/ServiceRequestsPage').then((m) => m.ServiceRequestsPage))
+const serviceRequestForm = lazyPage(() => import('@/features/requests/ServiceRequestFormPage').then((m) => m.ServiceRequestFormPage))
+const orderStats = lazyPage(() => import('@/features/orders/OrderStatsPage').then((m) => m.OrderStatsPage), 'orders.view')
 const cableSet = lazyPage(() => import('@/features/equipment/CableSetPage').then((m) => m.CableSetPage), 'equipment.view')
 const casesList = lazyPage(() => import('@/features/cases/CasesListPage').then((m) => m.CasesListPage), 'cases.view')
 const caseDetail = lazyPage(() => import('@/features/cases/CaseDetailPage').then((m) => m.CaseDetailPage), 'cases.view')
@@ -122,6 +126,7 @@ export const routes: RouteObject[] = [
               { path: 'welcome', lazy: welcome },
               { path: 'partners', lazy: partners },
               { path: 'equipment/excel', lazy: equipmentExcel },
+              { path: 'equipment/capsules', lazy: capsules },
               { path: 'equipment/:id', lazy: equipmentDetail },
               { path: 'equipment/:id/edit', lazy: equipmentForm },
               { path: 'cases', lazy: casesList },
@@ -140,6 +145,8 @@ export const routes: RouteObject[] = [
               { path: 'loans/:id/edit', lazy: loanForm },
               { path: 'service', lazy: serviceList },
               { path: 'service/new', lazy: serviceForm },
+              { path: 'service/requests', lazy: serviceRequests },
+              { path: 'service/requests/new', lazy: serviceRequestForm },
               { path: 'service/:id', lazy: serviceForm },
               { path: 'todos', lazy: todos },
               { path: 'shopping', lazy: shopping },
@@ -165,6 +172,7 @@ export const routes: RouteObject[] = [
               { path: 'staff/:key', lazy: staffDetail },
               { path: 'orders', lazy: ordersList },
               { path: 'orders/new', lazy: orderForm },
+              { path: 'orders/stats', lazy: orderStats },
               { path: 'orders/:id', lazy: orderDetail },
               { path: 'more', element: <MorePage /> },
               { path: 'more/customize', element: <CustomizeMenuPage /> },

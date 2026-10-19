@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { EQUIPMENT_KINDS } from '@/features/equipment/model'
+import { formatMoney } from '@/lib/format'
 
 export const CURRENCIES = ['EUR', 'CZK', 'USD', 'GBP'] as const
 
@@ -79,6 +80,14 @@ export const orderSchema = z.object({
   currency: z.enum(CURRENCIES),
   note: text(2000),
   items: z.array(itemSchema).min(1, 'Pridajte aspoň jednu položku'),
+  /** Kto objednal (člen firmy); prázdne = ten, kto zapisuje. */
+  orderedBy: z.string().optional(),
+  /** Nie pre nás: kúpené pre klienta / kolegu – nezaráta sa do našich nákladov. */
+  forUs: z.boolean().optional(),
+  forWhom: text(120).optional(),
+  /** Vypnuté = žiadna položka sa nepridá do techniky. */
+  addToStock: z.boolean().optional(),
+  hasInvoice: z.boolean().optional(),
 })
 
 export type OrderFormValues = z.infer<typeof orderSchema>
@@ -137,6 +146,112 @@ export type OrderSummary = {
   note: string
   itemCount: number
   total: number
+  /** Údaje z 0060; bez migrácie predvolené (pre nás, do techniky, s faktúrou). */
+  createdAt?: string
+  orderedBy?: string | null
+  forUs?: boolean
+  forWhom?: string
+  addToStock?: boolean
+  hasInvoice?: boolean
+}
+
+export const ORDER_SORTS = ['ordered_desc', 'ordered_asc', 'created_desc', 'created_asc', 'total_desc', 'total_asc'] as const
+export type OrderSort = (typeof ORDER_SORTS)[number]
+export const ORDER_SORT_LABELS: Record<OrderSort, string> = {
+  ordered_desc: 'Dátum kúpy – najnovšie',
+  ordered_asc: 'Dátum kúpy – najstaršie',
+  created_desc: 'Naposledy pridané',
+  created_asc: 'Najskôr pridané',
+  total_desc: 'Najvyššia cena',
+  total_asc: 'Najnižšia cena',
+}
+
+export type OrderFilter = {
+  search: string
+  orderedBy: string
+  /** „us“ = pre nás, „others“ = nie pre nás. */
+  forWhom: '' | 'us' | 'others'
+  source: '' | OrderSource
+  year: string
+  /** „noInvoice“ = bez faktúry, „noStock“ = nepridané do techniky. */
+  flag: '' | 'noInvoice' | 'noStock'
+  sort: OrderSort
+}
+
+export const NO_ORDER_FILTER: OrderFilter = { search: '', orderedBy: '', forWhom: '', source: '', year: '', flag: '', sort: 'ordered_desc' }
+
+const plainText = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+
+export function filterOrders(orders: OrderSummary[], filter: OrderFilter) {
+  const words = plainText(filter.search).split(/\s+/).filter(Boolean)
+  const found = orders.filter((order) => {
+    if (filter.orderedBy && order.orderedBy !== filter.orderedBy) return false
+    if (filter.forWhom === 'us' && order.forUs === false) return false
+    if (filter.forWhom === 'others' && order.forUs !== false) return false
+    if (filter.source && order.source !== filter.source) return false
+    if (filter.year && !order.orderedAt.startsWith(filter.year)) return false
+    if (filter.flag === 'noInvoice' && order.hasInvoice !== false) return false
+    if (filter.flag === 'noStock' && order.addToStock !== false) return false
+    const haystack = plainText([order.supplier, order.seller, order.orderNumber, order.note, order.forWhom].join(' '))
+    return words.every((word) => haystack.includes(word))
+  })
+  const [field, direction] = filter.sort.split('_') as ['ordered' | 'created' | 'total', 'asc' | 'desc']
+  const sign = direction === 'asc' ? 1 : -1
+  const key = (order: OrderSummary) => (field === 'ordered' ? order.orderedAt : field === 'created' ? (order.createdAt ?? order.orderedAt) : order.total)
+  return [...found].sort((a, b) => {
+    const x = key(a)
+    const y = key(b)
+    return sign * (typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y)))
+  })
+}
+
+export type OrderStats = {
+  count: number
+  /** Súčty podľa meny (objednávky môžu byť v rôznych menách). */
+  totals: Record<string, number>
+  forOthers: Record<string, number>
+  byMonth: { month: string; totals: Record<string, number>; count: number }[]
+  bySupplier: { name: string; totals: Record<string, number>; count: number }[]
+  byOrderer: { id: string | null; totals: Record<string, number>; count: number }[]
+}
+
+const addTo = (totals: Record<string, number>, currency: string, amount: number) => {
+  totals[currency] = Math.round(((totals[currency] ?? 0) + amount) * 100) / 100
+}
+
+/** Štatistiky objednávok: súčty (pre nás aj nie pre nás), po mesiacoch, dodávateľoch a objednávateľoch. */
+export function orderStats(orders: OrderSummary[]): OrderStats {
+  const stats: OrderStats = { count: orders.length, totals: {}, forOthers: {}, byMonth: [], bySupplier: [], byOrderer: [] }
+  const months = new Map<string, OrderStats['byMonth'][number]>()
+  const suppliers = new Map<string, OrderStats['bySupplier'][number]>()
+  const orderers = new Map<string | null, OrderStats['byOrderer'][number]>()
+  for (const order of orders) {
+    if (order.forUs === false) {
+      addTo(stats.forOthers, order.currency, order.total)
+      continue
+    }
+    addTo(stats.totals, order.currency, order.total)
+    const month = order.orderedAt.slice(0, 7)
+    const m = months.get(month) ?? { month, totals: {}, count: 0 }
+    addTo(m.totals, order.currency, order.total)
+    m.count += 1
+    months.set(month, m)
+    const supplierKey = order.supplier.trim().toLowerCase()
+    const s = suppliers.get(supplierKey) ?? { name: order.supplier.trim(), totals: {}, count: 0 }
+    addTo(s.totals, order.currency, order.total)
+    s.count += 1
+    suppliers.set(supplierKey, s)
+    const who = order.orderedBy ?? null
+    const o = orderers.get(who) ?? { id: who, totals: {}, count: 0 }
+    addTo(o.totals, order.currency, order.total)
+    o.count += 1
+    orderers.set(who, o)
+  }
+  const main = (totals: Record<string, number>) => totals.EUR ?? Object.values(totals)[0] ?? 0
+  stats.byMonth = [...months.values()].sort((a, b) => b.month.localeCompare(a.month))
+  stats.bySupplier = [...suppliers.values()].sort((a, b) => main(b.totals) - main(a.totals))
+  stats.byOrderer = [...orderers.values()].sort((a, b) => main(b.totals) - main(a.totals))
+  return stats
 }
 
 export type OrderLine = {
@@ -174,4 +289,11 @@ export type FoundLine = {
   supplier: string
   orderedAt: string
   currency: string
+}
+
+/** „1 200,00 € + 300,00 Kč“ – súčty vo viacerých menách. */
+export function formatTotals(totals: Record<string, number>) {
+  const entries = Object.entries(totals)
+  if (entries.length === 0) return formatMoney(0, 'EUR')
+  return entries.map(([currency, amount]) => formatMoney(amount, currency)).join(' + ')
 }

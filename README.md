@@ -21,6 +21,22 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 1.15 – 19. 10. 2026
+
+- **Veľký filter techniky** – druh, typ zvuku, vlastník, výrobca, upozornenia (servis, dokúpiť, hodiny), zhoda s Capture,
+  rok nákupu, s IP / MAC, s odkazmi; triedenie (názov, naposledy upravené, dátum nákupu, počet kusov). Filter ostane po návrate z detailu.
+- **Technika** – dátum nákupu celej položky aj po kusoch, odkazy (návod, fixtúra, firmvér…), pri svetlách „kópia čoho“
+  a či sedí s Capture (áno / čiastočne / nie + prečo).
+- **Kapsule k mikrofónom** – vlastný zoznam (Technika → Kapsule), na evente sa vyberá, ktoré a koľko idú.
+- **Cases a racks** – priorita kontroly (vysoká 14 dní / bežná 60 / nízka 180), „Na kontrolu“, filter (kontrola, priorita,
+  umiestnenie, vlastník, kategória, obsah) a triedenie.
+- **Objednávky** – kto objednal, „nie pre nás“ (pre koho), „nepridávať nič do techniky“, „bez faktúry“; filter, triedenie
+  (dátum, pridané, cena) a **štatistiky** (po mesiacoch, dodávatelia, kto objednával).
+- **Žiadosti o servis** – poruchu nahlási ktokoľvek (aj z detailu techniky), servis mení stav a odpíše; ostatní vidia svoje.
+- **Kontakt z telefónu** – pri firmách a organizátorovi „Z telefónu“ (Android) alebo zo súboru .vcf (iPhone: Zdieľať kontakt).
+
+Nové migrácie: `0060`.
+
 ### 1.14.1 – 19. 10. 2026
 
 - **Kontrola databázy** – `supabase/check-migrations.sql` vypíše, ktoré migrácie databáza má a ktoré chýbajú

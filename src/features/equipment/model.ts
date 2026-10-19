@@ -98,6 +98,24 @@ export type EquipmentAttributes = {
 
 export type DmxMode = { name: string; channels: number }
 
+/** Odkaz pri technike: návod, fixtúra (GDTF / Capture), firmvér… */
+export const LINK_TAGS = ['manual', 'fixture', 'firmware', 'datasheet', 'video', 'other'] as const
+export type LinkTag = (typeof LINK_TAGS)[number]
+export const LINK_TAG_LABELS: Record<LinkTag, string> = {
+  manual: 'Návod',
+  fixture: 'Fixtúra',
+  firmware: 'Firmvér / softvér',
+  datasheet: 'Datasheet',
+  video: 'Video',
+  other: 'Iné',
+}
+export type EquipmentLink = { title: string; url: string; tag: LinkTag }
+
+/** Sedí svetlo s fixtúrou v Capture? */
+export const CAPTURE_MATCHES = ['yes', 'partial', 'no'] as const
+export type CaptureMatch = (typeof CAPTURE_MATCHES)[number]
+export const CAPTURE_MATCH_LABELS: Record<CaptureMatch, string> = { yes: 'Áno', partial: 'Čiastočne', no: 'Nie' }
+
 export type LabelRole = 'main' | 'secondary'
 
 export type Lookup = { id: string; name: string; consumable?: boolean; color?: CategoryColor | null }
@@ -141,6 +159,14 @@ export type Equipment = {
   updatedAt: string
   /** Karta zamestnanca, ktorému technika patrí (jeho vlastná); prázdne = firma. */
   ownerStaffId?: string | null
+  /** Dátum nákupu celej položky a po kusoch (číslo kusu → dátum); 0060. */
+  purchasedOn?: string | null
+  unitPurchases?: Record<string, string>
+  links?: EquipmentLink[]
+  /** Pri svetle: kópia čoho je (napr. Robe Spiider) a či sedí s fixtúrou v Capture. */
+  cloneOf?: string
+  captureMatch?: CaptureMatch | ''
+  captureNote?: string
 }
 
 const text = (max: number) => z.string().trim().max(max, `Najviac ${max} znakov`)
@@ -221,6 +247,22 @@ export const equipmentSchema = z.object({
   note: text(2000),
   /** Vlastník: prázdne = firma, id karty zamestnanca, alebo „m-<id člena>“ pre člena bez karty. */
   owner: z.string().optional(),
+  purchasedOn: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Zadajte dátum').optional(),
+  /** Dátum nákupu po kusoch; prázdny dátum = ako celá položka. */
+  unitPurchases: z.array(z.object({ unit: z.number(), date: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Zadajte dátum') })).optional(),
+  links: z
+    .array(
+      z.object({
+        title: text(120),
+        url: z.string().trim().max(1000, 'Príliš dlhý odkaz').regex(/^https?:\/\/\S+$/i, 'Odkaz začína https://'),
+        tag: z.enum(LINK_TAGS),
+      }),
+    )
+    .max(30, 'Najviac 30 odkazov')
+    .optional(),
+  cloneOf: text(120).optional(),
+  captureMatch: z.enum([...CAPTURE_MATCHES, '']).optional(),
+  captureNote: text(500).optional(),
 })
 
 export type EquipmentFormValues = z.infer<typeof equipmentSchema>
@@ -355,6 +397,42 @@ export type EquipmentFilter = {
   locationId: string
   /** Prázdne = všetko, NO_CASE = technika mimo cases, inak id konkrétneho case. */
   caseId: string
+  kind?: EquipmentKind | ''
+  audioType?: AudioType | ''
+  /** Prázdne = všetci, COMPANY_OWNER = firemná, inak id karty zamestnanca. */
+  owner?: string
+  manufacturer?: string
+  /** Na čo upozorniť: servis po termíne / do 30 dní, dokúpiť, odčítať hodiny. */
+  attention?: '' | 'service' | 'restock' | 'hours'
+  /** Svetlá: sedí s Capture (yes/partial/no), alebo „unset“ = nevyplnené. */
+  capture?: '' | CaptureMatch | 'unset'
+  /** Rok nákupu (celá položka alebo niektorý kus). */
+  purchasedYear?: string
+  withNetwork?: boolean
+  withLinks?: boolean
+  sort?: EquipmentSort
+}
+
+export const COMPANY_OWNER = 'company'
+
+export const EQUIPMENT_SORTS = ['name', 'newest', 'oldest', 'purchased', 'quantity'] as const
+export type EquipmentSort = (typeof EQUIPMENT_SORTS)[number]
+export const SORT_LABELS: Record<EquipmentSort, string> = {
+  name: 'Podľa názvu',
+  newest: 'Naposledy upravené',
+  oldest: 'Najdlhšie neupravené',
+  purchased: 'Podľa dátumu nákupu',
+  quantity: 'Najviac kusov',
+}
+
+/** Počet zapnutých rozšírených filtrov (na odznak pri tlačidle). */
+export function advancedFilterCount(filter: EquipmentFilter) {
+  return [filter.kind, filter.audioType, filter.owner, filter.manufacturer, filter.attention, filter.capture, filter.purchasedYear, filter.withNetwork, filter.withLinks].filter(Boolean).length
+}
+
+/** Všetky dátumy nákupu techniky (celá položka aj kusy). */
+export function purchaseDates(item: Pick<Equipment, 'purchasedOn' | 'unitPurchases'>) {
+  return [item.purchasedOn, ...Object.values(item.unitPurchases ?? {})].filter((date): date is string => Boolean(date))
 }
 
 export const NO_CASE = 'none'
@@ -367,10 +445,21 @@ function normalize(value: string) {
     .toLowerCase()
 }
 
-export function filterEquipment(items: Equipment[], filter: EquipmentFilter) {
+export function filterEquipment(items: Equipment[], filter: EquipmentFilter, today = new Date().toISOString().slice(0, 10)) {
   const words = normalize(filter.search).split(/\s+/).filter(Boolean)
-  return items.filter((item) => {
+  const found = items.filter((item) => {
     if (filter.status && item.status !== filter.status) return false
+    if (filter.kind && item.kind !== filter.kind) return false
+    if (filter.audioType && item.attributes.audioType !== filter.audioType) return false
+    if (filter.owner === COMPANY_OWNER ? item.ownerStaffId : filter.owner && item.ownerStaffId !== filter.owner) return false
+    if (filter.manufacturer && normalize(item.manufacturer.trim()) !== normalize(filter.manufacturer.trim())) return false
+    if (filter.attention === 'service' && !['overdue', 'soon'].includes(serviceState(item, today).state)) return false
+    if (filter.attention === 'restock' && !needsRestock(item)) return false
+    if (filter.attention === 'hours' && !['overdue', 'unknown'].includes(hoursState(item, today).state)) return false
+    if (filter.capture === 'unset' ? item.kind !== 'light' || Boolean(item.captureMatch) : filter.capture && item.captureMatch !== filter.capture) return false
+    if (filter.purchasedYear && !purchaseDates(item).some((date) => date.startsWith(filter.purchasedYear!))) return false
+    if (filter.withNetwork && !item.ipAddress && !item.macAddress && !item.attributes.ipDhcp) return false
+    if (filter.withLinks && !item.links?.length) return false
     if (filter.categoryId && item.categoryId !== filter.categoryId) return false
     if (filter.locationId && item.locationId !== filter.locationId) return false
     if (filter.caseId === NO_CASE ? item.caseId !== null : filter.caseId && item.caseId !== filter.caseId) return false
@@ -386,10 +475,23 @@ export function filterEquipment(items: Equipment[], filter: EquipmentFilter) {
         item.ipAddress,
         item.attributes.connector,
         item.attributes.audioType && AUDIO_TYPE_LABELS[item.attributes.audioType],
+        item.cloneOf,
       ].join(' '),
     )
     return words.every((word) => haystack.includes(word))
   })
+  return sortEquipment(found, filter.sort ?? 'name')
+}
+
+export function sortEquipment(items: Equipment[], sort: EquipmentSort) {
+  if (sort === 'name') return items
+  const sorted = [...items]
+  const firstPurchase = (item: Equipment) => purchaseDates(item).sort()[0] ?? '9999'
+  if (sort === 'newest') sorted.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  if (sort === 'oldest') sorted.sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))
+  if (sort === 'purchased') sorted.sort((a, b) => firstPurchase(a).localeCompare(firstPurchase(b)))
+  if (sort === 'quantity') sorted.sort((a, b) => b.quantity - a.quantity)
+  return sorted
 }
 
 /** Technika, ktorá by mala byť v nejakom case, ale nie je. Vyradená a spotrebný materiál sa nerátajú. */

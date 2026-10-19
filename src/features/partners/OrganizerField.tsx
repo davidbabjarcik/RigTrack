@@ -1,4 +1,5 @@
 import type { UseFormRegister, UseFormSetValue } from 'react-hook-form'
+import { PhoneContactButton } from '@/components/share/PhoneContactButton'
 import { Field, SelectField } from '@/components/ui/field'
 import type { EventFormValues } from '@/features/events/model'
 import type { Partner } from './api'
@@ -60,6 +61,17 @@ export function OrganizerField({ partners, value, onChange, register, setValue, 
       )}
       {typed && (
         <>
+          <div className="sm:col-span-2">
+            <PhoneContactButton
+              onPick={(contact) => {
+                const opts = { shouldDirty: true }
+                if (contact.org) setValue('organizer', contact.org, opts)
+                if (contact.name) setValue('organizerPerson', contact.name, opts)
+                if (contact.phone) setValue('organizerPhone', contact.phone, opts)
+                if (contact.email) setValue('organizerEmail', contact.email, opts)
+              }}
+            />
+          </div>
           <Field label="Organizátor (firma / skupina)" placeholder="napr. JESKO, Mesto Stropkov" error={errors.organizer?.message} {...register('organizer')} />
           <Field label="Kontaktná osoba" placeholder="napr. Simeon" error={errors.organizerPerson?.message} {...register('organizerPerson')} />
           <Field label="Telefón" type="tel" autoComplete="off" error={errors.organizerPhone?.message} {...register('organizerPhone')} />

@@ -20,6 +20,8 @@ import {
   asOptionalNumber,
   AUDIO_TYPE_LABELS,
   AUDIO_TYPES,
+  CAPTURE_MATCH_LABELS,
+  CAPTURE_MATCHES,
   COMMON_CONNECTORS,
   EQUIPMENT_KINDS,
   EQUIPMENT_STATUSES,
@@ -37,6 +39,7 @@ import {
   type EquipmentFormValues,
   type Lookup,
 } from './model'
+import { PurchaseLinksFields } from './PurchaseLinksFields'
 import { useEquipmentLookups } from './useEquipmentLookups'
 
 const EMPTY: EquipmentFormValues = {
@@ -74,6 +77,12 @@ const EMPTY: EquipmentFormValues = {
   hoursIntervalMonths: undefined,
   note: '',
   owner: '',
+  purchasedOn: '',
+  unitPurchases: [],
+  links: [],
+  cloneOf: '',
+  captureMatch: '',
+  captureNote: '',
 }
 
 function toFormValues(equipment: Equipment, categories: Lookup[], locations: Lookup[]): EquipmentFormValues {
@@ -112,6 +121,12 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     hoursIntervalMonths: equipment.hoursIntervalMonths ?? undefined,
     note: equipment.note,
     owner: equipment.ownerStaffId ?? '',
+    purchasedOn: equipment.purchasedOn ?? '',
+    unitPurchases: Object.entries(equipment.unitPurchases ?? {}).map(([unit, date]) => ({ unit: Number(unit), date })),
+    links: equipment.links ?? [],
+    cloneOf: equipment.cloneOf ?? '',
+    captureMatch: equipment.captureMatch ?? '',
+    captureNote: equipment.captureNote ?? '',
   }
 }
 
@@ -165,6 +180,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const trackUnits = useWatch({ control, name: 'trackUnits' })
   const unitIdsText = useWatch({ control, name: 'unitIds' })
   const lengthM = useWatch({ control, name: 'lengthM' })
+  const quantity = useWatch({ control, name: 'quantity' })
+  const captureMatch = useWatch({ control, name: 'captureMatch' })
   const simple = isSimpleKind(kind, categoryText ?? '')
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
@@ -313,6 +330,25 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               Pridať mód
             </Button>
           </fieldset>
+          <Field label="Kópia čoho" placeholder="napr. Robe Spiider, Clay Paky Sharpy" maxLength={120} error={errors.cloneOf?.message} {...register('cloneOf')} />
+          <SelectField label="Sedí s fixtúrou v Capture?" error={errors.captureMatch?.message} {...register('captureMatch')}>
+            <option value="">— nezistené —</option>
+            {CAPTURE_MATCHES.map((match) => (
+              <option key={match} value={match}>
+                {CAPTURE_MATCH_LABELS[match]}
+              </option>
+            ))}
+          </SelectField>
+          {captureMatch && captureMatch !== 'yes' && (
+            <Field
+              label="Prečo nesedí / čo nesedí"
+              className="sm:col-span-2"
+              placeholder="napr. iné poradie kanálov, chýba zoom, použiť fixtúru Spiider Mode 2"
+              maxLength={500}
+              error={errors.captureNote?.message}
+              {...register('captureNote')}
+            />
+          )}
         </Group>
       )}
 
@@ -548,6 +584,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           </Group>
         </>
       )}
+
+      <PurchaseLinksFields control={control} register={register} errors={errors} trackUnits={trackUnits} unitIdsText={unitIdsText ?? ''} quantity={quantity} />
 
       <TextareaField label="Poznámka" error={errors.note?.message} {...register('note')} />
 

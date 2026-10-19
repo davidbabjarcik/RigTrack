@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, Wrench } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -17,7 +17,8 @@ import { can } from '@/lib/permissions'
 import { deleteEquipment, equipmentKeys, fetchEquipment } from './api'
 import { EquipmentPhoto } from './EquipmentPhoto'
 import { OwnerLink } from '@/features/staff/OwnerLink'
-import { describeAttributes, describeUnitIds, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
+import { EquipmentLinks } from './PurchaseLinksFields'
+import { CAPTURE_MATCH_LABELS, describeAttributes, describeUnitIds, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
 import { OperatingHours } from './OperatingHours'
 import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
@@ -84,6 +85,16 @@ export function EquipmentDetailPage() {
     ['Vlastník', equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
     ['Kategória', categories.find((c) => c.id === equipment.categoryId)?.name],
     ['DMX módy', equipment.attributes.dmxModes?.map((mode) => `${mode.name} ${mode.channels} ch`).join(' · ')],
+    ['Kópia čoho', equipment.cloneOf],
+    [
+      'Sedí s Capture',
+      equipment.captureMatch && (
+        <span key="capture" className={equipment.captureMatch === 'no' ? 'text-destructive' : equipment.captureMatch === 'partial' ? 'text-accent' : undefined}>
+          {CAPTURE_MATCH_LABELS[equipment.captureMatch]}
+          {equipment.captureNote && <span className="block text-sm font-normal text-muted-foreground">{equipment.captureNote}</span>}
+        </span>
+      ),
+    ],
     ['Umiestnenie', locations.find((l) => l.id === equipment.locationId)?.name],
     [
       'Case',
@@ -118,6 +129,15 @@ export function EquipmentDetailPage() {
     ['Inventárne číslo', equipment.inventoryNumber],
     ['MAC adresa', equipment.macAddress],
     ['IP adresa', equipment.ipAddress && (equipment.attributes.ipPrefix ? `${equipment.ipAddress}/${equipment.attributes.ipPrefix}` : equipment.ipAddress)],
+    ['Kúpené', equipment.purchasedOn && formatDate(equipment.purchasedOn)],
+    [
+      'Kúpené po kusoch',
+      Object.keys(equipment.unitPurchases ?? {}).length > 0 &&
+        Object.entries(equipment.unitPurchases ?? {})
+          .sort(([a], [b]) => Number(a) - Number(b))
+          .map(([unit, date]) => `#${unit} ${formatDate(date)}`)
+          .join(' · '),
+    ],
     ['Posledný servis', equipment.lastServiceOn && formatDate(equipment.lastServiceOn)],
     ['Ďalší servis', serviceText],
     ['Naposledy upravené', new Date(equipment.updatedAt).toLocaleString('sk-SK', { dateStyle: 'medium', timeStyle: 'short' })],
@@ -133,7 +153,11 @@ export function EquipmentDetailPage() {
             <StatusBadge status={equipment.status} />
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <LinkButton to={`/service/requests/new?equipment=${equipment.id}`} variant="outline" size="sm">
+            <Wrench className="size-4" aria-hidden />
+            Nahlásiť poruchu
+          </LinkButton>
           {can(company, 'equipment.edit') && (
             <LinkButton to={`/equipment/${equipment.id}/edit`} variant="outline" size="sm">
               <Pencil className="size-4" aria-hidden />
@@ -181,6 +205,15 @@ export function EquipmentDetailPage() {
             </div>
           ))}
       </dl>
+
+      {(equipment.links?.length ?? 0) > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-2 text-sm font-medium text-muted-foreground">Odkazy</h2>
+          <div className="rounded-xl border bg-surface p-4">
+            <EquipmentLinks links={equipment.links ?? []} />
+          </div>
+        </section>
+      )}
 
       {equipment.trackUnits && equipment.quantity > 1 && <UnitsOverview companyId={company.companyId} equipment={equipment} />}
 

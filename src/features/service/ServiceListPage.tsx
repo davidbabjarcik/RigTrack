@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { MessageSquareWarning, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -40,12 +40,18 @@ export function ServiceListPage() {
             : 'Opravy, kontroly a údržba techniky'
         }
         action={
-          canEdit && (
-            <LinkButton to="/service/new">
-              <Plus className="size-4" aria-hidden />
-              Nový
+          <div className="flex flex-wrap justify-end gap-2">
+            <LinkButton to="/service/requests" variant="outline">
+              <MessageSquareWarning className="size-4" aria-hidden />
+              Žiadosti
             </LinkButton>
-          )
+            {canEdit && (
+              <LinkButton to="/service/new">
+                <Plus className="size-4" aria-hidden />
+                Nový
+              </LinkButton>
+            )}
+          </div>
         }
       />
 

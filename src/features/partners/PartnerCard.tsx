@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Building2, Mail, Pencil, Phone, Plus, X } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
+import { PhoneContactButton } from '@/components/share/PhoneContactButton'
 import { AddToContactsButton } from '@/components/share/ShareButtons'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -76,6 +77,13 @@ export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { 
       {canEdit &&
         (adding ? (
           <form onSubmit={submit} className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <PhoneContactButton
+                onPick={(contact) =>
+                  setPerson({ name: contact.name || person.name, role: contact.title || person.role, phone: contact.phone || person.phone, email: contact.email || person.email })
+                }
+              />
+            </div>
             <Field label="Meno *" autoFocus maxLength={120} value={person.name} onChange={(event) => setPerson({ ...person, name: event.target.value })} />
             <Field label="Úloha" placeholder="napr. produkcia, technik" maxLength={80} value={person.role} onChange={(event) => setPerson({ ...person, role: event.target.value })} />
             <Field label="Telefón" type="tel" maxLength={40} value={person.phone} onChange={(event) => setPerson({ ...person, phone: event.target.value })} />

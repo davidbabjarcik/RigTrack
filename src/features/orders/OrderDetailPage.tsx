@@ -12,6 +12,7 @@ import { formatDate, formatMoney } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { deleteOrder, fetchOrder, orderKeys } from './api'
 import { SOURCE_LABELS, supplierProductUrl } from './model'
+import { OrderFlagsEditor } from './OrderFlagsEditor'
 import { OrderPhoto } from './OrderPhoto'
 import { SupplierBadge } from './SupplierBadge'
 
@@ -122,6 +123,8 @@ export function OrderDetailPage() {
       <div className="mb-6">
         <OrderPhoto companyId={companyId} orderId={data.id} name={data.supplier} photoPath={data.photoPath} canEdit={can(company, 'orders.edit')} />
       </div>
+
+      <OrderFlagsEditor companyId={companyId} order={data} canEdit={can(company, 'orders.edit')} />
 
       {data.note && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{data.note}</p>}
 

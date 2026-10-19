@@ -2,6 +2,7 @@ import { resolveLookup } from '@/features/equipment/api'
 import { storeCompanyPhoto } from '@/features/equipment/photo'
 import type { Lookup } from '@/features/equipment/model'
 import { getSupabase } from '@/lib/supabase/client'
+import { isMissingColumn } from '@/lib/supabase/errors'
 import type { FoundLine, ItemMode, OrderDetail, OrderFormValues, OrderSource, OrderSummary, Purchase } from './model'
 
 export const orderKeys = {
@@ -12,6 +13,15 @@ export const orderKeys = {
 }
 
 const OVERVIEW_COLUMNS = 'id, source, supplier, seller, photo_path, order_number, ordered_at, currency, note, item_count, total'
+// Údaje z 0060; bez migrácie sa objednávky načítajú bez nich.
+const EXTRA_COLUMNS = ', created_at, ordered_by, for_us, for_whom, add_to_stock, has_invoice'
+let extraColumns = EXTRA_COLUMNS
+const columns = () => OVERVIEW_COLUMNS + extraColumns
+function fallBack(error: { code?: string; message?: string } | null) {
+  if (!extraColumns || !isMissingColumn(error, 'for_us')) return false
+  extraColumns = ''
+  return true
+}
 
 type OverviewRow = {
   id: string
@@ -25,6 +35,12 @@ type OverviewRow = {
   note: string
   item_count: number
   total: number | string
+  created_at?: string
+  ordered_by?: string | null
+  for_us?: boolean
+  for_whom?: string
+  add_to_stock?: boolean
+  has_invoice?: boolean
 }
 
 function toSummary(row: OverviewRow): OrderSummary {
@@ -40,24 +56,31 @@ function toSummary(row: OverviewRow): OrderSummary {
     note: row.note,
     itemCount: row.item_count,
     total: Number(row.total),
+    createdAt: row.created_at,
+    orderedBy: row.ordered_by ?? null,
+    forUs: row.for_us ?? true,
+    forWhom: row.for_whom ?? '',
+    addToStock: row.add_to_stock ?? true,
+    hasInvoice: row.has_invoice ?? true,
   }
 }
 
 export async function fetchOrders(companyId: string): Promise<OrderSummary[]> {
   const { data, error } = await getSupabase()
     .from('orders_overview')
-    .select(OVERVIEW_COLUMNS)
+    .select(columns())
     .eq('company_id', companyId)
     .order('ordered_at', { ascending: false })
     .order('id')
+  if (fallBack(error)) return fetchOrders(companyId)
   if (error) throw error
-  return (data as OverviewRow[]).map(toSummary)
+  return (data as unknown as OverviewRow[]).map(toSummary)
 }
 
 export async function fetchOrder(companyId: string, id: string): Promise<OrderDetail | null> {
   const db = getSupabase()
   const [order, items, links] = await Promise.all([
-    db.from('orders_overview').select(OVERVIEW_COLUMNS).eq('company_id', companyId).eq('id', id).maybeSingle(),
+    db.from('orders_overview').select(columns()).eq('company_id', companyId).eq('id', id).maybeSingle(),
     db
       .from('order_items')
       .select('id, name, article_number, quantity, unit_price, category_id')
@@ -66,6 +89,7 @@ export async function fetchOrder(companyId: string, id: string): Promise<OrderDe
       .order('position'),
     db.from('equipment_purchases').select('order_item_id, equipment_id, quantity').eq('company_id', companyId).eq('order_id', id),
   ])
+  if (fallBack(order.error)) return fetchOrder(companyId, id)
   const error = order.error ?? items.error ?? links.error
   if (error) throw error
   if (!order.data) return null
@@ -80,7 +104,7 @@ export async function fetchOrder(companyId: string, id: string): Promise<OrderDe
     category_id: string | null
   }[]
   return {
-    ...toSummary(order.data as OverviewRow),
+    ...toSummary(order.data as unknown as OverviewRow),
     lines: itemRows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -109,7 +133,8 @@ export async function createOrder(companyId: string, values: OrderFormValues, ca
       category = { id: id!, name: item.category, consumable: false }
       known.push(category)
     }
-    const mode: ItemMode = category?.consumable ? 'none' : item.mode
+    // „Nepridávať do techniky“ platí pre celú objednávku.
+    const mode: ItemMode = category?.consumable || values.addToStock === false ? 'none' : item.mode
     items.push({
       name: item.name,
       article_number: item.articleNumber,
@@ -138,7 +163,28 @@ export async function createOrder(companyId: string, values: OrderFormValues, ca
     _items: items,
   })
   if (error) throw error
-  return data as string
+  const id = data as string
+  await setOrderFlags(companyId, id, values)
+  return id
+}
+
+export type OrderFlags = Pick<OrderFormValues, 'orderedBy' | 'forUs' | 'forWhom' | 'addToStock' | 'hasInvoice'>
+
+/**
+ * Kto objednal, pre koho, či do techniky a či s faktúrou (0060). Predvolené hodnoty sa neposielajú,
+ * takže bez migrácie sa objednávka uloží aj tak; vyplnené údaje vtedy ohlási chyba.
+ */
+export async function setOrderFlags(companyId: string, id: string, flags: OrderFlags) {
+  const row: Record<string, unknown> = {}
+  if (flags.orderedBy) row.ordered_by = flags.orderedBy
+  if (flags.forUs !== undefined) row.for_us = flags.forUs
+  if (flags.forWhom !== undefined) row.for_whom = flags.forUs === false ? flags.forWhom.trim() : ''
+  if (flags.addToStock !== undefined) row.add_to_stock = flags.addToStock
+  if (flags.hasInvoice !== undefined) row.has_invoice = flags.hasInvoice
+  const changed = Boolean(flags.orderedBy) || flags.forUs === false || flags.addToStock === false || flags.hasInvoice === false
+  if (Object.keys(row).length === 0 || (!changed && !extraColumns)) return
+  const { error } = await getSupabase().from('orders').update(row).eq('company_id', companyId).eq('id', id)
+  if (error && !(isMissingColumn(error, 'for_us') && !changed)) throw error
 }
 
 /** Nahrá fotku nákupu aj s náhľadom do zoznamu a zapíše ju k objednávke. */

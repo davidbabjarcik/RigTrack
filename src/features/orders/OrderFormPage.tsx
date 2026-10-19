@@ -8,12 +8,15 @@ import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
+import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
+import { useMembers } from '@/features/companies/useMembers'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { EQUIPMENT_KINDS, KIND_LABELS, type Equipment, type Lookup } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
+import { errorDetail } from '@/lib/supabase/errors'
 import { cn } from '@/lib/utils'
 import { createOrder, fetchArticleMemory, saveOrderPhoto } from './api'
 import { invoiceToFormValues } from './import/toFormValues'
@@ -41,6 +44,9 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
   const queryClient = useQueryClient()
   const categoryListId = useId()
   const marketListId = useId()
+  const userId = useAuth().session?.user.id ?? ''
+  const members = useMembers(companyId)
+  const flagDefaults = { orderedBy: userId, forUs: true, forWhom: '', addToStock: true, hasInvoice: true }
 
   const {
     register,
@@ -60,8 +66,12 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
       currency: 'EUR',
       note: '',
       items: [EMPTY_ITEM],
+      ...flagDefaults,
     },
   })
+  const forUs = useWatch({ control, name: 'forUs' }) !== false
+  const addToStock = useWatch({ control, name: 'addToStock' }) !== false
+  const hasInvoice = useWatch({ control, name: 'hasInvoice' }) !== false
   const { fields, append, remove } = useFieldArray({ control, name: 'items' })
   const items = useWatch({ control, name: 'items' })
   const currency = useWatch({ control, name: 'currency' })
@@ -127,7 +137,7 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
         })
       }
 
-      reset(invoiceToFormValues(invoice, remembered, todayIso()))
+      reset({ ...flagDefaults, ...invoiceToFormValues(invoice, remembered, todayIso()) })
       const known = invoice.items.filter((item) => remembered.has(item.articleNumber)).length
       setImportState({
         busy: false,
@@ -240,6 +250,46 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
           ))}
         </SelectField>
       </div>
+
+      <fieldset className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
+        <legend className="px-1 text-sm font-medium text-muted-foreground">Kto a pre koho</legend>
+        <SelectField label="Objednal" {...register('orderedBy')}>
+          {(members.data ?? []).map((member) => (
+            <option key={member.userId} value={member.userId}>
+              {member.fullName || member.email}
+            </option>
+          ))}
+          {!members.data && <option value={userId}>ja</option>}
+        </SelectField>
+        <div className="flex flex-col justify-end gap-2 pb-1">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" className="size-4" checked={!forUs} onChange={(e) => setValue('forUs', !e.target.checked)} />
+            Nie je pre nás (kúpené pre klienta / kolegu)
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="size-4"
+              checked={!addToStock}
+              onChange={(e) => {
+                const off = e.target.checked
+                // Bez pridania do techniky sú všetky položky len evidované.
+                if (off) items.forEach((_, index) => setValue(`items.${index}.mode`, 'none'))
+                setValue('addToStock', !off)
+              }}
+            />
+            Nepridávať nič do techniky
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" className="size-4" checked={!hasInvoice} onChange={(e) => setValue('hasInvoice', !e.target.checked)} />
+            Bez faktúry / bločku
+          </label>
+        </div>
+        {!forUs && (
+          <Field label="Pre koho" placeholder="napr. klient, Jano – vráti peniaze" className="sm:col-span-2" error={errors.forWhom?.message} {...register('forWhom')} />
+        )}
+        {!forUs && <p className="text-xs text-muted-foreground sm:col-span-2">Nákup nie pre nás sa v štatistikách ráta zvlášť, nie do našich nákladov.</p>}
+      </fieldset>
 
       <div className="flex items-center gap-3">
         {photo ? (
@@ -364,7 +414,7 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
                 </a>
               )}
 
-              {consumable ? (
+              {!addToStock ? null : consumable ? (
                 <p className="rounded-lg bg-muted p-3 text-sm">
                   Kategória „{category!.name}“ je spotrebný materiál: nákup sa eviduje len v objednávkach, do techniky sa
                   nepridáva.
@@ -434,7 +484,7 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
 
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo, nič sa nezapísalo. Skontrolujte pripojenie a skúste to znova.
+          Uloženie zlyhalo. {errorDetail(save.error) || 'Skontrolujte pripojenie a skúste to znova.'}
         </p>
       )}
 

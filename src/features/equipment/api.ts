@@ -4,14 +4,18 @@ import { isMissingColumn } from '@/lib/supabase/errors'
 import {
   attributesFor,
   cableName,
+  isLighting,
   isSimpleKind,
   normalizeMac,
   parseUnitIds,
+  unitRange,
   type CableSetValues,
+  type CaptureMatch,
   type Equipment,
   type EquipmentAttributes,
   type EquipmentFormValues,
   type EquipmentKind,
+  type EquipmentLink,
   type EquipmentStatus,
   type LabelRole,
   type Lookup,
@@ -28,9 +32,21 @@ export const equipmentKeys = {
 const COLUMNS =
   'id, name, kind, attributes, category_id, location_id, case_id, label_role, quantity, track_units, unit_ids, rental_price, min_quantity, manufacturer, model, serial_number, ' +
   'inventory_number, mac_address, ip_address, service_interval_months, last_service_on, hours_interval_months, operating_hours, hours_read_on, photo_path, status, note, updated_at'
-// Vlastník (0052). Bez migrácie stĺpec chýba – technika sa vtedy načíta bez neho, aby appka fungovala ďalej.
-const OWNER_COLUMN = ', owner_staff_id'
-let ownerColumn = OWNER_COLUMN
+// Novšie stĺpce: vlastník (0052) a dátum nákupu, odkazy, Capture (0060). Bez migrácie chýbajú – technika
+// sa vtedy načíta bez nich (skúša sa od najnovšej sady), aby appka fungovala ďalej.
+const OPTIONAL_COLUMNS = [', owner_staff_id, purchased_on, unit_purchases, links, clone_of, capture_match, capture_note', ', owner_staff_id', '']
+let optionalLevel = 0
+const optionalColumns = () => OPTIONAL_COLUMNS[optionalLevel]
+const hasOwnerColumn = () => optionalLevel < 2
+const hasExtraColumns = () => optionalLevel === 0
+/** Pri chýbajúcom stĺpci skúsi staršiu sadu; vráti true, ak je čo skúsiť. */
+function fallBack(error: { code?: string; message?: string } | null) {
+  if (!error || optionalLevel >= OPTIONAL_COLUMNS.length - 1) return false
+  const missing = hasExtraColumns() ? ['purchased_on', 'unit_purchases', 'links', 'clone_of', 'capture_match', 'capture_note'] : ['owner_staff_id']
+  if (!missing.some((column) => isMissingColumn(error, column))) return false
+  optionalLevel += 1
+  return true
+}
 
 type Row = {
   id: string
@@ -62,6 +78,12 @@ type Row = {
   note: string
   updated_at: string
   owner_staff_id?: string | null
+  purchased_on?: string | null
+  unit_purchases?: Record<string, string> | null
+  links?: EquipmentLink[] | null
+  clone_of?: string
+  capture_match?: CaptureMatch | ''
+  capture_note?: string
 }
 
 function fromRow(row: Row): Equipment {
@@ -95,6 +117,12 @@ function fromRow(row: Row): Equipment {
     note: row.note,
     updatedAt: row.updated_at,
     ownerStaffId: row.owner_staff_id ?? null,
+    purchasedOn: row.purchased_on ?? null,
+    unitPurchases: row.unit_purchases ?? {},
+    links: row.links ?? [],
+    cloneOf: row.clone_of ?? '',
+    captureMatch: row.capture_match ?? '',
+    captureNote: row.capture_note ?? '',
   }
 }
 
@@ -106,15 +134,12 @@ export async function fetchEquipmentList(companyId: string): Promise<Equipment[]
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await getSupabase()
       .from('equipment')
-      .select(COLUMNS + ownerColumn)
+      .select(COLUMNS + optionalColumns())
       .eq('company_id', companyId)
       .order('name')
       .order('id')
       .range(from, from + PAGE - 1)
-    if (ownerColumn && isMissingColumn(error, 'owner_staff_id')) {
-      ownerColumn = ''
-      return fetchEquipmentList(companyId)
-    }
+    if (fallBack(error)) return fetchEquipmentList(companyId)
     if (error) throw error
     all.push(...(data as unknown as Row[]).map(fromRow))
     if (data.length < PAGE) return all
@@ -124,14 +149,11 @@ export async function fetchEquipmentList(companyId: string): Promise<Equipment[]
 export async function fetchEquipment(companyId: string, id: string): Promise<Equipment | null> {
   const { data, error } = await getSupabase()
     .from('equipment')
-    .select(COLUMNS + ownerColumn)
+    .select(COLUMNS + optionalColumns())
     .eq('company_id', companyId)
     .eq('id', id)
     .maybeSingle()
-  if (ownerColumn && isMissingColumn(error, 'owner_staff_id')) {
-    ownerColumn = ''
-    return fetchEquipment(companyId, id)
-  }
+  if (fallBack(error)) return fetchEquipment(companyId, id)
   if (error) throw error
   return data ? fromRow(data as unknown as Row) : null
 }
@@ -213,22 +235,45 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     status: values.status,
     note: values.note,
     // Vlastník sa posiela len keď je zadaný alebo sa mení, aby uloženie fungovalo aj bez migrácie 0052.
-    ...(values.owner !== undefined && (values.owner !== '' || ownerColumn) ? { owner_staff_id: await resolveOwner(companyId, values.owner) } : {}),
+    ...(values.owner !== undefined && (values.owner !== '' || hasOwnerColumn()) ? { owner_staff_id: await resolveOwner(companyId, values.owner) } : {}),
+    // Údaje z 0060 len keď ich databáza pozná alebo sú vyplnené (inak chyba povie, čo chýba).
+    ...(hasExtraColumns() || extrasFilled(values) ? extraFields(values) : {}),
   }
   const write = (row: Record<string, unknown>) => {
     const table = getSupabase().from('equipment')
     return id ? table.update(row).eq('company_id', companyId).eq('id', id).select('id').single() : table.insert({ ...row, company_id: companyId }).select('id').single()
   }
-  let { data, error } = await write(fields)
-  // Databáza bez migrácie 0052 nepozná vlastníka – uloží sa bez neho.
-  if (error && 'owner_staff_id' in fields && isMissingColumn(error, 'owner_staff_id')) {
-    ownerColumn = ''
-    const rest: Record<string, unknown> = { ...fields }
-    delete rest.owner_staff_id
-    ;({ data, error } = await write(rest))
+  let row: Record<string, unknown> = fields
+  let { data, error } = await write(row)
+  // Databáza bez migrácie 0060 / 0052 nepozná nové stĺpce – uloží sa bez nich.
+  while (error && fallBack(error)) {
+    row = { ...row }
+    if (!hasExtraColumns()) for (const column of EXTRA_COLUMNS) delete row[column]
+    if (!hasOwnerColumn()) delete row.owner_staff_id
+    ;({ data, error } = await write(row))
   }
   if (error) throw error
   return (data as { id: string }).id
+}
+
+const EXTRA_COLUMNS = ['purchased_on', 'unit_purchases', 'links', 'clone_of', 'capture_match', 'capture_note']
+
+function extrasFilled(values: EquipmentFormValues) {
+  return Boolean(values.purchasedOn || values.links?.length || values.cloneOf || values.captureMatch || values.unitPurchases?.some((unit) => unit.date))
+}
+
+/** Dátum nákupu, odkazy a Capture z formulára; Capture a kópia len pri svetlách. */
+export function extraFields(values: EquipmentFormValues) {
+  const lighting = isLighting(values.kind, values.category)
+  const units = values.trackUnits ? new Set(values.unitIds ? parseUnitIds(values.unitIds) : unitRange(values.quantity)) : new Set<number>()
+  return {
+    purchased_on: values.purchasedOn || null,
+    unit_purchases: Object.fromEntries((values.unitPurchases ?? []).filter((unit) => unit.date && units.has(unit.unit)).map((unit) => [String(unit.unit), unit.date])),
+    links: (values.links ?? []).map((link) => ({ title: link.title.trim(), url: link.url.trim(), tag: link.tag })),
+    clone_of: lighting ? (values.cloneOf ?? '').trim() : '',
+    capture_match: lighting ? (values.captureMatch ?? '') : '',
+    capture_note: lighting && values.captureMatch && values.captureMatch !== 'yes' ? (values.captureNote ?? '').trim() : '',
+  }
 }
 
 /** „m-<id člena>“ = člen bez karty zamestnanca: kartu najprv založí. Prázdne = firma. */

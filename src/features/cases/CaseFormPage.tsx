@@ -13,7 +13,7 @@ import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { can } from '@/lib/permissions'
 import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { saveCase } from './api'
-import { caseSchema, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
+import { caseSchema, CHECK_AFTER_DAYS, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
 import { addCaseTemplate, caseTemplateKeys, describeTemplate, fetchCaseTemplates, numberedCaseNames, type CaseTemplate } from './templates'
 import { useCases } from './useCases'
 
@@ -59,6 +59,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
       depthCm: current?.depthCm ?? undefined,
       note: current?.note ?? '',
       owner: current?.ownerStaffId ?? ownerPreset,
+      checkPriority: current?.checkPriority ?? 'normal',
     },
   })
 
@@ -161,6 +162,13 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
           ))}
         </datalist>
         <OwnerSelect companyId={companyId} error={errors.owner?.message} {...register('owner')} />
+        <SelectField label="Priorita kontroly" error={errors.checkPriority?.message} {...register('checkPriority')}>
+          {CHECK_PRIORITIES.map((priority) => (
+            <option key={priority} value={priority}>
+              {CHECK_PRIORITY_LABELS[priority]} – kontrolovať aspoň raz za {CHECK_AFTER_DAYS[priority]} dní
+            </option>
+          ))}
+        </SelectField>
         <Field
           label="Číslo case na štítku"
           placeholder="napr. 1 alebo 2, ak je sada vo viacerých cases"

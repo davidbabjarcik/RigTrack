@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { Cable, ChevronRight, FileSpreadsheet, Network, Plus, Search } from 'lucide-react'
-import { useState } from 'react'
+import { Cable, ChevronRight, FileSpreadsheet, Mic, Network, Plus, Search } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -24,6 +24,7 @@ import {
   STATUS_LABELS,
   type EquipmentFilter,
 } from './model'
+import { AdvancedFilter } from './AdvancedFilter'
 import { colorOf, COLOR_CLASSES } from './categoryColors'
 import { PhotoThumb } from './PhotoThumb'
 import { StatusBadge } from './StatusBadge'
@@ -32,13 +33,31 @@ import { useEquipmentLookups } from './useEquipmentLookups'
 import { usePhotoThumbs } from './usePhotoThumbs'
 
 const NO_FILTER: EquipmentFilter = { search: '', status: '', categoryId: '', locationId: '', caseId: '' }
+const FILTER_KEY = 'rigtrack.equipment.filter'
+
+/** Filter ostane aj po návrate z detailu (len v tejto karte prehliadača). */
+function savedFilter(): EquipmentFilter {
+  try {
+    const saved = sessionStorage.getItem(FILTER_KEY)
+    return saved ? { ...NO_FILTER, ...(JSON.parse(saved) as EquipmentFilter) } : NO_FILTER
+  } catch {
+    return NO_FILTER
+  }
+}
 
 export function EquipmentListPage() {
   const company = useCompany().active!
   const canWrite = can(company, 'equipment.edit')
   // ?case=none otvorí zoznam rovno s technikou mimo cases (odkaz z prehľadu cases).
   const [params] = useSearchParams()
-  const [filter, setFilter] = useState({ ...NO_FILTER, caseId: params.get('case') ?? '' })
+  const [filter, setFilter] = useState<EquipmentFilter>(() => (params.get('case') ? { ...NO_FILTER, caseId: params.get('case')! } : savedFilter()))
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(FILTER_KEY, JSON.stringify(filter))
+    } catch {
+      // Bez úložiska sa filter len nezapamätá.
+    }
+  }, [filter])
   const cases = useCases(company.companyId)
   const { categories, locations } = useEquipmentLookups(company.companyId)
   const list = useQuery({
@@ -55,7 +74,7 @@ export function EquipmentListPage() {
   const inService = piecesInService(serviceRecords)
   const unitsOut = unitsInService(serviceRecords)
   const all = list.data ?? []
-  const visible = filterEquipment(all, filter)
+  const visible = filterEquipment(all, filter, today)
   const thumbs = usePhotoThumbs(
     company.companyId,
     all.map((item) => item.photoPath),
@@ -71,6 +90,10 @@ export function EquipmentListPage() {
             <LinkButton to="/equipment/excel" variant="outline">
               <FileSpreadsheet className="size-4" aria-hidden />
               Excel
+            </LinkButton>
+            <LinkButton to="/equipment/capsules" variant="outline">
+              <Mic className="size-4" aria-hidden />
+              Kapsule
             </LinkButton>
             <LinkButton to="/networks" variant="outline">
               <Network className="size-4" aria-hidden />
@@ -143,6 +166,7 @@ export function EquipmentListPage() {
             </option>
           ))}
         </SelectField>
+        <AdvancedFilter filter={filter} onChange={set} items={all} owners={staff.people.filter((person) => person.staffId).map((person) => ({ staffId: person.staffId!, name: person.name }))} />
       </div>
 
       {list.isPending ? (
