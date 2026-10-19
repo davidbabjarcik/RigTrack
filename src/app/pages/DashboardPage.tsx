@@ -7,13 +7,14 @@ import { RestockList } from '@/features/equipment/RestockList'
 import { LoanAlerts } from '@/features/loans/LoanAlerts'
 import { MyTasks } from '@/features/tasks/MyTasks'
 import { VehicleDeadlineAlerts } from '@/features/vehicles/VehicleDeadlineAlerts'
-import { NAV_ITEMS } from '@/lib/navigation'
+import { visibleNavItems } from '@/lib/navigation'
 import { isAdminRole } from '@/lib/roles'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
 
 export function DashboardPage() {
-  const modules = NAV_ITEMS.filter((item) => item.id !== 'dashboard')
   const { active } = useCompany()
+  // Len moduly, na ktoré má člen práva (helper nevidí nič navyše).
+  const modules = visibleNavItems(active).filter((item) => item.id !== 'dashboard')
 
   return (
     <>

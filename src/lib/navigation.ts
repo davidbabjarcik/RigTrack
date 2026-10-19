@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import type { PermissionKey } from '@/features/permissions/catalog'
 import { can, type Permitted } from './permissions'
+import type { Role } from './roles'
 
 export type NavItem = {
   id: string
@@ -33,6 +34,8 @@ export type NavItem = {
   to: string
   icon: LucideIcon
   description: string
+  /** Roly, ktorým sa položka nezobrazí (napr. helper nepotrebuje kalkulačky ani siete). */
+  hiddenFor?: Role[]
   /** Bez hlavného oprávnenia sa položka ukáže s inou adresou (napr. Servis → len Žiadosti o servis). */
   fallback?: { to: string; permission?: PermissionKey }
 }
@@ -55,7 +58,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'loans', permission: 'loans.view', label: 'Výpožičky', to: '/loans', icon: ArrowLeftRight, description: 'Vydaná a vrátená technika' },
   { id: 'events', permission: 'events.view', label: 'Eventy', to: '/events', icon: Ticket, description: 'Akcie, technika, posádka a dokumenty' },
   { id: 'partners', permission: 'events.view', label: 'Firmy a kontakty', to: '/partners', icon: Building2, description: 'Organizátori, partneri a ich ľudia' },
-  { id: 'calculators', label: 'Kalkulačky', to: '/calculators', icon: Calculator, description: 'Pódium Nivtec, delay subov, LED stena, DMX dip switch' },
+  { id: 'calculators', label: 'Kalkulačky', to: '/calculators', icon: Calculator, description: 'Pódium Nivtec, delay subov, LED stena, DMX dip switch', hiddenFor: ['helper'] },
   {
     id: 'service',
     permission: 'service.view',
@@ -65,21 +68,22 @@ export const NAV_ITEMS: NavItem[] = [
     description: 'Servisné záznamy, žiadosti o servis a servisní technici',
     fallback: { to: '/service/requests' },
   },
-  { id: 'networks', label: 'Siete', to: '/networks', icon: Wifi, description: 'Wi-Fi siete, routery, IP a MAC adresy' },
+  { id: 'networks', label: 'Siete', to: '/networks', icon: Wifi, description: 'Wi-Fi siete, routery, IP a MAC adresy', hiddenFor: ['helper'] },
   { id: 'calendar', label: 'Kalendár', to: '/calendar', icon: CalendarDays, description: 'Kalendárový prehľad' },
   { id: 'todos', permission: 'tasks.view', label: 'Úlohy', to: '/todos', icon: ListTodo, description: 'Úlohy pre viac ľudí, kategórie, úlohy po evente' },
-  { id: 'office', label: 'Kancelária', to: '/office', icon: Coffee, description: 'Voda, káva, poháre… – kto čo kúpil' },
+  { id: 'office', label: 'Kancelária', to: '/office', icon: Coffee, description: 'Voda, káva, poháre… – kto čo kúpil', hiddenFor: ['helper'] },
   { id: 'incidents', label: 'Škody a úrazy', to: '/incidents', icon: ShieldAlert, description: 'Rozbitá technika a úrazy, štatistiky' },
   { id: 'suggestions', permission: 'suggestions.view', label: 'Návrhy', to: '/suggestions', icon: Lightbulb, description: 'Návrhy na zlepšenie' },
   { id: 'staff', permission: 'staff.view', label: 'Zamestnanci', to: '/staff', icon: Users, description: 'Tím, kontakty a kto kedy môže' },
   { id: 'payouts', label: 'Odmeny', to: '/payouts', icon: Wallet, description: 'Odmeny a zálohy za akcie' },
-  { id: 'stats', label: 'Štatistiky', to: '/stats', icon: ChartColumn, description: 'Dostupnosť, vyťaženie a náklady' },
+  { id: 'stats', label: 'Štatistiky', to: '/stats', icon: ChartColumn, description: 'Dostupnosť, vyťaženie a náklady', hiddenFor: ['helper'] },
   { id: 'settings', label: 'Nastavenia', to: '/settings', icon: Settings, description: 'Firma a používatelia' },
 ]
 
 /** Položky menu, ktoré člen smie vidieť. Bez vybranej firmy (vývoj bez backendu) všetky. */
 export function visibleNavItems(member: Permitted | null) {
   return NAV_ITEMS.flatMap((item) => {
+    if (member && item.hiddenFor?.includes(member.role)) return []
     if (!member || !item.permission || can(member, item.permission)) return [item]
     if (item.fallback && (!item.fallback.permission || can(member, item.fallback.permission))) return [{ ...item, to: item.fallback.to }]
     return []

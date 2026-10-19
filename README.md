@@ -21,6 +21,18 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.11 – 19. 10. 2026
+
+- **Pack list** (detail eventu → Pack list): pri nakladaní a pri návrate posádka odškrtáva cases a voľnú techniku,
+  vidno kto a kedy odškrtol a čo sa ešte nevrátilo. Odškrtávať môže každý, kto je v posádke eventu.
+- **Cenová ponuka** (detail eventu → Ponuka): technika s cenami prenájmu × dni, doprava podľa km, obsluha, zľava
+  a DPH, s hlavičkou firmy – na tlač alebo do PDF. Nastavenia ponuky si prehliadač pamätá.
+- **Harmonogram pre posádku** (detail eventu → Pre posádku): prehľad na mobil – kam ísť (navigácia), ktoré dni ideš
+  ty, program po dňoch, kto ide s telefónmi, organizátor a odkazy (rider, lightplot…).
+- **Čo nesmieš, to nevidíš**: v menu aj na prehľade sa ukazujú len moduly, ku ktorým máte oprávnenie. Helper navyše
+  nevidí kalkulačky, siete, kanceláriu ani štatistiky.
+- Nové migrácie: `0074` (opravné `0071` a `0072` sú aktualizované).
+
 ### 2.10.1 – 19. 10. 2026
 
 - **Nastavenia sa dajú zbaliť** – klik na nadpis sekcie ju zbalí / rozbalí a prehliadač si to pamätá.

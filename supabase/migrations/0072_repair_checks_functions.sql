@@ -790,6 +790,20 @@ begin
     exception when others then raise notice 'Kontrola event_links_url_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.event_pack_checks') is not null then
+    begin
+      execute $sql$alter table public.event_pack_checks drop constraint if exists event_pack_checks_check$sql$;
+      execute $sql$alter table public.event_pack_checks add constraint event_pack_checks_check CHECK (((equipment_id IS NULL) <> (case_id IS NULL))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_pack_checks_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_pack_checks') is not null then
+    begin
+      execute $sql$alter table public.event_pack_checks drop constraint if exists event_pack_checks_phase_check$sql$;
+      execute $sql$alter table public.event_pack_checks add constraint event_pack_checks_phase_check CHECK ((phase = ANY (ARRAY['out'::text, 'back'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_pack_checks_phase_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.event_partners') is not null then
     begin
       execute $sql$alter table public.event_partners drop constraint if exists event_partners_kind_check$sql$;
@@ -1947,6 +1961,13 @@ begin
   end if;
   if to_regclass('public.task_templates') is not null then
     begin
+      execute $sql$alter table public.task_templates drop constraint if exists task_templates_assignee_ids_check$sql$;
+      execute $sql$alter table public.task_templates add constraint task_templates_assignee_ids_check CHECK ((cardinality(assignee_ids) <= 20)) not valid$sql$;
+    exception when others then raise notice 'Kontrola task_templates_assignee_ids_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.task_templates') is not null then
+    begin
       execute $sql$alter table public.task_templates drop constraint if exists task_templates_category_check$sql$;
       execute $sql$alter table public.task_templates add constraint task_templates_category_check CHECK ((char_length(category) <= 60)) NOT VALID not valid$sql$;
     exception when others then raise notice 'Kontrola task_templates_category_check: %', sqlerrm;
@@ -2934,8 +2955,10 @@ begin
   if not public.is_company_member(_company_id) then
     raise exception 'Nie ste členom firmy' using errcode = 'insufficient_privilege';
   end if;
-  insert into public.tasks (company_id, title, category, due_on, event_id, template_id, created_by)
-  select e.company_id, left(t.title || ': ' || e.name, 200), t.category, e.ends_on + t.days_after, e.id, t.id, null
+  insert into public.tasks (company_id, title, category, due_on, event_id, template_id, created_by, assignee_ids)
+  select e.company_id, left(t.title || ': ' || e.name, 200), t.category, e.ends_on + t.days_after, e.id, t.id, null,
+    -- len riešitelia, ktorí sú stále členmi firmy
+    coalesce((select array_agg(a) from unnest(t.assignee_ids) a where public.is_member_of(e.company_id, a)), '{}')
   from public.events e
   join public.task_templates t on t.company_id = e.company_id and t.active
   where e.company_id = _company_id
@@ -4291,6 +4314,25 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia stamp_office_purchase: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.stamp_pack_check()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  new.checked_by := auth.uid();
+  new.checked_at := now();
+  new.checked_by_name := coalesce((select coalesce(nullif(trim(p.full_name), ''), p.email) from public.profiles p where p.id = auth.uid()), '');
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia stamp_pack_check: %', sqlerrm;
 end;
 $repair$;
 

@@ -69,6 +69,9 @@ const stats = lazyPage(() => import('@/features/stats/StatsPage').then((m) => m.
 const eventsList = lazyPage(() => import('@/features/events/EventsListPage').then((m) => m.EventsListPage), 'events.view')
 const eventDetail = lazyPage(() => import('@/features/events/EventDetailPage').then((m) => m.EventDetailPage), 'events.view')
 const eventImport = lazyPage(() => import('@/features/events/import/EventImportPage').then((m) => m.EventImportPage), 'events.view')
+const pack = lazyPage(() => import('@/features/pack/PackPage').then((m) => m.PackPage), 'events.view')
+const quote = lazyPage(() => import('@/features/quote/QuotePage').then((m) => m.QuotePage), 'events.view')
+const crewSheet = lazyPage(() => import('@/features/events/CrewSheetPage').then((m) => m.CrewSheetPage), 'events.view')
 const patchPrint = lazyPage(() => import('@/features/patch/PatchPrintPage').then((m) => m.PatchPrintPage), 'events.view')
 const eventPrint = lazyPage(() => import('@/features/events/EventPrintPage').then((m) => m.EventPrintPage), 'events.view')
 const eventForm = lazyPage(() => import('@/features/events/EventFormPage').then((m) => m.EventFormPage), 'events.view')
@@ -119,6 +122,7 @@ export const routes: RouteObject[] = [
           { path: 'loans/:id/sheet', lazy: loanSheet },
           { path: 'events/:id/print', lazy: eventPrint },
           { path: 'events/:id/patch', lazy: patchPrint },
+          { path: 'events/:id/quote', lazy: quote },
           {
             path: '/',
             element: <AppLayout />,
@@ -169,6 +173,8 @@ export const routes: RouteObject[] = [
               { path: 'events/new', lazy: eventForm },
               { path: 'events/:id', lazy: eventDetail },
               { path: 'events/:id/edit', lazy: eventForm },
+              { path: 'events/:id/pack', lazy: pack },
+              { path: 'events/:id/crew', lazy: crewSheet },
               { path: 'events/:id/import', lazy: eventImport },
               { path: 'audit', lazy: audit },
               { path: 'payouts', lazy: payouts },

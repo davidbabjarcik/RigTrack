@@ -21,7 +21,7 @@ alter table public.cases drop constraint if exists cases_check_priority_check;
 alter table public.cases add constraint cases_check_priority_check check (check_priority in ('none', 'low', 'normal', 'high'));
 
 -- Úlohy po evente môžu mať riešiteľov (napr. soc media maker dostane „Fotky na soc. siete“ po každej akcii).
-alter table public.task_templates add column assignee_ids uuid[] not null default '{}' check (cardinality(assignee_ids) <= 20);
+alter table public.task_templates add column if not exists assignee_ids uuid[] not null default '{}' check (cardinality(assignee_ids) <= 20);
 grant update (assignee_ids) on public.task_templates to authenticated;
 
 create or replace function public.create_post_event_tasks(_company_id uuid)

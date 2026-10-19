@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, Printer, Trash2 } from 'lucide-react'
+import { ArrowLeft, CalendarClock, ListChecks, Pencil, Printer, Receipt, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
@@ -86,6 +86,20 @@ export function EventDetailPage() {
           <AddToCalendarButtons item={eventCalendarItem(event)} className="mt-3" />
         </div>
         <div className="flex flex-wrap gap-2">
+          <LinkButton to={`/events/${id}/crew`} variant="outline" size="sm">
+            <CalendarClock className="size-4" aria-hidden />
+            Pre posádku
+          </LinkButton>
+          <LinkButton to={`/events/${id}/pack`} variant="outline" size="sm">
+            <ListChecks className="size-4" aria-hidden />
+            Pack list
+          </LinkButton>
+          {canEdit && (
+            <LinkButton to={`/events/${id}/quote`} variant="outline" size="sm">
+              <Receipt className="size-4" aria-hidden />
+              Ponuka
+            </LinkButton>
+          )}
           <LinkButton to={`/events/${id}/print`} variant="outline" size="sm">
             <Printer className="size-4" aria-hidden />
             Tlač / PDF
