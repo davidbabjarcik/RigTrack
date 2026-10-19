@@ -40,7 +40,7 @@ with checks (migration, ok) as (
       and exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'member_devices' and column_name = 'networks')),
     ('0053 rola CEO (typ)', exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid where t.typname = 'app_role' and e.enumlabel = 'ceo')),
     ('0054 rola CEO (práva)', exists (select 1 from pg_proc where proname = 'can' and prosrc like '%ceo%')),
-    ('0055 Wi-Fi siete', to_regclass('public.wifi_networks') is not null),
+    ('0055 Wi-Fi siete (ak chýba, stačí oprava 0070)', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'wifi_networks' and column_name = 'dhcp_end')),
     ('0056 registrácia na pozvánku', exists (select 1 from pg_proc where proname = 'hook_require_invitation')),
     ('0057 ľudia (narodeniny, novinky)', to_regclass('public.company_news') is not null),
     ('0058 bohatšie demo', exists (select 1 from pg_proc where proname = 'seed_demo_extras')),

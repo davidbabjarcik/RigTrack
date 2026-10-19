@@ -64,6 +64,8 @@ export async function createTestDb() {
     users,
     /** Dotaz ako superuser — obchádza RLS, len na prípravu a kontrolu dát. */
     rows,
+    /** Viac príkazov naraz ako superuser (napr. celý súbor migrácie). */
+    exec: (sql: string) => db.exec(sql),
 
     async signUp(name: string, email: string, confirmed = true) {
       const [row] = await rows('insert into auth.users (email, email_confirmed_at) values ($1, $2) returning id', [

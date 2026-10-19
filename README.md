@@ -21,6 +21,14 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.9.1 – 19. 10. 2026
+
+- **Oprava Wi-Fi sietí** („Siete sa nepodarilo načítať“): migrácia `0070` založí alebo doplní tabuľky sietí, ak 0055
+  nebola spustená alebo prebehla v staršej verzii. Dá sa spustiť aj viackrát. Hláška pri Sieťach ukáže aj technický dôvod.
+- Kontrola databázy odhalí aj staršiu verziu 0055 a 0052.
+
+Nové migrácie: `0070`.
+
 ### 2.9 – 19. 10. 2026
 
 - **Kamery**: snímač full frame / APS-C alebo akčná kamera a či má HDMI výstup.

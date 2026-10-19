@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { errorDetail } from '@/lib/supabase/errors'
 import { AlertTriangle, Laptop, Plus, Search, Speaker } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -70,7 +71,7 @@ export function NetworksPage() {
         {networks.isPending ? (
           <LoadingBlock />
         ) : networks.isError ? (
-          <ErrorBlock message="Siete sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void networks.refetch()} />
+          <ErrorBlock message={`Siete sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie. ${errorDetail(networks.error)}`} onRetry={() => void networks.refetch()} />
         ) : allNetworks.length === 0 ? (
           editing !== 'new' && (
             <p className="rounded-xl border border-dashed bg-surface p-6 text-center text-sm text-muted-foreground">
