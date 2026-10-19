@@ -149,6 +149,7 @@ export async function deleteOfficePurchase(id: string) {
 export type OfficeStats = {
   total: number
   byPerson: { id: string | null; name: string; total: number; count: number }[]
+  /** Podľa človeka a položky: koľko čoho kto kúpil. */
   /** packs: spolu v baleniach podľa jednotky, napr. { kg: 4 }. */
   byItem: { itemId: string; quantity: number; total: number; packs: Record<string, number> }[]
 }
@@ -176,7 +177,7 @@ export function officeStats(purchases: OfficePurchase[], period = ''): OfficeSta
   const round = (value: number) => Math.round(value * 100) / 100
   return {
     total: round(total),
-    byPerson: [...people.values()].map((row) => ({ ...row, total: round(row.total) })).sort((a, b) => b.total - a.total),
+    byPerson: [...people.values()].map((row) => ({ ...row, total: round(row.total) })).sort((a, b) => b.count - a.count || b.total - a.total),
     byItem: [...items.values()].map((row) => ({ ...row, total: round(row.total) })).sort((a, b) => b.total - a.total),
   }
 }

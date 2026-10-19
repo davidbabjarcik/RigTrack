@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp, Check, SlidersHorizontal } from 'lucide-react'
+import { ArrowDown, ArrowUp, Check, FileChartColumn, SlidersHorizontal } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Button } from '@/components/ui/button'
+import { Button, LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { formatNumber } from '@/features/equipment/model'
@@ -247,10 +247,18 @@ export function StatsPage() {
         title="Štatistiky"
         description="Prehľad z údajov, ktoré sú v aplikácii zapísané"
         action={
-          <Button variant="outline" onClick={() => setEditing(!editing)}>
-            {editing ? <Check className="size-4" aria-hidden /> : <SlidersHorizontal className="size-4" aria-hidden />}
-            {editing ? 'Hotovo' : 'Upraviť'}
-          </Button>
+          <div className="flex flex-wrap justify-end gap-2">
+            {can(company, 'report.view') && (
+              <LinkButton to="/report" variant="outline">
+                <FileChartColumn className="size-4" aria-hidden />
+                Ročná správa
+              </LinkButton>
+            )}
+            <Button variant="outline" onClick={() => setEditing(!editing)}>
+              {editing ? <Check className="size-4" aria-hidden /> : <SlidersHorizontal className="size-4" aria-hidden />}
+              {editing ? 'Hotovo' : 'Upraviť'}
+            </Button>
+          </div>
         }
       />
 

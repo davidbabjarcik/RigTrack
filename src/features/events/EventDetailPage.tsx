@@ -15,6 +15,7 @@ import { EventCrewSection } from './EventCrewSection'
 import { EventLinksSection } from './EventLinksSection'
 import { EventLogSection } from './EventLogSection'
 import { EventPlanSection } from './EventPlanSection'
+import { EventPowerSection } from './EventPowerSection'
 import { EventTravelSection } from './EventTravelSection'
 import { EventPartnersSection } from '@/features/partners/EventPartnersSection'
 import { EventCapsulesSection } from '@/features/capsules/EventCapsulesSection'
@@ -199,6 +200,7 @@ export function EventDetailPage() {
       <EventLinksSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
       <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
       <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+      {can(company, 'equipment.view') && <EventPowerSection companyId={companyId} event={event} />}
       {can(company, 'equipment.view') && <EventCapsulesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />}
       {can(company, 'vehicles.view') && <EventLoadingSection companyId={companyId} event={event} />}
       <EventCrewSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />

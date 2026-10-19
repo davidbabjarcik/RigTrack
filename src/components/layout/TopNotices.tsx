@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bell, CheckCheck, Gift, Smartphone, Sparkles, UserRoundPen, X } from 'lucide-react'
+import { Bell, CheckCheck, FileChartColumn, Gift, Smartphone, Sparkles, UserRoundPen, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,8 @@ import { markNewsRead, newsKeys, useNews } from '@/features/news/api'
 import { describeCelebration, upcomingCelebrations } from '@/features/staff/celebrations'
 import { useStaff } from '@/features/staff/useStaff'
 import { formatDateTime, todayIso } from '@/lib/format'
+import { can } from '@/lib/permissions'
+import { yearReportYear } from '@/features/report/model'
 import { APP_VERSION } from '@/lib/version'
 
 /** Novinky vo firme (nový event, priradenie do posádky) s tlačidlom „prečítané“. */
@@ -70,6 +72,46 @@ function saveSeenVersion() {
   }
 }
 
+/**
+ * Ročná správa sa hore ukáže len 31. 12. (za tento rok) a 1. 1. (za minulý); inak je v Štatistikách.
+ * Dá sa zavrieť (zapamätá sa pre daný rok).
+ */
+function YearReportNotice() {
+  const company = useCompany().active
+  const year = yearReportYear(todayIso())
+  const key = `rigtrack.yearReport.${year}`
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem(key) === '1'
+    } catch {
+      return false
+    }
+  })
+  if (!year || hidden || !company || !can(company, 'report.view')) return null
+  const close = () => {
+    try {
+      localStorage.setItem(key, '1')
+    } catch {
+      // Bez úložiska sa oznam len skryje do obnovenia stránky.
+    }
+    setHidden(true)
+  }
+  return (
+    <div role="status" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+      <FileChartColumn className="size-5 shrink-0 text-accent" aria-hidden />
+      <span className="flex-1">
+        <span className="font-medium">Ročná správa {year} je pripravená.</span>{' '}
+        <Link to={`/report?year=${year}`} className="text-accent hover:underline" onClick={close}>
+          Pozrieť
+        </Link>
+      </span>
+      <button type="button" aria-label="Zavrieť" className="rounded p-1 text-muted-foreground hover:bg-accent/20" onClick={close}>
+        <X className="size-4" aria-hidden />
+      </button>
+    </div>
+  )
+}
+
 /** Po aktualizácii appky: „Nová verzia – pozrite, čo je nové“, kým ho človek nezavrie alebo neotvorí. */
 function UpdateNotice() {
   const [seen, setSeen] = useState(readSeenVersion)
@@ -127,6 +169,7 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-4 pt-4 empty:hidden md:px-8 print:hidden">
       <UpdateNotice />
+      <YearReportNotice />
       {me && !me.onboarded && !onWelcome && (
         <Link to="/welcome" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
           <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />

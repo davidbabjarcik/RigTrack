@@ -84,3 +84,11 @@ export function yearReport(input: ReportInput) {
 }
 
 export type YearReport = ReturnType<typeof yearReport>
+
+/** Za ktorý rok ukázať ročnú správu hore: 31. 12. tento rok, 1. 1. minulý; inak žiadny. */
+export function yearReportYear(today: string) {
+  const monthDay = today.slice(5)
+  if (monthDay === '12-31') return today.slice(0, 4)
+  if (monthDay === '01-01') return String(Number(today.slice(0, 4)) - 1)
+  return null
+}

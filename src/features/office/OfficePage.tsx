@@ -9,7 +9,7 @@ import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { useMembers } from '@/features/companies/useMembers'
 import { formatNumber } from '@/features/equipment/model'
-import { formatDate, formatMoney, todayIso } from '@/lib/format'
+import { formatDate, todayIso } from '@/lib/format'
 import { isAdminRole } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 import {
@@ -32,14 +32,13 @@ function PurchaseForm({ companyId, items, preset, onDone }: { companyId: string;
   const userId = useAuth().session?.user.id ?? ''
   const [itemId, setItemId] = useState(preset || items[0]?.id || '')
   const [quantity, setQuantity] = useState(1)
-  const [price, setPrice] = useState(0)
   const [packAmount, setPackAmount] = useState(Number.NaN)
   const [packUnit, setPackUnit] = useState<PackUnit | ''>('')
   const [boughtOn, setBoughtOn] = useState(todayIso())
   const [boughtBy, setBoughtBy] = useState(userId)
   const [note, setNote] = useState('')
   const save = useMutation({
-    mutationFn: () => addOfficePurchase(companyId, { itemId, quantity, price: Number.isNaN(price) ? 0 : price, packAmount: Number.isNaN(packAmount) ? null : packAmount, packUnit, boughtOn, boughtBy, note }),
+    mutationFn: () => addOfficePurchase(companyId, { itemId, quantity, price: 0, packAmount: Number.isNaN(packAmount) ? null : packAmount, packUnit, boughtOn, boughtBy, note }),
     onSuccess: onDone,
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['company', companyId, 'office'] }),
   })
@@ -57,7 +56,6 @@ function PurchaseForm({ companyId, items, preset, onDone }: { companyId: string;
         ))}
       </SelectField>
       <Field label={`Koľko (${items.find((item) => item.id === itemId)?.unit ?? 'ks'})`} type="number" inputMode="decimal" min={0.01} step="any" value={Number.isNaN(quantity) ? '' : quantity} onChange={(e) => setQuantity(e.target.valueAsNumber)} />
-      <Field label="Cena spolu (€)" type="number" inputMode="decimal" min={0} step="0.01" value={Number.isNaN(price) ? '' : price} onChange={(e) => setPrice(e.target.valueAsNumber)} />
       <div className="flex gap-2">
         <Field label="Balenie (nepovinné)" className="flex-1" type="number" inputMode="decimal" min={0} step="any" placeholder="napr. 1" value={Number.isNaN(packAmount) ? '' : packAmount} onChange={(e) => setPackAmount(e.target.valueAsNumber)} />
         <SelectField label="Jednotka" className="w-24" value={packUnit} onChange={(e) => setPackUnit(e.target.value as PackUnit | '')}>
@@ -212,14 +210,14 @@ export function OfficePage() {
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
           <div className="rounded-xl border bg-surface p-4">
-            <p className="text-sm text-muted-foreground">Kto koľko kúpil · spolu {formatMoney(stats.total, 'EUR')}</p>
+            <p className="text-sm text-muted-foreground">Kto koľkokrát kúpil</p>
             <ul className="mt-2 flex flex-col gap-1 text-sm">
               {stats.byPerson.map((person) => (
                 <li key={person.id ?? person.name} className="flex justify-between gap-3">
                   <span>
-                    {person.name || 'neznámy'} <span className="text-muted-foreground">· {person.count}×</span>
+                    {person.name || 'neznámy'}
                   </span>
-                  <span className="font-medium">{formatMoney(person.total, 'EUR')}</span>
+                  <span className="font-medium">{person.count}×</span>
                 </li>
               ))}
               {stats.byPerson.length === 0 && <li className="text-muted-foreground">Zatiaľ žiadne nákupy.</li>}
@@ -237,7 +235,6 @@ export function OfficePage() {
                       {Object.entries(row.packs).map(([unit, amount]) => ` · ${formatNumber(amount)} ${unit}`)}
                     </span>
                   </span>
-                  <span className="font-medium">{formatMoney(row.total, 'EUR')}</span>
                 </li>
               ))}
             </ul>
@@ -255,7 +252,6 @@ export function OfficePage() {
                 {purchase.packAmount && purchase.packUnit && ` × ${formatNumber(purchase.packAmount)} ${purchase.packUnit}`} · {purchase.boughtByName || 'neznámy'}
                 <span className="block text-muted-foreground">{[formatDate(purchase.boughtOn), purchase.note].filter(Boolean).join(' · ')}</span>
               </span>
-              <span className="font-medium">{formatMoney(purchase.price, 'EUR')}</span>
               {(admin || purchase.boughtBy === userId) && (
                 <button type="button" aria-label="Zmazať nákup" className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => window.confirm('Zmazať nákup? Odpočíta sa aj zo zásoby.') && removePurchase.mutate(purchase.id)}>
                   <X className="size-4" aria-hidden />

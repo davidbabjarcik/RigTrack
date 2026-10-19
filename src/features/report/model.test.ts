@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CompanyEvent } from '@/features/events/model'
-import { yearReport } from './model'
+import { yearReport, yearReportYear } from './model'
 
 const event = (patch: Partial<CompanyEvent>) =>
   ({ id: 'e', name: 'Ples', client: 'Mesto', venue: '', startsOn: '2026-02-10', endsOn: '2026-02-11', status: 'done', note: '', equipment: [], crew: [], ...patch }) as CompanyEvent
@@ -23,5 +23,13 @@ describe('yearReport', () => {
     expect(report.events?.months[6].events).toBe(1)
     expect(report.money).toMatchObject({ income: 1000, payouts: 200, orders: undefined })
     expect(report.service).toBeUndefined()
+  })
+})
+
+describe('yearReportYear', () => {
+  it('shows the report only on 31 Dec and 1 Jan', () => {
+    expect(yearReportYear('2026-12-31')).toBe('2026')
+    expect(yearReportYear('2027-01-01')).toBe('2026')
+    expect(yearReportYear('2027-01-02')).toBeNull()
   })
 })

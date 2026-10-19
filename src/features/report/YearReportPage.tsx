@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Printer } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { SelectField } from '@/components/ui/field'
@@ -10,7 +11,6 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { eventKeys, fetchEvents } from '@/features/events/api'
 import { fetchCompanyIncome } from '@/features/events/income'
 import { useIncidents } from '@/features/incidents/api'
-import { useOffice } from '@/features/office/api'
 import { fetchOrders, orderKeys } from '@/features/orders/api'
 import { fetchPayments, payoutKeys } from '@/features/payouts/api'
 import { useServiceRecords } from '@/features/service/useServiceRecords'
@@ -38,14 +38,14 @@ export function YearReportPage() {
   const company = useCompany().active!
   const companyId = company.companyId
   const money = can(company, 'report.money')
-  const [year, setYear] = useState(todayIso().slice(0, 4))
+  const [params] = useSearchParams()
+  const [year, setYear] = useState(params.get('year') ?? todayIso().slice(0, 4))
   const members = useMembers(companyId)
   const events = useQuery({ queryKey: eventKeys.list(companyId), queryFn: () => fetchEvents(companyId), enabled: can(company, 'events.view') })
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
   const service = useServiceRecords(companyId)
   const incidents = useIncidents(companyId)
   const tasks = useTasks(companyId)
-  const { purchases: office } = useOffice(companyId)
   const orders = useQuery({ queryKey: orderKeys.list(companyId), queryFn: () => fetchOrders(companyId), enabled: money && can(company, 'orders.view'), retry: false })
   const income = useQuery({ queryKey: ['company', companyId, 'income'], queryFn: () => fetchCompanyIncome(companyId), enabled: money, retry: false })
   const payouts = useQuery({ queryKey: payoutKeys.list(companyId), queryFn: () => fetchPayments(companyId), enabled: money, retry: false })
@@ -58,14 +58,13 @@ export function YearReportPage() {
     incidents: incidents.data,
     tasks: tasks.data,
     orders: money ? orders.data : undefined,
-    office: money ? office.data : undefined,
     income: money ? income.data : undefined,
     payouts: money ? payouts.data : undefined,
   })
   const firstYear = Math.min(Number(todayIso().slice(0, 4)), ...(events.data ?? []).map((event) => Number(event.startsOn.slice(0, 4))))
   const years = Array.from({ length: Number(todayIso().slice(0, 4)) - firstYear + 1 }, (_, index) => String(Number(todayIso().slice(0, 4)) - index))
   const maxMonth = Math.max(1, ...(report.events?.months.map((month) => month.events) ?? [0]))
-  const spent = (report.money.orders ?? 0) + (report.money.office ?? 0) + (report.money.payouts ?? 0)
+  const spent = (report.money.orders ?? 0) + (report.money.payouts ?? 0)
 
   return (
     <>
@@ -155,12 +154,11 @@ export function YearReportPage() {
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               {report.money.income !== undefined && <Tile label="Príjmy z akcií" value={formatMoney(report.money.income, 'EUR')} />}
               {report.money.orders !== undefined && <Tile label="Nákupy techniky" value={formatMoney(report.money.orders, 'EUR')} />}
-              {report.money.office !== undefined && <Tile label="Kancelária" value={formatMoney(report.money.office, 'EUR')} />}
               {report.money.payouts !== undefined && <Tile label="Odmeny ľuďom" value={formatMoney(report.money.payouts, 'EUR')} />}
               {report.money.income !== undefined && <Tile label="Príjmy − výdavky" value={formatMoney(report.money.income - spent, 'EUR')} />}
               {report.incidents && <Tile label="Náklady na škody" value={formatMoney(report.incidents.cost, 'EUR')} />}
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Nákupy len v eurách a len tie „pre nás“. Výdavky zahŕňajú nákupy techniky, kanceláriu a odmeny.</p>
+            <p className="mt-2 text-xs text-muted-foreground">Nákupy len v eurách a len tie „pre nás“. Výdavky zahŕňajú nákupy techniky a odmeny.</p>
           </section>
         )}
         {!money && <p className="text-sm text-muted-foreground">Peniaze v ročnej správe vidí len ten, komu ich admin povolí (Oprávnenia → Ročná správa).</p>}

@@ -21,6 +21,15 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.2 – 19. 10. 2026
+
+- **Rozfázovanie elektriky v evente** (sekcia „Elektrika – fázy“): technika eventu sa rozdelí na L1–L3 (aj 2 fázy
+  alebo 1) čo najrovnomernejšie, s ohľadom na iné zaťaženie fáz; ukáže kW a A na fázu oproti prípojke eventu
+  (CEE 16 / 32 / 63 / 125 A, zásuvka) – preťažená fáza je červená – a čo ide na ktorú fázu. Technika bez zadaného
+  výkonu sa vypíše, aby sa dala doplniť.
+- **Ročná správa** už nie je v menu: hore sa ukáže len 31. 12. a 1. 1. (dá sa zavrieť), inak je v Štatistikách.
+- **Kancelária bez cien**: zapisuje sa len kto, čo a koľko kúpil; štatistiky v kusoch a baleniach.
+
 ### 2.1 – 19. 10. 2026
 
 - **Patch list zvuku** pri evente: kanál, čo na ňom ide, stagebox a vstup, zdroj – mikrofón z techniky, bezdrôtový
