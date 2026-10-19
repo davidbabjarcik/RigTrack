@@ -21,6 +21,15 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 1.17 – 19. 10. 2026
+
+- **LED kalkulačka** (menu → LED kalkulačka): z rozmeru steny počet panelov (zaokrúhliť na najbližší / nikdy väčšia /
+  nikdy menšia), skutočný rozmer a m², rozlíšenie a pomer strán, porty procesora, váha, príkon, prúd a počet 16 A okruhov.
+  Podľa stavby – zavesená na truss s motormi, hliníková brána od zeme alebo stohovaná na zemi – spočíta hliník
+  z dielov, ktoré máte (3 / 2 / 1 / 0,5 m), spoje s kónusmi, čapmi a závlačkami, rohové kocky a podstavy, závesné lišty,
+  úväzy, topy (2 nekonečné oká), shackle, závesné body a záťaž na bod s upozornením na prekročenú nosnosť motora.
+  Panely aj materiál na lištu / bod / spoj sa dajú upraviť, nastavenie si appka pamätá.
+
 ### 1.16 – 19. 10. 2026
 
 - **Úlohy** – viac ľudí na jednu úlohu, kategórie (web, soc. siete…), filter podľa kategórie; **úlohy po evente**
