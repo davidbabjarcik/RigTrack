@@ -347,7 +347,7 @@ export function SettingsPage() {
           )}
 
           {isAdmin && (
-            <Section title="Záloha a export všetkého">
+            <Section title="Import a export">
               <BackupSettings companyId={company.companyId} companyName={company.companyName} />
             </Section>
           )}

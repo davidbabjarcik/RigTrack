@@ -28,3 +28,21 @@ describe('backup', () => {
     }
   })
 })
+
+describe('restore helpers', () => {
+  it('turns sheets back into rows with JSON columns', async () => {
+    const { sheetToRows, restoreOrder } = await import('./backup')
+    expect(
+      sheetToRows([
+        ['id', 'name', 'attributes', 'unit_ids', 'note'],
+        ['a', 'Kábel', '{"lengthM":5}', '[1,2]', null],
+        [null, null, null, null, null],
+      ]),
+    ).toEqual([{ id: 'a', name: 'Kábel', attributes: { lengthM: 5 }, unit_ids: [1, 2], note: null }])
+    expect(sheetToRows([['Žiadne záznamy']])).toEqual([])
+    const order = restoreOrder()
+    expect(order.indexOf('equipment_categories')).toBeLessThan(order.indexOf('equipment'))
+    expect(order.indexOf('cases')).toBeLessThan(order.indexOf('equipment'))
+    expect(order.indexOf('events')).toBeLessThan(order.indexOf('event_equipment'))
+  })
+})

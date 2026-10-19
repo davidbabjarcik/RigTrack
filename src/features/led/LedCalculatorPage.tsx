@@ -415,10 +415,12 @@ export function LedCalculatorPage() {
   const trussNeeds = new Map<number, number>()
   for (const { result } of results) for (const need of result.truss?.needs ?? []) trussNeeds.set(need.lengthM, (trussNeeds.get(need.lengthM) ?? 0) + need.count)
 
-  const processorItem = stockProcessors.find((item) => item.id === state.processor)
+  // Kým človek procesor nevyberie, použije sa prvý z techniky.
+  const processorChoice = state.processor === 'preset:2' && stockProcessors[0] ? stockProcessors[0].id : state.processor
+  const processorItem = stockProcessors.find((item) => item.id === processorChoice)
   const processor: Processor = processorItem
     ? { name: processorItem.name, ...processorItem.attributes.ledProcessor! }
-    : (PROCESSOR_PRESETS[Number(state.processor.replace('preset:', ''))] ?? PROCESSOR_PRESETS[2])
+    : (PROCESSOR_PRESETS[Number(processorChoice.replace('preset:', ''))] ?? PROCESSOR_PRESETS[2])
   const plan = planProcessors(
     results.map(({ wall: item, result }) => ({ name: item.name, columns: result.columns, rows: result.rows, panelPxW: item.panel.pxW, panelPxH: item.panel.pxH })),
     processor,
@@ -563,7 +565,7 @@ export function LedCalculatorPage() {
         )}
 
         <Card title="Procesor a zapojenie">
-          <SelectField label="Procesor" value={state.processor} onChange={(e) => setState({ ...state, processor: e.target.value })}>
+          <SelectField label="Procesor" value={processorChoice} onChange={(e) => setState({ ...state, processor: e.target.value })}>
             {stockProcessors.length > 0 && (
               <optgroup label="Z našej techniky">
                 {stockProcessors.map((item) => (

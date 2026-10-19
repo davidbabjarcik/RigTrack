@@ -21,6 +21,21 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 1.19 – 19. 10. 2026
+
+- **Ročná správa** (menu → Ročná správa): eventy a dni po mesiacoch, kto bol na koľkých akciách, najčastejší klienti,
+  kúpená technika, servisy, škody a úrazy, hotové úlohy; s oprávnením aj peniaze (príjmy, nákupy, kancelária, odmeny,
+  príjmy − výdavky). Kto ju vidí a kto v nej vidí peniaze, nastaví admin v Oprávneniach. Dá sa vytlačiť.
+- **Import a export v Nastaveniach**: export všetkého (ZIP) alebo jedného modulu (Excel), **obnova zo zálohy** (doplní
+  chýbajúce záznamy, existujúce nezmení) a import / export techniky z Excelu (presunuté z Techniky). Záloha obsahuje
+  aj kapsule, žiadosti o servis, kanceláriu, škody a úrazy a úlohy po evente.
+- **Partnerské firmy**: v Firmy a kontakty tlačidlo „Založiť im firmu v RigTracku“ (údaje IČO, DIČ, adresa sa prenesú,
+  vy ste admin a pozvete ich ľudí); keď si niekto zakladá vlastnú firmu, appka mu navrhne údaje, ktoré o ňom majú
+  firmy, kde je zapísaný ako kontakt.
+- LED kalkulačka predvolí procesor z vašej techniky.
+
+Nové migrácie: `0064`.
+
 ### 1.18 – 19. 10. 2026
 
 - **Rola helper** (brigádnik na pomoc): vidí len eventy, kde je v posádke, techniku a cases len prezerá, úlohy, tím

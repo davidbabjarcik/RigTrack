@@ -16,6 +16,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0059', label: 'program eventu, firmy a kontakty', table: 'event_days', column: 'id' },
   { migration: '0060', label: 'kapsule, žiadosti o servis', table: 'service_requests', column: 'id' },
   { migration: '0061', label: 'kancelária, škody, úlohy', table: 'incidents', column: 'id' },
+  { migration: '0064', label: 'ročná správa, partnerské firmy', table: 'partners', column: 'linked_company_id' },
 ]
 
 /** Ktoré migrácie v databáze chýbajú (tabuľka alebo stĺpec neexistuje). Prístup cez RLS nevadí – prázdny výsledok nie je chyba. */

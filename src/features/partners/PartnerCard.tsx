@@ -5,6 +5,7 @@ import { PhoneContactButton } from '@/components/share/PhoneContactButton'
 import { AddToContactsButton } from '@/components/share/ShareButtons'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
+import { FoundCompanyButton } from './FoundCompanyButton'
 import { addContact, deleteContact, partnerKeys, type Partner } from './api'
 
 /** Firma / skupina (napr. organizátor) s ľuďmi a ich číslami; pri každom „Do kontaktov“. */
@@ -74,6 +75,7 @@ export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { 
         </ul>
       )}
       {partner.note && <p className="text-sm whitespace-pre-wrap text-muted-foreground">{partner.note}</p>}
+      {canEdit && onEdit && <FoundCompanyButton partner={partner} />}
       {canEdit &&
         (adding ? (
           <form onSubmit={submit} className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Cable, ChevronRight, FileSpreadsheet, Mic, Network, Plus, Search } from 'lucide-react'
+import { Cable, ChevronRight, Mic, Network, Plus, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -87,10 +87,6 @@ export function EquipmentListPage() {
         description={list.data ? `${visible.length} z ${all.length} položiek` : undefined}
         action={
           <div className="flex flex-wrap justify-end gap-2">
-            <LinkButton to="/equipment/excel" variant="outline">
-              <FileSpreadsheet className="size-4" aria-hidden />
-              Excel
-            </LinkButton>
             <LinkButton to="/equipment/capsules" variant="outline">
               <Mic className="size-4" aria-hidden />
               Kapsule

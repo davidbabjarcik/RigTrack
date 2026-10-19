@@ -92,3 +92,44 @@ export function createZip(entries: ZipEntry[], now = new Date()): Uint8Array {
   }
   return result
 }
+
+/**
+ * Prečíta ZIP (aj z Windows / macOS „Komprimovať“): súbory bez kompresie aj s kompresiou deflate.
+ * Priečinky preskočí; názvy berie z centrálneho adresára.
+ */
+export async function readZip(bytes: Uint8Array): Promise<ZipEntry[]> {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+  let end = -1
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65_557); i--) {
+    if (view.getUint32(i, true) === 0x06054b50) {
+      end = i
+      break
+    }
+  }
+  if (end < 0) throw new Error('Súbor nie je ZIP')
+  const count = view.getUint16(end + 10, true)
+  let pointer = view.getUint32(end + 16, true)
+  const decoder = new TextDecoder()
+  const entries: ZipEntry[] = []
+  for (let n = 0; n < count; n++) {
+    if (view.getUint32(pointer, true) !== 0x02014b50) throw new Error('Poškodený ZIP')
+    const method = view.getUint16(pointer + 10, true)
+    const compressed = view.getUint32(pointer + 20, true)
+    const nameLength = view.getUint16(pointer + 28, true)
+    const extraLength = view.getUint16(pointer + 30, true)
+    const commentLength = view.getUint16(pointer + 32, true)
+    const local = view.getUint32(pointer + 42, true)
+    const name = decoder.decode(bytes.subarray(pointer + 46, pointer + 46 + nameLength))
+    pointer += 46 + nameLength + extraLength + commentLength
+    if (name.endsWith('/')) continue
+    const start = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true)
+    const raw = bytes.subarray(start, start + compressed)
+    if (method === 0) {
+      entries.push({ name, data: raw.slice() })
+    } else if (method === 8) {
+      const stream = new Blob([raw.slice()]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
+      entries.push({ name, data: new Uint8Array(await new Response(stream).arrayBuffer()) })
+    }
+  }
+  return entries
+}

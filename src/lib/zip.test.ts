@@ -38,3 +38,16 @@ describe('zip', () => {
     expect(readZip(zip)).toEqual({ 'Výpožičky.xlsx': 'obsah', 'ČÍTAJ.txt': '' })
   })
 })
+
+describe('readZip', () => {
+  it('reads back what createZip wrote', async () => {
+    const { readZip } = await import('./zip')
+    const zip = createZip([
+      { name: 'Technika.xlsx', data: new Uint8Array([1, 2, 3]) },
+      { name: 'ČÍTAJ.txt', data: new TextEncoder().encode('ahoj') },
+    ])
+    const entries = await readZip(zip)
+    expect(entries.map((entry) => entry.name)).toEqual(['Technika.xlsx', 'ČÍTAJ.txt'])
+    expect([...entries[0].data]).toEqual([1, 2, 3])
+  })
+})

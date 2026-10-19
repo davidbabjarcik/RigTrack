@@ -1,8 +1,23 @@
 import { useQuery } from '@tanstack/react-query'
 import { getSupabase } from '@/lib/supabase/client'
+import { isMissingColumn } from '@/lib/supabase/errors'
 
 export type PartnerContact = { id: string; name: string; role: string; phone: string; email: string }
-export type Partner = { id: string; name: string; ico: string; dic: string; address: string; usesApp: boolean; note: string; contacts: PartnerContact[] }
+export type Partner = {
+  id: string
+  name: string
+  ico: string
+  dic: string
+  address: string
+  usesApp: boolean
+  note: string
+  contacts: PartnerContact[]
+  /** Firma v RigTracku, ktorú sme im založili (0064). */
+  linkedCompanyId?: string | null
+}
+
+// Väzba na založenú firmu (0064); bez migrácie sa adresár načíta bez nej.
+let linkedColumn = ', linked_company_id'
 export type EventPartner = { partnerId: string; kind: 'organizer' | 'partner' }
 
 export const partnerKeys = {
@@ -13,13 +28,17 @@ export const partnerKeys = {
 export async function fetchPartners(companyId: string): Promise<Partner[]> {
   const db = getSupabase()
   const [partners, contacts] = await Promise.all([
-    db.from('partners').select('id, name, ico, dic, address, uses_app, note').eq('company_id', companyId).order('name'),
+    db.from('partners').select('id, name, ico, dic, address, uses_app, note' + linkedColumn).eq('company_id', companyId).order('name'),
     db.from('partner_contacts').select('id, partner_id, name, role, phone, email').eq('company_id', companyId).order('name'),
   ])
+  if (linkedColumn && isMissingColumn(partners.error, 'linked_company_id')) {
+    linkedColumn = ''
+    return fetchPartners(companyId)
+  }
   if (partners.error) throw partners.error
   if (contacts.error) throw contacts.error
   const people = contacts.data as (PartnerContact & { partner_id: string })[]
-  return (partners.data as { id: string; name: string; ico: string; dic: string; address: string; uses_app: boolean; note: string }[]).map((row) => ({
+  return (partners.data as unknown as { id: string; name: string; ico: string; dic: string; address: string; uses_app: boolean; note: string; linked_company_id?: string | null }[]).map((row) => ({
     id: row.id,
     name: row.name,
     ico: row.ico,
@@ -28,6 +47,7 @@ export async function fetchPartners(companyId: string): Promise<Partner[]> {
     usesApp: row.uses_app,
     note: row.note,
     contacts: people.filter((person) => person.partner_id === row.id).map(({ id, name, role, phone, email }) => ({ id, name, role, phone, email })),
+    linkedCompanyId: linkedColumn ? (row.linked_company_id ?? null) : undefined,
   }))
 }
 
