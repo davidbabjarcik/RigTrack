@@ -553,7 +553,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
 
       {save.isError && !errors.inventoryNumber && (
         <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo. Skontrolujte pripojenie a skúste to znova.
+          Uloženie zlyhalo. {errorDetail(save.error) || 'Skontrolujte pripojenie a skúste to znova.'}
         </p>
       )}
 

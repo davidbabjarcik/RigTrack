@@ -215,10 +215,18 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     // Vlastník sa posiela len keď je zadaný alebo sa mení, aby uloženie fungovalo aj bez migrácie 0052.
     ...(values.owner !== undefined && (values.owner !== '' || ownerColumn) ? { owner_staff_id: await resolveOwner(companyId, values.owner) } : {}),
   }
-  const table = getSupabase().from('equipment')
-  const { data, error } = id
-    ? await table.update(fields).eq('company_id', companyId).eq('id', id).select('id').single()
-    : await table.insert({ ...fields, company_id: companyId }).select('id').single()
+  const write = (row: Record<string, unknown>) => {
+    const table = getSupabase().from('equipment')
+    return id ? table.update(row).eq('company_id', companyId).eq('id', id).select('id').single() : table.insert({ ...row, company_id: companyId }).select('id').single()
+  }
+  let { data, error } = await write(fields)
+  // Databáza bez migrácie 0052 nepozná vlastníka – uloží sa bez neho.
+  if (error && 'owner_staff_id' in fields && isMissingColumn(error, 'owner_staff_id')) {
+    ownerColumn = ''
+    const rest: Record<string, unknown> = { ...fields }
+    delete rest.owner_staff_id
+    ;({ data, error } = await write(rest))
+  }
   if (error) throw error
   return (data as { id: string }).id
 }
