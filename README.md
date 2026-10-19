@@ -21,6 +21,16 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.13 – 19. 10. 2026
+
+- **Kedy nemôžem** (Kalendár): každý si sám zapíše, kedy nemôže (dovolenka, škola…). V kalendári pribudol druh
+  „Kto nemôže“, takže vidno, kto kedy chýba.
+- **Dostupnosť posádky v evente**: nad výberom posádky je prehľad, kto v termíne môže, kto nemôže (aj prečo) a kto je
+  na inom evente. Vo výbere „Kto“ je to pri mene a po zvolení vyskočí upozornenie.
+- **Podpis na mobile pri výpožičke**: v detaile výpožičky sú Podpisy – pri odovzdaní aj vrátení sa podpíše
+  vypožičiavateľ aj firma prstom na mobile. Podpisy sa vytlačia na zapožičacej listine (PDF).
+- Nové migrácie: `0075` (opravné `0071` a `0072` sú aktualizované).
+
 ### 2.12 – 19. 10. 2026
 
 - **QR štítky**: v detaile techniky aj case je tlačidlo „QR štítok“ a v Cases „QR štítky“ (všetky naraz, 3 v rade

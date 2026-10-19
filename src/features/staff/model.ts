@@ -97,3 +97,27 @@ export function matchesPerson(person: Person, query: string) {
   const haystack = plain([person.name, person.position, person.skills, person.phone, person.email, person.accountEmail].join(' '))
   return words.every((word) => haystack.includes(word))
 }
+
+export type CrewAvailability =
+  | { state: 'free' }
+  | { state: 'away'; periods: Unavailability[] }
+  | { state: 'busy'; events: CompanyEvent[] }
+
+/**
+ * Môže člen ísť na event? Najprv „nemôže“ zo zápisov nedostupnosti, potom iné eventy v tom istom termíne,
+ * kde je v posádke (zrušené eventy a odmietnuté pozvánky sa nerátajú).
+ */
+export function crewAvailability(memberId: string, people: Person[], periods: Unavailability[], events: CompanyEvent[], event: Pick<CompanyEvent, 'id' | 'startsOn' | 'endsOn'>): CrewAvailability {
+  const card = people.find((person) => person.memberId === memberId)
+  const away = card?.staffId ? clashes(periods, card.staffId, event.startsOn, event.endsOn) : []
+  if (away.length > 0) return { state: 'away', periods: away }
+  const busy = events.filter(
+    (other) =>
+      other.id !== event.id &&
+      other.status !== 'cancelled' &&
+      other.startsOn <= event.endsOn &&
+      other.endsOn >= event.startsOn &&
+      other.crew.some((person) => person.memberId === memberId && person.response !== 'no'),
+  )
+  return busy.length > 0 ? { state: 'busy', events: busy } : { state: 'free' }
+}

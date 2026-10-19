@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CompanyEvent } from '@/features/events/model'
-import { clashes, matchesPerson, mergeStaff, unavailableOn, upcomingEvents, upcomingPeriods, type StaffRow } from './model'
+import { clashes, crewAvailability, matchesPerson, mergeStaff, unavailableOn, upcomingEvents, upcomingPeriods, type Person, type StaffRow } from './model'
 
 const row = (patch: Partial<StaffRow>): StaffRow => ({
   id: 's1', memberId: null, name: '', position: '', phone: '', email: '', photoPath: '', skills: '', note: '', active: true, birthDate: null, nameDay: '', licences: [], onboarded: true, ...patch,
@@ -65,5 +65,22 @@ describe('celebrations', () => {
     const list = upcomingCelebrations(people, '2026-10-19', 7)
     expect(list.map((item) => describeCelebration(item, '2026-10-19'))).toEqual(['Dnes má meniny Mária', 'Zajtra má narodeniny Jano (30)'])
     expect(formatNameDay('06-24')).toBe('24. 6.')
+  })
+})
+
+describe('crew availability', () => {
+  const people = [{ memberId: 'u1', staffId: 's1' }, { memberId: 'u2', staffId: null }, { memberId: 'u3', staffId: 's3' }] as Person[]
+  const periods = [{ id: 'p', staffId: 's1', startsOn: '2026-11-13', endsOn: '2026-11-14', note: 'dovolenka' }]
+  const crew = (memberId: string, response: 'yes' | 'no' = 'yes') => ({ id: memberId, memberId, name: '', role: '', response, responseNote: '' })
+  const event = { id: 'e1', startsOn: '2026-11-14', endsOn: '2026-11-15' }
+  const others = [
+    { id: 'e2', name: 'Svadba', status: 'confirmed', startsOn: '2026-11-15', endsOn: '2026-11-15', crew: [crew('u2'), crew('u3', 'no')] },
+    { id: 'e3', name: 'Zrušené', status: 'cancelled', startsOn: '2026-11-14', endsOn: '2026-11-14', crew: [crew('u3')] },
+  ] as unknown as CompanyEvent[]
+
+  it('reports away, busy and free members', () => {
+    expect(crewAvailability('u1', people, periods, others, event)).toMatchObject({ state: 'away' })
+    expect(crewAvailability('u2', people, periods, others, event)).toMatchObject({ state: 'busy', events: [{ id: 'e2' }] })
+    expect(crewAvailability('u3', people, periods, others, event)).toEqual({ state: 'free' })
   })
 })

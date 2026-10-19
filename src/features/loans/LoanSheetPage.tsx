@@ -12,6 +12,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { describeContent, describeDamage, formatUnits, groupByCase, linePerDay, loanPricing } from './model'
 import { useLoans } from './useLoans'
+import { signatureOf, useLoanSignatures } from './signatures'
 
 // Listina sa tlačí z prehliadača (Tlačiť → Uložiť ako PDF), preto je vždy čierna na bielom
 // a stojí mimo rozloženia aplikácie.
@@ -21,10 +22,13 @@ const PRINT_CSS = `
 `
 
 /** Riadok na podpis. `value` je údaj, ktorý appka už pozná (dátum, meno) a predtlačí ho nad čiaru. */
-function Signature({ label, value }: { label: string; value?: string }) {
+function Signature({ label, value, image }: { label: string; value?: string; image?: string }) {
   return (
     <div className="min-w-0 flex-1">
-      <div className="flex h-14 items-end border-b border-neutral-500 pb-1 font-medium break-words">{value}</div>
+      <div className="relative flex h-14 items-end border-b border-neutral-500 pb-1 font-medium break-words">
+        {image && <img src={image} alt="" className="absolute right-0 bottom-0 h-14 max-w-[70%] object-contain mix-blend-multiply" />}
+        <span className="relative">{value}</span>
+      </div>
       <p className="mt-1 text-xs text-neutral-600">{label}</p>
     </div>
   )
@@ -40,6 +44,7 @@ export function LoanSheetPage() {
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const branding = useQuery({ queryKey: brandingKeys.branding(companyId), queryFn: () => fetchBranding(companyId) })
   const logo = useCompanyLogo(companyId)
+  const signatures = useLoanSignatures(companyId, id)
 
   const loan = loans.data?.find((candidate) => candidate.id === id)
   // Názov karty sa ponúkne ako názov PDF súboru.
@@ -233,8 +238,8 @@ export function LoanSheetPage() {
           <h2 className="text-xs font-semibold tracking-wide text-neutral-600 uppercase">Odovzdanie</h2>
           <div className="mt-2 flex gap-8">
             <Signature label="Dátum" value={loan.issuedAt ? formatDate(loan.issuedAt.slice(0, 10)) : undefined} />
-            <Signature label="Odovzdal (požičiavateľ)" value={loan.issuedAt ? loan.issuedByName : undefined} />
-            <Signature label="Prevzal (vypožičiavateľ)" value={loan.issuedAt ? loan.borrower : undefined} />
+            <Signature label="Odovzdal (požičiavateľ)" value={signatureOf(signatures.data, 'issue', 'lender')?.signerName ?? (loan.issuedAt ? loan.issuedByName : undefined)} image={signatureOf(signatures.data, 'issue', 'lender')?.image} />
+            <Signature label="Prevzal (vypožičiavateľ)" value={signatureOf(signatures.data, 'issue', 'borrower')?.signerName ?? (loan.issuedAt ? loan.borrower : undefined)} image={signatureOf(signatures.data, 'issue', 'borrower')?.image} />
           </div>
         </section>
 
@@ -242,8 +247,8 @@ export function LoanSheetPage() {
           <h2 className="text-xs font-semibold tracking-wide text-neutral-600 uppercase">Vrátenie</h2>
           <div className="mt-2 flex gap-8">
             <Signature label="Dátum" value={loan.returnedAt ? formatDate(loan.returnedAt.slice(0, 10)) : undefined} />
-            <Signature label="Vrátil (vypožičiavateľ)" value={loan.returnedAt ? loan.borrower : undefined} />
-            <Signature label="Prevzal späť (požičiavateľ)" value={loan.returnedAt ? loan.returnedByName : undefined} />
+            <Signature label="Vrátil (vypožičiavateľ)" value={signatureOf(signatures.data, 'return', 'borrower')?.signerName ?? (loan.returnedAt ? loan.borrower : undefined)} image={signatureOf(signatures.data, 'return', 'borrower')?.image} />
+            <Signature label="Prevzal späť (požičiavateľ)" value={signatureOf(signatures.data, 'return', 'lender')?.signerName ?? (loan.returnedAt ? loan.returnedByName : undefined)} image={signatureOf(signatures.data, 'return', 'lender')?.image} />
           </div>
           {loan.returnedAt ? (
             <div className="mt-4 border-b border-neutral-500 pb-1">

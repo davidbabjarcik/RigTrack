@@ -21,6 +21,9 @@ import { deleteLoan, issueLoan, returnLoan } from './api'
 import { LoanStatusBadge } from './LoanStatusBadge'
 import { describeContent, describeDamage, formatUnits, groupByCase, linePerDay, loanPricing, type LoanDamage } from './model'
 import { useLoans } from './useLoans'
+import { LoanSignatures } from './LoanSignatures'
+import { useAuth } from '@/features/auth/auth-context'
+import { memberName, useMembers } from '@/features/companies/useMembers'
 
 export function LoanDetailPage() {
   const { id = '' } = useParams()
@@ -33,6 +36,8 @@ export function LoanDetailPage() {
   const [damage, setDamage] = useState<Record<string, Omit<LoanDamage, 'equipmentId'>>>({})
 
   const loans = useLoans(companyId)
+  const userId = useAuth().session?.user.id
+  const members = useMembers(companyId)
   const cases = useCases(companyId)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const loan = loans.data?.find((candidate) => candidate.id === id)
@@ -295,6 +300,8 @@ export function LoanDetailPage() {
       </dl>
 
       {loan.note && <p className="rounded-xl border bg-surface p-4 whitespace-pre-wrap">{loan.note}</p>}
+
+      <LoanSignatures companyId={companyId} loan={loan} myName={(userId && memberName(members.data, userId)) || ''} canEdit={canEdit} />
     </>
   )
 }

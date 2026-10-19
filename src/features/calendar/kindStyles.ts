@@ -38,6 +38,12 @@ export const KIND_STYLES: Record<EntryKind, { dot: string; text: string; chip: s
     chip: 'bg-pink-500/15 text-pink-800 dark:text-pink-200',
     bar: 'border-l-pink-500',
   },
+  away: {
+    dot: 'bg-orange-500',
+    text: 'text-orange-600 dark:text-orange-400',
+    chip: 'bg-orange-500/15 text-orange-800 dark:text-orange-200',
+    bar: 'border-l-orange-500',
+  },
   shopping: {
     dot: 'bg-neutral-400',
     text: 'text-neutral-500 dark:text-neutral-400',

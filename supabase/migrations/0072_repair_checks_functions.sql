@@ -1182,6 +1182,34 @@ begin
     exception when others then raise notice 'Kontrola loan_items_unit_price_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.loan_signatures') is not null then
+    begin
+      execute $sql$alter table public.loan_signatures drop constraint if exists loan_signatures_image_check$sql$;
+      execute $sql$alter table public.loan_signatures add constraint loan_signatures_image_check CHECK (((image ~~ 'data:image/png;base64,%'::text) AND (char_length(image) <= 400000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola loan_signatures_image_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.loan_signatures') is not null then
+    begin
+      execute $sql$alter table public.loan_signatures drop constraint if exists loan_signatures_phase_check$sql$;
+      execute $sql$alter table public.loan_signatures add constraint loan_signatures_phase_check CHECK ((phase = ANY (ARRAY['issue'::text, 'return'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola loan_signatures_phase_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.loan_signatures') is not null then
+    begin
+      execute $sql$alter table public.loan_signatures drop constraint if exists loan_signatures_role_check$sql$;
+      execute $sql$alter table public.loan_signatures add constraint loan_signatures_role_check CHECK ((role = ANY (ARRAY['borrower'::text, 'lender'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola loan_signatures_role_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.loan_signatures') is not null then
+    begin
+      execute $sql$alter table public.loan_signatures drop constraint if exists loan_signatures_signer_name_check$sql$;
+      execute $sql$alter table public.loan_signatures add constraint loan_signatures_signer_name_check CHECK ((char_length(signer_name) <= 120)) not valid$sql$;
+    exception when others then raise notice 'Kontrola loan_signatures_signer_name_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_billed_days_check$sql$;
@@ -1962,7 +1990,7 @@ begin
   if to_regclass('public.task_templates') is not null then
     begin
       execute $sql$alter table public.task_templates drop constraint if exists task_templates_assignee_ids_check$sql$;
-      execute $sql$alter table public.task_templates add constraint task_templates_assignee_ids_check CHECK ((cardinality(assignee_ids) <= 20)) not valid$sql$;
+      execute $sql$alter table public.task_templates add constraint task_templates_assignee_ids_check CHECK ((cardinality(assignee_ids) <= 20)) NOT VALID not valid$sql$;
     exception when others then raise notice 'Kontrola task_templates_assignee_ids_check: %', sqlerrm;
     end;
   end if;
@@ -4288,6 +4316,24 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia stamp_loan_handover: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.stamp_loan_signature()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  new.signed_by := auth.uid();
+  new.signed_at := now();
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia stamp_loan_signature: %', sqlerrm;
 end;
 $repair$;
 

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeftRight, CalendarDays, CalendarPlus, Gift, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, CalendarDays, CalendarPlus, CalendarX, Gift, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -12,6 +12,8 @@ import { useLoans } from '@/features/loans/useLoans'
 import { fetchShoppingItems, shoppingKeys } from '@/features/shopping/api'
 import { useTasks } from '@/features/tasks/useTasks'
 import { useStaff } from '@/features/staff/useStaff'
+import { Availability } from '@/features/staff/Availability'
+import { useAuth } from '@/features/auth/auth-context'
 import { useVehicles } from '@/features/vehicles/useVehicles'
 import { formatDate, todayIso } from '@/lib/format'
 import { downloadIcs } from '@/lib/ics'
@@ -40,6 +42,7 @@ const ICONS: Record<EntryKind, LucideIcon> = {
   service: Wrench,
   shopping: ShoppingCart,
   celebration: Gift,
+  away: CalendarX,
 }
 
 const VIEW_KEY = 'rigtrack.calendar.view'
@@ -73,6 +76,7 @@ function EntryRow({ entry, showDate }: { entry: AgendaEntry; showDate?: boolean 
 
 export function CalendarPage() {
   const companyId = useCompany().active!.companyId
+  const userId = useAuth().session?.user.id
   const [days, setDays] = useState(90)
   const [hidden, setHidden] = useState<EntryKind[]>([])
   const today = todayIso()
@@ -101,7 +105,10 @@ export function CalendarPage() {
     equipment: equipment.data ?? [],
     shopping: shopping.data ?? [],
     people: staff.people,
+    unavailability: staff.unavailability,
   }
+  // Moja karta v tíme: tu si zapisujem, kedy nemôžem (vedúci to uvidí pri plánovaní posádky).
+  const me = staff.people.find((person) => person.memberId === userId)
   const entries = buildAgenda(data, today).filter((entry) => !hidden.includes(entry.kind))
   const gridDays = monthGridDays(month)
   const gridEntries = new Map(
@@ -131,6 +138,12 @@ export function CalendarPage() {
           </Button>
         }
       />
+
+      {me && (
+        <div className="mb-5">
+          <Availability companyId={companyId} person={me} canEdit title="Kedy nemôžem" />
+        </div>
+      )}
 
       <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Zobrazenie">
         {(

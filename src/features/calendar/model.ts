@@ -5,11 +5,11 @@ import type { ShoppingItem } from '@/features/shopping/model'
 import type { Task } from '@/features/tasks/model'
 import { vehicleDeadlines, type Vehicle } from '@/features/vehicles/model'
 import { upcomingCelebrations, type Celebration } from '@/features/staff/celebrations'
-import type { Person } from '@/features/staff/model'
+import type { Person, Unavailability } from '@/features/staff/model'
 
 // Kalendár je odvodený pohľad: nič sa doň nezapisuje, skladá sa z termínov ostatných modulov.
 
-export const ENTRY_KINDS = ['event', 'loan', 'vehicle', 'task', 'service', 'shopping', 'celebration'] as const
+export const ENTRY_KINDS = ['event', 'loan', 'vehicle', 'task', 'service', 'shopping', 'celebration', 'away'] as const
 export type EntryKind = (typeof ENTRY_KINDS)[number]
 
 export const ENTRY_KIND_LABELS: Record<EntryKind, string> = {
@@ -20,6 +20,7 @@ export const ENTRY_KIND_LABELS: Record<EntryKind, string> = {
   service: 'Servis techniky',
   shopping: 'Wantlist',
   celebration: 'Narodeniny a meniny',
+  away: 'Kto nemôže',
 }
 
 export type AgendaEntry = {
@@ -41,6 +42,8 @@ export type AgendaSources = {
   shopping: ShoppingItem[]
   /** Ľudia z tímu (narodeniny a meniny); nepovinné. */
   people?: Person[]
+  /** Kedy ľudia z tímu nemôžu; nepovinné. */
+  unavailability?: Unavailability[]
 }
 
 /** Všetky nevybavené termíny zo všetkých modulov, zoradené podľa dátumu. */
@@ -102,12 +105,33 @@ export function buildAgenda(sources: AgendaSources, today: string): AgendaEntry[
     }
   }
 
+  for (const period of sources.unavailability ?? []) {
+    if (period.endsOn < today) continue
+    const entry = awayEntry(period, sources.people ?? [])
+    entries.push({ ...entry, date: period.startsOn < today ? today : period.startsOn })
+  }
+
   // Narodeniny a meniny na rok dopredu.
   for (const celebration of upcomingCelebrations(sources.people ?? [], today, 366)) {
     entries.push(celebrationEntry(celebration))
   }
 
   return entries.sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title, 'sk'))
+}
+
+const shortDate = (iso: string) => iso.split('-').reverse().map(Number).slice(0, 2).join('. ') + '.'
+
+/** „Jano nemôže“ s obdobím a dôvodom; vedie na kartu človeka. */
+function awayEntry(period: Unavailability, people: Person[]): Omit<AgendaEntry, 'date'> {
+  const person = people.find((candidate) => candidate.staffId === period.staffId)
+  const range = period.startsOn === period.endsOn ? shortDate(period.startsOn) : `${shortDate(period.startsOn)} – ${shortDate(period.endsOn)}`
+  return {
+    id: `away-${period.id}`,
+    kind: 'away',
+    title: person?.name || 'Člen tímu',
+    detail: ['nemôže', range, period.note].filter(Boolean).join(' · '),
+    to: person ? `/staff/${person.key}` : '/staff',
+  }
 }
 
 function celebrationEntry(celebration: Celebration): AgendaEntry {
@@ -195,7 +219,8 @@ export function entriesByDay(sources: AgendaSources, today: string, from: string
       to: `/loans/${loan.id}`,
     })
   }
-  for (const entry of buildAgenda({ ...sources, people: [] }, today)) {
+  for (const period of sources.unavailability ?? []) span(period.startsOn, period.endsOn, awayEntry(period, sources.people ?? []))
+  for (const entry of buildAgenda({ ...sources, people: [], unavailability: [] }, today)) {
     if (entry.kind !== 'event' && entry.kind !== 'loan' && entry.date >= from && entry.date <= to) add(entry)
   }
   // Narodeniny a meniny aj v minulých dňoch mriežky.

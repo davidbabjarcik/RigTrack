@@ -7,7 +7,7 @@ import { Field, SelectField } from '@/components/ui/field'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { addEventCrew, eventKeys, removeEventCrew, setCrewResponse } from './api'
 import { previousEdition, type CompanyEvent, type CrewResponse, type EventCrew } from './model'
-import { clashes } from '@/features/staff/model'
+import { clashes, crewAvailability, type CrewAvailability } from '@/features/staff/model'
 import { useStaff } from '@/features/staff/useStaff'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -113,6 +113,20 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
   const labelOf = (person: EventCrew) => (person.memberId ? memberName(members.data, person.memberId) || 'Bývalý člen' : person.name)
 
   const valid = who === EXTERNAL ? name.trim() !== '' : who !== ''
+  // Kto z členov, čo ešte nie sú v posádke, v termíne môže, nemôže alebo je na inom evente.
+  const range = (from: string, to: string) => (from === to ? formatDate(from) : `${formatDate(from)} – ${formatDate(to)}`)
+  const availability = new Map<string, CrewAvailability>(
+    (members.data ?? []).filter((member) => !here.has(member.userId)).map((member) => [member.userId, crewAvailability(member.userId, staff.people, staff.unavailability, events, event)]),
+  )
+  const reason = (state: CrewAvailability) =>
+    state.state === 'away'
+      ? `nemôže ${state.periods.map((period) => [range(period.startsOn, period.endsOn), period.note].filter(Boolean).join(' – ')).join(', ')}`
+      : state.state === 'busy'
+        ? `na evente ${state.events.map((other) => other.name).join(', ')}`
+        : ''
+  const nameOf = (memberId: string) => memberName(members.data, memberId) || 'člen'
+  const groups = (['free', 'away', 'busy'] as const).map((state) => ({ state, ids: [...availability].filter(([, value]) => value.state === state).map(([id]) => id) }))
+  const chosen = who && who !== EXTERNAL ? availability.get(who) : undefined
   function handleSubmit(submit: FormEvent) {
     submit.preventDefault()
     if (valid) add.mutate()
@@ -175,13 +189,30 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
         </div>
       )}
 
+      {canEdit && availability.size > 0 && (
+        <div className="mb-3 rounded-xl border bg-surface p-3 text-sm">
+          <p className="mb-1 font-medium">V termíne eventu</p>
+          {groups.map(
+            ({ state, ids }) =>
+              ids.length > 0 && (
+                <p key={state} className={cn(state === 'free' ? 'text-emerald-700 dark:text-emerald-400' : state === 'away' ? 'text-destructive' : 'text-accent')}>
+                  <span className="font-medium">{state === 'free' ? 'Môžu' : state === 'away' ? 'Nemôžu' : 'Na inom evente'} ({ids.length}):</span>{' '}
+                  {ids.map((id) => (state === 'free' ? nameOf(id) : `${nameOf(id)} (${reason(availability.get(id)!).replace(/^nemôže |^na evente /, '')})`)).join(', ')}
+                </p>
+              ),
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">Kedy nemôžu si každý zapisuje sám v Kalendári („Kedy nemôžem“).</p>
+        </div>
+      )}
+
       {canEdit ? (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4 sm:flex-row sm:items-end">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4 sm:flex-row sm:flex-wrap sm:items-end">
           <SelectField label="Kto" className="sm:w-56" value={who} onChange={(e) => setWho(e.target.value)}>
             <option value="">— vyberte —</option>
             {(members.data ?? []).map((member) => (
               <option key={member.userId} value={member.userId}>
                 {member.fullName || member.email}
+                {availability.get(member.userId)?.state === 'away' ? ' – nemôže' : availability.get(member.userId)?.state === 'busy' ? ' – na inom evente' : ''}
               </option>
             ))}
             <option value={EXTERNAL}>Externista (napísať meno)</option>
@@ -200,6 +231,12 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
           <Button type="submit" disabled={add.isPending || !valid}>
             Pridať
           </Button>
+          {chosen && chosen.state !== 'free' && (
+            <p role="status" className="flex items-center gap-1 text-sm text-destructive sm:basis-full">
+              <CalendarX className="size-4 shrink-0" aria-hidden />
+              Pozor, {reason(chosen)}.
+            </p>
+          )}
         </form>
       ) : (
         event.crew.length === 0 && (
