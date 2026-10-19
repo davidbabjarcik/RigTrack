@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Pencil, Plus, Trash2, Wrench } from 'lucide-react'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -195,7 +195,11 @@ export function VehicleDetailPage() {
           <h1 className="text-2xl font-semibold tracking-tight break-words">{vehicle.plate}</h1>
           {vehicle.model && <p className="mt-1 text-muted-foreground">{vehicle.model}</p>}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <LinkButton to={`/service/requests/new?vehicle=${id}`} variant="outline" size="sm">
+            <Wrench className="size-4" aria-hidden />
+            Nahlásiť poruchu
+          </LinkButton>
           {can(company, 'vehicles.edit') && (
             <LinkButton to={`/vehicles/${id}/edit`} variant="outline" size="sm">
               <Pencil className="size-4" aria-hidden />

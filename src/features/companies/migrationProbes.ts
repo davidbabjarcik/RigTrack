@@ -19,6 +19,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0064', label: 'ročná správa, partnerské firmy', table: 'partners', column: 'linked_company_id' },
   { migration: '0065', label: 'prepojené firmy, video a DJ technika', table: 'company_links', column: 'id' },
   { migration: '0066', label: 'patch listy', table: 'event_patch', column: 'id' },
+  { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 
 /** Ktoré migrácie v databáze chýbajú (tabuľka alebo stĺpec neexistuje). Prístup cez RLS nevadí – prázdny výsledok nie je chyba. */

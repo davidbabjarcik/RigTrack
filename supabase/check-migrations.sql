@@ -49,7 +49,8 @@ with checks (migration, ok) as (
     ('0063 rola helper (práva)', exists (select 1 from pg_proc where proname = 'is_helper')),
     ('0064 ročná správa, partnerské firmy', exists (select 1 from pg_proc where proname = 'create_partner_company')),
     ('0065 prepojené firmy', to_regclass('public.company_links') is not null),
-    ('0066 patch listy', to_regclass('public.event_patch') is not null)
+    ('0066 patch listy', to_regclass('public.event_patch') is not null),
+    ('0067 žiadosti o servis pre autá', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'service_requests' and column_name = 'vehicle_id'))
 )
 select migration, case when ok then 'OK' else 'chýba' end as stav
 from checks

@@ -3,6 +3,7 @@ import { MessageSquareWarning, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ServiceTabs } from '@/components/layout/ModuleTabs'
 import { LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
@@ -32,6 +33,7 @@ export function ServiceListPage() {
 
   return (
     <>
+      <ServiceTabs />
       <PageHeader
         title="Servis"
         description={

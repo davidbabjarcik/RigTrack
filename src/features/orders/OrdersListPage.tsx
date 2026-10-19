@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { OrdersTabs } from '@/components/layout/ModuleTabs'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { memberName, useMembers } from '@/features/companies/useMembers'
@@ -78,6 +79,7 @@ export function OrdersListPage() {
 
   return (
     <>
+      <OrdersTabs />
       <PageHeader
         title="Objednávky"
         description="Nákupy techniky a ich položky"

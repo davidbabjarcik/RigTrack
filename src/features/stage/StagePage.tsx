@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { CalculatorTabs } from '@/components/layout/ModuleTabs'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
@@ -282,6 +283,7 @@ export function StagePage() {
 
   return (
     <>
+      <CalculatorTabs />
       <PageHeader
         title="Pódium"
         description={`Kalkulačka pódia ${config.data.name}`}

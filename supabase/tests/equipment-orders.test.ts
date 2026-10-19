@@ -81,4 +81,10 @@ describe('service requests', () => {
     await t.as('technik', `insert into public.service_requests (company_id, title) values ($1, 'Technikova')`, [company])
     expect(await t.as('viewer', 'select title from public.service_requests')).toEqual([{ title: 'Praská kapsula' }])
   })
+  it('accepts a vehicle of the same company', async () => {
+    const car = (await t.as('admin', `insert into public.vehicles (company_id, plate) values ($1, 'SP123AB') returning id`, [company]))[0].id
+    await t.as('viewer', `insert into public.service_requests (company_id, vehicle_id, title) values ($1, $2, 'Nesvieti brzdové svetlo')`, [company, car])
+    const foreignCar = (await t.as('outsider', `insert into public.vehicles (company_id, plate) values ($1, 'KE999XX') returning id`, [other]))[0].id
+    await expect(t.as('viewer', `insert into public.service_requests (company_id, vehicle_id, title) values ($1, $2, 'x')`, [company, foreignCar])).rejects.toThrow(/row-level security/)
+  })
 })

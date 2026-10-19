@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Download, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { CalculatorTabs } from '@/components/layout/ModuleTabs'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
@@ -451,6 +452,7 @@ export function LedCalculatorPage() {
 
   return (
     <>
+      <CalculatorTabs />
       <PageHeader title="LED kalkulačka" description="Panely, m², rozlíšenie, prúd, hliník, rigging a procesor – aj pre viac stien naraz" />
 
       <div className="mb-4 flex flex-wrap items-center gap-2" role="tablist" aria-label="Steny">

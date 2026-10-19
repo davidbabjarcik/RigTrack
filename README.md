@@ -21,6 +21,20 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.3 – 19. 10. 2026
+
+Upratanie aplikácie:
+
+- **Kalkulačky** sú jedna položka menu – Pódium Nivtec, Delay subov a LED stena, so záložkami medzi nimi.
+- **Objednávky**: záložky Objednávky | Štatistiky | **Wantlist** (Wantlist už nie je samostatne v menu; kto nemá
+  objednávky, otvorí z menu rovno Wantlist).
+- **Servis**: záložky Záznamy | **Žiadosti o servis** | **Servisní technici** (už nie samostatne v menu; kto nemá
+  servis, otvorí z menu svoje žiadosti).
+- **Žiadosti o servis aj pre autá** – pri aute tlačidlo „Nahlásiť poruchu“, vo formulári výber auta.
+- V evente sa v „Elektrika – fázy“ dá vyskúšať aj iná prípojka (napr. 32 A namiesto 16 A) bez úpravy eventu.
+
+Nové migrácie: `0067`.
+
 ### 2.2 – 19. 10. 2026
 
 - **Rozfázovanie elektriky v evente** (sekcia „Elektrika – fázy“): technika eventu sa rozdelí na L1–L3 (aj 2 fázy

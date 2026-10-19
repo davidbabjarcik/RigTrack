@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getSupabase } from '@/lib/supabase/client'
+import { isMissingColumn } from '@/lib/supabase/errors'
 
 export const REQUEST_STATUSES = ['open', 'in_progress', 'done', 'rejected'] as const
 export type RequestStatus = (typeof REQUEST_STATUSES)[number]
@@ -13,6 +14,8 @@ export const REQUEST_PRIORITY_LABELS: Record<RequestPriority, string> = { high: 
 export type ServiceRequest = {
   id: string
   equipmentId: string | null
+  /** Auto (0067); bez migrácie vždy null. */
+  vehicleId: string | null
   unitId: number | null
   title: string
   description: string
@@ -25,13 +28,16 @@ export type ServiceRequest = {
   resolvedAt: string | null
 }
 
-export type RequestFields = Pick<ServiceRequest, 'equipmentId' | 'unitId' | 'title' | 'description' | 'priority'>
+export type RequestFields = Pick<ServiceRequest, 'equipmentId' | 'vehicleId' | 'unitId' | 'title' | 'description' | 'priority'>
+
+let vehicleColumn = ', vehicle_id'
 
 export const requestKeys = { list: (companyId: string) => ['company', companyId, 'service-requests'] as const }
 
 type Row = {
   id: string
   equipment_id: string | null
+  vehicle_id?: string | null
   unit_id: number | null
   title: string
   description: string
@@ -48,14 +54,19 @@ type Row = {
 export async function fetchRequests(companyId: string): Promise<ServiceRequest[]> {
   const { data, error } = await getSupabase()
     .from('service_requests')
-    .select('id, equipment_id, unit_id, title, description, priority, status, response, requested_by, requested_by_name, created_at, resolved_at')
+    .select('id, equipment_id, unit_id, title, description, priority, status, response, requested_by, requested_by_name, created_at, resolved_at' + vehicleColumn)
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
     .limit(500)
+  if (vehicleColumn && isMissingColumn(error, 'vehicle_id')) {
+    vehicleColumn = ''
+    return fetchRequests(companyId)
+  }
   if (error) throw error
-  return (data as Row[]).map((row) => ({
+  return (data as unknown as Row[]).map((row) => ({
     id: row.id,
     equipmentId: row.equipment_id,
+    vehicleId: row.vehicle_id ?? null,
     unitId: row.unit_id,
     title: row.title,
     description: row.description,
@@ -76,7 +87,15 @@ export function useServiceRequests(companyId: string) {
 export async function createRequest(companyId: string, fields: RequestFields) {
   const { error } = await getSupabase()
     .from('service_requests')
-    .insert({ company_id: companyId, equipment_id: fields.equipmentId, unit_id: fields.unitId, title: fields.title.trim(), description: fields.description.trim(), priority: fields.priority })
+    .insert({
+      company_id: companyId,
+      equipment_id: fields.equipmentId,
+      ...(fields.vehicleId ? { vehicle_id: fields.vehicleId } : {}),
+      unit_id: fields.unitId,
+      title: fields.title.trim(),
+      description: fields.description.trim(),
+      priority: fields.priority,
+    })
   if (error) throw error
 }
 

@@ -7,6 +7,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { CalculatorTabs } from '@/components/layout/ModuleTabs'
 import { Field } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
 import {
@@ -297,6 +298,7 @@ export function DelayPage() {
 
   return (
     <>
+      <CalculatorTabs />
       <PageHeader title="Delay kalkulačka" description="Suby a zvuk: zarovnanie, delay veža, cardioid, end-fire, rad a arc" />
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Druh výpočtu">

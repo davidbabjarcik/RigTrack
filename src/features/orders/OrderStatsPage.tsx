@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { OrdersTabs } from '@/components/layout/ModuleTabs'
 import { SelectField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
@@ -42,6 +43,7 @@ export function OrderStatsPage() {
         <ArrowLeft className="size-4" aria-hidden />
         Objednávky
       </Link>
+      <OrdersTabs />
       <PageHeader title="Štatistiky objednávok" description="Nákupy pre nás; nákupy pre iných sa rátajú zvlášť." />
       {orders.isPending ? (
         <LoadingBlock />

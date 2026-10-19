@@ -5,14 +5,16 @@ import { SelectField } from '@/components/ui/field'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { cn } from '@/lib/utils'
 import { eventPhases, supplyOf } from './eventPower'
-import { POWER_LABELS, type CompanyEvent } from './model'
+import { POWER_LABELS, POWER_TYPES, type CompanyEvent, type PowerType } from './model'
 
 const fmt = (value: number, digits = 1) => value.toLocaleString('sk-SK', { maximumFractionDigits: digits })
 
 /** Rozfázovanie elektriky eventu: technika na L1–L3 čo najrovnomernejšie, prúd na fázu oproti prípojke. */
 export function EventPowerSection({ companyId, event }: { companyId: string; event: CompanyEvent }) {
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
-  const supply = supplyOf(event.power, event.powerCount)
+  // Prípojka z eventu; dá sa tu skúsiť aj iná (napr. 32 A namiesto 16 A) bez úpravy eventu.
+  const [power, setPower] = useState<PowerType | ''>(event.power)
+  const supply = supplyOf(power, event.powerCount)
   const [phaseCount, setPhaseCount] = useState<1 | 2 | 3>(supply?.phases ?? 3)
   const [existingKw, setExistingKw] = useState([0, 0, 0])
   if (!equipment.data || event.equipment.length === 0) return null
@@ -23,6 +25,22 @@ export function EventPowerSection({ companyId, event }: { companyId: string; eve
   return (
     <CollapsibleSection id="event.power" title={`Elektrika – fázy (${fmt(plan.totalWatts / 1000)} kW)`}>
       <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <SelectField
+          label="Prípojka"
+          value={power}
+          onChange={(e) => {
+            const next = e.target.value as PowerType | ''
+            setPower(next)
+            setPhaseCount(supplyOf(next, event.powerCount)?.phases ?? 3)
+          }}
+        >
+          <option value="">— neuvedená —</option>
+          {POWER_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {POWER_LABELS[type]}
+            </option>
+          ))}
+        </SelectField>
         <SelectField label="Fázy" value={phaseCount} onChange={(e) => setPhaseCount(Number(e.target.value) as 1 | 2 | 3)}>
           <option value={3}>3 fázy (L1–L3)</option>
           <option value={2}>2 fázy</option>
@@ -69,7 +87,8 @@ export function EventPowerSection({ companyId, event }: { companyId: string; eve
       </ul>
       <p className="mt-2 text-sm">
         Nevyváženosť: <span className={cn('font-medium', plan.imbalance > 20 && 'text-accent')}>{plan.imbalance} %</span>
-        {event.power && <span className="text-muted-foreground"> · prípojka: {POWER_LABELS[event.power]}{event.powerCount && event.powerCount > 1 ? ` × ${event.powerCount}` : ''}</span>}
+        {power && <span className="text-muted-foreground"> · prípojka: {POWER_LABELS[power]}{event.powerCount && event.powerCount > 1 ? ` × ${event.powerCount}` : ''}</span>}
+        {power !== event.power && <span className="text-accent"> (iná ako v evente)</span>}
       </p>
       {plan.unknown.length > 0 && (
         <p className="mt-2 text-sm text-muted-foreground">Bez zadaného výkonu (nerátajú sa): {plan.unknown.join(', ')}. Výkon doplňte v Technike.</p>

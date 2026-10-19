@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ServiceTabs } from '@/components/layout/ModuleTabs'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
@@ -115,6 +116,7 @@ export function TechniciansPage() {
 
   return (
     <>
+      <ServiceTabs />
       <PageHeader
         title="Servisní technici"
         description="Kto opravuje techniku a autá"

@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ServiceTabs } from '@/components/layout/ModuleTabs'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { useVehicles } from '@/features/vehicles/useVehicles'
 import { formatDateTime } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
@@ -32,7 +34,7 @@ const STATUS_CLASSES: Record<RequestStatus, string> = {
   rejected: 'bg-muted text-muted-foreground',
 }
 
-function RequestCard({ request, equipmentName, canResolve, canDelete }: { request: ServiceRequest; equipmentName?: string; canResolve: boolean; canDelete: boolean }) {
+function RequestCard({ request, equipmentName, vehicleName, canResolve, canDelete }: { request: ServiceRequest; equipmentName?: string; vehicleName?: string; canResolve: boolean; canDelete: boolean }) {
   const company = useCompany().active!
   const queryClient = useQueryClient()
   const [response, setResponse] = useState(request.response)
@@ -47,6 +49,7 @@ function RequestCard({ request, equipmentName, canResolve, canDelete }: { reques
           <span className="block text-sm text-muted-foreground">
             {[
               equipmentName && `${equipmentName}${request.unitId ? ` #${request.unitId}` : ''}`,
+              vehicleName && `auto ${vehicleName}`,
               `${request.requestedByName || 'neznámy'} · ${formatDateTime(request.createdAt)}`,
             ]
               .filter(Boolean)
@@ -63,6 +66,11 @@ function RequestCard({ request, equipmentName, canResolve, canDelete }: { reques
       {request.equipmentId && equipmentName && (
         <Link to={`/equipment/${request.equipmentId}`} className="self-start text-sm text-accent hover:underline">
           Otvoriť techniku
+        </Link>
+      )}
+      {request.vehicleId && vehicleName && (
+        <Link to={`/vehicles/${request.vehicleId}`} className="self-start text-sm text-accent hover:underline">
+          Otvoriť auto
         </Link>
       )}
       {request.description && <p className="text-sm whitespace-pre-wrap">{request.description}</p>}
@@ -117,6 +125,7 @@ export function ServiceRequestsPage() {
   const canResolve = can(company, 'service.edit')
   const requests = useServiceRequests(companyId)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
+  const vehicles = useVehicles(companyId)
   const [status, setStatus] = useState<'active' | RequestStatus | ''>('active')
   const [mine, setMine] = useState(false)
   const all = sortRequests(requests.data ?? [])
@@ -129,6 +138,7 @@ export function ServiceRequestsPage() {
 
   return (
     <>
+      <ServiceTabs />
       <PageHeader
         title="Žiadosti o servis"
         description={canResolve ? 'Nahlásené poruchy od celého tímu' : 'Vaše nahlásené poruchy a ako sa vybavili'}
@@ -177,6 +187,7 @@ export function ServiceRequestsPage() {
               key={request.id}
               request={request}
               equipmentName={equipment.data?.find((item) => item.id === request.equipmentId)?.name}
+              vehicleName={vehicles.data?.find((vehicle) => vehicle.id === request.vehicleId)?.plate}
               canResolve={canResolve}
               canDelete={can(company, 'service.delete') || (request.requestedBy === userId && request.status === 'open')}
             />

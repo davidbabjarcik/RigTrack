@@ -3,6 +3,7 @@ import { ExternalLink, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { OrdersTabs } from '@/components/layout/ModuleTabs'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
@@ -73,6 +74,7 @@ export function ShoppingPage() {
 
   return (
     <>
+      <OrdersTabs />
       <PageHeader
         title="Wantlist"
         description={pending.length > 0 ? `Odhad spolu: ${formatMoney(shoppingTotal(pending), 'EUR')}` : 'Čo treba kúpiť a čo chceme časom'}

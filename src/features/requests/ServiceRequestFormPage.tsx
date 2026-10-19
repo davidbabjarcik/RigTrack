@@ -7,6 +7,7 @@ import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { unitIdsOf } from '@/features/equipment/model'
+import { useVehicles } from '@/features/vehicles/useVehicles'
 import { can } from '@/lib/permissions'
 import { errorDetail } from '@/lib/supabase/errors'
 import { createRequest, REQUEST_PRIORITIES, REQUEST_PRIORITY_LABELS, requestKeys, type RequestPriority } from './api'
@@ -22,14 +23,17 @@ export function ServiceRequestFormPage() {
   const [params] = useSearchParams()
   const canSeeEquipment = can(company, 'equipment.view')
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: canSeeEquipment })
+  const canSeeVehicles = can(company, 'vehicles.view')
+  const vehicles = useVehicles(companyId)
   const [equipmentId, setEquipmentId] = useState(params.get('equipment') ?? '')
+  const [vehicleId, setVehicleId] = useState(params.get('vehicle') ?? '')
   const [search, setSearch] = useState('')
   const [unitId, setUnitId] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<RequestPriority>('normal')
   const save = useMutation({
-    mutationFn: () => createRequest(companyId, { equipmentId: equipmentId || null, unitId: unitId ? Number(unitId) : null, title, description, priority }),
+    mutationFn: () => createRequest(companyId, { equipmentId: equipmentId || null, vehicleId: vehicleId || null, unitId: unitId ? Number(unitId) : null, title, description, priority }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: requestKeys.list(companyId) })
       navigate('/service/requests', { replace: true })
@@ -51,7 +55,24 @@ export function ServiceRequestFormPage() {
     <>
       <PageHeader title="Nahlásiť poruchu" description="Žiadosť o servis – servis ju uvidí a dá vedieť, ako sa vybavila." />
       <form onSubmit={submit} className="flex flex-col gap-4">
-        {canSeeEquipment && (
+        {canSeeVehicles && (vehicles.data ?? []).length > 0 && (
+          <SelectField
+            label="Auto (ak ide o auto)"
+            value={vehicleId}
+            onChange={(e) => {
+              setVehicleId(e.target.value)
+              if (e.target.value) setEquipmentId('')
+            }}
+          >
+            <option value="">— nejde o auto —</option>
+            {(vehicles.data ?? []).map((vehicle) => (
+              <option key={vehicle.id} value={vehicle.id}>
+                {[vehicle.plate, vehicle.model].filter(Boolean).join(' · ')}
+              </option>
+            ))}
+          </SelectField>
+        )}
+        {canSeeEquipment && !vehicleId && (
           <fieldset className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
             <legend className="px-1 text-sm font-medium text-muted-foreground">Ktorá technika (nepovinné)</legend>
             {!chosen && <Field label="Hľadať techniku" type="search" placeholder="názov, výrobca, inventárne číslo" value={search} onChange={(e) => setSearch(e.target.value)} />}
@@ -102,7 +123,7 @@ export function ServiceRequestFormPage() {
           <Button type="submit" disabled={!title.trim() || save.isPending}>
             {save.isPending ? 'Odosielam…' : 'Odoslať žiadosť'}
           </Button>
-          <LinkButton to={chosen ? `/equipment/${chosen.id}` : '/service/requests'} variant="outline">
+          <LinkButton to={chosen ? `/equipment/${chosen.id}` : vehicleId ? `/vehicles/${vehicleId}` : '/service/requests'} variant="outline">
             Zrušiť
           </LinkButton>
         </div>
