@@ -168,7 +168,7 @@ export function CaseDetailPage() {
         <CasePhoto companyId={companyId} caseId={id} name={current.name} photoPath={current.photoPath} canEdit={canEdit} />
       </div>
 
-      <CaseChecks companyId={companyId} caseId={id} canCheck={canEdit} />
+      <CaseChecks companyId={companyId} caseId={id} canCheck={can(company, 'cases.check') || canEdit} />
 
       <div className="mb-6">
         <UsageHistory

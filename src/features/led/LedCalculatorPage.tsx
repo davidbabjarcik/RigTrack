@@ -1,20 +1,18 @@
-import { TriangleAlert } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
+import { useCompany } from '@/features/companies/company-context'
+import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { usePartners } from '@/features/partners/api'
+import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
+import { CanvasDiagram } from './CanvasDiagram'
+import { LedDiagram } from './LedDiagram'
+import { planProcessors, PROCESSOR_PRESETS, type Processor } from './processor'
 import { calculateLed, DEFAULT_INPUT, describePieces, MOUNT_LABELS, MOUNTS, PANEL_PRESETS, TRUSS_PRESETS, type LedInput, type Panel } from './model'
-
-const STORAGE_KEY = 'rigtrack.led'
-
-function load(): LedInput {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    return saved ? { ...DEFAULT_INPUT, ...(JSON.parse(saved) as Partial<LedInput>) } : DEFAULT_INPUT
-  } catch {
-    return DEFAULT_INPUT
-  }
-}
 
 const fmt = (value: number, digits = 2) => value.toLocaleString('sk-SK', { maximumFractionDigits: digits })
 
@@ -72,26 +70,34 @@ function Rows({ rows }: { rows: [string, ReactNode][] }) {
   )
 }
 
-/** LED kalkulačka: z rozmeru panely, m², rozlíšenie, prúd, a podľa spôsobu stavby hliník a rigging materiál. */
-export function LedCalculatorPage() {
-  const [input, setInput] = useState<LedInput>(load)
-  const set = (patch: Partial<LedInput>) => setInput((current) => ({ ...current, ...patch }))
-  const setPanel = (patch: Partial<Panel>) => setInput((current) => ({ ...current, panel: { ...current.panel, ...patch, name: patch.name ?? 'Vlastný panel' } }))
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(input))
-    } catch {
-      // Bez úložiska sa nastavenie len nezapamätá.
-    }
-  }, [input])
-  const result = calculateLed(input)
+type StockPanel = { id: string; name: string; quantity: number; panel: Panel }
+
+type EditorProps = {
+  input: LedInput
+  /** Vstup s dielmi hliníka zo skladu (ak sú zapnuté) – z neho sa počíta. */
+  effective: LedInput
+  name: string
+  set: (patch: Partial<LedInput>) => void
+  stockPanels: StockPanel[]
+  panelEquipmentId: string | undefined
+  onStockPanel: (item: StockPanel | null) => void
+  stockTruss: boolean
+}
+
+/** Jedna stena: zadanie a výsledky (panely, prúd, hliník, rigging) s nákresom. */
+function WallEditor({ input, effective, name, set, stockPanels, panelEquipmentId, onStockPanel, stockTruss }: EditorProps) {
+  const setPanel = (patch: Partial<Panel>) => {
+    onStockPanel(null)
+    set({ panel: { ...input.panel, ...patch, name: patch.name ?? 'Vlastný panel' } })
+  }
+  const result = calculateLed(effective)
   const presetIndex = PANEL_PRESETS.findIndex((preset) => preset.name === input.panel.name)
   const trussIndex = TRUSS_PRESETS.findIndex((preset) => preset.name === input.truss.name)
   const hanging = input.mount !== 'stacked'
+  const panelValue = panelEquipmentId ? `eq:${panelEquipmentId}` : presetIndex >= 0 ? String(presetIndex) : 'custom'
 
   return (
     <>
-      <PageHeader title="LED kalkulačka" description="Koľko panelov, m², rozlíšenie, prúd, hliník a rigging na LED stenu" />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
           <Card title="Panel">
@@ -99,9 +105,30 @@ export function LedCalculatorPage() {
               <SelectField
                 label="Typ panela"
                 className="col-span-2"
-                value={presetIndex >= 0 ? String(presetIndex) : 'custom'}
-                onChange={(e) => e.target.value !== 'custom' && set({ panel: PANEL_PRESETS[Number(e.target.value)] })}
+                value={panelValue}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value.startsWith('eq:')) {
+                    const item = stockPanels.find((candidate) => candidate.id === value.slice(3))
+                    if (item) {
+                      onStockPanel(item)
+                      set({ panel: item.panel })
+                    }
+                  } else if (value !== 'custom') {
+                    onStockPanel(null)
+                    set({ panel: PANEL_PRESETS[Number(value)] })
+                  }
+                }}
               >
+                {stockPanels.length > 0 && (
+                  <optgroup label="Z našej techniky">
+                    {stockPanels.map((item) => (
+                      <option key={item.id} value={`eq:${item.id}`}>
+                        {item.name} ({item.quantity} ks)
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
                 {PANEL_PRESETS.map((preset, index) => (
                   <option key={preset.name} value={index}>
                     {preset.name}
@@ -158,6 +185,9 @@ export function LedCalculatorPage() {
                     </option>
                   ))}
                 </SelectField>
+                {stockTruss ? (
+                  <p className="self-end text-sm text-muted-foreground">Diely hliníka: {effective.trussLengths.map((size) => `${fmt(size)} m`).join(', ')} (z techniky)</p>
+                ) : (
                 <Field
                   label="Diely, ktoré máme (m)"
                   placeholder="3, 2, 1, 0,5"
@@ -170,6 +200,7 @@ export function LedCalculatorPage() {
                     if (sizes.length > 0) set({ trussLengths: sizes })
                   }}
                 />
+                )}
                 <Num label="Presah trussu na každej strane (m)" value={input.overhangM} onChange={(value) => set({ overhangM: value })} />
                 {input.mount === 'goalpost' && <Num label="Spodok steny nad zemou (m)" value={input.clearanceM} onChange={(value) => set({ clearanceM: value })} />}
                 {input.mount === 'flown' && (
@@ -211,6 +242,7 @@ export function LedCalculatorPage() {
         </div>
 
         <div className="flex flex-col gap-4">
+          <LedDiagram input={effective} result={result} name={name} />
           {result.warnings.length > 0 && (
             <div role="alert" className="flex flex-col gap-1 rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
               {result.warnings.map((warning) => (
@@ -295,6 +327,310 @@ export function LedCalculatorPage() {
             Orientačný výpočet. Hodnoty panelov a materiálu na lištu / bod / spoj upravte podľa vášho systému; nosnosť trussu a motorov vždy overte podľa výrobcu.
           </p>
         </div>
+      </div>
+    </>
+  )
+}
+
+type Wall = LedInput & { id: string; name: string; panelEquipmentId?: string }
+type State = {
+  walls: Wall[]
+  active: number
+  /** Hliník podľa dielov v technike (druh truss s dĺžkou). */
+  stockTruss: boolean
+  /** Procesor: „preset:N“ alebo id techniky. */
+  processor: string
+  /** Odkiaľ chýbajúce panely: kľúč panela → id firmy z Firmy a kontakty. */
+  suppliers: Record<string, string>
+}
+
+const STATE_KEY = 'rigtrack.led.v2'
+const newId = () => Math.random().toString(36).slice(2, 10)
+
+function loadState(): State {
+  const fallback: State = { walls: [{ ...DEFAULT_INPUT, id: newId(), name: 'Stena 1' }], active: 0, stockTruss: false, processor: 'preset:2', suppliers: {} }
+  try {
+    const saved = localStorage.getItem(STATE_KEY)
+    if (saved) {
+      const state = JSON.parse(saved) as State
+      if (state.walls?.length) {
+        return { ...fallback, ...state, walls: state.walls.map((wall) => ({ ...DEFAULT_INPUT, ...wall })), active: Math.min(state.active ?? 0, state.walls.length - 1) }
+      }
+    }
+    // Staršia verzia kalkulačky mala jednu stenu.
+    const old = localStorage.getItem('rigtrack.led')
+    if (old) return { ...fallback, walls: [{ ...DEFAULT_INPUT, ...(JSON.parse(old) as Partial<LedInput>), id: newId(), name: 'Stena 1' }] }
+  } catch {
+    // Poškodené nastavenie – začne sa odznova.
+  }
+  return fallback
+}
+
+const panelKey = (wall: Wall) => (wall.panelEquipmentId ? `eq:${wall.panelEquipmentId}` : `name:${wall.panel.name}`)
+
+/** LED kalkulačka: viac stien, panely a hliník zo skladu, subdodávateľ, procesor a rozloženie do vstupov. */
+export function LedCalculatorPage() {
+  const company = useCompany().active
+  const companyId = company?.companyId ?? ''
+  const canSeeStock = Boolean(company && can(company, 'equipment.view'))
+  const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: canSeeStock })
+  const partners = usePartners(companyId)
+  const [state, setState] = useState<State>(loadState)
+  useEffect(() => {
+    try {
+      localStorage.setItem(STATE_KEY, JSON.stringify(state))
+    } catch {
+      // Bez úložiska sa nastavenie len nezapamätá.
+    }
+  }, [state])
+
+  const items = equipment.data ?? []
+  const stockPanels: StockPanel[] = items
+    .filter((item) => item.attributes.ledPanel && item.status !== 'retired')
+    .map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, panel: { name: item.name, ...item.attributes.ledPanel! } }))
+  const stockProcessors = items.filter((item) => item.attributes.ledProcessor && item.status !== 'retired')
+  const trussStock = new Map<number, number>()
+  for (const item of items) {
+    const length = item.attributes.lengthM
+    if (item.kind === 'truss' && length && item.status !== 'retired') trussStock.set(length, (trussStock.get(length) ?? 0) + item.quantity)
+  }
+  const stockTruss = state.stockTruss && trussStock.size > 0
+  const effective = (wall: Wall): LedInput => (stockTruss ? { ...wall, trussLengths: [...trussStock.keys()] } : wall)
+
+  const wall = state.walls[state.active]
+  const setWall = (patch: Partial<Wall>) =>
+    setState((current) => ({ ...current, walls: current.walls.map((item, index) => (index === current.active ? { ...item, ...patch } : item)) }))
+  const results = state.walls.map((item) => ({ wall: item, result: calculateLed(effective(item)) }))
+
+  // Panely spolu podľa druhu oproti skladu.
+  const panelNeeds = new Map<string, { label: string; need: number; have: number | null }>()
+  for (const { wall: item, result } of results) {
+    const key = panelKey(item)
+    const stock = stockPanels.find((panel) => panel.id === item.panelEquipmentId)
+    const entry = panelNeeds.get(key) ?? { label: item.panel.name, need: 0, have: stock ? stock.quantity : null }
+    entry.need += result.panels
+    panelNeeds.set(key, entry)
+  }
+  // Hliník spolu podľa dĺžky oproti skladu.
+  const trussNeeds = new Map<number, number>()
+  for (const { result } of results) for (const need of result.truss?.needs ?? []) trussNeeds.set(need.lengthM, (trussNeeds.get(need.lengthM) ?? 0) + need.count)
+
+  const processorItem = stockProcessors.find((item) => item.id === state.processor)
+  const processor: Processor = processorItem
+    ? { name: processorItem.name, ...processorItem.attributes.ledProcessor! }
+    : (PROCESSOR_PRESETS[Number(state.processor.replace('preset:', ''))] ?? PROCESSOR_PRESETS[2])
+  const plan = planProcessors(
+    results.map(({ wall: item, result }) => ({ name: item.name, columns: result.columns, rows: result.rows, panelPxW: item.panel.pxW, panelPxH: item.panel.pxH })),
+    processor,
+  )
+  const totals = results.reduce(
+    (sum, { result }) => ({ panels: sum.panels + result.panels, area: sum.area + result.areaM2, maxW: sum.maxW + result.power.maxW, kg: sum.kg + result.screenKg }),
+    { panels: 0, area: 0, maxW: 0, kg: 0 },
+  )
+
+  return (
+    <>
+      <PageHeader title="LED kalkulačka" description="Panely, m², rozlíšenie, prúd, hliník, rigging a procesor – aj pre viac stien naraz" />
+
+      <div className="mb-4 flex flex-wrap items-center gap-2" role="tablist" aria-label="Steny">
+        {state.walls.map((item, index) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={index === state.active}
+            onClick={() => setState({ ...state, active: index })}
+            className={cn('h-9 rounded-lg border px-3 text-sm font-medium', index === state.active ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
+          >
+            {item.name}
+          </button>
+        ))}
+        {state.walls.length < 8 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setState({ ...state, walls: [...state.walls, { ...wall, id: newId(), name: `Stena ${state.walls.length + 1}` }], active: state.walls.length })}
+          >
+            <Plus className="size-4" aria-hidden />
+            Ďalšia stena
+          </Button>
+        )}
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <Field label="Názov steny" className="w-56" maxLength={40} value={wall.name} onChange={(e) => setWall({ name: e.target.value })} />
+        {state.walls.length > 1 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setState({ ...state, walls: state.walls.filter((_, index) => index !== state.active), active: Math.max(0, state.active - 1) })}
+          >
+            <Trash2 className="size-4" aria-hidden />
+            Odstrániť stenu
+          </Button>
+        )}
+        {trussStock.size > 0 && (
+          <label className="flex items-center gap-2 pb-2 text-sm">
+            <input type="checkbox" className="size-4" checked={state.stockTruss} onChange={(e) => setState({ ...state, stockTruss: e.target.checked })} />
+            Hliník podľa dielov v technike
+          </label>
+        )}
+      </div>
+
+      <WallEditor
+        key={wall.id}
+        input={wall}
+        effective={effective(wall)}
+        name={wall.name}
+        set={(patch) => setWall(patch)}
+        stockPanels={stockPanels}
+        panelEquipmentId={wall.panelEquipmentId}
+        onStockPanel={(item) => setWall({ panelEquipmentId: item?.id })}
+        stockTruss={stockTruss}
+      />
+
+      <h2 className="mt-8 mb-3 text-lg font-semibold">{state.walls.length > 1 ? `Spolu za ${state.walls.length} steny` : 'Materiál a zapojenie'}</h2>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card title="Panely – máme / treba">
+          {state.walls.length > 1 && (
+            <p className="mb-2 text-sm">
+              {totals.panels} panelov · {fmt(totals.area)} m² · {fmt(totals.maxW / 1000, 1)} kW max · {fmt(totals.kg, 1)} kg
+            </p>
+          )}
+          <ul className="flex flex-col gap-3 text-sm">
+            {[...panelNeeds.entries()].map(([key, entry]) => {
+              const missing = entry.have === null ? entry.need : Math.max(0, entry.need - entry.have)
+              return (
+                <li key={key} className="flex flex-col gap-1">
+                  <span className="flex justify-between gap-3">
+                    <span className="font-medium">{entry.label}</span>
+                    <span>
+                      treba {entry.need} ks{entry.have !== null && ` · máme ${entry.have} ks`}
+                    </span>
+                  </span>
+                  {missing > 0 && (
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className={entry.have === null ? 'text-muted-foreground' : 'text-destructive'}>
+                        {entry.have === null ? 'nie je v našej technike' : `chýba ${missing} ks`} – od:
+                      </span>
+                      <SelectField
+                        label="Subdodávateľ"
+                        hideLabel
+                        className="w-56"
+                        value={state.suppliers[key] ?? ''}
+                        onChange={(e) => setState({ ...state, suppliers: { ...state.suppliers, [key]: e.target.value } })}
+                      >
+                        <option value="">— vyberte subdodávateľa —</option>
+                        {(partners.data ?? []).map((partner) => (
+                          <option key={partner.id} value={partner.id}>
+                            {partner.name}
+                          </option>
+                        ))}
+                      </SelectField>
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+          {stockPanels.length === 0 && canSeeStock && (
+            <p className="mt-2 text-xs text-muted-foreground">Panely zo skladu: v technike zaškrtnite „LED panel“ a zadajte rozmer a pixely.</p>
+          )}
+        </Card>
+
+        {trussNeeds.size > 0 && (
+          <Card title="Hliník – máme / treba">
+            <dl className="divide-y text-sm">
+              {[...trussNeeds.entries()]
+                .sort((a, b) => b[0] - a[0])
+                .map(([length, need]) => {
+                  const have = trussStock.get(length)
+                  const short = (have !== undefined && need > have) || (have === undefined && trussStock.size > 0)
+                  return (
+                    <div key={length} className="flex justify-between gap-4 py-1.5">
+                      <dt>{fmt(length)} m</dt>
+                      <dd className={cn('font-medium', short && 'text-destructive')}>
+                        treba {need} ks{have !== undefined ? ` · máme ${have}` : trussStock.size > 0 ? ' · nemáme' : ''}
+                      </dd>
+                    </div>
+                  )
+                })}
+            </dl>
+            {trussStock.size === 0 && canSeeStock && (
+              <p className="mt-2 text-xs text-muted-foreground">Hliník zo skladu: technika druhu „Stage – hliník / truss“ s dĺžkou dielu a počtom kusov.</p>
+            )}
+          </Card>
+        )}
+
+        <Card title="Procesor a zapojenie">
+          <SelectField label="Procesor" value={state.processor} onChange={(e) => setState({ ...state, processor: e.target.value })}>
+            {stockProcessors.length > 0 && (
+              <optgroup label="Z našej techniky">
+                {stockProcessors.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} ({item.attributes.ledProcessor!.outputs} výstupov, {item.quantity} ks)
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            <optgroup label="Typické">
+              {PROCESSOR_PRESETS.map((preset, index) => (
+                <option key={preset.name} value={`preset:${index}`}>
+                  {preset.name}
+                </option>
+              ))}
+            </optgroup>
+          </SelectField>
+          <div className="mt-3">
+            <Rows
+              rows={[
+                ['Porty (výstupy) spolu', `${plan.ports}`],
+                [
+                  'Procesorov treba',
+                  <span key="processors" className={processorItem && plan.processors > processorItem.quantity ? 'text-destructive' : undefined}>
+                    {plan.processors}
+                    {processorItem && ` · máme ${processorItem.quantity}`}
+                  </span>,
+                ],
+                [
+                  `Vstupov ${processor.inputW}×${processor.inputH}`,
+                  <span key="inputs" className={plan.inputsShort ? 'text-destructive' : undefined}>
+                    {plan.canvases} (procesor má {processor.inputs})
+                  </span>,
+                ],
+              ]}
+            />
+          </div>
+          {plan.inputsShort && <p className="mt-2 text-sm text-destructive">Obraz sa nezmestí do vstupov – zvážte škálovanie, väčší procesor alebo ďalší procesor.</p>}
+          <details className="mt-3">
+            <summary className="cursor-pointer text-sm font-medium">Zapojenie portov</summary>
+            <ul className="mt-2 flex flex-col gap-1 text-sm">
+              {plan.runs.map((run) => (
+                <li key={run.port}>
+                  <span className="font-medium">Port {run.port}</span> · {run.wall}: {run.fromColumn === run.toColumn ? `stĺpec ${run.fromColumn}` : `stĺpce ${run.fromColumn}–${run.toColumn}`} ·{' '}
+                  {run.panels} panelov · {fmt(run.pixels, 0)} px
+                </li>
+              ))}
+            </ul>
+          </details>
+        </Card>
+
+        <Card title={`Rozloženie do vstupov (${processor.inputW}×${processor.inputH})`}>
+          <CanvasDiagram placements={plan.placements} canvases={plan.canvases} inputW={processor.inputW} inputH={processor.inputH} walls={state.walls.map((item) => item.name)} />
+          <p className="mt-2 text-xs text-muted-foreground">
+            Steny sú v obraze po radoch od najvyššej; čo sa do jedného vstupu nezmestí, ide na ďalší (napr. HDMI 2 ako druhý obraz). Polohy (x, y) nastavte rovnako v Novastar.
+          </p>
+          <ul className="mt-2 text-sm">
+            {plan.placements.map((place) => (
+              <li key={place.wall}>
+                {place.wall}: vstup {place.canvas + 1}
+                {place.tilesX * place.tilesY > 1
+                  ? `–${place.canvas + place.tilesX * place.tilesY} (rozdelená na ${place.tilesX}×${place.tilesY})`
+                  : `, x ${place.x}, y ${place.y}, ${place.w}×${place.h} px`}
+              </li>
+            ))}
+          </ul>
+        </Card>
       </div>
     </>
   )

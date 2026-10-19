@@ -38,7 +38,7 @@ beforeAll(async () => {
 describe('defaults', () => {
   it('match the catalogue the application shows', async () => {
     const rows = await t.rows('select permission, roles::text[] as roles from public.permission_defaults() order by permission')
-    const fromDb = rows.map((row) => [row.permission, [...(row.roles as unknown as string[])].sort()])
+    const fromDb = rows.map((row) => [row.permission, [...(row.roles as unknown as string[])].sort()]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))
     const fromApp = PERMISSIONS.map((item) => [item.key, [...item.roles].sort()]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))
     expect(fromDb).toEqual(fromApp)
   })

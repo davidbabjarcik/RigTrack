@@ -5,10 +5,12 @@ import { isAdminRole } from '@/lib/roles'
 // v 0030_permissions.sql; zhodu stráži supabase/tests/permissions.test.ts.
 
 /** Roly, ktorým sa dajú oprávnenia meniť. Admin má vždy všetko. */
-export const CONFIGURABLE_ROLES = ['skladnik', 'technik', 'viewer'] as const satisfies readonly Role[]
+export const CONFIGURABLE_ROLES = ['skladnik', 'technik', 'viewer', 'helper'] as const satisfies readonly Role[]
 export type ConfigurableRole = (typeof CONFIGURABLE_ROLES)[number]
 
 const ALL: ConfigurableRole[] = ['skladnik', 'technik', 'viewer']
+/** Helper (brigádnik) vidí len to najnutnejšie: techniku, cases, svoje eventy, úlohy, tím a návrhy. */
+const ALL_AND_HELPER: ConfigurableRole[] = ['skladnik', 'technik', 'viewer', 'helper']
 const STAFF: ConfigurableRole[] = ['skladnik', 'technik']
 const KEEPER: ConfigurableRole[] = ['skladnik']
 const NOBODY: ConfigurableRole[] = []
@@ -19,19 +21,19 @@ const group = <const K extends string>(id: string, label: string, permissions: {
   permissions,
 })
 
-const crud = <const M extends string>(module: M) =>
+const crud = <const M extends string>(module: M, viewRoles: ConfigurableRole[] = ALL) =>
   [
-    { key: `${module}.view`, label: 'Vidieť', roles: ALL },
+    { key: `${module}.view`, label: 'Vidieť', roles: viewRoles },
     { key: `${module}.edit`, label: 'Pridávať a upravovať', roles: STAFF },
     { key: `${module}.delete`, label: 'Mazať', roles: KEEPER },
   ] as const
 
 export const PERMISSION_GROUPS = [
   group('equipment', 'Technika', [
-    ...crud('equipment'),
+    ...crud('equipment', ALL_AND_HELPER),
     { key: 'lookups.manage', label: 'Spravovať kategórie, umiestnenia a farby káblov', roles: KEEPER },
   ]),
-  group('cases', 'Cases', [...crud('cases')]),
+  group('cases', 'Cases', [...crud('cases', ALL_AND_HELPER), { key: 'cases.check', label: 'Kontrolovať obsah cases', roles: STAFF }]),
   group('orders', 'Objednávky a nákupné ceny', [
     { key: 'orders.view', label: 'Vidieť', roles: KEEPER },
     { key: 'orders.edit', label: 'Pridávať a upravovať', roles: KEEPER },
@@ -44,13 +46,13 @@ export const PERMISSION_GROUPS = [
     { key: 'vehicles.delete', label: 'Mazať', roles: NOBODY },
   ]),
   group('loans', 'Výpožičky', [...crud('loans')]),
-  group('events', 'Eventy', [...crud('events')]),
+  group('events', 'Eventy (helper vidí len tie, kde je v posádke)', [...crud('events', ALL_AND_HELPER)]),
   group('service', 'Servis', [...crud('service')]),
-  group('tasks', 'Úlohy', [...crud('tasks')]),
+  group('tasks', 'Úlohy', [...crud('tasks', ALL_AND_HELPER)]),
   group('shopping', 'Wantlist', [...crud('shopping')]),
   group('suggestions', 'Návrhy', [
-    { key: 'suggestions.view', label: 'Vidieť', roles: ALL },
-    { key: 'suggestions.add', label: 'Pridávať návrhy a komentáre', roles: ALL },
+    { key: 'suggestions.view', label: 'Vidieť', roles: ALL_AND_HELPER },
+    { key: 'suggestions.add', label: 'Pridávať návrhy a komentáre', roles: ALL_AND_HELPER },
     { key: 'suggestions.manage', label: 'Meniť stav cudzích návrhov', roles: KEEPER },
     { key: 'suggestions.delete', label: 'Mazať cudzie návrhy a komentáre', roles: NOBODY },
   ]),
@@ -60,7 +62,7 @@ export const PERMISSION_GROUPS = [
   ]),
   group('audit', 'História zmien', [{ key: 'audit.view', label: 'Vidieť', roles: NOBODY }]),
   group('staff', 'Zamestnanci', [
-    { key: 'staff.view', label: 'Vidieť tím a kontakty', roles: ALL },
+    { key: 'staff.view', label: 'Vidieť tím a kontakty', roles: ALL_AND_HELPER },
     { key: 'staff.manage', label: 'Spravovať karty a dostupnosť všetkých', roles: KEEPER },
   ]),
 ]

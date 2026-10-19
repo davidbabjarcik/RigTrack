@@ -44,7 +44,9 @@ with checks (migration, ok) as (
     ('0058 bohatšie demo', exists (select 1 from pg_proc where proname = 'seed_demo_extras')),
     ('0059 eventy (program, doprava)', to_regclass('public.event_days') is not null),
     ('0060 technika a objednávky', to_regclass('public.service_requests') is not null),
-    ('0061 kancelária, škody, úlohy', to_regclass('public.incidents') is not null)
+    ('0061 kancelária, škody, úlohy', to_regclass('public.incidents') is not null),
+    ('0062 rola helper (typ)', exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid where t.typname = 'app_role' and e.enumlabel = 'helper')),
+    ('0063 rola helper (práva)', exists (select 1 from pg_proc where proname = 'is_helper'))
 )
 select migration, case when ok then 'OK' else 'chýba' end as stav
 from checks

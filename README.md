@@ -21,6 +21,23 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 1.18 – 19. 10. 2026
+
+- **Rola helper** (brigádnik na pomoc): vidí len eventy, kde je v posádke, techniku a cases len prezerá, úlohy, tím
+  a návrhy; žiadosti o servis posiela a vidí len svoje. Kontrolu cases mu admin povolí novým oprávnením
+  „Kontrolovať obsah cases“ (platí pre všetky roly).
+- **LED kalkulačka**:
+  - **viac stien naraz** (Stena 1, 2, 3…, každá iný rozmer a panel) a súčet za všetky;
+  - **LED panely zo skladu** – v technike zaškrtnite „LED panel“ (rozmer, pixely, váha, príkon); kalkulačka ukáže
+    máme / treba a pri chýbajúcich vyberiete **subdodávateľa** z Firmy a kontakty;
+  - **hliník podľa dielov v technike** (truss s dĺžkou) – koľko dielov akej dĺžky treba a máme;
+  - **procesor** (napr. Novastar 4 / 6 / 8 / 16 výstupov alebo váš z techniky – „LED procesor“): zapojenie portov
+    po stĺpcoch, koľko procesorov treba a **rozloženie stien do Full HD vstupov** (viac stien v jednom obraze,
+    čo sa nezmestí, ide na HDMI 2 ako druhý obraz);
+  - **nákres steny** (panely, truss, veže, motory, rozmery) so stiahnutím ako obrázok.
+
+Nové migrácie: `0062` (samostatne), potom `0063`.
+
 ### 1.17 – 19. 10. 2026
 
 - **LED kalkulačka** (menu → LED kalkulačka): z rozmeru steny počet panelov (zaokrúhliť na najbližší / nikdy väčšia /

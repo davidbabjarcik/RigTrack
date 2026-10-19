@@ -42,6 +42,11 @@ describe('calculateLed', () => {
     const result = calculateLed({ ...DEFAULT_INPUT, mount: 'goalpost', widthM: 4, heightM: 2.5, clearanceM: 0.5 })
     // Veže 2,5 + 0,5 + 0,5 = 3,5 m → 3 + 0,5.
     expect(result.truss?.runs[1].pieces).toEqual([3, 0.5])
+    expect(result.truss?.needs).toEqual([
+      { lengthM: 3, count: 3 },
+      { lengthM: 2, count: 1 },
+      { lengthM: 0.5, count: 2 },
+    ])
     expect(result.truss).toMatchObject({ cornerCubes: 2, basePlates: 2, totalM: 5 + 7 })
     // Horný truss 5 m = 3 + 2 → 1 spoj + 2 ku kockám; každá veža 1 spoj + kocka + podstava.
     expect(result.truss?.joints).toBe(1 + 2 + 2 * 3)

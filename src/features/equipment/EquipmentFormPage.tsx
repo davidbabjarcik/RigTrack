@@ -83,6 +83,8 @@ const EMPTY: EquipmentFormValues = {
   cloneOf: '',
   captureMatch: '',
   captureNote: '',
+  isLedPanel: false,
+  isLedProcessor: false,
 }
 
 function toFormValues(equipment: Equipment, categories: Lookup[], locations: Lookup[]): EquipmentFormValues {
@@ -127,6 +129,20 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     cloneOf: equipment.cloneOf ?? '',
     captureMatch: equipment.captureMatch ?? '',
     captureNote: equipment.captureNote ?? '',
+    isLedPanel: Boolean(equipment.attributes.ledPanel),
+    ledWidthMm: equipment.attributes.ledPanel?.widthMm,
+    ledHeightMm: equipment.attributes.ledPanel?.heightMm,
+    ledPxW: equipment.attributes.ledPanel?.pxW,
+    ledPxH: equipment.attributes.ledPanel?.pxH,
+    ledWeightKg: equipment.attributes.ledPanel?.weightKg || undefined,
+    ledMaxW: equipment.attributes.ledPanel?.maxW || undefined,
+    ledAvgW: equipment.attributes.ledPanel?.avgW || undefined,
+    isLedProcessor: Boolean(equipment.attributes.ledProcessor),
+    procOutputs: equipment.attributes.ledProcessor?.outputs,
+    procPixels: equipment.attributes.ledProcessor?.pixelsPerOutput,
+    procInputs: equipment.attributes.ledProcessor?.inputs,
+    procInputW: equipment.attributes.ledProcessor?.inputW,
+    procInputH: equipment.attributes.ledProcessor?.inputH,
   }
 }
 
@@ -182,6 +198,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const lengthM = useWatch({ control, name: 'lengthM' })
   const quantity = useWatch({ control, name: 'quantity' })
   const captureMatch = useWatch({ control, name: 'captureMatch' })
+  const isLedPanel = useWatch({ control, name: 'isLedPanel' })
+  const isLedProcessor = useWatch({ control, name: 'isLedProcessor' })
   const simple = isSimpleKind(kind, categoryText ?? '')
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
@@ -395,6 +413,40 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
             </fieldset>
           )}
         </Group>
+      )}
+
+      {!simple && (
+        <fieldset className="rounded-xl border bg-surface p-4">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" className="size-4" {...register('isLedPanel')} />
+            LED panel (pre LED kalkulačku)
+          </label>
+          {isLedPanel && (
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Field label="Šírka (mm) *" type="number" inputMode="decimal" min={1} error={errors.ledWidthMm?.message} {...register('ledWidthMm', asOptionalNumber)} />
+              <Field label="Výška (mm) *" type="number" inputMode="decimal" min={1} error={errors.ledHeightMm?.message} {...register('ledHeightMm', asOptionalNumber)} />
+              <Field label="Pixely šírka *" type="number" inputMode="numeric" min={1} error={errors.ledPxW?.message} {...register('ledPxW', asOptionalNumber)} />
+              <Field label="Pixely výška *" type="number" inputMode="numeric" min={1} error={errors.ledPxH?.message} {...register('ledPxH', asOptionalNumber)} />
+              <Field label="Váha (kg)" type="number" inputMode="decimal" min={0} error={errors.ledWeightKg?.message} {...register('ledWeightKg', asOptionalNumber)} />
+              <Field label="Príkon max (W)" type="number" inputMode="decimal" min={0} error={errors.ledMaxW?.message} {...register('ledMaxW', asOptionalNumber)} />
+              <Field label="Príkon priemer (W)" type="number" inputMode="decimal" min={0} error={errors.ledAvgW?.message} {...register('ledAvgW', asOptionalNumber)} />
+              <p className="col-span-2 self-end text-xs text-muted-foreground sm:col-span-1">Počet kusov = koľko panelov máme.</p>
+            </div>
+          )}
+          <label className="mt-3 flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" className="size-4" {...register('isLedProcessor')} />
+            LED procesor (napr. Novastar)
+          </label>
+          {isLedProcessor && (
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+              <Field label="Výstupy (porty) *" type="number" inputMode="numeric" min={1} error={errors.procOutputs?.message} {...register('procOutputs', asOptionalNumber)} />
+              <Field label="Pixelov na výstup" type="number" inputMode="numeric" placeholder="650000" error={errors.procPixels?.message} {...register('procPixels', asOptionalNumber)} />
+              <Field label="Vstupy (HDMI…)" type="number" inputMode="numeric" placeholder="2" error={errors.procInputs?.message} {...register('procInputs', asOptionalNumber)} />
+              <Field label="Vstup šírka (px)" type="number" inputMode="numeric" placeholder="1920" error={errors.procInputW?.message} {...register('procInputW', asOptionalNumber)} />
+              <Field label="Vstup výška (px)" type="number" inputMode="numeric" placeholder="1080" error={errors.procInputH?.message} {...register('procInputH', asOptionalNumber)} />
+            </div>
+          )}
+        </fieldset>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">

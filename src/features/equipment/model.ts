@@ -94,7 +94,15 @@ export type EquipmentAttributes = {
   subDelayMs?: number
   /** DMX módy svetla: názov a počet kanálov, napr. Standard 16 ch. */
   dmxModes?: DmxMode[]
+  /** LED panel (pre LED kalkulačku): rozmer, pixely, váha a príkon jedného panela. */
+  ledPanel?: LedPanelSpec
+  /** LED procesor (napr. Novastar): výstupy, pixely na výstup, vstupy a ich rozlíšenie. */
+  ledProcessor?: LedProcessorSpec
 }
+
+export type LedProcessorSpec = { outputs: number; pixelsPerOutput: number; inputs: number; inputW: number; inputH: number }
+
+export type LedPanelSpec = { widthMm: number; heightMm: number; pxW: number; pxH: number; weightKg: number; maxW: number; avgW: number }
 
 export type DmxMode = { name: string; channels: number }
 
@@ -263,6 +271,20 @@ export const equipmentSchema = z.object({
   cloneOf: text(120).optional(),
   captureMatch: z.enum([...CAPTURE_MATCHES, '']).optional(),
   captureNote: text(500).optional(),
+  isLedPanel: z.boolean().optional(),
+  ledWidthMm: optionalNumber(5000),
+  ledHeightMm: optionalNumber(5000),
+  ledPxW: optionalNumber(10000),
+  ledPxH: optionalNumber(10000),
+  ledWeightKg: optionalNumber(1000),
+  ledMaxW: optionalNumber(10000),
+  ledAvgW: optionalNumber(10000),
+  isLedProcessor: z.boolean().optional(),
+  procOutputs: optionalNumber(64),
+  procPixels: optionalNumber(10_000_000),
+  procInputs: optionalNumber(32),
+  procInputW: optionalNumber(16000),
+  procInputH: optionalNumber(16000),
 })
 
 export type EquipmentFormValues = z.infer<typeof equipmentSchema>
@@ -303,7 +325,35 @@ export function hasBox(audioType: AudioType | '' | undefined) {
 /** Z formulára vyberie iba údaje, ktoré k zvolenému druhu patria. */
 export function attributesFor(
   values: Pick<EquipmentFormValues, 'kind' | 'connector' | 'lengthM' | 'powerW' | 'lightSource'> &
-    Partial<Pick<EquipmentFormValues, 'category' | 'dmxModes' | 'audioType' | 'boxWidthCm' | 'boxDepthCm' | 'boxHeightCm' | 'subDelayMs' | 'ipPrefix' | 'ipAddress' | 'ipDhcp'>>,
+    Partial<
+      Pick<
+        EquipmentFormValues,
+        | 'category'
+        | 'dmxModes'
+        | 'audioType'
+        | 'boxWidthCm'
+        | 'boxDepthCm'
+        | 'boxHeightCm'
+        | 'subDelayMs'
+        | 'ipPrefix'
+        | 'ipAddress'
+        | 'ipDhcp'
+        | 'isLedPanel'
+        | 'ledWidthMm'
+        | 'ledHeightMm'
+        | 'ledPxW'
+        | 'ledPxH'
+        | 'ledWeightKg'
+        | 'ledMaxW'
+        | 'ledAvgW'
+        | 'isLedProcessor'
+        | 'procOutputs'
+        | 'procPixels'
+        | 'procInputs'
+        | 'procInputW'
+        | 'procInputH'
+      >
+    >,
 ) {
   const attributes: EquipmentAttributes = {}
   const lighting = isLighting(values.kind, values.category ?? '')
@@ -328,6 +378,26 @@ export function attributesFor(
     if (values.audioType === 'subwoofer' && values.subDelayMs !== undefined) attributes.subDelayMs = values.subDelayMs
   }
   if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels }))
+  if (values.isLedPanel && values.ledWidthMm && values.ledHeightMm && values.ledPxW && values.ledPxH) {
+    attributes.ledPanel = {
+      widthMm: values.ledWidthMm,
+      heightMm: values.ledHeightMm,
+      pxW: values.ledPxW,
+      pxH: values.ledPxH,
+      weightKg: values.ledWeightKg ?? 0,
+      maxW: values.ledMaxW ?? 0,
+      avgW: values.ledAvgW ?? 0,
+    }
+  }
+  if (values.isLedProcessor && values.procOutputs) {
+    attributes.ledProcessor = {
+      outputs: values.procOutputs,
+      pixelsPerOutput: values.procPixels ?? 650_000,
+      inputs: values.procInputs ?? 1,
+      inputW: values.procInputW ?? 1920,
+      inputH: values.procInputH ?? 1080,
+    }
+  }
   return attributes
 }
 
@@ -347,6 +417,8 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.lightSource && LIGHT_SOURCE_LABELS[a.lightSource],
     a.boxWidthCm !== undefined && a.boxDepthCm !== undefined && `${formatNumber(a.boxWidthCm)}×${formatNumber(a.boxDepthCm)}${a.boxHeightCm !== undefined ? `×${formatNumber(a.boxHeightCm)}` : ''} cm`,
     a.dmxModes?.length && `DMX ${a.dmxModes.map((mode) => mode.channels).join('/')} ch`,
+    a.ledPanel && `LED ${a.ledPanel.widthMm}×${a.ledPanel.heightMm} mm, ${a.ledPanel.pxW}×${a.ledPanel.pxH} px`,
+    a.ledProcessor && `LED procesor ${a.ledProcessor.outputs} výstupov, ${a.ledProcessor.inputs}× vstup ${a.ledProcessor.inputW}×${a.ledProcessor.inputH}`,
   ].filter(Boolean) as string[]
 }
 

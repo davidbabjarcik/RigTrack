@@ -145,7 +145,12 @@ export type LedResult = {
   power: { maxW: number; avgW: number; ampsSingle: number; ampsPerPhase: number; circuits: number; panelsPerCircuit: number }
   ports: number
   /** Hliník (bez stohovania): diely, metre, váha a spoje. */
-  truss: { runs: { label: string; pieces: number[]; totalM: number }[]; totalM: number; weightKg: number; joints: number; cones: number; pins: number; clips: number; cornerCubes: number; basePlates: number } | null
+  truss: {
+    runs: { label: string; pieces: number[]; totalM: number }[]
+    /** Koľko dielov akej dĺžky treba spolu (aj obe veže). */
+    needs: { lengthM: number; count: number }[]
+    totalM: number
+    weightKg: number; joints: number; cones: number; pins: number; clips: number; cornerCubes: number; basePlates: number } | null
   rigging: { bars: number; barsKg: number; points: number; slings: number; steels: number; shackles: number; totalKg: number; kgPerPoint: number; overload: boolean } | null
   stack: { baseBars: number; braces: number } | null
   warnings: string[]
@@ -199,8 +204,11 @@ export function calculateLed(input: LedInput): LedResult {
       joints += 2 + 2 * (Math.max(0, tower.pieces.length - 1) + 2)
     }
     const totalM = round(runs.reduce((sum, run) => sum + run.totalM, 0), 2)
+    const counts = new Map<number, number>()
+    for (const piece of runs.flatMap((run) => run.pieces)) counts.set(piece, (counts.get(piece) ?? 0) + 1)
     truss = {
       runs: input.mount === 'goalpost' ? [runs[0], runs[1]] : runs,
+      needs: [...counts.entries()].sort((a, b) => b[0] - a[0]).map(([lengthM, count]) => ({ lengthM, count })),
       totalM,
       weightKg: round(totalM * input.truss.kgPerM, 1),
       joints,

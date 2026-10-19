@@ -1,4 +1,4 @@
-export const ROLES = ['admin', 'ceo', 'technik', 'skladnik', 'viewer'] as const
+export const ROLES = ['admin', 'ceo', 'technik', 'skladnik', 'viewer', 'helper'] as const
 export type Role = (typeof ROLES)[number]
 
 export const ROLE_LABELS: Record<Role, string> = {
@@ -7,6 +7,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   technik: 'Technik',
   skladnik: 'Skladník',
   viewer: 'Len na čítanie',
+  helper: 'Helper',
 }
 
 /** Admin a CEO smú vo firme všetko (CEO má práva admina, len iný názov). */
