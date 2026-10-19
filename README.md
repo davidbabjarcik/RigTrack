@@ -21,6 +21,14 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.9.2 – 19. 10. 2026
+
+- **Oprava celej databázy jedným súborom**: `0071_repair_all_columns.sql` doplní každý chýbajúci stĺpec vo všetkých
+  tabuľkách aj s oprávneniami (napr. „column vat of relation event_payments does not exist“ pri demo firme).
+  Je vygenerovaná z výslednej schémy, existujúce dáta nemení a dá sa spustiť aj viackrát.
+
+Nové migrácie: `0071`.
+
 ### 2.9.1 – 19. 10. 2026
 
 - **Oprava Wi-Fi sietí** („Siete sa nepodarilo načítať“): migrácia `0070` založí alebo doplní tabuľky sietí, ak 0055

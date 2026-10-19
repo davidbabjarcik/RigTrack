@@ -2,7 +2,8 @@
 -- Spustite v Supabase SQL Editore (nič nemení, len číta). Riadky s „chýba“ treba doplniť:
 -- súbory 0020–0048 sú v supabase/upgrade/, 0049 a vyššie v supabase/migrations/. Spúšťajte ich podľa čísla,
 -- od najnižšej chýbajúcej; 0053 samostatne pred 0054, 0062 samostatne pred 0063.
--- Ak chýba 0052 alebo 0059 len čiastočne, stačí spustiť opravu 0069 (dá sa spustiť aj viackrát).
+-- Ak hlášky v appke hovoria „column … does not exist“ (migrácia prebehla v staršej verzii), spustite
+-- opravu 0071_repair_all_columns.sql – doplní všetky chýbajúce stĺpce; dá sa spustiť aj viackrát.
 
 with checks (migration, ok) as (
   values
