@@ -74,7 +74,7 @@ export function ShoppingPage() {
   return (
     <>
       <PageHeader
-        title="Nákupné zoznamy"
+        title="Wantlist"
         description={pending.length > 0 ? `Odhad spolu: ${formatMoney(shoppingTotal(pending), 'EUR')}` : 'Čo treba kúpiť a čo chceme časom'}
         action={
           canEdit &&

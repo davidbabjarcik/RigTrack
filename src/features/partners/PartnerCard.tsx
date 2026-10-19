@@ -1,0 +1,100 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Building2, Mail, Pencil, Phone, Plus, X } from 'lucide-react'
+import { useState, type FormEvent, type ReactNode } from 'react'
+import { AddToContactsButton } from '@/components/share/ShareButtons'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { addContact, deleteContact, partnerKeys, type Partner } from './api'
+
+/** Firma / skupina (napr. organizátor) s ľuďmi a ich číslami; pri každom „Do kontaktov“. */
+export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { companyId: string; partner: Partner; canEdit: boolean; onEdit?: () => void; actions?: ReactNode }) {
+  const queryClient = useQueryClient()
+  const [adding, setAdding] = useState(false)
+  const [person, setPerson] = useState({ name: '', role: '', phone: '', email: '' })
+  const refresh = () => queryClient.invalidateQueries({ queryKey: partnerKeys.list(companyId) })
+  const add = useMutation({
+    mutationFn: () => addContact(companyId, partner.id, person),
+    onSuccess: () => {
+      setPerson({ name: '', role: '', phone: '', email: '' })
+      setAdding(false)
+    },
+    onSettled: refresh,
+  })
+  const remove = useMutation({ mutationFn: deleteContact, onSettled: refresh })
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    if (person.name.trim()) add.mutate()
+  }
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border bg-surface p-4">
+      <div className="flex items-start gap-3">
+        <Building2 className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium break-words">{partner.name}</p>
+          <p className="text-sm text-muted-foreground">
+            {[partner.ico && `IČO ${partner.ico}`, partner.dic && `DIČ ${partner.dic}`, partner.address, partner.usesApp && 'používa RigTrack'].filter(Boolean).join(' · ')}
+          </p>
+        </div>
+        {actions}
+        {canEdit && onEdit && (
+          <Button variant="ghost" size="sm" aria-label={`Upraviť ${partner.name}`} onClick={onEdit}>
+            <Pencil className="size-4" aria-hidden />
+          </Button>
+        )}
+      </div>
+      {partner.contacts.length > 0 && (
+        <ul className="divide-y rounded-lg border text-sm">
+          {partner.contacts.map((contact) => (
+            <li key={contact.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
+              <span className="font-medium">{contact.name}</span>
+              {contact.role && <span className="text-muted-foreground">{contact.role}</span>}
+              {contact.phone && (
+                <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 text-accent hover:underline">
+                  <Phone className="size-3.5" aria-hidden />
+                  {contact.phone}
+                </a>
+              )}
+              {contact.email && (
+                <a href={`mailto:${contact.email}`} className="inline-flex items-center gap-1 break-all text-accent hover:underline">
+                  <Mail className="size-3.5" aria-hidden />
+                  {contact.email}
+                </a>
+              )}
+              <span className="ml-auto flex items-center gap-1">
+                <AddToContactsButton label="Do kontaktov" contact={{ name: contact.name, org: partner.name, title: contact.role, phone: contact.phone, email: contact.email }} />
+                {canEdit && (
+                  <button type="button" aria-label={`Odstrániť ${contact.name}`} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => remove.mutate(contact.id)}>
+                    <X className="size-4" aria-hidden />
+                  </button>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {partner.note && <p className="text-sm whitespace-pre-wrap text-muted-foreground">{partner.note}</p>}
+      {canEdit &&
+        (adding ? (
+          <form onSubmit={submit} className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">
+            <Field label="Meno *" autoFocus maxLength={120} value={person.name} onChange={(event) => setPerson({ ...person, name: event.target.value })} />
+            <Field label="Úloha" placeholder="napr. produkcia, technik" maxLength={80} value={person.role} onChange={(event) => setPerson({ ...person, role: event.target.value })} />
+            <Field label="Telefón" type="tel" maxLength={40} value={person.phone} onChange={(event) => setPerson({ ...person, phone: event.target.value })} />
+            <Field label="E-mail" type="email" maxLength={120} value={person.email} onChange={(event) => setPerson({ ...person, email: event.target.value })} />
+            <div className="flex gap-2 sm:col-span-2">
+              <Button type="submit" size="sm" disabled={!person.name.trim() || add.isPending}>
+                Pridať človeka
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>
+                Zrušiť
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <Button variant="outline" size="sm" className="self-start" onClick={() => setAdding(true)}>
+            <Plus className="size-4" aria-hidden />
+            Pridať človeka
+          </Button>
+        ))}
+    </div>
+  )
+}

@@ -16,15 +16,17 @@ export type MemberDevice = {
   userId: string
   kind: DeviceKind
   name: string
-  /** Vždy v tvare AA:BB:CC:DD:EE:FF. */
+  /** MAC Wi-Fi karty, vždy v tvare AA:BB:CC:DD:EE:FF. */
   mac: string
+  /** MAC ethernet (LAN) karty, napr. pri notebooku; prázdne = nemá. */
+  ethernetMac: string
   note: string
   /** Wi-Fi siete, kde zariadenie chodí: IP adresa a MAC v tej sieti (súkromná adresa mobilu). */
   networks: DeviceNetwork[]
 }
 
-/** Wi-Fi sieť zariadenia: pevná IP, alebo `dhcp` (adresu pridelí router). */
-export type DeviceNetwork = { ssid: string; ip: string; mac: string; dhcp?: boolean }
+/** Sieť zariadenia: pevná IP, alebo `dhcp` (adresu pridelí router); `via` = pripojené cez Wi-Fi alebo kábel (LAN). */
+export type DeviceNetwork = { ssid: string; ip: string; mac: string; dhcp?: boolean; via?: 'wifi' | 'ethernet' }
 
 /** „aa-bb-cc-dd-ee-ff“, „aabb.ccdd.eeff“ aj „AABBCCDDEEFF“ → „AA:BB:CC:DD:EE:FF“; neplatná MAC → null. */
 export function normalizeMac(input: string) {
@@ -51,6 +53,10 @@ export const deviceSchema = z.object({
     .string()
     .refine((value) => normalizeMac(value) !== null, 'Zadajte MAC v tvare AA:BB:CC:DD:EE:FF')
     .transform((value) => normalizeMac(value)!),
+  ethernetMac: z
+    .string()
+    .refine((value) => value.trim() === '' || normalizeMac(value) !== null, 'MAC v tvare AA:BB:CC:DD:EE:FF')
+    .transform((value) => (value.trim() === '' ? '' : normalizeMac(value)!)),
   note: text(200),
   networks: z
     .array(
@@ -66,6 +72,7 @@ export const deviceSchema = z.object({
           .refine((value) => value.trim() === '' || normalizeMac(value) !== null, 'MAC v tvare AA:BB:CC:DD:EE:FF')
           .transform((value) => (value.trim() === '' ? '' : normalizeMac(value)!)),
         dhcp: z.boolean().optional(),
+        via: z.enum(['wifi', 'ethernet']).optional(),
       }),
     )
     .max(20, 'Najviac 20 sietí'),

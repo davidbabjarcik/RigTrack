@@ -8,26 +8,28 @@ export const deviceKeys = {
 }
 
 /** Zariadenia, ktoré smie prihlásený vidieť: svoje, správca (staff.manage) všetky. Rozhoduje databáza. */
-// Wi-Fi siete zariadenia (0052); bez migrácie sa zariadenia načítajú bez nich.
-let networksColumn = ', networks'
+// Wi-Fi siete zariadenia (0052) a ethernet MAC (0059). Bez migrácií sa zariadenia načítajú bez nich – skúša sa od najnovšej.
+const OPTIONAL_COLUMNS = [', networks, ethernet_mac', ', networks', '']
+let optional = 0
 
 export async function fetchDevices(companyId: string): Promise<MemberDevice[]> {
   const { data, error } = await getSupabase()
     .from('member_devices')
-    .select('id, user_id, kind, name, mac, note' + networksColumn)
+    .select('id, user_id, kind, name, mac, note' + OPTIONAL_COLUMNS[optional])
     .eq('company_id', companyId)
     .order('name')
-  if (networksColumn && isMissingColumn(error, 'networks')) {
-    networksColumn = ''
+  if (optional < OPTIONAL_COLUMNS.length - 1 && (isMissingColumn(error, 'ethernet_mac') || isMissingColumn(error, 'networks'))) {
+    optional += 1
     return fetchDevices(companyId)
   }
   if (error) throw error
-  return (data as unknown as { id: string; user_id: string; kind: DeviceKind; name: string; mac: string; note: string; networks: DeviceNetwork[] | null }[]).map((row) => ({
+  return (data as unknown as { id: string; user_id: string; kind: DeviceKind; name: string; mac: string; note: string; networks: DeviceNetwork[] | null; ethernet_mac?: string }[]).map((row) => ({
     id: row.id,
     userId: row.user_id,
     kind: row.kind,
     name: row.name,
     mac: row.mac,
+    ethernetMac: row.ethernet_mac ?? '',
     note: row.note,
     networks: Array.isArray(row.networks) ? row.networks : [],
   }))

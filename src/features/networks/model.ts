@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { isValidIp, type Equipment } from '@/features/equipment/model'
-import type { MemberDevice } from '@/features/devices/model'
+import type { DeviceNetwork, MemberDevice } from '@/features/devices/model'
 
 // ---------------------------------------------------------------------------
 // Wi-Fi siete firmy
@@ -195,7 +195,11 @@ export function addressRows(equipment: Equipment[], devices: MemberDevice[], net
   }
   for (const device of devices) {
     const who = owner(device.userId)
-    const entries = device.networks.length > 0 ? device.networks : [{ ssid: '', ip: '', mac: '' }]
+    // Bez zapísaných sietí aspoň MAC adresy zariadenia (Wi-Fi a prípadne LAN).
+    const entries: DeviceNetwork[] =
+      device.networks.length > 0
+        ? device.networks
+        : [{ ssid: '', ip: '', mac: '' }, ...(device.ethernetMac ? [{ ssid: '', ip: '', mac: '', via: 'ethernet' as const }] : [])]
     entries.forEach((entry, index) => {
       const bySsid = entry.ssid ? networks.find((network) => network.ssid === entry.ssid)?.id : undefined
       rows.push({
@@ -206,7 +210,7 @@ export function addressRows(equipment: Equipment[], devices: MemberDevice[], net
         ip: entry.ip,
         dhcp: Boolean(entry.dhcp) && !entry.ip,
         prefix: null,
-        mac: entry.mac || device.mac,
+        mac: entry.mac || (entry.via === 'ethernet' && device.ethernetMac ? device.ethernetMac : device.mac),
         networkId: bySsid ?? byIp(entry.ip),
         to: who.to,
       })

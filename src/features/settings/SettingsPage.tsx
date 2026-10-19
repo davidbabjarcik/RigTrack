@@ -26,6 +26,7 @@ import { RulesSettings } from '@/features/events/RulesSettings'
 import { PackagesSettings } from '@/features/packages/PackagesSettings'
 import { useCompany, type Membership } from '@/features/companies/company-context'
 import { BrandingSettings } from '@/features/companies/BrandingSettings'
+import { CompanyProfileSettings } from '@/features/companies/CompanyProfileSettings'
 import { DeleteCompanySettings } from '@/features/companies/DeleteCompanySettings'
 import { DemoSettings } from '@/features/companies/DemoSettings'
 import { MyDevicesSettings } from '@/features/devices/MyDevicesSettings'
@@ -326,6 +327,10 @@ export function SettingsPage() {
                 Zmeniť firmu
               </Link>
             </div>
+          </Section>
+
+          <Section title="Údaje o firme a sklad">
+            <CompanyProfileSettings companyId={company.companyId} canEdit={isAdmin} />
           </Section>
 
           {isAdmin && (

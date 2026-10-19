@@ -8,7 +8,7 @@ const network = (patch: Partial<WifiNetwork>): WifiNetwork => ({
   managementIp: '', routerModel: '', dhcp: true, dhcpStart: '', dhcpEnd: '', equipmentId: null, place: '', note: '', ...patch,
 })
 const item = (patch: Partial<Equipment>) => ({ id: 'e1', name: 'SD9', manufacturer: 'DiGiCo', model: 'SD9', ipAddress: '', macAddress: '', status: 'available', ...patch }) as Equipment
-const device = (patch: Partial<MemberDevice>): MemberDevice => ({ id: 'd1', userId: 'u1', kind: 'phone', name: 'iPhone', mac: 'A4:83:E7:12:34:56', note: '', networks: [], ...patch })
+const device = (patch: Partial<MemberDevice>): MemberDevice => ({ id: 'd1', userId: 'u1', kind: 'phone', name: 'iPhone', mac: 'A4:83:E7:12:34:56', ethernetMac: '', note: '', networks: [], ...patch })
 
 describe('wifi QR', () => {
   it('builds and reads the WIFI: text with escaping', () => {

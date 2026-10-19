@@ -23,8 +23,8 @@ function DeviceForm({ companyId, userId, current, onDone }: { companyId: string;
   } = useForm<DeviceFormInput, unknown, DeviceFormValues>({
     resolver: zodResolver(deviceSchema),
     defaultValues: current
-      ? { kind: current.kind, name: current.name, mac: current.mac, note: current.note, networks: current.networks }
-      : { kind: 'phone', name: '', mac: '', note: '', networks: [] },
+      ? { kind: current.kind, name: current.name, mac: current.mac, ethernetMac: current.ethernetMac, note: current.note, networks: current.networks }
+      : { kind: 'phone', name: '', mac: '', ethernetMac: '', note: '', networks: [] },
   })
   const networks = useFieldArray({ control, name: 'networks' })
   const save = useMutation({
@@ -45,15 +45,24 @@ function DeviceForm({ companyId, userId, current, onDone }: { companyId: string;
           ))}
         </SelectField>
         <Field label="Názov" placeholder="napr. iPhone 15, MacBook" error={errors.name?.message} {...register('name')} />
-        <Field label="MAC adresa" placeholder="AA:BB:CC:DD:EE:FF" autoComplete="off" autoCapitalize="characters" error={errors.mac?.message} {...register('mac')} />
+        <Field label="MAC Wi-Fi" placeholder="AA:BB:CC:DD:EE:FF" autoComplete="off" autoCapitalize="characters" error={errors.mac?.message} {...register('mac')} />
       </div>
+      <Field
+        label="MAC ethernet / LAN (nepovinné)"
+        placeholder="napr. notebook s káblom"
+        autoComplete="off"
+        autoCapitalize="characters"
+        className="sm:w-1/2"
+        error={errors.ethernetMac?.message}
+        {...register('ethernetMac')}
+      />
       <Field label="Poznámka" placeholder="nepovinné" error={errors.note?.message} {...register('note')} />
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium">Wi-Fi siete (IP adresa a MAC v danej sieti)</legend>
         {networks.fields.map((field, index) => (
           <div key={field.id} className="grid items-start gap-2 rounded-lg border p-2 sm:grid-cols-[1fr_1fr_1fr_auto_auto]">
-            <Field label="Wi-Fi (SSID)" list={ssidListId} autoComplete="off" error={errors.networks?.[index]?.ssid?.message} {...register(`networks.${index}.ssid`)} />
+            <Field label="Sieť (SSID / názov)" list={ssidListId} autoComplete="off" error={errors.networks?.[index]?.ssid?.message} {...register(`networks.${index}.ssid`)} />
             <Field label="IP adresa (pevná)" placeholder="prázdne pri DHCP" inputMode="decimal" autoComplete="off" error={errors.networks?.[index]?.ip?.message} {...register(`networks.${index}.ip`)} />
             <Field
               label="MAC v tejto sieti"
@@ -63,10 +72,16 @@ function DeviceForm({ companyId, userId, current, onDone }: { companyId: string;
               error={errors.networks?.[index]?.mac?.message}
               {...register(`networks.${index}.mac`)}
             />
-            <label className="flex items-center gap-2 text-sm sm:mt-9">
-              <input type="checkbox" className="size-4" {...register(`networks.${index}.dhcp`)} />
-              DHCP
-            </label>
+            <span className="flex flex-col gap-1 text-sm sm:mt-6">
+              <select aria-label="Pripojenie" className="h-9 rounded-lg border bg-surface px-2" {...register(`networks.${index}.via`)}>
+                <option value="wifi">Wi-Fi</option>
+                <option value="ethernet">Kábel (LAN)</option>
+              </select>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" className="size-4" {...register(`networks.${index}.dhcp`)} />
+                DHCP
+              </label>
+            </span>
             <Button variant="ghost" size="sm" className="sm:mt-7" aria-label="Odobrať sieť" onClick={() => networks.remove(index)}>
               <X className="size-4" aria-hidden />
             </Button>
@@ -77,7 +92,7 @@ function DeviceForm({ companyId, userId, current, onDone }: { companyId: string;
             <option key={network.id} value={network.ssid} />
           ))}
         </datalist>
-        <Button variant="outline" size="sm" className="self-start" disabled={networks.fields.length >= 20} onClick={() => networks.append({ ssid: '', ip: '', mac: '', dhcp: false })}>
+        <Button variant="outline" size="sm" className="self-start" disabled={networks.fields.length >= 20} onClick={() => networks.append({ ssid: '', ip: '', mac: '', dhcp: false, via: 'wifi' })}>
           <Plus className="size-4" aria-hidden />
           Pridať Wi-Fi sieť
         </Button>
@@ -128,12 +143,14 @@ export function DeviceRow({
             <Wifi className="size-3.5" aria-hidden />
             <span className="font-medium text-foreground">{network.ssid}</span>
             {network.ip ? <span className="font-mono">{network.ip}</span> : network.dhcp && <span>DHCP</span>}
+            {network.via === 'ethernet' && <span>kábel</span>}
             {network.mac && network.mac !== device.mac && <span className="font-mono">{network.mac}</span>}
           </span>
         ))}
       </span>
       <span className="shrink-0 text-right font-mono text-sm">
         {device.mac}
+        {device.ethernetMac && <span className="block text-xs text-muted-foreground">LAN {device.ethernetMac}</span>}
         {isRandomMac(device.mac) && <span className="block font-sans text-xs text-amber-700 dark:text-amber-300">súkromná (náhodná) adresa</span>}
       </span>
       {onEdit && (

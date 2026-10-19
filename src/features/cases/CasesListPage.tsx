@@ -56,7 +56,7 @@ export function CasesListPage() {
   return (
     <>
       <PageHeader
-        title="Cases"
+        title="Cases a racks"
         description={cases.data ? `${visible.length} z ${all.length}` : undefined}
         action={
           canEdit && (

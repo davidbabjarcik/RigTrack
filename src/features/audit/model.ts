@@ -30,6 +30,7 @@ export const ENTITIES: Record<string, { label: string; path?: string }> = {
   events: { label: 'event', path: '/events' },
   service_technicians: { label: 'servisného technika' },
   wifi_networks: { label: 'Wi-Fi sieť' },
+  partners: { label: 'firmu / organizátora' },
 }
 
 // Stĺpce, ktoré sa menia najčastejšie; ostatné sa vypíšu technickým názvom.

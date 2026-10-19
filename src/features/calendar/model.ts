@@ -18,7 +18,7 @@ export const ENTRY_KIND_LABELS: Record<EntryKind, string> = {
   vehicle: 'Vozidlá',
   task: 'Úlohy',
   service: 'Servis techniky',
-  shopping: 'Nákupy',
+  shopping: 'Wantlist',
   celebration: 'Narodeniny a meniny',
 }
 

@@ -71,6 +71,7 @@ const delay = lazyPage(() => import('@/features/delay/DelayPage').then((m) => m.
 // Verejná stránka (aj bez prihlásenia a firmy), preto bez lazyPage.
 const changelog = async () => ({ Component: (await import('@/features/changelog/ChangelogPage')).ChangelogPage })
 const welcome = lazyPage(() => import('@/features/staff/WelcomePage').then((m) => m.WelcomePage))
+const partners = lazyPage(() => import('@/features/partners/PartnersPage').then((m) => m.PartnersPage), 'events.view')
 const stage = lazyPage(() => import('@/features/stage/StagePage').then((m) => m.StagePage), 'events.view')
 const warehouse = lazyPage(() => import('@/features/warehouse/WarehousePage').then((m) => m.WarehousePage), 'cases.view')
 const recycleBin = lazyPage(() => import('@/features/bin/RecycleBinPage').then((m) => m.RecycleBinPage))
@@ -119,6 +120,7 @@ export const routes: RouteObject[] = [
               { path: 'equipment/network', element: <Navigate to="/networks" replace /> },
               { path: 'networks', lazy: networks },
               { path: 'welcome', lazy: welcome },
+              { path: 'partners', lazy: partners },
               { path: 'equipment/excel', lazy: equipmentExcel },
               { path: 'equipment/:id', lazy: equipmentDetail },
               { path: 'equipment/:id/edit', lazy: equipmentForm },

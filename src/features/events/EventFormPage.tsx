@@ -1,11 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
+import { fetchEventPartners, partnerKeys, setEventOrganizer, usePartners } from '@/features/partners/api'
+import { NEW_ORGANIZER, OrganizerField } from '@/features/partners/OrganizerField'
 import { useCompany } from '@/features/companies/company-context'
 import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
@@ -64,6 +67,18 @@ function EventForm({ companyId, current, events }: FormProps) {
     },
   })
 
+  // Organizátor z Firmy a kontakty: pri úprave sa predvyberie ten, ktorý je pri evente; inak nový podľa textu.
+  const partners = usePartners(companyId)
+  const linked = useQuery({
+    queryKey: partnerKeys.ofEvent(companyId, current?.id ?? 'new'),
+    queryFn: () => fetchEventPartners(companyId, current!.id),
+    enabled: Boolean(current) && partners.isSuccess,
+    retry: false,
+  })
+  const [pickedOrganizer, setOrganizerChoice] = useState<string | null>(null)
+  const linkedOrganizer = linked.data?.find((item) => item.kind === 'organizer')?.partnerId
+  const organizerChoice = pickedOrganizer ?? linkedOrganizer ?? (current?.organizer ? NEW_ORGANIZER : '')
+
   // Opakovaná akcia: podľa názvu nájdeme minulý ročník a ponúkneme jeho údaje.
   const name = useWatch({ control, name: 'name' })
   const startsOn = useWatch({ control, name: 'startsOn' })
@@ -78,7 +93,12 @@ function EventForm({ companyId, current, events }: FormProps) {
   }
 
   const save = useMutation({
-    mutationFn: (values: EventFormValues) => saveEvent(companyId, current?.id ?? null, values),
+    mutationFn: async (values: EventFormValues) => {
+      const id = await saveEvent(companyId, current?.id ?? null, values)
+      // Organizátor do Firmy a kontakty a k eventu (bez migrácie 0059 sa preskočí).
+      if (partners.isSuccess) await setEventOrganizer(companyId, id, organizerChoice, values).catch(() => {})
+      return id
+    },
     onSuccess: async (id) => {
       // Nový event: adminom, čo si to zapli, odíde e-mail (ak e-maily nie sú nastavené, nič sa nestane).
       if (!current) void notifyNewEvent(id)
@@ -174,13 +194,14 @@ function EventForm({ companyId, current, events }: FormProps) {
         />
       </fieldset>
 
-      <fieldset className="grid gap-4 rounded-xl border p-4 sm:grid-cols-2">
-        <legend className="px-1 text-sm font-medium">Organizátor</legend>
-        <Field label="Organizátor" placeholder="napr. Mesto Stropkov" error={errors.organizer?.message} {...register('organizer')} />
-        <Field label="Kontaktná osoba" error={errors.organizerPerson?.message} {...register('organizerPerson')} />
-        <Field label="Telefón" type="tel" autoComplete="off" error={errors.organizerPhone?.message} {...register('organizerPhone')} />
-        <Field label="E-mail" type="email" autoComplete="off" error={errors.organizerEmail?.message} {...register('organizerEmail')} />
-      </fieldset>
+      <OrganizerField
+        partners={partners.isSuccess ? partners.data : undefined}
+        value={organizerChoice}
+        onChange={setOrganizerChoice}
+        register={register}
+        setValue={setValue}
+        errors={errors}
+      />
 
       <TextareaField
         label="Popis eventu"

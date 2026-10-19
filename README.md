@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.13.0**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.14.0**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,26 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.14 – 19. 10. 2026
+
+- **Viacdňové eventy** – program po dňoch (stavba, event, balenie, cesta, voľno) s časmi a poznámkou; pri každom
+  dni kto z posádky ide (klikom na meno).
+- **Firmy a kontakty** – nový adresár organizátorov a partnerov: skupina s IČO, DIČ a adresou a ľudia s číslami
+  (každý sa dá uložiť do kontaktov); pri evente organizátor (aj viac firiem) a spolupracujúce firmy, či používajú RigTrack.
+- **Rider, lightplot a odkazy** – pri evente odkazy so štítkom (rider, lightplot, stage plot, zmluva, fotky…),
+  odporúčame zdieľaný priečinok v Google Disku.
+- **Doprava a kilometre** – adresa akcie, km zo skladu **vypočítané z mapy** (alebo ručne), trasa v Google Mapách;
+  po dňoch koľko áut, koľko otočiek, kde sa spalo a km navyše; spolu km za event.
+- **Osobný výkaz** – pri evente si každý zapíše čas od–do, prestávky a výdavky (palivo, jedlo, ubytovanie…);
+  vidí ich len on a admin / CEO.
+- **Údaje o firme** v Nastaveniach – obchodné meno, IČO, DIČ, IČ DPH, sídlo, CEO, kontakt a **adresa skladu**.
+- **Zariadenia** – notebook a pod. môže mať aj druhú MAC (ethernet / LAN); pri sieti sa vyberie Wi-Fi alebo kábel.
+- **Organizátor vo formulári eventu** sa vyberá z Firmy a kontakty alebo sa založí nový (uloží sa do adresára);
+  starý textový organizátor sa dá jedným klikom uložiť do adresára.
+- Premenované: **Nákupy → Wantlist**, **Cases → Cases a racks**.
+
+Nové migrácie: `0059`.
 
 ### 1.13 – 19. 10. 2026
 
@@ -282,6 +302,8 @@ Potrebné migrácie: do `0043`.
   zapíše sa až po kontrole; priradenia si appka pamätá.
 - Upozornenie na case, ktorý od poslednej kontroly obsahu bol na eventoch.
 - **Opakované akcie** – návrh údajov, posádky a odmien z minulého ročníka.
+- **Viacdňový program** (stavba / event / balenie, kto ide v ktorý deň), **organizátor a firmy** s kontaktmi,
+  **odkazy** (rider, lightplot…), **doprava a km zo skladu** a **osobný výkaz** času a výdavkov.
 - **Balíky** – vopred poskladané sady (malý / veľký zvukový, svetelný…) sa na event aj do výpožičky pridajú jedným klikom.
 - **Pripomienky** – podľa pravidiel z nastavení upozorní pri evente aj výpožičke, čo k technike ešte chýba
   (napr. 4 repráky → 4 káble NL4, svetlá → case s hákmi).
@@ -347,6 +369,7 @@ Tajný (service-role) kľúč Supabase do aplikácie nepatrí – používa sa l
   výsledok treba skontrolovať.
 - Import techniky na event pozná zatiaľ len Equipment Report z Capture.
 - Počasie poskytuje Open-Meteo (open-meteo.com); posiela sa mu len názov miesta a dátumy akcie.
+- Km z mapy rátajú OpenStreetMap Nominatim (adresa → poloha) a OSRM (trasa); posiela sa len adresa skladu a akcie.
 - Fotky a dokumenty sú v úložisku Supabase (v databáze je len cesta k nim); presun na vlastný NAS zatiaľ nie je.
 
 ---

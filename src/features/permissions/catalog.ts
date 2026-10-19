@@ -47,7 +47,7 @@ export const PERMISSION_GROUPS = [
   group('events', 'Eventy', [...crud('events')]),
   group('service', 'Servis', [...crud('service')]),
   group('tasks', 'Úlohy', [...crud('tasks')]),
-  group('shopping', 'Nákupy', [...crud('shopping')]),
+  group('shopping', 'Wantlist', [...crud('shopping')]),
   group('suggestions', 'Návrhy', [
     { key: 'suggestions.view', label: 'Vidieť', roles: ALL },
     { key: 'suggestions.add', label: 'Pridávať návrhy a komentáre', roles: ALL },

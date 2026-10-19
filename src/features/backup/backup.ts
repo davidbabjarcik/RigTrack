@@ -41,7 +41,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'order_item_equipment', sheet: 'Technika z položiek' },
     ],
   },
-  { file: 'Nákupy.xlsx', tables: [{ table: 'shopping_items', sheet: 'Nákupy' }] },
+  { file: 'Wantlist.xlsx', tables: [{ table: 'shopping_items', sheet: 'Wantlist' }] },
   {
     file: 'Vozidlá.xlsx',
     tables: [
@@ -64,6 +64,20 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'event_crew', sheet: 'Posádka' },
       { table: 'event_payments', sheet: 'Príjmy' },
       { table: 'event_documents', sheet: 'Dokumenty a fotky' },
+      { table: 'event_days', sheet: 'Program po dňoch' },
+      { table: 'event_links', sheet: 'Odkazy' },
+      { table: 'event_partners', sheet: 'Organizátori a firmy' },
+      { table: 'event_travel', sheet: 'Doprava' },
+      { table: 'event_work_logs', sheet: 'Výkazy času' },
+      { table: 'event_expenses', sheet: 'Výdavky' },
+    ],
+  },
+  {
+    file: 'Firmy a kontakty.xlsx',
+    tables: [
+      { table: 'partners', sheet: 'Firmy' },
+      { table: 'partner_contacts', sheet: 'Kontakty' },
+      { table: 'company_profile', sheet: 'Údaje o našej firme' },
     ],
   },
   {

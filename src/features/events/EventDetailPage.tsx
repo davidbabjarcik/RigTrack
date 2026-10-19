@@ -12,6 +12,12 @@ import { EventLoadingSection } from '@/features/loading/EventLoadingSection'
 import { can } from '@/lib/permissions'
 import { deleteEvent, eventKeys } from './api'
 import { EventCrewSection } from './EventCrewSection'
+import { EventLinksSection } from './EventLinksSection'
+import { EventLogSection } from './EventLogSection'
+import { EventPlanSection } from './EventPlanSection'
+import { EventTravelSection } from './EventTravelSection'
+import { EventPartnersSection } from '@/features/partners/EventPartnersSection'
+import { usePartners } from '@/features/partners/api'
 import { EventDocumentsSection } from './EventDocumentsSection'
 import { EventIncomeSection } from './EventIncomeSection'
 import { EventPhotosSection } from './EventPhotosSection'
@@ -29,6 +35,7 @@ export function EventDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const events = useEvents(companyId)
+  const directory = usePartners(companyId)
 
   const remove = useMutation({
     mutationFn: () => deleteEvent(companyId, id),
@@ -58,7 +65,8 @@ export function EventDetailPage() {
   }
 
   const times = describeTimes(event)
-  const organizer = [event.organizer, event.organizerPerson, event.organizerPhone, event.organizerEmail].filter(Boolean)
+  // Organizátor je v sekcii „Organizátor a firmy“; tu len pri starej databáze bez adresára firiem (pred 0059).
+  const organizer = directory.isError ? [event.organizer, event.organizerPerson, event.organizerPhone, event.organizerEmail].filter(Boolean) : []
   const when = event.startsOn === event.endsOn ? formatDate(event.startsOn) : `${formatDate(event.startsOn)} – ${formatDate(event.endsOn)}`
 
   return (
@@ -113,7 +121,7 @@ export function EventDetailPage() {
       )}
 
       {(times || organizer.length > 0 || event.setting || event.power) && (
-        <CollapsibleSection id="event.details" title="Miesto, elektrina a organizátor">
+        <CollapsibleSection id="event.details" title={organizer.length > 0 ? 'Miesto, elektrina a organizátor' : 'Miesto a elektrina'}>
           <dl className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
             {event.setting && (
               <div>
@@ -182,9 +190,14 @@ export function EventDetailPage() {
         </CollapsibleSection>
       )}
 
+      <EventPlanSection companyId={companyId} event={event} canEdit={canEdit} />
+      <EventPartnersSection companyId={companyId} event={event} canEdit={canEdit} />
+      <EventLinksSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
       <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
       {can(company, 'vehicles.view') && <EventLoadingSection companyId={companyId} event={event} />}
       <EventCrewSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+      <EventTravelSection companyId={companyId} event={event} canEdit={canEdit} />
+      <EventLogSection companyId={companyId} event={event} />
       {can(company, 'payouts.manage') && <EventIncomeSection companyId={companyId} eventId={event.id} />}
       <EventPhotosSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
       <EventDocumentsSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
