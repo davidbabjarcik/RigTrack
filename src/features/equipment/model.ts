@@ -40,6 +40,8 @@ export const LIGHT_SOURCE_LABELS: Record<LightSource, string> = {
   other: 'Iné',
 }
 
+export const SUB_DESIGN_LABELS = { direct: 'Priamy (bass reflex)', horn: 'Horna', snail: 'Slimák' } as const
+
 /** Podtyp DJ techniky. */
 export const DJ_TYPES = ['mixer', 'player', 'turntable', 'all_in_one', 'pc_controller', 'other'] as const
 export type DjType = (typeof DJ_TYPES)[number]
@@ -53,15 +55,20 @@ export const DJ_TYPE_LABELS: Record<DjType, string> = {
 }
 
 /** Čo je to za zvukovú techniku; podľa toho sa dá v zozname hľadať aj triediť. */
-export const AUDIO_TYPES = ['mixer', 'microphone', 'speaker', 'subwoofer', 'monitor', 'amplifier', 'processor', 'di', 'stagebox', 'wireless', 'iem', 'other'] as const
+export const AUDIO_TYPES = ['line_array', 'speaker', 'monitor', 'subwoofer', 'mixer', 'amplifier', 'microphone', 'wireless', 'iem', 'di', 'stagebox', 'processor', 'other'] as const
+/** Typy zvuku v skupine PA (ozvučenie); ostatné sú mikrofóny, stageboxy a pod. */
+export const PA_TYPES = ['line_array', 'speaker', 'monitor', 'subwoofer', 'mixer', 'amplifier', 'processor', 'stagebox'] as const
+/** DI box sa zadáva pri kábloch (Kábel → typ DI box); starší zvuk s typom DI ostáva platný. */
+export const HIDDEN_AUDIO_TYPES = ['di'] as const
 export type AudioType = (typeof AUDIO_TYPES)[number]
 
 export const AUDIO_TYPE_LABELS: Record<AudioType, string> = {
+  line_array: 'Line array (LA systém)',
   mixer: 'Mixpult',
   microphone: 'Mikrofón',
-  speaker: 'Reprobox',
-  subwoofer: 'Subwoofer',
-  monitor: 'Odposluch',
+  speaker: 'Live / portable PA (vrch)',
+  subwoofer: 'Sub (basák)',
+  monitor: 'Monitor',
   amplifier: 'Zosilňovač',
   processor: 'Procesor / DSP',
   di: 'DI box',
@@ -98,6 +105,42 @@ export type EquipmentAttributes = {
   audioType?: AudioType
   /** Podtyp DJ techniky (mix, player, gramofón…). */
   djType?: DjType
+  /** Mixpult: analógový / digitálny, počet kanálov a pri digitálnom karta (Dante, MADI, USB…). */
+  mixerKind?: 'analog' | 'digital'
+  mixerChannels?: number
+  mixerCard?: string
+  /** Kábel alebo DI box (pri druhu Kábel). */
+  cableType?: 'cable' | 'adapter' | 'di'
+  /** Bezdrôtový systém / in-ear: frekvenčný rozsah (napr. G51 470–534 MHz). */
+  rfRange?: string
+  /** Mikrofón: káblový alebo bezdrôtový, dynamický alebo kondenzátorový (ten potrebuje phantom 48 V). */
+  micKind?: 'wired' | 'wireless'
+  micType?: 'dynamic' | 'condenser'
+  /** Bezdrôtový mikrofón: kapsule, ktoré k nemu pasujú (id zo zoznamu kapsúl). */
+  capsuleIds?: string[]
+  /** Reprobox / sub / odposluch: aktívny alebo pasívny, výkon RMS a peak, woofery, max SPL, konektory, hniezdo na stojan. */
+  powered?: 'active' | 'passive'
+  rmsW?: number
+  peakW?: number
+  woofer?: string
+  maxSplDb?: number
+  connectors?: string
+  poleMount?: boolean
+  /** Katalógové údaje PA (napr. z listu JBL): výkon program, SPL peak, citlivosť, impedancia, frekvencie, uhol, výhybka, bi-amp, HF driver. */
+  programW?: number
+  maxSplPeakDb?: number
+  sensitivityDb?: number
+  impedanceOhm?: number
+  freqRange?: string
+  freqResponse?: string
+  coverage?: string
+  crossover?: string
+  biamp?: boolean
+  hfDriver?: string
+  /** Sub: konštrukcia – priamy (bass reflex), horna alebo slimák. */
+  subDesign?: 'direct' | 'horn' | 'snail'
+  /** Váha jedného kusu (kg). */
+  weightKg?: number
   /** Prefix siete pri IP adrese, napr. 24 (= maska 255.255.255.0). */
   ipPrefix?: number
   /** IP prideľuje DHCP (nemá pevnú adresu). */
@@ -269,6 +312,33 @@ export const equipmentSchema = z.object({
   lightSource: z.enum([...LIGHT_SOURCES, '']),
   audioType: z.enum([...AUDIO_TYPES, '']),
   djType: z.enum([...DJ_TYPES, '']).optional(),
+  mixerKind: z.enum(['analog', 'digital', '']).optional(),
+  mixerChannels: optionalNumber(512),
+  mixerCard: text(80).optional(),
+  micKind: z.enum(['wired', 'wireless', '']).optional(),
+  cableType: z.enum(['cable', 'adapter', 'di', '']).optional(),
+  rfRange: text(60).optional(),
+  micType: z.enum(['dynamic', 'condenser', '']).optional(),
+  capsuleIds: z.array(z.string()).max(30).optional(),
+  powered: z.enum(['active', 'passive', '']).optional(),
+  rmsW: optionalNumber(100000),
+  peakW: optionalNumber(200000),
+  woofer: text(40).optional(),
+  maxSplDb: optionalNumber(200),
+  connectors: text(80).optional(),
+  poleMount: z.boolean().optional(),
+  subDesign: z.enum(['direct', 'horn', 'snail', '']).optional(),
+  programW: optionalNumber(200000),
+  maxSplPeakDb: optionalNumber(200),
+  sensitivityDb: optionalNumber(200),
+  impedanceOhm: optionalNumber(1000),
+  freqRange: text(40).optional(),
+  freqResponse: text(40).optional(),
+  coverage: text(40).optional(),
+  crossover: text(40).optional(),
+  biamp: z.boolean().optional(),
+  hfDriver: text(80).optional(),
+  weightKg: optionalNumber(10000),
   ipPrefix: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Od 1').max(32, 'Najviac 32').optional(),
   ipDhcp: z.boolean().optional(),
   boxWidthCm: optionalNumber(1000),
@@ -375,7 +445,7 @@ export function isAudio(kind: EquipmentKind, category: string) {
 
 /** Reprobox, sub a odposluch majú rozmery boxu. */
 export function hasBox(audioType: AudioType | '' | undefined) {
-  return audioType === 'speaker' || audioType === 'subwoofer' || audioType === 'monitor'
+  return audioType === 'line_array' || audioType === 'speaker' || audioType === 'subwoofer' || audioType === 'monitor'
 }
 
 /** Z formulára vyberie iba údaje, ktoré k zvolenému druhu patria. */
@@ -388,6 +458,33 @@ export function attributesFor(
         | 'dmxModes'
         | 'audioType'
         | 'djType'
+        | 'mixerKind'
+        | 'mixerChannels'
+        | 'mixerCard'
+        | 'micKind'
+        | 'cableType'
+        | 'rfRange'
+        | 'micType'
+        | 'capsuleIds'
+        | 'powered'
+        | 'rmsW'
+        | 'peakW'
+        | 'woofer'
+        | 'maxSplDb'
+        | 'connectors'
+        | 'poleMount'
+        | 'subDesign'
+        | 'programW'
+        | 'maxSplPeakDb'
+        | 'sensitivityDb'
+        | 'impedanceOhm'
+        | 'freqRange'
+        | 'freqResponse'
+        | 'coverage'
+        | 'crossover'
+        | 'biamp'
+        | 'hfDriver'
+        | 'weightKg'
         | 'boxWidthCm'
         | 'boxDepthCm'
         | 'boxHeightCm'
@@ -430,6 +527,8 @@ export function attributesFor(
   const lighting = isLighting(values.kind, values.category ?? '')
   const audio = isAudio(values.kind, values.category ?? '')
   if (values.kind === 'cable') {
+    if (values.cableType === 'di' || values.cableType === 'adapter') attributes.cableType = values.cableType
+    if (values.cableType === 'di' && values.powered) attributes.powered = values.powered
     if (values.connector) attributes.connector = values.connector
     if (values.lengthM !== undefined) attributes.lengthM = values.lengthM
   }
@@ -440,11 +539,38 @@ export function attributesFor(
   }
   if (lighting && values.lightSource) attributes.lightSource = values.lightSource
   if (audio && values.audioType) attributes.audioType = values.audioType
+  if (audio && (values.audioType === 'wireless' || values.audioType === 'iem') && values.rfRange?.trim()) attributes.rfRange = values.rfRange.trim()
+  if (audio && values.audioType === 'stagebox' && values.mixerCard?.trim()) attributes.mixerCard = values.mixerCard.trim()
+  if (audio && values.audioType === 'mixer') {
+    if (values.mixerKind) attributes.mixerKind = values.mixerKind
+    if (values.mixerChannels !== undefined) attributes.mixerChannels = values.mixerChannels
+    if (values.mixerKind === 'digital' && values.mixerCard?.trim()) attributes.mixerCard = values.mixerCard.trim()
+  }
+  if (audio && values.audioType === 'microphone') {
+    if (values.micKind) attributes.micKind = values.micKind
+    if (values.micType) attributes.micType = values.micType
+  }
+  const wireless = audio && (values.audioType === 'wireless' || (values.audioType === 'microphone' && values.micKind === 'wireless'))
+  if (wireless && values.capsuleIds?.length) attributes.capsuleIds = values.capsuleIds
   if (values.kind === 'dj' && values.djType) attributes.djType = values.djType
   if (values.kind === 'dj' && values.powerW !== undefined) attributes.powerW = values.powerW
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipAddress && values.ipPrefix !== undefined) attributes.ipPrefix = values.ipPrefix
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipDhcp && !values.ipAddress) attributes.ipDhcp = true
+  if (values.weightKg !== undefined) attributes.weightKg = values.weightKg
   if (audio && hasBox(values.audioType)) {
+    if (values.powered) attributes.powered = values.powered
+    if (values.rmsW !== undefined) attributes.rmsW = values.rmsW
+    if (values.peakW !== undefined) attributes.peakW = values.peakW
+    if (values.woofer?.trim()) attributes.woofer = values.woofer.trim()
+    if (values.maxSplDb !== undefined) attributes.maxSplDb = values.maxSplDb
+    if (values.connectors?.trim()) attributes.connectors = values.connectors.trim()
+    if (values.poleMount) attributes.poleMount = true
+    const numbers = ['programW', 'maxSplPeakDb', 'sensitivityDb', 'impedanceOhm'] as const
+    for (const key of numbers) if (values[key] !== undefined) attributes[key] = values[key]
+    const texts = ['freqRange', 'freqResponse', 'coverage', 'crossover', 'hfDriver'] as const
+    for (const key of texts) if (values[key]?.trim()) attributes[key] = values[key]!.trim()
+    if (values.biamp) attributes.biamp = true
+    if (values.audioType === 'subwoofer' && values.subDesign) attributes.subDesign = values.subDesign
     if (values.boxWidthCm !== undefined) attributes.boxWidthCm = values.boxWidthCm
     if (values.boxDepthCm !== undefined) attributes.boxDepthCm = values.boxDepthCm
     if (values.boxHeightCm !== undefined) attributes.boxHeightCm = values.boxHeightCm
@@ -519,6 +645,22 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
   return [
     a.audioType && AUDIO_TYPE_LABELS[a.audioType],
     a.djType && DJ_TYPE_LABELS[a.djType],
+    a.cableType === 'di' && 'DI box',
+    a.cableType === 'adapter' && 'Redukcia',
+    a.rfRange,
+    a.mixerKind && (a.mixerKind === 'digital' ? 'digitálny' : 'analógový'),
+    a.mixerChannels !== undefined && `${a.mixerChannels} ch`,
+    a.mixerCard && `karta ${a.mixerCard}`,
+    a.micKind && (a.micKind === 'wireless' ? 'bezdrôtový' : 'káblový'),
+    a.micType && (a.micType === 'condenser' ? 'kondenzátorový' : 'dynamický'),
+    a.powered && (a.powered === 'active' ? 'aktívny' : 'pasívny'),
+    a.subDesign && SUB_DESIGN_LABELS[a.subDesign].toLowerCase(),
+    a.woofer,
+    a.rmsW !== undefined && `${formatNumber(a.rmsW)} W RMS`,
+    a.maxSplDb !== undefined && `${formatNumber(a.maxSplDb)} dB SPL`,
+    a.biamp && 'bi-amp',
+    a.impedanceOhm !== undefined && `${formatNumber(a.impedanceOhm)} Ω`,
+    a.weightKg !== undefined && `${formatNumber(a.weightKg)} kg`,
     a.connector,
     a.lengthM !== undefined && `${formatNumber(a.lengthM)} m`,
     a.powerW !== undefined && `${formatNumber(a.powerW)} W`,

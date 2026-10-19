@@ -299,3 +299,48 @@ describe('LED processor', () => {
     expect(describeAttributes({ attributes })).toEqual(['LED procesor 4-CH · Novastar · 2× HDMI, 1× DVI · 1920×1080 · len USB'])
   })
 })
+
+describe('mixer and microphone', () => {
+  it('stores mixer details and microphone kind', () => {
+    const mixer = attributesFor({ kind: 'audio', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', audioType: 'mixer', mixerKind: 'digital', mixerChannels: 32, mixerCard: 'Dante' })
+    expect(describeAttributes({ attributes: mixer })).toEqual(['Mixpult', 'digitálny', '32 ch', 'karta Dante'])
+    const analog = attributesFor({ kind: 'audio', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', audioType: 'mixer', mixerKind: 'analog', mixerCard: 'Dante' })
+    expect(analog.mixerCard).toBeUndefined()
+    const mic = attributesFor({ kind: 'audio', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', audioType: 'microphone', micKind: 'wireless' })
+    expect(describeAttributes({ attributes: mic })).toEqual(['Mikrofón', 'bezdrôtový'])
+  })
+})
+
+describe('speaker specs and weight', () => {
+  it('stores speaker data and weight', () => {
+    const sub = attributesFor({ kind: 'audio', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', audioType: 'subwoofer', powered: 'active', subDesign: 'horn', woofer: '2× 18″', rmsW: 2000, maxSplDb: 138, poleMount: true, subDelayMs: 4, weightKg: 85 })
+    expect(sub).toMatchObject({ powered: 'active', subDesign: 'horn', woofer: '2× 18″', rmsW: 2000, maxSplDb: 138, poleMount: true, subDelayMs: 4, weightKg: 85 })
+    expect(describeAttributes({ attributes: sub })).toEqual(['Sub (basák)', 'aktívny', 'horna', '2× 18″', '2000 W RMS', '138 dB SPL', '85 kg'])
+    const cable = attributesFor({ kind: 'cable', connector: 'XLR', lengthM: 5, powerW: undefined, lightSource: '', weightKg: 0.4 })
+    expect(cable.weightKg).toBe(0.4)
+  })
+})
+
+describe('PA spec sheet', () => {
+  it('stores the JBL VRX915M data', () => {
+    const monitor = attributesFor({
+      kind: 'audio', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', audioType: 'monitor', powered: 'passive',
+      rmsW: 800, programW: 1600, peakW: 3200, maxSplDb: 127, maxSplPeakDb: 133, sensitivityDb: 98, impedanceOhm: 8,
+      freqRange: '60 Hz – 20 kHz', freqResponse: '70 Hz – 20 kHz', coverage: '50° × 90°', crossover: '1,1 kHz', biamp: true,
+      woofer: '1× 15″ JBL 2265H', hfDriver: 'JBL 2452H', connectors: '2× speakON NL4', weightKg: 21,
+    })
+    expect(monitor).toMatchObject({ programW: 1600, maxSplPeakDb: 133, sensitivityDb: 98, impedanceOhm: 8, coverage: '50° × 90°', biamp: true, hfDriver: 'JBL 2452H' })
+    expect(describeAttributes({ attributes: monitor })).toContain('bi-amp')
+    expect(JSON.stringify(monitor).length).toBeLessThan(2000)
+  })
+})
+
+describe('cables, adapters and DI boxes', () => {
+  it('stores the cable type and DI power', () => {
+    const di = attributesFor({ kind: 'cable', connector: 'XLR', lengthM: undefined, powerW: undefined, lightSource: '', cableType: 'di', powered: 'active' })
+    expect(di).toMatchObject({ cableType: 'di', powered: 'active' })
+    expect(describeAttributes({ attributes: di })).toEqual(['DI box', 'aktívny', 'XLR'])
+    const adapter = attributesFor({ kind: 'cable', connector: 'XLR – jack', lengthM: undefined, powerW: undefined, lightSource: '', cableType: 'adapter', powered: 'active' })
+    expect(adapter).toEqual({ cableType: 'adapter', connector: 'XLR – jack' })
+  })
+})

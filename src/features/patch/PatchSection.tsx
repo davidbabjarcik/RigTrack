@@ -28,9 +28,18 @@ import {
 
 /** Ktorá technika sa ponúkne pri zdroji: mikrofóny, bezdrôtové systémy, DI boxy (keď typ nie je zadaný, všetok zvuk). */
 function equipmentFor(source: PatchSource, items: Equipment[]) {
+  if (source === 'di') {
+    const di = items.filter((item) => item.status !== 'retired' && (item.attributes.cableType === 'di' || item.attributes.audioType === 'di'))
+    if (di.length > 0) return di
+  }
   const audio = items.filter((item) => item.kind === 'audio' && item.status !== 'retired')
   const types = source === 'wireless' ? ['wireless', 'iem'] : source === 'di' ? ['di'] : ['microphone']
-  const typed = audio.filter((item) => item.attributes.audioType && types.includes(item.attributes.audioType))
+  const typed = audio.filter(
+    (item) =>
+      (item.attributes.audioType && types.includes(item.attributes.audioType)) ||
+      // Bezdrôtový mikrofón zadaný ako „Mikrofón – bezdrôtový“.
+      (source === 'wireless' && item.attributes.audioType === 'microphone' && item.attributes.micKind === 'wireless'),
+  )
   return typed.length > 0 ? typed : audio
 }
 
@@ -46,6 +55,8 @@ function LineForm({ initial, equipment, capsules, onSave, onCancel, onDelete, sa
   const [fields, setFields] = useState<PatchFields>(initial)
   const set = (patch: Partial<PatchFields>) => setFields((value) => ({ ...value, ...patch }))
   const options = equipmentFor(fields.source, equipment)
+  // Kapsule, ktoré pasujú na vybraný bezdrôtový mikrofón, sú v zozname prvé.
+  const fitting = equipment.find((item) => item.id === fields.equipmentId)?.attributes.capsuleIds ?? []
   function submit(event: FormEvent) {
     event.preventDefault()
     if (fields.channel >= 1) onSave(fields)
@@ -75,7 +86,16 @@ function LineForm({ initial, equipment, capsules, onSave, onCancel, onDelete, sa
         </SelectField>
       ) : (
         fields.source !== 'other' && (
-          <SelectField label={fields.source === 'wireless' ? 'Bezdrôtový systém' : fields.source === 'di' ? 'DI box' : 'Mikrofón'} className="sm:col-span-2" value={fields.equipmentId ?? ''} onChange={(e) => set({ equipmentId: e.target.value || null })}>
+          <SelectField
+            label={fields.source === 'wireless' ? 'Bezdrôtový systém' : fields.source === 'di' ? 'DI box' : 'Mikrofón'}
+            className="sm:col-span-2"
+            value={fields.equipmentId ?? ''}
+            onChange={(e) => {
+              const item = equipment.find((candidate) => candidate.id === e.target.value)
+              // Kondenzátorový mikrofón potrebuje phantom.
+              set({ equipmentId: e.target.value || null, ...(item?.attributes.micType === 'condenser' ? { phantom: true } : {}) })
+            }}
+          >
             <option value="">— z techniky (nepovinné) —</option>
             {options.map((item) => (
               <option key={item.id} value={item.id}>
@@ -88,11 +108,14 @@ function LineForm({ initial, equipment, capsules, onSave, onCancel, onDelete, sa
       {fields.source === 'wireless' && (
         <SelectField label="Kapsula" value={fields.capsuleId ?? ''} onChange={(e) => set({ capsuleId: e.target.value || null })}>
           <option value="">— bez kapsuly —</option>
-          {capsules.map((capsule) => (
-            <option key={capsule.id} value={capsule.id}>
-              {[capsule.manufacturer, capsule.name].filter(Boolean).join(' ')}
-            </option>
-          ))}
+          {[...capsules]
+            .sort((a, b) => Number(fitting.includes(b.id)) - Number(fitting.includes(a.id)))
+            .map((capsule) => (
+              <option key={capsule.id} value={capsule.id}>
+                {[capsule.manufacturer, capsule.name].filter(Boolean).join(' ')}
+                {fitting.includes(capsule.id) ? ' ✓' : ''}
+              </option>
+            ))}
         </SelectField>
       )}
       <SelectField label="Stojan" value={fields.stand} onChange={(e) => set({ stand: e.target.value as PatchFields['stand'] })}>

@@ -3,16 +3,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useId, useState, type ReactNode } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { useFieldArray, useForm, useWatch } from 'react-hook-form'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
+import { useCapsules } from '@/features/capsules/api'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { can } from '@/lib/permissions'
 import { errorDetail } from '@/lib/supabase/errors'
+import { cn } from '@/lib/utils'
 import { equipmentKeys, fetchEquipment, saveEquipment } from './api'
 import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
@@ -20,6 +22,7 @@ import {
   asOptionalNumber,
   AUDIO_TYPE_LABELS,
   AUDIO_TYPES,
+  PA_TYPES,
   CAPTURE_MATCH_LABELS,
   CAPTURE_MATCHES,
   COMMON_CONNECTORS,
@@ -27,6 +30,7 @@ import {
   DISPLAY_TYPES,
   DJ_TYPE_LABELS,
   DJ_TYPES,
+  SUB_DESIGN_LABELS,
   PROCESSOR_CONTROL_LABELS,
   PROCESSOR_CONTROLS,
   EQUIPMENT_KINDS,
@@ -70,6 +74,24 @@ const EMPTY: EquipmentFormValues = {
   lightSource: '',
   audioType: '',
   djType: '',
+  mixerKind: '',
+  mixerCard: '',
+  micKind: '',
+  cableType: 'cable',
+  rfRange: '',
+  micType: '',
+  capsuleIds: [],
+  powered: '',
+  woofer: '',
+  connectors: '',
+  poleMount: false,
+  subDesign: '',
+  freqRange: '',
+  freqResponse: '',
+  coverage: '',
+  crossover: '',
+  biamp: false,
+  hfDriver: '',
   ipPrefix: undefined,
   ipDhcp: false,
   boxWidthCm: undefined,
@@ -119,6 +141,33 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     lightSource: equipment.attributes.lightSource ?? '',
     audioType: equipment.attributes.audioType ?? '',
     djType: equipment.attributes.djType ?? '',
+    mixerKind: equipment.attributes.mixerKind ?? '',
+    mixerChannels: equipment.attributes.mixerChannels,
+    mixerCard: equipment.attributes.mixerCard ?? '',
+    micKind: equipment.attributes.micKind ?? '',
+    cableType: equipment.attributes.cableType ?? 'cable',
+    rfRange: equipment.attributes.rfRange ?? '',
+    micType: equipment.attributes.micType ?? '',
+    capsuleIds: equipment.attributes.capsuleIds ?? [],
+    powered: equipment.attributes.powered ?? '',
+    rmsW: equipment.attributes.rmsW,
+    peakW: equipment.attributes.peakW,
+    woofer: equipment.attributes.woofer ?? '',
+    maxSplDb: equipment.attributes.maxSplDb,
+    connectors: equipment.attributes.connectors ?? '',
+    poleMount: equipment.attributes.poleMount ?? false,
+    subDesign: equipment.attributes.subDesign ?? '',
+    programW: equipment.attributes.programW,
+    maxSplPeakDb: equipment.attributes.maxSplPeakDb,
+    sensitivityDb: equipment.attributes.sensitivityDb,
+    impedanceOhm: equipment.attributes.impedanceOhm,
+    freqRange: equipment.attributes.freqRange ?? '',
+    freqResponse: equipment.attributes.freqResponse ?? '',
+    coverage: equipment.attributes.coverage ?? '',
+    crossover: equipment.attributes.crossover ?? '',
+    biamp: equipment.attributes.biamp ?? false,
+    hfDriver: equipment.attributes.hfDriver ?? '',
+    weightKg: equipment.attributes.weightKg,
     ipPrefix: equipment.attributes.ipPrefix,
     ipDhcp: equipment.attributes.ipDhcp ?? false,
     boxWidthCm: equipment.attributes.boxWidthCm,
@@ -203,6 +252,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
     register,
     control,
     handleSubmit,
+    setValue,
     setError,
     formState: { errors },
   } = useForm<EquipmentFormValues>({
@@ -225,6 +275,12 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const isLedPanel = useWatch({ control, name: 'isLedPanel' })
   const isLedProcessor = useWatch({ control, name: 'isLedProcessor' })
   const isDisplay = useWatch({ control, name: 'isDisplay' })
+  const cableType = useWatch({ control, name: 'cableType' })
+  const mixerKind = useWatch({ control, name: 'mixerKind' })
+  const micKind = useWatch({ control, name: 'micKind' })
+  const capsuleIds = useWatch({ control, name: 'capsuleIds' }) ?? []
+  const capsules = useCapsules(companyId)
+  const wirelessMic = audio && (audioType === 'wireless' || (audioType === 'microphone' && micKind === 'wireless'))
   const displayType = useWatch({ control, name: 'displayType' })
   const simple = isSimpleKind(kind, categoryText ?? '')
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
@@ -279,6 +335,18 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
 
       {kind === 'cable' && (
         <Group title="Kábel">
+          <SelectField label="Typ" {...register('cableType')}>
+            <option value="cable">Kábel</option>
+            <option value="adapter">Redukcia</option>
+            <option value="di">DI box</option>
+          </SelectField>
+          {cableType === 'di' && (
+            <SelectField label="DI box" {...register('powered')}>
+              <option value="">—</option>
+              <option value="active">Aktívny</option>
+              <option value="passive">Pasívny</option>
+            </SelectField>
+          )}
           <Field
             label="Konektor / typ"
             list={connectorListId}
@@ -430,11 +498,20 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         <Group title="Zvuk">
           <SelectField label="Typ" error={errors.audioType?.message} {...register('audioType')}>
             <option value="">— nezadané —</option>
-            {AUDIO_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {AUDIO_TYPE_LABELS[type]}
-              </option>
-            ))}
+            <optgroup label="PA">
+              {PA_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {AUDIO_TYPE_LABELS[type]}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Mikrofóny a ostatné">
+              {AUDIO_TYPES.filter((type) => !(PA_TYPES as readonly string[]).includes(type) && (type !== 'di' || audioType === 'di')).map((type) => (
+                <option key={type} value={type}>
+                  {AUDIO_TYPE_LABELS[type]}
+                </option>
+              ))}
+            </optgroup>
           </SelectField>
           <Field
             label="Výkon (W)"
@@ -444,6 +521,107 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
             error={errors.powerW?.message}
             {...register('powerW', asOptionalNumber)}
           />
+          {audioType === 'mixer' && (
+            <>
+              <SelectField label="Mixpult" error={errors.mixerKind?.message} {...register('mixerKind')}>
+                <option value="">— nezadané —</option>
+                <option value="analog">Analógový</option>
+                <option value="digital">Digitálny</option>
+              </SelectField>
+              <Field label="Počet kanálov" type="number" inputMode="numeric" min={1} placeholder="napr. 32" error={errors.mixerChannels?.message} {...register('mixerChannels', asOptionalNumber)} />
+              {mixerKind === 'digital' && (
+                <Field label="Karta" placeholder="napr. Dante, MADI, USB, AES50" maxLength={80} error={errors.mixerCard?.message} {...register('mixerCard')} />
+              )}
+            </>
+          )}
+          {(audioType === 'wireless' || audioType === 'iem') && (
+            <Field label="Frekvenčný rozsah" placeholder="napr. G51 470–534 MHz" maxLength={60} {...register('rfRange')} />
+          )}
+          {audioType === 'stagebox' && (
+            <Field label="Karta / protokol" placeholder="napr. Dante, AES50, MADI" maxLength={80} {...register('mixerCard')} />
+          )}
+          {audioType === 'microphone' && (
+            <>
+              <SelectField label="Mikrofón" error={errors.micKind?.message} {...register('micKind')}>
+                <option value="">— nezadané —</option>
+                <option value="wired">Káblový</option>
+                <option value="wireless">Bezdrôtový</option>
+              </SelectField>
+              <SelectField label="Typ mikrofónu" error={errors.micType?.message} {...register('micType')}>
+                <option value="">— nezadané —</option>
+                <option value="dynamic">Dynamický</option>
+                <option value="condenser">Kondenzátorový (phantom 48 V)</option>
+              </SelectField>
+            </>
+          )}
+          {wirelessMic && (
+            <fieldset className="sm:col-span-2">
+              <legend className="mb-1.5 text-sm font-medium">Kapsule, ktoré pasujú</legend>
+              <div className="flex flex-wrap gap-2">
+                {(capsules.data ?? []).map((capsule) => {
+                  const on = capsuleIds.includes(capsule.id)
+                  return (
+                    <button
+                      key={capsule.id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setValue('capsuleIds', on ? capsuleIds.filter((id) => id !== capsule.id) : [...capsuleIds, capsule.id], { shouldDirty: true })}
+                      className={cn('h-9 rounded-lg border px-3 text-sm font-medium', on ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
+                    >
+                      {[capsule.manufacturer, capsule.name].filter(Boolean).join(' ')}
+                    </button>
+                  )
+                })}
+                <Link to="/equipment/capsules?new=1" target="_blank" className="inline-flex h-9 items-center gap-1 rounded-lg border border-dashed px-3 text-sm text-accent hover:bg-muted">
+                  <Plus className="size-4" aria-hidden />
+                  Nová kapsula
+                </Link>
+              </div>
+              {capsules.isError && <p className="mt-1 text-xs text-muted-foreground">Kapsule sa nedajú načítať (migrácia 0060).</p>}
+            </fieldset>
+          )}
+          {hasBox(audioType) && (
+            <fieldset className="grid grid-cols-2 items-end gap-3 sm:col-span-2 sm:grid-cols-4">
+              <legend className="mb-1 text-sm font-medium">{AUDIO_TYPE_LABELS[audioType as keyof typeof AUDIO_TYPE_LABELS]}</legend>
+              <SelectField label="Aktívny / pasívny" {...register('powered')}>
+                <option value="">—</option>
+                <option value="active">Aktívny</option>
+                <option value="passive">Pasívny</option>
+              </SelectField>
+              {audioType === 'subwoofer' && (
+                <SelectField label="Konštrukcia" {...register('subDesign')}>
+                  <option value="">—</option>
+                  {(Object.keys(SUB_DESIGN_LABELS) as (keyof typeof SUB_DESIGN_LABELS)[]).map((design) => (
+                    <option key={design} value={design}>
+                      {SUB_DESIGN_LABELS[design]}
+                    </option>
+                  ))}
+                </SelectField>
+              )}
+              <Field label="Výkon continuous / RMS (W)" type="number" inputMode="decimal" min={0} error={errors.rmsW?.message} {...register('rmsW', asOptionalNumber)} />
+              <Field label="Výkon program (W)" type="number" inputMode="decimal" min={0} error={errors.programW?.message} {...register('programW', asOptionalNumber)} />
+              <Field label="Výkon peak (W)" type="number" inputMode="decimal" min={0} error={errors.peakW?.message} {...register('peakW', asOptionalNumber)} />
+              <Field label="Impedancia (Ω)" type="number" inputMode="decimal" min={0} placeholder="8" error={errors.impedanceOhm?.message} {...register('impedanceOhm', asOptionalNumber)} />
+              <Field label="LF driver (woofer)" placeholder={audioType === 'subwoofer' ? 'napr. 2× 18″' : 'napr. 1× 15″ JBL 2265H'} maxLength={40} {...register('woofer')} />
+              {audioType !== 'subwoofer' && <Field label="HF driver" placeholder="napr. JBL 2452H, 1,5″ výstup" maxLength={80} {...register('hfDriver')} />}
+              <Field label="Max SPL continuous (dB)" type="number" inputMode="decimal" min={0} error={errors.maxSplDb?.message} {...register('maxSplDb', asOptionalNumber)} />
+              <Field label="Max SPL peak (dB)" type="number" inputMode="decimal" min={0} error={errors.maxSplPeakDb?.message} {...register('maxSplPeakDb', asOptionalNumber)} />
+              <Field label="Citlivosť 1 W / 1 m (dB)" type="number" inputMode="decimal" min={0} error={errors.sensitivityDb?.message} {...register('sensitivityDb', asOptionalNumber)} />
+              <Field label="Frekvenčný rozsah (−10 dB)" placeholder="napr. 60 Hz – 20 kHz" maxLength={40} {...register('freqRange')} />
+              <Field label="Frekvenčná odozva (±3 dB)" placeholder="napr. 70 Hz – 20 kHz" maxLength={40} {...register('freqResponse')} />
+              {audioType !== 'subwoofer' && <Field label="Vyžarovací uhol" placeholder="napr. 50° × 90°" maxLength={40} {...register('coverage')} />}
+              <Field label="Výhybka" placeholder="napr. 1,1 kHz" maxLength={40} {...register('crossover')} />
+              <label className="flex items-end gap-2 pb-3 text-sm">
+                <input type="checkbox" className="size-4" {...register('biamp')} />
+                Dá sa na bi-amp
+              </label>
+              <Field label="Konektory" placeholder="napr. XLR, speakON NL4, powerCON" maxLength={80} {...register('connectors')} />
+              <label className="flex items-end gap-2 pb-3 text-sm">
+                <input type="checkbox" className="size-4" {...register('poleMount')} />
+                Hniezdo na stojan (35 mm)
+              </label>
+            </fieldset>
+          )}
           {hasBox(audioType) && (
             <fieldset className="sm:col-span-2">
               <legend className="mb-1 text-sm font-medium">Rozmery boxu (cm)</legend>
@@ -572,6 +750,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         </datalist>
 
         <Field label="Výrobca" error={errors.manufacturer?.message} {...register('manufacturer')} />
+        <Field label="Váha kusu (kg)" type="number" inputMode="decimal" min={0} step="0.1" error={errors.weightKg?.message} {...register('weightKg', asOptionalNumber)} />
         <Field label="Model" error={errors.model?.message} {...register('model')} />
         {!simple && (
           <Field label="Sériové číslo" autoComplete="off" error={errors.serialNumber?.message} {...register('serialNumber')} />

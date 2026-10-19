@@ -21,6 +21,22 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.5 – 19. 10. 2026
+
+Podrobnejšia technika:
+
+- **Zvuk – skupina PA**: Line array (LA systém), Live / portable PA (vrch), Monitor, Sub (basák), Mixpult, Zosilňovač,
+  Procesor / DSP a Stagebox. Pri PA (vrch, monitor, sub, LA) údaje z katalógového listu: aktívny / pasívny,
+  výkon continuous / program / peak, impedancia, LF a HF driver, max SPL continuous a peak, citlivosť, frekvenčný
+  rozsah a odozva, vyžarovací uhol, výhybka, **bi-amp**, konektory a hniezdo na stojan; pri sube konštrukcia
+  (priamy / horna / slimák) a vlastný delay.
+- **Mixpult**: analógový / digitálny, počet kanálov, pri digitálnom karta (Dante, MADI…). **Stagebox**: karta / protokol.
+- **Mikrofón**: káblový / bezdrôtový, dynamický / kondenzátorový (kondenzátorový v patch liste sám zapne 48 V);
+  pri bezdrôtovom kapsule, ktoré pasujú (aj „Nová kapsula“). **Bezdrôtový systém a in-ear**: frekvenčný rozsah.
+- **Káble**: typ Kábel / Redukcia / **DI box** (aktívny / pasívny) – DI box sa ponúka aj v patch liste.
+- **Váha (kg)** pri každej technike.
+- **DMX dip switch**: prepínač 9 / 10, ON hore / OFF dole, poradie (prepínač 1 vľavo alebo vpravo).
+
 ### 2.4 – 19. 10. 2026
 
 - **DMX dip switch** v Kalkulačkách: adresa → ktoré prepínače zapnúť (aj s hodnotami 1 + 4 + 32…), klikom na
