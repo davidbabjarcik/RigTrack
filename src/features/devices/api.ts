@@ -56,3 +56,30 @@ export async function deleteDevice(companyId: string, id: string) {
 export function isDuplicateMac(error: unknown) {
   return typeof error === 'object' && error !== null && (error as { code?: string }).code === '23505'
 }
+
+export type DeviceExemption = { userId: string; kind: 'phone' | 'laptop' | 'tablet' }
+
+export const exemptionKeys = { list: (companyId: string) => ['company', companyId, 'device-exemptions'] as const }
+
+/** Výnimky zo zariadení (svoje; správca tímu všetky). */
+export async function fetchExemptions(companyId: string): Promise<DeviceExemption[]> {
+  const { data, error } = await getSupabase().from('device_exemptions').select('user_id, kind').eq('company_id', companyId)
+  if (error) throw error
+  return (data as { user_id: string; kind: DeviceExemption['kind'] }[]).map((row) => ({ userId: row.user_id, kind: row.kind }))
+}
+
+export async function setExemption(companyId: string, userId: string, kind: DeviceExemption['kind'], exempt: boolean) {
+  const table = getSupabase().from('device_exemptions')
+  const { error } = exempt
+    ? await table.insert({ company_id: companyId, user_id: userId, kind })
+    : await table.delete().eq('company_id', companyId).eq('user_id', userId).eq('kind', kind)
+  if (error) throw error
+}
+
+/** Ktoré povinné zariadenia (mobil, tablet / iPad, notebook) človeku chýbajú a nemá na ne výnimku. */
+export function missingDeviceKinds(devices: Pick<MemberDevice, 'userId' | 'kind'>[], exemptions: DeviceExemption[], userId: string) {
+  const required: DeviceExemption['kind'][] = ['phone', 'tablet', 'laptop']
+  return required.filter(
+    (kind) => !devices.some((device) => device.userId === userId && device.kind === kind) && !exemptions.some((item) => item.userId === userId && item.kind === kind),
+  )
+}

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Trash2 } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { InstallGuide } from '@/components/feedback/InstallGuide'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
@@ -28,6 +29,7 @@ import { BrandingSettings } from '@/features/companies/BrandingSettings'
 import { DeleteCompanySettings } from '@/features/companies/DeleteCompanySettings'
 import { DemoSettings } from '@/features/companies/DemoSettings'
 import { MyDevicesSettings } from '@/features/devices/MyDevicesSettings'
+import { EmailPrefs } from '@/features/news/EmailPrefs'
 import { LookupSettings } from '@/features/equipment/LookupSettings'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { PermissionsSettings } from '@/features/permissions/PermissionsSettings'
@@ -421,6 +423,14 @@ export function SettingsPage() {
           </Section>
           <Section title={`Moje zariadenia (${company.companyName})`}>
             <MyDevicesSettings companyId={company.companyId} userId={user.id} />
+          </Section>
+          {isAdminRole(company.role) && (
+            <Section title="E-mailové upozornenia">
+              <EmailPrefs companyId={company.companyId} />
+            </Section>
+          )}
+          <Section title="Aplikácia na ploche">
+            <InstallGuide />
           </Section>
           <Section title="Demo">
             <DemoSettings userId={user.id} />

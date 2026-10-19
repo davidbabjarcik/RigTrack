@@ -3,7 +3,7 @@ import type { CompanyEvent } from '@/features/events/model'
 import { clashes, matchesPerson, mergeStaff, unavailableOn, upcomingEvents, upcomingPeriods, type StaffRow } from './model'
 
 const row = (patch: Partial<StaffRow>): StaffRow => ({
-  id: 's1', memberId: null, name: '', position: '', phone: '', email: '', photoPath: '', skills: '', note: '', active: true, ...patch,
+  id: 's1', memberId: null, name: '', position: '', phone: '', email: '', photoPath: '', skills: '', note: '', active: true, birthDate: null, nameDay: '', licences: [], onboarded: true, ...patch,
 })
 const members = [
   { userId: 'u1', email: 'peter@x.sk', fullName: 'Peter Zvukár', role: 'technik' as const },
@@ -51,5 +51,19 @@ describe('staff', () => {
     expect(matchesPerson(peter, 'zvukar')).toBe(true)
     expect(matchesPerson(peter, 'vyskach')).toBe(true)
     expect(matchesPerson(peter, 'osvetlovac')).toBe(false)
+  })
+})
+
+describe('celebrations', () => {
+  it('finds birthdays and name days in the next days', async () => {
+    const { upcomingCelebrations, describeCelebration, formatNameDay } = await import('./celebrations')
+    const people = mergeStaff([], [
+      row({ id: 'a', name: 'Jano', birthDate: '1996-10-20' }),
+      row({ id: 'b', name: 'Mária', nameDay: '10-19' }),
+      row({ id: 'c', name: 'Neaktívny', nameDay: '10-19', active: false }),
+    ])
+    const list = upcomingCelebrations(people, '2026-10-19', 7)
+    expect(list.map((item) => describeCelebration(item, '2026-10-19'))).toEqual(['Dnes má meniny Mária', 'Zajtra má narodeniny Jano (30)'])
+    expect(formatNameDay('06-24')).toBe('24. 6.')
   })
 })

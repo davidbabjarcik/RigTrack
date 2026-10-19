@@ -70,6 +70,7 @@ const technicians = lazyPage(() => import('@/features/technicians/TechniciansPag
 const delay = lazyPage(() => import('@/features/delay/DelayPage').then((m) => m.DelayPage))
 // Verejná stránka (aj bez prihlásenia a firmy), preto bez lazyPage.
 const changelog = async () => ({ Component: (await import('@/features/changelog/ChangelogPage')).ChangelogPage })
+const welcome = lazyPage(() => import('@/features/staff/WelcomePage').then((m) => m.WelcomePage))
 const stage = lazyPage(() => import('@/features/stage/StagePage').then((m) => m.StagePage), 'events.view')
 const warehouse = lazyPage(() => import('@/features/warehouse/WarehousePage').then((m) => m.WarehousePage), 'cases.view')
 const recycleBin = lazyPage(() => import('@/features/bin/RecycleBinPage').then((m) => m.RecycleBinPage))
@@ -117,6 +118,7 @@ export const routes: RouteObject[] = [
               // Pôvodná stránka IP / MAC je teraz v Sieťach.
               { path: 'equipment/network', element: <Navigate to="/networks" replace /> },
               { path: 'networks', lazy: networks },
+              { path: 'welcome', lazy: welcome },
               { path: 'equipment/excel', lazy: equipmentExcel },
               { path: 'equipment/:id', lazy: equipmentDetail },
               { path: 'equipment/:id/edit', lazy: equipmentForm },

@@ -7,6 +7,7 @@ import { BinAutoPurge } from '@/features/bin/BinAutoPurge'
 import { useCompany } from '@/features/companies/company-context'
 import { CompanyLogo } from '@/features/companies/CompanyLogo'
 import { Credits } from './Credits'
+import { TopNotices } from './TopNotices'
 import { ThemeToggle } from './ThemeToggle'
 import { FIXED_PINNED, visibleNavItems, type NavItem } from '@/lib/navigation'
 import { usePinnedNav } from '@/lib/usePinnedNav'
@@ -110,6 +111,7 @@ export function AppLayout() {
           </Link>
           <ThemeToggle className="-mr-2" />
         </header>
+        <TopNotices />
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-10 md:px-8">
           <Outlet />
         </main>

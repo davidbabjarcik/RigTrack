@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.12.0**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.13.0**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,25 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.13 – 19. 10. 2026
+
+- **Úvodný dotazník** – nový člen sa po prihlásení vyplní telefón, e-mail, fotku, pozíciu a narodeniny;
+  všetko sa zapíše do jeho karty v Zamestnancoch.
+- **Karta zamestnanca** – dátum narodenia, meniny a skupiny vodičského preukazu (klikacie).
+- **Narodeniny a meniny** – upozornenie hore pre kolegov (oslávencovi blahoželanie) a v Kalendári.
+- **Chýbajúce zariadenia** – kým člen nezapíše mobil, tablet / iPad a notebook s MAC, svieti mu hore červené
+  upozornenie; výnimku (napr. nemá tablet) dá v jeho karte len admin.
+- **Novinky vo firme** – nový event a priradenie do posádky sa ukážu hore všetkým, s tlačidlom **Prečítané**.
+- **Potvrdenie účasti** – člen v posádke eventu klikne **Môžem / Nemôžem** (a napíše prečo); ostatní to vidia.
+- **E-mail pri novom evente** – admin / CEO si ho zapne v Nastaveniach → Účet (Edge Function `notify-new-event`).
+- **Aplikácia na ploche** – návod pre iPhone, Android aj počítač, kde sa dá aj tlačidlo Nainštalovať
+  (v Nastaveniach → Účet a na mobile na Prehľade).
+- **Demo firma** má viac: zamestnancov, zariadenia, Wi-Fi siete, servisných technikov, servis, odmeny, príjmy
+  a vlastnú techniku zamestnanca.
+- **Databáza v jednom súbore** – `supabase/baseline.sql` (stav po `0058`) pre novú inštaláciu; nové migrácie od `0059`.
+
+Nové migrácie: `0057`, `0058`.
 
 ### 1.12 – 19. 10. 2026
 
@@ -344,9 +363,11 @@ Aplikácia beží na `http://localhost:5173`. Bez databázy sa zobrazí iba kost
 ## Pripojenie Supabase
 
 1. Vytvor projekt na supabase.com.
-2. V SQL Editore spusti postupne **všetky** súbory zo `supabase/migrations/` podľa čísla (0001 až najvyššie).
-   Pri aktualizácii spusti tie, ktoré pribudli – ktoré to sú, je v [Čo je nové](#čo-je-nové).
-   Súbor `0026` je prázdny (fotky vozidiel zakladá `0027`), `0037` sa dá spustiť aj opakovane.
+2. **Nová inštalácia:** v SQL Editore spusti `supabase/baseline.sql` – celá databáza naraz (stav po migrácii `0058`).
+   Potom spusti zo `supabase/migrations/` už len súbory s číslom **vyšším ako 0058** (ak nejaké sú).
+   **Existujúca databáza** (inštalácia spred 1.13): spusti zo `supabase/migrations/` tie, ktoré ešte nemáš
+   (`0049`–`0058`, `0053` samostatne pred `0054`); staré `0001`–`0048` už v databáze sú. Pri ďalších
+   aktualizáciách spúšťaj len nové – ktoré to sú, je v [Čo je nové](#čo-je-nové).
 3. V Authentication → URL Configuration nastav Site URL (`http://localhost:5173`, neskôr produkčnú doménu)
    a medzi Redirect URLs pridaj `<adresa>/auth/update-password`.
 4. Potvrdzovanie e-mailu (Authentication → Sign In / Providers → Email → Confirm email) nechaj **zapnuté** –
@@ -373,6 +394,7 @@ Hlásenia fungujú v aplikácii hneď po migrácii `0048`. Aby chodili aj e-mail
    npx supabase login
    npx supabase link --project-ref <ref-projektu>
    npx supabase functions deploy notify-bug-report
+   npx supabase functions deploy notify-new-event
    npx supabase secrets set RESEND_API_KEY=re_... BUG_REPORT_FROM="RigTrack <chyby@tvoja-domena.sk>" APP_URL=https://<používateľ>.github.io/RigTrack
    ```
 E-mail dostanú vývojári a admini firmy, v ktorej bola chyba nahlásená. Kým funkcia nie je nasadená,
@@ -425,7 +447,8 @@ Ak ešte nemáš tunel, doplň `TUNNEL_TOKEN` a pridaj `--profile tunnel`; služ
 
 - `src/features/<modul>/` – každý modul má `model.ts` (pravidlá a výpočty s testami), `api.ts` (dotazy) a obrazovky.
 - `src/lib/`, `src/components/` – navigácia, oprávnenia, formátovanie, prvky rozhrania, verzia, ZIP.
-- `supabase/migrations/` – schéma a pravidlá prístupu; `supabase/tests/` – ich testy (bežia v pamäti, bez Supabase).
+- `supabase/baseline.sql` – celá schéma a pravidlá prístupu naraz (stav po `0058`); `supabase/migrations/` – novšie
+  zmeny (a `0049`–`0058` pre staršie inštalácie); `supabase/tests/` – testy (bežia v pamäti, bez Supabase).
 - Verzia sa berie z `package.json`; pri novej verzii sa zvýši tam a pribudne záznam v [Čo je nové](#čo-je-nové).
 
 ---

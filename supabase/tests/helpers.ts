@@ -40,6 +40,7 @@ const SUPABASE_STUB = `
 `
 
 const MIGRATIONS = 'supabase/migrations'
+const BASELINE = 'supabase/baseline.sql'
 
 type Row = Record<string, string>
 
@@ -47,7 +48,12 @@ type Row = Record<string, string>
 export async function createTestDb() {
   const db = new PGlite()
   await db.exec(SUPABASE_STUB)
-  for (const file of readdirSync(MIGRATIONS).sort()) {
+  // Najprv celá databáza naraz (baseline), potom len migrácie novšie ako baseline.
+  const baseline = readFileSync(BASELINE, 'utf8')
+  const last = Number(baseline.match(/^-- baseline: (\d+)/m)?.[1] ?? 0)
+  await db.exec(baseline)
+  for (const file of readdirSync(MIGRATIONS).filter((name) => /^\d{4}_.*\.sql$/.test(name)).sort()) {
+    if (Number(file.slice(0, 4)) <= last) continue
     await db.exec(readFileSync(`${MIGRATIONS}/${file}`, 'utf8'))
   }
   const users: Record<string, string> = {}

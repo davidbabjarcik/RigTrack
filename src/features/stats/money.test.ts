@@ -33,9 +33,9 @@ describe('money statistics', () => {
 
   it('groups pay by the role the member had on the event', () => {
     const events = [
-      { id: 'e1', crew: [{ id: 'c1', memberId: 'me', name: '', role: 'Osvetľovač' }] },
-      { id: 'e2', crew: [{ id: 'c2', memberId: 'me', name: '', role: ' osvetľovač ' }] },
-      { id: 'e3', crew: [{ id: 'c3', memberId: 'me', name: '', role: 'Zvukár' }] },
+      { id: 'e1', crew: [{ id: 'c1', memberId: 'me', name: '', role: 'Osvetľovač', response: 'pending' as const, responseNote: '' }] },
+      { id: 'e2', crew: [{ id: 'c2', memberId: 'me', name: '', role: ' osvetľovač ', response: 'pending' as const, responseNote: '' }] },
+      { id: 'e3', crew: [{ id: 'c3', memberId: 'me', name: '', role: 'Zvukár', response: 'pending' as const, responseNote: '' }] },
       { id: 'e4', crew: [] },
     ]
     expect(byRole([pay(200, '2026-09-01', 'e1'), pay(150, '2026-09-02', 'e2'), pay(120, '2026-09-03', 'e3'), pay(80, '2026-09-04', 'e4'), pay(30, '2026-09-05')], events)).toEqual([

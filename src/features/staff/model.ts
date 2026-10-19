@@ -14,7 +14,17 @@ export type StaffRow = {
   skills: string
   note: string
   active: boolean
+  birthDate: string | null
+  /** Meniny ako „MM-DD“, prázdne = nezadané. */
+  nameDay: string
+  /** Skupiny vodičského oprávnenia, napr. B, C. */
+  licences: string[]
+  /** Prešiel úvodným dotazníkom po prvom prihlásení. */
+  onboarded: boolean
 }
+
+/** Skupiny vodičského oprávnenia na Slovensku. */
+export const LICENCES = ['AM', 'A1', 'A2', 'A', 'B1', 'B', 'BE', 'C1', 'C1E', 'C', 'CE', 'D1', 'D1E', 'D', 'DE', 'T'] as const
 
 export type Unavailability = { id: string; staffId: string; startsOn: string; endsOn: string; note: string }
 
@@ -34,7 +44,7 @@ export const memberKey = (memberId: string) => `m-${memberId}`
 export function mergeStaff(members: Member[], rows: StaffRow[]): Person[] {
   const people: Person[] = members.map((member) => {
     const row = rows.find((candidate) => candidate.memberId === member.userId)
-    const base = { position: '', phone: '', email: '', photoPath: '', skills: '', note: '', active: true }
+    const base = { position: '', phone: '', email: '', photoPath: '', skills: '', note: '', active: true, birthDate: null, nameDay: '', licences: [], onboarded: false }
     return {
       ...base,
       ...(row ?? {}),

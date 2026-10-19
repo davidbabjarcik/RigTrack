@@ -1,5 +1,6 @@
 import { storeCompanyPhoto } from '@/features/equipment/photo'
 import { getSupabase } from '@/lib/supabase/client'
+import { isMissingColumn } from '@/lib/supabase/errors'
 import type { StaffRow, Unavailability } from './model'
 
 export const staffKeys = {
@@ -18,15 +19,26 @@ type Row = {
   skills: string
   note: string
   active: boolean
+  birth_date?: string | null
+  name_day?: string
+  licences?: string[]
+  onboarded?: boolean
 }
+
+// Narodeniny, meniny, vodičák a dotazník (0057); bez migrácie sa karty načítajú bez nich.
+let extraColumns = ', birth_date, name_day, licences, onboarded'
 
 export async function fetchStaff(companyId: string): Promise<StaffRow[]> {
   const { data, error } = await getSupabase()
     .from('staff')
-    .select('id, member_id, name, position, phone, email, photo_path, skills, note, active')
+    .select('id, member_id, name, position, phone, email, photo_path, skills, note, active' + extraColumns)
     .eq('company_id', companyId)
+  if (extraColumns && isMissingColumn(error, 'birth_date')) {
+    extraColumns = ''
+    return fetchStaff(companyId)
+  }
   if (error) throw error
-  return (data as Row[]).map((row) => ({
+  return (data as unknown as Row[]).map((row) => ({
     id: row.id,
     memberId: row.member_id,
     name: row.name,
@@ -37,6 +49,11 @@ export async function fetchStaff(companyId: string): Promise<StaffRow[]> {
     skills: row.skills,
     note: row.note,
     active: row.active,
+    birthDate: row.birth_date ?? null,
+    nameDay: row.name_day ?? '',
+    licences: row.licences ?? [],
+    // Bez migrácie dotazník nepýtame.
+    onboarded: row.onboarded ?? true,
   }))
 }
 
@@ -56,7 +73,8 @@ export async function fetchUnavailability(companyId: string): Promise<Unavailabi
   }))
 }
 
-export type StaffFields = Pick<StaffRow, 'name' | 'position' | 'phone' | 'email' | 'skills' | 'note' | 'active'>
+export type StaffFields = Pick<StaffRow, 'name' | 'position' | 'phone' | 'email' | 'skills' | 'note' | 'active'> &
+  Partial<Pick<StaffRow, 'birthDate' | 'nameDay' | 'licences' | 'onboarded'>>
 
 const columns = (fields: StaffFields) => ({
   name: fields.name.trim(),
@@ -66,6 +84,11 @@ const columns = (fields: StaffFields) => ({
   skills: fields.skills.trim(),
   note: fields.note.trim(),
   active: fields.active,
+  // Nové polia (0057) sa posielajú, len keď ich formulár má.
+  ...(fields.birthDate !== undefined && { birth_date: fields.birthDate || null }),
+  ...(fields.nameDay !== undefined && { name_day: fields.nameDay }),
+  ...(fields.licences !== undefined && { licences: fields.licences }),
+  ...(fields.onboarded !== undefined && { onboarded: fields.onboarded }),
 })
 
 /** Uloží kartu; člen firmy bez karty ju dostane založenú. Vráti id karty. */

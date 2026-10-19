@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { InstallHint } from '@/components/feedback/InstallGuide'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useCompany } from '@/features/companies/company-context'
 import { RestockList } from '@/features/equipment/RestockList'
@@ -15,6 +16,7 @@ export function DashboardPage() {
   return (
     <>
       <PageHeader title="Prehľad" description="Evidencia techniky a jej prevádzky" />
+      <InstallHint />
 
       {!isSupabaseConfigured && (
         <div role="status" className="mb-6 rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">

@@ -14,7 +14,9 @@ export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
 
 /** `caseId` je vyplnené, keď technika prišla na event ako súčasť celého case. */
 export type EventEquipment = { equipmentId: string; quantity: number; caseId: string | null }
-export type EventCrew = { id: string; memberId: string | null; name: string; role: string }
+/** Odpoveď člena posádky: zatiaľ nič / môže / nemôže. */
+export type CrewResponse = 'pending' | 'yes' | 'no'
+export type EventCrew = { id: string; memberId: string | null; name: string; role: string; response: CrewResponse; responseNote: string }
 
 /** Údaje eventu do tlače: organizátor, popis a časy prvého dňa („HH:MM“ alebo prázdne). */
 export const EVENT_SETTINGS = ['indoor', 'outdoor', 'mixed'] as const

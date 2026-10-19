@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Briefcase, Plus, Speaker } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -7,6 +7,8 @@ import { LinkButton } from '@/components/ui/button'
 import { SelectField } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
+import { exemptionKeys, fetchExemptions, setExemption, useDevices, type DeviceExemption } from '@/features/devices/api'
+import { DEVICE_KIND_LABELS } from '@/features/devices/model'
 import { DeviceList } from '@/features/devices/MyDevicesSettings'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import type { CompanyEvent } from '@/features/events/model'
@@ -14,6 +16,7 @@ import { fetchPayments, payoutKeys } from '@/features/payouts/api'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { isAdminRole } from '@/lib/roles'
+import { cn } from '@/lib/utils'
 import type { Person } from './model'
 import { pastEventsOf, periods, personStats } from './stats'
 
@@ -28,9 +31,45 @@ export function StaffDevices({ companyId, person, userId }: Omit<Props, 'events'
     <CollapsibleSection id="staff.devices" title="Zariadenia (mobil, notebook, iPad)">
       <div className="rounded-xl border bg-surface p-4">
         <p className="text-sm text-muted-foreground">MAC a IP adresy pre Wi-Fi siete. Nie je to technika firmy.</p>
+        <RequiredDevices companyId={companyId} memberId={person.memberId} />
         <DeviceList companyId={companyId} userId={person.memberId} canEdit empty="Zatiaľ žiadne zariadenia." />
       </div>
     </CollapsibleSection>
+  )
+}
+
+/** Povinné zariadenia (mobil, tablet, notebook): čo chýba; admin môže dať výnimku, aby nesvietilo upozornenie. */
+function RequiredDevices({ companyId, memberId }: { companyId: string; memberId: string }) {
+  const company = useCompany().active!
+  const queryClient = useQueryClient()
+  const devices = useDevices(companyId)
+  const exemptions = useQuery({ queryKey: exemptionKeys.list(companyId), queryFn: () => fetchExemptions(companyId), retry: false })
+  const toggle = useMutation({
+    mutationFn: ({ kind, exempt }: { kind: DeviceExemption['kind']; exempt: boolean }) => setExemption(companyId, memberId, kind, exempt),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: exemptionKeys.list(companyId) }),
+  })
+  if (!devices.isSuccess || !exemptions.isSuccess) return null
+  const isAdmin = isAdminRole(company.role)
+  const kinds: DeviceExemption['kind'][] = ['phone', 'tablet', 'laptop']
+  return (
+    <ul className="mt-3 flex flex-wrap gap-2 text-sm">
+      {kinds.map((kind) => {
+        const has = devices.data.some((device) => device.userId === memberId && device.kind === kind)
+        const exempt = exemptions.data.some((item) => item.userId === memberId && item.kind === kind)
+        return (
+          <li key={kind} className={cn('flex items-center gap-2 rounded-lg border px-2 py-1', !has && !exempt && 'border-destructive/50 bg-destructive/10')}>
+            <span>
+              {DEVICE_KIND_LABELS[kind]}: {has ? 'zapísané' : exempt ? 'výnimka' : <span className="text-destructive">chýba</span>}
+            </span>
+            {isAdmin && !has && (
+              <button type="button" className="text-xs text-accent hover:underline" disabled={toggle.isPending} onClick={() => toggle.mutate({ kind, exempt: !exempt })}>
+                {exempt ? 'zrušiť výnimku' : 'dať výnimku'}
+              </button>
+            )}
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 

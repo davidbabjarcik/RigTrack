@@ -56,3 +56,20 @@ describe('demo company', () => {
     await expect(t.as(null, 'select public.create_demo_company()')).rejects.toThrow(/permission denied/)
   })
 })
+
+describe('richer demo', () => {
+  it('has staff, devices, wifi, technicians and payouts', async () => {
+    await t.signUp('cyril', 'cyril@example.com')
+    const demo = (await t.as('cyril', 'select public.create_demo_company() as id'))[0].id
+    const count = async (table: string) => Number((await t.as('cyril', `select count(*)::int as n from public.${table} where company_id = $1`, [demo]))[0].n)
+    expect(await count('staff')).toBeGreaterThanOrEqual(5)
+    expect(await count('member_devices')).toBe(2)
+    expect(await count('wifi_networks')).toBe(2)
+    expect(await count('service_technicians')).toBe(2)
+    expect(await count('member_payments')).toBe(2)
+    expect(await t.as('cyril', 'select onboarded from public.staff where company_id = $1 and member_id = $2', [demo, t.users.cyril])).toEqual([{ onboarded: true }])
+    // reset založí všetko znova
+    const again = (await t.as('cyril', 'select public.reset_demo_company() as id'))[0].id
+    expect(Number((await t.as('cyril', 'select count(*)::int as n from public.wifi_networks where company_id = $1', [again]))[0].n)).toBe(2)
+  })
+})

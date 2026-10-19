@@ -9,7 +9,7 @@ import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
-import { eventKeys, saveEvent } from './api'
+import { eventKeys, notifyNewEvent, saveEvent } from './api'
 import {
   EVENT_SETTINGS,
   EVENT_STATUS_LABELS,
@@ -80,7 +80,11 @@ function EventForm({ companyId, current, events }: FormProps) {
   const save = useMutation({
     mutationFn: (values: EventFormValues) => saveEvent(companyId, current?.id ?? null, values),
     onSuccess: async (id) => {
+      // Nový event: adminom, čo si to zapli, odíde e-mail (ak e-maily nie sú nastavené, nič sa nestane).
+      if (!current) void notifyNewEvent(id)
+      // Celá firma: zmenia sa aj novinky.
       await queryClient.invalidateQueries({ queryKey: eventKeys.list(companyId) })
+      void queryClient.invalidateQueries({ queryKey: ['company', companyId, 'news'] })
       navigate(`/events/${id}`, { replace: true })
     },
   })

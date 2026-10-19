@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeftRight, CalendarDays, CalendarPlus, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, CalendarDays, CalendarPlus, Gift, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -11,6 +11,7 @@ import { useEvents } from '@/features/events/useEvents'
 import { useLoans } from '@/features/loans/useLoans'
 import { fetchShoppingItems, shoppingKeys } from '@/features/shopping/api'
 import { useTasks } from '@/features/tasks/useTasks'
+import { useStaff } from '@/features/staff/useStaff'
 import { useVehicles } from '@/features/vehicles/useVehicles'
 import { formatDate, todayIso } from '@/lib/format'
 import { downloadIcs } from '@/lib/ics'
@@ -38,6 +39,7 @@ const ICONS: Record<EntryKind, LucideIcon> = {
   task: ListTodo,
   service: Wrench,
   shopping: ShoppingCart,
+  celebration: Gift,
 }
 
 const VIEW_KEY = 'rigtrack.calendar.view'
@@ -88,6 +90,7 @@ export function CalendarPage() {
   const tasks = useTasks(companyId)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const shopping = useQuery({ queryKey: shoppingKeys.list(companyId), queryFn: () => fetchShoppingItems(companyId) })
+  const staff = useStaff(companyId)
   const sources = [events, loans, vehicles, tasks, equipment, shopping]
 
   const data: AgendaSources = {
@@ -97,6 +100,7 @@ export function CalendarPage() {
     tasks: tasks.data ?? [],
     equipment: equipment.data ?? [],
     shopping: shopping.data ?? [],
+    people: staff.people,
   }
   const entries = buildAgenda(data, today).filter((entry) => !hidden.includes(entry.kind))
   const gridDays = monthGridDays(month)

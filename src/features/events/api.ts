@@ -1,6 +1,7 @@
 import { shrinkImage } from '@/features/equipment/photo'
 import { getSupabase } from '@/lib/supabase/client'
-import type { CompanyEvent, EventDocument, EventFormValues, EventSetting, EventStatus, PowerType } from './model'
+import { isMissingColumn } from '@/lib/supabase/errors'
+import type { CompanyEvent, CrewResponse, EventDocument, EventFormValues, EventSetting, EventStatus, PowerType } from './model'
 
 const BUCKET = 'event-documents'
 
@@ -15,19 +16,26 @@ const EVENT_COLUMNS =
 /** Databáza vracia čas ako „14:00:00“. */
 const hhmm = (value: string | null) => (value ?? '').slice(0, 5)
 
+// Potvrdenie účasti posádky (0057); bez migrácie sa posádka načíta bez neho.
+let crewResponseColumns = ', response, response_note'
+
 /** Všetky eventy firmy s technikou a posádkou. Tri dotazy, aby nezáviselo od vnárania cez zložené kľúče. */
 export async function fetchEvents(companyId: string): Promise<CompanyEvent[]> {
   const db = getSupabase()
   const [events, equipment, crew] = await Promise.all([
     db.from('events').select(EVENT_COLUMNS).eq('company_id', companyId),
     db.from('event_equipment').select('event_id, equipment_id, quantity, case_id').eq('company_id', companyId),
-    db.from('event_crew').select('id, event_id, member_id, name, role').eq('company_id', companyId).order('created_at'),
+    db.from('event_crew').select('id, event_id, member_id, name, role' + crewResponseColumns).eq('company_id', companyId).order('created_at'),
   ])
+  if (crewResponseColumns && isMissingColumn(crew.error, 'response')) {
+    crewResponseColumns = ''
+    return fetchEvents(companyId)
+  }
   const error = events.error ?? equipment.error ?? crew.error
   if (error) throw error
 
   const equipmentRows = equipment.data as { event_id: string; equipment_id: string; quantity: number; case_id: string | null }[]
-  const crewRows = crew.data as { id: string; event_id: string; member_id: string | null; name: string; role: string }[]
+  const crewRows = crew.data as unknown as { id: string; event_id: string; member_id: string | null; name: string; role: string; response?: CrewResponse; response_note?: string }[]
   const rows = events.data as {
     id: string
     name: string
@@ -78,7 +86,7 @@ export async function fetchEvents(companyId: string): Promise<CompanyEvent[]> {
       .map((item) => ({ equipmentId: item.equipment_id, quantity: item.quantity, caseId: item.case_id })),
     crew: crewRows
       .filter((member) => member.event_id === row.id)
-      .map((member) => ({ id: member.id, memberId: member.member_id, name: member.name, role: member.role })),
+      .map((member) => ({ id: member.id, memberId: member.member_id, name: member.name, role: member.role, response: member.response ?? 'pending', responseNote: member.response_note ?? '' })),
   }))
 }
 
@@ -178,6 +186,17 @@ export async function removeEventEquipment(eventId: string, equipmentId: string)
   if (data.length === 0) throw new Error('Not deleted')
 }
 
+/** Člen posádky potvrdí účasť (môže / nemôže a prečo). */
+export async function setCrewResponse(id: string, response: CrewResponse, note: string) {
+  const { data, error } = await getSupabase()
+    .from('event_crew')
+    .update({ response, response_note: response === 'no' ? note.trim() : '' })
+    .eq('id', id)
+    .select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
+}
+
 export async function addEventCrew(companyId: string, eventId: string, crew: { memberId: string | null; name: string; role: string }) {
   const { error } = await getSupabase()
     .from('event_crew')
@@ -263,4 +282,11 @@ export async function eventDocumentUrl(document: EventDocument) {
   const { data, error } = await getSupabase().storage.from(BUCKET).createSignedUrl(document.path, 120, { download: document.name })
   if (error) throw error
   return data.signedUrl
+}
+
+/** Požiada server o e-mail adminom o novom evente; chyby (napr. nenastavené e-maily) sa ticho ignorujú. */
+export async function notifyNewEvent(eventId: string) {
+  await getSupabase()
+    .functions.invoke('notify-new-event', { body: { eventId } })
+    .catch(() => {})
 }

@@ -4,10 +4,12 @@ import { isOpen, LOAN_STATUS_LABELS, type Loan } from '@/features/loans/model'
 import type { ShoppingItem } from '@/features/shopping/model'
 import type { Task } from '@/features/tasks/model'
 import { vehicleDeadlines, type Vehicle } from '@/features/vehicles/model'
+import { upcomingCelebrations, type Celebration } from '@/features/staff/celebrations'
+import type { Person } from '@/features/staff/model'
 
 // Kalendár je odvodený pohľad: nič sa doň nezapisuje, skladá sa z termínov ostatných modulov.
 
-export const ENTRY_KINDS = ['event', 'loan', 'vehicle', 'task', 'service', 'shopping'] as const
+export const ENTRY_KINDS = ['event', 'loan', 'vehicle', 'task', 'service', 'shopping', 'celebration'] as const
 export type EntryKind = (typeof ENTRY_KINDS)[number]
 
 export const ENTRY_KIND_LABELS: Record<EntryKind, string> = {
@@ -17,6 +19,7 @@ export const ENTRY_KIND_LABELS: Record<EntryKind, string> = {
   task: 'Úlohy',
   service: 'Servis techniky',
   shopping: 'Nákupy',
+  celebration: 'Narodeniny a meniny',
 }
 
 export type AgendaEntry = {
@@ -36,6 +39,8 @@ export type AgendaSources = {
   tasks: Task[]
   equipment: Equipment[]
   shopping: ShoppingItem[]
+  /** Ľudia z tímu (narodeniny a meniny); nepovinné. */
+  people?: Person[]
 }
 
 /** Všetky nevybavené termíny zo všetkých modulov, zoradené podľa dátumu. */
@@ -97,7 +102,23 @@ export function buildAgenda(sources: AgendaSources, today: string): AgendaEntry[
     }
   }
 
+  // Narodeniny a meniny na rok dopredu.
+  for (const celebration of upcomingCelebrations(sources.people ?? [], today, 366)) {
+    entries.push(celebrationEntry(celebration))
+  }
+
   return entries.sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title, 'sk'))
+}
+
+function celebrationEntry(celebration: Celebration): AgendaEntry {
+  return {
+    id: `celebration-${celebration.kind}-${celebration.person.key}-${celebration.date}`,
+    date: celebration.date,
+    kind: 'celebration',
+    title: celebration.person.name,
+    detail: celebration.kind === 'birthday' ? `narodeniny${celebration.age !== null ? ` (${celebration.age})` : ''}` : 'meniny',
+    to: `/staff/${celebration.person.key}`,
+  }
 }
 
 export type AgendaGroup = { date: string; entries: AgendaEntry[] }
@@ -174,8 +195,11 @@ export function entriesByDay(sources: AgendaSources, today: string, from: string
       to: `/loans/${loan.id}`,
     })
   }
-  for (const entry of buildAgenda(sources, today)) {
+  for (const entry of buildAgenda({ ...sources, people: [] }, today)) {
     if (entry.kind !== 'event' && entry.kind !== 'loan' && entry.date >= from && entry.date <= to) add(entry)
   }
+  // Narodeniny a meniny aj v minulých dňoch mriežky.
+  const gridDayCount = Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000) + 1
+  for (const celebration of upcomingCelebrations(sources.people ?? [], from, gridDayCount)) add(celebrationEntry(celebration))
   return byDay
 }

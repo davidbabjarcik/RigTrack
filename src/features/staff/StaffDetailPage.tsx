@@ -17,7 +17,10 @@ import { can } from '@/lib/permissions'
 import { ROLE_LABELS } from '@/lib/roles'
 import { useMembers } from '@/features/companies/useMembers'
 import { addUnavailability, clearStaffPhoto, deleteStaff, deleteUnavailability, saveStaff, setStaffPhoto, staffKeys, type StaffFields } from './api'
-import { upcomingEvents, upcomingPeriods, type Person } from './model'
+import { LICENCES, upcomingEvents, upcomingPeriods, type Person } from './model'
+import { NameDayField } from './NameDayField'
+import { formatNameDay } from './celebrations'
+import { cn } from '@/lib/utils'
 import { StaffDevices, StaffOverview, StaffOwnGear, StaffPastEvents } from './StaffExtras'
 import { useStaff } from './useStaff'
 
@@ -32,6 +35,9 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
     skills: person.skills,
     note: person.note,
     active: person.active,
+    birthDate: person.birthDate ?? '',
+    nameDay: person.nameDay,
+    licences: person.licences,
   })
   const set = (patch: Partial<StaffFields>) => setFields((current) => ({ ...current, ...patch }))
   const refresh = () => queryClient.invalidateQueries({ queryKey: staffKeys.list(companyId) })
@@ -50,6 +56,9 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
   if (!canEdit) {
     const rows: [string, string][] = [
       ['Pozícia', person.position],
+      ['Narodeniny', person.birthDate ? formatDate(person.birthDate) : ''],
+      ['Meniny', formatNameDay(person.nameDay)],
+      ['Vodičák', person.licences.join(', ')],
       ['Zručnosti', person.skills],
       ['Poznámka', person.note],
     ]
@@ -80,10 +89,33 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
           Aktívny v tíme
         </label>
       </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Dátum narodenia" type="date" value={fields.birthDate ?? ''} onChange={(event) => set({ birthDate: event.target.value })} />
+        <NameDayField value={fields.nameDay ?? ''} onChange={(nameDay) => set({ nameDay })} />
+      </div>
+      <fieldset>
+        <legend className="mb-1 text-sm font-medium">Vodičský preukaz</legend>
+        <div className="flex flex-wrap gap-1.5">
+          {LICENCES.map((licence) => {
+            const on = (fields.licences ?? []).includes(licence)
+            return (
+              <button
+                key={licence}
+                type="button"
+                aria-pressed={on}
+                onClick={() => set({ licences: on ? (fields.licences ?? []).filter((item) => item !== licence) : [...(fields.licences ?? []), licence] })}
+                className={cn('h-9 min-w-11 rounded-lg border px-2 text-sm font-medium', on ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
+              >
+                {licence}
+              </button>
+            )
+          })}
+        </div>
+      </fieldset>
       <TextareaField
         label="Zručnosti"
         rows={2}
-        placeholder="napr. vodičák B, práca vo výškach, GrandMA, X32"
+        placeholder="napr. práca vo výškach, GrandMA, X32"
         maxLength={500}
         value={fields.skills}
         onChange={(event) => set({ skills: event.target.value })}
