@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, Trash2, Wrench } from 'lucide-react'
+import { ArrowLeft, Pencil, QrCode, Trash2, Wrench } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -16,6 +16,7 @@ import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { deleteEquipment, equipmentKeys, fetchEquipment } from './api'
 import { EquipmentPhoto } from './EquipmentPhoto'
+import { ItemHistory } from './ItemHistory'
 import { OwnerLink } from '@/features/staff/OwnerLink'
 import { EquipmentLinks } from './PurchaseLinksFields'
 import { CAPTURE_MATCH_LABELS, hoursSinceLamp, describeAttributes, describeUnitIds, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
@@ -23,6 +24,7 @@ import { OperatingHours } from './OperatingHours'
 import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
 import { useEquipmentLookups } from './useEquipmentLookups'
+import { equipmentValue } from './value'
 
 export function EquipmentDetailPage() {
   const { id = '' } = useParams()
@@ -80,6 +82,8 @@ export function EquipmentDetailPage() {
     )
   // Káble a spotrebný materiál sa neservisujú a nemajú sieť.
   const simple = isSimpleKind(equipment.kind, categories.find((c) => c.id === equipment.categoryId)?.name ?? '')
+  // Nákupná cena a hodnota len pre tých, čo techniku spravujú.
+  const value = can(company, 'equipment.edit') ? equipmentValue(equipment, todayIso()) : null
   const rows: [string, ReactNode][] = [
     ['Druh', [KIND_LABELS[equipment.kind], ...describeAttributes(equipment)].join(' · ')],
     ['Vlastník', equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
@@ -144,6 +148,12 @@ export function EquipmentDetailPage() {
           .map(([unit, date]) => `#${unit} ${formatDate(date)}`)
           .join(' · '),
     ],
+    ['Nákupná cena', value && `${formatMoney(equipment.attributes.purchasePrice!, 'EUR')} za kus · spolu ${formatMoney(value.purchase, 'EUR')}`],
+    [
+      'Hodnota dnes',
+      value &&
+        [formatMoney(value.current, 'EUR'), `odpis ${value.years} r.`, value.undated > 0 && `${value.undated} ks bez dátumu nákupu`].filter(Boolean).join(' · '),
+    ],
     ['Posledný servis', equipment.lastServiceOn && formatDate(equipment.lastServiceOn)],
     ['Ďalší servis', serviceText],
     ['Naposledy upravené', new Date(equipment.updatedAt).toLocaleString('sk-SK', { dateStyle: 'medium', timeStyle: 'short' })],
@@ -163,6 +173,10 @@ export function EquipmentDetailPage() {
           <LinkButton to={`/service/requests/new?equipment=${equipment.id}`} variant="outline" size="sm">
             <Wrench className="size-4" aria-hidden />
             Nahlásiť poruchu
+          </LinkButton>
+          <LinkButton to={`/qr/equipment?ids=${equipment.id}`} variant="outline" size="sm">
+            <QrCode className="size-4" aria-hidden />
+            QR štítok
           </LinkButton>
           {can(company, 'equipment.edit') && (
             <LinkButton to={`/equipment/${equipment.id}/edit`} variant="outline" size="sm">
@@ -228,6 +242,8 @@ export function EquipmentDetailPage() {
       {!simple && <EquipmentServiceHistory companyId={company.companyId} equipmentId={equipment.id} canEdit={can(company, 'service.edit')} />}
 
       <UsageHistory companyId={company.companyId} equipmentIds={[equipment.id]} />
+
+      <ItemHistory companyId={company.companyId} equipmentId={equipment.id} withChanges={can(company, 'audit.view')} />
 
       {can(company, 'orders.view') && <PurchaseHistory companyId={company.companyId} equipmentId={equipment.id} />}
 

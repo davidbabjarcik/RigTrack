@@ -21,6 +21,20 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.12 – 19. 10. 2026
+
+- **QR štítky**: v detaile techniky aj case je tlačidlo „QR štítok“ a v Cases „QR štítky“ (všetky naraz, 3 v rade
+  na A4). Na flight case štítku je QR kód vpravo hore, dá sa vypnúť. QR je obyčajný odkaz: fotoaparát v mobile
+  otvorí detail aj bez appky.
+- **Skenovanie**: tlačidlo „Skenovať“ v Technike a v Cases otvorí kameru a naskenovaný štítok otvorí detail.
+  V **pack liste** sa naskenovaný case alebo technika rovno odškrtne – stačí prechádzať popri cases s mobilom.
+- **Hodnota techniky**: pri technike sa dá zadať nákupná cena za kus a za koľko rokov sa odpíše (predvolene 4).
+  Detail ukazuje hodnotu dnes (pri evidencii po kusoch podľa dátumu nákupu každého kusu), Štatistiky celkovú
+  hodnotu a hodnotu podľa kategórií. Ceny vidí len ten, kto môže techniku upravovať.
+- **História kusu**: v detaile techniky pribudla „História zmien a škody“ – kto čo menil (presun, stav, počet…)
+  a zapísané škody, spolu s eventami, výpožičkami, servisom a nákupmi, ktoré tam už boli.
+- Bez nových migrácií.
+
 ### 2.11 – 19. 10. 2026
 
 - **Pack list** (detail eventu → Pack list): pri nakladaní a pri návrate posádka odškrtáva cases a voľnú techniku,

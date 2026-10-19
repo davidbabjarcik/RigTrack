@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronRight, ClipboardCheck, PackageOpen, Plus, SlidersHorizontal } from 'lucide-react'
+import { ChevronRight, ClipboardCheck, PackageOpen, Plus, QrCode as QrCodeIcon, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ScanButton } from '@/features/scan/ScanButton'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
@@ -93,12 +94,21 @@ export function CasesListPage() {
         title="Cases a racks"
         description={cases.data ? `${visible.length} z ${all.length}` : undefined}
         action={
-          canEdit && (
-            <LinkButton to="/cases/new">
-              <Plus className="size-4" aria-hidden />
-              Pridať
-            </LinkButton>
-          )
+          <div className="flex flex-wrap gap-2">
+            <ScanButton />
+            {canEdit && (
+              <LinkButton to="/qr/cases" variant="outline">
+                <QrCodeIcon className="size-4" aria-hidden />
+                QR štítky
+              </LinkButton>
+            )}
+            {canEdit && (
+              <LinkButton to="/cases/new">
+                <Plus className="size-4" aria-hidden />
+                Pridať
+              </LinkButton>
+            )}
+          </div>
         }
       />
 

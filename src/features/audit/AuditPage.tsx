@@ -9,43 +9,9 @@ import { useCompany } from '@/features/companies/company-context'
 import { Button } from '@/components/ui/button'
 import { downloadTable } from '@/lib/excelExport'
 import { formatDateTime, todayIso } from '@/lib/format'
-import { getSupabase } from '@/lib/supabase/client'
 import { can } from '@/lib/permissions'
-import { ACTION_LABELS, AUDIT_EXPORT_COLUMNS, auditExportRow, describeChanges, ENTITIES, entryLink, type AuditAction, type AuditEntry } from './model'
-
-const LIMIT = 200
-
-async function fetchAudit(companyId: string, entity: string, from = 0, to = LIMIT - 1): Promise<AuditEntry[]> {
-  let query = getSupabase()
-    .from('audit_log')
-    .select('id, actor_name, action, entity, entity_id, label, changed, created_at')
-    .eq('company_id', companyId)
-    .order('id', { ascending: false })
-    .range(from, to)
-  if (entity) query = query.eq('entity', entity)
-  const { data, error } = await query
-  if (error) throw error
-  const rows = data as {
-    id: number
-    actor_name: string
-    action: AuditAction
-    entity: string
-    entity_id: string | null
-    label: string
-    changed: string[] | null
-    created_at: string
-  }[]
-  return rows.map((row) => ({
-    id: row.id,
-    actorName: row.actor_name,
-    action: row.action,
-    entity: row.entity,
-    entityId: row.entity_id,
-    label: row.label,
-    changed: row.changed ?? [],
-    createdAt: row.created_at,
-  }))
-}
+import { fetchAudit, LIMIT } from './api'
+import { ACTION_LABELS, AUDIT_EXPORT_COLUMNS, auditExportRow, describeChanges, ENTITIES, entryLink, type AuditEntry } from './model'
 
 /** Celá história (nie len posledných 200) po stránkach a stiahnutie do Excelu. */
 async function exportAudit(companyId: string, entity: string) {

@@ -263,6 +263,9 @@ export type EquipmentAttributes = {
   subDesign?: 'direct' | 'horn' | 'snail'
   /** Váha jedného kusu (kg). */
   weightKg?: number
+  /** Nákupná cena jedného kusu (€) a za koľko rokov sa odpíše do nuly. */
+  purchasePrice?: number
+  depreciationYears?: number
   /** Prefix siete pri IP adrese, napr. 24 (= maska 255.255.255.0). */
   ipPrefix?: number
   /** IP prideľuje DHCP (nemá pevnú adresu). */
@@ -480,6 +483,8 @@ export const equipmentSchema = z.object({
   biamp: z.boolean().optional(),
   hfDriver: text(80).optional(),
   weightKg: optionalNumber(10000),
+  purchasePrice: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(10_000_000).optional(),
+  depreciationYears: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Aspoň 1 rok').max(50, 'Najviac 50 rokov').optional(),
   ipPrefix: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Od 1').max(32, 'Najviac 32').optional(),
   ipDhcp: z.boolean().optional(),
   boxWidthCm: optionalNumber(1000),
@@ -645,6 +650,8 @@ export function attributesFor(
         | 'biamp'
         | 'hfDriver'
         | 'weightKg'
+        | 'purchasePrice'
+        | 'depreciationYears'
         | 'boxWidthCm'
         | 'boxDepthCm'
         | 'boxHeightCm'
@@ -748,6 +755,8 @@ export function attributesFor(
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipAddress && values.ipPrefix !== undefined) attributes.ipPrefix = values.ipPrefix
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipDhcp && !values.ipAddress) attributes.ipDhcp = true
   if (values.weightKg !== undefined) attributes.weightKg = values.weightKg
+  if (values.purchasePrice !== undefined) attributes.purchasePrice = values.purchasePrice
+  if (values.purchasePrice !== undefined && values.depreciationYears !== undefined) attributes.depreciationYears = values.depreciationYears
   if (audio && hasBox(values.audioType)) {
     if (values.powered) attributes.powered = values.powered
     if (values.rmsW !== undefined) attributes.rmsW = values.rmsW

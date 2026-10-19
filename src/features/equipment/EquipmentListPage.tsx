@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ScanButton } from '@/features/scan/ScanButton'
 import { LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
@@ -96,12 +97,15 @@ export function EquipmentListPage() {
         title="Technika"
         description={list.data ? `${visible.length} z ${all.length} položiek` : undefined}
         action={
-          canWrite && (
-            <LinkButton to="/equipment/new">
-              <Plus className="size-4" aria-hidden />
-              Pridať
-            </LinkButton>
-          )
+          <div className="flex flex-wrap gap-2">
+            <ScanButton />
+            {canWrite && (
+              <LinkButton to="/equipment/new">
+                <Plus className="size-4" aria-hidden />
+                Pridať
+              </LinkButton>
+            )}
+          </div>
         }
       />
 

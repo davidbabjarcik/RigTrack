@@ -20,6 +20,8 @@ export type LabelData = {
   /** Logo firmy; bez neho sa do rámčeka vypíše názov firmy. */
   logo: CanvasImageSource | null
   companyName: string
+  /** QR kód s odkazom na case v appke (vpravo hore); bez neho sa nekreslí. */
+  qr?: CanvasImageSource | null
 }
 
 /** Riadky na štítok: rovnaké názvy sa zlúčia a kusy sčítajú, napr. „2× Kapsula Beta 58“. */
@@ -195,6 +197,9 @@ export function drawCaseLabel(canvas: HTMLCanvasElement, data: LabelData) {
     ctx.textAlign = 'left'
   }
 
-  const contentTop = top + 30 + 42 + 34
+  // QR kód vpravo hore; obsah sa vtedy začína až pod ním.
+  const QR_SIZE = 260
+  if (data.qr) ctx.drawImage(data.qr, rightX + rightWidth - QR_SIZE, top + 24, QR_SIZE, QR_SIZE)
+  const contentTop = data.qr ? top + 24 + QR_SIZE + 12 : top + 30 + 42 + 34
   drawContent(ctx, data, rightX, contentTop, rightWidth, top + height - footerSpace - contentTop)
 }

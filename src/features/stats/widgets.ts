@@ -29,6 +29,8 @@ export const STAT_WIDGETS = [
   { id: 'equipment.packed', section: 'equipment', kind: 'tile', label: 'V cases a mimo nich' },
   { id: 'loans.open', section: 'equipment', kind: 'tile', label: 'Otvorené výpožičky' },
   { id: 'equipment.byStatus', section: 'equipment', kind: 'ranking', label: 'Technika podľa stavu' },
+  { id: 'equipment.value', section: 'equipment', kind: 'tile', label: 'Hodnota techniky', needs: ['equipment.edit'] },
+  { id: 'equipment.valueByCategory', section: 'equipment', kind: 'ranking', label: 'Hodnota techniky podľa kategórií', needs: ['equipment.edit'] },
   { id: 'loans.mostLent', section: 'equipment', kind: 'ranking', label: 'Najviac požičiavaná technika' },
   { id: 'service.records', section: 'service', kind: 'tile', label: 'Servisné záznamy' },
   { id: 'service.hours', section: 'service', kind: 'tile', label: 'Odpracované hodiny' },

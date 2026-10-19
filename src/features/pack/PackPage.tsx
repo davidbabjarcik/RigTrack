@@ -1,13 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check } from 'lucide-react'
+import { ArrowLeft, Check, ScanLine } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
+import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { useEvents } from '@/features/events/useEvents'
+import { LiveScanner } from '@/features/scan/LiveScanner'
+import { parseQr } from '@/features/scan/qr'
 import { formatDate } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
@@ -28,6 +31,7 @@ export function PackPage() {
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
   const checks = usePackChecks(companyId, id)
   const [phase, setPhase] = useState<PackPhase>('out')
+  const [scanning, setScanning] = useState(false)
   const toggle = useMutation({
     mutationFn: ({ row, checked, existingId }: { row: PackRow; checked: boolean; existingId?: string }) =>
       setPackCheck(companyId, id, { equipmentId: row.equipmentId, caseId: row.caseId }, phase, checked, existingId),
@@ -55,6 +59,31 @@ export function PackPage() {
       <p className="mb-4 text-sm text-muted-foreground">
         {event.name} · {formatDate(event.startsOn)}
       </p>
+
+      {canTick && rows.length > 0 && (
+        <Button variant="outline" className="mb-3 w-full" onClick={() => setScanning(true)}>
+          <ScanLine className="size-4" aria-hidden />
+          Skenovať QR štítky ({PHASE_LABELS[phase].toLowerCase()})
+        </Button>
+      )}
+      {scanning && (
+        <LiveScanner
+          title={`Pack list – ${PHASE_LABELS[phase].toLowerCase()}`}
+          onClose={() => setScanning(false)}
+          onResult={(text) => {
+            const target = parseQr(text)
+            if (!target) return 'Tento QR kód nie je z RigTracku.'
+            const row = rows.find((candidate) => (target.kind === 'case' ? candidate.caseId : candidate.equipmentId) === target.id)
+            if (!row) {
+              const name = target.kind === 'case' ? cases.data?.find((item) => item.id === target.id)?.name : equipment.data?.find((item) => item.id === target.id)?.name
+              return `✗ ${name ?? 'Toto'} nie je v pack liste eventu.`
+            }
+            if (checkOf(row, all, phase)) return `✓ ${row.name} už je odškrtnuté.`
+            toggle.mutate({ row, checked: true })
+            return `✓ ${row.name}`
+          }}
+        />
+      )}
 
       <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl border bg-surface p-1" role="group" aria-label="Fáza">
         {(['out', 'back'] as const).map((value) => {

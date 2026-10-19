@@ -2,7 +2,8 @@ import { ExternalLink, Plus, Trash2 } from 'lucide-react'
 import { useController, useFieldArray, type Control, type FieldErrors, type UseFormRegister } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
-import { LINK_TAG_LABELS, LINK_TAGS, parseUnitIds, unitRange, type EquipmentFormValues } from './model'
+import { asOptionalNumber, LINK_TAG_LABELS, LINK_TAGS, parseUnitIds, unitRange, type EquipmentFormValues } from './model'
+import { DEFAULT_DEPRECIATION_YEARS } from './value'
 
 /** Najviac kusov, pri ktorých formulár ukáže dátum nákupu zvlášť. */
 const MAX_UNIT_DATES = 200
@@ -29,7 +30,28 @@ export function PurchaseLinksFields({ control, register, errors, trackUnits, uni
     <>
       <fieldset className="rounded-xl border bg-surface p-4">
         <legend className="px-1 text-sm font-medium text-muted-foreground">Nákup (nepovinné)</legend>
-        <Field label="Dátum nákupu" type="date" className="sm:w-56" error={errors.purchasedOn?.message} {...register('purchasedOn')} />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label="Dátum nákupu" type="date" error={errors.purchasedOn?.message} {...register('purchasedOn')} />
+          <Field
+            label="Nákupná cena za kus (€)"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.01"
+            error={errors.purchasePrice?.message}
+            {...register('purchasePrice', asOptionalNumber)}
+          />
+          <Field
+            label="Odpísať za (rokov)"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            step={1}
+            placeholder={`${DEFAULT_DEPRECIATION_YEARS}`}
+            error={errors.depreciationYears?.message}
+            {...register('depreciationYears', asOptionalNumber)}
+          />
+        </div>
         {units.length > 0 && (
           <details className="mt-3">
             <summary className="cursor-pointer text-sm font-medium">Dátum nákupu po kusoch ({dates.filter((item) => item.date && units.includes(item.unit)).length} z {units.length})</summary>

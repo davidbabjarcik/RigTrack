@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CirclePlus, ClipboardList, MapPin, Pencil, Plus, Star, Tag, Trash2, X } from 'lucide-react'
+import { ArrowLeft, CirclePlus, ClipboardList, MapPin, Pencil, Plus, QrCode, Star, Tag, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -128,6 +128,10 @@ export function CaseDetailPage() {
           <LinkButton to={`/cases/${id}/label`} variant="outline" size="sm">
             <Tag className="size-4" aria-hidden />
             Štítok
+          </LinkButton>
+          <LinkButton to={`/qr/cases?ids=${id}`} variant="outline" size="sm">
+            <QrCode className="size-4" aria-hidden />
+            QR štítok
           </LinkButton>
           <LinkButton to={`/cases/${id}/content`} variant="outline" size="sm">
             <ClipboardList className="size-4" aria-hidden />

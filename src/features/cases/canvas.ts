@@ -55,3 +55,11 @@ export function downloadCanvas(canvas: HTMLCanvasElement, fileName: string) {
 export function fileSlug(text: string) {
   return text.replace(/[^\p{L}\p{N}_-]+/gu, '_')
 }
+
+/** QR kód ako canvas na kreslenie do štítku (knižnica sa stiahne až pri prvom použití). */
+export async function qrCanvas(text: string, size = 520) {
+  const { toCanvas } = await import('qrcode')
+  const canvas = document.createElement('canvas')
+  await toCanvas(canvas, text, { margin: 0, width: size, errorCorrectionLevel: 'M' })
+  return canvas
+}

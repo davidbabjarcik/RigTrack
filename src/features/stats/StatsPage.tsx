@@ -7,6 +7,8 @@ import { Button, LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { formatNumber } from '@/features/equipment/model'
+import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
+import { valueSummary } from '@/features/equipment/value'
 import { useLoans } from '@/features/loans/useLoans'
 import { useServiceRecords } from '@/features/service/useServiceRecords'
 import { fetchVehicleCosts, vehicleKeys } from '@/features/vehicles/api'
@@ -143,6 +145,7 @@ export function StatsPage() {
   const income = useQuery({ queryKey: ['company', companyId, 'income'], queryFn: () => fetchCompanyIncome(companyId), enabled: canIncome })
   const events = useEvents(companyId)
   const members = useMembers(companyId)
+  const { categories } = useEquipmentLookups(companyId)
   const sources = [equipment, loans, service, vehicles, vehicleCosts, payments, events]
 
   if (sources.some((source) => source.isPending)) return <LoadingBlock />
@@ -161,6 +164,8 @@ export function StatsPage() {
     today,
     addDays(today, -365),
   )
+
+  const value = valueSummary(equipment.data ?? [], today, (item) => categories.find((category) => category.id === item.categoryId)?.name ?? 'Bez kategórie')
 
   // Peniaze vo zvolenom roku.
   const allPayments = payments.data ?? []
@@ -206,6 +211,21 @@ export function StatsPage() {
     'equipment.items': <Tile label="Položiek" value={String(stats.equipment.items)} hint={`${stats.equipment.pieces} kusov`} />,
     'equipment.availability': (
       <Tile label="Dostupnosť" value={`${Math.round(stats.equipment.availability * 100)} %`} hint="kusov pripravených na výdaj" />
+    ),
+    'equipment.value': (
+      <Tile
+        label="Hodnota techniky dnes"
+        value={money(value.current)}
+        hint={`nákupná cena ${money(value.purchase)}${value.unpriced > 0 ? ` · ${value.unpriced} položiek bez ceny` : ''}`}
+      />
+    ),
+    'equipment.valueByCategory': (
+      <Ranking
+        title="Hodnota techniky dnes podľa kategórií"
+        rows={value.groups.map((group) => ({ id: group.name, label: group.name, value: group.current }))}
+        format={money}
+        empty="Technika zatiaľ nemá zadanú nákupnú cenu (Technika → Upraviť → Nákup)."
+      />
     ),
     'equipment.packed': <Tile label="V cases" value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} mimo cases`} />,
     'loans.open': (

@@ -226,6 +226,8 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     biamp: equipment.attributes.biamp ?? false,
     hfDriver: equipment.attributes.hfDriver ?? '',
     weightKg: equipment.attributes.weightKg,
+    purchasePrice: equipment.attributes.purchasePrice,
+    depreciationYears: equipment.attributes.depreciationYears,
     ipPrefix: equipment.attributes.ipPrefix,
     ipDhcp: equipment.attributes.ipDhcp ?? false,
     boxWidthCm: equipment.attributes.boxWidthCm,

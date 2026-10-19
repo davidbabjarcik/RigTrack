@@ -13,6 +13,8 @@ import { can } from '@/lib/permissions'
 import { caseKeys } from './api'
 import { downloadCanvas, fileSlug } from './canvas'
 import { CustomLabelContent } from './CustomLabelContent'
+import { qrUrl } from '@/features/scan/qr'
+import { qrCanvas } from './canvas'
 import { drawCaseLabel, formatWeight, LABEL_HEIGHT, LABEL_WIDTH, labelContentLines } from './label'
 import { useCases } from './useCases'
 
@@ -22,6 +24,13 @@ export function CaseLabelPage() {
   const companyId = company.companyId
   const canvas = useRef<HTMLCanvasElement>(null)
   const [drawn, setDrawn] = useState(false)
+  const [withQr, setWithQr] = useState(() => {
+    try {
+      return localStorage.getItem('rigtrack.label.qr') !== 'off'
+    } catch {
+      return true
+    }
+  })
 
   const cases = useCases(companyId)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
@@ -64,8 +73,10 @@ export function CaseLabelPage() {
       const [logoBitmap, photoBitmap] = await Promise.all(
         [logo.data, photo.data].map((blob) => (blob ? createImageBitmap(blob).catch(() => null) : null)),
       )
+      const qr = withQr ? await qrCanvas(qrUrl({ kind: 'case', id: current.id }, window.location.origin)).catch(() => null) : null
       if (cancelled) return
       drawCaseLabel(target, {
+        qr,
         number: current.labelNumber,
         category: current.labelCategory,
         weight: formatWeight(current.weightKg),
@@ -82,7 +93,7 @@ export function CaseLabelPage() {
     return () => {
       cancelled = true
     }
-  }, [ready, current, mainName, hasMain, secondary, branding.data, logo.data, photo.data, company.companyName])
+  }, [ready, current, mainName, hasMain, secondary, branding.data, logo.data, photo.data, company.companyName, withQr])
 
   const back = (
     <Link to={`/cases/${id}`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -124,6 +135,22 @@ export function CaseLabelPage() {
           Niektorý obrázok sa nepodarilo načítať, štítok je bez neho.
         </p>
       )}
+      <label className="mb-3 flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="size-4"
+          checked={withQr}
+          onChange={(event) => {
+            setWithQr(event.target.checked)
+            try {
+              localStorage.setItem('rigtrack.label.qr', event.target.checked ? 'on' : 'off')
+            } catch {
+              // Bez úložiska sa voľba len nezapamätá.
+            }
+          }}
+        />
+        QR kód na štítku (naskenovaním sa otvorí case v appke, v pack liste sa odškrtne)
+      </label>
       <canvas
         ref={canvas}
         width={LABEL_WIDTH}
