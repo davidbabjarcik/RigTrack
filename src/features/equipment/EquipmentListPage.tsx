@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Cable, ChevronRight, Mic, Search, Speaker } from 'lucide-react'
+import { ChevronRight, Plus, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { AddMenu } from '@/components/ui/AddMenu'
+import { LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
@@ -95,13 +95,10 @@ export function EquipmentListPage() {
         description={list.data ? `${visible.length} z ${all.length} položiek` : undefined}
         action={
           canWrite && (
-            <AddMenu
-              items={[
-                { to: '/equipment/new', label: 'Technika', icon: Speaker },
-                { to: '/equipment/new-cables', label: 'Sada káblov', icon: Cable },
-                { to: '/equipment/capsules', label: 'Kapsule k mikrofónom', icon: Mic },
-              ]}
-            />
+            <LinkButton to="/equipment/new">
+              <Plus className="size-4" aria-hidden />
+              Pridať
+            </LinkButton>
           )
         }
       />

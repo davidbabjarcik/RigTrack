@@ -251,12 +251,28 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-[12rem_1fr]">
-        <SelectField label="Druh" error={errors.kind?.message} {...register('kind')}>
+        <SelectField
+          label="Druh"
+          error={errors.kind?.message}
+          {...register('kind', {
+            // Sada káblov a kapsule majú vlastné formuláre.
+            onChange: (event: { target: { value: string } }) => {
+              if (event.target.value === 'cable-set') navigate('/equipment/new-cables')
+              if (event.target.value === 'capsule') navigate('/equipment/capsules?new=1')
+            },
+          })}
+        >
           {EQUIPMENT_KINDS.map((value) => (
             <option key={value} value={value}>
               {KIND_LABELS[value]}
             </option>
           ))}
+          {!equipment && (
+            <optgroup label="Iný formulár">
+              <option value="cable-set">Sada káblov (viac dĺžok naraz)</option>
+              <option value="capsule">Kapsula k mikrofónu</option>
+            </optgroup>
+          )}
         </SelectField>
         <Field label="Názov *" autoFocus={!equipment} error={errors.name?.message} {...register('name')} />
       </div>

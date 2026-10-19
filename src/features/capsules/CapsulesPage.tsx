@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Mic, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -56,7 +56,9 @@ export function CapsulesPage() {
   const canEdit = can(company, 'equipment.edit')
   const queryClient = useQueryClient()
   const capsules = useCapsules(companyId)
-  const [editing, setEditing] = useState<string | null>(null)
+  const [params] = useSearchParams()
+  // Z formulára novej techniky (druh Kapsula) sa otvorí rovno pridanie.
+  const [editing, setEditing] = useState<string | null>(params.get('new') ? 'new' : null)
   const remove = useMutation({ mutationFn: deleteCapsule, onSettled: () => queryClient.invalidateQueries({ queryKey: capsuleKeys.list(companyId) }) })
 
   return (

@@ -1,4 +1,4 @@
-import { AudioWaveform, ChevronRight, LayoutGrid, MonitorPlay, type LucideIcon } from 'lucide-react'
+import { AudioWaveform, ChevronRight, LayoutGrid, MonitorPlay, ToggleRight, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { CalculatorTabs } from '@/components/layout/ModuleTabs'
@@ -13,6 +13,7 @@ export function CalculatorsPage() {
   const calculators: Calculator[] = [
     { to: '/stage', label: 'Pódium Nivtec', description: 'Dosky, nohy, plachty, zábradlie a schody', icon: LayoutGrid, shown: !company || can(company, 'events.view') },
     { to: '/delay', label: 'Delay subov', description: 'Cardioid, end-fire, rad, arc a delay veža', icon: AudioWaveform, shown: true },
+    { to: '/dmx', label: 'DMX dip switch', description: 'Adresa na prepínače a späť, adresy pre rad svetiel', icon: ToggleRight, shown: true },
     { to: '/led', label: 'LED stena', description: 'Panely, prúd a fázy, hliník, rigging, procesor a Full HD', icon: MonitorPlay, shown: true },
   ]
   return (

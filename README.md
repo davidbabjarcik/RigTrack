@@ -21,6 +21,14 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.4 – 19. 10. 2026
+
+- **DMX dip switch** v Kalkulačkách: adresa → ktoré prepínače zapnúť (aj s hodnotami 1 + 4 + 32…), klikom na
+  prepínače späť na adresu, 9 alebo 10 prepínačov; adresy pre rad svetiel (štart, kanálov na svetlo, počet) aj
+  s prechodom do ďalšieho univerza a dip nastavením pre každé svetlo.
+- **Nová technika**: v „Druh“ je aj **Sada káblov** a **Kapsula k mikrofónu** (otvoria svoj formulár); „Pridať“
+  v Technike je znova jedno tlačidlo.
+
 ### 2.3 – 19. 10. 2026
 
 Upratanie aplikácie:

@@ -56,7 +56,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'loans', permission: 'loans.view', label: 'Výpožičky', to: '/loans', icon: ArrowLeftRight, description: 'Vydaná a vrátená technika' },
   { id: 'events', permission: 'events.view', label: 'Eventy', to: '/events', icon: Ticket, description: 'Akcie, technika, posádka a dokumenty' },
   { id: 'partners', permission: 'events.view', label: 'Firmy a kontakty', to: '/partners', icon: Building2, description: 'Organizátori, partneri a ich ľudia' },
-  { id: 'calculators', label: 'Kalkulačky', to: '/calculators', icon: Calculator, description: 'Pódium Nivtec, delay subov, LED stena' },
+  { id: 'calculators', label: 'Kalkulačky', to: '/calculators', icon: Calculator, description: 'Pódium Nivtec, delay subov, LED stena, DMX dip switch' },
   {
     id: 'service',
     permission: 'service.view',

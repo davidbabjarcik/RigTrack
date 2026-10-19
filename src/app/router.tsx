@@ -39,6 +39,7 @@ const capsules = lazyPage(() => import('@/features/capsules/CapsulesPage').then(
 const serviceRequests = lazyPage(() => import('@/features/requests/ServiceRequestsPage').then((m) => m.ServiceRequestsPage))
 const serviceRequestForm = lazyPage(() => import('@/features/requests/ServiceRequestFormPage').then((m) => m.ServiceRequestFormPage))
 const report = lazyPage(() => import('@/features/report/YearReportPage').then((m) => m.YearReportPage), 'report.view')
+const dmx = lazyPage(() => import('@/features/dmx/DmxPage').then((m) => m.DmxPage))
 const calculators = lazyPage(() => import('@/features/calculators/CalculatorsPage').then((m) => m.CalculatorsPage))
 const led = lazyPage(() => import('@/features/led/LedCalculatorPage').then((m) => m.LedCalculatorPage))
 const office = lazyPage(() => import('@/features/office/OfficePage').then((m) => m.OfficePage))
@@ -178,6 +179,7 @@ export const routes: RouteObject[] = [
               { path: 'delay', lazy: delay },
               { path: 'led', lazy: led },
               { path: 'calculators', lazy: calculators },
+              { path: 'dmx', lazy: dmx },
               { path: 'bugs', lazy: bugsList },
               { path: 'bugs/new', lazy: bugReport },
               { path: 'staff', lazy: staffList },

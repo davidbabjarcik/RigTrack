@@ -41,6 +41,7 @@ export function CalculatorTabs() {
         { to: '/stage', label: 'Pódium Nivtec', shown: !company || can(company, 'events.view') },
         { to: '/delay', label: 'Delay' },
         { to: '/led', label: 'LED' },
+        { to: '/dmx', label: 'DMX' },
       ]}
     />
   )
