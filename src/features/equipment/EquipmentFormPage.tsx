@@ -30,6 +30,9 @@ import {
   DJ_TYPES,
   VIDEO_TYPE_LABELS,
   VIDEO_TYPES,
+  CAMERA_SENSOR_LABELS,
+  CAMERA_SENSORS,
+  STAND_TYPES,
   IT_TYPE_LABELS,
   IT_TYPES,
   APPLIANCE_TYPE_LABELS,
@@ -98,6 +101,8 @@ const EMPTY: EquipmentFormValues = {
   audioType: '',
   djType: '',
   videoType: '',
+  cameraSensor: '',
+  hdmiOut: false,
   itType: '',
   applianceType: '',
   madeIn: '',
@@ -177,6 +182,8 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     audioType: equipment.attributes.audioType ?? '',
     djType: equipment.attributes.djType ?? '',
     videoType: equipment.attributes.videoType ?? '',
+    cameraSensor: equipment.attributes.cameraSensor ?? '',
+    hdmiOut: equipment.attributes.hdmiOut ?? false,
     itType: equipment.attributes.itType ?? '',
     applianceType: equipment.attributes.applianceType ?? '',
     madeYear: equipment.attributes.madeYear,
@@ -698,8 +705,15 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
                 </option>
               ))}
             </optgroup>
+            <optgroup label="Stojany">
+              {STAND_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {AUDIO_TYPE_LABELS[type]}
+                </option>
+              ))}
+            </optgroup>
             <optgroup label="Mikrofóny a ostatné">
-              {AUDIO_TYPES.filter((type) => !(PA_TYPES as readonly string[]).includes(type) && (type !== 'di' || audioType === 'di')).map((type) => (
+              {AUDIO_TYPES.filter((type) => !(PA_TYPES as readonly string[]).includes(type) && !(STAND_TYPES as readonly string[]).includes(type) && (type !== 'di' || audioType === 'di')).map((type) => (
                 <option key={type} value={type}>
                   {AUDIO_TYPE_LABELS[type]}
                 </option>
@@ -867,6 +881,22 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               </option>
             ))}
           </SelectField>
+          {videoType === 'camera' && !isLedPanel && !isLedProcessor && !isDisplay && (
+            <div className="mt-3 grid grid-cols-2 items-end gap-3 sm:grid-cols-4">
+              <SelectField label="Snímač / typ" {...register('cameraSensor')}>
+                <option value="">— nezadané —</option>
+                {CAMERA_SENSORS.map((sensor) => (
+                  <option key={sensor} value={sensor}>
+                    {CAMERA_SENSOR_LABELS[sensor]}
+                  </option>
+                ))}
+              </SelectField>
+              <label className="flex items-center gap-2 pb-3 text-sm">
+                <input type="checkbox" className="size-4" {...register('hdmiOut')} />
+                Má HDMI výstup
+              </label>
+            </div>
+          )}
           {isLedPanel && (
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Field label="Pixel pitch (mm)" type="number" inputMode="decimal" min={0} step="0.1" placeholder="napr. 3,9" error={errors.ledPitchMm?.message} {...register('ledPitchMm', asOptionalNumber)} />

@@ -120,6 +120,11 @@ export const VIDEO_TYPES = ['camera', 'tripod', 'lens', 'gimbal', 'other'] as co
 export type VideoType = (typeof VIDEO_TYPES)[number]
 export const VIDEO_TYPE_LABELS: Record<VideoType, string> = { camera: 'Kamera', tripod: 'Statív', lens: 'Objektív', gimbal: 'Gimbal', other: 'Iné video' }
 
+/** Kamera: snímač (full frame, APS-C) alebo akčná kamera. */
+export const CAMERA_SENSORS = ['full_frame', 'aps_c', 'action', 'other'] as const
+export type CameraSensor = (typeof CAMERA_SENSORS)[number]
+export const CAMERA_SENSOR_LABELS: Record<CameraSensor, string> = { full_frame: 'Full frame', aps_c: 'APS-C', action: 'Akčná kamera', other: 'Iný snímač' }
+
 export const IT_TYPES = ['phone', 'tablet', 'laptop', 'computer', 'network', 'other'] as const
 export type ItType = (typeof IT_TYPES)[number]
 export const IT_TYPE_LABELS: Record<ItType, string> = { phone: 'Mobil', tablet: 'Tablet / iPad', laptop: 'Notebook', computer: 'Počítač', network: 'Router / sieť', other: 'Iné IT' }
@@ -141,7 +146,9 @@ export const DJ_TYPE_LABELS: Record<DjType, string> = {
 }
 
 /** Čo je to za zvukovú techniku; podľa toho sa dá v zozname hľadať aj triediť. */
-export const AUDIO_TYPES = ['line_array', 'speaker', 'monitor', 'subwoofer', 'mixer', 'amplifier', 'microphone', 'wireless', 'iem', 'di', 'stagebox', 'processor', 'other'] as const
+export const AUDIO_TYPES = ['line_array', 'speaker', 'monitor', 'subwoofer', 'mixer', 'amplifier', 'microphone', 'wireless', 'iem', 'di', 'stagebox', 'processor', 'speaker_stand', 'mic_stand', 'other'] as const
+/** Stojany (na repráky a mikrofóny) – vlastná skupina vo výbere. */
+export const STAND_TYPES = ['speaker_stand', 'mic_stand'] as const
 /** Typy zvuku v skupine PA (ozvučenie); ostatné sú mikrofóny, stageboxy a pod. */
 export const PA_TYPES = ['line_array', 'speaker', 'monitor', 'subwoofer', 'mixer', 'amplifier', 'processor', 'stagebox'] as const
 /** DI box sa zadáva pri kábloch (Kábel → typ DI box); starší zvuk s typom DI ostáva platný. */
@@ -150,6 +157,8 @@ export type AudioType = (typeof AUDIO_TYPES)[number]
 
 export const AUDIO_TYPE_LABELS: Record<AudioType, string> = {
   line_array: 'Line array (LA systém)',
+  speaker_stand: 'Stojan na repráky',
+  mic_stand: 'Stojan na mikrofón',
   mixer: 'Mixpult',
   microphone: 'Mikrofón',
   speaker: 'Live / portable PA (vrch)',
@@ -201,6 +210,9 @@ export type EquipmentAttributes = {
   /** Podtyp DJ techniky (mix, player, gramofón…). */
   djType?: DjType
   videoType?: VideoType
+  cameraSensor?: CameraSensor
+  /** Kamera má HDMI výstup (čistý obraz do prepínača / LED). */
+  hdmiOut?: boolean
   itType?: ItType
   applianceType?: ApplianceType
   /** DJ technika: rok a krajina výroby, farba, stav. */
@@ -422,6 +434,8 @@ export const equipmentSchema = z.object({
   audioType: z.enum([...AUDIO_TYPES, '']),
   djType: z.enum([...DJ_TYPES, '']).optional(),
   videoType: z.enum([...VIDEO_TYPES, '']).optional(),
+  cameraSensor: z.enum([...CAMERA_SENSORS, '']).optional(),
+  hdmiOut: z.boolean().optional(),
   itType: z.enum([...IT_TYPES, '']).optional(),
   applianceType: z.enum([...APPLIANCE_TYPES, '']).optional(),
   madeYear: z.number('Zadajte rok').int('Celý rok').min(1950, 'Od 1950').max(2100).optional(),
@@ -581,6 +595,8 @@ export function attributesFor(
         | 'audioType'
         | 'djType'
         | 'videoType'
+        | 'cameraSensor'
+        | 'hdmiOut'
         | 'itType'
         | 'applianceType'
         | 'madeYear'
@@ -692,6 +708,10 @@ export function attributesFor(
   if (wireless && values.capsuleIds?.length) attributes.capsuleIds = values.capsuleIds
   if (values.kind === 'dj' && values.djType) attributes.djType = values.djType
   if (values.kind === 'video' && values.videoType && !values.isLedPanel && !values.isLedProcessor && !values.isDisplay) attributes.videoType = values.videoType
+  if (attributes.videoType === 'camera') {
+    if (values.cameraSensor) attributes.cameraSensor = values.cameraSensor
+    if (values.hdmiOut) attributes.hdmiOut = true
+  }
   if (values.kind === 'it' && values.itType) attributes.itType = values.itType
   if (values.kind === 'appliance' && values.applianceType) attributes.applianceType = values.applianceType
   if (values.kind === 'appliance' && values.powerW !== undefined) attributes.powerW = values.powerW
@@ -800,6 +820,8 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.stageSize,
     a.djType && DJ_TYPE_LABELS[a.djType],
     a.videoType && VIDEO_TYPE_LABELS[a.videoType],
+    a.cameraSensor && CAMERA_SENSOR_LABELS[a.cameraSensor],
+    a.hdmiOut && 'HDMI out',
     a.itType && IT_TYPE_LABELS[a.itType],
     a.applianceType && APPLIANCE_TYPE_LABELS[a.applianceType],
     a.color,

@@ -391,3 +391,13 @@ describe('video, IT and appliance types', () => {
     expect(attributesFor({ ...base, kind: 'appliance', applianceType: 'coffee', powerW: 1500 })).toEqual({ applianceType: 'coffee', powerW: 1500 })
   })
 })
+
+describe('cameras and stands', () => {
+  it('stores camera sensor and HDMI out, and stand types', () => {
+    const base = { connector: '', lengthM: undefined, powerW: undefined, lightSource: '' as const }
+    const camera = attributesFor({ ...base, kind: 'video', videoType: 'camera', cameraSensor: 'full_frame', hdmiOut: true })
+    expect(describeAttributes({ attributes: camera })).toEqual(['Kamera', 'Full frame', 'HDMI out'])
+    expect(attributesFor({ ...base, kind: 'video', videoType: 'tripod', cameraSensor: 'aps_c', hdmiOut: true })).toEqual({ videoType: 'tripod' })
+    expect(describeAttributes({ attributes: attributesFor({ ...base, kind: 'audio', audioType: 'mic_stand' }) })).toEqual(['Stojan na mikrofón'])
+  })
+})

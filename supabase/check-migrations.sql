@@ -1,7 +1,8 @@
 -- RigTrack: ktoré migrácie databáza má.
 -- Spustite v Supabase SQL Editore (nič nemení, len číta). Riadky s „chýba“ treba doplniť:
 -- súbory 0020–0048 sú v supabase/upgrade/, 0049 a vyššie v supabase/migrations/. Spúšťajte ich podľa čísla,
--- od najnižšej chýbajúcej; 0053 samostatne pred 0054.
+-- od najnižšej chýbajúcej; 0053 samostatne pred 0054, 0062 samostatne pred 0063.
+-- Ak chýba 0052 alebo 0059 len čiastočne, stačí spustiť opravu 0069 (dá sa spustiť aj viackrát).
 
 with checks (migration, ok) as (
   values
@@ -35,7 +36,8 @@ with checks (migration, ok) as (
     ('0049 servisní technici', to_regclass('public.service_technicians') is not null),
     ('0050 zmazanie firmy', exists (select 1 from pg_proc where proname = 'delete_company')),
     ('0051 zariadenia členov', to_regclass('public.member_devices') is not null),
-    ('0052 účty, vlastníci, karty', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'equipment' and column_name = 'owner_staff_id')),
+    ('0052 účty, vlastníci, karty', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'equipment' and column_name = 'owner_staff_id')
+      and exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'member_devices' and column_name = 'networks')),
     ('0053 rola CEO (typ)', exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid where t.typname = 'app_role' and e.enumlabel = 'ceo')),
     ('0054 rola CEO (práva)', exists (select 1 from pg_proc where proname = 'can' and prosrc like '%ceo%')),
     ('0055 Wi-Fi siete', to_regclass('public.wifi_networks') is not null),

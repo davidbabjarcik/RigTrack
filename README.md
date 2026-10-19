@@ -21,6 +21,15 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.9 – 19. 10. 2026
+
+- **Kamery**: snímač full frame / APS-C alebo akčná kamera a či má HDMI výstup.
+- **Stojany** na repráky a na mikrofóny (Zvuk → skupina Stojany).
+- **Oprava demo firmy** („column networks of relation member_devices does not exist“): migrácia `0069` doplní
+  chýbajúce stĺpce zariadení a vlastníkov, ak 0052 / 0059 prebehli len čiastočne. Dá sa spustiť aj viackrát.
+
+Nové migrácie: `0069`.
+
 ### 2.8 – 19. 10. 2026
 
 - **Nové druhy techniky**: **IT** (mobil, tablet / iPad, notebook, počítač, router / sieť) a **Spotrebiče**

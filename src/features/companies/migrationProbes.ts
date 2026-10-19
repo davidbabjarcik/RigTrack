@@ -11,6 +11,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0049', label: 'servisní technici', table: 'service_technicians', column: 'id' },
   { migration: '0051', label: 'zariadenia členov', table: 'member_devices', column: 'id' },
   { migration: '0052', label: 'vlastníci techniky', table: 'equipment', column: 'owner_staff_id' },
+  { migration: '0069', label: 'oprava zariadení (Wi-Fi siete, ethernet MAC)', table: 'member_devices', column: 'networks' },
   { migration: '0055', label: 'Wi-Fi siete', table: 'wifi_networks', column: 'id' },
   { migration: '0057', label: 'narodeniny, novinky', table: 'company_news', column: 'id' },
   { migration: '0059', label: 'program eventu, firmy a kontakty', table: 'event_days', column: 'id' },
