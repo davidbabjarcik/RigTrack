@@ -224,7 +224,8 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     ip_address: simple ? '' : values.ipAddress,
     service_interval_months: simple ? null : (values.serviceIntervalMonths ?? null),
     last_service_on: simple ? null : values.lastServiceOn || null,
-    hours_interval_months: simple ? null : (values.hoursIntervalMonths ?? null),
+    // Interval odčítania sa ráta z úrovne kontroly (attributes); starý interval v mesiacoch sa nahrádza.
+    hours_interval_months: simple || values.trackHours !== undefined ? null : (values.hoursIntervalMonths ?? null),
     case_id: values.caseId || null,
     quantity: values.quantity,
     min_quantity: values.minQuantity ?? null,

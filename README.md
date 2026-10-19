@@ -21,6 +21,19 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.10 – 19. 10. 2026
+
+- **Úrovne kontroly** (Nastavenia → Pripomienky): žiadna / malá / stredná / veľká a po koľkých dňoch sa pri každej
+  kontroluje. Platí pre **cases a racky** (úroveň „žiadna“ = bez kontroly) aj pre prevádzkové hodiny.
+- **Prevádzkové hodiny** (zosilňovače, svetlá a iné): zaškrtnete „Sledovať prevádzkové hodiny“ a zvolíte úroveň
+  kontroly; v detaile techniky **graf**, ako hodiny rastú, a priemer hodín za mesiac.
+- **Výbojka / halogén**: kedy sa naposledy menila a stav počítadla pri výmene – detail ukáže, koľko hodín odvtedy
+  nabehala.
+- **Úlohy po evente** môžu mať riešiteľov – napr. soc media maker dostane „Fotky na soc. siete“ po každej akcii.
+- Opravné migrácie 0071 a 0072 obsahujú aj tieto zmeny.
+
+Nové migrácie: `0073`.
+
 ### 2.9.3 – 19. 10. 2026
 
 - **Oprava kontrol hodnôt a funkcií**: `0072_repair_checks_functions.sql` nastaví všetky kontroly hodnôt (check

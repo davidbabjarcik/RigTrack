@@ -18,7 +18,7 @@ import { deleteEquipment, equipmentKeys, fetchEquipment } from './api'
 import { EquipmentPhoto } from './EquipmentPhoto'
 import { OwnerLink } from '@/features/staff/OwnerLink'
 import { EquipmentLinks } from './PurchaseLinksFields'
-import { CAPTURE_MATCH_LABELS, describeAttributes, describeUnitIds, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
+import { CAPTURE_MATCH_LABELS, hoursSinceLamp, describeAttributes, describeUnitIds, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
 import { OperatingHours } from './OperatingHours'
 import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
@@ -130,6 +130,11 @@ export function EquipmentDetailPage() {
     ['Inventárne číslo', equipment.inventoryNumber],
     ['MAC adresa', equipment.macAddress],
     ['IP adresa', equipment.ipAddress && (equipment.attributes.ipPrefix ? `${equipment.ipAddress}/${equipment.attributes.ipPrefix}` : equipment.ipAddress)],
+    [
+      equipment.attributes.lightSource === 'halogen' ? 'Žiarovka menená' : 'Výbojka menená',
+      equipment.attributes.lampChangedOn &&
+        [formatDate(equipment.attributes.lampChangedOn), hoursSinceLamp(equipment) !== null && `odvtedy ${hoursSinceLamp(equipment)} h`].filter(Boolean).join(' · '),
+    ],
     ['Kúpené', equipment.purchasedOn && formatDate(equipment.purchasedOn)],
     [
       'Kúpené po kusoch',

@@ -13,7 +13,8 @@ import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { can } from '@/lib/permissions'
 import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { saveCase } from './api'
-import { caseSchema, CHECK_AFTER_DAYS, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
+import { useCheckLevels, levelDays } from '@/features/checks/levels'
+import { caseSchema, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
 import { addCaseTemplate, caseTemplateKeys, describeTemplate, fetchCaseTemplates, numberedCaseNames, type CaseTemplate } from './templates'
 import { useCases } from './useCases'
 
@@ -36,6 +37,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
   const [templateId, setTemplateId] = useState('')
   const [copies, setCopies] = useState(1)
   const [searchParams] = useSearchParams()
+  const checkDays = useCheckLevels(companyId).days
   const ownerPreset = searchParams.get('owner') ?? ''
 
   const {
@@ -165,7 +167,8 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
         <SelectField label="Priorita kontroly" error={errors.checkPriority?.message} {...register('checkPriority')}>
           {CHECK_PRIORITIES.map((priority) => (
             <option key={priority} value={priority}>
-              {CHECK_PRIORITY_LABELS[priority]} – kontrolovať aspoň raz za {CHECK_AFTER_DAYS[priority]} dní
+              {CHECK_PRIORITY_LABELS[priority]}
+              {levelDays(priority, checkDays) !== null ? ` – kontrolovať aspoň raz za ${levelDays(priority, checkDays)} dní` : ' – nekontroluje sa'}
             </option>
           ))}
         </SelectField>

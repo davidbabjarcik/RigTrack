@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { DEFAULT_CHECK_DAYS, levelDays, type CheckLevel, type CheckLevelDays } from '@/features/checks/levels'
 import type { CategoryColor } from './categoryColors'
 
 export const EQUIPMENT_STATUSES = ['available', 'loaned', 'in_service', 'damaged', 'retired'] as const
@@ -203,6 +204,12 @@ export type EquipmentAttributes = {
   stageType?: StageType
   stageBrand?: string
   stageSize?: string
+  /** Sledovať prevádzkové hodiny (zosilňovače, svetlá) a s akou úrovňou kontroly odčítavať počítadlo. */
+  trackHours?: boolean
+  hoursPriority?: CheckLevel
+  /** Výbojka / halogén: kedy sa naposledy menila a stav počítadla pri výmene. */
+  lampChangedOn?: string
+  lampChangedHours?: number
   /** Typ svetla (pohyblivé, statické, efektové, divadelné, výrobníky, príslušenstvo). */
   lightType?: LightType
   /** Typ zvukovej techniky (mixpult, mikrofón…). */
@@ -426,6 +433,10 @@ export const equipmentSchema = z.object({
   powerW: optionalNumber(100000),
   lightSource: z.enum([...LIGHT_SOURCES, '']),
   lightType: z.enum([...(LIGHT_TYPES as LightType[]), '']).optional(),
+  trackHours: z.boolean().optional(),
+  hoursPriority: z.enum(['none', 'low', 'normal', 'high', '']).optional(),
+  lampChangedOn: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Zadajte dátum').optional(),
+  lampChangedHours: z.number('Zadajte číslo').min(0).max(1_000_000).optional(),
   trussType: z.enum([...TRUSS_TYPES, '']).optional(),
   trussShape: z.enum([...TRUSS_SHAPES, '']).optional(),
   stageType: z.enum([...STAGE_TYPES, '']).optional(),
@@ -586,6 +597,10 @@ export function attributesFor(
         EquipmentFormValues,
         | 'category'
         | 'lightType'
+        | 'trackHours'
+        | 'hoursPriority'
+        | 'lampChangedOn'
+        | 'lampChangedHours'
         | 'trussType'
         | 'trussShape'
         | 'stageType'
@@ -692,6 +707,14 @@ export function attributesFor(
   const accessory = Boolean(values.lightType?.startsWith('acc_'))
   if (lighting && values.lightType) attributes.lightType = values.lightType
   if (lighting && values.lightSource && !accessory) attributes.lightSource = values.lightSource
+  if (lighting && (values.lightSource === 'discharge' || values.lightSource === 'halogen') && !accessory) {
+    if (values.lampChangedOn) attributes.lampChangedOn = values.lampChangedOn
+    if (values.lampChangedHours !== undefined) attributes.lampChangedHours = values.lampChangedHours
+  }
+  if (values.trackHours && !isSimpleKind(values.kind, values.category ?? '')) {
+    attributes.trackHours = true
+    if (values.hoursPriority) attributes.hoursPriority = values.hoursPriority
+  }
   if (audio && values.audioType) attributes.audioType = values.audioType
   if (audio && (values.audioType === 'wireless' || values.audioType === 'iem') && values.rfRange?.trim()) attributes.rfRange = values.rfRange.trim()
   if (audio && values.audioType === 'stagebox' && values.mixerCard?.trim()) attributes.mixerCard = values.mixerCard.trim()
@@ -879,9 +902,29 @@ export function serviceState(item: Pick<Equipment, 'serviceIntervalMonths' | 'la
   return intervalState(item.serviceIntervalMonths, item.lastServiceOn, today)
 }
 
-/** Stav odčítania prevádzkových hodín: rovnaká logika ako pri servise, len s vlastným intervalom. */
-export function hoursState(item: Pick<Equipment, 'hoursIntervalMonths' | 'hoursReadOn'>, today: string): ServiceState {
+/**
+ * Stav odčítania prevádzkových hodín. S úrovňou kontroly (Nastavenia → Úrovne kontroly) sa ráta v dňoch podľa nej,
+ * inak podľa staršieho intervalu v mesiacoch.
+ */
+export function hoursState(item: Pick<Equipment, 'hoursIntervalMonths' | 'hoursReadOn'> & { attributes?: EquipmentAttributes }, today: string, days: CheckLevelDays = DEFAULT_CHECK_DAYS): ServiceState {
+  const level = item.attributes?.hoursPriority
+  if (item.attributes?.trackHours && level) {
+    const limit = levelDays(level, days)
+    if (limit === null) return { state: 'none' }
+    if (!item.hoursReadOn) return { state: 'unknown' }
+    const dueOn = new Date(Date.parse(item.hoursReadOn) + limit * 86_400_000).toISOString().slice(0, 10)
+    if (dueOn < today) return { state: 'overdue', dueOn }
+    const daysLeft = (Date.parse(dueOn) - Date.parse(today)) / 86_400_000
+    return { state: daysLeft <= Math.min(SOON_DAYS, Math.ceil(limit / 3)) ? 'soon' : 'ok', dueOn }
+  }
   return intervalState(item.hoursIntervalMonths, item.hoursReadOn, today)
+}
+
+/** Hodiny od poslednej výmeny výbojky / žiarovky (ak je zapísaný stav počítadla pri výmene). */
+export function hoursSinceLamp(item: Pick<Equipment, 'operatingHours'> & { attributes: EquipmentAttributes }) {
+  const at = item.attributes.lampChangedHours
+  if (at === undefined || item.operatingHours === null) return null
+  return Math.max(0, Math.round((item.operatingHours - at) * 10) / 10)
 }
 
 function intervalState(intervalMonths: number | null, lastOn: string | null, today: string): ServiceState {

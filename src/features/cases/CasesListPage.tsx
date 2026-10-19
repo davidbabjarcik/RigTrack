@@ -14,6 +14,7 @@ import { NO_CASE, unpackedEquipment } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { formatDateTime } from '@/lib/format'
 import { can } from '@/lib/permissions'
+import { useCheckLevels } from '@/features/checks/levels'
 import { useStaff } from '@/features/staff/useStaff'
 import { cn } from '@/lib/utils'
 import { CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, filterCases, needsCheck, NO_CASE_FILTER, type CaseFilter } from './model'
@@ -58,6 +59,9 @@ export function CasesListPage() {
     }
   }, [filter])
   const staff = useStaff(company.companyId)
+  const checkDays = useCheckLevels(company.companyId).days
+  // Čas sa zoberie raz pri otvorení stránky (render musí byť čistý).
+  const [now] = useState(() => Date.now())
   const cases = useCases(company.companyId)
   const { locations } = useEquipmentLookups(company.companyId)
   const equipment = useQuery({
@@ -76,8 +80,8 @@ export function CasesListPage() {
     (cases.data ?? []).map((item) => item.photoPath),
   )
   const all = cases.data ?? []
-  const visible = filterCases(all, filter, counts)
-  const due = all.filter((item) => needsCheck(item)).length
+  const visible = filterCases(all, filter, counts, now, checkDays)
+  const due = all.filter((item) => needsCheck(item, now, checkDays)).length
   const ownerIds = new Set(all.map((item) => item.ownerStaffId).filter(Boolean))
   const owners = staff.people.filter((person) => person.staffId && ownerIds.has(person.staffId))
   const labelCategories = [...new Set(all.map((item) => item.labelCategory).filter(Boolean))].sort()
@@ -221,7 +225,7 @@ export function CasesListPage() {
               ? `Kontrola ${formatDateTime(item.lastCheck.checkedAt)} · ${item.lastCheck.checkedByName || 'neznámy'}`
               : 'Zatiaľ nekontrolované'
             const priority = item.checkPriority ?? 'normal'
-            const late = needsCheck(item)
+            const late = needsCheck(item, now, checkDays)
             return (
               <li key={item.id}>
                 <Link to={`/cases/${item.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
@@ -231,7 +235,7 @@ export function CasesListPage() {
                       <span className="truncate font-medium">{item.name}</span>
                       {priority !== 'normal' && (
                         <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium', priority === 'high' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>
-                          {priority === 'high' ? 'vysoká priorita' : 'nízka priorita'}
+                          {priority === 'none' ? 'bez kontroly' : `${CHECK_PRIORITY_LABELS[priority].toLowerCase()} kontrola`}
                         </span>
                       )}
                     </span>

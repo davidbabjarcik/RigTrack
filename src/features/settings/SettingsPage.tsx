@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { CheckLevelsSettings } from '@/features/checks/CheckLevelsSettings'
 import { bugKeys, fetchIsDeveloper } from '@/features/bugs/api'
 import { LinksSettings } from '@/features/links/LinksSettings'
 import { MigrationStatus } from '@/features/companies/MigrationStatus'
@@ -423,6 +424,12 @@ export function SettingsPage() {
       {tab === 'reminders' && (
         <Section title="Pripomienky pri eventoch">
           <RulesSettings companyId={company.companyId} />
+        </Section>
+      )}
+
+      {tab === 'reminders' && isAdmin && (
+        <Section title="Úrovne kontroly (cases, prevádzkové hodiny)">
+          <CheckLevelsSettings companyId={company.companyId} />
         </Section>
       )}
 

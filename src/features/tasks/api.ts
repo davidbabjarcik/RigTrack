@@ -79,24 +79,33 @@ export async function setTaskStatus(companyId: string, id: string, status: TaskS
   if (data.length === 0) throw new Error('Not updated')
 }
 
-export type TaskTemplate = { id: string; title: string; category: string; daysAfter: number; active: boolean }
+export type TaskTemplate = { id: string; title: string; category: string; daysAfter: number; active: boolean; assigneeIds: string[] }
+
+// Riešitelia šablón (0073); bez migrácie sa načítajú bez nich.
+let templateAssignees = ', assignee_ids'
 
 export async function fetchTaskTemplates(companyId: string): Promise<TaskTemplate[]> {
-  const { data, error } = await getSupabase().from('task_templates').select('id, title, category, days_after, active').eq('company_id', companyId).order('created_at')
+  const { data, error } = await getSupabase().from('task_templates').select('id, title, category, days_after, active' + templateAssignees).eq('company_id', companyId).order('created_at')
+  if (templateAssignees && isMissingColumn(error, 'assignee_ids')) {
+    templateAssignees = ''
+    return fetchTaskTemplates(companyId)
+  }
   if (error) throw error
-  return (data as { id: string; title: string; category: string; days_after: number; active: boolean }[]).map((row) => ({
+  return (data as unknown as { id: string; title: string; category: string; days_after: number; active: boolean; assignee_ids?: string[] }[]).map((row) => ({
     id: row.id,
     title: row.title,
     category: row.category,
     daysAfter: row.days_after,
     active: row.active,
+    assigneeIds: row.assignee_ids ?? [],
   }))
 }
 
 export async function addTaskTemplate(companyId: string, template: Omit<TaskTemplate, 'id' | 'active'>) {
+  const assignees = template.assigneeIds.length > 0 ? { assignee_ids: template.assigneeIds } : {}
   const { error } = await getSupabase()
     .from('task_templates')
-    .insert({ company_id: companyId, title: template.title.trim(), category: template.category.trim(), days_after: template.daysAfter })
+    .insert({ company_id: companyId, title: template.title.trim(), category: template.category.trim(), days_after: template.daysAfter, ...assignees })
   if (error) throw error
 }
 

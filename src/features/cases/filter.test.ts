@@ -58,3 +58,10 @@ describe('filterCases', () => {
     expect(filterCases(cases, { ...NO_CASE_FILTER, sort: 'pieces' }, pieces, NOW)[0].id).toBe('cables')
   })
 })
+
+describe('check level none', () => {
+  it('never needs a check', () => {
+    expect(needsCheck(box({ checkPriority: 'none' }), NOW)).toBe(false)
+    expect(needsCheck(box({ checkPriority: 'high', lastCheck: { checkedAt: daysAgo(20), checkedByName: '', note: '' } }), NOW, { low: 180, normal: 60, high: 30 })).toBe(false)
+  })
+})

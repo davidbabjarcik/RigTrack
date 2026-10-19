@@ -70,6 +70,7 @@ import {
   type Lookup,
 } from './model'
 import { PurchaseLinksFields } from './PurchaseLinksFields'
+import { CHECK_LEVEL_LABELS, CHECK_LEVELS, levelDays, useCheckLevels } from '@/features/checks/levels'
 import { useEquipmentLookups } from './useEquipmentLookups'
 
 const EMPTY: EquipmentFormValues = {
@@ -93,6 +94,9 @@ const EMPTY: EquipmentFormValues = {
   powerW: undefined,
   lightSource: '',
   lightType: '',
+  trackHours: false,
+  hoursPriority: 'normal',
+  lampChangedOn: '',
   trussType: '',
   trussShape: '',
   stageType: '',
@@ -174,6 +178,11 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     powerW: equipment.attributes.powerW,
     lightSource: equipment.attributes.lightSource ?? '',
     lightType: equipment.attributes.lightType ?? '',
+    // Staršia technika s intervalom v mesiacoch prejde na sledovanie so strednou úrovňou.
+    trackHours: equipment.attributes.trackHours ?? (equipment.hoursIntervalMonths !== null || equipment.operatingHours !== null),
+    hoursPriority: equipment.attributes.hoursPriority ?? 'normal',
+    lampChangedOn: equipment.attributes.lampChangedOn ?? '',
+    lampChangedHours: equipment.attributes.lampChangedHours,
     trussType: equipment.attributes.trussType ?? '',
     trussShape: equipment.attributes.trussShape ?? '',
     stageType: equipment.attributes.stageType ?? '',
@@ -328,6 +337,9 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const cableType = useWatch({ control, name: 'cableType' })
   const powered = useWatch({ control, name: 'powered' })
   const lightType = useWatch({ control, name: 'lightType' })
+  const lightSource = useWatch({ control, name: 'lightSource' })
+  const trackHours = useWatch({ control, name: 'trackHours' })
+  const checkDays = useCheckLevels(companyId).days
   const trussType = useWatch({ control, name: 'trussType' })
   const stageType = useWatch({ control, name: 'stageType' })
   const stageBrandList = useId()
@@ -657,6 +669,12 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               </option>
             ))}
           </SelectField>
+          {(lightSource === 'discharge' || lightSource === 'halogen') && !lightAccessory && (
+            <>
+              <Field label={lightSource === 'discharge' ? 'Výbojka naposledy menená' : 'Žiarovka naposledy menená'} type="date" error={errors.lampChangedOn?.message} {...register('lampChangedOn')} />
+              <Field label="Stav počítadla pri výmene (h)" type="number" inputMode="decimal" min={0} placeholder="nepovinné" error={errors.lampChangedHours?.message} {...register('lampChangedHours', asOptionalNumber)} />
+            </>
+          )}
           {captureMatch && captureMatch !== 'yes' && (
             <Field
               label="Prečo nesedí / čo nesedí"
@@ -1116,19 +1134,22 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           </Group>
 
           <Group title="Prevádzkové hodiny (nepovinné)">
-            <Field
-              label="Odčítať každých (mesiacov)"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              step={1}
-              placeholder="napr. 3"
-              error={errors.hoursIntervalMonths?.message}
-              {...register('hoursIntervalMonths', asOptionalNumber)}
-            />
+            <label className="flex items-center gap-2 text-sm font-medium sm:col-span-2">
+              <input type="checkbox" className="size-4" {...register('trackHours')} />
+              Sledovať prevádzkové hodiny (zosilňovače, svetlá s počítadlom)
+            </label>
+            {trackHours && (
+              <SelectField label="Úroveň kontroly – ako často odčítať" {...register('hoursPriority')}>
+                {CHECK_LEVELS.map((level) => (
+                  <option key={level} value={level}>
+                    {CHECK_LEVEL_LABELS[level]}
+                    {levelDays(level, checkDays) !== null ? ` – každých ${levelDays(level, checkDays)} dní` : ' – len zapisovať, nepripomínať'}
+                  </option>
+                ))}
+              </SelectField>
+            )}
             <p className="self-end text-sm text-muted-foreground">
-              Pre zariadenia s vlastným počítadlom hodín (hlavy, zosilňovače). Appka pripomenie, kedy ho treba odčítať;
-              samotný stav zapíšete v detaile techniky.
+              Stav počítadla zapíšete v detaile techniky, tam je aj graf. Dni pri úrovniach nastaví admin v Nastaveniach → Pripomienky.
             </p>
           </Group>
         </>

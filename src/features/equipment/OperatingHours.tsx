@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { formatDate, todayIso } from '@/lib/format'
 import { addHourReading, equipmentKeys, fetchHourReadings, hourReadingKeys } from './api'
+import { useCheckLevels } from '@/features/checks/levels'
+import { HoursChart } from './HoursChart'
 import { formatNumber, hoursState, type Equipment } from './model'
 
 type Props = { companyId: string; equipment: Equipment; canEdit: boolean }
@@ -21,7 +23,8 @@ export function OperatingHours({ companyId, equipment, canEdit }: Props) {
   const [hours, setHours] = useState('')
   const [readOn, setReadOn] = useState(today)
   const [note, setNote] = useState('')
-  const tracked = equipment.hoursIntervalMonths !== null || equipment.operatingHours !== null
+  const checkDays = useCheckLevels(companyId).days
+  const tracked = Boolean(equipment.attributes.trackHours) || equipment.hoursIntervalMonths !== null || equipment.operatingHours !== null
 
   const readings = useQuery({
     queryKey: hourReadingKeys.list(companyId, equipment.id),
@@ -44,7 +47,7 @@ export function OperatingHours({ companyId, equipment, canEdit }: Props) {
 
   if (!tracked) return null
 
-  const state = hoursState(equipment, today)
+  const state = hoursState(equipment, today, checkDays)
   const lower = equipment.operatingHours !== null && valid && value < equipment.operatingHours
 
   function handleSubmit(event: FormEvent) {
@@ -118,6 +121,8 @@ export function OperatingHours({ companyId, equipment, canEdit }: Props) {
           </div>
         </form>
       )}
+
+      {readings.data && readings.data.length > 1 && <HoursChart readings={readings.data} />}
 
       {readings.data && readings.data.length > 0 && (
         <details className="mt-4 border-t pt-3 text-sm">

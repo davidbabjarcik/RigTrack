@@ -8,6 +8,7 @@ import {
   describeUnitIds,
   equipmentSchema,
   filterEquipment,
+  hoursSinceLamp,
   hoursState,
   isAudio,
   isLighting,
@@ -399,5 +400,15 @@ describe('cameras and stands', () => {
     expect(describeAttributes({ attributes: camera })).toEqual(['Kamera', 'Full frame', 'HDMI out'])
     expect(attributesFor({ ...base, kind: 'video', videoType: 'tripod', cameraSensor: 'aps_c', hdmiOut: true })).toEqual({ videoType: 'tripod' })
     expect(describeAttributes({ attributes: attributesFor({ ...base, kind: 'audio', audioType: 'mic_stand' }) })).toEqual(['Stojan na mikrofón'])
+  })
+})
+
+describe('hours with check levels and lamp changes', () => {
+  it('uses the level days and lamp hours', () => {
+    const item = { ...base, hoursReadOn: '2026-09-01', operatingHours: 1500, attributes: { trackHours: true, hoursPriority: 'high' as const, lampChangedHours: 1200 } }
+    expect(hoursState(item, '2026-09-20', { low: 180, normal: 60, high: 14 }).state).toBe('overdue')
+    expect(hoursState(item, '2026-09-10', { low: 180, normal: 60, high: 30 }).state).toBe('ok')
+    expect(hoursState({ ...item, attributes: { trackHours: true, hoursPriority: 'none' as const } }, '2027-01-01').state).toBe('none')
+    expect(hoursSinceLamp(item)).toBe(300)
   })
 })

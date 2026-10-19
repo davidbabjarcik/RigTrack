@@ -27,6 +27,7 @@ import {
 import { useLinkedEquipment } from '@/features/links/api'
 import { filterLinkedEquipment } from '@/features/links/filter'
 import { LinkedEquipmentList } from '@/features/links/LinkedEquipmentList'
+import { useCheckLevels } from '@/features/checks/levels'
 import { AdvancedFilter } from './AdvancedFilter'
 import { colorOf, COLOR_CLASSES } from './categoryColors'
 import { PhotoThumb } from './PhotoThumb'
@@ -73,6 +74,7 @@ export function EquipmentListPage() {
   const staff = useStaff(company.companyId)
   const ownerName = (id: string | null | undefined) => (id ? staff.people.find((person) => person.staffId === id)?.name : undefined)
   const today = todayIso()
+  const checkDays = useCheckLevels(company.companyId).days
   const serviceRecords = useServiceRecords(company.companyId).data ?? []
   const inService = piecesInService(serviceRecords)
   const unitsOut = unitsInService(serviceRecords)
@@ -204,7 +206,7 @@ export function EquipmentListPage() {
                       </span>
                     )}
                     {needsRestock(item) && <span className="block text-sm text-destructive">Treba dokúpiť</span>}
-                    {['overdue', 'unknown'].includes(hoursState(item, today).state) && (
+                    {['overdue', 'unknown'].includes(hoursState(item, today, checkDays).state) && (
                       <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>
                     )}
                     {service === 'overdue' && <span className="block text-sm text-destructive">Servis po termíne</span>}
