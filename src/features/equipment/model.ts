@@ -14,7 +14,7 @@ export const STATUS_LABELS: Record<EquipmentStatus, string> = {
 
 // Druh určuje, na čo sa formulár pýta. Zodpovedá check constraint v 0007_equipment_details.sql.
 // Poradie vo výbere: zvuk, svetlo, stage, pódium, káble, spotrebný materiál, ostatné.
-export const EQUIPMENT_KINDS = ['audio', 'light', 'video', 'dj', 'truss', 'stage', 'cable', 'consumable', 'general'] as const
+export const EQUIPMENT_KINDS = ['audio', 'light', 'video', 'dj', 'truss', 'stage', 'cable', 'it', 'appliance', 'consumable', 'general'] as const
 export type EquipmentKind = (typeof EQUIPMENT_KINDS)[number]
 
 export const KIND_LABELS: Record<EquipmentKind, string> = {
@@ -23,6 +23,8 @@ export const KIND_LABELS: Record<EquipmentKind, string> = {
   light: 'Svetlo',
   video: 'Video (LED, procesory, projektory)',
   dj: 'DJ technika',
+  it: 'IT (mobil, tablet, notebook…)',
+  appliance: 'Spotrebiče (kávovar, chladnička…)',
   audio: 'Zvuk',
   truss: 'Stage – hliník / truss',
   stage: 'Pódium (Nivtec a príslušenstvo)',
@@ -113,6 +115,19 @@ export const LIGHT_SOURCE_LABELS: Record<LightSource, string> = {
 
 export const SUB_DESIGN_LABELS = { direct: 'Priamy (bass reflex)', horn: 'Horna', snail: 'Slimák' } as const
 
+/** Video okrem LED a obrazoviek: kamery, statívy, objektívy, gimbaly. */
+export const VIDEO_TYPES = ['camera', 'tripod', 'lens', 'gimbal', 'other'] as const
+export type VideoType = (typeof VIDEO_TYPES)[number]
+export const VIDEO_TYPE_LABELS: Record<VideoType, string> = { camera: 'Kamera', tripod: 'Statív', lens: 'Objektív', gimbal: 'Gimbal', other: 'Iné video' }
+
+export const IT_TYPES = ['phone', 'tablet', 'laptop', 'computer', 'network', 'other'] as const
+export type ItType = (typeof IT_TYPES)[number]
+export const IT_TYPE_LABELS: Record<ItType, string> = { phone: 'Mobil', tablet: 'Tablet / iPad', laptop: 'Notebook', computer: 'Počítač', network: 'Router / sieť', other: 'Iné IT' }
+
+export const APPLIANCE_TYPES = ['coffee', 'fridge', 'kettle', 'heater', 'other'] as const
+export type ApplianceType = (typeof APPLIANCE_TYPES)[number]
+export const APPLIANCE_TYPE_LABELS: Record<ApplianceType, string> = { coffee: 'Kávovar', fridge: 'Chladnička', kettle: 'Rýchlovarná kanvica', heater: 'Ohrievač', other: 'Iný spotrebič' }
+
 /** Podtyp DJ techniky. */
 export const DJ_TYPES = ['mixer', 'player', 'turntable', 'all_in_one', 'pc_controller', 'other'] as const
 export type DjType = (typeof DJ_TYPES)[number]
@@ -185,6 +200,9 @@ export type EquipmentAttributes = {
   audioType?: AudioType
   /** Podtyp DJ techniky (mix, player, gramofón…). */
   djType?: DjType
+  videoType?: VideoType
+  itType?: ItType
+  applianceType?: ApplianceType
   /** DJ technika: rok a krajina výroby, farba, stav. */
   madeYear?: number
   madeIn?: string
@@ -403,6 +421,9 @@ export const equipmentSchema = z.object({
   stageSize: text(40).optional(),
   audioType: z.enum([...AUDIO_TYPES, '']),
   djType: z.enum([...DJ_TYPES, '']).optional(),
+  videoType: z.enum([...VIDEO_TYPES, '']).optional(),
+  itType: z.enum([...IT_TYPES, '']).optional(),
+  applianceType: z.enum([...APPLIANCE_TYPES, '']).optional(),
   madeYear: z.number('Zadajte rok').int('Celý rok').min(1950, 'Od 1950').max(2100).optional(),
   madeIn: text(60).optional(),
   color: text(40).optional(),
@@ -559,6 +580,9 @@ export function attributesFor(
         | 'dmxModes'
         | 'audioType'
         | 'djType'
+        | 'videoType'
+        | 'itType'
+        | 'applianceType'
         | 'madeYear'
         | 'madeIn'
         | 'color'
@@ -667,6 +691,10 @@ export function attributesFor(
   const wireless = audio && (values.audioType === 'wireless' || (values.audioType === 'microphone' && values.micKind === 'wireless'))
   if (wireless && values.capsuleIds?.length) attributes.capsuleIds = values.capsuleIds
   if (values.kind === 'dj' && values.djType) attributes.djType = values.djType
+  if (values.kind === 'video' && values.videoType && !values.isLedPanel && !values.isLedProcessor && !values.isDisplay) attributes.videoType = values.videoType
+  if (values.kind === 'it' && values.itType) attributes.itType = values.itType
+  if (values.kind === 'appliance' && values.applianceType) attributes.applianceType = values.applianceType
+  if (values.kind === 'appliance' && values.powerW !== undefined) attributes.powerW = values.powerW
   if (values.kind === 'dj') {
     if (values.madeYear !== undefined) attributes.madeYear = values.madeYear
     if (values.madeIn?.trim()) attributes.madeIn = values.madeIn.trim()
@@ -771,6 +799,9 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.stageBrand,
     a.stageSize,
     a.djType && DJ_TYPE_LABELS[a.djType],
+    a.videoType && VIDEO_TYPE_LABELS[a.videoType],
+    a.itType && IT_TYPE_LABELS[a.itType],
+    a.applianceType && APPLIANCE_TYPE_LABELS[a.applianceType],
     a.color,
     a.madeYear !== undefined && `${a.madeYear}${a.madeIn ? ` · ${a.madeIn}` : ''}`,
     a.condition && CONDITION_LABELS[a.condition].toLowerCase(),

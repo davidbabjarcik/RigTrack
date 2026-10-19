@@ -381,3 +381,13 @@ describe('DJ details and cable names', () => {
     expect(cableBaseName('Kábel')).toBe('Kábel')
   })
 })
+
+describe('video, IT and appliance types', () => {
+  it('stores the subtype of each kind', () => {
+    const base = { connector: '', lengthM: undefined, powerW: undefined, lightSource: '' as const }
+    expect(describeAttributes({ attributes: attributesFor({ ...base, kind: 'video', videoType: 'gimbal' }) })).toEqual(['Gimbal'])
+    expect(attributesFor({ ...base, kind: 'video', videoType: 'camera', isLedPanel: true, ledWidthMm: 500, ledHeightMm: 500, ledPxW: 128, ledPxH: 128 }).videoType).toBeUndefined()
+    expect(describeAttributes({ attributes: attributesFor({ ...base, kind: 'it', itType: 'tablet' }) })).toEqual(['Tablet / iPad'])
+    expect(attributesFor({ ...base, kind: 'appliance', applianceType: 'coffee', powerW: 1500 })).toEqual({ applianceType: 'coffee', powerW: 1500 })
+  })
+})

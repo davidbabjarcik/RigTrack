@@ -28,6 +28,12 @@ import {
   COMMON_CONNECTORS,
   DJ_TYPE_LABELS,
   DJ_TYPES,
+  VIDEO_TYPE_LABELS,
+  VIDEO_TYPES,
+  IT_TYPE_LABELS,
+  IT_TYPES,
+  APPLIANCE_TYPE_LABELS,
+  APPLIANCE_TYPES,
   cableBaseName,
   cableName,
   CONDITION_LABELS,
@@ -91,6 +97,9 @@ const EMPTY: EquipmentFormValues = {
   stageSize: '',
   audioType: '',
   djType: '',
+  videoType: '',
+  itType: '',
+  applianceType: '',
   madeIn: '',
   color: '',
   condition: '',
@@ -167,6 +176,9 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     stageSize: equipment.attributes.stageSize ?? '',
     audioType: equipment.attributes.audioType ?? '',
     djType: equipment.attributes.djType ?? '',
+    videoType: equipment.attributes.videoType ?? '',
+    itType: equipment.attributes.itType ?? '',
+    applianceType: equipment.attributes.applianceType ?? '',
     madeYear: equipment.attributes.madeYear,
     madeIn: equipment.attributes.madeIn ?? '',
     color: equipment.attributes.color ?? '',
@@ -305,6 +317,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const isLedPanel = useWatch({ control, name: 'isLedPanel' })
   const isLedProcessor = useWatch({ control, name: 'isLedProcessor' })
   const isDisplay = useWatch({ control, name: 'isDisplay' })
+  const videoType = useWatch({ control, name: 'videoType' })
   const cableType = useWatch({ control, name: 'cableType' })
   const powered = useWatch({ control, name: 'powered' })
   const lightType = useWatch({ control, name: 'lightType' })
@@ -499,6 +512,33 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               {...register('lengthM', asOptionalNumber)}
             />
           )}
+        </Group>
+      )}
+
+      {kind === 'it' && (
+        <Group title="IT">
+          <SelectField label="Typ" {...register('itType')}>
+            <option value="">— nezadané —</option>
+            {IT_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {IT_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </SelectField>
+        </Group>
+      )}
+
+      {kind === 'appliance' && (
+        <Group title="Spotrebič">
+          <SelectField label="Typ" {...register('applianceType')}>
+            <option value="">— nezadané —</option>
+            {APPLIANCE_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {APPLIANCE_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </SelectField>
+          <Field label="Príkon (W)" type="number" inputMode="decimal" min={0} error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />
         </Group>
       )}
 
@@ -804,22 +844,28 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           <SelectField
             label="Typ"
             className="sm:w-72"
-            value={isLedPanel ? 'led_panel' : isLedProcessor ? 'led_processor' : isDisplay ? (displayType ?? 'tv') : ''}
+            value={isLedPanel ? 'led_panel' : isLedProcessor ? 'led_processor' : isDisplay ? (displayType ?? 'tv') : (videoType ?? '')}
             onChange={(e) => {
               const value = e.target.value
               const opts = { shouldDirty: true }
+              setValue('videoType', (VIDEO_TYPES as readonly string[]).includes(value) ? (value as (typeof VIDEO_TYPES)[number]) : '', opts)
               setValue('isLedPanel', value === 'led_panel', opts)
               setValue('isLedProcessor', value === 'led_processor', opts)
               setValue('isDisplay', value === 'tv' || value === 'monitor' || value === 'projector', opts)
               if (value === 'tv' || value === 'monitor' || value === 'projector') setValue('displayType', value, opts)
             }}
           >
-            <option value="">— iné (kamera, kábel, prepínač…) —</option>
+            <option value="">— nezadané —</option>
             <option value="led_panel">LED panel</option>
             <option value="led_processor">LED procesor (napr. Novastar)</option>
             <option value="tv">TV</option>
             <option value="monitor">Monitor</option>
             <option value="projector">Projektor</option>
+            {VIDEO_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {VIDEO_TYPE_LABELS[type]}
+              </option>
+            ))}
           </SelectField>
           {isLedPanel && (
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">

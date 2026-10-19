@@ -21,6 +21,14 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.8 – 19. 10. 2026
+
+- **Nové druhy techniky**: **IT** (mobil, tablet / iPad, notebook, počítač, router / sieť) a **Spotrebiče**
+  (kávovar, chladnička, rýchlovarná kanvica, ohrievač – s príkonom).
+- **Video**: aj kamery, statívy, objektívy a gimbaly.
+
+Nové migrácie: `0068`.
+
 ### 2.7 – 19. 10. 2026
 
 - **DJ technika**: rok a krajina výroby, farba a stav (nový / výborný / dobrý / opotrebovaný / poškodený).
