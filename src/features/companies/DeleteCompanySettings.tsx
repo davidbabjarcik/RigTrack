@@ -54,7 +54,7 @@ export function DeleteCompanySettings({ userId }: { userId: string }) {
           />
           {remove.isError && (
             <p role="alert" className="text-sm text-destructive">
-              Firmu sa nepodarilo zmazať. Ak ste ešte nespustili migráciu 0050, urobte to.
+              Firmu sa nepodarilo zmazať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
             </p>
           )}
           <div className="flex flex-wrap gap-2">

@@ -165,7 +165,7 @@ export function IncidentsPage() {
   const preset: Partial<IncidentFields> = { memberId: params.get('member'), eventId: params.get('event') }
 
   if (incidents.isPending) return <LoadingBlock />
-  if (incidents.isError) return <ErrorBlock message="Škody a úrazy sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0061, spustite ju v Supabase." onRetry={() => void incidents.refetch()} />
+  if (incidents.isError) return <ErrorBlock message="Škody a úrazy sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void incidents.refetch()} />
 
   const nameOf = (id: string) => memberName(members.data, id) || 'bývalý člen'
   const years = [...new Set([todayIso().slice(0, 4), ...incidents.data.map((item) => item.occurredOn.slice(0, 4))])].sort().reverse()

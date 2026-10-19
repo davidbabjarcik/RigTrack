@@ -46,7 +46,7 @@ export function PermissionsSettings({ companyId, members }: Props) {
   if (overrides.isError) {
     return (
       <p role="alert" className="rounded-xl border bg-surface p-4 text-sm text-destructive">
-        Oprávnenia sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0030, urobte to.
+        Oprávnenia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
       </p>
     )
   }

@@ -70,7 +70,7 @@ export function NetworksPage() {
         {networks.isPending ? (
           <LoadingBlock />
         ) : networks.isError ? (
-          <ErrorBlock message="Siete sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0055, urobte to." onRetry={() => void networks.refetch()} />
+          <ErrorBlock message="Siete sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void networks.refetch()} />
         ) : allNetworks.length === 0 ? (
           editing !== 'new' && (
             <p className="rounded-xl border border-dashed bg-surface p-6 text-center text-sm text-muted-foreground">

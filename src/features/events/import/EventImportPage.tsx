@@ -176,7 +176,7 @@ function Review({ companyId, event, report, equipment, aliases }: { companyId: s
 
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
-          Zápis sa nepodaril. Ak ste ešte nespustili migráciu 0040, urobte to.
+          Zápis sa nepodaril. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
         </p>
       )}
       <div className="flex flex-wrap gap-3">
@@ -217,7 +217,7 @@ export function EventImportPage() {
 
   if (!can(company, 'events.edit')) return <ErrorBlock message="Na úpravu eventov nemáte oprávnenie." />
   if (events.isPending || equipment.isPending || aliases.isPending) return <LoadingBlock />
-  if (aliases.isError) return <ErrorBlock message="Import sa nepodarilo pripraviť. Ak ste ešte nespustili migráciu 0040, urobte to." />
+  if (aliases.isError) return <ErrorBlock message="Import sa nepodarilo pripraviť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." />
   if (!event || !equipment.data) {
     return (
       <>

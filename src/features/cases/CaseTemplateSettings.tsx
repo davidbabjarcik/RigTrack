@@ -43,7 +43,7 @@ export function CaseTemplateSettings({ companyId }: { companyId: string }) {
     <>
       {templates.isError && (
         <p role="alert" className="mb-3 text-sm text-destructive">
-          Šablóny sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0034, urobte to.
+          Šablóny sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
         </p>
       )}
       {(templates.data ?? []).length > 0 && (

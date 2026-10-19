@@ -58,7 +58,7 @@ export function StaffPage() {
 
   if (!can(company, 'staff.view')) return <ErrorBlock message="Na zoznam zamestnancov nemáte oprávnenie." />
   if (staff.isPending) return <LoadingBlock />
-  if (staff.isError) return <ErrorBlock message="Zamestnancov sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0046, urobte to." onRetry={() => void staff.refetch()} />
+  if (staff.isError) return <ErrorBlock message="Zamestnancov sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void staff.refetch()} />
 
   const today = todayIso()
   const visible = staff.people.filter((person) => matchesPerson(person, search))

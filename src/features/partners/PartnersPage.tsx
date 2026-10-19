@@ -28,7 +28,7 @@ export function PartnersPage() {
   const [query, setQuery] = useState('')
 
   if (partners.isPending) return <LoadingBlock />
-  if (partners.isError) return <ErrorBlock message="Firmy sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0059, urobte to." onRetry={() => void partners.refetch()} />
+  if (partners.isError) return <ErrorBlock message="Firmy sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void partners.refetch()} />
   const visible = partners.data.filter((partner) => matches(partner, query))
 
   return (

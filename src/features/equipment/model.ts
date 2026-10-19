@@ -185,6 +185,11 @@ export type EquipmentAttributes = {
   audioType?: AudioType
   /** Podtyp DJ techniky (mix, player, gramofón…). */
   djType?: DjType
+  /** DJ technika: rok a krajina výroby, farba, stav. */
+  madeYear?: number
+  madeIn?: string
+  color?: string
+  condition?: Condition
   /** Mixpult: analógový / digitálny, počet kanálov a pri digitálnom karta (Dante, MADI, USB…). */
   mixerKind?: 'analog' | 'digital'
   mixerChannels?: number
@@ -398,6 +403,10 @@ export const equipmentSchema = z.object({
   stageSize: text(40).optional(),
   audioType: z.enum([...AUDIO_TYPES, '']),
   djType: z.enum([...DJ_TYPES, '']).optional(),
+  madeYear: z.number('Zadajte rok').int('Celý rok').min(1950, 'Od 1950').max(2100).optional(),
+  madeIn: text(60).optional(),
+  color: text(40).optional(),
+  condition: z.enum(['new', 'excellent', 'good', 'worn', 'damaged', '']).optional(),
   mixerKind: z.enum(['analog', 'digital', '']).optional(),
   mixerChannels: optionalNumber(512),
   mixerCard: text(80).optional(),
@@ -550,6 +559,10 @@ export function attributesFor(
         | 'dmxModes'
         | 'audioType'
         | 'djType'
+        | 'madeYear'
+        | 'madeIn'
+        | 'color'
+        | 'condition'
         | 'mixerKind'
         | 'mixerChannels'
         | 'mixerCard'
@@ -654,6 +667,12 @@ export function attributesFor(
   const wireless = audio && (values.audioType === 'wireless' || (values.audioType === 'microphone' && values.micKind === 'wireless'))
   if (wireless && values.capsuleIds?.length) attributes.capsuleIds = values.capsuleIds
   if (values.kind === 'dj' && values.djType) attributes.djType = values.djType
+  if (values.kind === 'dj') {
+    if (values.madeYear !== undefined) attributes.madeYear = values.madeYear
+    if (values.madeIn?.trim()) attributes.madeIn = values.madeIn.trim()
+    if (values.color?.trim()) attributes.color = values.color.trim()
+    if (values.condition) attributes.condition = values.condition
+  }
   if (values.kind === 'dj' && values.powerW !== undefined) attributes.powerW = values.powerW
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipAddress && values.ipPrefix !== undefined) attributes.ipPrefix = values.ipPrefix
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipDhcp && !values.ipAddress) attributes.ipDhcp = true
@@ -752,6 +771,9 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.stageBrand,
     a.stageSize,
     a.djType && DJ_TYPE_LABELS[a.djType],
+    a.color,
+    a.madeYear !== undefined && `${a.madeYear}${a.madeIn ? ` · ${a.madeIn}` : ''}`,
+    a.condition && CONDITION_LABELS[a.condition].toLowerCase(),
     a.cableType === 'di' && 'DI box',
     a.cableType === 'adapter' && 'Redukcia',
     a.rfRange,
@@ -964,6 +986,16 @@ export type CableSetValues = z.infer<typeof cableSetSchema>
 export function cableName(namePrefix: string, lengthM: number) {
   return `${namePrefix} ${formatNumber(lengthM)} m`
 }
+
+/** „XLR kábel 5 m“ → „XLR kábel“ (dĺžka na konci názvu sa odstráni). */
+export function cableBaseName(name: string) {
+  return name.replace(/\s*\d+(?:[.,]\d+)?\s*m\s*$/i, '').trim() || name.trim()
+}
+
+/** Stav DJ techniky. */
+export const CONDITIONS = ['new', 'excellent', 'good', 'worn', 'damaged'] as const
+export type Condition = (typeof CONDITIONS)[number]
+export const CONDITION_LABELS: Record<Condition, string> = { new: 'Nový', excellent: 'Výborný', good: 'Dobrý', worn: 'Opotrebovaný', damaged: 'Poškodený' }
 
 /** Čísla kusov 1..count. */
 export const unitRange = (count: number) => Array.from({ length: Math.max(count, 0) }, (_, index) => index + 1)

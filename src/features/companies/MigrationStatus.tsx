@@ -1,6 +1,8 @@
 import { CircleCheck, DatabaseZap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { useQuery } from '@tanstack/react-query'
+import { bugKeys, fetchIsDeveloper } from '@/features/bugs/api'
 import { useMissingMigrations } from './migrationProbes'
 
 const STEPS = 'V Supabase → SQL Editor spustite chýbajúce súbory podľa čísla od najnižšieho: 0020–0048 sú v supabase/upgrade/, 0049 a vyššie v supabase/migrations/ (0053 samostatne pred 0054).'
@@ -38,8 +40,10 @@ export function MigrationStatus() {
 
 /** Upozornenie pre admina na Prehľade, keď databáze chýbajú migrácie. */
 export function MigrationBanner() {
-  const missing = useMissingMigrations()
-  if (!missing.data || missing.data.length === 0) return null
+  // Chýbajúce migrácie rieši vývojár – ostatní vidia pri funkcii len „kontaktujte vývojára“.
+  const developer = useQuery({ queryKey: bugKeys.developer, queryFn: fetchIsDeveloper, retry: false, staleTime: 10 * 60_000 })
+  const missing = useMissingMigrations(developer.data === true)
+  if (!developer.data || !missing.data || missing.data.length === 0) return null
   return (
     <Link to="/settings" className="mb-4 flex items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/5 p-4 hover:bg-destructive/10">
       <DatabaseZap className="size-5 shrink-0 text-destructive" aria-hidden />

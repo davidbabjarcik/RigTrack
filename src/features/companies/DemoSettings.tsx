@@ -54,7 +54,7 @@ export function DemoSettings({ userId }: { userId: string }) {
         <p role="alert" className="mt-3 text-sm text-destructive">
           Nepodarilo sa. {errorDetail(create.error ?? reset.error ?? remove.error ?? demo.error)}
           <span className="block text-muted-foreground">
-            Najčastejšie chýba niektorá migrácia – v Supabase spustite <code>supabase/check-migrations.sql</code> a doplňte riadky „chýba“.
+            Ak to nepomôže ani o chvíľu, kontaktujte vývojára aplikácie.
           </span>
         </p>
       )}

@@ -118,7 +118,7 @@ function PackageForm({
       {!parsed.success && values.name.trim() !== '' && <p className="text-sm text-destructive">Pri každom riadku vyberte techniku alebo case a zadajte počet.</p>}
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
-          {duplicate ? 'Balík s týmto názvom už existuje.' : 'Uloženie zlyhalo. Ak ste ešte nespustili migráciu 0045, urobte to.'}
+          {duplicate ? 'Balík s týmto názvom už existuje.' : 'Uloženie zlyhalo. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.'}
         </p>
       )}
       <div className="flex gap-2">
@@ -145,7 +145,7 @@ export function PackagesSettings({ companyId }: { companyId: string }) {
     onSettled: () => queryClient.invalidateQueries({ queryKey: packageKeys.list(companyId) }),
   })
 
-  if (packages.isError) return <p className="text-sm text-destructive">Balíky sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0045, urobte to.</p>
+  if (packages.isError) return <p className="text-sm text-destructive">Balíky sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
   if (!packages.data || !equipment.data || !cases.data) return <p className="text-sm text-muted-foreground">Načítavam…</p>
   const lendable = [...equipment.data].filter((item) => item.status !== 'retired').sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   const caseList = [...cases.data].sort((a, b) => a.name.localeCompare(b.name, 'sk'))

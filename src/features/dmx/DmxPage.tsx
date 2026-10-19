@@ -6,14 +6,14 @@ import { cn } from '@/lib/utils'
 import { addressFromSwitches, describeSwitches, dipSwitches, MAX_ADDRESS, patchFixtures } from './model'
 
 /** Rad dip prepínačov; zapnuté hore (ON), klikom sa dajú prepínať. */
-function Switches({ on, reversed, onToggle }: { on: boolean[]; reversed: boolean; onToggle?: (index: number) => void }) {
+function Switches({ on, reversed, onBottom, onToggle }: { on: boolean[]; reversed: boolean; onBottom: boolean; onToggle?: (index: number) => void }) {
   const order = on.map((value, index) => ({ value, index }))
   if (reversed) order.reverse()
   return (
     <div className="flex items-stretch gap-2">
       <div className="flex flex-col justify-between py-1 text-[10px] font-semibold text-muted-foreground" aria-hidden>
-        <span>ON</span>
-        <span className="mb-5">OFF</span>
+        <span>{onBottom ? 'OFF' : 'ON'}</span>
+        <span className="mb-5">{onBottom ? 'ON' : 'OFF'}</span>
       </div>
       <div className="flex flex-wrap gap-1" role="group" aria-label="Dip prepínače">
       {order.map(({ value, index }) => (
@@ -27,7 +27,7 @@ function Switches({ on, reversed, onToggle }: { on: boolean[]; reversed: boolean
           className="flex flex-col items-center gap-1"
         >
           <span className="flex h-12 w-6 flex-col rounded-md border-2 border-foreground/70 bg-muted p-0.5">
-            <span className={cn('h-1/2 w-full rounded-sm transition-colors', value ? 'bg-accent' : 'translate-y-full bg-foreground/60')} />
+            <span className={cn('h-1/2 w-full rounded-sm transition-colors', value ? 'bg-accent' : 'bg-foreground/60', value === onBottom && 'translate-y-full')} />
           </span>
           <span className="text-xs font-medium">{index + 1}</span>
         </button>
@@ -42,6 +42,7 @@ export function DmxPage() {
   const [address, setAddress] = useState(1)
   const [switchCount, setSwitchCount] = useState(9)
   const [reversed, setReversed] = useState(false)
+  const [onBottom, setOnBottom] = useState(false)
   const [start, setStart] = useState(1)
   const [channels, setChannels] = useState(16)
   const [count, setCount] = useState(8)
@@ -79,13 +80,17 @@ export function DmxPage() {
             <input type="checkbox" className="size-4" checked={reversed} onChange={(e) => setReversed(e.target.checked)} />
             Prepínač 1 je vpravo (opačné poradie)
           </label>
-          <Switches on={on} reversed={reversed} onToggle={(index) => setAddress(Math.max(1, Math.min(511, addressFromSwitches(on.map((value, i) => (i === index ? !value : value))))))} />
+          <label className="mb-3 flex items-center gap-2 text-sm">
+            <input type="checkbox" className="size-4" checked={onBottom} onChange={(e) => setOnBottom(e.target.checked)} />
+            ON je dole (prepínače otočené)
+          </label>
+          <Switches on={on} reversed={reversed} onBottom={onBottom} onToggle={(index) => setAddress(Math.max(1, Math.min(511, addressFromSwitches(on.map((value, i) => (i === index ? !value : value))))))} />
           <p className="mt-3 text-sm">
             Zapnúť: <span className="font-medium">{on.flatMap((value, index) => (value ? [index + 1] : [])).join(', ') || '—'}</span>
             <span className="text-muted-foreground"> · hodnoty {describeSwitches(on)} = {address}</span>
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            ON = hore, OFF = dole. Prepínač 1 je {reversed ? 'vpravo' : 'vľavo'}, {switchCount} {reversed ? 'vľavo' : 'vpravo'}. Hodnoty: 1 = 1, 2 = 2, 3 = 4 … 9 = 256
+            ON = {onBottom ? 'dole' : 'hore'}, OFF = {onBottom ? 'hore' : 'dole'}. Prepínač 1 je {reversed ? 'vpravo' : 'vľavo'}, {switchCount} {reversed ? 'vľavo' : 'vpravo'}. Hodnoty: 1 = 1, 2 = 2, 3 = 4 … 9 = 256
             {switchCount === 10 && ', 10 = funkcia (pri väčšine svetiel nie adresa)'}. Klikom na prepínač sa adresa prepočíta.
           </p>
         </section>

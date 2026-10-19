@@ -109,7 +109,7 @@ export function RecycleBinPage() {
       {bin.isPending ? (
         <LoadingBlock />
       ) : bin.isError ? (
-        <ErrorBlock message="Kôš sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0036, urobte to." onRetry={() => void bin.refetch()} />
+        <ErrorBlock message="Kôš sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void bin.refetch()} />
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
           <p className="font-medium">Kôš je prázdny</p>

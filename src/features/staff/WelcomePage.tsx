@@ -88,7 +88,7 @@ export function WelcomePage() {
         <p className="text-xs text-muted-foreground">Rolu v aplikácii (čo smiete) nastavuje admin firmy. Ďalšie údaje (meniny, vodičák, zariadenia) doplníte v Zamestnancoch.</p>
         {save.isError && (
           <p role="alert" className="text-sm text-destructive">
-            Uloženie zlyhalo. Ak admin ešte nespustil migráciu 0057, skúste to neskôr.
+            Uloženie zlyhalo. Ak to nepomôže ani o chvíľu, kontaktujte vývojára aplikácie.
           </p>
         )}
         <div className="flex flex-wrap gap-2">

@@ -1,6 +1,6 @@
 import { CalendarPlus, UserPlus } from 'lucide-react'
 import { AnchorButton, Button } from '@/components/ui/button'
-import { downloadIcs, googleCalendarUrl, type CalendarItem } from '@/lib/ics'
+import { googleCalendarUrl, type CalendarItem } from '@/lib/ics'
 import { downloadVCard, isUsefulContact, type Contact } from '@/lib/vcard'
 import { cn } from '@/lib/utils'
 
@@ -15,16 +15,13 @@ export function AddToContactsButton({ contact, className, label = 'Do kontaktov'
   )
 }
 
-/** Pridá termín do kalendára: súbor .ics (telefón, Outlook, Apple) alebo rovno Google Kalendár. */
+/** Pridá termín do Google Kalendára. */
 export function AddToCalendarButtons({ item, className }: { item: CalendarItem; className?: string }) {
   return (
     <span className={cn('inline-flex flex-wrap gap-2', className)}>
-      <Button variant="outline" size="sm" onClick={() => downloadIcs(item.title, [item])} title="Stiahne termín (.ics) pre telefón, Outlook alebo Apple Kalendár">
-        <CalendarPlus className="size-4" aria-hidden />
-        Do kalendára
-      </Button>
       <AnchorButton variant="outline" size="sm" href={googleCalendarUrl(item)}>
-        Google Kalendár
+        <CalendarPlus className="size-4" aria-hidden />
+        Add to Google kalendár
       </AnchorButton>
     </span>
   )

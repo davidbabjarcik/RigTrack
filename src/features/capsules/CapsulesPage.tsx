@@ -88,7 +88,7 @@ export function CapsulesPage() {
       {capsules.isPending ? (
         <LoadingBlock />
       ) : capsules.isError ? (
-        <ErrorBlock message="Kapsule sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0060, spustite ju v Supabase." onRetry={() => void capsules.refetch()} />
+        <ErrorBlock message="Kapsule sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void capsules.refetch()} />
       ) : capsules.data.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center">
           <p className="font-medium">Zatiaľ žiadne kapsule</p>

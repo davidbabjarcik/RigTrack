@@ -21,6 +21,17 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.7 – 19. 10. 2026
+
+- **DJ technika**: rok a krajina výroby, farba a stav (nový / výborný / dobrý / opotrebovaný / poškodený).
+- **Kábel bez „sady“**: pri novom kábli tlačidlo „Pridať ďalšiu dĺžku“ – každá dĺžka sa uloží ako samostatná položka.
+- **Eventy**: klient a organizátor sú jedno (zadáva sa organizátor); nahrávanie dokumentov zrušené (ridery cez odkazy,
+  staré dokumenty ostávajú); tlačidlo Pódium z eventu preč; kalendár len „Add to Google kalendár“.
+- **Upozornenia** sú hore v appke ako zbaliteľný pruh (nie samostatná stránka v menu).
+- **Chýbajúce migrácie** vidí len vývojár (Prehľad, Nastavenia → Stav databázy); ostatným sa pri funkcii ukáže
+  „kontaktujte vývojára aplikácie“.
+- **DMX dip switch**: aj otočené prepínače (ON dole).
+
 ### 2.6 – 19. 10. 2026
 
 - **Svetlá – typ v skupinách**: pohyblivé (beam, wash, spot, hybrid), statické (LED PAR, LED bar), efektové

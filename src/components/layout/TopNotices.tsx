@@ -8,6 +8,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { exemptionKeys, fetchExemptions, missingDeviceKinds, useDevices } from '@/features/devices/api'
 import { DEVICE_KIND_LABELS } from '@/features/devices/model'
 import { markNewsRead, newsKeys, useNews } from '@/features/news/api'
+import { NotificationsStrip } from '@/features/notifications/NotificationsStrip'
 import { describeCelebration, upcomingCelebrations } from '@/features/staff/celebrations'
 import { useStaff } from '@/features/staff/useStaff'
 import { formatDateTime, todayIso } from '@/lib/format'
@@ -215,6 +216,7 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
           </button>
         </div>
       )}
+      <NotificationsStrip />
       <NewsBell companyId={companyId} userId={userId} />
     </div>
   )

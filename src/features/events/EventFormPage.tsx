@@ -94,7 +94,8 @@ function EventForm({ companyId, current, events }: FormProps) {
 
   const save = useMutation({
     mutationFn: async (values: EventFormValues) => {
-      const id = await saveEvent(companyId, current?.id ?? null, values)
+      // Klient a organizátor sú to isté – klient sa ukladá podľa organizátora (staré eventy si klienta nechajú).
+      const id = await saveEvent(companyId, current?.id ?? null, { ...values, client: values.organizer.trim() || values.client })
       // Organizátor do Firmy a kontakty a k eventu (bez migrácie 0059 sa preskočí).
       if (partners.isSuccess) await setEventOrganizer(companyId, id, organizerChoice, values).catch(() => {})
       return id
@@ -131,7 +132,6 @@ function EventForm({ companyId, current, events }: FormProps) {
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Klient" error={errors.client?.message} {...register('client')} />
         <Field label="Miesto" placeholder="napr. Dom kultúry Stropkov" error={errors.venue?.message} {...register('venue')} />
         <Field label="Od *" type="date" error={errors.startsOn?.message} {...register('startsOn')} />
         <Field label="Do *" type="date" error={errors.endsOn?.message} {...register('endsOn')} />

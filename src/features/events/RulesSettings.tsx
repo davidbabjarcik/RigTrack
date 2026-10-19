@@ -122,7 +122,7 @@ function Editor({ companyId, initial, options }: { companyId: string; initial: E
       {!valid && rules.length > 0 && <p className="text-sm text-destructive">Pri každom pravidle vyberte obe hodnoty a pri „na každý kus“ zadajte počet.</p>}
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo. Ak ste ešte nespustili migráciu 0044, urobte to.
+          Uloženie zlyhalo. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
         </p>
       )}
       {save.isSuccess && <p role="status" className="text-sm text-muted-foreground">Uložené.</p>}
@@ -139,7 +139,7 @@ export function RulesSettings({ companyId }: { companyId: string }) {
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const cases = useCases(companyId)
   const { categories } = useEquipmentLookups(companyId)
-  if (rules.isError) return <p className="text-sm text-destructive">Pripomienky sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0044, urobte to.</p>
+  if (rules.isError) return <p className="text-sm text-destructive">Pripomienky sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
   if (!rules.data || !equipment.data || !cases.data) return <p className="text-sm text-muted-foreground">Načítavam…</p>
   const byName = <T extends { name: string }>(list: T[]) => [...list].sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   return (

@@ -181,7 +181,7 @@ export function DeviceList({ companyId, userId, canEdit, empty }: { companyId: s
     <>
       {devices.isError && (
         <p role="alert" className="mt-3 text-sm text-destructive">
-          Zariadenia sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0051, urobte to.
+          Zariadenia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
         </p>
       )}
       {mine.length > 0 ? (

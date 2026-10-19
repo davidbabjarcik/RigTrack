@@ -17,7 +17,7 @@ export function CompanyProfileSettings({ companyId, canEdit }: { companyId: stri
     },
   })
   if (profile.isPending) return <p className="text-sm text-muted-foreground">Načítavam…</p>
-  if (profile.isError) return <p className="text-sm text-destructive">Údaje o firme sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0059, urobte to.</p>
+  if (profile.isError) return <p className="text-sm text-destructive">Údaje o firme sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
   const values = draft ?? profile.data
   const set = (patch: Partial<CompanyProfile>) => setDraft({ ...values, ...patch })
   const field = (label: string, key: keyof CompanyProfile, extra: { placeholder?: string; type?: string; className?: string } = {}) => (

@@ -124,7 +124,7 @@ export function BugsPage() {
   const [filter, setFilter] = useState<BugStatus | 'open' | ''>('open')
 
   if (reports.isPending) return <LoadingBlock />
-  if (reports.isError) return <ErrorBlock message="Hlásenia sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0048, urobte to." onRetry={() => void reports.refetch()} />
+  if (reports.isError) return <ErrorBlock message="Hlásenia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void reports.refetch()} />
 
   const isDeveloper = developer.data === true
   const canManage = (report: BugReport) => isDeveloper || (report.companyId !== null && company.memberships.some((m) => m.companyId === report.companyId && isAdminRole(m.role)))

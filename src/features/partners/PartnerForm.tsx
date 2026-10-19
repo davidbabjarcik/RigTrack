@@ -37,7 +37,7 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
         Používa aj RigTrack
       </label>
       <TextareaField label="Poznámka" rows={2} maxLength={1000} value={fields.note} onChange={(event) => set({ note: event.target.value })} />
-      {(save.isError || remove.isError) && <p className="text-sm text-destructive">Nepodarilo sa uložiť. Ak ste ešte nespustili migráciu 0059, urobte to.</p>}
+      {(save.isError || remove.isError) && <p className="text-sm text-destructive">Nepodarilo sa uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" size="sm" disabled={!fields.name.trim() || save.isPending}>
           {current ? 'Uložiť' : 'Pridať firmu'}

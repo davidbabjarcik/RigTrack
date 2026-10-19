@@ -131,7 +131,7 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
 
       {(save.isError || remove.isError) && (
         <p role="alert" className="text-sm text-destructive">
-          Nepodarilo sa uložiť. Ak ste ešte nespustili migráciu 0055, urobte to.
+          Nepodarilo sa uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
         </p>
       )}
       <div className="flex flex-wrap gap-2">

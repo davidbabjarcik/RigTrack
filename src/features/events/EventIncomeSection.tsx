@@ -80,7 +80,7 @@ export function EventIncomeSection({ companyId, eventId }: { companyId: string; 
 
       {payments.isError && (
         <p role="alert" className="mb-2 text-sm text-destructive">
-          Príjmy sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0042, urobte to.
+          Príjmy sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
         </p>
       )}
 

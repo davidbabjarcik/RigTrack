@@ -67,7 +67,7 @@ function TechnicianForm({ companyId, current, onDone }: { companyId: string; cur
       <TextareaField label="Poznámka" rows={2} error={errors.note?.message} {...register('note')} />
       {(save.isError || remove.isError) && (
         <p role="alert" className="text-sm text-destructive">
-          Nepodarilo sa uložiť. Ak ste ešte nespustili migráciu 0049, urobte to.
+          Nepodarilo sa uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
         </p>
       )}
       <div className="flex flex-wrap gap-2">
@@ -108,7 +108,7 @@ export function TechniciansPage() {
 
   if (!can(company, 'service.view') && !can(company, 'vehicles.view')) return <ErrorBlock message="Na servisných technikov nemáte oprávnenie." />
   if (technicians.isPending) return <LoadingBlock />
-  if (technicians.isError) return <ErrorBlock message="Technikov sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0049, urobte to." onRetry={() => void technicians.refetch()} />
+  if (technicians.isError) return <ErrorBlock message="Technikov sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void technicians.refetch()} />
 
   const visible = sortTechnicians(technicians.data).filter(
     (technician) => matchesTechnician(technician, search) && (!scope || scope === 'both' ? true : servesFor(technician, scope)),

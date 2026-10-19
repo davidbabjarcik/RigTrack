@@ -129,7 +129,7 @@ export function BugReportPage() {
         </p>
         {send.isError && (
           <p role="alert" className="text-sm text-destructive">
-            Hlásenie sa nepodarilo odoslať. Ak ste ešte nespustili migráciu 0048, urobte to.
+            Hlásenie sa nepodarilo odoslať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
           </p>
         )}
         <Button type="submit" className="self-start" disabled={!valid || send.isPending}>

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, LayoutGrid, Pencil, Printer, Trash2 } from 'lucide-react'
+import { ArrowLeft, Pencil, Printer, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
@@ -90,12 +90,6 @@ export function EventDetailPage() {
             <Printer className="size-4" aria-hidden />
             Tlač / PDF
           </LinkButton>
-          {canEdit && (
-            <LinkButton to={`/stage?event=${id}`} variant="outline" size="sm">
-              <LayoutGrid className="size-4" aria-hidden />
-              Pódium
-            </LinkButton>
-          )}
           {canEdit && (
             <LinkButton to={`/events/${id}/edit`} variant="outline" size="sm">
               <Pencil className="size-4" aria-hidden />
@@ -208,7 +202,7 @@ export function EventDetailPage() {
       <EventLogSection companyId={companyId} event={event} />
       {can(company, 'payouts.manage') && <EventIncomeSection companyId={companyId} eventId={event.id} />}
       <EventPhotosSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
-      <EventDocumentsSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
+      <EventDocumentsSection companyId={companyId} eventId={event.id} canEdit={false} />
     </>
   )
 }

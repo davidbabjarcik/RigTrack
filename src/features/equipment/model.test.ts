@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   attributesFor,
+  cableBaseName,
   cableName,
   cableSetSchema,
   describeAttributes,
@@ -365,5 +366,18 @@ describe('truss shape and stage decks', () => {
     const deck = attributesFor({ kind: 'stage', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', stageType: 'deck', stageBrand: 'Nivtec originál', stageSize: '2 × 1 m' })
     expect(describeAttributes({ attributes: deck })).toEqual(['Dosky', 'Nivtec originál', '2 × 1 m'])
     expect(attributesFor({ kind: 'stage', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', stageType: 'accessory', stageBrand: 'x' })).toEqual({ stageType: 'accessory' })
+  })
+})
+
+describe('DJ details and cable names', () => {
+  it('stores year, country, colour and condition of DJ gear', () => {
+    const dj = attributesFor({ kind: 'dj', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', djType: 'player', madeYear: 2021, madeIn: 'Japonsko', color: 'biela', condition: 'excellent' })
+    expect(describeAttributes({ attributes: dj })).toEqual(['Player', 'biela', '2021 · Japonsko', 'výborný'])
+  })
+
+  it('strips the length from a cable name', () => {
+    expect(cableBaseName('XLR kábel 5 m')).toBe('XLR kábel')
+    expect(cableBaseName('powerCON 1,5m')).toBe('powerCON')
+    expect(cableBaseName('Kábel')).toBe('Kábel')
   })
 })

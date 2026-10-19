@@ -68,7 +68,7 @@ function CrewResponseLine({ companyId, person, mine }: { companyId: string; pers
           </Button>
         </form>
       )}
-      {respond.isError && <span className="text-sm text-destructive">Nepodarilo sa uložiť. Ak admin ešte nespustil migráciu 0057, skúste neskôr.</span>}
+      {respond.isError && <span className="text-sm text-destructive">Nepodarilo sa uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</span>}
     </span>
   )
 }

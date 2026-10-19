@@ -272,7 +272,7 @@ export function StagePage() {
   })
 
   if (config.isPending || equipment.isPending) return <LoadingBlock />
-  if (config.isError) return <ErrorBlock message="Nastavenie pódia sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0039, urobte to." />
+  if (config.isError) return <ErrorBlock message="Nastavenie pódia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." />
   if (!plan) return null
 
   const unassigned = plan.lines.some((line) => !line.equipmentId)

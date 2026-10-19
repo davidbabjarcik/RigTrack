@@ -112,7 +112,7 @@ export function OfficePage() {
 
   if (items.isPending || purchases.isPending) return <LoadingBlock />
   if (items.isError || purchases.isError) {
-    return <ErrorBlock message="Kanceláriu sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0061, spustite ju v Supabase." onRetry={() => void items.refetch()} />
+    return <ErrorBlock message="Kanceláriu sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void items.refetch()} />
   }
   const list = items.data
   const nameOf = (id: string) => list.find((item) => item.id === id)?.name ?? '—'

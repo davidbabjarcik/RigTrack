@@ -24,7 +24,7 @@ export function EmailPrefs({ companyId }: { companyId: string }) {
           <span className="block text-sm text-muted-foreground">Keď niekto vo firme pridá event, príde vám e-mail s termínom a odkazom.</span>
         </span>
       </label>
-      {(pref.isError || save.isError) && <p className="mt-2 text-sm text-destructive">Nastavenie sa nepodarilo načítať alebo uložiť. Ak ste ešte nespustili migráciu 0057, urobte to.</p>}
+      {(pref.isError || save.isError) && <p className="mt-2 text-sm text-destructive">Nastavenie sa nepodarilo načítať alebo uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>}
     </div>
   )
 }

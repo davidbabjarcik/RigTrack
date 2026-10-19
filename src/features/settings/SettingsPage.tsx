@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { bugKeys, fetchIsDeveloper } from '@/features/bugs/api'
 import { LinksSettings } from '@/features/links/LinksSettings'
 import { MigrationStatus } from '@/features/companies/MigrationStatus'
 import { Trash2 } from 'lucide-react'
@@ -281,6 +282,7 @@ export function SettingsPage() {
   const company = active!
 
   const isAdmin = isAdminRole(company.role)
+  const isDeveloper = useQuery({ queryKey: bugKeys.developer, queryFn: fetchIsDeveloper, retry: false, staleTime: 10 * 60_000 }).data === true
   const tabs = [
     { id: 'company', label: 'Firma', shown: true },
     { id: 'members', label: 'Členovia', shown: true },
@@ -347,8 +349,8 @@ export function SettingsPage() {
             </Section>
           )}
 
-          {isAdmin && (
-            <Section title="Stav databázy">
+          {isDeveloper && (
+            <Section title="Stav databázy (vývojár)">
               <MigrationStatus />
             </Section>
           )}

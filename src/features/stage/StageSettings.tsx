@@ -254,7 +254,7 @@ function Editor({ companyId, initial, equipment }: { companyId: string; initial:
       {!parsed.success && <p className="text-sm text-destructive">Skontrolujte políčka: všetky čísla musia byť vyplnené a príslušenstvo musí mať názov.</p>}
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo. Ak ste ešte nespustili migráciu 0039, urobte to.
+          Uloženie zlyhalo. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
         </p>
       )}
       {save.isSuccess && <p role="status" className="text-sm text-muted-foreground">Uložené.</p>}
@@ -269,7 +269,7 @@ function Editor({ companyId, initial, equipment }: { companyId: string; initial:
 export function StageSettings({ companyId }: { companyId: string }) {
   const config = useQuery({ queryKey: stageKeys.config(companyId), queryFn: () => fetchStageConfig(companyId) })
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
-  if (config.isError) return <p className="text-sm text-destructive">Nastavenie sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0039, urobte to.</p>
+  if (config.isError) return <p className="text-sm text-destructive">Nastavenie sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
   if (!config.data || !equipment.data) return <p className="text-sm text-muted-foreground">Načítavam…</p>
   const sorted = [...equipment.data].filter((item) => item.status !== 'retired').sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   return <Editor companyId={companyId} initial={config.data} equipment={sorted} />

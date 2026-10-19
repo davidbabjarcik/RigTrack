@@ -26,7 +26,7 @@ export function LinksSettings({ companyId }: { companyId: string }) {
   const remove = useMutation({ mutationFn: removeLink, onSettled: refresh })
 
   if (links.isError || code.isError) {
-    return <p className="text-sm text-destructive">Prepojené firmy sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0065, spustite ju v Supabase.</p>
+    return <p className="text-sm text-destructive">Prepojené firmy sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
   }
 
   function submit(event: FormEvent) {

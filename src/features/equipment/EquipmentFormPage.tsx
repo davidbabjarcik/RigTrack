@@ -28,6 +28,10 @@ import {
   COMMON_CONNECTORS,
   DJ_TYPE_LABELS,
   DJ_TYPES,
+  cableBaseName,
+  cableName,
+  CONDITION_LABELS,
+  CONDITIONS,
   SUB_DESIGN_LABELS,
   PROCESSOR_CONTROL_LABELS,
   PROCESSOR_CONTROLS,
@@ -87,6 +91,9 @@ const EMPTY: EquipmentFormValues = {
   stageSize: '',
   audioType: '',
   djType: '',
+  madeIn: '',
+  color: '',
+  condition: '',
   mixerKind: '',
   mixerCard: '',
   micKind: '',
@@ -160,6 +167,10 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     stageSize: equipment.attributes.stageSize ?? '',
     audioType: equipment.attributes.audioType ?? '',
     djType: equipment.attributes.djType ?? '',
+    madeYear: equipment.attributes.madeYear,
+    madeIn: equipment.attributes.madeIn ?? '',
+    color: equipment.attributes.color ?? '',
+    condition: equipment.attributes.condition ?? '',
     mixerKind: equipment.attributes.mixerKind ?? '',
     mixerChannels: equipment.attributes.mixerChannels,
     mixerCard: equipment.attributes.mixerCard ?? '',
@@ -310,12 +321,23 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const simple = isSimpleKind(kind, categoryText ?? '')
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
+  // Ďalšie dĺžky nového kábla (namiesto samostatnej „Sady káblov“).
+  const [extraLengths, setExtraLengths] = useState<{ lengthM: number; quantity: number }[]>([])
 
   const save = useMutation({
     mutationFn: async (values: EquipmentFormValues) => {
       const colorEdit = values.kind === 'cable' && values.lengthM !== undefined ? colorEdits[values.lengthM] : undefined
       if (colorEdit) await saveCableColor(companyId, { lengthM: values.lengthM!, ...colorEdit })
-      return saveEquipment({ companyId, id: equipment?.id ?? null, values, categories, locations })
+      const id = await saveEquipment({ companyId, id: equipment?.id ?? null, values, categories, locations })
+      // Nový kábel: každá ďalšia dĺžka je samostatná položka s rovnakým konektorom a kategóriou.
+      if (!equipment && values.kind === 'cable' && (values.cableType ?? 'cable') === 'cable') {
+        const base = cableBaseName(values.name)
+        const known = [...categories]
+        for (const extra of extraLengths.filter((row) => row.lengthM > 0 && row.quantity > 0)) {
+          await saveEquipment({ companyId, id: null, values: { ...values, name: cableName(base, extra.lengthM), lengthM: extra.lengthM, quantity: extra.quantity }, categories: known, locations })
+        }
+      }
+      return id
     },
     onSuccess: async (id) => {
       // Uloženie mohlo založiť novú kategóriu či umiestnenie, preto celý strom firmy.
@@ -338,7 +360,6 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           {...register('kind', {
             // Sada káblov a kapsule majú vlastné formuláre.
             onChange: (event: { target: { value: string } }) => {
-              if (event.target.value === 'cable-set') navigate('/equipment/new-cables')
               if (event.target.value === 'capsule') navigate('/equipment/capsules?new=1')
             },
           })}
@@ -350,7 +371,6 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           ))}
           {!equipment && (
             <optgroup label="Iný formulár">
-              <option value="cable-set">Sada káblov (viac dĺžok naraz)</option>
               <option value="capsule">Kapsula k mikrofónu</option>
             </optgroup>
           )}
@@ -394,6 +414,48 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
             error={errors.lengthM?.message}
             {...register('lengthM', asOptionalNumber)}
           />
+          {!equipment && cableType !== 'adapter' && cableType !== 'di' && (
+            <div className="sm:col-span-2">
+              <p className="mb-1.5 text-sm font-medium">Ďalšie dĺžky</p>
+              {extraLengths.length > 0 && (
+                <ul className="mb-2 flex flex-col gap-2">
+                  {extraLengths.map((row, index) => (
+                    <li key={index} className="flex items-end gap-2">
+                      <Field
+                        label="Dĺžka (m)"
+                        hideLabel={index > 0}
+                        className="flex-1"
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="0.1"
+                        value={Number.isNaN(row.lengthM) ? '' : row.lengthM}
+                        onChange={(e) => setExtraLengths(extraLengths.map((item, i) => (i === index ? { ...item, lengthM: e.target.valueAsNumber } : item)))}
+                      />
+                      <Field
+                        label="Kusov"
+                        hideLabel={index > 0}
+                        className="w-24"
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        value={Number.isNaN(row.quantity) ? '' : row.quantity}
+                        onChange={(e) => setExtraLengths(extraLengths.map((item, i) => (i === index ? { ...item, quantity: e.target.valueAsNumber } : item)))}
+                      />
+                      <Button variant="ghost" aria-label={`Odobrať dĺžku ${index + 1}`} onClick={() => setExtraLengths(extraLengths.filter((_, i) => i !== index))}>
+                        <Trash2 className="size-4" aria-hidden />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Button variant="outline" size="sm" onClick={() => setExtraLengths([...extraLengths, { lengthM: Number.NaN, quantity: 1 }])}>
+                <Plus className="size-4" aria-hidden />
+                Pridať ďalšiu dĺžku
+              </Button>
+              <p className="mt-1 text-xs text-muted-foreground">Každá dĺžka sa uloží ako samostatná položka, napr. „XLR kábel 5 m“, „XLR kábel 10 m“.</p>
+            </div>
+          )}
           <div className="sm:col-span-2">
             <LengthColorField
               lengthM={lengthM}
@@ -571,6 +633,17 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               </option>
             ))}
           </SelectField>
+          <SelectField label="Stav" {...register('condition')}>
+            <option value="">— nezadané —</option>
+            {CONDITIONS.map((condition) => (
+              <option key={condition} value={condition}>
+                {CONDITION_LABELS[condition]}
+              </option>
+            ))}
+          </SelectField>
+          <Field label="Rok výroby" type="number" inputMode="numeric" min={1950} max={2100} placeholder="napr. 2021" error={errors.madeYear?.message} {...register('madeYear', asOptionalNumber)} />
+          <Field label="Krajina výroby" placeholder="napr. Japonsko, Čína" maxLength={60} {...register('madeIn')} />
+          <Field label="Farba" placeholder="napr. čierna, biela (limitovaná)" maxLength={40} {...register('color')} />
         </Group>
       )}
 

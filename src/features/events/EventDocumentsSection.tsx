@@ -32,6 +32,9 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
     },
   })
 
+  // Nové dokumenty sa už nenahrávajú (ridery a podobne cez odkazy); staré ostávajú viditeľné.
+  if (!documents.data || documents.data.length === 0) return null
+
   return (
     <CollapsibleSection id="event.documents" title={<>Dokumenty ({documents.data?.length ?? 0})</>} actions={
         <>
