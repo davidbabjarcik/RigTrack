@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { CheckLevelsSettings } from '@/features/checks/CheckLevelsSettings'
 import { bugKeys, fetchIsDeveloper } from '@/features/bugs/api'
 import { LinksSettings } from '@/features/links/LinksSettings'
@@ -45,12 +46,12 @@ import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
 import { formatDateTime } from '@/lib/format'
 
+/** Sekcia Nastavení – dá sa zbaliť; prehliadač si pamätá, čo máte zbalené. */
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mb-8">
-      <h2 className="mb-2 text-sm font-medium text-muted-foreground">{title}</h2>
+    <CollapsibleSection id={`settings.${title}`} title={title} className="mb-8">
       {children}
-    </section>
+    </CollapsibleSection>
   )
 }
 

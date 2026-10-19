@@ -21,6 +21,12 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.10.1 – 19. 10. 2026
+
+- **Nastavenia sa dajú zbaliť** – klik na nadpis sekcie ju zbalí / rozbalí a prehliadač si to pamätá.
+- **Tabuľka oprávnení na mobile**: názov oprávnenia ostáva pri posúvaní do strany viditeľný a je tam návod, že sa
+  tabuľka posúva prstom.
+
 ### 2.10 – 19. 10. 2026
 
 - **Úrovne kontroly** (Nastavenia → Pripomienky): žiadna / malá / stredná / veľká a po koľkých dňoch sa pri každej

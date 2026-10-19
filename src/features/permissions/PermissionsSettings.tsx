@@ -58,11 +58,12 @@ export function PermissionsSettings({ companyId, members }: Props) {
           Zaškrtnuté = rola to smie. Bodka označuje zmenu oproti predvolenému stavu ({changedRoles}). Admin smie vždy všetko a členov, pozvánky
           a nastavenia firmy spravuje iba on.
         </p>
-        <div className="overflow-x-auto rounded-xl border bg-surface">
+        <p className="mb-2 text-xs text-muted-foreground sm:hidden">Tabuľku posuňte prstom do strany – vidíte všetky roly.</p>
+        <div className="overflow-x-auto overscroll-x-contain rounded-xl border bg-surface">
           <table className="w-full min-w-[34rem] border-collapse text-sm">
             <thead>
               <tr className="border-b text-left">
-                <th className="px-4 py-2 font-medium">Oprávnenie</th>
+                <th className="sticky left-0 z-10 bg-surface px-4 py-2 font-medium">Oprávnenie</th>
                 {CONFIGURABLE_ROLES.map((role) => (
                   <th key={role} className="w-24 px-2 py-2 text-center font-medium">
                     {ROLE_LABELS[role]}
@@ -75,7 +76,7 @@ export function PermissionsSettings({ companyId, members }: Props) {
                 <PermissionGroupRows key={group.id} label={group.label} columns={CONFIGURABLE_ROLES.length + 1}>
                   {group.permissions.map((permission) => (
                     <tr key={permission.key} className="border-b last:border-b-0">
-                      <td className="px-4 py-2">{permission.label}</td>
+                      <td className="sticky left-0 z-10 max-w-40 bg-surface px-4 py-2">{permission.label}</td>
                       {CONFIGURABLE_ROLES.map((role) => {
                         const allowed = roleAllowed(role, permission.key, roles)
                         const changed = allowed !== defaultAllowed(role, permission.key)
@@ -137,7 +138,7 @@ export function PermissionsSettings({ companyId, members }: Props) {
                       const own = memberOverrides.find((item) => item.userId === selected.userId && item.permission === permission.key)
                       return (
                         <tr key={permission.key} className="border-b last:border-b-0">
-                          <td className="px-4 py-2">{permission.label}</td>
+                          <td className="sticky left-0 z-10 max-w-40 bg-surface px-4 py-2">{permission.label}</td>
                           <td className="w-56 px-2 py-1.5">
                             <select
                               aria-label={`${group.label}: ${permission.label}`}
