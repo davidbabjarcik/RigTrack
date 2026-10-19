@@ -181,13 +181,13 @@ describe('kind-specific data', () => {
     expect(attributesFor({ ...values, kind: 'audio', audioType: 'microphone' }).audioType).toBe('microphone')
     expect(attributesFor({ ...values, kind: 'general', category: 'Zvuk – mikrofóny', audioType: 'microphone' }).audioType).toBe('microphone')
     expect(attributesFor({ ...values, kind: 'general', category: 'Káble', audioType: 'microphone' }).audioType).toBeUndefined()
-    expect(describeAttributes({ attributes: { audioType: 'amplifier', powerW: 2000 } })).toEqual(['Zosilňovač', '2000 W'])
+    expect(describeAttributes({ attributes: { audioType: 'amplifier', powerW: 2000 } })).toEqual(['Zosilňovač'])
     expect(isAudio('general', 'Sound')).toBe(true)
   })
 
   it('describes the data briefly', () => {
     expect(describeAttributes({ attributes: { connector: 'XLR', lengthM: 1.5 } })).toEqual(['XLR', '1,5 m'])
-    expect(describeAttributes({ attributes: { powerW: 200, lightSource: 'discharge' } })).toEqual(['200 W', 'Výbojka'])
+    expect(describeAttributes({ attributes: { powerW: 200, lightSource: 'discharge' } })).toEqual(['Výbojka'])
     expect(describeAttributes({ attributes: { dmxModes: [{ name: 'Basic', channels: 8 }, { name: 'Full', channels: 24 }] } })).toEqual(['DMX 8/24 ch'])
     expect(describeAttributes({ attributes: {} })).toEqual([])
   })
@@ -342,5 +342,28 @@ describe('cables, adapters and DI boxes', () => {
     expect(describeAttributes({ attributes: di })).toEqual(['DI box', 'aktívny', 'XLR'])
     const adapter = attributesFor({ kind: 'cable', connector: 'XLR – jack', lengthM: undefined, powerW: undefined, lightSource: '', cableType: 'adapter', powered: 'active' })
     expect(adapter).toEqual({ cableType: 'adapter', connector: 'XLR – jack' })
+  })
+})
+
+describe('lights and truss types', () => {
+  it('stores the light type without source for accessories', () => {
+    const beam = attributesFor({ kind: 'light', connector: '', lengthM: undefined, powerW: 470, lightSource: 'discharge', lightType: 'moving_beam' })
+    expect(describeAttributes({ attributes: beam })).toEqual(['Beam', 'Výbojka'])
+    const hooks = attributesFor({ kind: 'light', connector: '', lengthM: undefined, powerW: undefined, lightSource: 'led', lightType: 'acc_hook' })
+    expect(hooks).toEqual({ lightType: 'acc_hook' })
+  })
+
+  it('keeps the length only for truss sections', () => {
+    expect(attributesFor({ kind: 'truss', connector: '', lengthM: 2, powerW: undefined, lightSource: '', trussType: 'point4' })).toEqual({ trussType: 'point4', lengthM: 2 })
+    expect(attributesFor({ kind: 'truss', connector: '', lengthM: 2, powerW: undefined, lightSource: '', trussType: 'stand_lift' })).toEqual({ trussType: 'stand_lift' })
+  })
+})
+
+describe('truss shape and stage decks', () => {
+  it('stores shape for truss sections and brand / size for decks', () => {
+    expect(attributesFor({ kind: 'truss', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', trussType: 'point4', trussShape: 'corner' })).toEqual({ trussType: 'point4', trussShape: 'corner' })
+    const deck = attributesFor({ kind: 'stage', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', stageType: 'deck', stageBrand: 'Nivtec originál', stageSize: '2 × 1 m' })
+    expect(describeAttributes({ attributes: deck })).toEqual(['Dosky', 'Nivtec originál', '2 × 1 m'])
+    expect(attributesFor({ kind: 'stage', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', stageType: 'accessory', stageBrand: 'x' })).toEqual({ stageType: 'accessory' })
   })
 })

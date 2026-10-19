@@ -84,6 +84,7 @@ export function EquipmentDetailPage() {
     ['Druh', [KIND_LABELS[equipment.kind], ...describeAttributes(equipment)].join(' · ')],
     ['Vlastník', equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
     ['Kategória', categories.find((c) => c.id === equipment.categoryId)?.name],
+    ['Príkon', equipment.attributes.powerW !== undefined && `${equipment.attributes.powerW} W`],
     ['DMX módy', equipment.attributes.dmxModes?.map((mode) => `${mode.name} ${mode.channels} ch`).join(' · ')],
     ['Kópia čoho', equipment.cloneOf],
     [

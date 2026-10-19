@@ -26,8 +26,6 @@ import {
   CAPTURE_MATCH_LABELS,
   CAPTURE_MATCHES,
   COMMON_CONNECTORS,
-  DISPLAY_TYPE_LABELS,
-  DISPLAY_TYPES,
   DJ_TYPE_LABELS,
   DJ_TYPES,
   SUB_DESIGN_LABELS,
@@ -43,6 +41,15 @@ import {
   KIND_LABELS,
   LIGHT_SOURCE_LABELS,
   LIGHT_SOURCES,
+  LIGHT_TYPE_GROUPS,
+  LIGHT_TYPE_LABELS,
+  isTrussSection,
+  TRUSS_TYPE_LABELS,
+  TRUSS_TYPES,
+  TRUSS_SHAPE_LABELS,
+  TRUSS_SHAPES,
+  STAGE_TYPE_LABELS,
+  STAGE_TYPES,
   parseUnitIds,
   STATUS_LABELS,
   type Equipment,
@@ -72,6 +79,12 @@ const EMPTY: EquipmentFormValues = {
   lengthM: undefined,
   powerW: undefined,
   lightSource: '',
+  lightType: '',
+  trussType: '',
+  trussShape: '',
+  stageType: '',
+  stageBrand: '',
+  stageSize: '',
   audioType: '',
   djType: '',
   mixerKind: '',
@@ -139,6 +152,12 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     lengthM: equipment.attributes.lengthM,
     powerW: equipment.attributes.powerW,
     lightSource: equipment.attributes.lightSource ?? '',
+    lightType: equipment.attributes.lightType ?? '',
+    trussType: equipment.attributes.trussType ?? '',
+    trussShape: equipment.attributes.trussShape ?? '',
+    stageType: equipment.attributes.stageType ?? '',
+    stageBrand: equipment.attributes.stageBrand ?? '',
+    stageSize: equipment.attributes.stageSize ?? '',
     audioType: equipment.attributes.audioType ?? '',
     djType: equipment.attributes.djType ?? '',
     mixerKind: equipment.attributes.mixerKind ?? '',
@@ -276,6 +295,12 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const isLedProcessor = useWatch({ control, name: 'isLedProcessor' })
   const isDisplay = useWatch({ control, name: 'isDisplay' })
   const cableType = useWatch({ control, name: 'cableType' })
+  const powered = useWatch({ control, name: 'powered' })
+  const lightType = useWatch({ control, name: 'lightType' })
+  const trussType = useWatch({ control, name: 'trussType' })
+  const stageType = useWatch({ control, name: 'stageType' })
+  const stageBrandList = useId()
+  const lightAccessory = Boolean(lightType && lightType.startsWith('acc_'))
   const mixerKind = useWatch({ control, name: 'mixerKind' })
   const micKind = useWatch({ control, name: 'micKind' })
   const capsuleIds = useWatch({ control, name: 'capsuleIds' }) ?? []
@@ -383,28 +408,81 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
 
       {kind === 'truss' && (
         <Group title="Hliník / truss">
-          <Field
-            label="Dĺžka dielu (m)"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="0.5"
-            error={errors.lengthM?.message}
-            {...register('lengthM', asOptionalNumber)}
-          />
+          <SelectField label="Typ" error={errors.trussType?.message} {...register('trussType')}>
+            <option value="">— nezadané —</option>
+            {TRUSS_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {TRUSS_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </SelectField>
+          {trussType?.startsWith('point') && (
+            <SelectField label="Tvar" {...register('trussShape')}>
+              <option value="">— nezadané —</option>
+              {TRUSS_SHAPES.map((shape) => (
+                <option key={shape} value={shape}>
+                  {TRUSS_SHAPE_LABELS[shape]}
+                </option>
+              ))}
+            </SelectField>
+          )}
+          {isTrussSection(trussType) && (
+            <Field
+              label="Dĺžka dielu (m)"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.5"
+              error={errors.lengthM?.message}
+              {...register('lengthM', asOptionalNumber)}
+            />
+          )}
+        </Group>
+      )}
+
+      {kind === 'stage' && (
+        <Group title="Pódium">
+          <SelectField label="Typ" {...register('stageType')}>
+            <option value="">— nezadané —</option>
+            {STAGE_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {STAGE_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </SelectField>
+          {stageType === 'deck' && (
+            <>
+              <Field label="Značka" list={stageBrandList} placeholder="napr. Nivtec originál" maxLength={60} {...register('stageBrand')} />
+              <datalist id={stageBrandList}>
+                <option value="Nivtec originál" />
+                <option value="Nivtec kompatibilné" />
+                <option value="Bütec" />
+                <option value="Litec" />
+              </datalist>
+              <Field label="Veľkosť" placeholder="napr. 2 × 1 m" maxLength={40} {...register('stageSize')} />
+            </>
+          )}
         </Group>
       )}
 
       {lighting && (
         <Group title="Svetlo">
-          <Field
-            label="Výkon (W)"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            error={errors.powerW?.message}
-            {...register('powerW', asOptionalNumber)}
-          />
+          <SelectField label="Typ svetla" error={errors.lightType?.message} {...register('lightType')}>
+            <option value="">— nezadané —</option>
+            {LIGHT_TYPE_GROUPS.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.types.map((type) => (
+                  <option key={type} value={type}>
+                    {LIGHT_TYPE_LABELS[type]}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </SelectField>
+          {!lightAccessory && (
+            <Field label="Príkon (W)" type="number" inputMode="decimal" min={0} error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />
+          )}
+          {!lightAccessory && (
           <SelectField label="Zdroj svetla" error={errors.lightSource?.message} {...register('lightSource')}>
             <option value="">— neuvedené —</option>
             {LIGHT_SOURCES.map((source) => (
@@ -413,6 +491,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               </option>
             ))}
           </SelectField>
+          )}
+          {!lightAccessory && (
           <fieldset className="sm:col-span-2">
             <legend className="mb-1.5 text-sm font-medium">DMX módy</legend>
             {dmxModes.fields.length === 0 && (
@@ -458,6 +538,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               Pridať mód
             </Button>
           </fieldset>
+          )}
           <Field label="Kópia čoho" placeholder="napr. Robe Spiider, Clay Paky Sharpy" maxLength={120} error={errors.cloneOf?.message} {...register('cloneOf')} />
           <SelectField label="Sedí s fixtúrou v Capture?" error={errors.captureMatch?.message} {...register('captureMatch')}>
             <option value="">— nezistené —</option>
@@ -490,7 +571,6 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               </option>
             ))}
           </SelectField>
-          <Field label="Výkon (W)" type="number" inputMode="decimal" min={0} error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />
         </Group>
       )}
 
@@ -513,14 +593,9 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               ))}
             </optgroup>
           </SelectField>
-          <Field
-            label="Výkon (W)"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            error={errors.powerW?.message}
-            {...register('powerW', asOptionalNumber)}
-          />
+          {(audioType === 'amplifier' || audioType === 'processor' || (hasBox(audioType) && powered === 'active')) && (
+            <Field label="Príkon zo siete (W)" type="number" inputMode="decimal" min={0} error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />
+          )}
           {audioType === 'mixer' && (
             <>
               <SelectField label="Mixpult" error={errors.mixerKind?.message} {...register('mixerKind')}>
@@ -653,10 +728,26 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
       {(kind === 'video' || isLedPanel || isLedProcessor || isDisplay) && (
         <fieldset className="rounded-xl border bg-surface p-4">
           <legend className="px-1 text-sm font-medium text-muted-foreground">Video</legend>
-          <label className="flex items-center gap-2 text-sm font-medium">
-            <input type="checkbox" className="size-4" {...register('isLedPanel')} />
-            LED panel (pre LED kalkulačku)
-          </label>
+          <SelectField
+            label="Typ"
+            className="sm:w-72"
+            value={isLedPanel ? 'led_panel' : isLedProcessor ? 'led_processor' : isDisplay ? (displayType ?? 'tv') : ''}
+            onChange={(e) => {
+              const value = e.target.value
+              const opts = { shouldDirty: true }
+              setValue('isLedPanel', value === 'led_panel', opts)
+              setValue('isLedProcessor', value === 'led_processor', opts)
+              setValue('isDisplay', value === 'tv' || value === 'monitor' || value === 'projector', opts)
+              if (value === 'tv' || value === 'monitor' || value === 'projector') setValue('displayType', value, opts)
+            }}
+          >
+            <option value="">— iné (kamera, kábel, prepínač…) —</option>
+            <option value="led_panel">LED panel</option>
+            <option value="led_processor">LED procesor (napr. Novastar)</option>
+            <option value="tv">TV</option>
+            <option value="monitor">Monitor</option>
+            <option value="projector">Projektor</option>
+          </SelectField>
           {isLedPanel && (
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Field label="Pixel pitch (mm)" type="number" inputMode="decimal" min={0} step="0.1" placeholder="napr. 3,9" error={errors.ledPitchMm?.message} {...register('ledPitchMm', asOptionalNumber)} />
@@ -670,19 +761,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               <p className="col-span-2 self-end text-xs text-muted-foreground sm:col-span-4">Pixely sa dopočítajú z rozmeru a pitchu, ak ich nevyplníte. Počet kusov = koľko panelov máme.</p>
             </div>
           )}
-          <label className="mt-3 flex items-center gap-2 text-sm font-medium">
-            <input type="checkbox" className="size-4" {...register('isDisplay')} />
-            Obrazovka – TV, monitor alebo projektor
-          </label>
           {isDisplay && (
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
-              <SelectField label="Typ" {...register('displayType')}>
-                {DISPLAY_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {DISPLAY_TYPE_LABELS[type]}
-                  </option>
-                ))}
-              </SelectField>
               <Field label="Rozlíšenie šírka (px)" type="number" inputMode="numeric" placeholder="1920" error={errors.displayResW?.message} {...register('displayResW', asOptionalNumber)} />
               <Field label="Rozlíšenie výška (px)" type="number" inputMode="numeric" placeholder="1080" error={errors.displayResH?.message} {...register('displayResH', asOptionalNumber)} />
               <Field label="Uhlopriečka (palce)" type="number" inputMode="decimal" placeholder="55" error={errors.displayDiagonalIn?.message} {...register('displayDiagonalIn', asOptionalNumber)} />
@@ -691,10 +771,6 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               )}
             </div>
           )}
-          <label className="mt-3 flex items-center gap-2 text-sm font-medium">
-            <input type="checkbox" className="size-4" {...register('isLedProcessor')} />
-            LED procesor (napr. Novastar)
-          </label>
           {isLedProcessor && (
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
               <Field label="Výstupy (CH) *" type="number" inputMode="numeric" min={1} placeholder="napr. 4" error={errors.procOutputs?.message} {...register('procOutputs', asOptionalNumber)} />

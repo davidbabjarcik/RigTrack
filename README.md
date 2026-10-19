@@ -21,6 +21,19 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.6 – 19. 10. 2026
+
+- **Svetlá – typ v skupinách**: pohyblivé (beam, wash, spot, hybrid), statické (LED PAR, LED bar), efektové
+  (blinder, strobo, pixel line, laser, špeciálne efekty), profilové / divadelné (profil, fresnel), výrobníky
+  (dymostroj, hazer, fazer) a **príslušenstvo** (háky, klemy, klapky, prevodníky, mixpult na svetlá, licenčné
+  kľúče, kvapaliny) – príslušenstvo bez príkonu, zdroja a DMX.
+- **Truss**: 1- / 2- / 3- / 4-point, ground support, príslušenstvo, stojany / lifty; pri 1–4-point tvar (rovný,
+  roh, T, kríž, kocka, kruh) a dĺžka dielu.
+- **Pódium**: dosky (značka – napr. Nivtec originál – a veľkosť) alebo príslušenstvo.
+- **Video**: typ sa vyberá zo zoznamu (LED panel, LED procesor, TV, monitor, projektor) namiesto zaškrtávania.
+- **Príkon (W)** sa pýta len tam, kde má zmysel (svetlá, aktívne PA, zosilňovače, procesory) a v zozname techniky
+  sa už neukazuje – je v detaile.
+
 ### 2.5 – 19. 10. 2026
 
 Podrobnejšia technika:

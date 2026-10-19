@@ -32,6 +32,77 @@ export const KIND_LABELS: Record<EquipmentKind, string> = {
 export const LIGHT_SOURCES = ['led', 'discharge', 'halogen', 'laser', 'other'] as const
 export type LightSource = (typeof LIGHT_SOURCES)[number]
 
+/** Typ hliníka: koľko-bodový truss, ground support, príslušenstvo, stojany a lifty. */
+export const TRUSS_TYPES = ['point1', 'point2', 'point3', 'point4', 'ground_support', 'accessory', 'stand_lift'] as const
+export type TrussType = (typeof TRUSS_TYPES)[number]
+export const TRUSS_TYPE_LABELS: Record<TrussType, string> = {
+  point1: '1-point truss',
+  point2: '2-point truss',
+  point3: '3-point truss',
+  point4: '4-point truss',
+  ground_support: 'Ground support',
+  accessory: 'Príslušenstvo k trussu',
+  stand_lift: 'Stojany / lifty',
+}
+/** Tvar dielu trussu: rovný, roh, T (tečko), kríž, kocka, kruh / oblúk. */
+export const TRUSS_SHAPES = ['straight', 'corner', 'tee', 'cross', 'box', 'circle', 'other'] as const
+export type TrussShape = (typeof TRUSS_SHAPES)[number]
+export const TRUSS_SHAPE_LABELS: Record<TrussShape, string> = {
+  straight: 'Rovný',
+  corner: 'Roh',
+  tee: 'T (tečko)',
+  cross: 'Kríž',
+  box: 'Kocka',
+  circle: 'Kruh / oblúk',
+  other: 'Iný tvar',
+}
+
+/** Pódium: dosky alebo príslušenstvo. */
+export const STAGE_TYPES = ['deck', 'accessory'] as const
+export type StageType = (typeof STAGE_TYPES)[number]
+export const STAGE_TYPE_LABELS: Record<StageType, string> = { deck: 'Dosky', accessory: 'Príslušenstvo' }
+
+/** Truss, ktorý má dĺžku dielu (1–4-point). */
+export const isTrussSection = (type: TrussType | '' | undefined) => !type || type.startsWith('point')
+
+/** Typ svetla v skupinách; „acc_“ je príslušenstvo (bez príkonu, zdroja a DMX). */
+export const LIGHT_TYPE_GROUPS = [
+  { label: 'Pohyblivé svetlá', types: ['moving_beam', 'moving_wash', 'moving_spot', 'moving_hybrid'] },
+  { label: 'Statické svetlá', types: ['led_par', 'led_bar'] },
+  { label: 'Efektové svetlá', types: ['blinder', 'strobe', 'pixel_line', 'laser', 'special_fx'] },
+  { label: 'Profilové / divadelné', types: ['profile', 'fresnel'] },
+  { label: 'Výrobníky', types: ['smoke', 'hazer', 'fazer'] },
+  { label: 'Príslušenstvo', types: ['acc_hook', 'acc_clamp', 'acc_barndoor', 'acc_converter', 'acc_console', 'acc_license', 'acc_fluid', 'acc_other'] },
+] as const
+export const LIGHT_TYPES = LIGHT_TYPE_GROUPS.flatMap((group) => group.types)
+export type LightType = (typeof LIGHT_TYPE_GROUPS)[number]['types'][number]
+export const LIGHT_TYPE_LABELS: Record<LightType, string> = {
+  moving_beam: 'Beam',
+  moving_wash: 'Wash',
+  moving_spot: 'Spot',
+  moving_hybrid: 'Hybrid',
+  led_par: 'LED PAR',
+  led_bar: 'LED bar',
+  blinder: 'Blinder',
+  strobe: 'Strobo',
+  pixel_line: 'Pixel line',
+  laser: 'Laser',
+  special_fx: 'Špeciálne efekty',
+  profile: 'Profil',
+  fresnel: 'Fresnel',
+  smoke: 'Dymostroj',
+  hazer: 'Hazer',
+  fazer: 'Fazer',
+  acc_hook: 'Háky',
+  acc_clamp: 'Klemy',
+  acc_barndoor: 'Klapky',
+  acc_converter: 'Prevodníky (DMX / sieť)',
+  acc_console: 'Mixpult na svetlá',
+  acc_license: 'Licenčné kľúče',
+  acc_fluid: 'Kvapaliny',
+  acc_other: 'Iné príslušenstvo',
+}
+
 export const LIGHT_SOURCE_LABELS: Record<LightSource, string> = {
   led: 'LED',
   discharge: 'Výbojka',
@@ -101,6 +172,15 @@ export type EquipmentAttributes = {
   lengthM?: number
   powerW?: number
   lightSource?: LightSource
+  /** Typ hliníka (1–4-point, ground support, príslušenstvo, stojany / lifty). */
+  trussType?: TrussType
+  trussShape?: TrussShape
+  /** Pódium: dosky (značka, veľkosť) alebo príslušenstvo. */
+  stageType?: StageType
+  stageBrand?: string
+  stageSize?: string
+  /** Typ svetla (pohyblivé, statické, efektové, divadelné, výrobníky, príslušenstvo). */
+  lightType?: LightType
   /** Typ zvukovej techniky (mixpult, mikrofón…). */
   audioType?: AudioType
   /** Podtyp DJ techniky (mix, player, gramofón…). */
@@ -310,6 +390,12 @@ export const equipmentSchema = z.object({
   lengthM: optionalNumber(1000),
   powerW: optionalNumber(100000),
   lightSource: z.enum([...LIGHT_SOURCES, '']),
+  lightType: z.enum([...(LIGHT_TYPES as LightType[]), '']).optional(),
+  trussType: z.enum([...TRUSS_TYPES, '']).optional(),
+  trussShape: z.enum([...TRUSS_SHAPES, '']).optional(),
+  stageType: z.enum([...STAGE_TYPES, '']).optional(),
+  stageBrand: text(60).optional(),
+  stageSize: text(40).optional(),
   audioType: z.enum([...AUDIO_TYPES, '']),
   djType: z.enum([...DJ_TYPES, '']).optional(),
   mixerKind: z.enum(['analog', 'digital', '']).optional(),
@@ -455,6 +541,12 @@ export function attributesFor(
       Pick<
         EquipmentFormValues,
         | 'category'
+        | 'lightType'
+        | 'trussType'
+        | 'trussShape'
+        | 'stageType'
+        | 'stageBrand'
+        | 'stageSize'
         | 'dmxModes'
         | 'audioType'
         | 'djType'
@@ -533,11 +625,20 @@ export function attributesFor(
     if (values.lengthM !== undefined) attributes.lengthM = values.lengthM
   }
   // Truss sa delí podľa dĺžky dielu (0,5 / 1 / 2 / 3 m).
-  if (values.kind === 'truss' && values.lengthM !== undefined) attributes.lengthM = values.lengthM
+  if (values.kind === 'truss' && values.trussType) attributes.trussType = values.trussType
+  if (values.kind === 'truss' && values.trussType?.startsWith('point') && values.trussShape) attributes.trussShape = values.trussShape
+  if (values.kind === 'stage' && values.stageType) attributes.stageType = values.stageType
+  if (values.kind === 'stage' && values.stageType === 'deck') {
+    if (values.stageBrand?.trim()) attributes.stageBrand = values.stageBrand.trim()
+    if (values.stageSize?.trim()) attributes.stageSize = values.stageSize.trim()
+  }
+  if (values.kind === 'truss' && isTrussSection(values.trussType) && values.lengthM !== undefined) attributes.lengthM = values.lengthM
   if (lighting || audio) {
     if (values.powerW !== undefined) attributes.powerW = values.powerW
   }
-  if (lighting && values.lightSource) attributes.lightSource = values.lightSource
+  const accessory = Boolean(values.lightType?.startsWith('acc_'))
+  if (lighting && values.lightType) attributes.lightType = values.lightType
+  if (lighting && values.lightSource && !accessory) attributes.lightSource = values.lightSource
   if (audio && values.audioType) attributes.audioType = values.audioType
   if (audio && (values.audioType === 'wireless' || values.audioType === 'iem') && values.rfRange?.trim()) attributes.rfRange = values.rfRange.trim()
   if (audio && values.audioType === 'stagebox' && values.mixerCard?.trim()) attributes.mixerCard = values.mixerCard.trim()
@@ -644,6 +745,12 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
   const a = item.attributes
   return [
     a.audioType && AUDIO_TYPE_LABELS[a.audioType],
+    a.lightType && LIGHT_TYPE_LABELS[a.lightType],
+    a.trussType && TRUSS_TYPE_LABELS[a.trussType],
+    a.trussShape && TRUSS_SHAPE_LABELS[a.trussShape],
+    a.stageType && STAGE_TYPE_LABELS[a.stageType],
+    a.stageBrand,
+    a.stageSize,
     a.djType && DJ_TYPE_LABELS[a.djType],
     a.cableType === 'di' && 'DI box',
     a.cableType === 'adapter' && 'Redukcia',
@@ -663,7 +770,6 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.weightKg !== undefined && `${formatNumber(a.weightKg)} kg`,
     a.connector,
     a.lengthM !== undefined && `${formatNumber(a.lengthM)} m`,
-    a.powerW !== undefined && `${formatNumber(a.powerW)} W`,
     a.lightSource && LIGHT_SOURCE_LABELS[a.lightSource],
     a.boxWidthCm !== undefined && a.boxDepthCm !== undefined && `${formatNumber(a.boxWidthCm)}×${formatNumber(a.boxDepthCm)}${a.boxHeightCm !== undefined ? `×${formatNumber(a.boxHeightCm)}` : ''} cm`,
     a.dmxModes?.length && `DMX ${a.dmxModes.map((mode) => mode.channels).join('/')} ch`,
