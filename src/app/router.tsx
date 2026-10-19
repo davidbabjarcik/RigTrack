@@ -67,6 +67,7 @@ const stats = lazyPage(() => import('@/features/stats/StatsPage').then((m) => m.
 const eventsList = lazyPage(() => import('@/features/events/EventsListPage').then((m) => m.EventsListPage), 'events.view')
 const eventDetail = lazyPage(() => import('@/features/events/EventDetailPage').then((m) => m.EventDetailPage), 'events.view')
 const eventImport = lazyPage(() => import('@/features/events/import/EventImportPage').then((m) => m.EventImportPage), 'events.view')
+const patchPrint = lazyPage(() => import('@/features/patch/PatchPrintPage').then((m) => m.PatchPrintPage), 'events.view')
 const eventPrint = lazyPage(() => import('@/features/events/EventPrintPage').then((m) => m.EventPrintPage), 'events.view')
 const eventForm = lazyPage(() => import('@/features/events/EventFormPage').then((m) => m.EventFormPage), 'events.view')
 const audit = lazyPage(() => import('@/features/audit/AuditPage').then((m) => m.AuditPage), 'audit.view')
@@ -115,6 +116,7 @@ export const routes: RouteObject[] = [
           // Tlačová listina stojí mimo rozloženia aplikácie, aby sa netlačilo menu.
           { path: 'loans/:id/sheet', lazy: loanSheet },
           { path: 'events/:id/print', lazy: eventPrint },
+          { path: 'events/:id/patch', lazy: patchPrint },
           {
             path: '/',
             element: <AppLayout />,

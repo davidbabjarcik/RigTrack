@@ -73,6 +73,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'event_work_logs', sheet: 'Výkazy času' },
       { table: 'event_expenses', sheet: 'Výdavky' },
       { table: 'event_capsules', sheet: 'Kapsule' },
+      { table: 'event_patch', sheet: 'Patch list' },
     ],
   },
   {

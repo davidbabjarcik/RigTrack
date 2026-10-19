@@ -21,6 +21,15 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.1 – 19. 10. 2026
+
+- **Patch list zvuku** pri evente: kanál, čo na ňom ide, stagebox a vstup, zdroj – mikrofón z techniky, bezdrôtový
+  mikrofón s kapsulou, DI box alebo port (XLR / madona alebo jack) – stojan, phantom 48 V a poznámka. Ďalší kanál
+  sa predvyplní (kanál +1, rovnaký stagebox, ďalší vstup), duplicitné kanály appka označí, patch sa dá načítať
+  z iného eventu. **Tlač / PDF** na A4 so súhrnom, čo pripraviť (mikrofóny, kapsule, DI, káble, stojany).
+
+Nové migrácie: `0066`.
+
 ### 2.0 – 19. 10. 2026
 
 Veľká verzia: RigTrack už nie je len pre jednu firmu – firmy sa dajú prepojiť a spolupracovať.
