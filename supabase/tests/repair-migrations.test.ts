@@ -41,4 +41,17 @@ describe('repair migrations', () => {
     expect(demo[0].id).toBeTruthy()
     expect(await t.as('owner', 'select count(*)::int > 0 as ok from public.wifi_networks')).toEqual([{ ok: true }])
   })
+  it('0072 restores current checks and functions so the demo company can be created again', async () => {
+    const t = await createTestDb()
+    await t.exec(`
+      alter table public.event_payments drop constraint event_payments_method_check;
+      alter table public.event_payments add constraint event_payments_method_check check (method in ('cash'));
+      create or replace function public.create_demo_company() returns uuid language sql as $$ select null::uuid $$;
+    `)
+    await t.exec(sql('0072_repair_checks_functions.sql'))
+    await t.exec(sql('0072_repair_checks_functions.sql'))
+    await t.signUp('owner', 'owner@example.com')
+    const demo = await t.as('owner', 'select public.create_demo_company() as id')
+    expect(demo[0].id).toBeTruthy()
+  })
 })

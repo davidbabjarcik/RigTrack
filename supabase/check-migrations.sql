@@ -3,7 +3,8 @@
 -- súbory 0020–0048 sú v supabase/upgrade/, 0049 a vyššie v supabase/migrations/. Spúšťajte ich podľa čísla,
 -- od najnižšej chýbajúcej; 0053 samostatne pred 0054, 0062 samostatne pred 0063.
 -- Ak hlášky v appke hovoria „column … does not exist“ (migrácia prebehla v staršej verzii), spustite
--- opravu 0071_repair_all_columns.sql – doplní všetky chýbajúce stĺpce; dá sa spustiť aj viackrát.
+-- opravu 0071_repair_all_columns.sql – doplní všetky chýbajúce stĺpce; pri „violates check constraint“ alebo
+-- starších funkciách potom 0072_repair_checks_functions.sql. Obe sa dajú spustiť aj viackrát.
 
 with checks (migration, ok) as (
   values

@@ -21,6 +21,14 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.9.3 – 19. 10. 2026
+
+- **Oprava kontrol hodnôt a funkcií**: `0072_repair_checks_functions.sql` nastaví všetky kontroly hodnôt (check
+  constraints) a funkcie databázy na aktuálnu verziu – napr. „violates check constraint event_payments_method_check“
+  pri demo firme. Vygenerované z výslednej schémy, dáta nemení, dá sa spustiť aj viackrát (po 0071).
+
+Nové migrácie: `0072`.
+
 ### 2.9.2 – 19. 10. 2026
 
 - **Oprava celej databázy jedným súborom**: `0071_repair_all_columns.sql` doplní každý chýbajúci stĺpec vo všetkých
