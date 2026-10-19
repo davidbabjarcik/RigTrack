@@ -1,4 +1,5 @@
 import type { Role } from '@/lib/roles'
+import { isAdminRole } from '@/lib/roles'
 
 // Zoznam oprávnení a ich predvolených rolí. Musí sedieť s public.permission_defaults()
 // v 0030_permissions.sql; zhodu stráži supabase/tests/permissions.test.ts.
@@ -70,7 +71,7 @@ export const PERMISSIONS = PERMISSION_GROUPS.flatMap((item) => item.permissions.
 
 /** Má rola oprávnenie, kým ho admin nezmení? */
 export function defaultAllowed(role: Role, permission: PermissionKey) {
-  if (role === 'admin') return true
+  if (isAdminRole(role)) return true
   return PERMISSIONS.some((item) => item.key === permission && (item.roles as Role[]).includes(role))
 }
 
@@ -84,7 +85,7 @@ export type MemberOverride = { userId: string; permission: PermissionKey; allowe
 
 /** Oprávnenie roly po zmenách admina. */
 export function roleAllowed(role: Role, permission: PermissionKey, overrides: RoleOverride[]) {
-  if (role === 'admin') return true
+  if (isAdminRole(role)) return true
   return overrides.find((item) => item.role === role && item.permission === permission)?.allowed ?? defaultAllowed(role, permission)
 }
 
@@ -95,7 +96,7 @@ export function memberAllowed(
   roleOverrides: RoleOverride[],
   memberOverrides: MemberOverride[],
 ) {
-  if (member.role === 'admin') return true
+  if (isAdminRole(member.role)) return true
   return (
     memberOverrides.find((item) => item.userId === member.userId && item.permission === permission)?.allowed ??
     roleAllowed(member.role, permission, roleOverrides)

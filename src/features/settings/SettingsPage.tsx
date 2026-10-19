@@ -7,13 +7,16 @@ import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useAuth } from '@/features/auth/auth-context'
 import {
+  accountStatusKey,
   companyKeys,
   deleteInvitation,
+  fetchAccountStatus,
   fetchInvitations,
   fetchMembers,
   inviteMember,
   removeMember,
   updateMemberRole,
+  type AccountStatus,
 } from '@/features/companies/api'
 import { BackupSettings } from '@/features/backup/BackupSettings'
 import { CaseTemplateSettings } from '@/features/cases/CaseTemplateSettings'
@@ -29,10 +32,11 @@ import { LookupSettings } from '@/features/equipment/LookupSettings'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { PermissionsSettings } from '@/features/permissions/PermissionsSettings'
 import { can } from '@/lib/permissions'
-import { ROLE_LABELS, ROLES, type Role } from '@/lib/roles'
+import { isAdminRole, ROLE_LABELS, ROLES, type Role } from '@/lib/roles'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
+import { formatDateTime } from '@/lib/format'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -41,6 +45,31 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       {children}
     </section>
   )
+}
+
+/** Stav účtu člena alebo pozvaného: kto už má účet, potvrdil e-mail a kedy sa naposledy prihlásil. */
+function useAccountStatus(company: Membership) {
+  const status = useQuery({
+    queryKey: accountStatusKey(company.companyId),
+    queryFn: () => fetchAccountStatus(company.companyId),
+    enabled: isAdminRole(company.role),
+    retry: false,
+  })
+  return (email: string) => status.data?.find((item) => item.email === email.toLowerCase())
+}
+
+function AccountBadge({ status, invitation }: { status: AccountStatus | undefined; invitation?: boolean }) {
+  if (!status) return null
+  const [tone, text] = !status.hasAccount
+    ? ['bg-muted text-muted-foreground', 'ešte nemá účet']
+    : !status.confirmed
+      ? ['bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200', 'účet bez potvrdeného e-mailu']
+      : invitation
+        ? ['bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200', 'má účet, pozvánku ešte neprijal']
+        : status.lastSignInAt
+          ? ['bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200', `naposledy ${formatDateTime(status.lastSignInAt)}`]
+          : ['bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200', 'má účet']
+  return <span className={cn('inline-block rounded-full px-2 py-0.5 text-xs font-medium', tone)}>{text}</span>
 }
 
 function RoleOptions() {
@@ -58,9 +87,10 @@ function PermissionsSection({ companyId }: { companyId: string }) {
 
 function Members({ company, userId }: { company: Membership; userId: string }) {
   const queryClient = useQueryClient()
-  const isAdmin = company.role === 'admin'
+  const isAdmin = isAdminRole(company.role)
   const key = companyKeys.members(company.companyId)
   const members = useQuery({ queryKey: key, queryFn: () => fetchMembers(company.companyId) })
+  const statusOf = useAccountStatus(company)
 
   // Zmena vlastnej roly alebo odchod mení aj zoznam mojich firiem.
   const refresh = () =>
@@ -99,6 +129,7 @@ function Members({ company, userId }: { company: Membership; userId: string }) {
                 {member.userId === userId && <span className="text-muted-foreground"> (vy)</span>}
               </p>
               {member.fullName && <p className="truncate text-sm text-muted-foreground">{member.email}</p>}
+              <AccountBadge status={statusOf(member.email)} />
             </div>
             {isAdmin ? (
               <>
@@ -143,6 +174,7 @@ function Invitations({ company }: { company: Membership }) {
   const queryClient = useQueryClient()
   const key = companyKeys.invitations(company.companyId)
   const invitations = useQuery({ queryKey: key, queryFn: () => fetchInvitations(company.companyId) })
+  const statusOf = useAccountStatus(company)
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<Role>('viewer')
 
@@ -187,13 +219,17 @@ function Invitations({ company }: { company: Membership }) {
         </p>
       )}
       <p className="mb-3 text-sm text-muted-foreground">
-        Pozvánka sa neposiela e-mailom. Pozvaný ju uvidí po prihlásení do RigTracku účtom s touto adresou.
+        Pozvánka sa neposiela e-mailom. Pozvaný ju uvidí po prihlásení do RigTracku účtom s touto adresou. Pri každej pozvánke vidíte,
+        či si človek už účet vytvoril.
       </p>
       {invitations.data && invitations.data.length > 0 && (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {invitations.data.map((invitation) => (
             <li key={invitation.id} className="flex items-center gap-3 px-4 py-3">
-              <span className="min-w-0 flex-1 truncate">{invitation.email}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">{invitation.email}</span>
+                <AccountBadge status={statusOf(invitation.email)} invitation />
+              </span>
               <span className="text-sm text-muted-foreground">{ROLE_LABELS[invitation.role]}</span>
               <Button
                 variant="ghost"
@@ -239,7 +275,7 @@ export function SettingsPage() {
   const user = session!.user
   const company = active!
 
-  const isAdmin = company.role === 'admin'
+  const isAdmin = isAdminRole(company.role)
   const tabs = [
     { id: 'company', label: 'Firma', shown: true },
     { id: 'members', label: 'Členovia', shown: true },

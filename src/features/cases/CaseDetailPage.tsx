@@ -12,6 +12,7 @@ import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { StatusBadge } from '@/features/equipment/StatusBadge'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
+import { OwnerLink } from '@/features/staff/OwnerLink'
 import { UsageHistory } from '@/features/usage/UsageHistory'
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { describeSpot } from '@/features/warehouse/model'
@@ -115,6 +116,7 @@ export function CaseDetailPage() {
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight break-words">{current.name}</h1>
           {info.length > 0 && <p className="mt-1 text-sm text-muted-foreground">{info.join(' · ')}</p>}
+          <OwnerLink companyId={companyId} staffId={current.ownerStaffId} className="mt-1" />
           {spot && (
             <Link to={`/warehouse?spot=${spot.id}`} className="mt-1 inline-flex items-center gap-1 text-sm text-accent hover:underline">
               <MapPin className="size-4" aria-hidden />

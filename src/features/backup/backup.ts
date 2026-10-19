@@ -81,6 +81,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'staff', sheet: 'Zamestnanci' },
       { table: 'staff_unavailability', sheet: 'Kedy nemôžu' },
       { table: 'member_devices', sheet: 'Zariadenia členov' },
+      { table: 'wifi_networks', sheet: 'Wi-Fi siete' },
     ],
   },
   {

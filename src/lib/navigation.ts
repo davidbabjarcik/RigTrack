@@ -19,6 +19,7 @@ import {
   Ticket,
   Wallet,
   Warehouse,
+  Wifi,
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
@@ -48,6 +49,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'stage', permission: 'events.view', label: 'Pódium', to: '/stage', icon: LayoutGrid, description: 'Kalkulačka pódia: dosky, nohy, plachty, zábradlie' },
   { id: 'delay', label: 'Delay kalkulačka', to: '/delay', icon: AudioWaveform, description: 'Suby: cardioid, end-fire, rad, arc, delay veža' },
   { id: 'service', permission: 'service.view', label: 'Servis', to: '/service', icon: Wrench, description: 'Servisné záznamy' },
+  { id: 'networks', label: 'Siete', to: '/networks', icon: Wifi, description: 'Wi-Fi siete, routery, IP a MAC adresy' },
   { id: 'technicians', permission: 'service.view', label: 'Servisní technici', to: '/technicians', icon: HardHat, description: 'Kto opravuje techniku a autá' },
   { id: 'calendar', label: 'Kalendár', to: '/calendar', icon: CalendarDays, description: 'Kalendárový prehľad' },
   { id: 'todos', permission: 'tasks.view', label: 'Úlohy', to: '/todos', icon: ListTodo, description: 'Zoznam úloh' },
@@ -64,9 +66,10 @@ export function visibleNavItems(member: Permitted | null) {
   return NAV_ITEMS.filter((item) => !member || !item.permission || can(member, item.permission))
 }
 
-/** Počet položiek v spodnej lište na mobile (piata je vždy „Viac“). */
-export const PINNED_COUNT = 4
-export const DEFAULT_PINNED = ['dashboard', 'equipment', 'events', 'loans']
+/** Spodná lišta na mobile: Prehľad je vždy prvý, potom PINNED_COUNT vybraných modulov a nakoniec „Viac“. */
+export const FIXED_PINNED = 'dashboard'
+export const PINNED_COUNT = 3
+export const DEFAULT_PINNED = ['equipment', 'events', 'loans']
 
 const STORAGE_KEY = 'rigtrack:pinned-nav'
 
@@ -75,7 +78,7 @@ function isValidPinned(value: unknown): value is string[] {
     Array.isArray(value) &&
     value.length === PINNED_COUNT &&
     new Set(value).size === PINNED_COUNT &&
-    value.every((id) => NAV_ITEMS.some((item) => item.id === id))
+    value.every((id) => id !== FIXED_PINNED && NAV_ITEMS.some((item) => item.id === id))
   )
 }
 
@@ -83,7 +86,13 @@ function isValidPinned(value: unknown): value is string[] {
 export function loadPinned(): string[] {
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
-    return isValidPinned(parsed) ? parsed : DEFAULT_PINNED
+    if (isValidPinned(parsed)) return parsed
+    // Staré nastavenie (4 položky, Prehľad medzi nimi): Prehľad je teraz pevný, ostatné sa ponechajú.
+    if (Array.isArray(parsed) && parsed.length === 4) {
+      const kept = parsed.filter((id) => id !== FIXED_PINNED).slice(0, PINNED_COUNT)
+      if (isValidPinned(kept)) return kept
+    }
+    return DEFAULT_PINNED
   } catch {
     return DEFAULT_PINNED
   }

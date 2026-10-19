@@ -25,6 +25,8 @@ export type Case = {
   lastCheck: CaseCheck | null
   /** Fotka case; prázdna = bez fotky. */
   photoPath: string
+  /** Karta zamestnanca, ktorému case / rack patrí; prázdne = firma. */
+  ownerStaffId?: string | null
 }
 
 export type CaseCheck = {
@@ -50,6 +52,8 @@ export const caseSchema = z.object({
   lengthCm: size(10000),
   depthCm: size(10000),
   note: text(2000),
+  /** Vlastník: prázdne = firma, id karty zamestnanca, alebo „m-<id člena>“. */
+  owner: z.string().optional(),
 })
 
 /** „120 × 60 × 40 cm“ z rozmerov, ktoré sú vyplnené; bez rozmerov prázdny text. */

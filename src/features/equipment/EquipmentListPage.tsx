@@ -27,6 +27,7 @@ import {
 import { colorOf, COLOR_CLASSES } from './categoryColors'
 import { PhotoThumb } from './PhotoThumb'
 import { StatusBadge } from './StatusBadge'
+import { useStaff } from '@/features/staff/useStaff'
 import { useEquipmentLookups } from './useEquipmentLookups'
 import { usePhotoThumbs } from './usePhotoThumbs'
 
@@ -47,6 +48,8 @@ export function EquipmentListPage() {
 
   const set = (patch: Partial<EquipmentFilter>) => setFilter((current) => ({ ...current, ...patch }))
   const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name
+  const staff = useStaff(company.companyId)
+  const ownerName = (id: string | null | undefined) => (id ? staff.people.find((person) => person.staffId === id)?.name : undefined)
   const today = todayIso()
   const serviceRecords = useServiceRecords(company.companyId).data ?? []
   const inService = piecesInService(serviceRecords)
@@ -69,9 +72,9 @@ export function EquipmentListPage() {
               <FileSpreadsheet className="size-4" aria-hidden />
               Excel
             </LinkButton>
-            <LinkButton to="/equipment/network" variant="outline">
+            <LinkButton to="/networks" variant="outline">
               <Network className="size-4" aria-hidden />
-              IP / MAC
+              Siete / IP
             </LinkButton>
             {canWrite && (
               <>
@@ -166,6 +169,7 @@ export function EquipmentListPage() {
               [item.manufacturer, item.model].filter(Boolean).join(' '),
               ...describeAttributes(item),
               categoryName(item.categoryId),
+              ownerName(item.ownerStaffId) && `patrí: ${ownerName(item.ownerStaffId)}`,
               item.inventoryNumber && `inv. č. ${item.inventoryNumber}`,
               item.quantity !== 1 && `${item.quantity} ks`,
             ].filter(Boolean)

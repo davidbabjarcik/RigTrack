@@ -10,7 +10,8 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Field } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
 import {
-  alignment,
+  alignWithSubDelay,
+  compensateOwnDelay,
   arcDelay,
   cardioid,
   endFire,
@@ -199,29 +200,56 @@ function ResponseTable({ target, response }: { target: number; response: (freque
   )
 }
 
-function SubTable({ subs }: { subs: SubDelay[] }) {
+function SubTable({ subs, ownMs }: { subs: SubDelay[]; ownMs: number }) {
+  // Vlastný delay jednotlivých subov (napr. pri mixe hornových a priamych); prázdne = podľa zvoleného subu.
+  const [own, setOwn] = useState<Record<string, string>>({})
+  const ownOf = (label: string) => {
+    const typed = Number((own[label] ?? '').replace(',', '.'))
+    return (own[label] ?? '').trim() !== '' && Number.isFinite(typed) && typed >= 0 ? typed : ownMs
+  }
+  const dsp = compensateOwnDelay(subs.map((sub) => ({ ms: sub.ms, ownMs: ownOf(sub.label) })))
+  const mixed = subs.some((sub) => ownOf(sub.label) !== ownOf(subs[0].label))
   return (
     <div className="overflow-x-auto rounded-xl border bg-surface">
       <table className="w-full text-sm tabular-nums">
         <thead className="text-muted-foreground">
           <tr className="border-b text-left">
             <th className="px-4 py-2 font-medium">Sub</th>
-            <th className="px-4 py-2 text-right font-medium">Delay</th>
-            <th className="px-4 py-2 text-right font-medium">Vzorky 48 kHz</th>
+            <th className="px-4 py-2 text-right font-medium">Delay z polohy</th>
+            <th className="px-4 py-2 font-medium">Vlastný delay subu (ms)</th>
+            <th className="px-4 py-2 text-right font-medium">Nastaviť v procesore</th>
             <th className="px-4 py-2 font-medium">Polarita</th>
           </tr>
         </thead>
         <tbody className="divide-y">
-          {subs.map((sub) => (
+          {subs.map((sub, index) => (
             <tr key={sub.label}>
               <td className="px-4 py-2">{sub.label}</td>
-              <td className="px-4 py-2 text-right font-medium">{fmt(sub.ms)} ms</td>
-              <td className="px-4 py-2 text-right">{samples(sub.ms)}</td>
+              <td className="px-4 py-2 text-right">{fmt(sub.ms)} ms</td>
+              <td className="px-4 py-1">
+                <input
+                  inputMode="decimal"
+                  aria-label={`Vlastný delay: ${sub.label}`}
+                  placeholder={fmt(ownMs)}
+                  className="h-9 w-20 rounded-lg border bg-surface px-2 text-right"
+                  value={own[sub.label] ?? ''}
+                  onChange={(event) => setOwn((current) => ({ ...current, [sub.label]: event.target.value }))}
+                />
+              </td>
+              <td className="px-4 py-2 text-right font-medium">
+                {fmt(dsp[index])} ms
+                <span className="block text-xs font-normal text-muted-foreground">{samples(dsp[index])} vz. @ 48 kHz</span>
+              </td>
               <td className={cn('px-4 py-2', sub.inverted && 'font-medium text-amber-700 dark:text-amber-300')}>{sub.inverted ? 'otočená (−)' : 'normálna (+)'}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      <p className="border-t px-4 py-2 text-xs text-muted-foreground">
+        {mixed
+          ? 'Suby majú rôzny vlastný delay (napr. hornové a priame): v procesore nastavte stĺpec „Nastaviť v procesore“, aby zvuk prišiel naraz.'
+          : 'Všetky suby majú rovnaký vlastný delay, takže sa vyruší. Pri mixe rôznych subov (napr. slimák a priamy) zadajte vlastný delay pri každom.'}
+      </p>
     </div>
   )
 }
@@ -250,6 +278,8 @@ export function DelayPage() {
   const [boxW, setBoxW] = useState<number | null>(null)
   const [boxD, setBoxD] = useState<number | null>(null)
   const [boxH, setBoxH] = useState<number | null>(null)
+  // Vlastné oneskorenie zvoleného subu (hornový / slimák), ms.
+  const [ownMs, setOwnMs] = useState(0)
   const box: SubBox | null = boxW && boxD ? { name: subChoices.find((item) => item.id === subId)?.name ?? 'Vlastné rozmery', widthCm: boxW, depthCm: boxD, heightCm: boxH } : null
   const [layout, setLayout] = useState<CardioidLayout>('behind')
   const [gap, setGap] = useState(0)
@@ -410,7 +440,7 @@ export function DelayPage() {
         )}
       </div>
 
-      {mode !== 'align' && mode !== 'tower' && (
+      {mode !== 'tower' && (
         <CollapsibleSection id="delay.sub" title="Sub" summary={box ? `${box.name} · ${fmt(box.widthCm, 0)}×${fmt(box.depthCm, 0)} cm` : 'bez rozmerov'}>
         <div className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-4">
           <SelectField
@@ -425,6 +455,7 @@ export function DelayPage() {
               setBoxW(width)
               setBoxD(depth)
               setBoxH(item?.attributes.boxHeightCm ?? null)
+              setOwnMs(item?.attributes.subDelayMs ?? 0)
               if (width && depth && mode === 'cardioid') setSpacing(round(cardioidSpacing({ depthCm: depth }, layout, gap), 3))
             }}
           >
@@ -441,6 +472,16 @@ export function DelayPage() {
           <NumberInput key={`w-${subId}`} label="Šírka boxu" unit="cm" value={boxW ?? 0} onChange={(value) => setBoxW(value || null)} step={1} max={500} />
           <NumberInput key={`d-${subId}`} label="Hĺbka boxu" unit="cm" value={boxD ?? 0} onChange={(value) => setBoxD(value || null)} step={1} max={500} />
           <NumberInput key={`h-${subId}`} label="Výška boxu" unit="cm" value={boxH ?? 0} onChange={(value) => setBoxH(value || null)} step={1} max={500} />
+          <NumberInput
+            key={`o-${subId}`}
+            label="Vlastný delay subu"
+            unit="ms"
+            value={ownMs}
+            onChange={setOwnMs}
+            step={0.1}
+            max={200}
+            hint="Hornový sub / slimák hrá neskôr (dlhšia cesta zvuku). Údaj výrobcu alebo z merania."
+          />
           <p className="self-end text-xs text-muted-foreground sm:pb-3">
             {subChoices.length === 0
               ? 'Suby z techniky sa ukážu, keď majú typ Subwoofer. Rozmery boxu sa zadávajú pri technike.'
@@ -452,12 +493,12 @@ export function DelayPage() {
 
       {mode === 'align' &&
         (() => {
-          const result = alignment(toTops, toSubs, temp)
+          const result = alignWithSubDelay(toTops, toSubs, ownMs, temp)
           return (
             <Result
-              title={result.delayed === null ? 'Zdroje sú rovnako ďaleko' : result.delayed === 'a' ? 'Oneskorte TOPY o' : 'Oneskorte SUBY o'}
+              title={result.delayed === null ? 'Topy a suby prídu naraz' : result.delayed === 'tops' ? 'Oneskorte TOPY o' : 'Oneskorte SUBY o'}
               ms={result.ms}
-              note="Výpočet platí pre zvolené miesto počúvania. Doladiť sa dá meraním (napr. Smaart) okolo crossoveru; pri zmene teploty sa čas mierne mení."
+              note={`${ownMs > 0 ? `Započítaný vlastný delay subu ${fmt(ownMs)} ms. ` : ''}Výpočet platí pre zvolené miesto počúvania. Doladiť sa dá meraním (napr. Smaart) okolo crossoveru; pri zmene teploty sa čas mierne mení.`}
             />
           )
         })()}
@@ -493,7 +534,7 @@ export function DelayPage() {
                 </p>
               )}
               <Diagram subs={subs} box={box} />
-              <SubTable subs={subs} />
+              <SubTable subs={subs} ownMs={ownMs} />
               <ResponseTable target={target} response={(frequency) => cardioidResponse(frontCount, backCount, spacing, frequency, temp)} />
               <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">
                 Pri tomto rozostupe pomáhajú zadné suby dopredu najviac okolo {fmt(speedOfSound(temp) / (4 * spacing), 0)} Hz a nad{' '}
@@ -525,7 +566,7 @@ export function DelayPage() {
                 </Warning>
               )}
               <Diagram subs={subs} box={box} />
-              <SubTable subs={subs} />
+              <SubTable subs={subs} ownMs={ownMs} />
               <ResponseTable target={target} response={(frequency) => endFireResponse(rows, spacing, frequency, temp)} />
               <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">
                 Všetky rady hrajú dopredu. Zadný rad hrá bez delay, každý rad pred ním sa oneskorí o rozostup od zadného radu. Dopredu sa sčítajú,
@@ -595,7 +636,7 @@ export function DelayPage() {
                 </p>
               )}
               <Diagram subs={subs} box={box} />
-              <SubTable subs={subs} />
+              <SubTable subs={subs} ownMs={ownMs} />
               <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">
                 Suby stoja v rovnom rade; delay ich „ohne“ do oblúka s polomerom {fmt(radius)} m a uhlom {fmt(angle, 0)}°. Stred hrá bez delay, ku krajom
                 delay rastie, akoby boli suby fyzicky vzadu na oblúku (nákres ukazuje tento virtuálny oblúk). Rovnaké čísla zadajte symetricky vľavo aj

@@ -22,7 +22,7 @@ export function CollapsibleSection({ id, title, actions, summary, className, chi
   return (
     <section className={cn('mb-6', className)}>
       <div className={cn('flex flex-wrap items-center justify-between gap-x-3 gap-y-2', !collapsed && 'mb-2')}>
-        <h2 className="min-w-0 text-sm font-medium text-muted-foreground">
+        <h2 className="min-w-0 flex-1 text-sm font-medium text-muted-foreground">
           <button
             type="button"
             className="-mx-1 inline-flex max-w-full items-center gap-1 rounded px-1 py-0.5 text-left hover:text-foreground"

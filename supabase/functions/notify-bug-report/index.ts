@@ -50,7 +50,7 @@ Deno.serve(async (request) => {
 
   const developers = await admin.from('app_developers').select('user_id')
   const admins = report.company_id
-    ? await admin.from('company_members').select('user_id').eq('company_id', report.company_id).eq('role', 'admin')
+    ? await admin.from('company_members').select('user_id').eq('company_id', report.company_id).in('role', ['admin', 'ceo'])
     : { data: [] as { user_id: string }[] }
   const ids = [...new Set([...(developers.data ?? []), ...(admins.data ?? [])].map((row) => row.user_id))]
   const { data: profiles } = await admin.from('profiles').select('email').in('id', ids)

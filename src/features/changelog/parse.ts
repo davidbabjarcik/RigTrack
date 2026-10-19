@@ -65,3 +65,17 @@ export function parseInline(text: string): InlinePart[] {
   if (index < text.length) parts.push({ kind: 'text', text: text.slice(index) })
   return parts
 }
+
+/** Rovnaká verzia? „1.11“ = „1.11.0“, ale „1.1“ ≠ „1.11“. */
+export function sameVersion(a: string, b: string) {
+  const parts = (version: string) => version.trim().split('.').map(Number)
+  const left = parts(a)
+  const right = parts(b)
+  const length = Math.max(left.length, right.length)
+  return Array.from({ length }, (_, index) => (left[index] ?? 0) === (right[index] ?? 0)).every(Boolean)
+}
+
+/** Text vydania pre používateľa: bez technických riadkov o migráciách databázy. */
+export function forUsers(release: Release): Release {
+  return { ...release, blocks: release.blocks.filter((block) => !(block.kind === 'text' && /^Nové migrácie/i.test(block.text))) }
+}

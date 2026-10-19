@@ -16,7 +16,8 @@ import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { deleteEquipment, equipmentKeys, fetchEquipment } from './api'
 import { EquipmentPhoto } from './EquipmentPhoto'
-import { describeAttributes, describeUnitIds, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
+import { OwnerLink } from '@/features/staff/OwnerLink'
+import { describeAttributes, describeUnitIds, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
 import { OperatingHours } from './OperatingHours'
 import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
@@ -76,8 +77,11 @@ export function EquipmentDetailPage() {
         {service.state === 'soon' && ' · do 30 dní'}
       </span>
     )
+  // Káble a spotrebný materiál sa neservisujú a nemajú sieť.
+  const simple = isSimpleKind(equipment.kind, categories.find((c) => c.id === equipment.categoryId)?.name ?? '')
   const rows: [string, ReactNode][] = [
     ['Druh', [KIND_LABELS[equipment.kind], ...describeAttributes(equipment)].join(' · ')],
+    ['Vlastník', equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
     ['Kategória', categories.find((c) => c.id === equipment.categoryId)?.name],
     ['DMX módy', equipment.attributes.dmxModes?.map((mode) => `${mode.name} ${mode.channels} ch`).join(' · ')],
     ['Umiestnenie', locations.find((l) => l.id === equipment.locationId)?.name],
@@ -113,7 +117,7 @@ export function EquipmentDetailPage() {
     ['Sériové číslo', equipment.serialNumber],
     ['Inventárne číslo', equipment.inventoryNumber],
     ['MAC adresa', equipment.macAddress],
-    ['IP adresa', equipment.ipAddress],
+    ['IP adresa', equipment.ipAddress && (equipment.attributes.ipPrefix ? `${equipment.ipAddress}/${equipment.attributes.ipPrefix}` : equipment.ipAddress)],
     ['Posledný servis', equipment.lastServiceOn && formatDate(equipment.lastServiceOn)],
     ['Ďalší servis', serviceText],
     ['Naposledy upravené', new Date(equipment.updatedAt).toLocaleString('sk-SK', { dateStyle: 'medium', timeStyle: 'short' })],
@@ -166,20 +170,23 @@ export function EquipmentDetailPage() {
         canEdit={can(company, 'equipment.edit')}
       />
 
+      {/* Prázdne údaje sa neukazujú – kábel tak nemá MAC, IP ani servis, reprák DMX módy. */}
       <dl className="divide-y overflow-hidden rounded-xl border bg-surface">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex justify-between gap-4 px-4 py-3">
-            <dt className="text-sm text-muted-foreground">{label}</dt>
-            <dd className="text-right font-medium break-words">{value || '—'}</dd>
-          </div>
-        ))}
+        {rows
+          .filter(([label, value]) => (value !== undefined && value !== null && value !== '' && value !== false) || label === 'Počet kusov')
+          .map(([label, value]) => (
+            <div key={label} className="flex justify-between gap-4 px-4 py-3">
+              <dt className="text-sm text-muted-foreground">{label}</dt>
+              <dd className="text-right font-medium break-words">{value}</dd>
+            </div>
+          ))}
       </dl>
 
       {equipment.trackUnits && equipment.quantity > 1 && <UnitsOverview companyId={company.companyId} equipment={equipment} />}
 
-      <OperatingHours companyId={company.companyId} equipment={equipment} canEdit={can(company, 'equipment.edit')} />
+      {!simple && <OperatingHours companyId={company.companyId} equipment={equipment} canEdit={can(company, 'equipment.edit')} />}
 
-      <EquipmentServiceHistory companyId={company.companyId} equipmentId={equipment.id} canEdit={can(company, 'service.edit')} />
+      {!simple && <EquipmentServiceHistory companyId={company.companyId} equipmentId={equipment.id} canEdit={can(company, 'service.edit')} />}
 
       <UsageHistory companyId={company.companyId} equipmentIds={[equipment.id]} />
 

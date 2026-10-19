@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { createBrowserRouter, type RouteObject } from 'react-router-dom'
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom'
 import { BackendRequired } from '@/components/feedback/BackendRequired'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { CenteredLayout } from '@/components/layout/CenteredLayout'
@@ -34,7 +34,7 @@ const equipmentList = lazyPage(() => import('@/features/equipment/EquipmentListP
 const equipmentDetail = lazyPage(() => import('@/features/equipment/EquipmentDetailPage').then((m) => m.EquipmentDetailPage), 'equipment.view')
 const equipmentForm = lazyPage(() => import('@/features/equipment/EquipmentFormPage').then((m) => m.EquipmentFormPage), 'equipment.view')
 const equipmentExcel = lazyPage(() => import('@/features/equipment/EquipmentExcelPage').then((m) => m.EquipmentExcelPage), 'equipment.view')
-const network = lazyPage(() => import('@/features/network/NetworkPage').then((m) => m.NetworkPage), 'equipment.view')
+const networks = lazyPage(() => import('@/features/networks/NetworksPage').then((m) => m.NetworksPage))
 const cableSet = lazyPage(() => import('@/features/equipment/CableSetPage').then((m) => m.CableSetPage), 'equipment.view')
 const casesList = lazyPage(() => import('@/features/cases/CasesListPage').then((m) => m.CasesListPage), 'cases.view')
 const caseDetail = lazyPage(() => import('@/features/cases/CaseDetailPage').then((m) => m.CaseDetailPage), 'cases.view')
@@ -114,7 +114,9 @@ export const routes: RouteObject[] = [
               { path: 'equipment', lazy: equipmentList },
               { path: 'equipment/new', lazy: equipmentForm },
               { path: 'equipment/new-cables', lazy: cableSet },
-              { path: 'equipment/network', lazy: network },
+              // Pôvodná stránka IP / MAC je teraz v Sieťach.
+              { path: 'equipment/network', element: <Navigate to="/networks" replace /> },
+              { path: 'networks', lazy: networks },
               { path: 'equipment/excel', lazy: equipmentExcel },
               { path: 'equipment/:id', lazy: equipmentDetail },
               { path: 'equipment/:id/edit', lazy: equipmentForm },

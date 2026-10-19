@@ -202,3 +202,25 @@ export function endFireResponse(rows: number, spacingM: number, frequencyHz: num
 
 /** Frekvencie, pre ktoré ukazujeme tabuľku odozvy. */
 export const RESPONSE_FREQUENCIES = [31.5, 40, 50, 63, 80, 100, 125]
+
+/**
+ * Vlastné oneskorenie subov (hornový sub / „slimák“ hrá neskôr): čo nastaviť v procesore, aby zvuk
+ * zo všetkých subov prišiel tak, ako vyšlo vo výpočte. Sub s väčším vlastným oneskorením dostane menej;
+ * celé sa to posunie tak, aby nikde nevyšlo záporné číslo.
+ */
+export function compensateOwnDelay(subs: { ms: number; ownMs: number }[]) {
+  if (subs.length === 0) return []
+  const shift = Math.max(0, ...subs.map((sub) => sub.ownMs - sub.ms))
+  return subs.map((sub) => sub.ms + shift - sub.ownMs)
+}
+
+/**
+ * Zarovnanie topov a subov so započítaním vlastného oneskorenia subu.
+ * Vráti, ktorý zdroj oneskoriť a o koľko ms (null = netreba).
+ */
+export function alignWithSubDelay(toTops: number, toSubs: number, subOwnMs: number, tempC: number) {
+  // Kladné = suby prídu neskôr ako topy.
+  const subsLate = delayMs(toSubs - toTops, tempC) + subOwnMs
+  if (Math.abs(subsLate) < 0.005) return { delayed: null, ms: 0 }
+  return subsLate > 0 ? { delayed: 'tops' as const, ms: subsLate } : { delayed: 'subs' as const, ms: -subsLate }
+}

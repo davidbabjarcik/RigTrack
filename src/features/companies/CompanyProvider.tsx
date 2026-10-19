@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { isAdminRole } from '@/lib/roles'
 import { useMemo, useState, type ReactNode } from 'react'
 import { useAuth } from '@/features/auth/auth-context'
 import { fetchMyPermissions, permissionKeys } from '@/features/permissions/api'
@@ -34,7 +35,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const permissions = useQuery({
     queryKey: permissionKeys.mine(chosen?.companyId ?? ''),
     queryFn: () => fetchMyPermissions(chosen!.companyId),
-    enabled: Boolean(chosen) && chosen?.role !== 'admin',
+    enabled: Boolean(chosen) && !isAdminRole(chosen?.role),
   })
   const active = useMemo(
     () => (chosen && permissions.data ? { ...chosen, permissions: new Set(permissions.data) } : chosen),

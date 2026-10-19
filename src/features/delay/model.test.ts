@@ -89,3 +89,22 @@ describe('directional response', () => {
     expect(endFireResponse(3, 1, quarter, 20).rearDb).toBeCloseTo(0, 1)
   })
 })
+
+describe('own sub delay', () => {
+  it('compensates horn-loaded subs in a mixed array', async () => {
+    const { compensateOwnDelay } = await import('./model')
+    // dva rovnaké suby: vlastný delay sa vyruší
+    expect(compensateOwnDelay([{ ms: 0, ownMs: 5 }, { ms: 2, ownMs: 5 }])).toEqual([0, 2])
+    // hornový (5 ms) a priamy (0 ms): priamy musí počkať
+    expect(compensateOwnDelay([{ ms: 0, ownMs: 5 }, { ms: 0, ownMs: 0 }])).toEqual([0, 5])
+  })
+
+  it('includes the sub latency when aligning with tops', async () => {
+    const { alignWithSubDelay, delayMs } = await import('./model')
+    // suby bližšie o 1,5 m, ale slimák má 6 ms → topy treba oneskoriť
+    const result = alignWithSubDelay(20, 18.5, 6, 20)
+    expect(result.delayed).toBe('tops')
+    expect(result.ms).toBeCloseTo(6 - delayMs(1.5, 20))
+    expect(alignWithSubDelay(20, 18.5, 0, 20)).toEqual({ delayed: 'subs', ms: delayMs(1.5, 20) })
+  })
+})

@@ -2,7 +2,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { APP_VERSION } from '@/lib/version'
 import readme from '../../../README.md?raw'
-import { parseChangelog, parseInline } from './parse'
+import { forUsers, parseChangelog, parseInline, sameVersion } from './parse'
 
 function Inline({ text }: { text: string }) {
   return parseInline(text).map((part, index) =>
@@ -18,7 +18,7 @@ function Inline({ text }: { text: string }) {
   )
 }
 
-const releases = parseChangelog(readme)
+const releases = parseChangelog(readme).map(forUsers)
 
 /** Čo je nové v jednotlivých verziách (zo sekcie README „Čo je nové“). */
 export function ChangelogPage() {
@@ -37,7 +37,7 @@ export function ChangelogPage() {
             <h2 className="flex flex-wrap items-baseline gap-x-2">
               <span className="text-lg font-semibold">Verzia {release.version}</span>
               {release.date && <span className="text-sm text-muted-foreground">{release.date}</span>}
-              {APP_VERSION.startsWith(release.version) && (
+              {sameVersion(APP_VERSION, release.version) && (
                 <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">vaša verzia</span>
               )}
             </h2>

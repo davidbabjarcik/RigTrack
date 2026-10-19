@@ -97,3 +97,21 @@ export async function inviteMember(companyId: string, email: string, role: Role)
     .insert({ company_id: companyId, email: email.trim().toLowerCase(), role })
   if (error) throw error
 }
+
+export type AccountStatus = { email: string; userId: string | null; isMember: boolean; hasAccount: boolean; confirmed: boolean; lastSignInAt: string | null }
+
+export const accountStatusKey = (companyId: string) => ['company', companyId, 'account-status'] as const
+
+/** Kto z členov a pozvaných má účet, potvrdený e-mail a kedy sa naposledy prihlásil (len admin). */
+export async function fetchAccountStatus(companyId: string): Promise<AccountStatus[]> {
+  const { data, error } = await getSupabase().rpc('company_account_status', { _company: companyId })
+  if (error) throw error
+  return (data as { email: string; user_id: string | null; is_member: boolean; has_account: boolean; confirmed: boolean; last_sign_in_at: string | null }[]).map((row) => ({
+    email: row.email.toLowerCase(),
+    userId: row.user_id,
+    isMember: row.is_member,
+    hasAccount: row.has_account,
+    confirmed: row.confirmed,
+    lastSignInAt: row.last_sign_in_at,
+  }))
+}

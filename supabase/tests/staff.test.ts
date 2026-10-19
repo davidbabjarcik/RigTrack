@@ -20,13 +20,14 @@ beforeAll(async () => {
 })
 
 describe('staff', () => {
-  it('lets a member create and edit only their own card', async () => {
-    technikCard = (await t.as('technik', `insert into public.staff (company_id, member_id, position, phone) values ($1, $2, 'Osvetľovač', '+421 900') returning id`, [companyA, t.users.technik]))[0].id
+  it('gives every member a card that only they (and managers) can edit', async () => {
+    // Karta vznikne sama pri pridaní do firmy (0052).
+    technikCard = (await t.as('technik', 'select id from public.staff where member_id = $1', [t.users.technik]))[0].id
     await expect(t.as('technik', `insert into public.staff (company_id, member_id) values ($1, $2)`, [companyA, t.users.technik2])).rejects.toThrow(/row-level security/)
-    await t.as('technik', `update public.staff set phone = '+421 911' where id = $1`, [technikCard])
+    await t.as('technik', `update public.staff set position = 'Osvetľovač', phone = '+421 911' where id = $1`, [technikCard])
     expect(await t.as('technik2', `update public.staff set phone = 'x' where id = $1 returning id`, [technikCard])).toEqual([])
-    expect(await t.as('technik2', 'select position, phone from public.staff')).toEqual([{ position: 'Osvetľovač', phone: '+421 911' }])
-    expect(await t.as('outsider', 'select 1 from public.staff')).toEqual([])
+    expect(await t.as('technik2', 'select position, phone from public.staff where id = $1', [technikCard])).toEqual([{ position: 'Osvetľovač', phone: '+421 911' }])
+    expect(await t.as('outsider', 'select 1 from public.staff where company_id = $1', [companyA])).toEqual([])
   })
 
   it('lets managers add part-timers without an account, who need a name', async () => {

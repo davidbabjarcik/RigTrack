@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { isAdminRole } from '@/lib/roles'
 import { Bug, ChevronDown, ExternalLink, Image, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -126,7 +127,7 @@ export function BugsPage() {
   if (reports.isError) return <ErrorBlock message="Hlásenia sa nepodarilo načítať. Ak ste ešte nespustili migráciu 0048, urobte to." onRetry={() => void reports.refetch()} />
 
   const isDeveloper = developer.data === true
-  const canManage = (report: BugReport) => isDeveloper || (report.companyId !== null && company.memberships.some((m) => m.companyId === report.companyId && m.role === 'admin'))
+  const canManage = (report: BugReport) => isDeveloper || (report.companyId !== null && company.memberships.some((m) => m.companyId === report.companyId && isAdminRole(m.role)))
   const companyName = (id: string | null) => (id ? (company.memberships.find((m) => m.companyId === id)?.companyName ?? null) : null)
   const visible = sortReports(reports.data).filter((report) =>
     filter === 'open' ? report.status === 'new' || report.status === 'in_progress' : filter ? report.status === filter : true,

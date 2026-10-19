@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { SelectField } from '@/components/ui/field'
 import type { Member } from '@/features/companies/api'
-import { ROLE_LABELS } from '@/lib/roles'
+import { isAdminRole, ROLE_LABELS } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 import { fetchPermissionOverrides, permissionKeys, setMemberPermission, setRolePermission } from './api'
 import {
@@ -37,7 +37,7 @@ export function PermissionsSettings({ companyId, members }: Props) {
 
   const roles = overrides.data?.roles ?? []
   const memberOverrides = overrides.data?.members ?? []
-  const adjustable = members.filter((member) => member.role !== 'admin')
+  const adjustable = members.filter((member) => !isAdminRole(member.role))
   const selected = adjustable.find((member) => member.userId === memberId)
   const changedRoles = roles.length
   const exceptionsOf = (userId: string) => memberOverrides.filter((item) => item.userId === userId).length

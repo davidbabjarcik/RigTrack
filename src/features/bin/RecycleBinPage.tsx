@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { isAdminRole } from '@/lib/roles'
 import { FileSpreadsheet, RotateCcw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -15,7 +16,7 @@ import { BIN_DAYS, BIN_EXPORT_COLUMNS, BIN_KIND_LABELS, BIN_KINDS, binExportRow,
 export function RecycleBinPage() {
   const company = useCompany().active!
   const companyId = company.companyId
-  const isAdmin = company.role === 'admin'
+  const isAdmin = isAdminRole(company.role)
   const queryClient = useQueryClient()
   const [kind, setKind] = useState<BinKind | ''>('')
 

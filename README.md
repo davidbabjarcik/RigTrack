@@ -1,6 +1,6 @@
 # RigTrack
 
-**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.11.0**
+**Evidencia techniky, cases, výpožičiek a eventov pre event / AV firmy.** · Verzia **1.12.0**
 
 RigTrack je webová aplikácia (PWA), ktorá drží na jednom mieste všetko, čo sa v požičovni a na akciách
 deje: technika a jej kusy, cases a sklad, výpožičky s listinami, eventy s posádkou a plánom nakladania,
@@ -20,6 +20,30 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 ---
 
 ## Čo je nové
+
+### 1.12 – 19. 10. 2026
+
+- **Siete** – nový modul: Wi-Fi siete firmy (napr. router ku každému mixu) s heslom, IP rozsahom, gateway,
+  IP správy, modelom routera a **DHCP** rozsahom; **QR kód na pripojenie** a načítanie siete z QR kódu;
+  prihlásenie do správy routera vidí len ten, kto smie upravovať techniku.
+- **Všetky IP a MAC adresy** techniky aj zariadení členov v jednej tabuľke, podľa sietí, s prefixom (/24),
+  DHCP, upozornením na rovnakú IP a návrhom voľnej IP (mimo DHCP rozsahu).
+- **Zariadenia členov** (mobil, notebook, iPad) nie sú technika: pri každom Wi-Fi siete s IP a MAC, dajú sa upraviť;
+  skladník a admin ich zapíšu aj za iného a vidia ich v karte zamestnanca.
+- **Kto má účet** – admin vidí pri členoch aj pozvánkach, či človek má účet, potvrdený e-mail a kedy sa naposledy prihlásil.
+- **Len na pozvánky** – účet si vytvorí len e-mail s pozvánkou (treba zapnúť hook v Supabase, pozri nižšie).
+- **Rola CEO** – rovnaké práva ako admin.
+- **Vlastná technika a cases / racky zamestnancov** – vlastník pri technike aj case, „Patrí: …“ v zozname a detaile.
+- **Karta zamestnanca** – každý člen ju má automaticky; zariadenia, vlastná technika, minulé eventy a pre admina /
+  vedúceho prehľad za rok: na koľkých eventoch bol a nebol, dni na akciách, role a zárobky.
+- **Technika podľa druhu** – zvuk, svetlo, stage, pódium, káble…: DMX módy len pri svetlách, káble a spotrebný
+  materiál bez siete a servisu, prázdne údaje sa v detaile neukazujú; IP s prefixom a voľba „IP z DHCP“.
+- **Delay kalkulačka** – vlastný delay subu (hornový / slimák) pri technike aj v kalkulačke, pri každom sube zvlášť
+  a čo nastaviť v procesore; započíta sa aj pri zarovnaní s topmi.
+- Klik na **RigTrack** vedie na Prehľad; v spodnej lište na mobile je **Prehľad vždy prvý**.
+- Opravené „vaša verzia“ v Čo je nové (1.1 vs 1.11); úprava techniky ukáže presný dôvod, ak sa nenačíta.
+
+Nové migrácie: `0052`, `0053` (spustiť samostatne pred `0054`), `0054`, `0055`, `0056`.
 
 ### 1.11 – 18. 10. 2026
 
@@ -207,8 +231,7 @@ Potrebné migrácie: do `0043`.
   háky, káble či viazačky sa rátajú len na počet.
 - Servisné intervaly a odčítanie prevádzkových hodín s pripomienkami, hranica „treba dokúpiť“.
 - Sada káblov naraz podľa dĺžok s farebným značením, cenník prenájmu za deň.
-- **IP / MAC tabuľka** zoradená podľa IP, hľadanie v ľubovoľnom zápise, upozornenie na rovnakú IP;
-  pod ňou zariadenia členov (mobily, notebooky, tablety).
+- **Siete** – Wi-Fi siete s heslom, QR kódom, routerom a DHCP; všetky IP / MAC adresy techniky aj zariadení členov.
 - **Rozmery boxu** reproboxov a subov (pre delay kalkulačku).
 - **Excel** – export a import techniky aj cases (hárok na kategóriu, hárok „Cases“, prázdna šablóna).
 - Pri každej technike história nákupov, servisu, výpožičiek a eventov.
@@ -285,6 +308,7 @@ Potrebné migrácie: do `0043`.
 - Logo firmy (pozadie sa odstráni, logo sa prispôsobí svetlému aj tmavému podkladu), kategórie s farbami,
   umiestnenia, šablóny cases, záložky **Nivtec**, **Balíky** a **Pripomienky**.
 - Svetlý / tmavý režim, **demo firma** s resetom, verzia aplikácie a **Čo je nové**.
+- Roly admin, **CEO**, skladník, technik, len na čítanie; **registrácia len na pozvánku**; stav účtov pri členoch.
 - **Moje zariadenia** (MAC adresy) a **zmazanie firmy** so všetkými údajmi a súbormi.
 
 ---
@@ -328,6 +352,13 @@ Aplikácia beží na `http://localhost:5173`. Bez databázy sa zobrazí iba kost
 4. Potvrdzovanie e-mailu (Authentication → Sign In / Providers → Email → Confirm email) nechaj **zapnuté** –
    pozvánky do firmy sa viažu na potvrdenú adresu.
 5. Skopíruj `.env.example` do `.env.local` a doplň Project URL a publishable kľúč.
+
+## Registrácia len na pozvánku
+
+Po migrácii `0056` zapni v Supabase **Authentication → Hooks → Before User Created → Postgres function →
+`public.hook_require_invitation`**. Potom si účet vytvorí len e-mail, ktorý má pozvánku do niektorej firmy
+(admin ju pridá v Nastaveniach → Členovia). Bez zapnutého hooku sa môže zaregistrovať ktokoľvek, len bez
+pozvánky neuvidí žiadnu firmu.
 
 ## Nahlasovanie chýb – e-maily
 

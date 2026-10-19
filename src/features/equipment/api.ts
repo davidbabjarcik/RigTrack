@@ -1,5 +1,6 @@
 import type { CategoryColor } from './categoryColors'
 import { getSupabase } from '@/lib/supabase/client'
+import { isMissingColumn } from '@/lib/supabase/errors'
 import {
   attributesFor,
   cableName,
@@ -27,6 +28,9 @@ export const equipmentKeys = {
 const COLUMNS =
   'id, name, kind, attributes, category_id, location_id, case_id, label_role, quantity, track_units, unit_ids, rental_price, min_quantity, manufacturer, model, serial_number, ' +
   'inventory_number, mac_address, ip_address, service_interval_months, last_service_on, hours_interval_months, operating_hours, hours_read_on, photo_path, status, note, updated_at'
+// Vlastník (0052). Bez migrácie stĺpec chýba – technika sa vtedy načíta bez neho, aby appka fungovala ďalej.
+const OWNER_COLUMN = ', owner_staff_id'
+let ownerColumn = OWNER_COLUMN
 
 type Row = {
   id: string
@@ -57,6 +61,7 @@ type Row = {
   status: EquipmentStatus
   note: string
   updated_at: string
+  owner_staff_id?: string | null
 }
 
 function fromRow(row: Row): Equipment {
@@ -89,6 +94,7 @@ function fromRow(row: Row): Equipment {
     status: row.status,
     note: row.note,
     updatedAt: row.updated_at,
+    ownerStaffId: row.owner_staff_id ?? null,
   }
 }
 
@@ -100,11 +106,15 @@ export async function fetchEquipmentList(companyId: string): Promise<Equipment[]
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await getSupabase()
       .from('equipment')
-      .select(COLUMNS)
+      .select(COLUMNS + ownerColumn)
       .eq('company_id', companyId)
       .order('name')
       .order('id')
       .range(from, from + PAGE - 1)
+    if (ownerColumn && isMissingColumn(error, 'owner_staff_id')) {
+      ownerColumn = ''
+      return fetchEquipmentList(companyId)
+    }
     if (error) throw error
     all.push(...(data as unknown as Row[]).map(fromRow))
     if (data.length < PAGE) return all
@@ -114,10 +124,14 @@ export async function fetchEquipmentList(companyId: string): Promise<Equipment[]
 export async function fetchEquipment(companyId: string, id: string): Promise<Equipment | null> {
   const { data, error } = await getSupabase()
     .from('equipment')
-    .select(COLUMNS)
+    .select(COLUMNS + ownerColumn)
     .eq('company_id', companyId)
     .eq('id', id)
     .maybeSingle()
+  if (ownerColumn && isMissingColumn(error, 'owner_staff_id')) {
+    ownerColumn = ''
+    return fetchEquipment(companyId, id)
+  }
   if (error) throw error
   return data ? fromRow(data as unknown as Row) : null
 }
@@ -173,7 +187,7 @@ type SaveArgs = {
 
 export async function saveEquipment({ companyId, id, values, categories, locations }: SaveArgs): Promise<string> {
   // Polia, na ktoré sa formulár pri danom druhu nepýta, sa vyprázdnia, aby po zmene druhu neostali staré hodnoty.
-  const simple = isSimpleKind(values.kind)
+  const simple = isSimpleKind(values.kind, values.category)
   const fields = {
     name: values.name,
     kind: values.kind,
@@ -198,6 +212,8 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     rental_price: values.rentalPrice ?? null,
     status: values.status,
     note: values.note,
+    // Vlastník sa posiela len keď je zadaný alebo sa mení, aby uloženie fungovalo aj bez migrácie 0052.
+    ...(values.owner !== undefined && (values.owner !== '' || ownerColumn) ? { owner_staff_id: await resolveOwner(companyId, values.owner) } : {}),
   }
   const table = getSupabase().from('equipment')
   const { data, error } = id
@@ -205,6 +221,14 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     : await table.insert({ ...fields, company_id: companyId }).select('id').single()
   if (error) throw error
   return (data as { id: string }).id
+}
+
+/** „m-<id člena>“ = člen bez karty zamestnanca: kartu najprv založí. Prázdne = firma. */
+export async function resolveOwner(companyId: string, owner: string) {
+  if (!owner) return null
+  if (!owner.startsWith('m-')) return owner
+  const { saveStaff } = await import('@/features/staff/api')
+  return saveStaff(companyId, null, owner.slice(2), { name: '', position: '', phone: '', email: '', skills: '', note: '', active: true })
 }
 
 type CableSetArgs = { companyId: string; values: CableSetValues; categories: Lookup[]; locations: Lookup[] }

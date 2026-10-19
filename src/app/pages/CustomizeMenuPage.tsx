@@ -1,22 +1,23 @@
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
-import { NAV_ITEMS, PINNED_COUNT } from '@/lib/navigation'
+import { FIXED_PINNED, NAV_ITEMS, PINNED_COUNT } from '@/lib/navigation'
 import { usePinnedNav } from '@/lib/usePinnedNav'
 
 export function CustomizeMenuPage() {
   const { pinned, setPinned, reset } = usePinnedNav()
 
-  // Lišta má vždy presne PINNED_COUNT položiek: nová položka nahradí najstaršiu vybranú.
+  // Lišta má vždy presne PINNED_COUNT vybraných položiek: nová nahradí najstaršiu vybranú.
   function toggle(id: string) {
     if (pinned.includes(id)) return
     setPinned([...pinned.slice(1), id])
   }
+  const fixed = NAV_ITEMS.find((item) => item.id === FIXED_PINNED)!
 
   return (
     <>
       <PageHeader
         title="Prispôsobiť lištu"
-        description={`Vyberte ${PINNED_COUNT} moduly pre spodnú lištu. Nastavenie platí len na tomto zariadení.`}
+        description={`Prvý je vždy ${fixed.label}, k nemu vyberte ${PINNED_COUNT} moduly. Nastavenie platí len na tomto zariadení.`}
         action={
           <Button variant="outline" size="sm" onClick={reset}>
             Obnoviť
@@ -24,7 +25,7 @@ export function CustomizeMenuPage() {
         }
       />
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter((item) => item.id !== FIXED_PINNED).map((item) => {
           const checked = pinned.includes(item.id)
           return (
             <li key={item.id}>

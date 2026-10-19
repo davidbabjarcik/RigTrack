@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useId, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { asOptionalNumber, type Lookup } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { can } from '@/lib/permissions'
+import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { saveCase } from './api'
 import { caseSchema, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
 import { addCaseTemplate, caseTemplateKeys, describeTemplate, fetchCaseTemplates, numberedCaseNames, type CaseTemplate } from './templates'
@@ -34,6 +35,8 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
   const categoryListId = useId()
   const [templateId, setTemplateId] = useState('')
   const [copies, setCopies] = useState(1)
+  const [searchParams] = useSearchParams()
+  const ownerPreset = searchParams.get('owner') ?? ''
 
   const {
     register,
@@ -55,6 +58,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
       lengthCm: current?.lengthCm ?? undefined,
       depthCm: current?.depthCm ?? undefined,
       note: current?.note ?? '',
+      owner: current?.ownerStaffId ?? ownerPreset,
     },
   })
 
@@ -156,6 +160,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
             <option key={location.id} value={location.name} />
           ))}
         </datalist>
+        <OwnerSelect companyId={companyId} error={errors.owner?.message} {...register('owner')} />
         <Field
           label="Číslo case na štítku"
           placeholder="napr. 1 alebo 2, ak je sada vo viacerých cases"

@@ -29,6 +29,7 @@ export const ENTITIES: Record<string, { label: string; path?: string }> = {
   service_records: { label: 'servisný záznam', path: '/service' },
   events: { label: 'event', path: '/events' },
   service_technicians: { label: 'servisného technika' },
+  wifi_networks: { label: 'Wi-Fi sieť' },
 }
 
 // Stĺpce, ktoré sa menia najčastejšie; ostatné sa vypíšu technickým názvom.

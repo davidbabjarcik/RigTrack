@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isValidIp } from '@/features/equipment/model'
 
 export const DEVICE_KINDS = ['phone', 'laptop', 'tablet', 'other'] as const
 export type DeviceKind = (typeof DEVICE_KINDS)[number]
@@ -18,7 +19,12 @@ export type MemberDevice = {
   /** Vždy v tvare AA:BB:CC:DD:EE:FF. */
   mac: string
   note: string
+  /** Wi-Fi siete, kde zariadenie chodí: IP adresa a MAC v tej sieti (súkromná adresa mobilu). */
+  networks: DeviceNetwork[]
 }
+
+/** Wi-Fi sieť zariadenia: pevná IP, alebo `dhcp` (adresu pridelí router). */
+export type DeviceNetwork = { ssid: string; ip: string; mac: string; dhcp?: boolean }
 
 /** „aa-bb-cc-dd-ee-ff“, „aabb.ccdd.eeff“ aj „AABBCCDDEEFF“ → „AA:BB:CC:DD:EE:FF“; neplatná MAC → null. */
 export function normalizeMac(input: string) {
@@ -46,6 +52,23 @@ export const deviceSchema = z.object({
     .refine((value) => normalizeMac(value) !== null, 'Zadajte MAC v tvare AA:BB:CC:DD:EE:FF')
     .transform((value) => normalizeMac(value)!),
   note: text(200),
+  networks: z
+    .array(
+      z.object({
+        ssid: z.string().trim().min(1, 'Zadajte názov Wi-Fi').max(32, 'Najviac 32 znakov'),
+        ip: z
+          .string()
+          .trim()
+          .max(45)
+          .refine((value) => value === '' || isValidIp(value), 'IP adresa má tvar 192.168.1.20'),
+        mac: z
+          .string()
+          .refine((value) => value.trim() === '' || normalizeMac(value) !== null, 'MAC v tvare AA:BB:CC:DD:EE:FF')
+          .transform((value) => (value.trim() === '' ? '' : normalizeMac(value)!)),
+        dhcp: z.boolean().optional(),
+      }),
+    )
+    .max(20, 'Najviac 20 sietí'),
 })
 export type DeviceFormInput = z.input<typeof deviceSchema>
 export type DeviceFormValues = z.output<typeof deviceSchema>

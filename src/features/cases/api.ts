@@ -1,7 +1,8 @@
-import { resolveLookup } from '@/features/equipment/api'
+import { resolveLookup, resolveOwner } from '@/features/equipment/api'
 import { storeCompanyPhoto } from '@/features/equipment/photo'
 import type { Lookup } from '@/features/equipment/model'
 import { getSupabase } from '@/lib/supabase/client'
+import { isMissingColumn } from '@/lib/supabase/errors'
 import type { Case, CaseCheck, CaseFormValues } from './model'
 
 export const caseKeys = {
@@ -27,9 +28,12 @@ type Row = {
   spot_level: number | null
   note: string
   updated_at: string
+  owner_staff_id?: string | null
 }
 
 const COLUMNS = 'id, name, inventory_number, location_id, label_number, label_category, label_title, label_photo_path, photo_path, weight_kg, width_cm, length_cm, depth_cm, spot_id, spot_level, note, updated_at'
+// Vlastník (0052); bez migrácie sa cases načítajú bez neho.
+let ownerColumn = ', owner_staff_id'
 
 // PostgREST môže numeric vrátiť ako číslo aj ako text.
 const toNumber = (value: number | string | null) => (value === null ? null : Number(value))
@@ -43,14 +47,18 @@ function toCheck(row: CheckRow): CaseCheck {
 export async function fetchCases(companyId: string): Promise<Case[]> {
   const db = getSupabase()
   const [cases, checks] = await Promise.all([
-    db.from('cases').select(COLUMNS).eq('company_id', companyId).order('name'),
+    db.from('cases').select(COLUMNS + ownerColumn).eq('company_id', companyId).order('name'),
     db.from('case_last_checks').select('case_id, checked_at, checked_by_name, note').eq('company_id', companyId),
   ])
+  if (ownerColumn && isMissingColumn(cases.error, 'owner_staff_id')) {
+    ownerColumn = ''
+    return fetchCases(companyId)
+  }
   const error = cases.error ?? checks.error
   if (error) throw error
 
   const lastChecks = new Map((checks.data as CheckRow[]).map((row) => [row.case_id, toCheck(row)]))
-  return (cases.data as Row[]).map((row) => ({
+  return (cases.data as unknown as Row[]).map((row) => ({
     id: row.id,
     name: row.name,
     inventoryNumber: row.inventory_number,
@@ -69,6 +77,7 @@ export async function fetchCases(companyId: string): Promise<Case[]> {
     note: row.note,
     updatedAt: row.updated_at,
     lastCheck: lastChecks.get(row.id) ?? null,
+    ownerStaffId: row.owner_staff_id ?? null,
   }))
 }
 
@@ -105,6 +114,7 @@ export async function saveCase({ companyId, id, values, locations }: SaveArgs): 
     length_cm: values.lengthCm ?? null,
     depth_cm: values.depthCm ?? null,
     note: values.note,
+    ...(values.owner !== undefined && (values.owner !== '' || ownerColumn) ? { owner_staff_id: await resolveOwner(companyId, values.owner) } : {}),
   }
   const table = getSupabase().from('cases')
   const { data, error } = id

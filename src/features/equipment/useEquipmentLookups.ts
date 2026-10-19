@@ -15,5 +15,7 @@ export function useEquipmentLookups(companyId: string) {
     locations: locations.data ?? [],
     isPending: categories.isPending || locations.isPending,
     isError: categories.isError || locations.isError,
+    error: categories.error ?? locations.error,
+    refetch: () => Promise.all([categories.refetch(), locations.refetch()]),
   }
 }

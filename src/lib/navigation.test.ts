@@ -11,20 +11,26 @@ describe('pinned navigation', () => {
   })
 
   it('round-trips a valid selection', () => {
-    const ids = ['cases', 'service', 'todos', 'calendar']
+    const ids = ['cases', 'service', 'todos']
     savePinned(ids)
     expect(loadPinned()).toEqual(ids)
   })
 
   it.each([
     ['corrupt JSON', '{not json'],
-    ['unknown module id', JSON.stringify(['dashboard', 'equipment', 'events', 'removed-module'])],
+    ['unknown module id', JSON.stringify(['equipment', 'events', 'removed-module'])],
+    ['dashboard among the choices', JSON.stringify(['dashboard', 'events', 'loans'])],
     ['wrong length', JSON.stringify(['dashboard'])],
-    ['duplicates', JSON.stringify(['dashboard', 'dashboard', 'events', 'loans'])],
+    ['duplicates', JSON.stringify(['events', 'events', 'loans'])],
     ['wrong type', JSON.stringify({ a: 1 })],
   ])('falls back to defaults on %s', (_name, stored) => {
     localStorage.setItem(KEY, stored)
     expect(loadPinned()).toEqual(DEFAULT_PINNED)
+  })
+
+  it('keeps an old four-item selection without the fixed dashboard', () => {
+    localStorage.setItem(KEY, JSON.stringify(['dashboard', 'cases', 'service', 'todos']))
+    expect(loadPinned()).toEqual(['cases', 'service', 'todos'])
   })
 
   it('refuses to save an invalid selection', () => {

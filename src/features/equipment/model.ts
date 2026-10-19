@@ -13,15 +13,16 @@ export const STATUS_LABELS: Record<EquipmentStatus, string> = {
 }
 
 // Druh určuje, na čo sa formulár pýta. Zodpovedá check constraint v 0007_equipment_details.sql.
-export const EQUIPMENT_KINDS = ['general', 'cable', 'light', 'audio', 'truss', 'stage', 'consumable'] as const
+// Poradie vo výbere: zvuk, svetlo, stage, pódium, káble, spotrebný materiál, ostatné.
+export const EQUIPMENT_KINDS = ['audio', 'light', 'truss', 'stage', 'cable', 'consumable', 'general'] as const
 export type EquipmentKind = (typeof EQUIPMENT_KINDS)[number]
 
 export const KIND_LABELS: Record<EquipmentKind, string> = {
-  general: 'Všeobecné',
+  general: 'Ostatné / všeobecné',
   cable: 'Kábel',
   light: 'Svetlo',
   audio: 'Zvuk',
-  truss: 'Hliník / truss',
+  truss: 'Stage – hliník / truss',
   stage: 'Pódium (Nivtec a príslušenstvo)',
   consumable: 'Spotrebný materiál',
 }
@@ -81,10 +82,16 @@ export type EquipmentAttributes = {
   lightSource?: LightSource
   /** Typ zvukovej techniky (mixpult, mikrofón…). */
   audioType?: AudioType
+  /** Prefix siete pri IP adrese, napr. 24 (= maska 255.255.255.0). */
+  ipPrefix?: number
+  /** IP prideľuje DHCP (nemá pevnú adresu). */
+  ipDhcp?: boolean
   /** Vonkajšie rozmery boxu (reprobox, sub, odposluch) v cm – napr. pre delay kalkulačku subov. */
   boxWidthCm?: number
   boxDepthCm?: number
   boxHeightCm?: number
+  /** Vlastné oneskorenie subu v ms (hornový sub / „slimák“ má zvuk dlhšiu cestu) – pre delay kalkulačku. */
+  subDelayMs?: number
   /** DMX módy svetla: názov a počet kanálov, napr. Standard 16 ch. */
   dmxModes?: DmxMode[]
 }
@@ -132,6 +139,8 @@ export type Equipment = {
   status: EquipmentStatus
   note: string
   updatedAt: string
+  /** Karta zamestnanca, ktorému technika patrí (jeho vlastná); prázdne = firma. */
+  ownerStaffId?: string | null
 }
 
 const text = (max: number) => z.string().trim().max(max, `Najviac ${max} znakov`)
@@ -184,9 +193,12 @@ export const equipmentSchema = z.object({
   powerW: optionalNumber(100000),
   lightSource: z.enum([...LIGHT_SOURCES, '']),
   audioType: z.enum([...AUDIO_TYPES, '']),
+  ipPrefix: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Od 1').max(32, 'Najviac 32').optional(),
+  ipDhcp: z.boolean().optional(),
   boxWidthCm: optionalNumber(1000),
   boxDepthCm: optionalNumber(1000),
   boxHeightCm: optionalNumber(1000),
+  subDelayMs: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(200, 'Najviac 200 ms').optional(),
   dmxModes: z
     .array(
       z.object({
@@ -207,14 +219,20 @@ export const equipmentSchema = z.object({
   lastServiceOn: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Zadajte dátum'),
   hoursIntervalMonths: z.number('Zadajte číslo').int('Celé mesiace').min(1, 'Aspoň 1 mesiac').max(120).optional(),
   note: text(2000),
+  /** Vlastník: prázdne = firma, id karty zamestnanca, alebo „m-<id člena>“ pre člena bez karty. */
+  owner: z.string().optional(),
 })
 
 export type EquipmentFormValues = z.infer<typeof equipmentSchema>
 
 /** Káble a spotrebný materiál nemajú sériové číslo, sieť ani servis — formulár sa na to nepýta. */
-export function isSimpleKind(kind: EquipmentKind) {
-  return kind === 'cable' || kind === 'consumable'
+export function isSimpleKind(kind: EquipmentKind, category = '') {
+  if (kind === 'cable' || kind === 'consumable') return true
+  // Pri „Ostatné“ rozhodne kategória (napr. „Káble“, „Spotrebný materiál“).
+  return kind === 'general' && /k[aá]bel|k[aá]bl|cable|spotreb|consum/.test(plainText(category))
 }
+
+const plainText = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 
 /** Zásoba klesla na nastavenú hranicu: treba dokúpiť. */
 export function needsRestock(item: Pick<Equipment, 'quantity' | 'minQuantity'>) {
@@ -226,14 +244,13 @@ export function needsRestock(item: Pick<Equipment, 'quantity' | 'minQuantity'>) 
  * („Svetlá“, „Svetlo – hlavy“, „Light“). Vtedy sa formulár pýta aj na zdroj a DMX módy.
  */
 export function isLighting(kind: EquipmentKind, category: string) {
-  const plain = category.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
-  return kind === 'light' || /svetl|light/.test(plain)
+  // Druh rozhoduje vždy; kategória len pri „Ostatné“, aby sa napr. repro v kategórii „Svetlá a zvuk“ nepýtalo na DMX.
+  return kind === 'light' || (kind === 'general' && /svetl|light/.test(plainText(category)))
 }
 
 /** Je to zvuk? Podľa druhu, alebo podľa kategórie („Zvuk“, „Audio“, „Sound“). */
 export function isAudio(kind: EquipmentKind, category: string) {
-  const plain = category.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
-  return kind === 'audio' || /zvuk|audio|sound/.test(plain)
+  return kind === 'audio' || (kind === 'general' && /zvuk|audio|sound/.test(plainText(category)))
 }
 
 /** Reprobox, sub a odposluch majú rozmery boxu. */
@@ -244,7 +261,7 @@ export function hasBox(audioType: AudioType | '' | undefined) {
 /** Z formulára vyberie iba údaje, ktoré k zvolenému druhu patria. */
 export function attributesFor(
   values: Pick<EquipmentFormValues, 'kind' | 'connector' | 'lengthM' | 'powerW' | 'lightSource'> &
-    Partial<Pick<EquipmentFormValues, 'category' | 'dmxModes' | 'audioType' | 'boxWidthCm' | 'boxDepthCm' | 'boxHeightCm'>>,
+    Partial<Pick<EquipmentFormValues, 'category' | 'dmxModes' | 'audioType' | 'boxWidthCm' | 'boxDepthCm' | 'boxHeightCm' | 'subDelayMs' | 'ipPrefix' | 'ipAddress' | 'ipDhcp'>>,
 ) {
   const attributes: EquipmentAttributes = {}
   const lighting = isLighting(values.kind, values.category ?? '')
@@ -260,10 +277,13 @@ export function attributesFor(
   }
   if (lighting && values.lightSource) attributes.lightSource = values.lightSource
   if (audio && values.audioType) attributes.audioType = values.audioType
+  if (!isSimpleKind(values.kind, values.category ?? '') && values.ipAddress && values.ipPrefix !== undefined) attributes.ipPrefix = values.ipPrefix
+  if (!isSimpleKind(values.kind, values.category ?? '') && values.ipDhcp && !values.ipAddress) attributes.ipDhcp = true
   if (audio && hasBox(values.audioType)) {
     if (values.boxWidthCm !== undefined) attributes.boxWidthCm = values.boxWidthCm
     if (values.boxDepthCm !== undefined) attributes.boxDepthCm = values.boxDepthCm
     if (values.boxHeightCm !== undefined) attributes.boxHeightCm = values.boxHeightCm
+    if (values.audioType === 'subwoofer' && values.subDelayMs !== undefined) attributes.subDelayMs = values.subDelayMs
   }
   if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels }))
   return attributes

@@ -18,6 +18,7 @@ import { ROLE_LABELS } from '@/lib/roles'
 import { useMembers } from '@/features/companies/useMembers'
 import { addUnavailability, clearStaffPhoto, deleteStaff, deleteUnavailability, saveStaff, setStaffPhoto, staffKeys, type StaffFields } from './api'
 import { upcomingEvents, upcomingPeriods, type Person } from './model'
+import { StaffDevices, StaffOverview, StaffOwnGear, StaffPastEvents } from './StaffExtras'
 import { useStaff } from './useStaff'
 
 function Details({ companyId, person, canEdit }: { companyId: string; person: Person; canEdit: boolean }) {
@@ -286,6 +287,11 @@ export function StaffDetailPage() {
           )}
         </CollapsibleSection>
       )}
+
+      <StaffOverview companyId={companyId} person={person} events={events.data ?? []} userId={userId} />
+      <StaffPastEvents person={person} events={events.data ?? []} />
+      <StaffDevices companyId={companyId} person={person} userId={userId} />
+      <StaffOwnGear companyId={companyId} person={person} />
     </>
   )
 }

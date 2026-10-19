@@ -10,7 +10,7 @@ type Mode = 'signin' | 'signup' | 'reset'
 
 const TITLES: Record<Mode, string> = {
   signin: 'Prihlásenie',
-  signup: 'Registrácia',
+  signup: 'Vytvorenie účtu z pozvánky',
   reset: 'Obnova hesla',
 }
 
@@ -64,7 +64,11 @@ function AuthForm() {
       })
       if (error) {
         setError(
-          error.code === 'weak_password' ? 'Heslo je príliš slabé. Zvoľte dlhšie.' : 'Registrácia zlyhala. Skúste to znova.',
+          error.code === 'weak_password'
+            ? 'Heslo je príliš slabé. Zvoľte dlhšie.'
+            : error.status === 403 || /pozv/i.test(error.message)
+              ? 'Pre tento e-mail nemáme pozvánku. Účet sa dá vytvoriť len s e-mailom, na ktorý vás pozval admin firmy.'
+              : 'Vytvorenie účtu zlyhalo. Skúste to znova.',
         )
       } else {
         setNotice('Poslali sme vám e-mail s potvrdzovacím odkazom. Po potvrdení sa môžete prihlásiť.')
@@ -83,6 +87,11 @@ function AuthForm() {
     <div className="rounded-2xl border bg-surface p-6">
       <h1 className="mb-5 text-xl font-semibold">{TITLES[mode]}</h1>
 
+      {mode === 'signup' && (
+        <p className="mb-4 rounded-lg bg-muted p-3 text-sm">
+          RigTrack funguje len na pozvánky. Účet si vytvoríte s e-mailom, na ktorý vás pozval admin firmy – po prihlásení pozvánku uvidíte.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {mode === 'signup' && (
           <Field
@@ -138,7 +147,7 @@ function AuthForm() {
         )}
         {mode !== 'signup' && (
           <button type="button" className="text-accent hover:underline" onClick={() => switchMode('signup')}>
-            Vytvoriť nový účet
+            Mám pozvánku – vytvoriť účet
           </button>
         )}
         {mode === 'signin' && (

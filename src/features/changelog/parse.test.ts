@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import readme from '../../../README.md?raw'
-import { parseChangelog, parseInline } from './parse'
+import { forUsers, parseChangelog, parseInline, sameVersion } from './parse'
 
 const sample = `# App
 
@@ -37,6 +37,13 @@ describe('changelog', () => {
     expect(releases[1].blocks).toEqual([{ kind: 'list', items: ['Oprava.'] }])
   })
 
+  it('compares versions exactly and hides migration notes', () => {
+    expect(sameVersion('1.11', '1.11.0')).toBe(true)
+    expect(sameVersion('1.11', '1.1')).toBe(false)
+    expect(sameVersion('1.1', '1.10')).toBe(false)
+    expect(forUsers(parseChangelog(sample)[0]).blocks).toHaveLength(1)
+  })
+
   it('formats bold and code', () => {
     expect(parseInline('a **b** c `d`')).toEqual([
       { kind: 'text', text: 'a ' },
@@ -49,6 +56,6 @@ describe('changelog', () => {
   it('finds the current version in the real README', async () => {
     const { APP_VERSION } = await import('@/lib/version')
     const latest = parseChangelog(readme)[0]
-    expect(APP_VERSION.startsWith(latest.version)).toBe(true)
+    expect(sameVersion(APP_VERSION, latest.version)).toBe(true)
   })
 })

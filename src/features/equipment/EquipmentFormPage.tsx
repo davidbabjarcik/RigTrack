@@ -3,14 +3,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useId, useState, type ReactNode } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { useFieldArray, useForm, useWatch } from 'react-hook-form'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
+import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { can } from '@/lib/permissions'
+import { errorDetail } from '@/lib/supabase/errors'
 import { equipmentKeys, fetchEquipment, saveEquipment } from './api'
 import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
@@ -58,9 +60,12 @@ const EMPTY: EquipmentFormValues = {
   powerW: undefined,
   lightSource: '',
   audioType: '',
+  ipPrefix: undefined,
+  ipDhcp: false,
   boxWidthCm: undefined,
   boxDepthCm: undefined,
   boxHeightCm: undefined,
+  subDelayMs: undefined,
   dmxModes: [],
   macAddress: '',
   ipAddress: '',
@@ -68,6 +73,7 @@ const EMPTY: EquipmentFormValues = {
   lastServiceOn: '',
   hoursIntervalMonths: undefined,
   note: '',
+  owner: '',
 }
 
 function toFormValues(equipment: Equipment, categories: Lookup[], locations: Lookup[]): EquipmentFormValues {
@@ -92,9 +98,12 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     powerW: equipment.attributes.powerW,
     lightSource: equipment.attributes.lightSource ?? '',
     audioType: equipment.attributes.audioType ?? '',
+    ipPrefix: equipment.attributes.ipPrefix,
+    ipDhcp: equipment.attributes.ipDhcp ?? false,
     boxWidthCm: equipment.attributes.boxWidthCm,
     boxDepthCm: equipment.attributes.boxDepthCm,
     boxHeightCm: equipment.attributes.boxHeightCm,
+    subDelayMs: equipment.attributes.subDelayMs,
     dmxModes: equipment.attributes.dmxModes ?? [],
     macAddress: equipment.macAddress,
     ipAddress: equipment.ipAddress,
@@ -102,6 +111,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     lastServiceOn: equipment.lastServiceOn ?? '',
     hoursIntervalMonths: equipment.hoursIntervalMonths ?? undefined,
     note: equipment.note,
+    owner: equipment.ownerStaffId ?? '',
   }
 }
 
@@ -131,6 +141,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const locationListId = useId()
   const connectorListId = useId()
   const cancelTo = equipment ? `/equipment/${equipment.id}` : '/equipment'
+  const [searchParams] = useSearchParams()
+  const ownerPreset = searchParams.get('owner') ?? ''
 
   const {
     register,
@@ -140,7 +152,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
     formState: { errors },
   } = useForm<EquipmentFormValues>({
     resolver: zodResolver(equipmentSchema),
-    defaultValues: equipment ? toFormValues(equipment, categories, locations) : EMPTY,
+    // Z karty zamestnanca sa dá pridať jeho vlastná technika (?owner=…).
+    defaultValues: equipment ? toFormValues(equipment, categories, locations) : { ...EMPTY, owner: ownerPreset },
   })
   const kind = useWatch({ control, name: 'kind' })
   const categoryText = useWatch({ control, name: 'category' })
@@ -152,7 +165,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const trackUnits = useWatch({ control, name: 'trackUnits' })
   const unitIdsText = useWatch({ control, name: 'unitIds' })
   const lengthM = useWatch({ control, name: 'lengthM' })
-  const simple = isSimpleKind(kind)
+  const simple = isSimpleKind(kind, categoryText ?? '')
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
 
@@ -329,6 +342,19 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
                 <Field label="Hĺbka" type="number" inputMode="decimal" min={0} error={errors.boxDepthCm?.message} {...register('boxDepthCm', asOptionalNumber)} />
                 <Field label="Výška" type="number" inputMode="decimal" min={0} error={errors.boxHeightCm?.message} {...register('boxHeightCm', asOptionalNumber)} />
               </div>
+              {audioType === 'subwoofer' && (
+                <Field
+                  label="Vlastný delay subu (ms)"
+                  className="mt-3 sm:w-64"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="0.1"
+                  placeholder="napr. hornový / slimák"
+                  error={errors.subDelayMs?.message}
+                  {...register('subDelayMs', asOptionalNumber)}
+                />
+              )}
               <p className="mt-1 text-xs text-muted-foreground">Použije sa v delay kalkulačke (rozostup subov, cardioid, šírka radu).</p>
             </fieldset>
           )}
@@ -444,6 +470,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         spotrebnom materiáli (kvapalina do hazera) nastavte, pri koľkých kusoch sa má objaviť v zozname „treba kúpiť“.
       </p>
 
+      <OwnerSelect companyId={companyId} error={errors.owner?.message} {...register('owner')} />
+
       <SelectField label="Case" error={errors.caseId?.message} {...register('caseId')}>
         <option value="">— nie je v žiadnom case —</option>
         {cases.map((item) => (
@@ -472,6 +500,20 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               error={errors.ipAddress?.message}
               {...register('ipAddress')}
             />
+            <Field
+              label="Prefix / maska"
+              placeholder="24 (= 255.255.255.0)"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={32}
+              error={errors.ipPrefix?.message}
+              {...register('ipPrefix', asOptionalNumber)}
+            />
+            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+              <input type="checkbox" className="size-4" {...register('ipDhcp')} />
+              IP prideľuje DHCP (bez pevnej adresy – pole IP nechajte prázdne)
+            </label>
           </Group>
 
           <Group title="Servis (nepovinné)">
@@ -546,7 +588,13 @@ export function EquipmentFormPage() {
   } else if (lookups.isPending || cases.isPending || (id && item.isPending)) {
     body = <LoadingBlock />
   } else if (lookups.isError || cases.isError || item.isError) {
-    body = <ErrorBlock message="Údaje sa nepodarilo načítať." onRetry={() => void item.refetch()} />
+    const failed = item.error ?? cases.error ?? lookups.error
+    body = (
+      <ErrorBlock
+        message={`Údaje sa nepodarilo načítať${item.isError ? ' (technika)' : cases.isError ? ' (cases)' : ' (kategórie / umiestnenia)'}. ${errorDetail(failed)}`}
+        onRetry={() => void Promise.all([item.refetch(), cases.refetch(), lookups.refetch()])}
+      />
+    )
   } else if (id && !item.data) {
     body = <ErrorBlock message="Táto technika neexistuje alebo k nej nemáte prístup." />
   } else {
