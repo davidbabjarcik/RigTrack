@@ -276,3 +276,26 @@ describe('unit numbers', () => {
     expect(describeUnitIds([])).toBe('')
   })
 })
+
+describe('LED panel', () => {
+  it('derives pixels from pitch and size', () => {
+    const attributes = attributesFor({ kind: 'video', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', isLedPanel: true, ledPitchMm: 3.9, ledWidthMm: 500, ledHeightMm: 1000, ledWeightKg: 12.5, ledMaxW: 275 })
+    expect(attributes.ledPanel).toEqual({ widthMm: 500, heightMm: 1000, pxW: 128, pxH: 256, pitchMm: 3.9, weightKg: 12.5, maxW: 275, avgW: 0 })
+    expect(describeAttributes({ attributes })).toEqual(['LED P3,9 500×1000 mm, 128×256 px'])
+  })
+})
+
+describe('display', () => {
+  it('describes a TV', () => {
+    const attributes = attributesFor({ kind: 'video', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', isDisplay: true, displayType: 'tv', displayResW: 1920, displayResH: 1080, displayDiagonalIn: 55 })
+    expect(describeAttributes({ attributes })).toEqual(['TV 55″ 1920×1080'])
+  })
+})
+
+describe('LED processor', () => {
+  it('sums inputs by type and describes the processor', () => {
+    const attributes = attributesFor({ kind: 'video', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', isLedProcessor: true, procOutputs: 4, procChip: 'Novastar', procControl: 'usb', procHdmi: 2, procDvi: 1 })
+    expect(attributes.ledProcessor).toMatchObject({ outputs: 4, inputs: 3, inputTypes: { hdmi: 2, dvi: 1 }, control: 'usb' })
+    expect(describeAttributes({ attributes })).toEqual(['LED procesor 4-CH · Novastar · 2× HDMI, 1× DVI · 1920×1080 · len USB'])
+  })
+})

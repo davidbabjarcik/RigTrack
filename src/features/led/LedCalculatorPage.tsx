@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Trash2, TriangleAlert } from 'lucide-react'
+import { Download, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,10 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { usePartners } from '@/features/partners/api'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
+import { downloadText } from '@/lib/download'
 import { CanvasDiagram } from './CanvasDiagram'
+import { arenaGuide, drawPixelMap, novastarGuide } from './exports'
+import { PhasesCard } from './PhasesCard'
 import { LedDiagram } from './LedDiagram'
 import { planProcessors, PROCESSOR_PRESETS, type Processor } from './processor'
 import { calculateLed, DEFAULT_INPUT, describePieces, MOUNT_LABELS, MOUNTS, PANEL_PRESETS, TRUSS_PRESETS, type LedInput, type Panel } from './model'
@@ -342,6 +345,9 @@ type State = {
   processor: string
   /** Odkiaľ chýbajúce panely: kľúč panela → id firmy z Firmy a kontakty. */
   suppliers: Record<string, string>
+  /** Rozfázovanie: počet fáz a iné zaťaženie na L1–L3 (kW). */
+  phaseCount?: 1 | 2 | 3
+  existingKw?: [number, number, number]
 }
 
 const STATE_KEY = 'rigtrack.led.v2'
@@ -421,10 +427,23 @@ export function LedCalculatorPage() {
   const processor: Processor = processorItem
     ? { name: processorItem.name, ...processorItem.attributes.ledProcessor! }
     : (PROCESSOR_PRESETS[Number(processorChoice.replace('preset:', ''))] ?? PROCESSOR_PRESETS[2])
-  const plan = planProcessors(
-    results.map(({ wall: item, result }) => ({ name: item.name, columns: result.columns, rows: result.rows, panelPxW: item.panel.pxW, panelPxH: item.panel.pxH })),
-    processor,
-  )
+  const wiring = results.map(({ wall: item, result }) => ({ name: item.name, columns: result.columns, rows: result.rows, panelPxW: item.panel.pxW, panelPxH: item.panel.pxH }))
+  const plan = planProcessors(wiring, processor)
+  function downloadPixelMaps() {
+    for (let input = 0; input < plan.canvases; input++) {
+      drawPixelMap(wiring, plan.runs, plan.placements, processor, input).toBlob((blob) => {
+        if (!blob) return
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `pixel-mapa-vstup-${input + 1}.png`
+        document.body.append(link)
+        link.click()
+        link.remove()
+        setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      }, 'image/png')
+    }
+  }
   const totals = results.reduce(
     (sum, { result }) => ({ panels: sum.panels + result.panels, area: sum.area + result.areaM2, maxW: sum.maxW + result.power.maxW, kg: sum.kg + result.screenKg }),
     { panels: 0, area: 0, maxW: 0, kg: 0 },
@@ -617,8 +636,30 @@ export function LedCalculatorPage() {
           </details>
         </Card>
 
+        <PhasesCard
+          walls={results.map(({ wall: item, result }) => ({ name: item.name, columns: result.columns, rows: result.rows, maxW: item.panel.maxW, avgW: item.panel.avgW }))}
+          wattsPerCircuit={wall.wattsPerCircuit}
+          phaseCount={state.phaseCount ?? 3}
+          existingKw={state.existingKw ?? [0, 0, 0]}
+          onChange={(patch) => setState({ ...state, ...patch })}
+        />
+
         <Card title={`Rozloženie do vstupov (${processor.inputW}×${processor.inputH})`}>
           <CanvasDiagram placements={plan.placements} canvases={plan.canvases} inputW={processor.inputW} inputH={processor.inputH} walls={state.walls.map((item) => item.name)} />
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={downloadPixelMaps}>
+              <Download className="size-4" aria-hidden />
+              Pixel mapa (PNG)
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => downloadText('novastar-nastavenie.txt', novastarGuide(wiring, plan.runs, plan.placements, processor), 'text/plain;charset=utf-8')}>
+              <Download className="size-4" aria-hidden />
+              Nastavenie Novastar
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => downloadText('resolume-arena-slices.txt', arenaGuide(wiring, plan.placements, processor), 'text/plain;charset=utf-8')}>
+              <Download className="size-4" aria-hidden />
+              Slicy pre Arenu
+            </Button>
+          </div>
           <p className="mt-2 text-xs text-muted-foreground">
             Steny sú v obraze po radoch od najvyššej; čo sa do jedného vstupu nezmestí, ide na ďalší (napr. HDMI 2 ako druhý obraz). Polohy (x, y) nastavte rovnako v Novastar.
           </p>

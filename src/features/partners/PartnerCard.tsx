@@ -5,6 +5,7 @@ import { PhoneContactButton } from '@/components/share/PhoneContactButton'
 import { AddToContactsButton } from '@/components/share/ShareButtons'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
+import { setPartnerShared } from '@/features/links/api'
 import { FoundCompanyButton } from './FoundCompanyButton'
 import { addContact, deleteContact, partnerKeys, type Partner } from './api'
 
@@ -23,6 +24,7 @@ export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { 
     onSettled: refresh,
   })
   const remove = useMutation({ mutationFn: deleteContact, onSettled: refresh })
+  const share = useMutation({ mutationFn: (shared: boolean) => setPartnerShared(partner.id, shared), onSettled: refresh })
   function submit(event: FormEvent) {
     event.preventDefault()
     if (person.name.trim()) add.mutate()
@@ -76,6 +78,18 @@ export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { 
       )}
       {partner.note && <p className="text-sm whitespace-pre-wrap text-muted-foreground">{partner.note}</p>}
       {canEdit && onEdit && <FoundCompanyButton partner={partner} />}
+      {canEdit && onEdit && partner.shared !== undefined && (
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            className="size-4"
+            checked={partner.shared}
+            disabled={share.isPending}
+            onChange={(event) => share.mutate(event.target.checked)}
+          />
+          Zdieľať s prepojenými firmami
+        </label>
+      )}
       {canEdit &&
         (adding ? (
           <form onSubmit={submit} className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">

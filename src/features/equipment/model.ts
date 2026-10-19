@@ -14,13 +14,15 @@ export const STATUS_LABELS: Record<EquipmentStatus, string> = {
 
 // Druh určuje, na čo sa formulár pýta. Zodpovedá check constraint v 0007_equipment_details.sql.
 // Poradie vo výbere: zvuk, svetlo, stage, pódium, káble, spotrebný materiál, ostatné.
-export const EQUIPMENT_KINDS = ['audio', 'light', 'truss', 'stage', 'cable', 'consumable', 'general'] as const
+export const EQUIPMENT_KINDS = ['audio', 'light', 'video', 'dj', 'truss', 'stage', 'cable', 'consumable', 'general'] as const
 export type EquipmentKind = (typeof EQUIPMENT_KINDS)[number]
 
 export const KIND_LABELS: Record<EquipmentKind, string> = {
   general: 'Ostatné / všeobecné',
   cable: 'Kábel',
   light: 'Svetlo',
+  video: 'Video (LED, procesory, projektory)',
+  dj: 'DJ technika',
   audio: 'Zvuk',
   truss: 'Stage – hliník / truss',
   stage: 'Pódium (Nivtec a príslušenstvo)',
@@ -35,6 +37,18 @@ export const LIGHT_SOURCE_LABELS: Record<LightSource, string> = {
   discharge: 'Výbojka',
   halogen: 'Halogén',
   laser: 'Laser',
+  other: 'Iné',
+}
+
+/** Podtyp DJ techniky. */
+export const DJ_TYPES = ['mixer', 'player', 'turntable', 'all_in_one', 'pc_controller', 'other'] as const
+export type DjType = (typeof DJ_TYPES)[number]
+export const DJ_TYPE_LABELS: Record<DjType, string> = {
+  mixer: 'Mix (DJ mixpult)',
+  player: 'Player',
+  turntable: 'Gramofón',
+  all_in_one: 'All-in-one konzola',
+  pc_controller: 'Konzola na PC',
   other: 'Iné',
 }
 
@@ -82,6 +96,8 @@ export type EquipmentAttributes = {
   lightSource?: LightSource
   /** Typ zvukovej techniky (mixpult, mikrofón…). */
   audioType?: AudioType
+  /** Podtyp DJ techniky (mix, player, gramofón…). */
+  djType?: DjType
   /** Prefix siete pri IP adrese, napr. 24 (= maska 255.255.255.0). */
   ipPrefix?: number
   /** IP prideľuje DHCP (nemá pevnú adresu). */
@@ -98,11 +114,36 @@ export type EquipmentAttributes = {
   ledPanel?: LedPanelSpec
   /** LED procesor (napr. Novastar): výstupy, pixely na výstup, vstupy a ich rozlíšenie. */
   ledProcessor?: LedProcessorSpec
+  /** Obrazovka: TV, monitor alebo projektor s rozlíšením a uhlopriečkou (palce) / svetelným výkonom. */
+  display?: DisplaySpec
 }
 
-export type LedProcessorSpec = { outputs: number; pixelsPerOutput: number; inputs: number; inputW: number; inputH: number }
+export const DISPLAY_TYPES = ['tv', 'monitor', 'projector'] as const
+export type DisplayType = (typeof DISPLAY_TYPES)[number]
+export const DISPLAY_TYPE_LABELS: Record<DisplayType, string> = { tv: 'TV', monitor: 'Monitor', projector: 'Projektor' }
+export type DisplaySpec = { type: DisplayType; resW?: number; resH?: number; diagonalIn?: number; lumens?: number }
 
-export type LedPanelSpec = { widthMm: number; heightMm: number; pxW: number; pxH: number; weightKg: number; maxW: number; avgW: number }
+export const PROCESSOR_CONTROLS = ['usb_ethernet', 'usb', 'ethernet'] as const
+export type ProcessorControl = (typeof PROCESSOR_CONTROLS)[number]
+export const PROCESSOR_CONTROL_LABELS: Record<ProcessorControl, string> = { usb_ethernet: 'USB aj Ethernet', usb: 'len USB', ethernet: 'len Ethernet' }
+/** Typy vstupov procesora; počet kusov každého. */
+export const PROCESSOR_INPUTS = ['hdmi', 'dvi', 'sdi', 'dp', 'vga'] as const
+export type ProcessorInput = (typeof PROCESSOR_INPUTS)[number]
+export const PROCESSOR_INPUT_LABELS: Record<ProcessorInput, string> = { hdmi: 'HDMI', dvi: 'DVI', sdi: 'SDI', dp: 'DisplayPort', vga: 'VGA' }
+
+export type LedProcessorSpec = {
+  outputs: number
+  pixelsPerOutput: number
+  /** Vstupov spolu (súčet podľa typov). */
+  inputs: number
+  inputW: number
+  inputH: number
+  chip?: string
+  control?: ProcessorControl
+  inputTypes?: Partial<Record<ProcessorInput, number>>
+}
+
+export type LedPanelSpec = { widthMm: number; heightMm: number; pxW: number; pxH: number; weightKg: number; maxW: number; avgW: number; pitchMm?: number }
 
 export type DmxMode = { name: string; channels: number }
 
@@ -227,6 +268,7 @@ export const equipmentSchema = z.object({
   powerW: optionalNumber(100000),
   lightSource: z.enum([...LIGHT_SOURCES, '']),
   audioType: z.enum([...AUDIO_TYPES, '']),
+  djType: z.enum([...DJ_TYPES, '']).optional(),
   ipPrefix: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Od 1').max(32, 'Najviac 32').optional(),
   ipDhcp: z.boolean().optional(),
   boxWidthCm: optionalNumber(1000),
@@ -272,6 +314,7 @@ export const equipmentSchema = z.object({
   captureMatch: z.enum([...CAPTURE_MATCHES, '']).optional(),
   captureNote: text(500).optional(),
   isLedPanel: z.boolean().optional(),
+  ledPitchMm: optionalNumber(100),
   ledWidthMm: optionalNumber(5000),
   ledHeightMm: optionalNumber(5000),
   ledPxW: optionalNumber(10000),
@@ -279,10 +322,23 @@ export const equipmentSchema = z.object({
   ledWeightKg: optionalNumber(1000),
   ledMaxW: optionalNumber(10000),
   ledAvgW: optionalNumber(10000),
+  isDisplay: z.boolean().optional(),
+  displayType: z.enum(['tv', 'monitor', 'projector']).optional(),
+  displayResW: optionalNumber(20000),
+  displayResH: optionalNumber(20000),
+  displayDiagonalIn: optionalNumber(1000),
+  displayLumens: optionalNumber(100000),
   isLedProcessor: z.boolean().optional(),
   procOutputs: optionalNumber(64),
   procPixels: optionalNumber(10_000_000),
   procInputs: optionalNumber(32),
+  procChip: text(60).optional(),
+  procControl: z.enum(['usb_ethernet', 'usb', 'ethernet', '']).optional(),
+  procHdmi: z.number().int().min(0).max(32).optional(),
+  procDvi: z.number().int().min(0).max(32).optional(),
+  procSdi: z.number().int().min(0).max(32).optional(),
+  procDp: z.number().int().min(0).max(32).optional(),
+  procVga: z.number().int().min(0).max(32).optional(),
   procInputW: optionalNumber(16000),
   procInputH: optionalNumber(16000),
 })
@@ -331,6 +387,7 @@ export function attributesFor(
         | 'category'
         | 'dmxModes'
         | 'audioType'
+        | 'djType'
         | 'boxWidthCm'
         | 'boxDepthCm'
         | 'boxHeightCm'
@@ -339,6 +396,7 @@ export function attributesFor(
         | 'ipAddress'
         | 'ipDhcp'
         | 'isLedPanel'
+        | 'ledPitchMm'
         | 'ledWidthMm'
         | 'ledHeightMm'
         | 'ledPxW'
@@ -347,9 +405,22 @@ export function attributesFor(
         | 'ledMaxW'
         | 'ledAvgW'
         | 'isLedProcessor'
+        | 'isDisplay'
+        | 'displayType'
+        | 'displayResW'
+        | 'displayResH'
+        | 'displayDiagonalIn'
+        | 'displayLumens'
         | 'procOutputs'
         | 'procPixels'
         | 'procInputs'
+        | 'procChip'
+        | 'procControl'
+        | 'procHdmi'
+        | 'procDvi'
+        | 'procSdi'
+        | 'procDp'
+        | 'procVga'
         | 'procInputW'
         | 'procInputH'
       >
@@ -369,6 +440,8 @@ export function attributesFor(
   }
   if (lighting && values.lightSource) attributes.lightSource = values.lightSource
   if (audio && values.audioType) attributes.audioType = values.audioType
+  if (values.kind === 'dj' && values.djType) attributes.djType = values.djType
+  if (values.kind === 'dj' && values.powerW !== undefined) attributes.powerW = values.powerW
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipAddress && values.ipPrefix !== undefined) attributes.ipPrefix = values.ipPrefix
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipDhcp && !values.ipAddress) attributes.ipDhcp = true
   if (audio && hasBox(values.audioType)) {
@@ -378,24 +451,50 @@ export function attributesFor(
     if (values.audioType === 'subwoofer' && values.subDelayMs !== undefined) attributes.subDelayMs = values.subDelayMs
   }
   if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels }))
-  if (values.isLedPanel && values.ledWidthMm && values.ledHeightMm && values.ledPxW && values.ledPxH) {
+  // Pixely sa dajú zadať priamo, alebo sa dopočítajú z rozmeru a pixel pitchu (500 mm / P3.9 = 128 px).
+  const pitch = values.ledPitchMm
+  const pxW = values.ledPxW ?? (pitch && values.ledWidthMm ? Math.round(values.ledWidthMm / pitch) : undefined)
+  const pxH = values.ledPxH ?? (pitch && values.ledHeightMm ? Math.round(values.ledHeightMm / pitch) : undefined)
+  if (values.isLedPanel && values.ledWidthMm && values.ledHeightMm && pxW && pxH) {
     attributes.ledPanel = {
       widthMm: values.ledWidthMm,
       heightMm: values.ledHeightMm,
-      pxW: values.ledPxW,
-      pxH: values.ledPxH,
+      pxW,
+      pxH,
+      ...(pitch ? { pitchMm: pitch } : {}),
       weightKg: values.ledWeightKg ?? 0,
       maxW: values.ledMaxW ?? 0,
       avgW: values.ledAvgW ?? 0,
     }
   }
+  if (values.isDisplay) {
+    const type = values.displayType ?? 'tv'
+    attributes.display = {
+      type,
+      ...(values.displayResW && values.displayResH ? { resW: values.displayResW, resH: values.displayResH } : {}),
+      ...(values.displayDiagonalIn ? { diagonalIn: values.displayDiagonalIn } : {}),
+      ...(type === 'projector' && values.displayLumens ? { lumens: values.displayLumens } : {}),
+    }
+  }
   if (values.isLedProcessor && values.procOutputs) {
+    const counts: [ProcessorInput, number | undefined][] = [
+      ['hdmi', values.procHdmi],
+      ['dvi', values.procDvi],
+      ['sdi', values.procSdi],
+      ['dp', values.procDp],
+      ['vga', values.procVga],
+    ]
+    const inputTypes = Object.fromEntries(counts.filter(([, count]) => count)) as Partial<Record<ProcessorInput, number>>
+    const typed = Object.values(inputTypes).reduce((sum, count) => sum + (count ?? 0), 0)
     attributes.ledProcessor = {
       outputs: values.procOutputs,
       pixelsPerOutput: values.procPixels ?? 650_000,
-      inputs: values.procInputs ?? 1,
+      inputs: typed || (values.procInputs ?? 1),
       inputW: values.procInputW ?? 1920,
       inputH: values.procInputH ?? 1080,
+      ...(values.procChip?.trim() ? { chip: values.procChip.trim() } : {}),
+      ...(values.procControl ? { control: values.procControl } : {}),
+      ...(typed ? { inputTypes } : {}),
     }
   }
   return attributes
@@ -406,19 +505,32 @@ export function formatNumber(value: number) {
   return String(value).replace('.', ',')
 }
 
+/** „LED procesor 4-CH · Novastar · 2× HDMI, 1× DVI · 1920×1080 · len USB“ */
+export function describeProcessor(spec: LedProcessorSpec) {
+  const inputs = spec.inputTypes
+    ? (Object.entries(spec.inputTypes) as [ProcessorInput, number][]).map(([type, count]) => `${count}× ${PROCESSOR_INPUT_LABELS[type]}`).join(', ')
+    : `${spec.inputs}× vstup`
+  return [`LED procesor ${spec.outputs}-CH`, spec.chip, inputs, `${spec.inputW}×${spec.inputH}`, spec.control && PROCESSOR_CONTROL_LABELS[spec.control]].filter(Boolean).join(' · ')
+}
+
 /** Krátky popis údajov druhu do zoznamu a detailu, napr. „XLR · 5 m“ alebo „200 W · LED“. */
 export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
   const a = item.attributes
   return [
     a.audioType && AUDIO_TYPE_LABELS[a.audioType],
+    a.djType && DJ_TYPE_LABELS[a.djType],
     a.connector,
     a.lengthM !== undefined && `${formatNumber(a.lengthM)} m`,
     a.powerW !== undefined && `${formatNumber(a.powerW)} W`,
     a.lightSource && LIGHT_SOURCE_LABELS[a.lightSource],
     a.boxWidthCm !== undefined && a.boxDepthCm !== undefined && `${formatNumber(a.boxWidthCm)}×${formatNumber(a.boxDepthCm)}${a.boxHeightCm !== undefined ? `×${formatNumber(a.boxHeightCm)}` : ''} cm`,
     a.dmxModes?.length && `DMX ${a.dmxModes.map((mode) => mode.channels).join('/')} ch`,
-    a.ledPanel && `LED ${a.ledPanel.widthMm}×${a.ledPanel.heightMm} mm, ${a.ledPanel.pxW}×${a.ledPanel.pxH} px`,
-    a.ledProcessor && `LED procesor ${a.ledProcessor.outputs} výstupov, ${a.ledProcessor.inputs}× vstup ${a.ledProcessor.inputW}×${a.ledProcessor.inputH}`,
+    a.ledPanel && `LED${a.ledPanel.pitchMm ? ` P${formatNumber(a.ledPanel.pitchMm)}` : ''} ${a.ledPanel.widthMm}×${a.ledPanel.heightMm} mm, ${a.ledPanel.pxW}×${a.ledPanel.pxH} px`,
+    a.display &&
+      [DISPLAY_TYPE_LABELS[a.display.type], a.display.diagonalIn && `${formatNumber(a.display.diagonalIn)}″`, a.display.resW && `${a.display.resW}×${a.display.resH}`, a.display.lumens && `${a.display.lumens} lm`]
+        .filter(Boolean)
+        .join(' '),
+    a.ledProcessor && describeProcessor(a.ledProcessor),
   ].filter(Boolean) as string[]
 }
 
@@ -483,6 +595,8 @@ export type EquipmentFilter = {
   withNetwork?: boolean
   withLinks?: boolean
   sort?: EquipmentSort
+  /** Prepojené firmy: prázdne = len naša technika, „all“ = aj všetkých prepojených, inak id firmy (len jej). */
+  company?: string
 }
 
 export const COMPANY_OWNER = 'company'
@@ -499,7 +613,7 @@ export const SORT_LABELS: Record<EquipmentSort, string> = {
 
 /** Počet zapnutých rozšírených filtrov (na odznak pri tlačidle). */
 export function advancedFilterCount(filter: EquipmentFilter) {
-  return [filter.status, filter.categoryId, filter.locationId, filter.caseId, filter.kind, filter.audioType, filter.owner, filter.manufacturer, filter.attention, filter.capture, filter.purchasedYear, filter.withNetwork, filter.withLinks].filter(Boolean).length
+  return [filter.company, filter.status, filter.categoryId, filter.locationId, filter.caseId, filter.kind, filter.audioType, filter.owner, filter.manufacturer, filter.attention, filter.capture, filter.purchasedYear, filter.withNetwork, filter.withLinks].filter(Boolean).length
 }
 
 /** Všetky dátumy nákupu techniky (celá položka aj kusy). */

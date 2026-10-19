@@ -9,6 +9,7 @@ import { can } from '@/lib/permissions'
 import { usePartners, type Partner } from './api'
 import { PartnerCard } from './PartnerCard'
 import { PartnerForm } from './PartnerForm'
+import { LinkedPartnersSection } from '@/features/links/LinkedPartnersSection'
 
 const fold = (value: string) => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -70,6 +71,9 @@ export function PartnersPage() {
           ))}
         </ul>
       )}
+      <div className="mt-6">
+        <LinkedPartnersSection companyId={company.companyId} own={partners.data} canEdit={canEdit} />
+      </div>
     </>
   )
 }

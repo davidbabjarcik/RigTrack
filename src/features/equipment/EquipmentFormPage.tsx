@@ -23,6 +23,12 @@ import {
   CAPTURE_MATCH_LABELS,
   CAPTURE_MATCHES,
   COMMON_CONNECTORS,
+  DISPLAY_TYPE_LABELS,
+  DISPLAY_TYPES,
+  DJ_TYPE_LABELS,
+  DJ_TYPES,
+  PROCESSOR_CONTROL_LABELS,
+  PROCESSOR_CONTROLS,
   EQUIPMENT_KINDS,
   EQUIPMENT_STATUSES,
   equipmentSchema,
@@ -63,6 +69,7 @@ const EMPTY: EquipmentFormValues = {
   powerW: undefined,
   lightSource: '',
   audioType: '',
+  djType: '',
   ipPrefix: undefined,
   ipDhcp: false,
   boxWidthCm: undefined,
@@ -85,6 +92,8 @@ const EMPTY: EquipmentFormValues = {
   captureNote: '',
   isLedPanel: false,
   isLedProcessor: false,
+  isDisplay: false,
+  displayType: 'tv',
 }
 
 function toFormValues(equipment: Equipment, categories: Lookup[], locations: Lookup[]): EquipmentFormValues {
@@ -109,6 +118,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     powerW: equipment.attributes.powerW,
     lightSource: equipment.attributes.lightSource ?? '',
     audioType: equipment.attributes.audioType ?? '',
+    djType: equipment.attributes.djType ?? '',
     ipPrefix: equipment.attributes.ipPrefix,
     ipDhcp: equipment.attributes.ipDhcp ?? false,
     boxWidthCm: equipment.attributes.boxWidthCm,
@@ -130,6 +140,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     captureMatch: equipment.captureMatch ?? '',
     captureNote: equipment.captureNote ?? '',
     isLedPanel: Boolean(equipment.attributes.ledPanel),
+    ledPitchMm: equipment.attributes.ledPanel?.pitchMm,
     ledWidthMm: equipment.attributes.ledPanel?.widthMm,
     ledHeightMm: equipment.attributes.ledPanel?.heightMm,
     ledPxW: equipment.attributes.ledPanel?.pxW,
@@ -138,9 +149,22 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     ledMaxW: equipment.attributes.ledPanel?.maxW || undefined,
     ledAvgW: equipment.attributes.ledPanel?.avgW || undefined,
     isLedProcessor: Boolean(equipment.attributes.ledProcessor),
+    isDisplay: Boolean(equipment.attributes.display),
+    displayType: equipment.attributes.display?.type ?? 'tv',
+    displayResW: equipment.attributes.display?.resW,
+    displayResH: equipment.attributes.display?.resH,
+    displayDiagonalIn: equipment.attributes.display?.diagonalIn,
+    displayLumens: equipment.attributes.display?.lumens,
     procOutputs: equipment.attributes.ledProcessor?.outputs,
     procPixels: equipment.attributes.ledProcessor?.pixelsPerOutput,
     procInputs: equipment.attributes.ledProcessor?.inputs,
+    procChip: equipment.attributes.ledProcessor?.chip ?? '',
+    procControl: equipment.attributes.ledProcessor?.control ?? '',
+    procHdmi: equipment.attributes.ledProcessor?.inputTypes?.hdmi,
+    procDvi: equipment.attributes.ledProcessor?.inputTypes?.dvi,
+    procSdi: equipment.attributes.ledProcessor?.inputTypes?.sdi,
+    procDp: equipment.attributes.ledProcessor?.inputTypes?.dp,
+    procVga: equipment.attributes.ledProcessor?.inputTypes?.vga,
     procInputW: equipment.attributes.ledProcessor?.inputW,
     procInputH: equipment.attributes.ledProcessor?.inputH,
   }
@@ -200,6 +224,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const captureMatch = useWatch({ control, name: 'captureMatch' })
   const isLedPanel = useWatch({ control, name: 'isLedPanel' })
   const isLedProcessor = useWatch({ control, name: 'isLedProcessor' })
+  const isDisplay = useWatch({ control, name: 'isDisplay' })
+  const displayType = useWatch({ control, name: 'displayType' })
   const simple = isSimpleKind(kind, categoryText ?? '')
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
@@ -370,6 +396,20 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         </Group>
       )}
 
+      {kind === 'dj' && (
+        <Group title="DJ technika">
+          <SelectField label="Typ" error={errors.djType?.message} {...register('djType')}>
+            <option value="">— nezadané —</option>
+            {DJ_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {DJ_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </SelectField>
+          <Field label="Výkon (W)" type="number" inputMode="decimal" min={0} error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />
+        </Group>
+      )}
+
       {audio && (
         <Group title="Zvuk">
           <SelectField label="Typ" error={errors.audioType?.message} {...register('audioType')}>
@@ -415,22 +455,46 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         </Group>
       )}
 
-      {!simple && (
+      {/* Video: LED panely a procesory pre LED kalkulačku (staršie položky iného druhu si údaje nechajú). */}
+      {(kind === 'video' || isLedPanel || isLedProcessor || isDisplay) && (
         <fieldset className="rounded-xl border bg-surface p-4">
+          <legend className="px-1 text-sm font-medium text-muted-foreground">Video</legend>
           <label className="flex items-center gap-2 text-sm font-medium">
             <input type="checkbox" className="size-4" {...register('isLedPanel')} />
             LED panel (pre LED kalkulačku)
           </label>
           {isLedPanel && (
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Field label="Pixel pitch (mm)" type="number" inputMode="decimal" min={0} step="0.1" placeholder="napr. 3,9" error={errors.ledPitchMm?.message} {...register('ledPitchMm', asOptionalNumber)} />
               <Field label="Šírka (mm) *" type="number" inputMode="decimal" min={1} error={errors.ledWidthMm?.message} {...register('ledWidthMm', asOptionalNumber)} />
               <Field label="Výška (mm) *" type="number" inputMode="decimal" min={1} error={errors.ledHeightMm?.message} {...register('ledHeightMm', asOptionalNumber)} />
-              <Field label="Pixely šírka *" type="number" inputMode="numeric" min={1} error={errors.ledPxW?.message} {...register('ledPxW', asOptionalNumber)} />
-              <Field label="Pixely výška *" type="number" inputMode="numeric" min={1} error={errors.ledPxH?.message} {...register('ledPxH', asOptionalNumber)} />
+              <Field label="Pixely šírka" type="number" inputMode="numeric" min={1} error={errors.ledPxW?.message} {...register('ledPxW', asOptionalNumber)} />
+              <Field label="Pixely výška" type="number" inputMode="numeric" min={1} error={errors.ledPxH?.message} {...register('ledPxH', asOptionalNumber)} />
               <Field label="Váha (kg)" type="number" inputMode="decimal" min={0} error={errors.ledWeightKg?.message} {...register('ledWeightKg', asOptionalNumber)} />
               <Field label="Príkon max (W)" type="number" inputMode="decimal" min={0} error={errors.ledMaxW?.message} {...register('ledMaxW', asOptionalNumber)} />
               <Field label="Príkon priemer (W)" type="number" inputMode="decimal" min={0} error={errors.ledAvgW?.message} {...register('ledAvgW', asOptionalNumber)} />
-              <p className="col-span-2 self-end text-xs text-muted-foreground sm:col-span-1">Počet kusov = koľko panelov máme.</p>
+              <p className="col-span-2 self-end text-xs text-muted-foreground sm:col-span-4">Pixely sa dopočítajú z rozmeru a pitchu, ak ich nevyplníte. Počet kusov = koľko panelov máme.</p>
+            </div>
+          )}
+          <label className="mt-3 flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" className="size-4" {...register('isDisplay')} />
+            Obrazovka – TV, monitor alebo projektor
+          </label>
+          {isDisplay && (
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+              <SelectField label="Typ" {...register('displayType')}>
+                {DISPLAY_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {DISPLAY_TYPE_LABELS[type]}
+                  </option>
+                ))}
+              </SelectField>
+              <Field label="Rozlíšenie šírka (px)" type="number" inputMode="numeric" placeholder="1920" error={errors.displayResW?.message} {...register('displayResW', asOptionalNumber)} />
+              <Field label="Rozlíšenie výška (px)" type="number" inputMode="numeric" placeholder="1080" error={errors.displayResH?.message} {...register('displayResH', asOptionalNumber)} />
+              <Field label="Uhlopriečka (palce)" type="number" inputMode="decimal" placeholder="55" error={errors.displayDiagonalIn?.message} {...register('displayDiagonalIn', asOptionalNumber)} />
+              {displayType === 'projector' && (
+                <Field label="Svietivosť (lm)" type="number" inputMode="numeric" placeholder="10000" error={errors.displayLumens?.message} {...register('displayLumens', asOptionalNumber)} />
+              )}
             </div>
           )}
           <label className="mt-3 flex items-center gap-2 text-sm font-medium">
@@ -439,9 +503,22 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           </label>
           {isLedProcessor && (
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
-              <Field label="Výstupy (porty) *" type="number" inputMode="numeric" min={1} error={errors.procOutputs?.message} {...register('procOutputs', asOptionalNumber)} />
+              <Field label="Výstupy (CH) *" type="number" inputMode="numeric" min={1} placeholder="napr. 4" error={errors.procOutputs?.message} {...register('procOutputs', asOptionalNumber)} />
+              <Field label="Čip / platforma" placeholder="napr. Novastar, Linsn" maxLength={60} error={errors.procChip?.message} {...register('procChip')} />
+              <SelectField label="Ovládanie" error={errors.procControl?.message} {...register('procControl')}>
+                <option value="">— neuvedené —</option>
+                {PROCESSOR_CONTROLS.map((control) => (
+                  <option key={control} value={control}>
+                    {PROCESSOR_CONTROL_LABELS[control]}
+                  </option>
+                ))}
+              </SelectField>
+              <Field label="HDMI (ks)" type="number" inputMode="numeric" min={0} {...register('procHdmi', asOptionalNumber)} />
+              <Field label="DVI (ks)" type="number" inputMode="numeric" min={0} {...register('procDvi', asOptionalNumber)} />
+              <Field label="SDI (ks)" type="number" inputMode="numeric" min={0} {...register('procSdi', asOptionalNumber)} />
+              <Field label="DisplayPort (ks)" type="number" inputMode="numeric" min={0} {...register('procDp', asOptionalNumber)} />
+              <Field label="VGA (ks)" type="number" inputMode="numeric" min={0} {...register('procVga', asOptionalNumber)} />
               <Field label="Pixelov na výstup" type="number" inputMode="numeric" placeholder="650000" error={errors.procPixels?.message} {...register('procPixels', asOptionalNumber)} />
-              <Field label="Vstupy (HDMI…)" type="number" inputMode="numeric" placeholder="2" error={errors.procInputs?.message} {...register('procInputs', asOptionalNumber)} />
               <Field label="Vstup šírka (px)" type="number" inputMode="numeric" placeholder="1920" error={errors.procInputW?.message} {...register('procInputW', asOptionalNumber)} />
               <Field label="Vstup výška (px)" type="number" inputMode="numeric" placeholder="1080" error={errors.procInputH?.message} {...register('procInputH', asOptionalNumber)} />
             </div>

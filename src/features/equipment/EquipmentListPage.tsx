@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Cable, ChevronRight, Mic, Network, Plus, Search } from 'lucide-react'
+import { Cable, ChevronRight, Mic, Search, Speaker } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { LinkButton } from '@/components/ui/button'
+import { AddMenu } from '@/components/ui/AddMenu'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
@@ -24,6 +24,9 @@ import {
   STATUS_LABELS,
   type EquipmentFilter,
 } from './model'
+import { useLinkedEquipment } from '@/features/links/api'
+import { filterLinkedEquipment } from '@/features/links/filter'
+import { LinkedEquipmentList } from '@/features/links/LinkedEquipmentList'
 import { AdvancedFilter } from './AdvancedFilter'
 import { colorOf, COLOR_CLASSES } from './categoryColors'
 import { PhotoThumb } from './PhotoThumb'
@@ -74,7 +77,12 @@ export function EquipmentListPage() {
   const inService = piecesInService(serviceRecords)
   const unitsOut = unitsInService(serviceRecords)
   const all = list.data ?? []
-  const visible = filterEquipment(all, filter, today)
+  const linked = useLinkedEquipment(company.companyId).data ?? []
+  const linkedCompanies = [...new Map(linked.map((item) => [item.companyId, { id: item.companyId, name: item.companyName }])).values()]
+  const linkedVisible = filterLinkedEquipment(linked, filter)
+  // Pri výbere jednej prepojenej firmy sa naša technika neukazuje.
+  const ownHidden = Boolean(filter.company && filter.company !== 'all')
+  const visible = ownHidden ? [] : filterEquipment(all, filter, today)
   const thumbs = usePhotoThumbs(
     company.companyId,
     all.map((item) => item.photoPath),
@@ -86,28 +94,15 @@ export function EquipmentListPage() {
         title="Technika"
         description={list.data ? `${visible.length} z ${all.length} položiek` : undefined}
         action={
-          <div className="flex flex-wrap justify-end gap-2">
-            <LinkButton to="/equipment/capsules" variant="outline">
-              <Mic className="size-4" aria-hidden />
-              Kapsule
-            </LinkButton>
-            <LinkButton to="/networks" variant="outline">
-              <Network className="size-4" aria-hidden />
-              Siete / IP
-            </LinkButton>
-            {canWrite && (
-              <>
-                <LinkButton to="/equipment/new-cables" variant="outline">
-                  <Cable className="size-4" aria-hidden />
-                  Sada káblov
-                </LinkButton>
-                <LinkButton to="/equipment/new">
-                  <Plus className="size-4" aria-hidden />
-                  Pridať
-                </LinkButton>
-              </>
-            )}
-          </div>
+          canWrite && (
+            <AddMenu
+              items={[
+                { to: '/equipment/new', label: 'Technika', icon: Speaker },
+                { to: '/equipment/new-cables', label: 'Sada káblov', icon: Cable },
+                { to: '/equipment/capsules', label: 'Kapsule k mikrofónom', icon: Mic },
+              ]}
+            />
+          )
         }
       />
 
@@ -129,6 +124,7 @@ export function EquipmentListPage() {
           onChange={set}
           items={all}
           owners={staff.people.filter((person) => person.staffId).map((person) => ({ staffId: person.staffId!, name: person.name }))}
+          linkedCompanies={linkedCompanies}
         >
           <SelectField label="Stav" value={filter.status} onChange={(e) => set({ status: e.target.value as EquipmentFilter['status'] })}>
             <option value="">Všetky stavy</option>
@@ -175,7 +171,7 @@ export function EquipmentListPage() {
           <p className="font-medium">Zatiaľ tu nie je žiadna technika</p>
           {canWrite && <p className="mt-1 text-sm text-muted-foreground">Začnite tlačidlom Pridať.</p>}
         </div>
-      ) : visible.length === 0 ? (
+      ) : ownHidden ? null : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center">
           <p className="font-medium">Filtru nič nezodpovedá</p>
           <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => setFilter(NO_FILTER)}>
@@ -225,6 +221,7 @@ export function EquipmentListPage() {
           })}
         </ul>
       )}
+      <LinkedEquipmentList items={linkedVisible} />
     </>
   )
 }

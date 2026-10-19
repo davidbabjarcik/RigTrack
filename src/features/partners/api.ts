@@ -14,10 +14,14 @@ export type Partner = {
   contacts: PartnerContact[]
   /** Firma v RigTracku, ktorú sme im založili (0064). */
   linkedCompanyId?: string | null
+  /** Zdieľaná s prepojenými firmami (0065). */
+  shared?: boolean
 }
 
 // Väzba na založenú firmu (0064); bez migrácie sa adresár načíta bez nej.
-let linkedColumn = ', linked_company_id'
+const LINK_COLUMNS = [', linked_company_id, shared', ', linked_company_id', '']
+let linkLevel = 0
+const linkedColumn = () => LINK_COLUMNS[linkLevel]
 export type EventPartner = { partnerId: string; kind: 'organizer' | 'partner' }
 
 export const partnerKeys = {
@@ -28,17 +32,17 @@ export const partnerKeys = {
 export async function fetchPartners(companyId: string): Promise<Partner[]> {
   const db = getSupabase()
   const [partners, contacts] = await Promise.all([
-    db.from('partners').select('id, name, ico, dic, address, uses_app, note' + linkedColumn).eq('company_id', companyId).order('name'),
+    db.from('partners').select('id, name, ico, dic, address, uses_app, note' + linkedColumn()).eq('company_id', companyId).order('name'),
     db.from('partner_contacts').select('id, partner_id, name, role, phone, email').eq('company_id', companyId).order('name'),
   ])
-  if (linkedColumn && isMissingColumn(partners.error, 'linked_company_id')) {
-    linkedColumn = ''
+  if (linkLevel < 2 && isMissingColumn(partners.error, linkLevel === 0 ? 'shared' : 'linked_company_id')) {
+    linkLevel += 1
     return fetchPartners(companyId)
   }
   if (partners.error) throw partners.error
   if (contacts.error) throw contacts.error
   const people = contacts.data as (PartnerContact & { partner_id: string })[]
-  return (partners.data as unknown as { id: string; name: string; ico: string; dic: string; address: string; uses_app: boolean; note: string; linked_company_id?: string | null }[]).map((row) => ({
+  return (partners.data as unknown as { id: string; name: string; ico: string; dic: string; address: string; uses_app: boolean; note: string; linked_company_id?: string | null; shared?: boolean }[]).map((row) => ({
     id: row.id,
     name: row.name,
     ico: row.ico,
@@ -47,7 +51,8 @@ export async function fetchPartners(companyId: string): Promise<Partner[]> {
     usesApp: row.uses_app,
     note: row.note,
     contacts: people.filter((person) => person.partner_id === row.id).map(({ id, name, role, phone, email }) => ({ id, name, role, phone, email })),
-    linkedCompanyId: linkedColumn ? (row.linked_company_id ?? null) : undefined,
+    linkedCompanyId: linkLevel < 2 ? (row.linked_company_id ?? null) : undefined,
+    shared: linkLevel === 0 ? Boolean(row.shared) : undefined,
   }))
 }
 

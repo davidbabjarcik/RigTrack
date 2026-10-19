@@ -21,6 +21,29 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.0 – 19. 10. 2026
+
+Veľká verzia: RigTrack už nie je len pre jednu firmu – firmy sa dajú prepojiť a spolupracovať.
+
+- **Prepojené firmy** (Nastavenia → Prepojené firmy): prepojenie kódom firmy, druhá strana potvrdí. Každá firma sama
+  zvolí, čo zdieľa:
+  - **techniku** – u partnera sa ukáže v Technike (Viac filtrov → Firma: naša / naša aj prepojených / len partner),
+    bez cien, sériových čísel a poznámok;
+  - **kontakty** – vo Firmy a kontakty zaškrtnete pri firme „Zdieľať s prepojenými firmami“; partner ich vidí
+    v sekcii „Od prepojených firiem“ a môže si ich skopírovať;
+  - **spoločné eventy** – v detaile eventu „Spoločný event s firmami“: vy zapíšete, čo dodáte, oni čo dodajú
+    (aj prenájom techniky); partner vidí event, termín, miesto a program v Eventoch.
+- **Nové druhy techniky**: **Video** (LED panel s pixel pitchom – pixely sa dopočítajú, obrazovka TV / monitor /
+  projektor s rozlíšením a uhlopriečkou, LED procesor s počtom CH, čipom, ovládaním USB / Ethernet a vstupmi
+  HDMI / DVI / SDI / DisplayPort / VGA) a **DJ technika** (mix, player, gramofón, all-in-one konzola, konzola na PC).
+- **LED kalkulačka**: **rozfázovanie elektriky** (okruhy 16 A po stĺpcoch rozdelené na L1–L3, aj na 2 fázy alebo 1,
+  s ohľadom na iné zaťaženie fáz), **pixel mapa (PNG)**, **nastavenie Novastar** (výstupy, štartovacie X / Y) a
+  **slicy pre Resolume Arena** na stiahnutie; panel P3.9 500×1000 podľa vašich údajov (12,5 kg, 275 W).
+- **Technika**: „Pridať“ je ponuka (technika, sada káblov, kapsule); Siete / IP sú len v menu; na mobile sú
+  „Viac filtrov“ a triedenie rovnako veľké vedľa seba.
+
+Nové migrácie: `0065`.
+
 ### 1.19 – 19. 10. 2026
 
 - **Ročná správa** (menu → Ročná správa): eventy a dni po mesiacoch, kto bol na koľkých akciách, najčastejší klienti,

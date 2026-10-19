@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { SharedEventsSection } from '@/features/links/SharedEventsSection'
 import { LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { formatDate, todayIso } from '@/lib/format'
@@ -91,6 +92,9 @@ export function EventsListPage() {
           ))}
         </ul>
       )}
+      <div className="mt-6">
+        <SharedEventsSection companyId={company.companyId} canEdit={canEdit} />
+      </div>
     </>
   )
 }

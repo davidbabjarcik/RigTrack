@@ -17,7 +17,7 @@ export const PANEL_PRESETS: Panel[] = [
   { name: 'P2.6 500×500', widthMm: 500, heightMm: 500, pxW: 192, pxH: 192, weightKg: 7.5, maxW: 180, avgW: 60 },
   { name: 'P2.9 500×500', widthMm: 500, heightMm: 500, pxW: 168, pxH: 168, weightKg: 7.5, maxW: 200, avgW: 70 },
   { name: 'P3.9 500×500', widthMm: 500, heightMm: 500, pxW: 128, pxH: 128, weightKg: 7.5, maxW: 200, avgW: 70 },
-  { name: 'P3.9 500×1000', widthMm: 500, heightMm: 1000, pxW: 128, pxH: 256, weightKg: 13, maxW: 400, avgW: 140 },
+  { name: 'P3.9 500×1000', widthMm: 500, heightMm: 1000, pxW: 128, pxH: 256, weightKg: 12.5, maxW: 275, avgW: 95 },
   { name: 'P4.8 500×1000 outdoor', widthMm: 500, heightMm: 1000, pxW: 104, pxH: 208, weightKg: 14, maxW: 450, avgW: 150 },
 ]
 

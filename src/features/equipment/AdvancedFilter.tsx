@@ -23,12 +23,14 @@ type Props = {
   onChange: (patch: Partial<EquipmentFilter>) => void
   items: Equipment[]
   owners: { staffId: string; name: string }[]
+  /** Prepojené firmy, ktoré nám zdieľajú techniku. */
+  linkedCompanies?: { id: string; name: string }[]
   /** Základné filtre (stav, kategória, umiestnenie, case) – zobrazia sa na začiatku panela. */
   children?: ReactNode
 }
 
 /** Veľký filter techniky: druh, typ, vlastník, výrobca, upozornenia, Capture, rok nákupu, sieť, odkazy a triedenie. */
-export function AdvancedFilter({ filter, onChange, items, owners, children }: Props) {
+export function AdvancedFilter({ filter, onChange, items, owners, linkedCompanies = [], children }: Props) {
   const count = advancedFilterCount(filter)
   const [open, setOpen] = useState(count > 0)
   const manufacturers = [...new Set(items.map((item) => item.manufacturer.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'sk'))
@@ -39,12 +41,13 @@ export function AdvancedFilter({ filter, onChange, items, owners, children }: Pr
 
   return (
     <div className="sm:col-span-2 lg:col-span-4">
-      <div className="flex flex-wrap items-end gap-2">
-        <Button variant="outline" size="sm" aria-expanded={open} onClick={() => setOpen(!open)}>
+      {/* Na mobile vedľa seba rovnako veľké. */}
+      <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap">
+        <Button variant="outline" aria-expanded={open} onClick={() => setOpen(!open)}>
           <SlidersHorizontal className="size-4" aria-hidden />
           Viac filtrov{count > 0 && ` (${count})`}
         </Button>
-        <SelectField label="Triediť" hideLabel className="w-56" value={filter.sort ?? 'name'} onChange={(e) => onChange({ sort: e.target.value as EquipmentFilter['sort'] })}>
+        <SelectField label="Triediť" hideLabel className="sm:w-56" value={filter.sort ?? 'name'} onChange={(e) => onChange({ sort: e.target.value as EquipmentFilter['sort'] })}>
           {EQUIPMENT_SORTS.map((sort) => (
             <option key={sort} value={sort}>
               {SORT_LABELS[sort]}
@@ -54,8 +57,8 @@ export function AdvancedFilter({ filter, onChange, items, owners, children }: Pr
         {count > 0 && (
           <button
             type="button"
-            className="px-2 py-2 text-sm text-accent hover:underline"
-            onClick={() => onChange({ status: '', categoryId: '', locationId: '', caseId: '', kind: '', audioType: '', owner: '', manufacturer: '', attention: '', capture: '', purchasedYear: '', withNetwork: false, withLinks: false })}
+            className="col-span-2 px-2 py-2 text-left text-sm text-accent hover:underline"
+            onClick={() => onChange({ company: '', status: '', categoryId: '', locationId: '', caseId: '', kind: '', audioType: '', owner: '', manufacturer: '', attention: '', capture: '', purchasedYear: '', withNetwork: false, withLinks: false })}
           >
             Zrušiť filtre
           </button>
@@ -63,6 +66,17 @@ export function AdvancedFilter({ filter, onChange, items, owners, children }: Pr
       </div>
       {open && (
         <div className="mt-3 grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
+          {linkedCompanies.length > 0 && (
+            <SelectField label="Firma" value={filter.company ?? ''} onChange={(e) => onChange({ company: e.target.value })}>
+              <option value="">Len naša technika</option>
+              <option value="all">Naša aj prepojených firiem</option>
+              {linkedCompanies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  Len {company.name}
+                </option>
+              ))}
+            </SelectField>
+          )}
           {children}
           <SelectField label="Druh" value={filter.kind ?? ''} onChange={(e) => onChange({ kind: e.target.value as EquipmentFilter['kind'] })}>
             <option value="">Všetky druhy</option>
