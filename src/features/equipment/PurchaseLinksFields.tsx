@@ -3,7 +3,6 @@ import { useController, useFieldArray, type Control, type FieldErrors, type UseF
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { asOptionalNumber, LINK_TAG_LABELS, LINK_TAGS, parseUnitIds, unitRange, type EquipmentFormValues } from './model'
-import { DEFAULT_DEPRECIATION_YEARS } from './value'
 
 /** Najviac kusov, pri ktorých formulár ukáže dátum nákupu zvlášť. */
 const MAX_UNIT_DATES = 200
@@ -30,7 +29,7 @@ export function PurchaseLinksFields({ control, register, errors, trackUnits, uni
     <>
       <fieldset className="rounded-xl border bg-surface p-4">
         <legend className="px-1 text-sm font-medium text-muted-foreground">Nákup (nepovinné)</legend>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Dátum nákupu" type="date" error={errors.purchasedOn?.message} {...register('purchasedOn')} />
           <Field
             label="Nákupná cena za kus (€)"
@@ -40,16 +39,6 @@ export function PurchaseLinksFields({ control, register, errors, trackUnits, uni
             step="0.01"
             error={errors.purchasePrice?.message}
             {...register('purchasePrice', asOptionalNumber)}
-          />
-          <Field
-            label="Odpísať za (rokov)"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            step={1}
-            placeholder={`${DEFAULT_DEPRECIATION_YEARS}`}
-            error={errors.depreciationYears?.message}
-            {...register('depreciationYears', asOptionalNumber)}
           />
         </div>
         {units.length > 0 && (

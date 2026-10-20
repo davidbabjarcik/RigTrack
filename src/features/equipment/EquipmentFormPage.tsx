@@ -163,7 +163,8 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     category: categories.find((c) => c.id === equipment.categoryId)?.name ?? '',
     location: locations.find((l) => l.id === equipment.locationId)?.name ?? '',
     caseId: equipment.caseId ?? '',
-    manufacturer: equipment.manufacturer,
+    // Staršie pódiá mali značku zvlášť; teraz je vo Výrobcovi.
+    manufacturer: equipment.manufacturer || (equipment.kind === 'stage' ? (equipment.attributes.stageBrand ?? '') : ''),
     model: equipment.model,
     serialNumber: equipment.serialNumber,
     inventoryNumber: equipment.inventoryNumber,
@@ -186,7 +187,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     trussType: equipment.attributes.trussType ?? '',
     trussShape: equipment.attributes.trussShape ?? '',
     stageType: equipment.attributes.stageType ?? '',
-    stageBrand: equipment.attributes.stageBrand ?? '',
+    stageBrand: '',
     stageSize: equipment.attributes.stageSize ?? '',
     audioType: equipment.attributes.audioType ?? '',
     djType: equipment.attributes.djType ?? '',
@@ -575,13 +576,6 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           </SelectField>
           {stageType === 'deck' && (
             <>
-              <Field label="Značka" list={stageBrandList} placeholder="napr. Nivtec originál" maxLength={60} {...register('stageBrand')} />
-              <datalist id={stageBrandList}>
-                <option value="Nivtec originál" />
-                <option value="Nivtec kompatibilné" />
-                <option value="Bütec" />
-                <option value="Litec" />
-              </datalist>
               <Field label="Veľkosť" placeholder="napr. 2 × 1 m" maxLength={40} {...register('stageSize')} />
             </>
           )}
@@ -966,14 +960,17 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label="Kategória"
-          list={categoryListId}
-          placeholder="Vyberte alebo napíšte novú"
-          autoComplete="off"
-          error={errors.category?.message}
-          {...register('category')}
-        />
+        {/* Pódium má vlastný typ (dosky, nohy…), všeobecná kategória by ho len zdvojovala. */}
+        {kind !== 'stage' && (
+          <Field
+            label="Kategória"
+            list={categoryListId}
+            placeholder="Vyberte alebo napíšte novú"
+            autoComplete="off"
+            error={errors.category?.message}
+            {...register('category')}
+          />
+        )}
         <datalist id={categoryListId}>
           {categories.map((category) => (
             <option key={category.id} value={category.name} />
@@ -994,7 +991,21 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           ))}
         </datalist>
 
-        <Field label="Výrobca" error={errors.manufacturer?.message} {...register('manufacturer')} />
+        <Field
+          label={kind === 'stage' ? 'Výrobca / značka' : 'Výrobca'}
+          list={kind === 'stage' ? stageBrandList : undefined}
+          placeholder={kind === 'stage' ? 'napr. Nivtec originál' : undefined}
+          error={errors.manufacturer?.message}
+          {...register('manufacturer')}
+        />
+        {kind === 'stage' && (
+          <datalist id={stageBrandList}>
+            <option value="Nivtec originál" />
+            <option value="Nivtec kompatibilné" />
+            <option value="Bütec" />
+            <option value="Litec" />
+          </datalist>
+        )}
         <Field label="Váha kusu (kg)" type="number" inputMode="decimal" min={0} step="0.1" error={errors.weightKg?.message} {...register('weightKg', asOptionalNumber)} />
         <Field label="Model" error={errors.model?.message} {...register('model')} />
         {!simple && (
