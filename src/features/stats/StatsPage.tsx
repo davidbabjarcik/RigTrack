@@ -165,7 +165,7 @@ export function StatsPage() {
     addDays(today, -365),
   )
 
-  const value = valueSummary(equipment.data ?? [], today, (item) => categories.find((category) => category.id === item.categoryId)?.name ?? 'Bez kategórie')
+  const value = valueSummary(equipment.data ?? [], (item) => categories.find((category) => category.id === item.categoryId)?.name ?? 'Bez kategórie')
 
   // Peniaze vo zvolenom roku.
   const allPayments = payments.data ?? []
@@ -214,15 +214,15 @@ export function StatsPage() {
     ),
     'equipment.value': (
       <Tile
-        label="Hodnota techniky dnes"
-        value={money(value.current)}
-        hint={`nákupná cena ${money(value.purchase)}${value.unpriced > 0 ? ` · ${value.unpriced} položiek bez ceny` : ''}`}
+        label="Hodnota techniky"
+        value={money(value.total)}
+        hint={`podľa nákupných cien${value.unpriced > 0 ? ` · ${value.unpriced} položiek bez ceny` : ''}`}
       />
     ),
     'equipment.valueByCategory': (
       <Ranking
-        title="Hodnota techniky dnes podľa kategórií"
-        rows={value.groups.map((group) => ({ id: group.name, label: group.name, value: group.current }))}
+        title="Hodnota techniky podľa kategórií"
+        rows={value.groups.map((group) => ({ id: group.name, label: group.name, value: group.value }))}
         format={money}
         empty="Technika zatiaľ nemá zadanú nákupnú cenu (Technika → Upraviť → Nákup)."
       />

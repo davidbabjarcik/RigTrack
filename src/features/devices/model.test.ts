@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deviceSchema, isRandomMac, matchesDevice, normalizeMac, type MemberDevice } from './model'
+import { deviceRow, deviceSchema, isRandomMac, matchesDevice, normalizeMac, type MemberDevice } from './model'
 
 const device: MemberDevice = { id: 'd', userId: 'u', kind: 'phone', name: 'iPhone 15', mac: 'A4:83:E7:12:34:56', ethernetMac: '', note: '', networks: [] }
 
@@ -29,5 +29,13 @@ describe('member devices', () => {
     expect(matchesDevice(device, 'Dávid', 'david')).toBe(true)
     expect(matchesDevice(device, 'Dávid', 'e7-12')).toBe(true)
     expect(matchesDevice(device, 'Dávid', 'samsung')).toBe(false)
+  })
+})
+
+describe('device row', () => {
+  it('maps form values to database columns', () => {
+    const row = deviceRow({ kind: 'laptop', name: 'DB-PC', mac: '74:4C:A1:D8:DC:65', ethernetMac: '38:F3:AB:CD:3E:20', note: '', networks: [] })
+    expect(row).toEqual({ kind: 'laptop', name: 'DB-PC', mac: '74:4C:A1:D8:DC:65', ethernet_mac: '38:F3:AB:CD:3E:20', note: '', networks: [] })
+    expect(Object.keys(row).every((key) => /^[a-z_]+$/.test(key))).toBe(true)
   })
 })

@@ -21,12 +21,19 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.13.2 – 20. 10. 2026
+
+- **Oprava: Moje zariadenia sa nedali pridať ani upraviť** (chyba „Nepodarilo sa uložiť“) – appka posielala MAC
+  ethernet / LAN pod nesprávnym názvom stĺpca.
+- **Hodnota techniky bez odpisov**: pri technike je len nákupná cena (za kus a spolu), v Štatistikách súčet
+  nákupných cien celkom a podľa kategórií.
+- Opravná migrácia `0072` je upratanejšia (netreba ju spúšťať znova, ak už prebehla bez chyby).
+
 ### 2.13.1 – 20. 10. 2026
 
 - **Pódium bez zdvojených polí**: značka dosiek je teraz vo „Výrobca / značka“ (s ponukou Nivtec, Bütec, Litec)
   a všeobecná Kategória sa pri pódiu nezobrazuje – typ (dosky, nohy…) ju nahrádza. Doteraz zadaná značka sa pri
   úprave sama presunie do Výrobcu.
-- Pri nákupe techniky sa už nezadáva „Odpísať za (rokov)“ – hodnota sa počíta s odpisom 4 roky.
 
 ### 2.13 – 19. 10. 2026
 

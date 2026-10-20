@@ -9,161 +9,161 @@ begin
   if to_regclass('public.attachments') is not null then
     begin
       execute $sql$alter table public.attachments drop constraint if exists attachments_entity_type_check$sql$;
-      execute $sql$alter table public.attachments add constraint attachments_entity_type_check CHECK ((entity_type = ANY (ARRAY['service'::text, 'vehicle'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.attachments add constraint attachments_entity_type_check CHECK ((entity_type = ANY (ARRAY['service'::text, 'vehicle'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola attachments_entity_type_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.attachments') is not null then
     begin
       execute $sql$alter table public.attachments drop constraint if exists attachments_name_check$sql$;
-      execute $sql$alter table public.attachments add constraint attachments_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 200))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.attachments add constraint attachments_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 200))) not valid$sql$;
     exception when others then raise notice 'Kontrola attachments_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.attachments') is not null then
     begin
       execute $sql$alter table public.attachments drop constraint if exists attachments_path_check$sql$;
-      execute $sql$alter table public.attachments add constraint attachments_path_check CHECK ((char_length(path) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.attachments add constraint attachments_path_check CHECK ((char_length(path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola attachments_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.attachments') is not null then
     begin
       execute $sql$alter table public.attachments drop constraint if exists attachments_size_bytes_check$sql$;
-      execute $sql$alter table public.attachments add constraint attachments_size_bytes_check CHECK ((size_bytes >= 0)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.attachments add constraint attachments_size_bytes_check CHECK ((size_bytes >= 0)) not valid$sql$;
     exception when others then raise notice 'Kontrola attachments_size_bytes_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.audit_log') is not null then
     begin
       execute $sql$alter table public.audit_log drop constraint if exists audit_log_action_check$sql$;
-      execute $sql$alter table public.audit_log add constraint audit_log_action_check CHECK ((action = ANY (ARRAY['insert'::text, 'update'::text, 'delete'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.audit_log add constraint audit_log_action_check CHECK ((action = ANY (ARRAY['insert'::text, 'update'::text, 'delete'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola audit_log_action_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.bug_reports') is not null then
     begin
       execute $sql$alter table public.bug_reports drop constraint if exists bug_reports_app_version_check$sql$;
-      execute $sql$alter table public.bug_reports add constraint bug_reports_app_version_check CHECK ((char_length(app_version) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.bug_reports add constraint bug_reports_app_version_check CHECK ((char_length(app_version) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola bug_reports_app_version_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.bug_reports') is not null then
     begin
       execute $sql$alter table public.bug_reports drop constraint if exists bug_reports_description_check$sql$;
-      execute $sql$alter table public.bug_reports add constraint bug_reports_description_check CHECK ((char_length(description) <= 4000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.bug_reports add constraint bug_reports_description_check CHECK ((char_length(description) <= 4000)) not valid$sql$;
     exception when others then raise notice 'Kontrola bug_reports_description_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.bug_reports') is not null then
     begin
       execute $sql$alter table public.bug_reports drop constraint if exists bug_reports_page_url_check$sql$;
-      execute $sql$alter table public.bug_reports add constraint bug_reports_page_url_check CHECK ((char_length(page_url) <= 500)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.bug_reports add constraint bug_reports_page_url_check CHECK ((char_length(page_url) <= 500)) not valid$sql$;
     exception when others then raise notice 'Kontrola bug_reports_page_url_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.bug_reports') is not null then
     begin
       execute $sql$alter table public.bug_reports drop constraint if exists bug_reports_response_check$sql$;
-      execute $sql$alter table public.bug_reports add constraint bug_reports_response_check CHECK ((char_length(response) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.bug_reports add constraint bug_reports_response_check CHECK ((char_length(response) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola bug_reports_response_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.bug_reports') is not null then
     begin
       execute $sql$alter table public.bug_reports drop constraint if exists bug_reports_screenshot_path_check$sql$;
-      execute $sql$alter table public.bug_reports add constraint bug_reports_screenshot_path_check CHECK ((char_length(screenshot_path) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.bug_reports add constraint bug_reports_screenshot_path_check CHECK ((char_length(screenshot_path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola bug_reports_screenshot_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.bug_reports') is not null then
     begin
       execute $sql$alter table public.bug_reports drop constraint if exists bug_reports_status_check$sql$;
-      execute $sql$alter table public.bug_reports add constraint bug_reports_status_check CHECK ((status = ANY (ARRAY['new'::text, 'in_progress'::text, 'resolved'::text, 'wontfix'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.bug_reports add constraint bug_reports_status_check CHECK ((status = ANY (ARRAY['new'::text, 'in_progress'::text, 'resolved'::text, 'wontfix'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola bug_reports_status_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.bug_reports') is not null then
     begin
       execute $sql$alter table public.bug_reports drop constraint if exists bug_reports_title_check$sql$;
-      execute $sql$alter table public.bug_reports add constraint bug_reports_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 160))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.bug_reports add constraint bug_reports_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 160))) not valid$sql$;
     exception when others then raise notice 'Kontrola bug_reports_title_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.bug_reports') is not null then
     begin
       execute $sql$alter table public.bug_reports drop constraint if exists bug_reports_user_agent_check$sql$;
-      execute $sql$alter table public.bug_reports add constraint bug_reports_user_agent_check CHECK ((char_length(user_agent) <= 400)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.bug_reports add constraint bug_reports_user_agent_check CHECK ((char_length(user_agent) <= 400)) not valid$sql$;
     exception when others then raise notice 'Kontrola bug_reports_user_agent_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cable_colors') is not null then
     begin
       execute $sql$alter table public.cable_colors drop constraint if exists cable_colors_color_check$sql$;
-      execute $sql$alter table public.cable_colors add constraint cable_colors_color_check CHECK ((color ~ '^#[0-9a-f]{6}$'::text)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cable_colors add constraint cable_colors_color_check CHECK ((color ~ '^#[0-9a-f]{6}$'::text)) not valid$sql$;
     exception when others then raise notice 'Kontrola cable_colors_color_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cable_colors') is not null then
     begin
       execute $sql$alter table public.cable_colors drop constraint if exists cable_colors_length_m_check$sql$;
-      execute $sql$alter table public.cable_colors add constraint cable_colors_length_m_check CHECK ((length_m > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cable_colors add constraint cable_colors_length_m_check CHECK ((length_m > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola cable_colors_length_m_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cable_colors') is not null then
     begin
       execute $sql$alter table public.cable_colors drop constraint if exists cable_colors_name_check$sql$;
-      execute $sql$alter table public.cable_colors add constraint cable_colors_name_check CHECK ((char_length(name) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cable_colors add constraint cable_colors_name_check CHECK ((char_length(name) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola cable_colors_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.case_checks') is not null then
     begin
       execute $sql$alter table public.case_checks drop constraint if exists case_checks_note_check$sql$;
-      execute $sql$alter table public.case_checks add constraint case_checks_note_check CHECK ((char_length(note) <= 500)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.case_checks add constraint case_checks_note_check CHECK ((char_length(note) <= 500)) not valid$sql$;
     exception when others then raise notice 'Kontrola case_checks_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.case_templates') is not null then
     begin
       execute $sql$alter table public.case_templates drop constraint if exists case_templates_depth_cm_check$sql$;
-      execute $sql$alter table public.case_templates add constraint case_templates_depth_cm_check CHECK ((depth_cm > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.case_templates add constraint case_templates_depth_cm_check CHECK ((depth_cm > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola case_templates_depth_cm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.case_templates') is not null then
     begin
       execute $sql$alter table public.case_templates drop constraint if exists case_templates_label_category_check$sql$;
-      execute $sql$alter table public.case_templates add constraint case_templates_label_category_check CHECK ((char_length(label_category) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.case_templates add constraint case_templates_label_category_check CHECK ((char_length(label_category) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola case_templates_label_category_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.case_templates') is not null then
     begin
       execute $sql$alter table public.case_templates drop constraint if exists case_templates_length_cm_check$sql$;
-      execute $sql$alter table public.case_templates add constraint case_templates_length_cm_check CHECK ((length_cm > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.case_templates add constraint case_templates_length_cm_check CHECK ((length_cm > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola case_templates_length_cm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.case_templates') is not null then
     begin
       execute $sql$alter table public.case_templates drop constraint if exists case_templates_name_check$sql$;
-      execute $sql$alter table public.case_templates add constraint case_templates_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.case_templates add constraint case_templates_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola case_templates_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.case_templates') is not null then
     begin
       execute $sql$alter table public.case_templates drop constraint if exists case_templates_weight_kg_check$sql$;
-      execute $sql$alter table public.case_templates add constraint case_templates_weight_kg_check CHECK ((weight_kg > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.case_templates add constraint case_templates_weight_kg_check CHECK ((weight_kg > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola case_templates_weight_kg_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.case_templates') is not null then
     begin
       execute $sql$alter table public.case_templates drop constraint if exists case_templates_width_cm_check$sql$;
-      execute $sql$alter table public.case_templates add constraint case_templates_width_cm_check CHECK ((width_cm > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.case_templates add constraint case_templates_width_cm_check CHECK ((width_cm > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola case_templates_width_cm_check: %', sqlerrm;
     end;
   end if;
@@ -177,112 +177,112 @@ begin
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_depth_cm_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_depth_cm_check CHECK ((depth_cm > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_depth_cm_check CHECK ((depth_cm > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_depth_cm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_inventory_number_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_inventory_number_check CHECK ((char_length(inventory_number) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_inventory_number_check CHECK ((char_length(inventory_number) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_inventory_number_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_label_category_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_label_category_check CHECK ((char_length(label_category) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_label_category_check CHECK ((char_length(label_category) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_label_category_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_label_number_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_label_number_check CHECK ((char_length(label_number) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_label_number_check CHECK ((char_length(label_number) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_label_number_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_label_photo_path_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_label_photo_path_check CHECK ((char_length(label_photo_path) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_label_photo_path_check CHECK ((char_length(label_photo_path) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_label_photo_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_label_title_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_label_title_check CHECK ((char_length(label_title) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_label_title_check CHECK ((char_length(label_title) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_label_title_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_length_cm_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_length_cm_check CHECK ((length_cm > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_length_cm_check CHECK ((length_cm > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_length_cm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_name_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_note_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_note_check CHECK ((char_length(note) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_note_check CHECK ((char_length(note) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_photo_path_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_photo_path_check CHECK ((char_length(photo_path) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_photo_path_check CHECK ((char_length(photo_path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_photo_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_spot_level_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_spot_level_check CHECK (((spot_level >= 1) AND (spot_level <= 20))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_spot_level_check CHECK (((spot_level >= 1) AND (spot_level <= 20))) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_spot_level_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_weight_kg_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_weight_kg_check CHECK ((weight_kg > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_weight_kg_check CHECK ((weight_kg > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_weight_kg_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_width_cm_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_width_cm_check CHECK ((width_cm > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_width_cm_check CHECK ((width_cm > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_width_cm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.companies') is not null then
     begin
       execute $sql$alter table public.companies drop constraint if exists companies_label_footer_check$sql$;
-      execute $sql$alter table public.companies add constraint companies_label_footer_check CHECK ((char_length(label_footer) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.companies add constraint companies_label_footer_check CHECK ((char_length(label_footer) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola companies_label_footer_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.companies') is not null then
     begin
       execute $sql$alter table public.companies drop constraint if exists companies_logo_path_check$sql$;
-      execute $sql$alter table public.companies add constraint companies_logo_path_check CHECK ((char_length(logo_path) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.companies add constraint companies_logo_path_check CHECK ((char_length(logo_path) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola companies_logo_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.companies') is not null then
     begin
       execute $sql$alter table public.companies drop constraint if exists companies_name_check$sql$;
-      execute $sql$alter table public.companies add constraint companies_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.companies add constraint companies_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola companies_name_check: %', sqlerrm;
     end;
   end if;
@@ -310,483 +310,483 @@ begin
   if to_regclass('public.company_invitations') is not null then
     begin
       execute $sql$alter table public.company_invitations drop constraint if exists company_invitations_email_check$sql$;
-      execute $sql$alter table public.company_invitations add constraint company_invitations_email_check CHECK (((email = lower(TRIM(BOTH FROM email))) AND (email ~~ '%_@_%'::text))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_invitations add constraint company_invitations_email_check CHECK (((email = lower(TRIM(BOTH FROM email))) AND (email ~~ '%_@_%'::text))) not valid$sql$;
     exception when others then raise notice 'Kontrola company_invitations_email_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_links') is not null then
     begin
       execute $sql$alter table public.company_links drop constraint if exists company_links_check$sql$;
-      execute $sql$alter table public.company_links add constraint company_links_check CHECK ((requester <> target)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_links add constraint company_links_check CHECK ((requester <> target)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_links_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_links') is not null then
     begin
       execute $sql$alter table public.company_links drop constraint if exists company_links_status_check$sql$;
-      execute $sql$alter table public.company_links add constraint company_links_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'accepted'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_links add constraint company_links_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'accepted'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola company_links_status_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_news') is not null then
     begin
       execute $sql$alter table public.company_news drop constraint if exists company_news_kind_check$sql$;
-      execute $sql$alter table public.company_news add constraint company_news_kind_check CHECK ((kind = ANY (ARRAY['event'::text, 'crew'::text, 'other'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_news add constraint company_news_kind_check CHECK ((kind = ANY (ARRAY['event'::text, 'crew'::text, 'other'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola company_news_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_news') is not null then
     begin
       execute $sql$alter table public.company_news drop constraint if exists company_news_link_check$sql$;
-      execute $sql$alter table public.company_news add constraint company_news_link_check CHECK ((char_length(link) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_news add constraint company_news_link_check CHECK ((char_length(link) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_news_link_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_news') is not null then
     begin
       execute $sql$alter table public.company_news drop constraint if exists company_news_title_check$sql$;
-      execute $sql$alter table public.company_news add constraint company_news_title_check CHECK (((char_length(title) >= 1) AND (char_length(title) <= 200))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_news add constraint company_news_title_check CHECK (((char_length(title) >= 1) AND (char_length(title) <= 200))) not valid$sql$;
     exception when others then raise notice 'Kontrola company_news_title_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_profile') is not null then
     begin
       execute $sql$alter table public.company_profile drop constraint if exists company_profile_address_check$sql$;
-      execute $sql$alter table public.company_profile add constraint company_profile_address_check CHECK ((char_length(address) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_profile add constraint company_profile_address_check CHECK ((char_length(address) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_profile_address_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_profile') is not null then
     begin
       execute $sql$alter table public.company_profile drop constraint if exists company_profile_ceo_name_check$sql$;
-      execute $sql$alter table public.company_profile add constraint company_profile_ceo_name_check CHECK ((char_length(ceo_name) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_profile add constraint company_profile_ceo_name_check CHECK ((char_length(ceo_name) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_profile_ceo_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_profile') is not null then
     begin
       execute $sql$alter table public.company_profile drop constraint if exists company_profile_dic_check$sql$;
-      execute $sql$alter table public.company_profile add constraint company_profile_dic_check CHECK ((char_length(dic) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_profile add constraint company_profile_dic_check CHECK ((char_length(dic) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_profile_dic_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_profile') is not null then
     begin
       execute $sql$alter table public.company_profile drop constraint if exists company_profile_email_check$sql$;
-      execute $sql$alter table public.company_profile add constraint company_profile_email_check CHECK ((char_length(email) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_profile add constraint company_profile_email_check CHECK ((char_length(email) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_profile_email_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_profile') is not null then
     begin
       execute $sql$alter table public.company_profile drop constraint if exists company_profile_ic_dph_check$sql$;
-      execute $sql$alter table public.company_profile add constraint company_profile_ic_dph_check CHECK ((char_length(ic_dph) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_profile add constraint company_profile_ic_dph_check CHECK ((char_length(ic_dph) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_profile_ic_dph_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_profile') is not null then
     begin
       execute $sql$alter table public.company_profile drop constraint if exists company_profile_ico_check$sql$;
-      execute $sql$alter table public.company_profile add constraint company_profile_ico_check CHECK ((char_length(ico) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_profile add constraint company_profile_ico_check CHECK ((char_length(ico) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_profile_ico_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_profile') is not null then
     begin
       execute $sql$alter table public.company_profile drop constraint if exists company_profile_legal_name_check$sql$;
-      execute $sql$alter table public.company_profile add constraint company_profile_legal_name_check CHECK ((char_length(legal_name) <= 160)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_profile add constraint company_profile_legal_name_check CHECK ((char_length(legal_name) <= 160)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_profile_legal_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_profile') is not null then
     begin
       execute $sql$alter table public.company_profile drop constraint if exists company_profile_phone_check$sql$;
-      execute $sql$alter table public.company_profile add constraint company_profile_phone_check CHECK ((char_length(phone) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_profile add constraint company_profile_phone_check CHECK ((char_length(phone) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_profile_phone_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_profile') is not null then
     begin
       execute $sql$alter table public.company_profile drop constraint if exists company_profile_warehouse_address_check$sql$;
-      execute $sql$alter table public.company_profile add constraint company_profile_warehouse_address_check CHECK ((char_length(warehouse_address) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_profile add constraint company_profile_warehouse_address_check CHECK ((char_length(warehouse_address) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_profile_warehouse_address_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.company_profile') is not null then
     begin
       execute $sql$alter table public.company_profile drop constraint if exists company_profile_web_check$sql$;
-      execute $sql$alter table public.company_profile add constraint company_profile_web_check CHECK ((char_length(web) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.company_profile add constraint company_profile_web_check CHECK ((char_length(web) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola company_profile_web_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.device_exemptions') is not null then
     begin
       execute $sql$alter table public.device_exemptions drop constraint if exists device_exemptions_kind_check$sql$;
-      execute $sql$alter table public.device_exemptions add constraint device_exemptions_kind_check CHECK ((kind = ANY (ARRAY['phone'::text, 'laptop'::text, 'tablet'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.device_exemptions add constraint device_exemptions_kind_check CHECK ((kind = ANY (ARRAY['phone'::text, 'laptop'::text, 'tablet'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola device_exemptions_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_attributes_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_attributes_check CHECK (((jsonb_typeof(attributes) = 'object'::text) AND (char_length((attributes)::text) <= 2000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_attributes_check CHECK (((jsonb_typeof(attributes) = 'object'::text) AND (char_length((attributes)::text) <= 2000))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_attributes_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_capture_match_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_capture_match_check CHECK ((capture_match = ANY (ARRAY[''::text, 'yes'::text, 'no'::text, 'partial'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_capture_match_check CHECK ((capture_match = ANY (ARRAY[''::text, 'yes'::text, 'no'::text, 'partial'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_capture_match_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_capture_note_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_capture_note_check CHECK ((char_length(capture_note) <= 500)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_capture_note_check CHECK ((char_length(capture_note) <= 500)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_capture_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_clone_of_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_clone_of_check CHECK ((char_length(clone_of) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_clone_of_check CHECK ((char_length(clone_of) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_clone_of_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_hours_interval_months_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_hours_interval_months_check CHECK (((hours_interval_months >= 1) AND (hours_interval_months <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_hours_interval_months_check CHECK (((hours_interval_months >= 1) AND (hours_interval_months <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_hours_interval_months_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_inventory_number_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_inventory_number_check CHECK ((char_length(inventory_number) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_inventory_number_check CHECK ((char_length(inventory_number) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_inventory_number_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_ip_address_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_ip_address_check CHECK (((ip_address = ''::text) OR (ip_address ~ '^(\d{1,3}\.){3}\d{1,3}$'::text))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_ip_address_check CHECK (((ip_address = ''::text) OR (ip_address ~ '^(\d{1,3}\.){3}\d{1,3}$'::text))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_ip_address_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_kind_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_kind_check CHECK ((kind = ANY (ARRAY['general'::text, 'cable'::text, 'light'::text, 'audio'::text, 'video'::text, 'dj'::text, 'it'::text, 'appliance'::text, 'truss'::text, 'stage'::text, 'consumable'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_kind_check CHECK ((kind = ANY (ARRAY['general'::text, 'cable'::text, 'light'::text, 'audio'::text, 'video'::text, 'dj'::text, 'it'::text, 'appliance'::text, 'truss'::text, 'stage'::text, 'consumable'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_label_role_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_label_role_check CHECK ((label_role = ANY (ARRAY['main'::text, 'secondary'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_label_role_check CHECK ((label_role = ANY (ARRAY['main'::text, 'secondary'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_label_role_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_links_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_links_check CHECK (((jsonb_typeof(links) = 'array'::text) AND (char_length((links)::text) <= 10000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_links_check CHECK (((jsonb_typeof(links) = 'array'::text) AND (char_length((links)::text) <= 10000))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_links_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_mac_address_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_mac_address_check CHECK (((mac_address = ''::text) OR (mac_address ~ '^([0-9A-F]{2}:){5}[0-9A-F]{2}$'::text))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_mac_address_check CHECK (((mac_address = ''::text) OR (mac_address ~ '^([0-9A-F]{2}:){5}[0-9A-F]{2}$'::text))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_mac_address_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_manufacturer_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_manufacturer_check CHECK ((char_length(manufacturer) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_manufacturer_check CHECK ((char_length(manufacturer) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_manufacturer_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_min_quantity_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_min_quantity_check CHECK (((min_quantity >= 0) AND (min_quantity <= 100000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_min_quantity_check CHECK (((min_quantity >= 0) AND (min_quantity <= 100000))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_min_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_model_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_model_check CHECK ((char_length(model) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_model_check CHECK ((char_length(model) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_model_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_name_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_note_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_note_check CHECK ((char_length(note) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_note_check CHECK ((char_length(note) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_operating_hours_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_operating_hours_check CHECK ((operating_hours >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_operating_hours_check CHECK ((operating_hours >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_operating_hours_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_photo_path_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_photo_path_check CHECK ((char_length(photo_path) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_photo_path_check CHECK ((char_length(photo_path) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_photo_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_quantity_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_quantity_check CHECK (((quantity >= 0) AND (quantity <= 100000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_quantity_check CHECK (((quantity >= 0) AND (quantity <= 100000))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_rental_price_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_rental_price_check CHECK ((rental_price >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_rental_price_check CHECK ((rental_price >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_rental_price_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_serial_number_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_serial_number_check CHECK ((char_length(serial_number) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_serial_number_check CHECK ((char_length(serial_number) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_serial_number_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_service_interval_months_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_service_interval_months_check CHECK (((service_interval_months >= 1) AND (service_interval_months <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_service_interval_months_check CHECK (((service_interval_months >= 1) AND (service_interval_months <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_service_interval_months_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment') is not null then
     begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_unit_purchases_check$sql$;
-      execute $sql$alter table public.equipment add constraint equipment_unit_purchases_check CHECK (((jsonb_typeof(unit_purchases) = 'object'::text) AND (char_length((unit_purchases)::text) <= 20000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_unit_purchases_check CHECK (((jsonb_typeof(unit_purchases) = 'object'::text) AND (char_length((unit_purchases)::text) <= 20000))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_unit_purchases_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_aliases') is not null then
     begin
       execute $sql$alter table public.equipment_aliases drop constraint if exists equipment_aliases_alias_check$sql$;
-      execute $sql$alter table public.equipment_aliases add constraint equipment_aliases_alias_check CHECK (((char_length(alias) >= 1) AND (char_length(alias) <= 200))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment_aliases add constraint equipment_aliases_alias_check CHECK (((char_length(alias) >= 1) AND (char_length(alias) <= 200))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_aliases_alias_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_categories') is not null then
     begin
       execute $sql$alter table public.equipment_categories drop constraint if exists equipment_categories_color_check$sql$;
-      execute $sql$alter table public.equipment_categories add constraint equipment_categories_color_check CHECK ((color = ANY (ARRAY['green'::text, 'pink'::text, 'yellow'::text, 'red'::text, 'blue'::text, 'purple'::text, 'orange'::text, 'teal'::text, 'gray'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment_categories add constraint equipment_categories_color_check CHECK ((color = ANY (ARRAY['green'::text, 'pink'::text, 'yellow'::text, 'red'::text, 'blue'::text, 'purple'::text, 'orange'::text, 'teal'::text, 'gray'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_categories_color_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_categories') is not null then
     begin
       execute $sql$alter table public.equipment_categories drop constraint if exists equipment_categories_name_check$sql$;
-      execute $sql$alter table public.equipment_categories add constraint equipment_categories_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment_categories add constraint equipment_categories_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_categories_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_hour_readings') is not null then
     begin
       execute $sql$alter table public.equipment_hour_readings drop constraint if exists equipment_hour_readings_hours_check$sql$;
-      execute $sql$alter table public.equipment_hour_readings add constraint equipment_hour_readings_hours_check CHECK ((hours >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment_hour_readings add constraint equipment_hour_readings_hours_check CHECK ((hours >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_hour_readings_hours_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_hour_readings') is not null then
     begin
       execute $sql$alter table public.equipment_hour_readings drop constraint if exists equipment_hour_readings_note_check$sql$;
-      execute $sql$alter table public.equipment_hour_readings add constraint equipment_hour_readings_note_check CHECK ((char_length(note) <= 500)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment_hour_readings add constraint equipment_hour_readings_note_check CHECK ((char_length(note) <= 500)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_hour_readings_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_packages') is not null then
     begin
       execute $sql$alter table public.equipment_packages drop constraint if exists equipment_packages_cases_check$sql$;
-      execute $sql$alter table public.equipment_packages add constraint equipment_packages_cases_check CHECK (((jsonb_typeof(cases) = 'array'::text) AND (pg_column_size(cases) <= 10000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment_packages add constraint equipment_packages_cases_check CHECK (((jsonb_typeof(cases) = 'array'::text) AND (pg_column_size(cases) <= 10000))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_packages_cases_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_packages') is not null then
     begin
       execute $sql$alter table public.equipment_packages drop constraint if exists equipment_packages_category_check$sql$;
-      execute $sql$alter table public.equipment_packages add constraint equipment_packages_category_check CHECK ((char_length(category) <= 60)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment_packages add constraint equipment_packages_category_check CHECK ((char_length(category) <= 60)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_packages_category_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_packages') is not null then
     begin
       execute $sql$alter table public.equipment_packages drop constraint if exists equipment_packages_items_check$sql$;
-      execute $sql$alter table public.equipment_packages add constraint equipment_packages_items_check CHECK (((jsonb_typeof(items) = 'array'::text) AND (pg_column_size(items) <= 30000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment_packages add constraint equipment_packages_items_check CHECK (((jsonb_typeof(items) = 'array'::text) AND (pg_column_size(items) <= 30000))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_packages_items_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_packages') is not null then
     begin
       execute $sql$alter table public.equipment_packages drop constraint if exists equipment_packages_name_check$sql$;
-      execute $sql$alter table public.equipment_packages add constraint equipment_packages_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment_packages add constraint equipment_packages_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_packages_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_packages') is not null then
     begin
       execute $sql$alter table public.equipment_packages drop constraint if exists equipment_packages_note_check$sql$;
-      execute $sql$alter table public.equipment_packages add constraint equipment_packages_note_check CHECK ((char_length(note) <= 500)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.equipment_packages add constraint equipment_packages_note_check CHECK ((char_length(note) <= 500)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_packages_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_capsules') is not null then
     begin
       execute $sql$alter table public.event_capsules drop constraint if exists event_capsules_note_check$sql$;
-      execute $sql$alter table public.event_capsules add constraint event_capsules_note_check CHECK ((char_length(note) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_capsules add constraint event_capsules_note_check CHECK ((char_length(note) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_capsules_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_capsules') is not null then
     begin
       execute $sql$alter table public.event_capsules drop constraint if exists event_capsules_quantity_check$sql$;
-      execute $sql$alter table public.event_capsules add constraint event_capsules_quantity_check CHECK (((quantity >= 1) AND (quantity <= 1000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_capsules add constraint event_capsules_quantity_check CHECK (((quantity >= 1) AND (quantity <= 1000))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_capsules_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_crew') is not null then
     begin
       execute $sql$alter table public.event_crew drop constraint if exists event_crew_name_check$sql$;
-      execute $sql$alter table public.event_crew add constraint event_crew_name_check CHECK ((char_length(name) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_crew add constraint event_crew_name_check CHECK ((char_length(name) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_crew_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_crew') is not null then
     begin
       execute $sql$alter table public.event_crew drop constraint if exists event_crew_response_check$sql$;
-      execute $sql$alter table public.event_crew add constraint event_crew_response_check CHECK ((response = ANY (ARRAY['pending'::text, 'yes'::text, 'no'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_crew add constraint event_crew_response_check CHECK ((response = ANY (ARRAY['pending'::text, 'yes'::text, 'no'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_crew_response_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_crew') is not null then
     begin
       execute $sql$alter table public.event_crew drop constraint if exists event_crew_response_note_check$sql$;
-      execute $sql$alter table public.event_crew add constraint event_crew_response_note_check CHECK ((char_length(response_note) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_crew add constraint event_crew_response_note_check CHECK ((char_length(response_note) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_crew_response_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_crew') is not null then
     begin
       execute $sql$alter table public.event_crew drop constraint if exists event_crew_role_check$sql$;
-      execute $sql$alter table public.event_crew add constraint event_crew_role_check CHECK ((char_length(role) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_crew add constraint event_crew_role_check CHECK ((char_length(role) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_crew_role_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_days') is not null then
     begin
       execute $sql$alter table public.event_days drop constraint if exists event_days_kind_check$sql$;
-      execute $sql$alter table public.event_days add constraint event_days_kind_check CHECK ((kind = ANY (ARRAY['build'::text, 'show'::text, 'teardown'::text, 'travel'::text, 'rest'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_days add constraint event_days_kind_check CHECK ((kind = ANY (ARRAY['build'::text, 'show'::text, 'teardown'::text, 'travel'::text, 'rest'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_days_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_days') is not null then
     begin
       execute $sql$alter table public.event_days drop constraint if exists event_days_note_check$sql$;
-      execute $sql$alter table public.event_days add constraint event_days_note_check CHECK ((char_length(note) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_days add constraint event_days_note_check CHECK ((char_length(note) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_days_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_documents') is not null then
     begin
       execute $sql$alter table public.event_documents drop constraint if exists event_documents_name_check$sql$;
-      execute $sql$alter table public.event_documents add constraint event_documents_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 200))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_documents add constraint event_documents_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 200))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_documents_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_documents') is not null then
     begin
       execute $sql$alter table public.event_documents drop constraint if exists event_documents_path_check$sql$;
-      execute $sql$alter table public.event_documents add constraint event_documents_path_check CHECK ((char_length(path) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_documents add constraint event_documents_path_check CHECK ((char_length(path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_documents_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_documents') is not null then
     begin
       execute $sql$alter table public.event_documents drop constraint if exists event_documents_size_bytes_check$sql$;
-      execute $sql$alter table public.event_documents add constraint event_documents_size_bytes_check CHECK ((size_bytes >= 0)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_documents add constraint event_documents_size_bytes_check CHECK ((size_bytes >= 0)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_documents_size_bytes_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_equipment') is not null then
     begin
       execute $sql$alter table public.event_equipment drop constraint if exists event_equipment_quantity_check$sql$;
-      execute $sql$alter table public.event_equipment add constraint event_equipment_quantity_check CHECK (((quantity >= 1) AND (quantity <= 100000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_equipment add constraint event_equipment_quantity_check CHECK (((quantity >= 1) AND (quantity <= 100000))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_equipment_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_expenses') is not null then
     begin
       execute $sql$alter table public.event_expenses drop constraint if exists event_expenses_amount_check$sql$;
-      execute $sql$alter table public.event_expenses add constraint event_expenses_amount_check CHECK (((amount > (0)::numeric) AND (amount < (1000000)::numeric))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_expenses add constraint event_expenses_amount_check CHECK (((amount > (0)::numeric) AND (amount < (1000000)::numeric))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_expenses_amount_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_expenses') is not null then
     begin
       execute $sql$alter table public.event_expenses drop constraint if exists event_expenses_category_check$sql$;
-      execute $sql$alter table public.event_expenses add constraint event_expenses_category_check CHECK ((category = ANY (ARRAY['fuel'::text, 'food'::text, 'accommodation'::text, 'parking'::text, 'material'::text, 'other'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_expenses add constraint event_expenses_category_check CHECK ((category = ANY (ARRAY['fuel'::text, 'food'::text, 'accommodation'::text, 'parking'::text, 'material'::text, 'other'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_expenses_category_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_expenses') is not null then
     begin
       execute $sql$alter table public.event_expenses drop constraint if exists event_expenses_note_check$sql$;
-      execute $sql$alter table public.event_expenses add constraint event_expenses_note_check CHECK ((char_length(note) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_expenses add constraint event_expenses_note_check CHECK ((char_length(note) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_expenses_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_expenses') is not null then
     begin
       execute $sql$alter table public.event_expenses drop constraint if exists event_expenses_place_check$sql$;
-      execute $sql$alter table public.event_expenses add constraint event_expenses_place_check CHECK ((char_length(place) <= 160)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_expenses add constraint event_expenses_place_check CHECK ((char_length(place) <= 160)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_expenses_place_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_links') is not null then
     begin
       execute $sql$alter table public.event_links drop constraint if exists event_links_tag_check$sql$;
-      execute $sql$alter table public.event_links add constraint event_links_tag_check CHECK ((tag = ANY (ARRAY['rider'::text, 'lightplot'::text, 'stageplot'::text, 'tech'::text, 'contract'::text, 'photos'::text, 'other'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_links add constraint event_links_tag_check CHECK ((tag = ANY (ARRAY['rider'::text, 'lightplot'::text, 'stageplot'::text, 'tech'::text, 'contract'::text, 'photos'::text, 'other'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_links_tag_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_links') is not null then
     begin
       execute $sql$alter table public.event_links drop constraint if exists event_links_title_check$sql$;
-      execute $sql$alter table public.event_links add constraint event_links_title_check CHECK ((char_length(title) <= 160)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_links add constraint event_links_title_check CHECK ((char_length(title) <= 160)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_links_title_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_links') is not null then
     begin
       execute $sql$alter table public.event_links drop constraint if exists event_links_url_check$sql$;
-      execute $sql$alter table public.event_links add constraint event_links_url_check CHECK (((url ~* '^https?://'::text) AND (char_length(url) <= 1000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_links add constraint event_links_url_check CHECK (((url ~* '^https?://'::text) AND (char_length(url) <= 1000))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_links_url_check: %', sqlerrm;
     end;
   end if;
@@ -807,378 +807,378 @@ begin
   if to_regclass('public.event_partners') is not null then
     begin
       execute $sql$alter table public.event_partners drop constraint if exists event_partners_kind_check$sql$;
-      execute $sql$alter table public.event_partners add constraint event_partners_kind_check CHECK ((kind = ANY (ARRAY['organizer'::text, 'partner'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_partners add constraint event_partners_kind_check CHECK ((kind = ANY (ARRAY['organizer'::text, 'partner'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_partners_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_patch') is not null then
     begin
       execute $sql$alter table public.event_patch drop constraint if exists event_patch_channel_check$sql$;
-      execute $sql$alter table public.event_patch add constraint event_patch_channel_check CHECK (((channel >= 1) AND (channel <= 512))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_patch add constraint event_patch_channel_check CHECK (((channel >= 1) AND (channel <= 512))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_patch_channel_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_patch') is not null then
     begin
       execute $sql$alter table public.event_patch drop constraint if exists event_patch_connector_check$sql$;
-      execute $sql$alter table public.event_patch add constraint event_patch_connector_check CHECK ((connector = ANY (ARRAY[''::text, 'xlr'::text, 'jack'::text, 'other'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_patch add constraint event_patch_connector_check CHECK ((connector = ANY (ARRAY[''::text, 'xlr'::text, 'jack'::text, 'other'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_patch_connector_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_patch') is not null then
     begin
       execute $sql$alter table public.event_patch drop constraint if exists event_patch_name_check$sql$;
-      execute $sql$alter table public.event_patch add constraint event_patch_name_check CHECK ((char_length(name) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_patch add constraint event_patch_name_check CHECK ((char_length(name) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_patch_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_patch') is not null then
     begin
       execute $sql$alter table public.event_patch drop constraint if exists event_patch_note_check$sql$;
-      execute $sql$alter table public.event_patch add constraint event_patch_note_check CHECK ((char_length(note) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_patch add constraint event_patch_note_check CHECK ((char_length(note) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_patch_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_patch') is not null then
     begin
       execute $sql$alter table public.event_patch drop constraint if exists event_patch_source_check$sql$;
-      execute $sql$alter table public.event_patch add constraint event_patch_source_check CHECK ((source = ANY (ARRAY['mic'::text, 'wireless'::text, 'di'::text, 'port'::text, 'other'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_patch add constraint event_patch_source_check CHECK ((source = ANY (ARRAY['mic'::text, 'wireless'::text, 'di'::text, 'port'::text, 'other'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_patch_source_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_patch') is not null then
     begin
       execute $sql$alter table public.event_patch drop constraint if exists event_patch_stagebox_check$sql$;
-      execute $sql$alter table public.event_patch add constraint event_patch_stagebox_check CHECK ((char_length(stagebox) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_patch add constraint event_patch_stagebox_check CHECK ((char_length(stagebox) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_patch_stagebox_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_patch') is not null then
     begin
       execute $sql$alter table public.event_patch drop constraint if exists event_patch_stagebox_input_check$sql$;
-      execute $sql$alter table public.event_patch add constraint event_patch_stagebox_input_check CHECK (((stagebox_input >= 1) AND (stagebox_input <= 512))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_patch add constraint event_patch_stagebox_input_check CHECK (((stagebox_input >= 1) AND (stagebox_input <= 512))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_patch_stagebox_input_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_patch') is not null then
     begin
       execute $sql$alter table public.event_patch drop constraint if exists event_patch_stand_check$sql$;
-      execute $sql$alter table public.event_patch add constraint event_patch_stand_check CHECK ((stand = ANY (ARRAY[''::text, 'short'::text, 'tall'::text, 'clamp'::text, 'none'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_patch add constraint event_patch_stand_check CHECK ((stand = ANY (ARRAY[''::text, 'short'::text, 'tall'::text, 'clamp'::text, 'none'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_patch_stand_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_payments') is not null then
     begin
       execute $sql$alter table public.event_payments drop constraint if exists event_payments_amount_check$sql$;
-      execute $sql$alter table public.event_payments add constraint event_payments_amount_check CHECK (((amount > (0)::numeric) AND (amount < (10000000)::numeric))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_payments add constraint event_payments_amount_check CHECK (((amount > (0)::numeric) AND (amount < (10000000)::numeric))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_payments_amount_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_payments') is not null then
     begin
       execute $sql$alter table public.event_payments drop constraint if exists event_payments_invoiced_by_check$sql$;
-      execute $sql$alter table public.event_payments add constraint event_payments_invoiced_by_check CHECK ((char_length(invoiced_by) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_payments add constraint event_payments_invoiced_by_check CHECK ((char_length(invoiced_by) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_payments_invoiced_by_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_payments') is not null then
     begin
       execute $sql$alter table public.event_payments drop constraint if exists event_payments_method_check$sql$;
-      execute $sql$alter table public.event_payments add constraint event_payments_method_check CHECK ((method = ANY (ARRAY['cash'::text, 'account'::text, 'invoice'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_payments add constraint event_payments_method_check CHECK ((method = ANY (ARRAY['cash'::text, 'account'::text, 'invoice'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_payments_method_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_payments') is not null then
     begin
       execute $sql$alter table public.event_payments drop constraint if exists event_payments_note_check$sql$;
-      execute $sql$alter table public.event_payments add constraint event_payments_note_check CHECK ((char_length(note) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_payments add constraint event_payments_note_check CHECK ((char_length(note) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_payments_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_payments') is not null then
     begin
       execute $sql$alter table public.event_payments drop constraint if exists event_payments_vat_check$sql$;
-      execute $sql$alter table public.event_payments add constraint event_payments_vat_check CHECK ((vat = ANY (ARRAY['with'::text, 'without'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_payments add constraint event_payments_vat_check CHECK ((vat = ANY (ARRAY['with'::text, 'without'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_payments_vat_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_payments') is not null then
     begin
       execute $sql$alter table public.event_payments drop constraint if exists event_payments_vat_rate_check$sql$;
-      execute $sql$alter table public.event_payments add constraint event_payments_vat_rate_check CHECK (((vat_rate >= (0)::numeric) AND (vat_rate <= (50)::numeric))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_payments add constraint event_payments_vat_rate_check CHECK (((vat_rate >= (0)::numeric) AND (vat_rate <= (50)::numeric))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_payments_vat_rate_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_rules') is not null then
     begin
       execute $sql$alter table public.event_rules drop constraint if exists event_rules_rules_check$sql$;
-      execute $sql$alter table public.event_rules add constraint event_rules_rules_check CHECK (((jsonb_typeof(rules) = 'array'::text) AND (pg_column_size(rules) <= 50000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_rules add constraint event_rules_rules_check CHECK (((jsonb_typeof(rules) = 'array'::text) AND (pg_column_size(rules) <= 50000))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_rules_rules_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_shares') is not null then
     begin
       execute $sql$alter table public.event_shares drop constraint if exists event_shares_owner_part_check$sql$;
-      execute $sql$alter table public.event_shares add constraint event_shares_owner_part_check CHECK ((char_length(owner_part) <= 1000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_shares add constraint event_shares_owner_part_check CHECK ((char_length(owner_part) <= 1000)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_shares_owner_part_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_shares') is not null then
     begin
       execute $sql$alter table public.event_shares drop constraint if exists event_shares_partner_part_check$sql$;
-      execute $sql$alter table public.event_shares add constraint event_shares_partner_part_check CHECK ((char_length(partner_part) <= 1000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_shares add constraint event_shares_partner_part_check CHECK ((char_length(partner_part) <= 1000)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_shares_partner_part_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_travel') is not null then
     begin
       execute $sql$alter table public.event_travel drop constraint if exists event_travel_extra_km_check$sql$;
-      execute $sql$alter table public.event_travel add constraint event_travel_extra_km_check CHECK ((extra_km >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_travel add constraint event_travel_extra_km_check CHECK ((extra_km >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_travel_extra_km_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_travel') is not null then
     begin
       execute $sql$alter table public.event_travel drop constraint if exists event_travel_note_check$sql$;
-      execute $sql$alter table public.event_travel add constraint event_travel_note_check CHECK ((char_length(note) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_travel add constraint event_travel_note_check CHECK ((char_length(note) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_travel_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_travel') is not null then
     begin
       execute $sql$alter table public.event_travel drop constraint if exists event_travel_round_trips_check$sql$;
-      execute $sql$alter table public.event_travel add constraint event_travel_round_trips_check CHECK (((round_trips >= 0) AND (round_trips <= 20))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_travel add constraint event_travel_round_trips_check CHECK (((round_trips >= 0) AND (round_trips <= 20))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_travel_round_trips_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_travel') is not null then
     begin
       execute $sql$alter table public.event_travel drop constraint if exists event_travel_stay_check$sql$;
-      execute $sql$alter table public.event_travel add constraint event_travel_stay_check CHECK ((stay = ANY (ARRAY['home'::text, 'venue'::text, 'elsewhere'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_travel add constraint event_travel_stay_check CHECK ((stay = ANY (ARRAY['home'::text, 'venue'::text, 'elsewhere'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_travel_stay_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_travel') is not null then
     begin
       execute $sql$alter table public.event_travel drop constraint if exists event_travel_stay_place_check$sql$;
-      execute $sql$alter table public.event_travel add constraint event_travel_stay_place_check CHECK ((char_length(stay_place) <= 160)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_travel add constraint event_travel_stay_place_check CHECK ((char_length(stay_place) <= 160)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_travel_stay_place_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_travel') is not null then
     begin
       execute $sql$alter table public.event_travel drop constraint if exists event_travel_vehicles_check$sql$;
-      execute $sql$alter table public.event_travel add constraint event_travel_vehicles_check CHECK (((vehicles >= 0) AND (vehicles <= 50))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_travel add constraint event_travel_vehicles_check CHECK (((vehicles >= 0) AND (vehicles <= 50))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_travel_vehicles_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_work_logs') is not null then
     begin
       execute $sql$alter table public.event_work_logs drop constraint if exists event_work_logs_break_minutes_check$sql$;
-      execute $sql$alter table public.event_work_logs add constraint event_work_logs_break_minutes_check CHECK (((break_minutes >= 0) AND (break_minutes <= 1440))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_work_logs add constraint event_work_logs_break_minutes_check CHECK (((break_minutes >= 0) AND (break_minutes <= 1440))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_work_logs_break_minutes_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_work_logs') is not null then
     begin
       execute $sql$alter table public.event_work_logs drop constraint if exists event_work_logs_note_check$sql$;
-      execute $sql$alter table public.event_work_logs add constraint event_work_logs_note_check CHECK ((char_length(note) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.event_work_logs add constraint event_work_logs_note_check CHECK ((char_length(note) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_work_logs_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_address_check$sql$;
-      execute $sql$alter table public.events add constraint events_address_check CHECK ((char_length(address) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_address_check CHECK ((char_length(address) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_address_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_check$sql$;
-      execute $sql$alter table public.events add constraint events_check CHECK ((ends_on >= starts_on)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_check CHECK ((ends_on >= starts_on)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_client_check$sql$;
-      execute $sql$alter table public.events add constraint events_client_check CHECK ((char_length(client) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_client_check CHECK ((char_length(client) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_client_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_description_check$sql$;
-      execute $sql$alter table public.events add constraint events_description_check CHECK ((char_length(description) <= 8000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_description_check CHECK ((char_length(description) <= 8000)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_description_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_distance_km_check$sql$;
-      execute $sql$alter table public.events add constraint events_distance_km_check CHECK ((distance_km >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_distance_km_check CHECK ((distance_km >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_distance_km_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_name_check$sql$;
-      execute $sql$alter table public.events add constraint events_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 160))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 160))) not valid$sql$;
     exception when others then raise notice 'Kontrola events_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_note_check$sql$;
-      execute $sql$alter table public.events add constraint events_note_check CHECK ((char_length(note) <= 4000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_note_check CHECK ((char_length(note) <= 4000)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_organizer_check$sql$;
-      execute $sql$alter table public.events add constraint events_organizer_check CHECK ((char_length(organizer) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_organizer_check CHECK ((char_length(organizer) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_organizer_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_organizer_email_check$sql$;
-      execute $sql$alter table public.events add constraint events_organizer_email_check CHECK ((char_length(organizer_email) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_organizer_email_check CHECK ((char_length(organizer_email) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_organizer_email_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_organizer_person_check$sql$;
-      execute $sql$alter table public.events add constraint events_organizer_person_check CHECK ((char_length(organizer_person) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_organizer_person_check CHECK ((char_length(organizer_person) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_organizer_person_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_organizer_phone_check$sql$;
-      execute $sql$alter table public.events add constraint events_organizer_phone_check CHECK ((char_length(organizer_phone) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_organizer_phone_check CHECK ((char_length(organizer_phone) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_organizer_phone_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_power_check$sql$;
-      execute $sql$alter table public.events add constraint events_power_check CHECK ((power = ANY (ARRAY[''::text, 'schuko16'::text, 'cee16'::text, 'cee32'::text, 'cee63'::text, 'cee125'::text, 'generator'::text, 'none'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_power_check CHECK ((power = ANY (ARRAY[''::text, 'schuko16'::text, 'cee16'::text, 'cee32'::text, 'cee63'::text, 'cee125'::text, 'generator'::text, 'none'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola events_power_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_power_count_check$sql$;
-      execute $sql$alter table public.events add constraint events_power_count_check CHECK (((power_count >= 1) AND (power_count <= 50))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_power_count_check CHECK (((power_count >= 1) AND (power_count <= 50))) not valid$sql$;
     exception when others then raise notice 'Kontrola events_power_count_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_power_note_check$sql$;
-      execute $sql$alter table public.events add constraint events_power_note_check CHECK ((char_length(power_note) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_power_note_check CHECK ((char_length(power_note) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_power_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_setting_check$sql$;
-      execute $sql$alter table public.events add constraint events_setting_check CHECK ((setting = ANY (ARRAY[''::text, 'indoor'::text, 'outdoor'::text, 'mixed'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_setting_check CHECK ((setting = ANY (ARRAY[''::text, 'indoor'::text, 'outdoor'::text, 'mixed'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola events_setting_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_status_check$sql$;
-      execute $sql$alter table public.events add constraint events_status_check CHECK ((status = ANY (ARRAY['planned'::text, 'confirmed'::text, 'done'::text, 'cancelled'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_status_check CHECK ((status = ANY (ARRAY['planned'::text, 'confirmed'::text, 'done'::text, 'cancelled'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola events_status_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_venue_check$sql$;
-      execute $sql$alter table public.events add constraint events_venue_check CHECK ((char_length(venue) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_venue_check CHECK ((char_length(venue) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_venue_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.events') is not null then
     begin
       execute $sql$alter table public.events drop constraint if exists events_weather_place_check$sql$;
-      execute $sql$alter table public.events add constraint events_weather_place_check CHECK ((char_length(weather_place) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.events add constraint events_weather_place_check CHECK ((char_length(weather_place) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola events_weather_place_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.incidents') is not null then
     begin
       execute $sql$alter table public.incidents drop constraint if exists incidents_cost_check$sql$;
-      execute $sql$alter table public.incidents add constraint incidents_cost_check CHECK ((cost >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.incidents add constraint incidents_cost_check CHECK ((cost >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola incidents_cost_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.incidents') is not null then
     begin
       execute $sql$alter table public.incidents drop constraint if exists incidents_description_check$sql$;
-      execute $sql$alter table public.incidents add constraint incidents_description_check CHECK ((char_length(description) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.incidents add constraint incidents_description_check CHECK ((char_length(description) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola incidents_description_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.incidents') is not null then
     begin
       execute $sql$alter table public.incidents drop constraint if exists incidents_kind_check$sql$;
-      execute $sql$alter table public.incidents add constraint incidents_kind_check CHECK ((kind = ANY (ARRAY['damage'::text, 'injury'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.incidents add constraint incidents_kind_check CHECK ((kind = ANY (ARRAY['damage'::text, 'injury'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola incidents_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.incidents') is not null then
     begin
       execute $sql$alter table public.incidents drop constraint if exists incidents_paid_by_check$sql$;
-      execute $sql$alter table public.incidents add constraint incidents_paid_by_check CHECK ((paid_by = ANY (ARRAY[''::text, 'company'::text, 'person'::text, 'insurance'::text, 'other'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.incidents add constraint incidents_paid_by_check CHECK ((paid_by = ANY (ARRAY[''::text, 'company'::text, 'person'::text, 'insurance'::text, 'other'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola incidents_paid_by_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.incidents') is not null then
     begin
       execute $sql$alter table public.incidents drop constraint if exists incidents_person_name_check$sql$;
-      execute $sql$alter table public.incidents add constraint incidents_person_name_check CHECK ((char_length(person_name) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.incidents add constraint incidents_person_name_check CHECK ((char_length(person_name) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola incidents_person_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.incidents') is not null then
     begin
       execute $sql$alter table public.incidents drop constraint if exists incidents_severity_check$sql$;
-      execute $sql$alter table public.incidents add constraint incidents_severity_check CHECK ((severity = ANY (ARRAY['minor'::text, 'medium'::text, 'serious'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.incidents add constraint incidents_severity_check CHECK ((severity = ANY (ARRAY['minor'::text, 'medium'::text, 'serious'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola incidents_severity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.incidents') is not null then
     begin
       execute $sql$alter table public.incidents drop constraint if exists incidents_title_check$sql$;
-      execute $sql$alter table public.incidents add constraint incidents_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 200))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.incidents add constraint incidents_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 200))) not valid$sql$;
     exception when others then raise notice 'Kontrola incidents_title_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loan_items') is not null then
     begin
       execute $sql$alter table public.loan_items drop constraint if exists loan_items_damaged_quantity_check$sql$;
-      execute $sql$alter table public.loan_items add constraint loan_items_damaged_quantity_check CHECK ((damaged_quantity >= 0)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loan_items add constraint loan_items_damaged_quantity_check CHECK ((damaged_quantity >= 0)) not valid$sql$;
     exception when others then raise notice 'Kontrola loan_items_damaged_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loan_items') is not null then
     begin
       execute $sql$alter table public.loan_items drop constraint if exists loan_items_quantity_check$sql$;
-      execute $sql$alter table public.loan_items add constraint loan_items_quantity_check CHECK (((quantity >= 1) AND (quantity <= 100000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loan_items add constraint loan_items_quantity_check CHECK (((quantity >= 1) AND (quantity <= 100000))) not valid$sql$;
     exception when others then raise notice 'Kontrola loan_items_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loan_items') is not null then
     begin
       execute $sql$alter table public.loan_items drop constraint if exists loan_items_unit_price_check$sql$;
-      execute $sql$alter table public.loan_items add constraint loan_items_unit_price_check CHECK ((unit_price >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loan_items add constraint loan_items_unit_price_check CHECK ((unit_price >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola loan_items_unit_price_check: %', sqlerrm;
     end;
   end if;
@@ -1213,1141 +1213,1141 @@ begin
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_billed_days_check$sql$;
-      execute $sql$alter table public.loans add constraint loans_billed_days_check CHECK (((billed_days >= 1) AND (billed_days <= 3650))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loans add constraint loans_billed_days_check CHECK (((billed_days >= 1) AND (billed_days <= 3650))) not valid$sql$;
     exception when others then raise notice 'Kontrola loans_billed_days_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_borrower_address_check$sql$;
-      execute $sql$alter table public.loans add constraint loans_borrower_address_check CHECK ((char_length(borrower_address) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loans add constraint loans_borrower_address_check CHECK ((char_length(borrower_address) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola loans_borrower_address_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_borrower_check$sql$;
-      execute $sql$alter table public.loans add constraint loans_borrower_check CHECK (((char_length(TRIM(BOTH FROM borrower)) >= 1) AND (char_length(TRIM(BOTH FROM borrower)) <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loans add constraint loans_borrower_check CHECK (((char_length(TRIM(BOTH FROM borrower)) >= 1) AND (char_length(TRIM(BOTH FROM borrower)) <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola loans_borrower_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_borrower_ico_check$sql$;
-      execute $sql$alter table public.loans add constraint loans_borrower_ico_check CHECK ((char_length(borrower_ico) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loans add constraint loans_borrower_ico_check CHECK ((char_length(borrower_ico) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola loans_borrower_ico_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_check$sql$;
-      execute $sql$alter table public.loans add constraint loans_check CHECK ((ends_on >= starts_on)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loans add constraint loans_check CHECK ((ends_on >= starts_on)) not valid$sql$;
     exception when others then raise notice 'Kontrola loans_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_contact_check$sql$;
-      execute $sql$alter table public.loans add constraint loans_contact_check CHECK ((char_length(contact) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loans add constraint loans_contact_check CHECK ((char_length(contact) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola loans_contact_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_deposit_check$sql$;
-      execute $sql$alter table public.loans add constraint loans_deposit_check CHECK ((deposit >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loans add constraint loans_deposit_check CHECK ((deposit >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola loans_deposit_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_note_check$sql$;
-      execute $sql$alter table public.loans add constraint loans_note_check CHECK ((char_length(note) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loans add constraint loans_note_check CHECK ((char_length(note) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola loans_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_price_check$sql$;
-      execute $sql$alter table public.loans add constraint loans_price_check CHECK ((price >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loans add constraint loans_price_check CHECK ((price >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola loans_price_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.loans') is not null then
     begin
       execute $sql$alter table public.loans drop constraint if exists loans_status_check$sql$;
-      execute $sql$alter table public.loans add constraint loans_status_check CHECK ((status = ANY (ARRAY['reserved'::text, 'issued'::text, 'returned'::text, 'damaged'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.loans add constraint loans_status_check CHECK ((status = ANY (ARRAY['reserved'::text, 'issued'::text, 'returned'::text, 'damaged'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola loans_status_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.locations') is not null then
     begin
       execute $sql$alter table public.locations drop constraint if exists locations_name_check$sql$;
-      execute $sql$alter table public.locations add constraint locations_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.locations add constraint locations_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) not valid$sql$;
     exception when others then raise notice 'Kontrola locations_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.member_devices') is not null then
     begin
       execute $sql$alter table public.member_devices drop constraint if exists member_devices_ethernet_mac_check$sql$;
-      execute $sql$alter table public.member_devices add constraint member_devices_ethernet_mac_check CHECK (((ethernet_mac = ''::text) OR (ethernet_mac ~ '^([0-9A-F]{2}:){5}[0-9A-F]{2}$'::text))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.member_devices add constraint member_devices_ethernet_mac_check CHECK (((ethernet_mac = ''::text) OR (ethernet_mac ~ '^([0-9A-F]{2}:){5}[0-9A-F]{2}$'::text))) not valid$sql$;
     exception when others then raise notice 'Kontrola member_devices_ethernet_mac_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.member_devices') is not null then
     begin
       execute $sql$alter table public.member_devices drop constraint if exists member_devices_kind_check$sql$;
-      execute $sql$alter table public.member_devices add constraint member_devices_kind_check CHECK ((kind = ANY (ARRAY['phone'::text, 'laptop'::text, 'tablet'::text, 'other'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.member_devices add constraint member_devices_kind_check CHECK ((kind = ANY (ARRAY['phone'::text, 'laptop'::text, 'tablet'::text, 'other'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola member_devices_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.member_devices') is not null then
     begin
       execute $sql$alter table public.member_devices drop constraint if exists member_devices_mac_check$sql$;
-      execute $sql$alter table public.member_devices add constraint member_devices_mac_check CHECK ((mac ~ '^([0-9A-F]{2}:){5}[0-9A-F]{2}$'::text)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.member_devices add constraint member_devices_mac_check CHECK ((mac ~ '^([0-9A-F]{2}:){5}[0-9A-F]{2}$'::text)) not valid$sql$;
     exception when others then raise notice 'Kontrola member_devices_mac_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.member_devices') is not null then
     begin
       execute $sql$alter table public.member_devices drop constraint if exists member_devices_name_check$sql$;
-      execute $sql$alter table public.member_devices add constraint member_devices_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.member_devices add constraint member_devices_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) not valid$sql$;
     exception when others then raise notice 'Kontrola member_devices_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.member_devices') is not null then
     begin
       execute $sql$alter table public.member_devices drop constraint if exists member_devices_networks_check$sql$;
-      execute $sql$alter table public.member_devices add constraint member_devices_networks_check CHECK (((jsonb_typeof(networks) = 'array'::text) AND (jsonb_array_length(networks) <= 20) AND (char_length((networks)::text) <= 4000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.member_devices add constraint member_devices_networks_check CHECK (((jsonb_typeof(networks) = 'array'::text) AND (jsonb_array_length(networks) <= 20) AND (char_length((networks)::text) <= 4000))) not valid$sql$;
     exception when others then raise notice 'Kontrola member_devices_networks_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.member_devices') is not null then
     begin
       execute $sql$alter table public.member_devices drop constraint if exists member_devices_note_check$sql$;
-      execute $sql$alter table public.member_devices add constraint member_devices_note_check CHECK ((char_length(note) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.member_devices add constraint member_devices_note_check CHECK ((char_length(note) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola member_devices_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.member_payments') is not null then
     begin
       execute $sql$alter table public.member_payments drop constraint if exists member_payments_amount_check$sql$;
-      execute $sql$alter table public.member_payments add constraint member_payments_amount_check CHECK ((amount > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.member_payments add constraint member_payments_amount_check CHECK ((amount > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola member_payments_amount_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.member_payments') is not null then
     begin
       execute $sql$alter table public.member_payments drop constraint if exists member_payments_kind_check$sql$;
-      execute $sql$alter table public.member_payments add constraint member_payments_kind_check CHECK ((kind = ANY (ARRAY['reward'::text, 'advance'::text, 'bonus'::text, 'other'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.member_payments add constraint member_payments_kind_check CHECK ((kind = ANY (ARRAY['reward'::text, 'advance'::text, 'bonus'::text, 'other'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola member_payments_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.member_payments') is not null then
     begin
       execute $sql$alter table public.member_payments drop constraint if exists member_payments_note_check$sql$;
-      execute $sql$alter table public.member_payments add constraint member_payments_note_check CHECK ((char_length(note) <= 500)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.member_payments add constraint member_payments_note_check CHECK ((char_length(note) <= 500)) not valid$sql$;
     exception when others then raise notice 'Kontrola member_payments_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.member_permissions') is not null then
     begin
       execute $sql$alter table public.member_permissions drop constraint if exists member_permissions_permission_check$sql$;
-      execute $sql$alter table public.member_permissions add constraint member_permissions_permission_check CHECK (is_permission(permission)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.member_permissions add constraint member_permissions_permission_check CHECK (is_permission(permission)) not valid$sql$;
     exception when others then raise notice 'Kontrola member_permissions_permission_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.mic_capsules') is not null then
     begin
       execute $sql$alter table public.mic_capsules drop constraint if exists mic_capsules_fits_check$sql$;
-      execute $sql$alter table public.mic_capsules add constraint mic_capsules_fits_check CHECK ((char_length(fits) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.mic_capsules add constraint mic_capsules_fits_check CHECK ((char_length(fits) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola mic_capsules_fits_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.mic_capsules') is not null then
     begin
       execute $sql$alter table public.mic_capsules drop constraint if exists mic_capsules_manufacturer_check$sql$;
-      execute $sql$alter table public.mic_capsules add constraint mic_capsules_manufacturer_check CHECK ((char_length(manufacturer) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.mic_capsules add constraint mic_capsules_manufacturer_check CHECK ((char_length(manufacturer) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola mic_capsules_manufacturer_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.mic_capsules') is not null then
     begin
       execute $sql$alter table public.mic_capsules drop constraint if exists mic_capsules_name_check$sql$;
-      execute $sql$alter table public.mic_capsules add constraint mic_capsules_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.mic_capsules add constraint mic_capsules_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola mic_capsules_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.mic_capsules') is not null then
     begin
       execute $sql$alter table public.mic_capsules drop constraint if exists mic_capsules_note_check$sql$;
-      execute $sql$alter table public.mic_capsules add constraint mic_capsules_note_check CHECK ((char_length(note) <= 500)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.mic_capsules add constraint mic_capsules_note_check CHECK ((char_length(note) <= 500)) not valid$sql$;
     exception when others then raise notice 'Kontrola mic_capsules_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.mic_capsules') is not null then
     begin
       execute $sql$alter table public.mic_capsules drop constraint if exists mic_capsules_quantity_check$sql$;
-      execute $sql$alter table public.mic_capsules add constraint mic_capsules_quantity_check CHECK (((quantity >= 0) AND (quantity <= 10000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.mic_capsules add constraint mic_capsules_quantity_check CHECK (((quantity >= 0) AND (quantity <= 10000))) not valid$sql$;
     exception when others then raise notice 'Kontrola mic_capsules_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.office_items') is not null then
     begin
       execute $sql$alter table public.office_items drop constraint if exists office_items_min_quantity_check$sql$;
-      execute $sql$alter table public.office_items add constraint office_items_min_quantity_check CHECK ((min_quantity >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.office_items add constraint office_items_min_quantity_check CHECK ((min_quantity >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola office_items_min_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.office_items') is not null then
     begin
       execute $sql$alter table public.office_items drop constraint if exists office_items_name_check$sql$;
-      execute $sql$alter table public.office_items add constraint office_items_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.office_items add constraint office_items_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) not valid$sql$;
     exception when others then raise notice 'Kontrola office_items_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.office_items') is not null then
     begin
       execute $sql$alter table public.office_items drop constraint if exists office_items_quantity_check$sql$;
-      execute $sql$alter table public.office_items add constraint office_items_quantity_check CHECK ((quantity >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.office_items add constraint office_items_quantity_check CHECK ((quantity >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola office_items_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.office_items') is not null then
     begin
       execute $sql$alter table public.office_items drop constraint if exists office_items_unit_check$sql$;
-      execute $sql$alter table public.office_items add constraint office_items_unit_check CHECK ((char_length(unit) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.office_items add constraint office_items_unit_check CHECK ((char_length(unit) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola office_items_unit_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.office_purchases') is not null then
     begin
       execute $sql$alter table public.office_purchases drop constraint if exists office_purchases_note_check$sql$;
-      execute $sql$alter table public.office_purchases add constraint office_purchases_note_check CHECK ((char_length(note) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.office_purchases add constraint office_purchases_note_check CHECK ((char_length(note) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola office_purchases_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.office_purchases') is not null then
     begin
       execute $sql$alter table public.office_purchases drop constraint if exists office_purchases_pack_amount_check$sql$;
-      execute $sql$alter table public.office_purchases add constraint office_purchases_pack_amount_check CHECK ((pack_amount > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.office_purchases add constraint office_purchases_pack_amount_check CHECK ((pack_amount > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola office_purchases_pack_amount_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.office_purchases') is not null then
     begin
       execute $sql$alter table public.office_purchases drop constraint if exists office_purchases_pack_unit_check$sql$;
-      execute $sql$alter table public.office_purchases add constraint office_purchases_pack_unit_check CHECK ((pack_unit = ANY (ARRAY[''::text, 'kg'::text, 'g'::text, 'l'::text, 'ml'::text, 'ks'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.office_purchases add constraint office_purchases_pack_unit_check CHECK ((pack_unit = ANY (ARRAY[''::text, 'kg'::text, 'g'::text, 'l'::text, 'ml'::text, 'ks'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola office_purchases_pack_unit_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.office_purchases') is not null then
     begin
       execute $sql$alter table public.office_purchases drop constraint if exists office_purchases_price_check$sql$;
-      execute $sql$alter table public.office_purchases add constraint office_purchases_price_check CHECK ((price >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.office_purchases add constraint office_purchases_price_check CHECK ((price >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola office_purchases_price_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.office_purchases') is not null then
     begin
       execute $sql$alter table public.office_purchases drop constraint if exists office_purchases_quantity_check$sql$;
-      execute $sql$alter table public.office_purchases add constraint office_purchases_quantity_check CHECK (((quantity > (0)::numeric) AND (quantity <= (100000)::numeric))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.office_purchases add constraint office_purchases_quantity_check CHECK (((quantity > (0)::numeric) AND (quantity <= (100000)::numeric))) not valid$sql$;
     exception when others then raise notice 'Kontrola office_purchases_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.order_item_equipment') is not null then
     begin
       execute $sql$alter table public.order_item_equipment drop constraint if exists order_item_equipment_quantity_check$sql$;
-      execute $sql$alter table public.order_item_equipment add constraint order_item_equipment_quantity_check CHECK ((quantity >= 1)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.order_item_equipment add constraint order_item_equipment_quantity_check CHECK ((quantity >= 1)) not valid$sql$;
     exception when others then raise notice 'Kontrola order_item_equipment_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.order_items') is not null then
     begin
       execute $sql$alter table public.order_items drop constraint if exists order_items_article_number_check$sql$;
-      execute $sql$alter table public.order_items add constraint order_items_article_number_check CHECK ((char_length(article_number) <= 60)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.order_items add constraint order_items_article_number_check CHECK ((char_length(article_number) <= 60)) not valid$sql$;
     exception when others then raise notice 'Kontrola order_items_article_number_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.order_items') is not null then
     begin
       execute $sql$alter table public.order_items drop constraint if exists order_items_mode_check$sql$;
-      execute $sql$alter table public.order_items add constraint order_items_mode_check CHECK ((mode = ANY (ARRAY['none'::text, 'separate'::text, 'bulk'::text, 'existing'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.order_items add constraint order_items_mode_check CHECK ((mode = ANY (ARRAY['none'::text, 'separate'::text, 'bulk'::text, 'existing'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola order_items_mode_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.order_items') is not null then
     begin
       execute $sql$alter table public.order_items drop constraint if exists order_items_name_check$sql$;
-      execute $sql$alter table public.order_items add constraint order_items_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 200))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.order_items add constraint order_items_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 200))) not valid$sql$;
     exception when others then raise notice 'Kontrola order_items_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.order_items') is not null then
     begin
       execute $sql$alter table public.order_items drop constraint if exists order_items_quantity_check$sql$;
-      execute $sql$alter table public.order_items add constraint order_items_quantity_check CHECK (((quantity >= 1) AND (quantity <= 100000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.order_items add constraint order_items_quantity_check CHECK (((quantity >= 1) AND (quantity <= 100000))) not valid$sql$;
     exception when others then raise notice 'Kontrola order_items_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.order_items') is not null then
     begin
       execute $sql$alter table public.order_items drop constraint if exists order_items_unit_price_check$sql$;
-      execute $sql$alter table public.order_items add constraint order_items_unit_price_check CHECK ((unit_price >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.order_items add constraint order_items_unit_price_check CHECK ((unit_price >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola order_items_unit_price_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.orders') is not null then
     begin
       execute $sql$alter table public.orders drop constraint if exists orders_currency_check$sql$;
-      execute $sql$alter table public.orders add constraint orders_currency_check CHECK ((currency ~ '^[A-Z]{3}$'::text)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.orders add constraint orders_currency_check CHECK ((currency ~ '^[A-Z]{3}$'::text)) not valid$sql$;
     exception when others then raise notice 'Kontrola orders_currency_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.orders') is not null then
     begin
       execute $sql$alter table public.orders drop constraint if exists orders_for_whom_check$sql$;
-      execute $sql$alter table public.orders add constraint orders_for_whom_check CHECK ((char_length(for_whom) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.orders add constraint orders_for_whom_check CHECK ((char_length(for_whom) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola orders_for_whom_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.orders') is not null then
     begin
       execute $sql$alter table public.orders drop constraint if exists orders_note_check$sql$;
-      execute $sql$alter table public.orders add constraint orders_note_check CHECK ((char_length(note) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.orders add constraint orders_note_check CHECK ((char_length(note) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola orders_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.orders') is not null then
     begin
       execute $sql$alter table public.orders drop constraint if exists orders_order_number_check$sql$;
-      execute $sql$alter table public.orders add constraint orders_order_number_check CHECK ((char_length(order_number) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.orders add constraint orders_order_number_check CHECK ((char_length(order_number) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola orders_order_number_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.orders') is not null then
     begin
       execute $sql$alter table public.orders drop constraint if exists orders_photo_path_check$sql$;
-      execute $sql$alter table public.orders add constraint orders_photo_path_check CHECK ((char_length(photo_path) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.orders add constraint orders_photo_path_check CHECK ((char_length(photo_path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola orders_photo_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.orders') is not null then
     begin
       execute $sql$alter table public.orders drop constraint if exists orders_seller_check$sql$;
-      execute $sql$alter table public.orders add constraint orders_seller_check CHECK ((char_length(seller) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.orders add constraint orders_seller_check CHECK ((char_length(seller) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola orders_seller_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.orders') is not null then
     begin
       execute $sql$alter table public.orders drop constraint if exists orders_source_check$sql$;
-      execute $sql$alter table public.orders add constraint orders_source_check CHECK ((source = ANY (ARRAY['shop'::text, 'marketplace'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.orders add constraint orders_source_check CHECK ((source = ANY (ARRAY['shop'::text, 'marketplace'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola orders_source_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.orders') is not null then
     begin
       execute $sql$alter table public.orders drop constraint if exists orders_supplier_check$sql$;
-      execute $sql$alter table public.orders add constraint orders_supplier_check CHECK (((char_length(TRIM(BOTH FROM supplier)) >= 1) AND (char_length(TRIM(BOTH FROM supplier)) <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.orders add constraint orders_supplier_check CHECK (((char_length(TRIM(BOTH FROM supplier)) >= 1) AND (char_length(TRIM(BOTH FROM supplier)) <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola orders_supplier_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.partner_contacts') is not null then
     begin
       execute $sql$alter table public.partner_contacts drop constraint if exists partner_contacts_email_check$sql$;
-      execute $sql$alter table public.partner_contacts add constraint partner_contacts_email_check CHECK ((char_length(email) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.partner_contacts add constraint partner_contacts_email_check CHECK ((char_length(email) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola partner_contacts_email_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.partner_contacts') is not null then
     begin
       execute $sql$alter table public.partner_contacts drop constraint if exists partner_contacts_name_check$sql$;
-      execute $sql$alter table public.partner_contacts add constraint partner_contacts_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.partner_contacts add constraint partner_contacts_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola partner_contacts_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.partner_contacts') is not null then
     begin
       execute $sql$alter table public.partner_contacts drop constraint if exists partner_contacts_phone_check$sql$;
-      execute $sql$alter table public.partner_contacts add constraint partner_contacts_phone_check CHECK ((char_length(phone) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.partner_contacts add constraint partner_contacts_phone_check CHECK ((char_length(phone) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola partner_contacts_phone_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.partner_contacts') is not null then
     begin
       execute $sql$alter table public.partner_contacts drop constraint if exists partner_contacts_role_check$sql$;
-      execute $sql$alter table public.partner_contacts add constraint partner_contacts_role_check CHECK ((char_length(role) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.partner_contacts add constraint partner_contacts_role_check CHECK ((char_length(role) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola partner_contacts_role_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.partners') is not null then
     begin
       execute $sql$alter table public.partners drop constraint if exists partners_address_check$sql$;
-      execute $sql$alter table public.partners add constraint partners_address_check CHECK ((char_length(address) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.partners add constraint partners_address_check CHECK ((char_length(address) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola partners_address_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.partners') is not null then
     begin
       execute $sql$alter table public.partners drop constraint if exists partners_dic_check$sql$;
-      execute $sql$alter table public.partners add constraint partners_dic_check CHECK ((char_length(dic) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.partners add constraint partners_dic_check CHECK ((char_length(dic) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola partners_dic_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.partners') is not null then
     begin
       execute $sql$alter table public.partners drop constraint if exists partners_ico_check$sql$;
-      execute $sql$alter table public.partners add constraint partners_ico_check CHECK ((char_length(ico) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.partners add constraint partners_ico_check CHECK ((char_length(ico) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola partners_ico_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.partners') is not null then
     begin
       execute $sql$alter table public.partners drop constraint if exists partners_name_check$sql$;
-      execute $sql$alter table public.partners add constraint partners_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 160))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.partners add constraint partners_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 160))) not valid$sql$;
     exception when others then raise notice 'Kontrola partners_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.partners') is not null then
     begin
       execute $sql$alter table public.partners drop constraint if exists partners_note_check$sql$;
-      execute $sql$alter table public.partners add constraint partners_note_check CHECK ((char_length(note) <= 1000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.partners add constraint partners_note_check CHECK ((char_length(note) <= 1000)) not valid$sql$;
     exception when others then raise notice 'Kontrola partners_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.role_permissions') is not null then
     begin
       execute $sql$alter table public.role_permissions drop constraint if exists role_permissions_permission_check$sql$;
-      execute $sql$alter table public.role_permissions add constraint role_permissions_permission_check CHECK (is_permission(permission)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.role_permissions add constraint role_permissions_permission_check CHECK (is_permission(permission)) not valid$sql$;
     exception when others then raise notice 'Kontrola role_permissions_permission_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.role_permissions') is not null then
     begin
       execute $sql$alter table public.role_permissions drop constraint if exists role_permissions_role_check$sql$;
-      execute $sql$alter table public.role_permissions add constraint role_permissions_role_check CHECK ((role <> 'admin'::app_role)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.role_permissions add constraint role_permissions_role_check CHECK ((role <> 'admin'::app_role)) not valid$sql$;
     exception when others then raise notice 'Kontrola role_permissions_role_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_records') is not null then
     begin
       execute $sql$alter table public.service_records drop constraint if exists service_records_cost_check$sql$;
-      execute $sql$alter table public.service_records add constraint service_records_cost_check CHECK ((cost >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_records add constraint service_records_cost_check CHECK ((cost >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_records_cost_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_records') is not null then
     begin
       execute $sql$alter table public.service_records drop constraint if exists service_records_hours_check$sql$;
-      execute $sql$alter table public.service_records add constraint service_records_hours_check CHECK ((hours >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_records add constraint service_records_hours_check CHECK ((hours >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_records_hours_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_records') is not null then
     begin
       execute $sql$alter table public.service_records drop constraint if exists service_records_kind_check$sql$;
-      execute $sql$alter table public.service_records add constraint service_records_kind_check CHECK ((kind = ANY (ARRAY['repair'::text, 'inspection'::text, 'maintenance'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_records add constraint service_records_kind_check CHECK ((kind = ANY (ARRAY['repair'::text, 'inspection'::text, 'maintenance'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola service_records_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_records') is not null then
     begin
       execute $sql$alter table public.service_records drop constraint if exists service_records_problem_check$sql$;
-      execute $sql$alter table public.service_records add constraint service_records_problem_check CHECK ((char_length(problem) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_records add constraint service_records_problem_check CHECK ((char_length(problem) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_records_problem_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_records') is not null then
     begin
       execute $sql$alter table public.service_records drop constraint if exists service_records_quantity_check$sql$;
-      execute $sql$alter table public.service_records add constraint service_records_quantity_check CHECK ((quantity >= 1)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_records add constraint service_records_quantity_check CHECK ((quantity >= 1)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_records_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_records') is not null then
     begin
       execute $sql$alter table public.service_records drop constraint if exists service_records_status_check$sql$;
-      execute $sql$alter table public.service_records add constraint service_records_status_check CHECK ((status = ANY (ARRAY['open'::text, 'in_progress'::text, 'done'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_records add constraint service_records_status_check CHECK ((status = ANY (ARRAY['open'::text, 'in_progress'::text, 'done'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola service_records_status_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_records') is not null then
     begin
       execute $sql$alter table public.service_records drop constraint if exists service_records_technician_check$sql$;
-      execute $sql$alter table public.service_records add constraint service_records_technician_check CHECK ((char_length(technician) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_records add constraint service_records_technician_check CHECK ((char_length(technician) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_records_technician_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_records') is not null then
     begin
       execute $sql$alter table public.service_records drop constraint if exists service_records_work_done_check$sql$;
-      execute $sql$alter table public.service_records add constraint service_records_work_done_check CHECK ((char_length(work_done) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_records add constraint service_records_work_done_check CHECK ((char_length(work_done) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_records_work_done_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_requests') is not null then
     begin
       execute $sql$alter table public.service_requests drop constraint if exists service_requests_description_check$sql$;
-      execute $sql$alter table public.service_requests add constraint service_requests_description_check CHECK ((char_length(description) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_requests add constraint service_requests_description_check CHECK ((char_length(description) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_requests_description_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_requests') is not null then
     begin
       execute $sql$alter table public.service_requests drop constraint if exists service_requests_priority_check$sql$;
-      execute $sql$alter table public.service_requests add constraint service_requests_priority_check CHECK ((priority = ANY (ARRAY['low'::text, 'normal'::text, 'high'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_requests add constraint service_requests_priority_check CHECK ((priority = ANY (ARRAY['low'::text, 'normal'::text, 'high'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola service_requests_priority_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_requests') is not null then
     begin
       execute $sql$alter table public.service_requests drop constraint if exists service_requests_response_check$sql$;
-      execute $sql$alter table public.service_requests add constraint service_requests_response_check CHECK ((char_length(response) <= 1000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_requests add constraint service_requests_response_check CHECK ((char_length(response) <= 1000)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_requests_response_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_requests') is not null then
     begin
       execute $sql$alter table public.service_requests drop constraint if exists service_requests_status_check$sql$;
-      execute $sql$alter table public.service_requests add constraint service_requests_status_check CHECK ((status = ANY (ARRAY['open'::text, 'in_progress'::text, 'done'::text, 'rejected'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_requests add constraint service_requests_status_check CHECK ((status = ANY (ARRAY['open'::text, 'in_progress'::text, 'done'::text, 'rejected'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola service_requests_status_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_requests') is not null then
     begin
       execute $sql$alter table public.service_requests drop constraint if exists service_requests_title_check$sql$;
-      execute $sql$alter table public.service_requests add constraint service_requests_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 160))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_requests add constraint service_requests_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 160))) not valid$sql$;
     exception when others then raise notice 'Kontrola service_requests_title_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_requests') is not null then
     begin
       execute $sql$alter table public.service_requests drop constraint if exists service_requests_unit_id_check$sql$;
-      execute $sql$alter table public.service_requests add constraint service_requests_unit_id_check CHECK (((unit_id >= 1) AND (unit_id <= 100000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_requests add constraint service_requests_unit_id_check CHECK (((unit_id >= 1) AND (unit_id <= 100000))) not valid$sql$;
     exception when others then raise notice 'Kontrola service_requests_unit_id_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_technicians') is not null then
     begin
       execute $sql$alter table public.service_technicians drop constraint if exists service_technicians_address_check$sql$;
-      execute $sql$alter table public.service_technicians add constraint service_technicians_address_check CHECK ((char_length(address) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_technicians add constraint service_technicians_address_check CHECK ((char_length(address) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_technicians_address_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_technicians') is not null then
     begin
       execute $sql$alter table public.service_technicians drop constraint if exists service_technicians_email_check$sql$;
-      execute $sql$alter table public.service_technicians add constraint service_technicians_email_check CHECK ((char_length(email) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_technicians add constraint service_technicians_email_check CHECK ((char_length(email) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_technicians_email_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_technicians') is not null then
     begin
       execute $sql$alter table public.service_technicians drop constraint if exists service_technicians_firm_check$sql$;
-      execute $sql$alter table public.service_technicians add constraint service_technicians_firm_check CHECK ((char_length(firm) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_technicians add constraint service_technicians_firm_check CHECK ((char_length(firm) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_technicians_firm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_technicians') is not null then
     begin
       execute $sql$alter table public.service_technicians drop constraint if exists service_technicians_name_check$sql$;
-      execute $sql$alter table public.service_technicians add constraint service_technicians_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_technicians add constraint service_technicians_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) not valid$sql$;
     exception when others then raise notice 'Kontrola service_technicians_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_technicians') is not null then
     begin
       execute $sql$alter table public.service_technicians drop constraint if exists service_technicians_note_check$sql$;
-      execute $sql$alter table public.service_technicians add constraint service_technicians_note_check CHECK ((char_length(note) <= 1000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_technicians add constraint service_technicians_note_check CHECK ((char_length(note) <= 1000)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_technicians_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_technicians') is not null then
     begin
       execute $sql$alter table public.service_technicians drop constraint if exists service_technicians_phone_check$sql$;
-      execute $sql$alter table public.service_technicians add constraint service_technicians_phone_check CHECK ((char_length(phone) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_technicians add constraint service_technicians_phone_check CHECK ((char_length(phone) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_technicians_phone_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_technicians') is not null then
     begin
       execute $sql$alter table public.service_technicians drop constraint if exists service_technicians_scope_check$sql$;
-      execute $sql$alter table public.service_technicians add constraint service_technicians_scope_check CHECK ((scope = ANY (ARRAY['equipment'::text, 'vehicles'::text, 'both'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_technicians add constraint service_technicians_scope_check CHECK ((scope = ANY (ARRAY['equipment'::text, 'vehicles'::text, 'both'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola service_technicians_scope_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.service_technicians') is not null then
     begin
       execute $sql$alter table public.service_technicians drop constraint if exists service_technicians_specialization_check$sql$;
-      execute $sql$alter table public.service_technicians add constraint service_technicians_specialization_check CHECK ((char_length(specialization) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.service_technicians add constraint service_technicians_specialization_check CHECK ((char_length(specialization) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola service_technicians_specialization_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_list_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_list_check CHECK ((list = ANY (ARRAY['want'::text, 'buy'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_list_check CHECK ((list = ANY (ARRAY['want'::text, 'buy'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_list_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_name_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 200))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 200))) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_note_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_note_check CHECK ((char_length(note) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_note_check CHECK ((char_length(note) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_order_number_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_order_number_check CHECK ((char_length(order_number) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_order_number_check CHECK ((char_length(order_number) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_order_number_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_photo_path_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_photo_path_check CHECK ((char_length(photo_path) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_photo_path_check CHECK ((char_length(photo_path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_photo_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_priority_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_priority_check CHECK ((priority = ANY (ARRAY['low'::text, 'normal'::text, 'high'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_priority_check CHECK ((priority = ANY (ARRAY['low'::text, 'normal'::text, 'high'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_priority_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_quantity_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_quantity_check CHECK (((quantity >= 1) AND (quantity <= 100000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_quantity_check CHECK (((quantity >= 1) AND (quantity <= 100000))) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_quantity_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_status_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_status_check CHECK ((status = ANY (ARRAY['planned'::text, 'ordered'::text, 'delivered'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_status_check CHECK ((status = ANY (ARRAY['planned'::text, 'ordered'::text, 'delivered'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_status_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_supplier_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_supplier_check CHECK ((char_length(supplier) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_supplier_check CHECK ((char_length(supplier) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_supplier_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_unit_price_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_unit_price_check CHECK ((unit_price >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_unit_price_check CHECK ((unit_price >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_unit_price_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.shopping_items') is not null then
     begin
       execute $sql$alter table public.shopping_items drop constraint if exists shopping_items_url_check$sql$;
-      execute $sql$alter table public.shopping_items add constraint shopping_items_url_check CHECK (((char_length(url) <= 500) AND ((url = ''::text) OR (url ~* '^https?://'::text)))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.shopping_items add constraint shopping_items_url_check CHECK (((char_length(url) <= 500) AND ((url = ''::text) OR (url ~* '^https?://'::text)))) not valid$sql$;
     exception when others then raise notice 'Kontrola shopping_items_url_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_check CHECK (((member_id IS NOT NULL) OR (char_length(TRIM(BOTH FROM name)) > 0))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_check CHECK (((member_id IS NOT NULL) OR (char_length(TRIM(BOTH FROM name)) > 0))) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_email_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_email_check CHECK ((char_length(email) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_email_check CHECK ((char_length(email) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_email_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_licences_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_licences_check CHECK ((licences <@ ARRAY['AM'::text, 'A1'::text, 'A2'::text, 'A'::text, 'B1'::text, 'B'::text, 'BE'::text, 'C1'::text, 'C1E'::text, 'C'::text, 'CE'::text, 'D1'::text, 'D1E'::text, 'D'::text, 'DE'::text, 'T'::text])) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_licences_check CHECK ((licences <@ ARRAY['AM'::text, 'A1'::text, 'A2'::text, 'A'::text, 'B1'::text, 'B'::text, 'BE'::text, 'C1'::text, 'C1E'::text, 'C'::text, 'CE'::text, 'D1'::text, 'D1E'::text, 'D'::text, 'DE'::text, 'T'::text])) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_licences_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_name_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_name_check CHECK ((char_length(name) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_name_check CHECK ((char_length(name) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_name_day_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_name_day_check CHECK (((name_day = ''::text) OR (name_day ~ '^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'::text))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_name_day_check CHECK (((name_day = ''::text) OR (name_day ~ '^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'::text))) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_name_day_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_note_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_note_check CHECK ((char_length(note) <= 1000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_note_check CHECK ((char_length(note) <= 1000)) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_phone_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_phone_check CHECK ((char_length(phone) <= 40)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_phone_check CHECK ((char_length(phone) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_phone_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_photo_path_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_photo_path_check CHECK ((char_length(photo_path) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_photo_path_check CHECK ((char_length(photo_path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_photo_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_position_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_position_check CHECK ((char_length("position") <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_position_check CHECK ((char_length("position") <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_position_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_skills_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_skills_check CHECK ((char_length(skills) <= 500)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_skills_check CHECK ((char_length(skills) <= 500)) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_skills_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff') is not null then
     begin
       execute $sql$alter table public.staff drop constraint if exists staff_socials_check$sql$;
-      execute $sql$alter table public.staff add constraint staff_socials_check CHECK (((jsonb_typeof(socials) = 'object'::text) AND (char_length((socials)::text) <= 2000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff add constraint staff_socials_check CHECK (((jsonb_typeof(socials) = 'object'::text) AND (char_length((socials)::text) <= 2000))) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_socials_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff_unavailability') is not null then
     begin
       execute $sql$alter table public.staff_unavailability drop constraint if exists staff_unavailability_check$sql$;
-      execute $sql$alter table public.staff_unavailability add constraint staff_unavailability_check CHECK ((ends_on >= starts_on)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff_unavailability add constraint staff_unavailability_check CHECK ((ends_on >= starts_on)) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_unavailability_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.staff_unavailability') is not null then
     begin
       execute $sql$alter table public.staff_unavailability drop constraint if exists staff_unavailability_note_check$sql$;
-      execute $sql$alter table public.staff_unavailability add constraint staff_unavailability_note_check CHECK ((char_length(note) <= 200)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.staff_unavailability add constraint staff_unavailability_note_check CHECK ((char_length(note) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola staff_unavailability_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.stage_settings') is not null then
     begin
       execute $sql$alter table public.stage_settings drop constraint if exists stage_settings_config_check$sql$;
-      execute $sql$alter table public.stage_settings add constraint stage_settings_config_check CHECK (((jsonb_typeof(config) = 'object'::text) AND (pg_column_size(config) <= 20000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.stage_settings add constraint stage_settings_config_check CHECK (((jsonb_typeof(config) = 'object'::text) AND (pg_column_size(config) <= 20000))) not valid$sql$;
     exception when others then raise notice 'Kontrola stage_settings_config_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.suggestion_comments') is not null then
     begin
       execute $sql$alter table public.suggestion_comments drop constraint if exists suggestion_comments_body_check$sql$;
-      execute $sql$alter table public.suggestion_comments add constraint suggestion_comments_body_check CHECK (((char_length(TRIM(BOTH FROM body)) >= 1) AND (char_length(TRIM(BOTH FROM body)) <= 2000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.suggestion_comments add constraint suggestion_comments_body_check CHECK (((char_length(TRIM(BOTH FROM body)) >= 1) AND (char_length(TRIM(BOTH FROM body)) <= 2000))) not valid$sql$;
     exception when others then raise notice 'Kontrola suggestion_comments_body_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.suggestions') is not null then
     begin
       execute $sql$alter table public.suggestions drop constraint if exists suggestions_body_check$sql$;
-      execute $sql$alter table public.suggestions add constraint suggestions_body_check CHECK ((char_length(body) <= 4000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.suggestions add constraint suggestions_body_check CHECK ((char_length(body) <= 4000)) not valid$sql$;
     exception when others then raise notice 'Kontrola suggestions_body_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.suggestions') is not null then
     begin
       execute $sql$alter table public.suggestions drop constraint if exists suggestions_status_check$sql$;
-      execute $sql$alter table public.suggestions add constraint suggestions_status_check CHECK ((status = ANY (ARRAY['new'::text, 'in_progress'::text, 'done'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.suggestions add constraint suggestions_status_check CHECK ((status = ANY (ARRAY['new'::text, 'in_progress'::text, 'done'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola suggestions_status_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.suggestions') is not null then
     begin
       execute $sql$alter table public.suggestions drop constraint if exists suggestions_title_check$sql$;
-      execute $sql$alter table public.suggestions add constraint suggestions_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 200))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.suggestions add constraint suggestions_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 200))) not valid$sql$;
     exception when others then raise notice 'Kontrola suggestions_title_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.task_templates') is not null then
     begin
       execute $sql$alter table public.task_templates drop constraint if exists task_templates_assignee_ids_check$sql$;
-      execute $sql$alter table public.task_templates add constraint task_templates_assignee_ids_check CHECK ((cardinality(assignee_ids) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.task_templates add constraint task_templates_assignee_ids_check CHECK ((cardinality(assignee_ids) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola task_templates_assignee_ids_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.task_templates') is not null then
     begin
       execute $sql$alter table public.task_templates drop constraint if exists task_templates_category_check$sql$;
-      execute $sql$alter table public.task_templates add constraint task_templates_category_check CHECK ((char_length(category) <= 60)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.task_templates add constraint task_templates_category_check CHECK ((char_length(category) <= 60)) not valid$sql$;
     exception when others then raise notice 'Kontrola task_templates_category_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.task_templates') is not null then
     begin
       execute $sql$alter table public.task_templates drop constraint if exists task_templates_days_after_check$sql$;
-      execute $sql$alter table public.task_templates add constraint task_templates_days_after_check CHECK (((days_after >= 0) AND (days_after <= 60))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.task_templates add constraint task_templates_days_after_check CHECK (((days_after >= 0) AND (days_after <= 60))) not valid$sql$;
     exception when others then raise notice 'Kontrola task_templates_days_after_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.task_templates') is not null then
     begin
       execute $sql$alter table public.task_templates drop constraint if exists task_templates_title_check$sql$;
-      execute $sql$alter table public.task_templates add constraint task_templates_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 160))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.task_templates add constraint task_templates_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 160))) not valid$sql$;
     exception when others then raise notice 'Kontrola task_templates_title_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.tasks') is not null then
     begin
       execute $sql$alter table public.tasks drop constraint if exists tasks_assignee_ids_check$sql$;
-      execute $sql$alter table public.tasks add constraint tasks_assignee_ids_check CHECK ((cardinality(assignee_ids) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.tasks add constraint tasks_assignee_ids_check CHECK ((cardinality(assignee_ids) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola tasks_assignee_ids_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.tasks') is not null then
     begin
       execute $sql$alter table public.tasks drop constraint if exists tasks_category_check$sql$;
-      execute $sql$alter table public.tasks add constraint tasks_category_check CHECK ((char_length(category) <= 60)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.tasks add constraint tasks_category_check CHECK ((char_length(category) <= 60)) not valid$sql$;
     exception when others then raise notice 'Kontrola tasks_category_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.tasks') is not null then
     begin
       execute $sql$alter table public.tasks drop constraint if exists tasks_note_check$sql$;
-      execute $sql$alter table public.tasks add constraint tasks_note_check CHECK ((char_length(note) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.tasks add constraint tasks_note_check CHECK ((char_length(note) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola tasks_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.tasks') is not null then
     begin
       execute $sql$alter table public.tasks drop constraint if exists tasks_priority_check$sql$;
-      execute $sql$alter table public.tasks add constraint tasks_priority_check CHECK ((priority = ANY (ARRAY['low'::text, 'normal'::text, 'high'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.tasks add constraint tasks_priority_check CHECK ((priority = ANY (ARRAY['low'::text, 'normal'::text, 'high'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola tasks_priority_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.tasks') is not null then
     begin
       execute $sql$alter table public.tasks drop constraint if exists tasks_status_check$sql$;
-      execute $sql$alter table public.tasks add constraint tasks_status_check CHECK ((status = ANY (ARRAY['open'::text, 'in_progress'::text, 'done'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.tasks add constraint tasks_status_check CHECK ((status = ANY (ARRAY['open'::text, 'in_progress'::text, 'done'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola tasks_status_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.tasks') is not null then
     begin
       execute $sql$alter table public.tasks drop constraint if exists tasks_title_check$sql$;
-      execute $sql$alter table public.tasks add constraint tasks_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 200))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.tasks add constraint tasks_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 200))) not valid$sql$;
     exception when others then raise notice 'Kontrola tasks_title_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.trashed_photos') is not null then
     begin
       execute $sql$alter table public.trashed_photos drop constraint if exists trashed_photos_owner_table_check$sql$;
-      execute $sql$alter table public.trashed_photos add constraint trashed_photos_owner_table_check CHECK ((owner_table = ANY (ARRAY['equipment'::text, 'vehicles'::text, 'cases'::text, 'orders'::text, 'case_photo'::text, 'shopping_items'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.trashed_photos add constraint trashed_photos_owner_table_check CHECK ((owner_table = ANY (ARRAY['equipment'::text, 'vehicles'::text, 'cases'::text, 'orders'::text, 'case_photo'::text, 'shopping_items'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola trashed_photos_owner_table_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.trashed_photos') is not null then
     begin
       execute $sql$alter table public.trashed_photos drop constraint if exists trashed_photos_path_check$sql$;
-      execute $sql$alter table public.trashed_photos add constraint trashed_photos_path_check CHECK ((char_length(path) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.trashed_photos add constraint trashed_photos_path_check CHECK ((char_length(path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola trashed_photos_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicle_records') is not null then
     begin
       execute $sql$alter table public.vehicle_records drop constraint if exists vehicle_records_cost_check$sql$;
-      execute $sql$alter table public.vehicle_records add constraint vehicle_records_cost_check CHECK ((cost >= (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicle_records add constraint vehicle_records_cost_check CHECK ((cost >= (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicle_records_cost_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicle_records') is not null then
     begin
       execute $sql$alter table public.vehicle_records drop constraint if exists vehicle_records_description_check$sql$;
-      execute $sql$alter table public.vehicle_records add constraint vehicle_records_description_check CHECK ((char_length(description) <= 1000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicle_records add constraint vehicle_records_description_check CHECK ((char_length(description) <= 1000)) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicle_records_description_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicle_records') is not null then
     begin
       execute $sql$alter table public.vehicle_records drop constraint if exists vehicle_records_kind_check$sql$;
-      execute $sql$alter table public.vehicle_records add constraint vehicle_records_kind_check CHECK ((kind = ANY (ARRAY['service'::text, 'repair'::text, 'oil'::text, 'tyres'::text, 'fuel'::text, 'accident'::text, 'other'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicle_records add constraint vehicle_records_kind_check CHECK ((kind = ANY (ARRAY['service'::text, 'repair'::text, 'oil'::text, 'tyres'::text, 'fuel'::text, 'accident'::text, 'other'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicle_records_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicle_records') is not null then
     begin
       execute $sql$alter table public.vehicle_records drop constraint if exists vehicle_records_liters_check$sql$;
-      execute $sql$alter table public.vehicle_records add constraint vehicle_records_liters_check CHECK ((liters > (0)::numeric)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicle_records add constraint vehicle_records_liters_check CHECK ((liters > (0)::numeric)) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicle_records_liters_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicle_records') is not null then
     begin
       execute $sql$alter table public.vehicle_records drop constraint if exists vehicle_records_odometer_km_check$sql$;
-      execute $sql$alter table public.vehicle_records add constraint vehicle_records_odometer_km_check CHECK (((odometer_km >= 0) AND (odometer_km <= 5000000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicle_records add constraint vehicle_records_odometer_km_check CHECK (((odometer_km >= 0) AND (odometer_km <= 5000000))) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicle_records_odometer_km_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_cargo_height_cm_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_cargo_height_cm_check CHECK (((cargo_height_cm >= 1) AND (cargo_height_cm <= 500))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_cargo_height_cm_check CHECK (((cargo_height_cm >= 1) AND (cargo_height_cm <= 500))) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_cargo_height_cm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_cargo_length_cm_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_cargo_length_cm_check CHECK (((cargo_length_cm >= 1) AND (cargo_length_cm <= 2000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_cargo_length_cm_check CHECK (((cargo_length_cm >= 1) AND (cargo_length_cm <= 2000))) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_cargo_length_cm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_cargo_obstacles_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_cargo_obstacles_check CHECK (((jsonb_typeof(cargo_obstacles) = 'array'::text) AND (jsonb_array_length(cargo_obstacles) <= 20))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_cargo_obstacles_check CHECK (((jsonb_typeof(cargo_obstacles) = 'array'::text) AND (jsonb_array_length(cargo_obstacles) <= 20))) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_cargo_obstacles_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_cargo_width_cm_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_cargo_width_cm_check CHECK (((cargo_width_cm >= 1) AND (cargo_width_cm <= 500))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_cargo_width_cm_check CHECK (((cargo_width_cm >= 1) AND (cargo_width_cm <= 500))) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_cargo_width_cm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_driver_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_driver_check CHECK ((char_length(driver) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_driver_check CHECK ((char_length(driver) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_driver_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_model_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_model_check CHECK ((char_length(model) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_model_check CHECK ((char_length(model) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_model_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_note_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_note_check CHECK ((char_length(note) <= 2000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_note_check CHECK ((char_length(note) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_odometer_km_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_odometer_km_check CHECK (((odometer_km >= 0) AND (odometer_km <= 5000000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_odometer_km_check CHECK (((odometer_km >= 0) AND (odometer_km <= 5000000))) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_odometer_km_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_payload_kg_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_payload_kg_check CHECK (((payload_kg >= 1) AND (payload_kg <= 100000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_payload_kg_check CHECK (((payload_kg >= 1) AND (payload_kg <= 100000))) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_payload_kg_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_photo_path_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_photo_path_check CHECK ((char_length(photo_path) <= 300)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_photo_path_check CHECK ((char_length(photo_path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_photo_path_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_plate_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_plate_check CHECK (((char_length(TRIM(BOTH FROM plate)) >= 1) AND (char_length(TRIM(BOTH FROM plate)) <= 20))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_plate_check CHECK (((char_length(TRIM(BOTH FROM plate)) >= 1) AND (char_length(TRIM(BOTH FROM plate)) <= 20))) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_plate_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_status_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_status_check CHECK ((status = ANY (ARRAY['active'::text, 'in_service'::text, 'retired'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_status_check CHECK ((status = ANY (ARRAY['active'::text, 'in_service'::text, 'retired'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_status_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicles') is not null then
     begin
       execute $sql$alter table public.vehicles drop constraint if exists vehicles_vin_check$sql$;
-      execute $sql$alter table public.vehicles add constraint vehicles_vin_check CHECK ((char_length(vin) <= 20)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.vehicles add constraint vehicles_vin_check CHECK ((char_length(vin) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola vehicles_vin_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.warehouse_spots') is not null then
     begin
       execute $sql$alter table public.warehouse_spots drop constraint if exists warehouse_spots_kind_check$sql$;
-      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_kind_check CHECK ((kind = ANY (ARRAY['rack'::text, 'pallet'::text, 'zone'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_kind_check CHECK ((kind = ANY (ARRAY['rack'::text, 'pallet'::text, 'zone'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouse_spots_kind_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.warehouse_spots') is not null then
     begin
       execute $sql$alter table public.warehouse_spots drop constraint if exists warehouse_spots_length_check$sql$;
-      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_length_check CHECK ((length > 0)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_length_check CHECK ((length > 0)) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouse_spots_length_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.warehouse_spots') is not null then
     begin
       execute $sql$alter table public.warehouse_spots drop constraint if exists warehouse_spots_levels_check$sql$;
-      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_levels_check CHECK (((levels >= 1) AND (levels <= 20))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_levels_check CHECK (((levels >= 1) AND (levels <= 20))) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouse_spots_levels_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.warehouse_spots') is not null then
     begin
       execute $sql$alter table public.warehouse_spots drop constraint if exists warehouse_spots_name_check$sql$;
-      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 60))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 60))) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouse_spots_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.warehouse_spots') is not null then
     begin
       execute $sql$alter table public.warehouse_spots drop constraint if exists warehouse_spots_width_check$sql$;
-      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_width_check CHECK ((width > 0)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_width_check CHECK ((width > 0)) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouse_spots_width_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.warehouse_spots') is not null then
     begin
       execute $sql$alter table public.warehouse_spots drop constraint if exists warehouse_spots_x_check$sql$;
-      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_x_check CHECK ((x >= 0)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_x_check CHECK ((x >= 0)) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouse_spots_x_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.warehouse_spots') is not null then
     begin
       execute $sql$alter table public.warehouse_spots drop constraint if exists warehouse_spots_y_check$sql$;
-      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_y_check CHECK ((y >= 0)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_y_check CHECK ((y >= 0)) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouse_spots_y_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.warehouses') is not null then
     begin
       execute $sql$alter table public.warehouses drop constraint if exists warehouses_length_cm_check$sql$;
-      execute $sql$alter table public.warehouses add constraint warehouses_length_cm_check CHECK (((length_cm >= 100) AND (length_cm <= 100000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.warehouses add constraint warehouses_length_cm_check CHECK (((length_cm >= 100) AND (length_cm <= 100000))) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouses_length_cm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.warehouses') is not null then
     begin
       execute $sql$alter table public.warehouses drop constraint if exists warehouses_width_cm_check$sql$;
-      execute $sql$alter table public.warehouses add constraint warehouses_width_cm_check CHECK (((width_cm >= 100) AND (width_cm <= 100000))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.warehouses add constraint warehouses_width_cm_check CHECK (((width_cm >= 100) AND (width_cm <= 100000))) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouses_width_cm_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_dhcp_end_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_dhcp_end_check CHECK ((char_length(dhcp_end) <= 45)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_dhcp_end_check CHECK ((char_length(dhcp_end) <= 45)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_dhcp_end_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_dhcp_start_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_dhcp_start_check CHECK ((char_length(dhcp_start) <= 45)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_dhcp_start_check CHECK ((char_length(dhcp_start) <= 45)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_dhcp_start_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_management_ip_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_management_ip_check CHECK ((char_length(management_ip) <= 45)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_management_ip_check CHECK ((char_length(management_ip) <= 45)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_management_ip_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_note_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_note_check CHECK ((char_length(note) <= 1000)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_note_check CHECK ((char_length(note) <= 1000)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_password_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_password_check CHECK ((char_length(password) <= 63)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_password_check CHECK ((char_length(password) <= 63)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_password_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_place_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_place_check CHECK ((char_length(place) <= 120)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_place_check CHECK ((char_length(place) <= 120)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_place_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_router_ip_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_router_ip_check CHECK ((char_length(router_ip) <= 45)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_router_ip_check CHECK ((char_length(router_ip) <= 45)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_router_ip_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_router_model_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_router_model_check CHECK ((char_length(router_model) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_router_model_check CHECK ((char_length(router_model) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_router_model_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_security_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_security_check CHECK ((security = ANY (ARRAY['WPA'::text, 'WEP'::text, 'nopass'::text]))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_security_check CHECK ((security = ANY (ARRAY['WPA'::text, 'WEP'::text, 'nopass'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_security_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_ssid_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_ssid_check CHECK (((char_length(ssid) >= 1) AND (char_length(ssid) <= 32))) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_ssid_check CHECK (((char_length(ssid) >= 1) AND (char_length(ssid) <= 32))) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_ssid_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
     begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_subnet_check$sql$;
-      execute $sql$alter table public.wifi_networks add constraint wifi_networks_subnet_check CHECK ((char_length(subnet) <= 43)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_subnet_check CHECK ((char_length(subnet) <= 43)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_subnet_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_router_logins') is not null then
     begin
       execute $sql$alter table public.wifi_router_logins drop constraint if exists wifi_router_logins_password_check$sql$;
-      execute $sql$alter table public.wifi_router_logins add constraint wifi_router_logins_password_check CHECK ((char_length(password) <= 128)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_router_logins add constraint wifi_router_logins_password_check CHECK ((char_length(password) <= 128)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_router_logins_password_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_router_logins') is not null then
     begin
       execute $sql$alter table public.wifi_router_logins drop constraint if exists wifi_router_logins_username_check$sql$;
-      execute $sql$alter table public.wifi_router_logins add constraint wifi_router_logins_username_check CHECK ((char_length(username) <= 80)) NOT VALID not valid$sql$;
+      execute $sql$alter table public.wifi_router_logins add constraint wifi_router_logins_username_check CHECK ((char_length(username) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_router_logins_username_check: %', sqlerrm;
     end;
   end if;

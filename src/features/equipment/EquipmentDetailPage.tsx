@@ -83,7 +83,7 @@ export function EquipmentDetailPage() {
   // Káble a spotrebný materiál sa neservisujú a nemajú sieť.
   const simple = isSimpleKind(equipment.kind, categories.find((c) => c.id === equipment.categoryId)?.name ?? '')
   // Nákupná cena a hodnota len pre tých, čo techniku spravujú.
-  const value = can(company, 'equipment.edit') ? equipmentValue(equipment, todayIso()) : null
+  const value = can(company, 'equipment.edit') ? equipmentValue(equipment) : null
   const rows: [string, ReactNode][] = [
     ['Druh', [KIND_LABELS[equipment.kind], ...describeAttributes(equipment)].join(' · ')],
     ['Vlastník', equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
@@ -148,11 +148,10 @@ export function EquipmentDetailPage() {
           .map(([unit, date]) => `#${unit} ${formatDate(date)}`)
           .join(' · '),
     ],
-    ['Nákupná cena', value && `${formatMoney(equipment.attributes.purchasePrice!, 'EUR')} za kus · spolu ${formatMoney(value.purchase, 'EUR')}`],
     [
-      'Hodnota dnes',
-      value &&
-        [formatMoney(value.current, 'EUR'), `odpis ${value.years} r.`, value.undated > 0 && `${value.undated} ks bez dátumu nákupu`].filter(Boolean).join(' · '),
+      'Nákupná cena',
+      value !== null &&
+        `${formatMoney(equipment.attributes.purchasePrice!, 'EUR')} za kus${equipment.quantity > 1 ? ` · spolu ${formatMoney(value, 'EUR')}` : ''}`,
     ],
     ['Posledný servis', equipment.lastServiceOn && formatDate(equipment.lastServiceOn)],
     ['Ďalší servis', serviceText],

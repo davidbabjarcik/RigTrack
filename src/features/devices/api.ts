@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { getSupabase } from '@/lib/supabase/client'
 import { isMissingColumn } from '@/lib/supabase/errors'
-import type { DeviceFormValues, DeviceKind, DeviceNetwork, MemberDevice } from './model'
+import { deviceRow, type DeviceFormValues, type DeviceKind, type DeviceNetwork, type MemberDevice } from './model'
 
 export const deviceKeys = {
   list: (companyId: string) => ['company', companyId, 'devices'] as const,
@@ -42,9 +42,10 @@ export function useDevices(companyId: string) {
 /** Nové zariadenie patrí prihlásenému, alebo (pre správcu tímu) členovi `userId`. */
 export async function saveDevice(companyId: string, id: string | null, values: DeviceFormValues, userId?: string) {
   const table = getSupabase().from('member_devices')
+  const row = deviceRow(values)
   const { error } = id
-    ? await table.update(values).eq('company_id', companyId).eq('id', id)
-    : await table.insert({ ...values, company_id: companyId, ...(userId ? { user_id: userId } : {}) })
+    ? await table.update(row).eq('company_id', companyId).eq('id', id)
+    : await table.insert({ ...row, company_id: companyId, ...(userId ? { user_id: userId } : {}) })
   if (error) throw error
 }
 

@@ -53,5 +53,19 @@ describe('repair migrations', () => {
     await t.signUp('owner', 'owner@example.com')
     const demo = await t.as('owner', 'select public.create_demo_company() as id')
     expect(demo[0].id).toBeTruthy()
+    expect(await t.rows(`select pg_get_constraintdef(oid) as def from pg_constraint where conname = 'event_payments_method_check'`)).toEqual([{ def: expect.stringContaining('invoice') }])
+  })
+
+  it('0072 replaces a stale device check so a notebook can be saved', async () => {
+    const t = await createTestDb()
+    await t.exec(`
+      alter table public.member_devices drop constraint member_devices_kind_check;
+      alter table public.member_devices add constraint member_devices_kind_check check (kind in ('phone'));
+    `)
+    await t.exec(sql('0072_repair_checks_functions.sql'))
+    await t.signUp('owner', 'owner@example.com')
+    const company = (await t.as('owner', `select public.create_company('A') as id`))[0].id
+    await t.as('owner', `insert into public.member_devices (company_id, kind, name, mac, ethernet_mac) values ($1, 'laptop', 'DB-PC', '74:4C:A1:D8:DC:65', '38:F3:AB:CD:3E:20')`, [company])
+    expect(await t.as('owner', 'select kind from public.member_devices')).toEqual([{ kind: 'laptop' }])
   })
 })

@@ -80,6 +80,11 @@ export const deviceSchema = z.object({
 export type DeviceFormInput = z.input<typeof deviceSchema>
 export type DeviceFormValues = z.output<typeof deviceSchema>
 
+/** Hodnoty z formulára → stĺpce tabuľky (ethernet MAC sa v databáze volá ethernet_mac). */
+export function deviceRow(values: DeviceFormValues) {
+  return { kind: values.kind, name: values.name, mac: values.mac, ethernet_mac: values.ethernetMac, note: values.note, networks: values.networks }
+}
+
 const fold = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 const macKey = (value: string) => value.toUpperCase().replace(/[^0-9A-F]/g, '')
 
