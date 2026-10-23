@@ -59,7 +59,8 @@ with checks (migration, ok) as (
     ('0073 úrovne kontroly', to_regclass('public.company_check_levels') is not null),
     ('0074 pack list eventu', to_regclass('public.event_pack_checks') is not null),
     ('0075 podpisy výpožičiek', to_regclass('public.loan_signatures') is not null),
-    ('0076 stretávky a dochádzka', to_regclass('public.event_attendance') is not null)
+    ('0076 stretávky a dochádzka', to_regclass('public.event_attendance') is not null),
+    ('0077 činnosti pri eventoch', to_regclass('public.event_duties') is not null)
 )
 select migration, case when ok then 'OK' else 'chýba' end as stav
 from checks

@@ -75,6 +75,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'event_pack_checks', sheet: 'Pack list' },
       { table: 'event_meetings', sheet: 'Stretávky' },
       { table: 'event_attendance', sheet: 'Dochádzka' },
+      { table: 'event_duties', sheet: 'Kto čo robil' },
       { table: 'event_capsules', sheet: 'Kapsule' },
       { table: 'event_patch', sheet: 'Patch list' },
     ],
@@ -133,6 +134,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'attachments', sheet: 'Prílohy' },
       { table: 'stage_settings', sheet: 'Nastavenie Nivtec' },
       { table: 'event_rules', sheet: 'Pripomienky' },
+      { table: 'company_duty_types', sheet: 'Činnosti' },
     ],
   },
 ]
@@ -257,6 +259,7 @@ const RESTORE_FIRST = [
   'office_items',
   'staff',
   'task_templates',
+  'company_duty_types',
 ]
 
 export function restoreOrder() {

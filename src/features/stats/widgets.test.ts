@@ -19,7 +19,7 @@ describe('stat widgets', () => {
 describe('stats order', () => {
   it('keeps the stored order and appends what is new', () => {
     const order = parseOrder(JSON.stringify({ sections: ['vehicles', 'money', 'gone'], widgets: ['service.cost', 'equipment.items', 'service.cost'] }))
-    expect(order.sections).toEqual(['vehicles', 'money', 'equipment', 'service'])
+    expect(order.sections).toEqual(['vehicles', 'money', 'equipment', 'service', 'people'])
     expect(order.widgets.slice(0, 2)).toEqual(['service.cost', 'equipment.items'])
     expect(order.widgets).toHaveLength(STAT_WIDGETS.length)
     expect(parseOrder('nonsense')).toEqual(DEFAULT_ORDER)

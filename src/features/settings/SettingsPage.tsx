@@ -36,6 +36,7 @@ import { DeleteCompanySettings } from '@/features/companies/DeleteCompanySetting
 import { DemoSettings } from '@/features/companies/DemoSettings'
 import { MyDevicesSettings } from '@/features/devices/MyDevicesSettings'
 import { AttendanceSettings } from '@/features/attendance/MyAttendance'
+import { DutySettings } from '@/features/duties/DutySettings'
 import { EmailPrefs } from '@/features/news/EmailPrefs'
 import { LookupSettings } from '@/features/equipment/LookupSettings'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
@@ -426,6 +427,12 @@ export function SettingsPage() {
       {tab === 'reminders' && (
         <Section title="Pripomienky pri eventoch">
           <RulesSettings companyId={company.companyId} />
+        </Section>
+      )}
+
+      {tab === 'reminders' && isAdmin && (
+        <Section title="Činnosti pri eventoch (nakladanie, kontrola hliníka…)">
+          <DutySettings companyId={company.companyId} />
         </Section>
       )}
 

@@ -307,6 +307,13 @@ begin
     exception when others then raise notice 'Kontrola company_check_levels_normal_days_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.company_duty_types') is not null then
+    begin
+      execute $sql$alter table public.company_duty_types drop constraint if exists company_duty_types_name_check$sql$;
+      execute $sql$alter table public.company_duty_types add constraint company_duty_types_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 60))) not valid$sql$;
+    exception when others then raise notice 'Kontrola company_duty_types_name_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.company_invitations') is not null then
     begin
       execute $sql$alter table public.company_invitations drop constraint if exists company_invitations_email_check$sql$;
@@ -767,6 +774,20 @@ begin
       execute $sql$alter table public.event_documents drop constraint if exists event_documents_size_bytes_check$sql$;
       execute $sql$alter table public.event_documents add constraint event_documents_size_bytes_check CHECK ((size_bytes >= 0)) not valid$sql$;
     exception when others then raise notice 'Kontrola event_documents_size_bytes_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_duties') is not null then
+    begin
+      execute $sql$alter table public.event_duties drop constraint if exists event_duties_check$sql$;
+      execute $sql$alter table public.event_duties add constraint event_duties_check CHECK (((member_id IS NULL) <> (TRIM(BOTH FROM person_name) = ''::text))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_duties_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_duties') is not null then
+    begin
+      execute $sql$alter table public.event_duties drop constraint if exists event_duties_person_name_check$sql$;
+      execute $sql$alter table public.event_duties add constraint event_duties_person_name_check CHECK ((char_length(person_name) <= 80)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_duties_person_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_equipment') is not null then

@@ -9,6 +9,8 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { formatNumber } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { valueSummary } from '@/features/equipment/value'
+import { dutyKeys, fetchAllDuties, fetchWorkLogs, useDutyTypes } from '@/features/duties/api'
+import { dutyRanking, hoursByPerson } from '@/features/duties/model'
 import { useLoans } from '@/features/loans/useLoans'
 import { useServiceRecords } from '@/features/service/useServiceRecords'
 import { fetchVehicleCosts, vehicleKeys } from '@/features/vehicles/api'
@@ -105,6 +107,7 @@ function MoveButtons({ label, canUp, canDown, onMove }: { label: string; canUp: 
 
 const count = (value: number) => String(value)
 const daysLabel = (value: number) => `${value} ${value === 1 ? 'deň' : value <= 4 ? 'dni' : 'dní'}`
+const timesLabel = (value: number) => `${value}×`
 const money = (value: number) => formatMoney(value, 'EUR')
 
 export function StatsPage() {
@@ -146,6 +149,10 @@ export function StatsPage() {
   const events = useEvents(companyId)
   const members = useMembers(companyId)
   const { categories } = useEquipmentLookups(companyId)
+  // Ľudia: výkazy času a činnosti pri eventoch (bez migrácie 0077 sa činnosti len neukážu).
+  const workLogs = useQuery({ queryKey: dutyKeys.workLogs(companyId), queryFn: () => fetchWorkLogs(companyId), retry: false })
+  const dutyTypes = useDutyTypes(companyId)
+  const duties = useQuery({ queryKey: dutyKeys.all(companyId), queryFn: () => fetchAllDuties(companyId), retry: false })
   const sources = [equipment, loans, service, vehicles, vehicleCosts, payments, events]
 
   if (sources.some((source) => source.isPending)) return <LoadingBlock />
@@ -190,6 +197,13 @@ export function StatsPage() {
     value: sum(yearIncome.filter((payment) => payment.method === method).map((payment) => ({ amount: bothBases(payment).gross ?? payment.amount }))),
   })).filter((row) => row.value > 0)
   const period = year === 'all' ? 'spolu' : `v roku ${year}`
+  const eventStart = new Map((events.data ?? []).map((event) => [event.id, event.startsOn]))
+  const personName = (userId: string) => memberName(members.data, userId) || 'Bývalý člen'
+  const hours = hoursByPerson(workLogs.data ?? [], year, personName)
+  const dutyRankings = (dutyTypes.data ?? []).map((type) => ({
+    type,
+    rows: dutyRanking(duties.data ?? [], type.id, (id) => eventStart.get(id), year, (duty) => (duty.memberId ? personName(duty.memberId) : duty.personName.trim())),
+  }))
 
   // Jeden zápis pre každý widget zo zoznamu STAT_WIDGETS; chýbajúci by neprešiel kontrolou typov.
   const render: Record<StatWidgetId, ReactNode> = {
@@ -251,6 +265,19 @@ export function StatsPage() {
     'service.costliest': <Ranking title="Najdrahšia technika na servis" rows={stats.service.costliest} format={money} empty="Žiadne zapísané náklady." />,
     'vehicles.count': <Tile label="Aktívne vozidlá" value={String(stats.vehicles.count)} />,
     'vehicles.due': <Tile label="Termíny na vybavenie" value={String(stats.vehicles.due)} hint="po termíne alebo do 30 dní" />,
+    'people.hours': (
+      <Ranking title={`Odpracované hodiny ${period}`} rows={hours} format={(value) => `${formatNumber(value)} h`} empty="Žiadne zapísané výkazy času." />
+    ),
+    'people.duties':
+      dutyRankings.length === 0 ? (
+        <Ranking title="Kto čo robil najviac" rows={[]} format={count} empty="Činnosti si nastavíte v Nastaveniach → Pripomienky (nakladanie, kontrola hliníka…)." />
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {dutyRankings.map(({ type, rows }) => (
+            <Ranking key={type.id} title={`${type.name} – ${period}`} rows={rows} format={timesLabel} empty="Zatiaľ nikto." />
+          ))}
+        </div>
+      ),
     'vehicles.costs': <Ranking title="Náklady na prevádzku podľa vozidla" rows={stats.vehicles.costs} format={money} empty="Žiadne zapísané náklady." />,
   }
   // Widgety, na ktoré člen nemá oprávnenie, sa ani neponúkajú.

@@ -21,6 +21,17 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.15 – 23. 10. 2026
+
+- **Činnosti pri eventoch** (Nastavenia → Pripomienky, len admin): vlastný zoznam, napr. nakladanie, vykladanie,
+  kontrola a naskladnenie hliníka, kontrola kabeláže – jedným klikom predvolené, dajú sa pridať, preusporiadať
+  aj vypnúť.
+- **Kto čo robil** (detail eventu): ku každej činnosti sa zapíšu ľudia – členovia aj externisti. Človek z posádky
+  sa môže zapísať aj sám („Robil(a) som“).
+- **Štatistiky → Ľudia**: odpracované hodiny podľa ľudí (z výkazov času aj dochádzky) a pri každej činnosti
+  rebríček, kto ju robil najčastejšie – za zvolený rok.
+- Nové migrácie: `0077` (opravné `0071` a `0072` sú aktualizované).
+
 ### 2.14 – 23. 10. 2026
 
 - **Stretávka pri evente** (detail eventu → Stretávka a dochádzka): dátum, čas a miesto – na firme (sklad),
