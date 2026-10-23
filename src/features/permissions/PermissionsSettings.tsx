@@ -4,15 +4,17 @@ import { SelectField } from '@/components/ui/field'
 import type { Member } from '@/features/companies/api'
 import { isAdminRole, ROLE_LABELS } from '@/lib/roles'
 import { cn } from '@/lib/utils'
-import { fetchPermissionOverrides, permissionKeys, setMemberPermission, setRolePermission } from './api'
+import { fetchPermissionGroups, fetchPermissionOverrides, permissionKeys, setGroupPermission, setMemberPermission, setRolePermission } from './api'
 import {
   CONFIGURABLE_ROLES,
   defaultAllowed,
+  groupAllows,
   PERMISSION_GROUPS,
   roleAllowed,
   type ConfigurableRole,
   type PermissionKey,
 } from './catalog'
+import { PermissionGroups } from './PermissionGroups'
 
 type Props = { companyId: string; members: Member[] }
 
@@ -21,6 +23,13 @@ export function PermissionsSettings({ companyId, members }: Props) {
   const queryClient = useQueryClient()
   const [memberId, setMemberId] = useState('')
   const overrides = useQuery({ queryKey: permissionKeys.overrides(companyId), queryFn: () => fetchPermissionOverrides(companyId) })
+  // Skupiny (0079); bez migrácie sa tabuľka ukáže len s rolami.
+  const groupsQuery = useQuery({ queryKey: permissionKeys.groups(companyId), queryFn: () => fetchPermissionGroups(companyId), retry: false })
+  const groups = groupsQuery.data ?? []
+  const setGroup = useMutation({
+    mutationFn: (change: { groupId: string; permission: PermissionKey; allowed: boolean }) => setGroupPermission(companyId, change.groupId, change.permission, change.allowed),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: permissionKeys.groups(companyId) }),
+  })
   // Zmena sa týka aj toho, čo vidí sám admin v iných kartách; stačí však jeho vlastné oprávnenia a tento zoznam.
   const refresh = () => queryClient.invalidateQueries({ queryKey: permissionKeys.overrides(companyId) })
   const setRole = useMutation({
@@ -33,7 +42,7 @@ export function PermissionsSettings({ companyId, members }: Props) {
       setMemberPermission(companyId, change.userId, change.permission, change.allowed),
     onSettled: refresh,
   })
-  const busy = setRole.isPending || setMember.isPending
+  const busy = setRole.isPending || setMember.isPending || setGroup.isPending
 
   const roles = overrides.data?.roles ?? []
   const memberOverrides = overrides.data?.members ?? []
@@ -53,14 +62,15 @@ export function PermissionsSettings({ companyId, members }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
+      {groupsQuery.isSuccess && <PermissionGroups companyId={companyId} groups={groups} members={members} />}
       <div>
         <p className="mb-3 text-sm text-muted-foreground">
           Zaškrtnuté = rola to smie. Bodka označuje zmenu oproti predvolenému stavu ({changedRoles}). Admin smie vždy všetko a členov, pozvánky
-          a nastavenia firmy spravuje iba on.
+          a nastavenia firmy spravuje iba on.{groups.length > 0 && ' V stĺpcoch skupín zaškrtnite, čo skupina smie navyše k roli.'}
         </p>
         <p className="mb-2 text-xs text-muted-foreground sm:hidden">Tabuľku posuňte prstom do strany – vidíte všetky roly.</p>
         <div className="overflow-x-auto overscroll-x-contain rounded-xl border bg-surface">
-          <table className="w-full min-w-[34rem] border-collapse text-sm">
+          <table className="w-full border-collapse text-sm" style={{ minWidth: `${34 + groups.length * 6}rem` }}>
             <thead>
               <tr className="border-b text-left">
                 <th className="sticky left-0 z-10 bg-surface px-4 py-2 font-medium">Oprávnenie</th>
@@ -69,11 +79,16 @@ export function PermissionsSettings({ companyId, members }: Props) {
                     {ROLE_LABELS[role]}
                   </th>
                 ))}
+                {groups.map((group) => (
+                  <th key={group.id} className="w-24 border-l bg-accent/10 px-2 py-2 text-center font-medium" title="Skupina – smie navyše k roli">
+                    {group.name}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {PERMISSION_GROUPS.map((group) => (
-                <PermissionGroupRows key={group.id} label={group.label} columns={CONFIGURABLE_ROLES.length + 1}>
+                <PermissionGroupRows key={group.id} label={group.label} columns={CONFIGURABLE_ROLES.length + 1 + groups.length}>
                   {group.permissions.map((permission) => (
                     <tr key={permission.key} className="border-b last:border-b-0">
                       <td className="sticky left-0 z-10 max-w-40 bg-surface px-4 py-2">{permission.label}</td>
@@ -100,6 +115,20 @@ export function PermissionsSettings({ companyId, members }: Props) {
                           </td>
                         )
                       })}
+                      {groups.map((team) => (
+                        <td key={team.id} className="border-l bg-accent/5 px-2 py-2 text-center">
+                          <label className="inline-flex size-8 cursor-pointer items-center justify-center">
+                            <input
+                              type="checkbox"
+                              className="size-5"
+                              aria-label={`${group.label}: ${permission.label} — skupina ${team.name}`}
+                              checked={team.permissions.includes(permission.key)}
+                              disabled={busy}
+                              onChange={(event) => setGroup.mutate({ groupId: team.id, permission: permission.key, allowed: event.target.checked })}
+                            />
+                          </label>
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </PermissionGroupRows>
@@ -112,7 +141,7 @@ export function PermissionsSettings({ companyId, members }: Props) {
       <div>
         <h3 className="mb-1 font-medium">Výnimky pre jedného člena</h3>
         <p className="mb-3 text-sm text-muted-foreground">
-          Výnimka platí len pre vybraného človeka a má prednosť pred nastavením jeho roly.
+          Výnimka platí len pre vybraného človeka a má prednosť pred nastavením jeho roly aj skupín.
         </p>
         {adjustable.length === 0 ? (
           <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">Vo firme nie je nikto okrem adminov.</p>
@@ -134,7 +163,7 @@ export function PermissionsSettings({ companyId, members }: Props) {
                 {PERMISSION_GROUPS.map((group) => (
                   <PermissionGroupRows key={group.id} label={group.label} columns={2}>
                     {group.permissions.map((permission) => {
-                      const byRole = roleAllowed(selected.role, permission.key, roles)
+                      const byRole = groupAllows(selected.userId, permission.key, groups) || roleAllowed(selected.role, permission.key, roles)
                       const own = memberOverrides.find((item) => item.userId === selected.userId && item.permission === permission.key)
                       return (
                         <tr key={permission.key} className="border-b last:border-b-0">
@@ -156,7 +185,9 @@ export function PermissionsSettings({ companyId, members }: Props) {
                                 })
                               }
                             >
-                              <option value="role">Podľa roly ({byRole ? 'smie' : 'nesmie'})</option>
+                              <option value="role">
+                                Podľa roly{groups.some((team) => team.members.includes(selected.userId)) ? ' a skupín' : ''} ({byRole ? 'smie' : 'nesmie'})
+                              </option>
                               <option value="allow">Povoliť</option>
                               <option value="deny">Zakázať</option>
                             </select>
@@ -172,7 +203,7 @@ export function PermissionsSettings({ companyId, members }: Props) {
         )}
       </div>
 
-      {(setRole.isError || setMember.isError) && (
+      {(setRole.isError || setMember.isError || setGroup.isError) && (
         <p role="alert" className="text-sm text-destructive">
           Zmenu sa nepodarilo uložiť.
         </p>

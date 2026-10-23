@@ -1735,6 +1735,20 @@ begin
     exception when others then raise notice 'Kontrola partners_note_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.permission_group_rules') is not null then
+    begin
+      execute $sql$alter table public.permission_group_rules drop constraint if exists permission_group_rules_permission_check$sql$;
+      execute $sql$alter table public.permission_group_rules add constraint permission_group_rules_permission_check CHECK (is_permission(permission)) not valid$sql$;
+    exception when others then raise notice 'Kontrola permission_group_rules_permission_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.permission_groups') is not null then
+    begin
+      execute $sql$alter table public.permission_groups drop constraint if exists permission_groups_name_check$sql$;
+      execute $sql$alter table public.permission_groups add constraint permission_groups_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 40))) not valid$sql$;
+    exception when others then raise notice 'Kontrola permission_groups_name_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.role_permissions') is not null then
     begin
       execute $sql$alter table public.role_permissions drop constraint if exists role_permissions_permission_check$sql$;
@@ -2768,22 +2782,26 @@ begin
  STABLE SECURITY DEFINER
  SET search_path TO ''
 AS $function$
-    select coalesce(
-      (
-        select m.role in ('admin', 'ceo') or coalesce(
-          (select mp.allowed from public.member_permissions mp
-            where mp.company_id = m.company_id and mp.user_id = m.user_id and mp.permission = _permission),
-          (select rp.allowed from public.role_permissions rp
-            where rp.company_id = m.company_id and rp.role = m.role and rp.permission = _permission),
-          (select m.role = any (d.roles) from public.permission_defaults() d where d.permission = _permission),
-          false
-        )
-        from public.company_members m
-        where m.company_id = _company_id and m.user_id = auth.uid()
-      ),
-      false
-    )
-  $function$$repairfn$;
+  select coalesce(
+    (
+      select m.role in ('admin', 'ceo') or coalesce(
+        (select mp.allowed from public.member_permissions mp
+          where mp.company_id = m.company_id and mp.user_id = m.user_id and mp.permission = _permission),
+        (select true from public.permission_group_members gm
+          join public.permission_group_rules gr on gr.group_id = gm.group_id and gr.permission = _permission
+          where gm.company_id = m.company_id and gm.user_id = m.user_id
+          limit 1),
+        (select rp.allowed from public.role_permissions rp
+          where rp.company_id = m.company_id and rp.role = m.role and rp.permission = _permission),
+        (select m.role = any (d.roles) from public.permission_defaults() d where d.permission = _permission),
+        false
+      )
+      from public.company_members m
+      where m.company_id = _company_id and m.user_id = auth.uid()
+    ),
+    false
+  )
+$function$$repairfn$;
 exception when others then raise notice 'Funkcia can: %', sqlerrm;
 end;
 $repair$;

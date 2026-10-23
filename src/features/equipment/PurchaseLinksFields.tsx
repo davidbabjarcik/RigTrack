@@ -1,36 +1,18 @@
 import { ExternalLink, Plus, Trash2 } from 'lucide-react'
-import { useController, useFieldArray, type Control, type FieldErrors, type UseFormRegister } from 'react-hook-form'
+import { useFieldArray, type Control, type FieldErrors, type UseFormRegister } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
-import { asOptionalNumber, LINK_TAG_LABELS, LINK_TAGS, parseUnitIds, unitRange, type EquipmentFormValues } from './model'
-
-/** Najviac kusov, pri ktorých formulár ukáže údaje po kusoch. */
-const MAX_UNIT_DATES = 200
+import { asOptionalNumber, LINK_TAG_LABELS, LINK_TAGS, type EquipmentFormValues } from './model'
 
 type Props = {
   control: Control<EquipmentFormValues>
   register: UseFormRegister<EquipmentFormValues>
   errors: FieldErrors<EquipmentFormValues>
-  trackUnits: boolean
-  unitIdsText: string
-  quantity: number
 }
 
-/** Dátum nákupu (celá položka aj po kusoch) a odkazy na návody, fixtúry, firmvér. */
-export function PurchaseLinksFields({ control, register, errors, trackUnits, unitIdsText, quantity }: Props) {
+/** Dátum a cena nákupu a odkazy na návody, fixtúry, firmvér. */
+export function PurchaseLinksFields({ control, register, errors }: Props) {
   const links = useFieldArray({ control, name: 'links' })
-  const unitDates = useController({ control, name: 'unitPurchases' })
-  const units = trackUnits ? (parseUnitIds(unitIdsText).length > 0 ? parseUnitIds(unitIdsText) : unitRange(Number.isFinite(quantity) ? quantity : 0)) : []
-  const dates = unitDates.field.value ?? []
-  const dateOf = (unit: number) => dates.find((item) => item.unit === unit)?.date ?? ''
-  const setDate = (unit: number, date: string) => unitDates.field.onChange([...dates.filter((item) => item.unit !== unit), { unit, date }])
-  const unitInfo = useController({ control, name: 'unitInfo' })
-  const infos = unitInfo.field.value ?? []
-  const infoOf = (unit: number) => infos.find((item) => item.unit === unit) ?? { unit, serial: '', inv: '' }
-  const setInfo = (unit: number, patch: { serial?: string; inv?: string }) =>
-    unitInfo.field.onChange([...infos.filter((item) => item.unit !== unit), { ...infoOf(unit), ...patch }])
-  const filled = units.filter((unit) => dateOf(unit) || infoOf(unit).serial.trim() || infoOf(unit).inv.trim()).length
-
   return (
     <>
       <fieldset className="rounded-xl border bg-surface p-4">
@@ -48,46 +30,6 @@ export function PurchaseLinksFields({ control, register, errors, trackUnits, uni
           />
         </div>
       </fieldset>
-
-      {units.length > 0 && (
-        <fieldset className="rounded-xl border bg-surface p-4">
-          <legend className="px-1 text-sm font-medium text-muted-foreground">Údaje po kusoch (nepovinné)</legend>
-          <details open={units.length <= 12}>
-            <summary className="cursor-pointer text-sm font-medium">
-              Inventárne a sériové čísla, dátum nákupu ({filled} z {units.length} kusov vyplnených)
-            </summary>
-            <p className="mt-1 text-xs text-muted-foreground">Dátum nákupu vyplňte len pri kusoch kúpených inokedy ako celá položka.</p>
-            <ul className="mt-2 flex flex-col gap-2">
-              {units.slice(0, MAX_UNIT_DATES).map((unit) => (
-                <li key={unit} className="grid grid-cols-[3rem_1fr] items-center gap-2 sm:grid-cols-[3rem_1fr_1fr_11rem]">
-                  <span className="text-sm font-medium">#{unit}</span>
-                  <Field
-                    label={`Inventárne číslo kusu #${unit}`}
-                    hideLabel
-                    placeholder="inventárne č."
-                    maxLength={40}
-                    autoComplete="off"
-                    value={infoOf(unit).inv}
-                    onChange={(event) => setInfo(unit, { inv: event.target.value })}
-                  />
-                  <span className="sm:hidden" />
-                  <Field
-                    label={`Sériové číslo kusu #${unit}`}
-                    hideLabel
-                    placeholder="sériové č."
-                    maxLength={80}
-                    autoComplete="off"
-                    value={infoOf(unit).serial}
-                    onChange={(event) => setInfo(unit, { serial: event.target.value })}
-                  />
-                  <span className="sm:hidden" />
-                  <Field label={`Dátum nákupu kusu #${unit}`} hideLabel type="date" value={dateOf(unit)} onChange={(event) => setDate(unit, event.target.value)} />
-                </li>
-              ))}
-            </ul>
-          </details>
-        </fieldset>
-      )}
 
       <fieldset className="rounded-xl border bg-surface p-4">
         <legend className="px-1 text-sm font-medium text-muted-foreground">Odkazy – návody, fixtúry (nepovinné)</legend>

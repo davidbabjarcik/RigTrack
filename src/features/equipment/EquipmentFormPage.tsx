@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useId, useState, type ReactNode } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { useId, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { ChevronDown, Plus, Trash2 } from 'lucide-react'
 import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -63,13 +63,14 @@ import {
   TRUSS_SHAPES,
   STAGE_TYPE_LABELS,
   STAGE_TYPES,
-  parseUnitIds,
   STATUS_LABELS,
   type Equipment,
   type EquipmentFormValues,
   type Lookup,
 } from './model'
 import { PurchaseLinksFields } from './PurchaseLinksFields'
+import { UnitDetailsFields } from './UnitDetailsFields'
+import { isCollapsed, setCollapsed, subscribeCollapsed } from '@/components/layout/collapsed'
 import { CHECK_LEVEL_LABELS, CHECK_LEVELS, levelDays, useCheckLevels } from '@/features/checks/levels'
 import { useEquipmentLookups } from './useEquipmentLookups'
 
@@ -287,11 +288,21 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
   }
 }
 
+/** Skupina polí; kliknutím na nadpis sa zbalí a prehliadač si to pamätá (pre všetku techniku). */
 function Group({ title, children }: { title: string; children: ReactNode }) {
+  const id = `equipment.form.${title}`
+  const collapsed = useSyncExternalStore(subscribeCollapsed, () => isCollapsed(id))
   return (
     <fieldset className="rounded-xl border bg-surface p-4">
-      <legend className="px-1 text-sm font-medium text-muted-foreground">{title}</legend>
-      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+      <legend className="px-1 text-sm font-medium text-muted-foreground">
+        <button type="button" className="inline-flex items-center gap-1 hover:text-foreground" aria-expanded={!collapsed} onClick={() => setCollapsed(id, !collapsed)}>
+          <ChevronDown className={cn('size-4 transition-transform', collapsed && '-rotate-90')} aria-hidden />
+          {title}
+        </button>
+      </legend>
+      <div className="grid gap-4 sm:grid-cols-2" hidden={collapsed}>
+        {children}
+      </div>
     </fieldset>
   )
 }
@@ -365,6 +376,9 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
   // Ďalšie dĺžky nového kábla (namiesto samostatnej „Sady káblov“).
   const [extraLengths, setExtraLengths] = useState<{ lengthM: number; quantity: number }[]>([])
+  // Sieť a servis sa ukážu len pri technike, ktorá ich má (alebo keď ich zaškrtnete).
+  const [showNetwork, setShowNetwork] = useState(() => Boolean(equipment?.macAddress || equipment?.ipAddress || equipment?.attributes.ipDhcp))
+  const [showService, setShowService] = useState(() => Boolean(equipment?.serviceIntervalMonths || equipment?.lastServiceOn))
 
   const save = useMutation({
     mutationFn: async (values: EquipmentFormValues) => {
@@ -1075,21 +1089,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           </span>
         </label>
         {trackUnits && (
-          <div className="sm:col-span-2">
-            <Field
-              label="Čísla kusov (nepovinné)"
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="napr. 1, 4, 8 — prázdne = 1 až počet kusov"
-              error={errors.unitIds?.message}
-              {...register('unitIds')}
-            />
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              {parseUnitIds(unitIdsText ?? '').length > 0
-                ? `Kusov podľa čísel: ${parseUnitIds(unitIdsText ?? '').length}. Počet kusov sa pri uložení nastaví podľa nich.`
-                : 'Vyplňte, keď čísla nejdú po sebe – napríklad po vyradení kusu #2 ostanú 1, 3, 4. Ostatné kusy si svoje čísla a históriu nechajú.'}
-            </p>
-          </div>
+          <UnitDetailsFields control={control} register={register} errors={errors} unitIdsText={unitIdsText ?? ''} quantity={quantity} />
         )}
         <SelectField label="Stav" error={errors.status?.message} {...register('status')}>
           {EQUIPMENT_STATUSES.map((status) => (
@@ -1100,8 +1100,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         </SelectField>
       </div>
       <p className="-mt-2 text-sm text-muted-foreground">
-        Počet nechajte na 1, ak evidujete každý kus zvlášť. Viac kusov je pre veci na množstvo, napr. káble alebo háky. Pri
-        spotrebnom materiáli (kvapalina do hazera) nastavte, pri koľkých kusoch sa má objaviť v zozname „treba kúpiť“.
+        Pri evidencii po kusoch zadajte počet kusov a údaje každého kusu vyplníte priamo pod tým. Pri spotrebnom materiáli
+        (kvapalina do hazera) nastavte, pri koľkých kusoch sa má objaviť v zozname „treba kúpiť“.
       </p>
 
       <OwnerSelect companyId={companyId} error={errors.owner?.message} {...register('owner')} />
@@ -1117,7 +1117,21 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
 
       {!simple && (
         <>
-          <Group title="Sieť (nepovinné)">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" className="size-5" checked={showNetwork}
+              onChange={(event) => {
+                setShowNetwork(event.target.checked)
+                if (!event.target.checked) {
+                  setValue('macAddress', '')
+                  setValue('ipAddress', '')
+                  setValue('ipPrefix', undefined)
+                  setValue('ipDhcp', false)
+                }
+              }} />
+            Zariadenie je v sieti (má IP alebo MAC adresu)
+          </label>
+          {showNetwork && (
+          <Group title="Sieť">
             <Field
               label="MAC adresa"
               placeholder="00:1A:2B:3C:4D:5E"
@@ -1149,8 +1163,21 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               IP prideľuje DHCP (bez pevnej adresy – pole IP nechajte prázdne)
             </label>
           </Group>
+          )}
 
-          <Group title="Servis (nepovinné)">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" className="size-5" checked={showService}
+              onChange={(event) => {
+                setShowService(event.target.checked)
+                if (!event.target.checked) {
+                  setValue('serviceIntervalMonths', undefined)
+                  setValue('lastServiceOn', '')
+                }
+              }} />
+            Pravidelný servis
+          </label>
+          {showService && (
+          <Group title="Servis">
             <Field
               label="Interval (mesiace)"
               type="number"
@@ -1163,6 +1190,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
             />
             <Field label="Posledný servis" type="date" error={errors.lastServiceOn?.message} {...register('lastServiceOn')} />
           </Group>
+          )}
 
           <Group title="Prevádzkové hodiny (nepovinné)">
             <label className="flex items-center gap-2 text-sm font-medium sm:col-span-2">
@@ -1186,7 +1214,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         </>
       )}
 
-      <PurchaseLinksFields control={control} register={register} errors={errors} trackUnits={trackUnits} unitIdsText={unitIdsText ?? ''} quantity={quantity} />
+      <PurchaseLinksFields control={control} register={register} errors={errors} />
 
       <TextareaField label="Poznámka" error={errors.note?.message} {...register('note')} />
 

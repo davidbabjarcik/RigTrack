@@ -95,16 +95,25 @@ export function roleAllowed(role: Role, permission: PermissionKey, overrides: Ro
   return overrides.find((item) => item.role === role && item.permission === permission)?.allowed ?? defaultAllowed(role, permission)
 }
 
-/** Výsledné oprávnenie člena: výnimka člena má prednosť pred nastavením roly. */
+/** Skupina ľudí (napr. Šoféri): jej členovia smú navyše všetko, čo má skupina zaškrtnuté. */
+export type PermissionGroup = { id: string; name: string; members: string[]; permissions: PermissionKey[] }
+
+/** Dáva niektorá skupina člena toto oprávnenie? */
+export function groupAllows(userId: string, permission: PermissionKey, groups: PermissionGroup[] = []) {
+  return groups.some((group) => group.members.includes(userId) && group.permissions.includes(permission))
+}
+
+/** Výsledné oprávnenie člena: výnimka člena → niektorá jeho skupina → rola (rovnako ako public.can v databáze). */
 export function memberAllowed(
   member: { userId: string; role: Role },
   permission: PermissionKey,
   roleOverrides: RoleOverride[],
   memberOverrides: MemberOverride[],
+  groups: PermissionGroup[] = [],
 ) {
   if (isAdminRole(member.role)) return true
   return (
     memberOverrides.find((item) => item.userId === member.userId && item.permission === permission)?.allowed ??
-    roleAllowed(member.role, permission, roleOverrides)
+    (groupAllows(member.userId, permission, groups) || roleAllowed(member.role, permission, roleOverrides))
   )
 }

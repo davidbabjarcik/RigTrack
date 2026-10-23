@@ -21,6 +21,18 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.17 – 23. 10. 2026
+
+- **Skupiny ľudí v oprávneniach** (Nastavenia → Oprávnenia): vytvoríte skupiny (napr. Šoféri, Zvukári), pridáte
+  do nich členov a v tabuľke má každá skupina vlastný stĺpec. Člen skupiny smie to, čo jeho rola, a navyše
+  všetko, čo má skupina zaškrtnuté. Výnimka pre jedného člena má stále prednosť.
+- **Formulár techniky prehľadnejší**: pri „Evidovať každý kus zvlášť“ sa kusy (inventárne a sériové číslo,
+  dátum nákupu) ukážu hneď pod tým a počet kusov sa zadáva len raz – vlastné čísla kusov sú schované
+  v „Kusy majú iné čísla?“.
+- Skupiny polí (Zvuk, Svetlo, Sieť…) sa dajú kliknutím na nadpis zbaliť a appka si to pamätá. **Sieť** sa ukáže
+  až po zaškrtnutí „Zariadenie je v sieti“ a **Servis** po zaškrtnutí „Pravidelný servis“.
+- Nové migrácie: `0079` (opravné `0071` a `0072` sú aktualizované).
+
 ### 2.16 – 23. 10. 2026
 
 - **Zosilňovače**: výkon pri 2 Ω, 4 Ω a 8 Ω na kanál, bridge 4 Ω a 8 Ω a krajina výroby.

@@ -1,9 +1,10 @@
 import { getSupabase } from '@/lib/supabase/client'
-import type { ConfigurableRole, MemberOverride, PermissionKey, RoleOverride } from './catalog'
+import type { ConfigurableRole, MemberOverride, PermissionGroup, PermissionKey, RoleOverride } from './catalog'
 
 export const permissionKeys = {
   mine: (companyId: string) => ['company', companyId, 'my-permissions'] as const,
   overrides: (companyId: string) => ['company', companyId, 'permission-overrides'] as const,
+  groups: (companyId: string) => ['company', companyId, 'permission-groups'] as const,
 }
 
 /** Oprávnenia prihláseného člena vo firme, už po zmenách admina. */
@@ -53,4 +54,55 @@ export async function setMemberPermission(companyId: string, userId: string, per
   if (allowed === null) return
   const { error } = await table.insert({ company_id: companyId, user_id: userId, permission, allowed })
   if (error) throw error
+}
+
+/** Skupiny ľudí s ich členmi a oprávneniami (0079). Číta iba admin. */
+export async function fetchPermissionGroups(companyId: string): Promise<PermissionGroup[]> {
+  const db = getSupabase()
+  const [groups, members, rules] = await Promise.all([
+    db.from('permission_groups').select('id, name').eq('company_id', companyId).order('name'),
+    db.from('permission_group_members').select('group_id, user_id').eq('company_id', companyId),
+    db.from('permission_group_rules').select('group_id, permission').eq('company_id', companyId),
+  ])
+  const error = groups.error ?? members.error ?? rules.error
+  if (error) throw error
+  const memberRows = members.data as { group_id: string; user_id: string }[]
+  const ruleRows = rules.data as { group_id: string; permission: PermissionKey }[]
+  return (groups.data as { id: string; name: string }[]).map((group) => ({
+    id: group.id,
+    name: group.name,
+    members: memberRows.filter((row) => row.group_id === group.id).map((row) => row.user_id),
+    permissions: ruleRows.filter((row) => row.group_id === group.id).map((row) => row.permission),
+  }))
+}
+
+export async function addPermissionGroup(companyId: string, name: string) {
+  const { error } = await getSupabase().from('permission_groups').insert({ company_id: companyId, name: name.trim() })
+  if (error) throw error
+}
+
+export async function renamePermissionGroup(id: string, name: string) {
+  const { error } = await getSupabase().from('permission_groups').update({ name: name.trim() }).eq('id', id)
+  if (error) throw error
+}
+
+export async function deletePermissionGroup(id: string) {
+  const { error } = await getSupabase().from('permission_groups').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function setGroupMember(companyId: string, groupId: string, userId: string, member: boolean) {
+  const table = getSupabase().from('permission_group_members')
+  const { error } = member
+    ? await table.insert({ company_id: companyId, group_id: groupId, user_id: userId })
+    : await table.delete().eq('group_id', groupId).eq('user_id', userId)
+  if (error && error.code !== '23505') throw error
+}
+
+export async function setGroupPermission(companyId: string, groupId: string, permission: PermissionKey, allowed: boolean) {
+  const table = getSupabase().from('permission_group_rules')
+  const { error } = allowed
+    ? await table.insert({ company_id: companyId, group_id: groupId, permission })
+    : await table.delete().eq('group_id', groupId).eq('permission', permission)
+  if (error && error.code !== '23505') throw error
 }

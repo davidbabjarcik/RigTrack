@@ -42,6 +42,15 @@ describe('overrides', () => {
     expect(memberAllowed(fero, 'orders.view', roles, members)).toBe(false)
     expect(memberAllowed(jano, 'equipment.delete', roles, members)).toBe(false)
     expect(memberAllowed(fero, 'equipment.delete', roles, members)).toBe(true)
+    const groups = [
+      { id: 'g', name: 'Šoféri', members: [fero.userId], permissions: ['vehicles.edit' as const, 'orders.view' as const] },
+      { id: 'h', name: 'Sklad', members: [jano.userId], permissions: ['equipment.delete' as const] },
+    ]
+    expect(memberAllowed(fero, 'vehicles.edit', roles, members, groups)).toBe(true)
+    expect(memberAllowed(fero, 'orders.view', roles, members, groups)).toBe(true)
+    expect(memberAllowed(jano, 'vehicles.edit', roles, members, groups)).toBe(roleAllowed(jano.role, 'vehicles.edit', roles))
+    // Výnimka člena má prednosť aj pred skupinou.
+    expect(memberAllowed(jano, 'equipment.delete', roles, members, groups)).toBe(false)
   })
 })
 
