@@ -1,4 +1,5 @@
 import {
+  Timer,
   Briefcase,
   Building2,
   Calculator,
@@ -75,6 +76,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'incidents', label: 'Škody a úrazy', to: '/incidents', icon: ShieldAlert, description: 'Rozbitá technika a úrazy, štatistiky' },
   { id: 'suggestions', permission: 'suggestions.view', label: 'Návrhy', to: '/suggestions', icon: Lightbulb, description: 'Návrhy na zlepšenie' },
   { id: 'staff', permission: 'staff.view', label: 'Zamestnanci', to: '/staff', icon: Users, description: 'Tím, kontakty a kto kedy môže' },
+  { id: 'attendance', label: 'Dochádzka', to: '/attendance', icon: Timer, description: 'Práca na firme a doma, odpracované hodiny' },
   { id: 'payouts', label: 'Odmeny', to: '/payouts', icon: Wallet, description: 'Odmeny a zálohy za akcie' },
   { id: 'stats', label: 'Štatistiky', to: '/stats', icon: ChartColumn, description: 'Dostupnosť, vyťaženie a náklady', hiddenFor: ['helper'] },
   { id: 'settings', label: 'Nastavenia', to: '/settings', icon: Settings, description: 'Firma a používatelia' },

@@ -11,6 +11,8 @@ import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { valueSummary } from '@/features/equipment/value'
 import { dutyKeys, fetchAllDuties, fetchWorkLogs, useDutyTypes } from '@/features/duties/api'
 import { dutyRanking, hoursByPerson } from '@/features/duties/model'
+import { isoToLocal, workedMinutes } from '@/features/attendance/model'
+import { fetchSessions, workKeys } from '@/features/attendance/workApi'
 import { useLoans } from '@/features/loans/useLoans'
 import { useServiceRecords } from '@/features/service/useServiceRecords'
 import { fetchVehicleCosts, vehicleKeys } from '@/features/vehicles/api'
@@ -153,6 +155,7 @@ export function StatsPage() {
   const workLogs = useQuery({ queryKey: dutyKeys.workLogs(companyId), queryFn: () => fetchWorkLogs(companyId), retry: false })
   const dutyTypes = useDutyTypes(companyId)
   const duties = useQuery({ queryKey: dutyKeys.all(companyId), queryFn: () => fetchAllDuties(companyId), retry: false })
+  const sessions = useQuery({ queryKey: [...workKeys.sessions(companyId), 'all'], queryFn: () => fetchSessions(companyId, '2000-01-01T00:00:00Z'), retry: false })
   const sources = [equipment, loans, service, vehicles, vehicleCosts, payments, events]
 
   if (sources.some((source) => source.isPending)) return <LoadingBlock />
@@ -199,7 +202,13 @@ export function StatsPage() {
   const period = year === 'all' ? 'spolu' : `v roku ${year}`
   const eventStart = new Map((events.data ?? []).map((event) => [event.id, event.startsOn]))
   const personName = (userId: string) => memberName(members.data, userId) || 'Bývalý člen'
-  const hours = hoursByPerson(workLogs.data ?? [], year, personName)
+  const hours = hoursByPerson(
+    workLogs.data ?? [],
+    year,
+    personName,
+    10,
+    (sessions.data ?? []).filter((item) => item.endedAt).map((item) => ({ userId: item.userId, date: isoToLocal(item.startedAt).date, minutes: workedMinutes(item, Date.parse(item.endedAt!)) })),
+  )
   const dutyRankings = (dutyTypes.data ?? []).map((type) => ({
     type,
     rows: dutyRanking(duties.data ?? [], type.id, (id) => eventStart.get(id), year, (duty) => (duty.memberId ? personName(duty.memberId) : duty.personName.trim())),
@@ -266,7 +275,7 @@ export function StatsPage() {
     'vehicles.count': <Tile label="Aktívne vozidlá" value={String(stats.vehicles.count)} />,
     'vehicles.due': <Tile label="Termíny na vybavenie" value={String(stats.vehicles.due)} hint="po termíne alebo do 30 dní" />,
     'people.hours': (
-      <Ranking title={`Odpracované hodiny ${period}`} rows={hours} format={(value) => `${formatNumber(value)} h`} empty="Žiadne zapísané výkazy času." />
+      <Ranking title={`Odpracované hodiny ${period} (eventy, firma, doma)`} rows={hours} format={(value) => `${formatNumber(value)} h`} empty="Žiadne zapísané výkazy času." />
     ),
     'people.duties':
       dutyRankings.length === 0 ? (

@@ -1,26 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Coffee, Hourglass, LocateFixed, LogOut, MapPin, Play, UserCheck } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { LocateFixed, MapPin, UserCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import type { CompanyEvent } from '@/features/events/model'
 import { checkIn, currentPosition, finish, setPause } from './api'
-import { distanceM, formatDistance, formatMinutes, PAUSE_LABELS, PLACE_KIND_LABELS, timeOf, workedMinutes, type Attendance, type Meeting, type PauseKind } from './model'
+import { distanceM, formatDistance, PLACE_KIND_LABELS, timeOf, type Attendance, type Meeting, type PauseKind } from './model'
+import { RunningCard } from './RunningCard'
 
 type Props = { companyId: string; event: Pick<CompanyEvent, 'id' | 'name'>; meeting: Meeting | null; open: Attendance | null; showEvent?: boolean }
 
 /** Moja dochádzka na evente: „Som tu“ na mieste stretávky, prestávka / čakanie a koniec. */
 export function MyAttendanceCard({ companyId, event, meeting, open, showEvent }: Props) {
   const queryClient = useQueryClient()
-  const [now, setNow] = useState(() => Date.now())
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['company', companyId] })
   const hasPoint = meeting?.lat != null && meeting?.lon != null
-
-  // Odpracovaný čas sa prepočíta každú minútu.
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
-    return () => window.clearInterval(timer)
-  }, [])
 
   // Pred príchodom sa poloha zistí hneď (nikam sa neukladá, len sa porovná s miestom stretávky).
   const position = useQuery({ queryKey: ['position', meeting?.id], queryFn: currentPosition, enabled: !open && hasPoint, retry: false, staleTime: 30_000, gcTime: 0 })
@@ -55,45 +48,15 @@ export function MyAttendanceCard({ companyId, event, meeting, open, showEvent }:
 
   if (open) {
     return (
-      <div className="rounded-xl border border-emerald-600/40 bg-emerald-600/10 p-4">
-        <p className="flex items-center gap-2">
-          <UserCheck className="size-5 shrink-0 text-emerald-700 dark:text-emerald-400" aria-hidden />
-          {title}
-        </p>
-        <p className="mt-1 text-sm">
-          Od {timeOf(open.startedAt)} · odpracované <span className="font-semibold">{formatMinutes(workedMinutes(open, now))}</span>
-          {open.breakMinutes + open.waitMinutes > 0 && <span className="text-muted-foreground"> · odpočítané {formatMinutes(open.breakMinutes + open.waitMinutes)}</span>}
-        </p>
-        {open.pausedAt && (
-          <p className="mt-1 text-sm font-medium text-accent">
-            {PAUSE_LABELS[open.pauseKind ?? 'break']} od {timeOf(open.pausedAt)} – čas sa nepočíta
-          </p>
-        )}
-        <div className="mt-3 flex flex-wrap gap-2">
-          {open.pausedAt ? (
-            <Button disabled={busy} onClick={() => pause.mutate(null)}>
-              <Play className="size-4" aria-hidden />
-              Pokračovať
-            </Button>
-          ) : (
-            <>
-              <Button variant="outline" disabled={busy} onClick={() => pause.mutate('break')}>
-                <Coffee className="size-4" aria-hidden />
-                Prestávka
-              </Button>
-              <Button variant="outline" disabled={busy} onClick={() => pause.mutate('wait')} title="Napr. čakám na niekoho – čas sa nepočíta">
-                <Hourglass className="size-4" aria-hidden />
-                Čakám
-              </Button>
-            </>
-          )}
-          <Button variant="destructive" disabled={busy} onClick={() => window.confirm('Skončiť dochádzku? Zapíše sa do výkazu času.') && leave.mutate()}>
-            <LogOut className="size-4" aria-hidden />
-            Končím
-          </Button>
-        </div>
-        {failed && <p className="mt-2 text-sm text-destructive">Nepodarilo sa uložiť. Skúste znova.</p>}
-      </div>
+      <RunningCard
+        title={title}
+        record={open}
+        busy={busy}
+        failed={failed}
+        confirm="Skončiť dochádzku? Zapíše sa do výkazu času."
+        onPause={(kind) => pause.mutate(kind)}
+        onFinish={() => leave.mutate()}
+      />
     )
   }
 

@@ -71,6 +71,7 @@ const eventDetail = lazyPage(() => import('@/features/events/EventDetailPage').t
 const eventImport = lazyPage(() => import('@/features/events/import/EventImportPage').then((m) => m.EventImportPage), 'events.view')
 const pack = lazyPage(() => import('@/features/pack/PackPage').then((m) => m.PackPage), 'events.view')
 const quote = lazyPage(() => import('@/features/quote/QuotePage').then((m) => m.QuotePage), 'events.view')
+const attendance = lazyPage(() => import('@/features/attendance/AttendancePage').then((m) => m.AttendancePage))
 const qrLabels = lazyPage(() => import('@/features/scan/QrLabelsPage').then((m) => m.QrLabelsPage), 'equipment.view')
 const crewSheet = lazyPage(() => import('@/features/events/CrewSheetPage').then((m) => m.CrewSheetPage), 'events.view')
 const patchPrint = lazyPage(() => import('@/features/patch/PatchPrintPage').then((m) => m.PatchPrintPage), 'events.view')
@@ -170,6 +171,7 @@ export const routes: RouteObject[] = [
               { path: 'suggestions', lazy: suggestions },
               { path: 'notifications', lazy: notifications },
               { path: 'stats', lazy: stats },
+              { path: 'attendance', lazy: attendance },
               { path: 'report', lazy: report },
               { path: 'events', lazy: eventsList },
               { path: 'events/new', lazy: eventForm },

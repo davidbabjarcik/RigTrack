@@ -1448,6 +1448,27 @@ begin
     exception when others then raise notice 'Kontrola member_devices_note_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.member_homes') is not null then
+    begin
+      execute $sql$alter table public.member_homes drop constraint if exists member_homes_address_check$sql$;
+      execute $sql$alter table public.member_homes add constraint member_homes_address_check CHECK ((char_length(address) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola member_homes_address_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.member_homes') is not null then
+    begin
+      execute $sql$alter table public.member_homes drop constraint if exists member_homes_lat_check$sql$;
+      execute $sql$alter table public.member_homes add constraint member_homes_lat_check CHECK (((lat >= ('-90'::integer)::double precision) AND (lat <= (90)::double precision))) not valid$sql$;
+    exception when others then raise notice 'Kontrola member_homes_lat_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.member_homes') is not null then
+    begin
+      execute $sql$alter table public.member_homes drop constraint if exists member_homes_lon_check$sql$;
+      execute $sql$alter table public.member_homes add constraint member_homes_lon_check CHECK (((lon >= ('-180'::integer)::double precision) AND (lon <= (180)::double precision))) not valid$sql$;
+    exception when others then raise notice 'Kontrola member_homes_lon_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.member_payments') is not null then
     begin
       execute $sql$alter table public.member_payments drop constraint if exists member_payments_amount_check$sql$;
@@ -2484,6 +2505,55 @@ begin
     exception when others then raise notice 'Kontrola wifi_router_logins_username_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.work_sessions') is not null then
+    begin
+      execute $sql$alter table public.work_sessions drop constraint if exists work_sessions_break_minutes_check$sql$;
+      execute $sql$alter table public.work_sessions add constraint work_sessions_break_minutes_check CHECK (((break_minutes >= 0) AND (break_minutes <= 1440))) not valid$sql$;
+    exception when others then raise notice 'Kontrola work_sessions_break_minutes_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.work_sessions') is not null then
+    begin
+      execute $sql$alter table public.work_sessions drop constraint if exists work_sessions_check$sql$;
+      execute $sql$alter table public.work_sessions add constraint work_sessions_check CHECK (((ended_at IS NULL) OR (ended_at > started_at))) not valid$sql$;
+    exception when others then raise notice 'Kontrola work_sessions_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.work_sessions') is not null then
+    begin
+      execute $sql$alter table public.work_sessions drop constraint if exists work_sessions_distance_m_check$sql$;
+      execute $sql$alter table public.work_sessions add constraint work_sessions_distance_m_check CHECK ((distance_m >= 0)) not valid$sql$;
+    exception when others then raise notice 'Kontrola work_sessions_distance_m_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.work_sessions') is not null then
+    begin
+      execute $sql$alter table public.work_sessions drop constraint if exists work_sessions_note_check$sql$;
+      execute $sql$alter table public.work_sessions add constraint work_sessions_note_check CHECK ((char_length(note) <= 300)) not valid$sql$;
+    exception when others then raise notice 'Kontrola work_sessions_note_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.work_sessions') is not null then
+    begin
+      execute $sql$alter table public.work_sessions drop constraint if exists work_sessions_pause_kind_check$sql$;
+      execute $sql$alter table public.work_sessions add constraint work_sessions_pause_kind_check CHECK ((pause_kind = ANY (ARRAY['break'::text, 'wait'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola work_sessions_pause_kind_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.work_sessions') is not null then
+    begin
+      execute $sql$alter table public.work_sessions drop constraint if exists work_sessions_place_check$sql$;
+      execute $sql$alter table public.work_sessions add constraint work_sessions_place_check CHECK ((place = ANY (ARRAY['company'::text, 'home'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola work_sessions_place_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.work_sessions') is not null then
+    begin
+      execute $sql$alter table public.work_sessions drop constraint if exists work_sessions_wait_minutes_check$sql$;
+      execute $sql$alter table public.work_sessions add constraint work_sessions_wait_minutes_check CHECK (((wait_minutes >= 0) AND (wait_minutes <= 1440))) not valid$sql$;
+    exception when others then raise notice 'Kontrola work_sessions_wait_minutes_check: %', sqlerrm;
+    end;
+  end if;
 end;
 $repair$;
 
@@ -3348,6 +3418,63 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia finish_attendance: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.finish_work_session()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  editor boolean := public.can(old.company_id, 'staff.manage');
+  ending boolean := old.ended_at is null and new.ended_at is not null;
+  paused integer;
+begin
+  new.company_id := old.company_id;
+  new.user_id := old.user_id;
+  new.place := old.place;
+  new.verified := old.verified;
+  new.distance_m := old.distance_m;
+  if not editor then
+    new.started_at := old.started_at;
+    new.break_minutes := old.break_minutes;
+    new.wait_minutes := old.wait_minutes;
+    new.ended_at := case when ending then now() else old.ended_at end;
+  end if;
+  if editor and (
+    new.started_at is distinct from old.started_at
+    or (old.ended_at is not null and new.ended_at is distinct from old.ended_at)
+    or new.break_minutes is distinct from old.break_minutes
+    or new.wait_minutes is distinct from old.wait_minutes
+  ) then
+    new.edited_by_name := coalesce((select coalesce(nullif(trim(p.full_name), ''), p.email) from public.profiles p where p.id = auth.uid()), '');
+  else
+    new.edited_by_name := old.edited_by_name;
+  end if;
+  if old.paused_at is not null and (new.paused_at is null or ending) then
+    paused := least(1440, ceil(extract(epoch from (now() - old.paused_at)) / 60)::integer);
+    if old.pause_kind = 'wait' then
+      new.wait_minutes := least(1440, new.wait_minutes + paused);
+    else
+      new.break_minutes := least(1440, new.break_minutes + paused);
+    end if;
+    new.paused_at := null;
+    new.pause_kind := null;
+  elsif old.paused_at is null and new.paused_at is not null and old.ended_at is null and not ending then
+    new.paused_at := now();
+    new.pause_kind := coalesce(new.pause_kind, 'break');
+  else
+    new.paused_at := old.paused_at;
+    new.pause_kind := old.pause_kind;
+  end if;
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia finish_work_session: %', sqlerrm;
 end;
 $repair$;
 
@@ -4717,6 +4844,30 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia stamp_task: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.stamp_work_session()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  new.user_id := auth.uid();
+  new.started_at := now();
+  new.ended_at := null;
+  new.paused_at := null;
+  new.pause_kind := null;
+  new.break_minutes := 0;
+  new.wait_minutes := 0;
+  new.edited_by_name := '';
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia stamp_work_session: %', sqlerrm;
 end;
 $repair$;
 

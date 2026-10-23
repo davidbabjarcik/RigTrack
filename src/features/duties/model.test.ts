@@ -30,3 +30,11 @@ describe('duties model', () => {
     ])
   })
 })
+
+describe('hours with work outside events', () => {
+  it('adds minutes from work at the company or at home', () => {
+    const logs = [{ userId: 'a', workDate: '2026-03-01', startsAt: '08:00', endsAt: '10:00', breakMinutes: 0 }]
+    const extra = [{ userId: 'a', date: '2026-03-02', minutes: 90 }, { userId: 'b', date: '2025-01-01', minutes: 600 }]
+    expect(hoursByPerson(logs, '2026', (id) => id, 10, extra)).toEqual([{ id: 'a', label: 'a', value: 3.5 }])
+  })
+})

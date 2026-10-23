@@ -24,10 +24,17 @@ export function logMinutes(log: Pick<WorkLog, 'startsAt' | 'endsAt' | 'breakMinu
 
 const inYear = (date: string, year: string) => year === 'all' || date.startsWith(year)
 
-/** Odpracované hodiny po ľuďoch v roku (z výkazov času), od najviac. */
-export function hoursByPerson(logs: WorkLog[], year: string, nameOf: (userId: string) => string, limit = 10): Ranked[] {
+/** Odpracované hodiny po ľuďoch v roku (z výkazov času eventov a z práce na firme / doma), od najviac. */
+export function hoursByPerson(
+  logs: WorkLog[],
+  year: string,
+  nameOf: (userId: string) => string,
+  limit = 10,
+  extra: { userId: string; date: string; minutes: number }[] = [],
+): Ranked[] {
   const totals = new Map<string, number>()
   for (const log of logs) if (inYear(log.workDate, year)) totals.set(log.userId, (totals.get(log.userId) ?? 0) + logMinutes(log))
+  for (const item of extra) if (inYear(item.date, year)) totals.set(item.userId, (totals.get(item.userId) ?? 0) + item.minutes)
   return [...totals]
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)

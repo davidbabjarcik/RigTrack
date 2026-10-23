@@ -459,7 +459,7 @@ export function SettingsPage() {
             </div>
           </Section>
           <Section title="Dochádzka">
-            <AttendanceSettings />
+            <AttendanceSettings companyId={company.companyId} />
           </Section>
           <Section title={`Moje zariadenia (${company.companyName})`}>
             <MyDevicesSettings companyId={company.companyId} userId={user.id} />

@@ -21,6 +21,16 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.18 – 23. 10. 2026
+
+- **Dochádzka aj mimo eventov**: na Prehľade „Začať na firme“ a „Začať doma“ – začať sa dá na mieste (do 300 m
+  od adresy skladu, resp. domova), potom Prestávka, Čakám a Končím ako pri evente.
+- **Adresa domov** (Nastavenia → Účet → Dochádzka): vidí ju len človek sám a ten, kto spravuje tím.
+- **Stránka Dochádzka** (v menu): moje časy za 7 dní, mesiac alebo 3 mesiace so súčtom; kto spravuje tím, vidí
+  všetkých, filtruje podľa človeka a časy vie opraviť alebo zmazať.
+- **Štatistiky → Odpracované hodiny** rátajú eventy aj prácu na firme a doma.
+- Nové migrácie: `0080` (opravné `0071` a `0072` sú aktualizované).
+
 ### 2.17 – 23. 10. 2026
 
 - **Skupiny ľudí v oprávneniach** (Nastavenia → Oprávnenia): vytvoríte skupiny (napr. Šoféri, Zvukári), pridáte
