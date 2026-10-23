@@ -3,7 +3,8 @@
 
 type Point = { lat: number; lon: number }
 
-async function geocode(address: string): Promise<Point | null> {
+/** Adresa → súradnice (OpenStreetMap Nominatim); null, keď sa nenájde. */
+export async function geocode(address: string): Promise<Point | null> {
   const params = new URLSearchParams({ q: address, format: 'json', limit: '1', countrycodes: 'sk,cz,pl,hu,at', 'accept-language': 'sk' })
   const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`)
   if (!response.ok) throw new Error('Geocoding failed')

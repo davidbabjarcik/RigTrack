@@ -5,6 +5,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { MigrationBanner } from '@/features/companies/MigrationStatus'
 import { RestockList } from '@/features/equipment/RestockList'
 import { LoanAlerts } from '@/features/loans/LoanAlerts'
+import { MyAttendance } from '@/features/attendance/MyAttendance'
 import { MyTasks } from '@/features/tasks/MyTasks'
 import { VehicleDeadlineAlerts } from '@/features/vehicles/VehicleDeadlineAlerts'
 import { visibleNavItems } from '@/lib/navigation'
@@ -35,6 +36,7 @@ export function DashboardPage() {
       {isSupabaseConfigured && active && (
         <>
           {isAdminRole(active.role) && <MigrationBanner />}
+          <MyAttendance companyId={active.companyId} />
           <MyTasks companyId={active.companyId} />
           <LoanAlerts companyId={active.companyId} />
           <VehicleDeadlineAlerts companyId={active.companyId} />

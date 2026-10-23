@@ -35,6 +35,7 @@ import { CompanyProfileSettings } from '@/features/companies/CompanyProfileSetti
 import { DeleteCompanySettings } from '@/features/companies/DeleteCompanySettings'
 import { DemoSettings } from '@/features/companies/DemoSettings'
 import { MyDevicesSettings } from '@/features/devices/MyDevicesSettings'
+import { AttendanceSettings } from '@/features/attendance/MyAttendance'
 import { EmailPrefs } from '@/features/news/EmailPrefs'
 import { LookupSettings } from '@/features/equipment/LookupSettings'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
@@ -449,6 +450,9 @@ export function SettingsPage() {
                 Odhlásiť sa
               </Button>
             </div>
+          </Section>
+          <Section title="Dochádzka">
+            <AttendanceSettings />
           </Section>
           <Section title={`Moje zariadenia (${company.companyName})`}>
             <MyDevicesSettings companyId={company.companyId} userId={user.id} />

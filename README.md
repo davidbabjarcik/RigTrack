@@ -21,6 +21,19 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.14 – 23. 10. 2026
+
+- **Stretávka pri evente** (detail eventu → Stretávka a dochádzka): dátum, čas a miesto – na firme (sklad),
+  na mieste akcie, hotel alebo iná adresa (predvyplní sa) a polomer, v ktorom sa príchod uzná (predvolene 300 m).
+- **Dochádzka podľa polohy** (dobrovoľná – zapína si ju každý v Nastaveniach → Účet → Dochádzka): okolo času
+  stretávky sa na Prehľade ukáže karta s tlačidlom **Som tu**, ktoré sa odomkne, keď ste na mieste. Čas príchodu
+  dá server, poloha sa nikam neukladá.
+- **Prestávka a Čakám** (napr. keď sa na niekoho čaká): čas sa nepočíta, kým nekliknete Pokračovať.
+  **Končím** dochádzku sám zapíše do výkazu času eventu (prestávky a čakanie sa odpočítajú).
+- **Prehľad pre vedúceho**: kto kedy prišiel, či bol príchod overený polohou, prestávky, čakanie a odpracovaný čas.
+  Vedúci vie časy aj minúty opraviť – výkaz sa opraví s nimi.
+- Nové migrácie: `0076` (opravné `0071` a `0072` sú aktualizované).
+
 ### 2.13.2 – 20. 10. 2026
 
 - **Oprava: Moje zariadenia sa nedali pridať ani upraviť** (chyba „Nepodarilo sa uložiť“) – appka posielala MAC

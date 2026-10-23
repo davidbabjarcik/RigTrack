@@ -657,6 +657,41 @@ begin
     exception when others then raise notice 'Kontrola equipment_packages_note_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.event_attendance') is not null then
+    begin
+      execute $sql$alter table public.event_attendance drop constraint if exists event_attendance_break_minutes_check$sql$;
+      execute $sql$alter table public.event_attendance add constraint event_attendance_break_minutes_check CHECK (((break_minutes >= 0) AND (break_minutes <= 1440))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_attendance_break_minutes_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_attendance') is not null then
+    begin
+      execute $sql$alter table public.event_attendance drop constraint if exists event_attendance_check$sql$;
+      execute $sql$alter table public.event_attendance add constraint event_attendance_check CHECK (((ended_at IS NULL) OR (ended_at > started_at))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_attendance_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_attendance') is not null then
+    begin
+      execute $sql$alter table public.event_attendance drop constraint if exists event_attendance_distance_m_check$sql$;
+      execute $sql$alter table public.event_attendance add constraint event_attendance_distance_m_check CHECK ((distance_m >= 0)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_attendance_distance_m_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_attendance') is not null then
+    begin
+      execute $sql$alter table public.event_attendance drop constraint if exists event_attendance_pause_kind_check$sql$;
+      execute $sql$alter table public.event_attendance add constraint event_attendance_pause_kind_check CHECK ((pause_kind = ANY (ARRAY['break'::text, 'wait'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_attendance_pause_kind_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_attendance') is not null then
+    begin
+      execute $sql$alter table public.event_attendance drop constraint if exists event_attendance_wait_minutes_check$sql$;
+      execute $sql$alter table public.event_attendance add constraint event_attendance_wait_minutes_check CHECK (((wait_minutes >= 0) AND (wait_minutes <= 1440))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_attendance_wait_minutes_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.event_capsules') is not null then
     begin
       execute $sql$alter table public.event_capsules drop constraint if exists event_capsules_note_check$sql$;
@@ -788,6 +823,48 @@ begin
       execute $sql$alter table public.event_links drop constraint if exists event_links_url_check$sql$;
       execute $sql$alter table public.event_links add constraint event_links_url_check CHECK (((url ~* '^https?://'::text) AND (char_length(url) <= 1000))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_links_url_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_meetings') is not null then
+    begin
+      execute $sql$alter table public.event_meetings drop constraint if exists event_meetings_address_check$sql$;
+      execute $sql$alter table public.event_meetings add constraint event_meetings_address_check CHECK ((char_length(address) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_meetings_address_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_meetings') is not null then
+    begin
+      execute $sql$alter table public.event_meetings drop constraint if exists event_meetings_lat_check$sql$;
+      execute $sql$alter table public.event_meetings add constraint event_meetings_lat_check CHECK (((lat >= ('-90'::integer)::double precision) AND (lat <= (90)::double precision))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_meetings_lat_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_meetings') is not null then
+    begin
+      execute $sql$alter table public.event_meetings drop constraint if exists event_meetings_lon_check$sql$;
+      execute $sql$alter table public.event_meetings add constraint event_meetings_lon_check CHECK (((lon >= ('-180'::integer)::double precision) AND (lon <= (180)::double precision))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_meetings_lon_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_meetings') is not null then
+    begin
+      execute $sql$alter table public.event_meetings drop constraint if exists event_meetings_note_check$sql$;
+      execute $sql$alter table public.event_meetings add constraint event_meetings_note_check CHECK ((char_length(note) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_meetings_note_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_meetings') is not null then
+    begin
+      execute $sql$alter table public.event_meetings drop constraint if exists event_meetings_place_kind_check$sql$;
+      execute $sql$alter table public.event_meetings add constraint event_meetings_place_kind_check CHECK ((place_kind = ANY (ARRAY['company'::text, 'event'::text, 'hotel'::text, 'custom'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_meetings_place_kind_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_meetings') is not null then
+    begin
+      execute $sql$alter table public.event_meetings drop constraint if exists event_meetings_radius_m_check$sql$;
+      execute $sql$alter table public.event_meetings add constraint event_meetings_radius_m_check CHECK (((radius_m >= 50) AND (radius_m <= 5000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_meetings_radius_m_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_pack_checks') is not null then
@@ -3119,6 +3196,91 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.finish_attendance()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  zone constant text := 'Europe/Bratislava';
+  editor boolean := public.can(old.company_id, 'events.edit');
+  ending boolean := old.ended_at is null and new.ended_at is not null;
+  paused integer;
+begin
+  new.company_id := old.company_id;
+  new.event_id := old.event_id;
+  new.user_id := old.user_id;
+  new.meeting_id := old.meeting_id;
+  new.verified := old.verified;
+  new.distance_m := old.distance_m;
+  new.work_log_id := old.work_log_id;
+  if not editor then
+    new.started_at := old.started_at;
+    new.break_minutes := old.break_minutes;
+    new.wait_minutes := old.wait_minutes;
+    new.ended_at := case when ending then now() else old.ended_at end;
+  end if;
+  if editor and (
+    new.started_at is distinct from old.started_at
+    or (old.ended_at is not null and new.ended_at is distinct from old.ended_at)
+    or new.break_minutes is distinct from old.break_minutes
+    or new.wait_minutes is distinct from old.wait_minutes
+  ) then
+    new.edited_by_name := coalesce((select coalesce(nullif(trim(p.full_name), ''), p.email) from public.profiles p where p.id = auth.uid()), '');
+  else
+    new.edited_by_name := old.edited_by_name;
+  end if;
+
+  -- Prestávka: začiatok a koniec určuje server; pri odchode sa prebiehajúca ukončí.
+  if old.paused_at is not null and (new.paused_at is null or ending) then
+    paused := least(1440, ceil(extract(epoch from (now() - old.paused_at)) / 60)::integer);
+    if old.pause_kind = 'wait' then
+      new.wait_minutes := least(1440, new.wait_minutes + paused);
+    else
+      new.break_minutes := least(1440, new.break_minutes + paused);
+    end if;
+    new.paused_at := null;
+    new.pause_kind := null;
+  elsif old.paused_at is null and new.paused_at is not null and old.ended_at is null and not ending then
+    new.paused_at := now();
+    new.pause_kind := coalesce(new.pause_kind, 'break');
+  else
+    new.paused_at := old.paused_at;
+    new.pause_kind := old.pause_kind;
+  end if;
+
+  if new.ended_at is not null then
+    if new.work_log_id is null then
+      insert into public.event_work_logs (company_id, event_id, user_id, work_date, starts_at, ends_at, break_minutes, note)
+      values (
+        new.company_id, new.event_id, new.user_id,
+        (new.started_at at time zone zone)::date,
+        (new.started_at at time zone zone)::time(0),
+        (new.ended_at at time zone zone)::time(0),
+        least(1440, new.break_minutes + new.wait_minutes),
+        'Dochádzka' || case when new.wait_minutes > 0 then ' (čakanie ' || new.wait_minutes || ' min)' else '' end
+      )
+      returning id into new.work_log_id;
+    else
+      update public.event_work_logs
+        set work_date = (new.started_at at time zone zone)::date,
+            starts_at = (new.started_at at time zone zone)::time(0),
+            ends_at = (new.ended_at at time zone zone)::time(0),
+            break_minutes = least(1440, new.break_minutes + new.wait_minutes),
+            note = 'Dochádzka' || case when new.wait_minutes > 0 then ' (čakanie ' || new.wait_minutes || ' min)' else '' end
+        where id = new.work_log_id;
+    end if;
+  end if;
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia finish_attendance: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.guard_suggestion_status()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -3220,6 +3382,20 @@ AS $function$
   select exists (select 1 from public.app_developers d where d.user_id = auth.uid())
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia is_developer: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.is_event_crew(_event_id uuid)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select exists (select 1 from public.event_crew c where c.event_id = _event_id and c.member_id = auth.uid() and c.response <> 'no')
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia is_event_crew: %', sqlerrm;
 end;
 $repair$;
 
@@ -4211,6 +4387,31 @@ AS $function$
   );
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia shares_company: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.stamp_attendance()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  new.user_id := auth.uid();
+  new.started_at := now();
+  new.ended_at := null;
+  new.work_log_id := null;
+  new.edited_by_name := '';
+  new.paused_at := null;
+  new.pause_kind := null;
+  new.break_minutes := 0;
+  new.wait_minutes := 0;
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia stamp_attendance: %', sqlerrm;
 end;
 $repair$;
 
