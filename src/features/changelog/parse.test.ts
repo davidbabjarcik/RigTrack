@@ -44,6 +44,13 @@ describe('changelog', () => {
     expect(forUsers(parseChangelog(sample)[0]).blocks).toHaveLength(1)
   })
 
+  it('hides migration notes written as bullets, also in the real README', () => {
+    const release = { version: '2.15', date: '', blocks: [{ kind: 'list' as const, items: ['**Nové** – vec', 'Nové migrácie: `0077`'] }] }
+    expect(forUsers(release).blocks).toEqual([{ kind: 'list', items: ['**Nové** – vec'] }])
+    const shown = parseChangelog(readme).map(forUsers)
+    expect(shown.flatMap((item) => item.blocks).some((block) => (block.kind === 'list' ? block.items.join(' ') : block.text).includes('migráci'))).toBe(false)
+  })
+
   it('formats bold and code', () => {
     expect(parseInline('a **b** c `d`')).toEqual([
       { kind: 'text', text: 'a ' },

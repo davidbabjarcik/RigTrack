@@ -15,7 +15,7 @@ const STATE_STYLES = {
 }
 const STATE_LABELS = { free: 'Voľný', reserved: 'Rezervovaný', loaned: 'Vypožičaný', service: 'V servise' }
 
-type Props = { companyId: string; equipment: Pick<Equipment, 'id' | 'quantity' | 'unitIds'> }
+type Props = { companyId: string; equipment: Pick<Equipment, 'id' | 'quantity' | 'unitIds' | 'unitInfo' | 'unitPurchases'> }
 
 /** Prehľad očíslovaných kusov techniky: kde je ktorý kus teraz a čo má za sebou. */
 export function UnitsOverview({ companyId, equipment }: Props) {
@@ -30,6 +30,12 @@ export function UnitsOverview({ companyId, equipment }: Props) {
           <li key={unit.unit} className="flex items-center gap-3 px-4 py-2.5">
             <span className="w-10 shrink-0 font-semibold tabular-nums">#{unit.unit}</span>
             <span className="min-w-0 flex-1 text-sm text-muted-foreground">
+              {(() => {
+                const info = equipment.unitInfo?.[String(unit.unit)]
+                const bought = equipment.unitPurchases?.[String(unit.unit)]
+                const ids = [info?.inv && `inv. ${info.inv}`, info?.serial && `SN ${info.serial}`, bought && `kúpené ${formatDate(bought)}`].filter(Boolean)
+                return ids.length > 0 ? <span className="block truncate font-medium text-foreground">{ids.join(' · ')}</span> : null
+              })()}
               <span className="block truncate">
                 servis {unit.serviceCount}× · výpožičky {unit.loanCount}×
               </span>

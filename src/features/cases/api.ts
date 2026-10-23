@@ -30,17 +30,20 @@ type Row = {
   updated_at: string
   owner_staff_id?: string | null
   check_priority?: CheckPriority
+  old_numbers?: string
 }
 
 const COLUMNS = 'id, name, inventory_number, location_id, label_number, label_category, label_title, label_photo_path, photo_path, weight_kg, width_cm, length_cm, depth_cm, spot_id, spot_level, note, updated_at'
-// Vlastník (0052) a priorita kontroly (0060); bez migrácie sa cases načítajú bez nich.
-const OPTIONAL_COLUMNS = [', owner_staff_id, check_priority', ', owner_staff_id', '']
+// Vlastník (0052), priorita kontroly (0060) a staré čísla (0078); bez migrácie sa cases načítajú bez nich.
+const OPTIONAL_COLUMNS = [', owner_staff_id, check_priority, old_numbers', ', owner_staff_id, check_priority', ', owner_staff_id', '']
 let optionalLevel = 0
-const hasOwnerColumn = () => optionalLevel < 2
-const hasPriorityColumn = () => optionalLevel === 0
+const hasOldNumbers = () => optionalLevel === 0
+const hasOwnerColumn = () => optionalLevel < 3
+const hasPriorityColumn = () => optionalLevel < 2
 function fallBack(error: { code?: string; message?: string } | null) {
   if (!error || optionalLevel >= OPTIONAL_COLUMNS.length - 1) return false
-  if (!isMissingColumn(error, hasPriorityColumn() ? 'check_priority' : 'owner_staff_id')) return false
+  const missing = hasOldNumbers() ? ['old_numbers', 'check_priority'] : hasPriorityColumn() ? ['check_priority'] : ['owner_staff_id']
+  if (!missing.some((column) => isMissingColumn(error, column))) return false
   optionalLevel += 1
   return true
 }
@@ -86,6 +89,7 @@ export async function fetchCases(companyId: string): Promise<Case[]> {
     lastCheck: lastChecks.get(row.id) ?? null,
     ownerStaffId: row.owner_staff_id ?? null,
     checkPriority: row.check_priority ?? 'normal',
+    oldNumbers: row.old_numbers ?? '',
   }))
 }
 
@@ -124,6 +128,7 @@ export async function saveCase({ companyId, id, values, locations }: SaveArgs): 
     note: values.note,
     ...(values.owner !== undefined && (values.owner !== '' || hasOwnerColumn()) ? { owner_staff_id: await resolveOwner(companyId, values.owner) } : {}),
     ...(values.checkPriority && (values.checkPriority !== 'normal' || hasPriorityColumn()) ? { check_priority: values.checkPriority } : {}),
+    ...(hasOldNumbers() || values.oldNumbers?.trim() ? { old_numbers: (values.oldNumbers ?? '').trim() } : {}),
   }
   const write = (row: Record<string, unknown>) => {
     const table = getSupabase().from('cases')
@@ -134,6 +139,7 @@ export async function saveCase({ companyId, id, values, locations }: SaveArgs): 
   // Databáza bez migrácie 0060 / 0052 nepozná prioritu / vlastníka – uloží sa bez nich.
   while (error && fallBack(error)) {
     row = { ...row }
+    if (!hasOldNumbers()) delete row.old_numbers
     if (!hasPriorityColumn()) delete row.check_priority
     if (!hasOwnerColumn()) delete row.owner_staff_id
     ;({ data, error } = await write(row))

@@ -225,6 +225,12 @@ export type EquipmentAttributes = {
   /** DJ technika: rok a krajina výroby, farba, stav. */
   madeYear?: number
   madeIn?: string
+  /** Zosilňovač: výkon (W) pri 2 Ω na kanál, 4 Ω a 8 Ω na kanál a v bridge. */
+  ampW2?: number
+  ampW4?: number
+  ampW8?: number
+  ampBridge4?: number
+  ampBridge8?: number
   color?: string
   condition?: Condition
   /** Mixpult: analógový / digitálny, počet kanálov a pri digitálnom karta (Dante, MADI, USB…). */
@@ -379,6 +385,8 @@ export type Equipment = {
   /** Dátum nákupu celej položky a po kusoch (číslo kusu → dátum); 0060. */
   purchasedOn?: string | null
   unitPurchases?: Record<string, string>
+  /** Údaje po kusoch: číslo kusu → sériové a inventárne číslo (0078). */
+  unitInfo?: Record<string, UnitInfo>
   links?: EquipmentLink[]
   /** Pri svetle: kópia čoho je (napr. Robe Spiider) a či sedí s fixtúrou v Capture. */
   cloneOf?: string
@@ -454,6 +462,12 @@ export const equipmentSchema = z.object({
   applianceType: z.enum([...APPLIANCE_TYPES, '']).optional(),
   madeYear: z.number('Zadajte rok').int('Celý rok').min(1950, 'Od 1950').max(2100).optional(),
   madeIn: text(60).optional(),
+  ampW2: optionalNumber(100000),
+  ampW4: optionalNumber(100000),
+  ampW8: optionalNumber(100000),
+  ampBridge4: optionalNumber(100000),
+  ampBridge8: optionalNumber(100000),
+  unitInfo: z.array(z.object({ unit: z.number(), serial: text(80), inv: text(40) })).optional(),
   color: text(40).optional(),
   condition: z.enum(['new', 'excellent', 'good', 'worn', 'damaged', '']).optional(),
   mixerKind: z.enum(['analog', 'digital', '']).optional(),
@@ -621,6 +635,11 @@ export function attributesFor(
         | 'applianceType'
         | 'madeYear'
         | 'madeIn'
+        | 'ampW2'
+        | 'ampW4'
+        | 'ampW8'
+        | 'ampBridge4'
+        | 'ampBridge8'
         | 'color'
         | 'condition'
         | 'mixerKind'
@@ -752,6 +771,10 @@ export function attributesFor(
     if (values.condition) attributes.condition = values.condition
   }
   if (values.kind === 'dj' && values.powerW !== undefined) attributes.powerW = values.powerW
+  if (audio && values.audioType === 'amplifier') {
+    for (const key of ['ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8'] as const) if (values[key] !== undefined) attributes[key] = values[key]
+    if (values.madeIn?.trim()) attributes.madeIn = values.madeIn.trim()
+  }
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipAddress && values.ipPrefix !== undefined) attributes.ipPrefix = values.ipPrefix
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipDhcp && !values.ipAddress) attributes.ipDhcp = true
   if (values.weightKg !== undefined) attributes.weightKg = values.weightKg
@@ -858,6 +881,8 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.applianceType && APPLIANCE_TYPE_LABELS[a.applianceType],
     a.color,
     a.madeYear !== undefined && `${a.madeYear}${a.madeIn ? ` · ${a.madeIn}` : ''}`,
+    a.madeYear === undefined && a.madeIn && `vyrobené: ${a.madeIn}`,
+    ampPower(a),
     a.condition && CONDITION_LABELS[a.condition].toLowerCase(),
     a.cableType === 'di' && 'DI box',
     a.cableType === 'adapter' && 'Redukcia',
@@ -992,6 +1017,33 @@ export function advancedFilterCount(filter: EquipmentFilter) {
 }
 
 /** Všetky dátumy nákupu techniky (celá položka aj kusy). */
+export type UnitInfo = { serial?: string; inv?: string }
+
+/** Výkon zosilňovača do jedného riadku: „2 Ω 1 800 W · 4 Ω 2 000 W · 8 Ω 1 250 W · bridge 4 Ω 3 600 W“. */
+export function ampPower(a: Pick<EquipmentAttributes, 'ampW2' | 'ampW4' | 'ampW8' | 'ampBridge4' | 'ampBridge8'>) {
+  const parts = [
+    a.ampW2 !== undefined && `2 Ω ${formatNumber(a.ampW2)} W`,
+    a.ampW4 !== undefined && `4 Ω ${formatNumber(a.ampW4)} W`,
+    a.ampW8 !== undefined && `8 Ω ${formatNumber(a.ampW8)} W`,
+    a.ampBridge4 !== undefined && `bridge 4 Ω ${formatNumber(a.ampBridge4)} W`,
+    a.ampBridge8 !== undefined && `bridge 8 Ω ${formatNumber(a.ampBridge8)} W`,
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : false
+}
+
+/** Údaje kusov z formulára do databázy: len kusy, ktoré existujú, a len vyplnené údaje. */
+export function unitInfoFromForm(rows: { unit: number; serial: string; inv: string }[], units: Set<number>): Record<string, UnitInfo> {
+  const info: Record<string, UnitInfo> = {}
+  for (const row of rows) {
+    if (!units.has(row.unit)) continue
+    const serial = row.serial.trim()
+    const inv = row.inv.trim()
+    if (!serial && !inv) continue
+    info[String(row.unit)] = { ...(serial && { serial }), ...(inv && { inv }) }
+  }
+  return info
+}
+
 export function purchaseDates(item: Pick<Equipment, 'purchasedOn' | 'unitPurchases'>) {
   return [item.purchasedOn, ...Object.values(item.unitPurchases ?? {})].filter((date): date is string => Boolean(date))
 }
@@ -1032,6 +1084,7 @@ export function filterEquipment(items: Equipment[], filter: EquipmentFilter, tod
         item.model,
         item.serialNumber,
         item.inventoryNumber,
+        ...Object.values(item.unitInfo ?? {}).flatMap((info) => [info.serial ?? '', info.inv ?? '']),
         item.macAddress,
         item.ipAddress,
         item.attributes.connector,

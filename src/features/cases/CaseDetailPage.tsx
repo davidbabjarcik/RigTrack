@@ -104,6 +104,7 @@ export function CaseDetailPage() {
   const caseName = (caseId: string | null) => cases.data.find((c) => c.id === caseId)?.name
   const info = [
     current.inventoryNumber,
+    current.oldNumbers && `staré č. ${current.oldNumbers}`,
     locations.find((l) => l.id === current.locationId)?.name,
     formatDimensions(current),
     formatWeight(current.weightKg),

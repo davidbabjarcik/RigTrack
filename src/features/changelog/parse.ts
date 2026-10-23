@@ -75,7 +75,13 @@ export function sameVersion(a: string, b: string) {
   return Array.from({ length }, (_, index) => (left[index] ?? 0) === (right[index] ?? 0)).every(Boolean)
 }
 
+// Technické poznámky o migráciách databázy (odsek aj odrážka) sú pre vývojára, nie pre používateľa.
+const TECHNICAL = /migráci/i
+
 /** Text vydania pre používateľa: bez technických riadkov o migráciách databázy. */
 export function forUsers(release: Release): Release {
-  return { ...release, blocks: release.blocks.filter((block) => !(block.kind === 'text' && /^Nové migrácie/i.test(block.text))) }
+  const blocks = release.blocks
+    .map((block) => (block.kind === 'list' ? { ...block, items: block.items.filter((item) => !TECHNICAL.test(item)) } : block))
+    .filter((block) => (block.kind === 'list' ? block.items.length > 0 : !TECHNICAL.test(block.text)))
+  return { ...release, blocks }
 }

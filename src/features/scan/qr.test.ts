@@ -8,6 +8,8 @@ describe('qr', () => {
     expect(parseQr(qrUrl({ kind: 'case', id: ID }, 'https://rigtrack.app'))).toEqual({ kind: 'case', id: ID })
     expect(parseQr(`https://x.sk/equipment/${ID.toUpperCase()}?a=1`)).toEqual({ kind: 'equipment', id: ID })
     expect(qrPath({ kind: 'equipment', id: ID })).toBe(`/equipment/${ID}`)
+    expect(parseQr(qrUrl({ kind: 'spot', id: ID }, 'https://rigtrack.app'))).toEqual({ kind: 'spot', id: ID })
+    expect(parseQr(`https://x.sk/warehouse?x=1&spot=${ID}`)).toEqual({ kind: 'spot', id: ID })
   })
 
   it('ignores foreign codes', () => {

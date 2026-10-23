@@ -1,15 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Pencil, Search, Trash2, X } from 'lucide-react'
+import { Check, Pencil, QrCode, ScanLine, Search, Trash2, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { RectEditor } from '@/components/plan/RectEditor'
-import { Button } from '@/components/ui/button'
+import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { caseKeys } from '@/features/cases/api'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
+import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
+import { LiveScanner } from '@/features/scan/LiveScanner'
+import { parseQr } from '@/features/scan/qr'
 import { can } from '@/lib/permissions'
 import { addSpot, deleteSpot, fetchWarehouse, placeCase, saveWarehouse, updateSpot, warehouseKeys } from './api'
 import {
@@ -78,9 +82,14 @@ export function WarehousePage() {
   const [search, setSearch] = useState('')
   const [addCaseId, setAddCaseId] = useState('')
   const [addLevel, setAddLevel] = useState(1)
+  // Skenovanie: „find“ ukáže, kde case / technika leží; „place“ ukladá naskenované cases na vybrané miesto.
+  const [scanning, setScanning] = useState<'find' | 'place' | null>(null)
+  const [found, setFound] = useState<{ text: string; to?: string } | null>(null)
 
   const plan = useQuery({ queryKey: warehouseKeys.plan(companyId), queryFn: () => fetchWarehouse(companyId) })
   const cases = useCases(companyId)
+  const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
+  const { locations } = useEquipmentLookups(companyId)
 
   const refreshPlan = () => queryClient.invalidateQueries({ queryKey: warehouseKeys.plan(companyId) })
   // Zmazanie miesta vyprázdni miesto na cases, preto aj ich zoznam.
@@ -111,6 +120,48 @@ export function WarehousePage() {
   const unplaced = cases.data.filter((item) => !item.spotId || !spots.some((spot) => spot.id === item.spotId))
   const hits = findCases(cases.data, search)
   const spotOf = (id: string | null) => spots.find((spot) => spot.id === id)
+  const where = (item: { spotId: string | null; spotLevel: number | null }) => {
+    const spot = spotOf(item.spotId)
+    return spot ? describeSpot(spot, item.spotLevel) : 'nemá miesto v sklade'
+  }
+
+  /** Naskenovaný štítok: ukáže, kde leží (case, technika v case, miesto), alebo ho uloží na vybrané miesto. */
+  const onScan = (text: string): string | void => {
+    const target = parseQr(text)
+    if (!target) return 'Tento QR kód nie je z RigTracku.'
+    if (scanning === 'place' && selected) {
+      if (target.kind !== 'case') return 'Na miesto sa ukladajú cases – naskenujte štítok case.'
+      const item = cases.data.find((candidate) => candidate.id === target.id)
+      if (!item) return '✗ Tento case v evidencii nie je.'
+      if (item.spotId === selected.id) return `✓ ${item.name} už tu je.`
+      const level = selected.levels > 1 ? Math.min(addLevel, selected.levels) : null
+      place.mutate({ caseId: item.id, spotId: selected.id, level })
+      return `✓ ${item.name} → ${describeSpot(selected, level)}`
+    }
+    setScanning(null)
+    setSearch('')
+    if (target.kind === 'spot') {
+      const spot = spotOf(target.id)
+      setFound(spot ? null : { text: 'Toto miesto už v pláne skladu nie je.' })
+      if (spot) select(spot.id)
+      return
+    }
+    if (target.kind === 'case') {
+      const item = cases.data.find((candidate) => candidate.id === target.id)
+      if (!item) return void setFound({ text: 'Tento case v evidencii nie je.' })
+      if (item.spotId) select(item.spotId)
+      return void setFound({ text: `${item.name}: ${where(item)}`, to: `/cases/${item.id}` })
+    }
+    const piece = equipment.data?.find((candidate) => candidate.id === target.id)
+    if (!piece) return void setFound({ text: 'Táto technika v evidencii nie je.' })
+    const inCase = cases.data.find((candidate) => candidate.id === piece.caseId)
+    if (inCase) {
+      if (inCase.spotId) select(inCase.spotId)
+      return void setFound({ text: `${piece.name} je v case ${inCase.name}: ${where(inCase)}`, to: `/equipment/${piece.id}` })
+    }
+    const location = locations.find((candidate) => candidate.id === piece.locationId)?.name
+    setFound({ text: `${piece.name} nie je v žiadnom case${location ? ` – umiestnenie: ${location}` : ''}.`, to: `/equipment/${piece.id}` })
+  }
 
   return (
     <>
@@ -118,16 +169,56 @@ export function WarehousePage() {
         title="Sklad"
         description={warehouse ? `Plán ${metres(warehouse.lengthCm)} × ${metres(warehouse.widthCm)}, pohľad zhora` : 'Kde ktorý case leží'}
         action={
-          canPlan &&
           warehouse && (
-            <Button variant="outline" onClick={() => setEditing(!editing)}>
-              {editing ? <Check className="size-4" aria-hidden /> : <Pencil className="size-4" aria-hidden />}
-              {editing ? 'Hotovo' : 'Upraviť plán'}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {!editing && (
+                <Button variant="outline" onClick={() => setScanning('find')}>
+                  <ScanLine className="size-4" aria-hidden />
+                  Skenovať
+                </Button>
+              )}
+              {canPlan && spots.length > 0 && (
+                <LinkButton to="/qr/spots" variant="outline">
+                  <QrCode className="size-4" aria-hidden />
+                  QR štítky miest
+                </LinkButton>
+              )}
+              {canPlan && (
+                <Button variant="outline" onClick={() => setEditing(!editing)}>
+                  {editing ? <Check className="size-4" aria-hidden /> : <Pencil className="size-4" aria-hidden />}
+                  {editing ? 'Hotovo' : 'Upraviť plán'}
+                </Button>
+              )}
+            </div>
           )
         }
       />
       <DevNotice className="mb-4" />
+      {scanning && (
+        <LiveScanner
+          title={scanning === 'place' && selected ? `Uložiť na ${selected.name}` : 'Kde to je?'}
+          onClose={() => setScanning(null)}
+          onResult={onScan}
+        />
+      )}
+      {found && (
+        <p role="status" className="mb-3 flex items-start justify-between gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+          <span>
+            {found.text}
+            {found.to && (
+              <>
+                {' '}
+                <Link to={found.to} className="font-medium text-accent hover:underline">
+                  Detail
+                </Link>
+              </>
+            )}
+          </span>
+          <button type="button" aria-label="Zavrieť" className="text-muted-foreground hover:text-foreground" onClick={() => setFound(null)}>
+            <X className="size-4" aria-hidden />
+          </button>
+        </p>
+      )}
 
       {!warehouse &&
         (canPlan ? (
@@ -226,7 +317,7 @@ export function WarehousePage() {
               label="Nájsť case"
               hideLabel
               type="search"
-              placeholder="Nájsť case v sklade"
+              placeholder="Nájsť case – názov alebo číslo (aj staré)"
               className="[&_input]:pl-9"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -245,7 +336,15 @@ export function WarehousePage() {
                       onClick={() => select(spot!.id)}
                       className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-muted disabled:hover:bg-transparent"
                     >
-                      <span className="min-w-0 truncate font-medium">{item.name}</span>
+                      <span className="min-w-0 truncate font-medium">
+                        {item.name}
+                        {[item.inventoryNumber, item.labelNumber && `č. ${item.labelNumber}`, item.oldNumbers && `staré: ${item.oldNumbers}`].filter(Boolean).length > 0 && (
+                          <span className="font-normal text-muted-foreground">
+                            {' · '}
+                            {[item.inventoryNumber, item.labelNumber && `č. ${item.labelNumber}`, item.oldNumbers && `staré: ${item.oldNumbers}`].filter(Boolean).join(' · ')}
+                          </span>
+                        )}
+                      </span>
                       <span className={spot ? 'shrink-0 text-sm text-accent' : 'shrink-0 text-sm text-muted-foreground'}>
                         {spot ? describeSpot(spot, item.spotLevel) : 'nemá miesto'}
                       </span>
@@ -372,6 +471,10 @@ export function WarehousePage() {
                   )}
                   <Button type="submit" disabled={!addCaseId || place.isPending}>
                     Uložiť sem
+                  </Button>
+                  <Button variant="outline" onClick={() => setScanning('place')}>
+                    <ScanLine className="size-4" aria-hidden />
+                    Uložiť sem skenovaním
                   </Button>
                 </form>
               )}

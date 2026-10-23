@@ -30,6 +30,8 @@ export type Case = {
   ownerStaffId?: string | null
   /** Ako veľmi treba obsah kontrolovať (0060); bez migrácie „normal“. */
   checkPriority?: CheckPriority
+  /** Staré čísla (napr. pôvodné nálepky), podľa ktorých sa case dá nájsť (0078). */
+  oldNumbers?: string
 }
 
 /** Úroveň kontroly case (spoločná s prevádzkovými hodinami; dni nastaví admin v Nastaveniach). */
@@ -76,7 +78,7 @@ export function filterCases(items: Case[], filter: CaseFilter, pieces: Map<strin
     if (filter.labelCategory && item.labelCategory !== filter.labelCategory) return false
     if (filter.content === 'empty' && (pieces.get(item.id) ?? 0) > 0) return false
     if (filter.content === 'filled' && (pieces.get(item.id) ?? 0) === 0) return false
-    const haystack = plain([item.name, item.inventoryNumber, item.labelCategory, item.note].join(' '))
+    const haystack = plain([item.name, item.inventoryNumber, item.labelNumber, item.oldNumbers ?? '', item.labelCategory, item.note].join(' '))
     return words.every((word) => haystack.includes(word))
   })
   const sorted = [...found]
@@ -112,6 +114,7 @@ export const caseSchema = z.object({
   /** Vlastník: prázdne = firma, id karty zamestnanca, alebo „m-<id člena>“. */
   owner: z.string().optional(),
   checkPriority: z.enum(['high', 'normal', 'low', 'none']).optional(),
+  oldNumbers: text(200).optional(),
 })
 
 /** „120 × 60 × 40 cm“ z rozmerov, ktoré sú vyplnené; bez rozmerov prázdny text. */

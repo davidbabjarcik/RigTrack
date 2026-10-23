@@ -37,6 +37,18 @@ describe('warehouse plan', () => {
     expect(findCases(named, '  ')).toEqual([])
   })
 
+  it('finds cases by inventory, label and old numbers as whole numbers', () => {
+    const numbered = [
+      { ...item('x', 'rack'), inventoryNumber: 'C-14' },
+      { ...item('y', 'rack'), oldNumbers: '4, A-7' },
+      { ...item('z', null), labelNumber: '14' },
+    ]
+    expect(findCases(numbered, '4').map((entry) => entry.id)).toEqual(['y'])
+    expect(findCases(numbered, 'a-7').map((entry) => entry.id)).toEqual(['y'])
+    expect(findCases(numbered, 'c-14').map((entry) => entry.id)).toEqual(['x'])
+    expect(findCases(numbered, '14').map((entry) => entry.id)).toEqual(['z'])
+  })
+
   it('formats metres and proposes a free name', () => {
     expect(metres(1250)).toBe('12,5 m')
     expect(metres(800)).toBe('8 m')

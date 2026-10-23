@@ -146,6 +146,7 @@ const EMPTY: EquipmentFormValues = {
   owner: '',
   purchasedOn: '',
   unitPurchases: [],
+  unitInfo: [],
   links: [],
   cloneOf: '',
   captureMatch: '',
@@ -198,6 +199,11 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     applianceType: equipment.attributes.applianceType ?? '',
     madeYear: equipment.attributes.madeYear,
     madeIn: equipment.attributes.madeIn ?? '',
+    ampW2: equipment.attributes.ampW2,
+    ampW4: equipment.attributes.ampW4,
+    ampW8: equipment.attributes.ampW8,
+    ampBridge4: equipment.attributes.ampBridge4,
+    ampBridge8: equipment.attributes.ampBridge8,
     color: equipment.attributes.color ?? '',
     condition: equipment.attributes.condition ?? '',
     mixerKind: equipment.attributes.mixerKind ?? '',
@@ -245,6 +251,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     owner: equipment.ownerStaffId ?? '',
     purchasedOn: equipment.purchasedOn ?? '',
     unitPurchases: Object.entries(equipment.unitPurchases ?? {}).map(([unit, date]) => ({ unit: Number(unit), date })),
+    unitInfo: Object.entries(equipment.unitInfo ?? {}).map(([unit, info]) => ({ unit: Number(unit), serial: info.serial ?? '', inv: info.inv ?? '' })),
     links: equipment.links ?? [],
     cloneOf: equipment.cloneOf ?? '',
     captureMatch: equipment.captureMatch ?? '',
@@ -737,6 +744,16 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           {(audioType === 'amplifier' || audioType === 'processor' || (hasBox(audioType) && powered === 'active')) && (
             <Field label="Príkon zo siete (W)" type="number" inputMode="decimal" min={0} error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />
           )}
+          {audioType === 'amplifier' && (
+            <>
+              <Field label="Výkon 2 Ω na kanál (W)" type="number" inputMode="numeric" min={0} placeholder="napr. 1800" error={errors.ampW2?.message} {...register('ampW2', asOptionalNumber)} />
+              <Field label="Výkon 4 Ω na kanál (W)" type="number" inputMode="numeric" min={0} placeholder="napr. 2000" error={errors.ampW4?.message} {...register('ampW4', asOptionalNumber)} />
+              <Field label="Výkon 8 Ω na kanál (W)" type="number" inputMode="numeric" min={0} placeholder="napr. 1250" error={errors.ampW8?.message} {...register('ampW8', asOptionalNumber)} />
+              <Field label="Bridge 4 Ω (W)" type="number" inputMode="numeric" min={0} placeholder="napr. 3600" error={errors.ampBridge4?.message} {...register('ampBridge4', asOptionalNumber)} />
+              <Field label="Bridge 8 Ω (W)" type="number" inputMode="numeric" min={0} placeholder="napr. 4000" error={errors.ampBridge8?.message} {...register('ampBridge8', asOptionalNumber)} />
+              <Field label="Krajina výroby" placeholder="napr. Kórea, Čína" maxLength={60} {...register('madeIn')} />
+            </>
+          )}
           {audioType === 'mixer' && (
             <>
               <SelectField label="Mixpult" error={errors.mixerKind?.message} {...register('mixerKind')}>
@@ -1008,11 +1025,12 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         )}
         <Field label="Váha kusu (kg)" type="number" inputMode="decimal" min={0} step="0.1" error={errors.weightKg?.message} {...register('weightKg', asOptionalNumber)} />
         <Field label="Model" error={errors.model?.message} {...register('model')} />
-        {!simple && (
+        {/* Pri evidencii po kusoch má každý kus svoje sériové a inventárne číslo (nižšie, Údaje po kusoch). */}
+        {!simple && !trackUnits && (
           <Field label="Sériové číslo" autoComplete="off" error={errors.serialNumber?.message} {...register('serialNumber')} />
         )}
         <Field
-          label="Inventárne číslo"
+          label={trackUnits ? 'Inventárne číslo položky (spoločné, nepovinné)' : 'Inventárne číslo'}
           autoComplete="off"
           error={errors.inventoryNumber?.message}
           {...register('inventoryNumber')}

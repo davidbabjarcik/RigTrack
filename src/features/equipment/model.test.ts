@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ampPower,
   attributesFor,
   cableBaseName,
   cableName,
@@ -22,6 +23,7 @@ import {
   unpackedEquipment,
   type Equipment,
   type EquipmentFilter,
+  unitInfoFromForm,
 } from './model'
 
 const base: Equipment = {
@@ -410,5 +412,24 @@ describe('hours with check levels and lamp changes', () => {
     expect(hoursState(item, '2026-09-10', { low: 180, normal: 60, high: 30 }).state).toBe('ok')
     expect(hoursState({ ...item, attributes: { trackHours: true, hoursPriority: 'none' as const } }, '2027-01-01').state).toBe('none')
     expect(hoursSinceLamp(item)).toBe(300)
+  })
+})
+
+describe('amplifier and unit details', () => {
+  it('describes amplifier power and keeps amp fields only for amplifiers', () => {
+    expect(ampPower({ ampW2: 1800, ampW4: 2000, ampBridge8: 4000 })).toBe('2 Ω 1800 W · 4 Ω 2000 W · bridge 8 Ω 4000 W')
+    expect(ampPower({})).toBe(false)
+    const base = { connector: '', lengthM: undefined, powerW: undefined, lightSource: '' as const, ampW4: 2000, madeIn: 'Kórea' }
+    expect(attributesFor({ ...base, kind: 'audio', audioType: 'amplifier' })).toMatchObject({ ampW4: 2000, madeIn: 'Kórea' })
+    expect(attributesFor({ ...base, kind: 'audio', audioType: 'speaker' }).ampW4).toBeUndefined()
+  })
+
+  it('keeps filled unit details of existing pieces only', () => {
+    const rows = [
+      { unit: 1, serial: ' CT1 ', inv: 'Z-01' },
+      { unit: 2, serial: '', inv: '' },
+      { unit: 9, serial: 'CT9', inv: '' },
+    ]
+    expect(unitInfoFromForm(rows, new Set([1, 2, 3]))).toEqual({ '1': { serial: 'CT1', inv: 'Z-01' } })
   })
 })

@@ -21,6 +21,22 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.16 – 23. 10. 2026
+
+- **Zosilňovače**: výkon pri 2 Ω, 4 Ω a 8 Ω na kanál, bridge 4 Ω a 8 Ω a krajina výroby.
+- **Údaje po kusoch**: pri technike evidovanej po kusoch má každý kus vlastné inventárne a sériové číslo aj dátum
+  nákupu (vo formulári „Údaje po kusoch“, v detaile pri Kusoch). Vyhľadávanie v Technike nájde aj tieto čísla.
+- **Prevádzkové hodiny po kusoch**: pri odčítaní sa vyberie kus (napr. každý zosilňovač má svoje počítadlo),
+  prehľad posledného stavu každého kusu a graf pre zvolený kus.
+- **Sklad – skenovanie**: „Skenovať“ ukáže, kde naskenovaný case alebo technika leží (označí miesto na pláne).
+  Pri vybranom mieste „Uložiť sem skenovaním“ ukladá cases jeden za druhým. Miesta (regály) majú vlastné
+  QR štítky – naskenovanie ukáže, čo na nich leží.
+- **Sklad – hľadanie podľa čísla**: case nájdete aj podľa označenia, čísla na štítku a **starých čísel**
+  (nové pole pri case).
+- **QR kód ako PNG**: pri QR štítkoch sa dá stiahnuť samotný QR kód bez textu (jeden aj všetky).
+- V „Čo je nové“ v appke sa už nezobrazujú technické poznámky o databáze.
+- Nové migrácie: `0078` (opravné `0071` a `0072` sú aktualizované).
+
 ### 2.15 – 23. 10. 2026
 
 - **Činnosti pri eventoch** (Nastavenia → Pripomienky, len admin): vlastný zoznam, napr. nakladanie, vykladanie,

@@ -8,6 +8,7 @@ import {
   isSimpleKind,
   normalizeMac,
   parseUnitIds,
+  unitInfoFromForm,
   unitRange,
   type CableSetValues,
   type CaptureMatch,
@@ -19,6 +20,7 @@ import {
   type EquipmentStatus,
   type LabelRole,
   type Lookup,
+  type UnitInfo,
 } from './model'
 
 export type LookupTable = 'equipment_categories' | 'locations'
@@ -32,17 +34,20 @@ export const equipmentKeys = {
 const COLUMNS =
   'id, name, kind, attributes, category_id, location_id, case_id, label_role, quantity, track_units, unit_ids, rental_price, min_quantity, manufacturer, model, serial_number, ' +
   'inventory_number, mac_address, ip_address, service_interval_months, last_service_on, hours_interval_months, operating_hours, hours_read_on, photo_path, status, note, updated_at'
-// Novšie stĺpce: vlastník (0052) a dátum nákupu, odkazy, Capture (0060). Bez migrácie chýbajú – technika
-// sa vtedy načíta bez nich (skúša sa od najnovšej sady), aby appka fungovala ďalej.
-const OPTIONAL_COLUMNS = [', owner_staff_id, purchased_on, unit_purchases, links, clone_of, capture_match, capture_note', ', owner_staff_id', '']
+// Novšie stĺpce: vlastník (0052), dátum nákupu, odkazy, Capture (0060) a údaje po kusoch (0078). Bez migrácie
+// chýbajú – technika sa vtedy načíta bez nich (skúša sa od najnovšej sady), aby appka fungovala ďalej.
+const EXTRA = ', owner_staff_id, purchased_on, unit_purchases, links, clone_of, capture_match, capture_note'
+const OPTIONAL_COLUMNS = [EXTRA + ', unit_info', EXTRA, ', owner_staff_id', '']
 let optionalLevel = 0
 const optionalColumns = () => OPTIONAL_COLUMNS[optionalLevel]
-const hasOwnerColumn = () => optionalLevel < 2
-const hasExtraColumns = () => optionalLevel === 0
+const hasUnitInfo = () => optionalLevel === 0
+const hasOwnerColumn = () => optionalLevel < 3
+const hasExtraColumns = () => optionalLevel < 2
 /** Pri chýbajúcom stĺpci skúsi staršiu sadu; vráti true, ak je čo skúsiť. */
 function fallBack(error: { code?: string; message?: string } | null) {
   if (!error || optionalLevel >= OPTIONAL_COLUMNS.length - 1) return false
-  const missing = hasExtraColumns() ? ['purchased_on', 'unit_purchases', 'links', 'clone_of', 'capture_match', 'capture_note'] : ['owner_staff_id']
+  const extra = ['purchased_on', 'unit_purchases', 'links', 'clone_of', 'capture_match', 'capture_note']
+  const missing = hasUnitInfo() ? ['unit_info', ...extra] : hasExtraColumns() ? extra : ['owner_staff_id']
   if (!missing.some((column) => isMissingColumn(error, column))) return false
   optionalLevel += 1
   return true
@@ -80,6 +85,7 @@ type Row = {
   owner_staff_id?: string | null
   purchased_on?: string | null
   unit_purchases?: Record<string, string> | null
+  unit_info?: Record<string, UnitInfo> | null
   links?: EquipmentLink[] | null
   clone_of?: string
   capture_match?: CaptureMatch | ''
@@ -119,6 +125,7 @@ function fromRow(row: Row): Equipment {
     ownerStaffId: row.owner_staff_id ?? null,
     purchasedOn: row.purchased_on ?? null,
     unitPurchases: row.unit_purchases ?? {},
+    unitInfo: row.unit_info ?? {},
     links: row.links ?? [],
     cloneOf: row.clone_of ?? '',
     captureMatch: row.capture_match ?? '',
@@ -239,6 +246,8 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     ...(values.owner !== undefined && (values.owner !== '' || hasOwnerColumn()) ? { owner_staff_id: await resolveOwner(companyId, values.owner) } : {}),
     // Údaje z 0060 len keď ich databáza pozná alebo sú vyplnené (inak chyba povie, čo chýba).
     ...(hasExtraColumns() || extrasFilled(values) ? extraFields(values) : {}),
+    // Údaje po kusoch (0078) len keď ich databáza pozná alebo sú vyplnené.
+    ...(hasUnitInfo() || values.unitInfo?.some((unit) => unit.serial.trim() || unit.inv.trim()) ? { unit_info: unitInfoOf(values) } : {}),
   }
   const write = (row: Record<string, unknown>) => {
     const table = getSupabase().from('equipment')
@@ -249,12 +258,22 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
   // Databáza bez migrácie 0060 / 0052 nepozná nové stĺpce – uloží sa bez nich.
   while (error && fallBack(error)) {
     row = { ...row }
+    if (!hasUnitInfo()) delete row.unit_info
     if (!hasExtraColumns()) for (const column of EXTRA_COLUMNS) delete row[column]
     if (!hasOwnerColumn()) delete row.owner_staff_id
     ;({ data, error } = await write(row))
   }
   if (error) throw error
   return (data as { id: string }).id
+}
+
+/** Čísla kusov podľa formulára (vlastné čísla alebo 1..počet); bez evidencie po kusoch žiadne. */
+function formUnits(values: EquipmentFormValues) {
+  return values.trackUnits ? new Set(values.unitIds ? parseUnitIds(values.unitIds) : unitRange(values.quantity)) : new Set<number>()
+}
+
+function unitInfoOf(values: EquipmentFormValues) {
+  return unitInfoFromForm(values.unitInfo ?? [], formUnits(values))
 }
 
 const EXTRA_COLUMNS = ['purchased_on', 'unit_purchases', 'links', 'clone_of', 'capture_match', 'capture_note']
@@ -346,7 +365,7 @@ export async function setEquipmentQuantity(companyId: string, equipmentId: strin
   if (data.length === 0) throw new Error('Not updated')
 }
 
-export type HourReading = { id: string; readOn: string; hours: number; note: string; authorName: string }
+export type HourReading = { id: string; readOn: string; hours: number; note: string; authorName: string; unit: number | null }
 
 export const hourReadingKeys = {
   list: (companyId: string, equipmentId: string) => ['company', companyId, 'equipment', equipmentId, 'hours'] as const,
@@ -354,23 +373,34 @@ export const hourReadingKeys = {
 
 /** Odčítania počítadla prevádzkových hodín jedného zariadenia, najnovšie prvé. */
 export async function fetchHourReadings(companyId: string, equipmentId: string): Promise<HourReading[]> {
-  const { data, error } = await getSupabase()
-    .from('equipment_hour_readings')
-    .select('id, read_on, hours, note, author_name')
-    .eq('company_id', companyId)
-    .eq('equipment_id', equipmentId)
-    .order('read_on', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(20)
+  const query = (columns: string) =>
+    getSupabase()
+      .from('equipment_hour_readings')
+      .select(columns)
+      .eq('company_id', companyId)
+      .eq('equipment_id', equipmentId)
+      .order('read_on', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(100)
+  let { data, error } = await query('id, read_on, hours, note, author_name, unit')
+  // Bez migrácie 0078 odčítania po kusoch nie sú.
+  if (isMissingColumn(error, 'unit')) ({ data, error } = await query('id, read_on, hours, note, author_name'))
   if (error) throw error
-  const rows = data as { id: string; read_on: string; hours: number | string; note: string; author_name: string }[]
-  return rows.map((row) => ({ id: row.id, readOn: row.read_on, hours: Number(row.hours), note: row.note, authorName: row.author_name }))
+  const rows = data as unknown as { id: string; read_on: string; hours: number | string; note: string; author_name: string; unit?: number | null }[]
+  return rows.map((row) => ({ id: row.id, readOn: row.read_on, hours: Number(row.hours), note: row.note, authorName: row.author_name, unit: row.unit ?? null }))
 }
 
 /** Kto odčítal, doplní databáza; stav na technike prepíše trigger. */
-export async function addHourReading(companyId: string, equipmentId: string, reading: { readOn: string; hours: number; note: string }) {
+export async function addHourReading(companyId: string, equipmentId: string, reading: { readOn: string; hours: number; note: string; unit?: number | null }) {
   const { error } = await getSupabase()
     .from('equipment_hour_readings')
-    .insert({ company_id: companyId, equipment_id: equipmentId, read_on: reading.readOn, hours: reading.hours, note: reading.note.trim() })
+    .insert({
+      company_id: companyId,
+      equipment_id: equipmentId,
+      read_on: reading.readOn,
+      hours: reading.hours,
+      note: reading.note.trim(),
+      ...(reading.unit ? { unit: reading.unit } : {}),
+    })
   if (error) throw error
 }

@@ -22,7 +22,7 @@ export type Spot = {
 }
 
 /** Case tak, ako ho potrebuje plán. */
-export type PlacedCase = { id: string; name: string; spotId: string | null; spotLevel: number | null }
+export type PlacedCase = { id: string; name: string; spotId: string | null; spotLevel: number | null; inventoryNumber?: string; labelNumber?: string; oldNumbers?: string }
 
 /** Cases podľa miesta; kľúč je id miesta. Cases bez miesta tu nie sú. */
 export function casesBySpot<T extends PlacedCase>(cases: T[]) {
@@ -54,7 +54,10 @@ export function describeSpot(spot: Pick<Spot, 'name' | 'levels'>, level: number 
 export function findCases<T extends PlacedCase>(cases: T[], search: string) {
   const plain = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
   const wanted = plain(search.trim())
-  return wanted ? cases.filter((item) => plain(item.name).includes(wanted)) : []
+  if (!wanted) return []
+  // Názov, označenie, číslo na štítku aj staré čísla; číslo musí sedieť celé (napr. „4“ nenájde „14“).
+  const numberHit = (value: string | undefined) => (value ?? '').split(/[\s,;/]+/).some((part) => part && plain(part) === wanted)
+  return cases.filter((item) => plain(item.name).includes(wanted) || numberHit(item.inventoryNumber) || numberHit(item.labelNumber) || numberHit(item.oldNumbers))
 }
 
 /** Rozmer v metroch na jedno desatinné miesto: 1250 → „12,5 m“. */

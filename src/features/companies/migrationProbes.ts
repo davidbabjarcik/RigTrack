@@ -25,6 +25,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0075', label: 'podpisy výpožičiek', table: 'loan_signatures', column: 'id' },
   { migration: '0076', label: 'stretávky a dochádzka', table: 'event_attendance', column: 'wait_minutes' },
   { migration: '0077', label: 'činnosti pri eventoch', table: 'event_duties', column: 'id' },
+  { migration: '0078', label: 'údaje po kusoch, staré čísla cases', table: 'cases', column: 'old_numbers' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

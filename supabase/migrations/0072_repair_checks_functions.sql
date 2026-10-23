@@ -239,6 +239,13 @@ begin
   end if;
   if to_regclass('public.cases') is not null then
     begin
+      execute $sql$alter table public.cases drop constraint if exists cases_old_numbers_check$sql$;
+      execute $sql$alter table public.cases add constraint cases_old_numbers_check CHECK ((char_length(old_numbers) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola cases_old_numbers_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.cases') is not null then
+    begin
       execute $sql$alter table public.cases drop constraint if exists cases_photo_path_check$sql$;
       execute $sql$alter table public.cases add constraint cases_photo_path_check CHECK ((char_length(photo_path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_photo_path_check: %', sqlerrm;
@@ -589,6 +596,13 @@ begin
   end if;
   if to_regclass('public.equipment') is not null then
     begin
+      execute $sql$alter table public.equipment drop constraint if exists equipment_unit_info_check$sql$;
+      execute $sql$alter table public.equipment add constraint equipment_unit_info_check CHECK (((jsonb_typeof(unit_info) = 'object'::text) AND (char_length((unit_info)::text) <= 60000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola equipment_unit_info_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.equipment') is not null then
+    begin
       execute $sql$alter table public.equipment drop constraint if exists equipment_unit_purchases_check$sql$;
       execute $sql$alter table public.equipment add constraint equipment_unit_purchases_check CHECK (((jsonb_typeof(unit_purchases) = 'object'::text) AND (char_length((unit_purchases)::text) <= 20000))) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_unit_purchases_check: %', sqlerrm;
@@ -627,6 +641,13 @@ begin
       execute $sql$alter table public.equipment_hour_readings drop constraint if exists equipment_hour_readings_note_check$sql$;
       execute $sql$alter table public.equipment_hour_readings add constraint equipment_hour_readings_note_check CHECK ((char_length(note) <= 500)) not valid$sql$;
     exception when others then raise notice 'Kontrola equipment_hour_readings_note_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.equipment_hour_readings') is not null then
+    begin
+      execute $sql$alter table public.equipment_hour_readings drop constraint if exists equipment_hour_readings_unit_check$sql$;
+      execute $sql$alter table public.equipment_hour_readings add constraint equipment_hour_readings_unit_check CHECK ((unit > 0)) not valid$sql$;
+    exception when others then raise notice 'Kontrola equipment_hour_readings_unit_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.equipment_packages') is not null then
@@ -2641,10 +2662,22 @@ begin
  SET search_path TO ''
 AS $function$
 begin
-  update public.equipment
-  set operating_hours = new.hours, hours_read_on = new.read_on
-  where id = new.equipment_id and company_id = new.company_id
-    and (hours_read_on is null or hours_read_on <= new.read_on);
+  if new.unit is null then
+    update public.equipment
+    set operating_hours = new.hours, hours_read_on = new.read_on
+    where id = new.equipment_id and company_id = new.company_id
+      and (hours_read_on is null or hours_read_on <= new.read_on);
+  else
+    with latest as (
+      select distinct on (r.unit) r.hours, r.read_on
+      from public.equipment_hour_readings r
+      where r.equipment_id = new.equipment_id and r.unit is not null
+      order by r.unit, r.read_on desc, r.created_at desc
+    )
+    update public.equipment
+    set operating_hours = (select max(hours) from latest), hours_read_on = (select min(read_on) from latest)
+    where id = new.equipment_id and company_id = new.company_id;
+  end if;
   return new;
 end;
 $function$$repairfn$;

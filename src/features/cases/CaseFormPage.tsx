@@ -62,6 +62,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
       note: current?.note ?? '',
       owner: current?.ownerStaffId ?? ownerPreset,
       checkPriority: current?.checkPriority ?? 'normal',
+      oldNumbers: current?.oldNumbers ?? '',
     },
   })
 
@@ -149,6 +150,13 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
           autoComplete="off"
           error={errors.inventoryNumber?.message}
           {...register('inventoryNumber')}
+        />
+        <Field
+          label="Staré čísla (nepovinné)"
+          placeholder="napr. 17, A-4 – podľa nich ho nájdete v Sklade"
+          autoComplete="off"
+          error={errors.oldNumbers?.message}
+          {...register('oldNumbers')}
         />
         <Field
           label="Umiestnenie"
