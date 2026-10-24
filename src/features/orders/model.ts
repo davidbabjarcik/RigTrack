@@ -5,13 +5,14 @@ import { formatMoney } from '@/lib/format'
 export const CURRENCIES = ['EUR', 'CZK', 'USD', 'GBP'] as const
 
 // Zodpovedá režimom funkcie create_order v migráciách.
-export const ITEM_MODES = ['separate', 'bulk', 'existing', 'none'] as const
+export const ITEM_MODES = ['separate', 'bulk', 'existing', 'link', 'none'] as const
 export type ItemMode = (typeof ITEM_MODES)[number]
 
 export const MODE_LABELS: Record<ItemMode, string> = {
   separate: 'Nová technika — každý kus zvlášť',
   bulk: 'Nová technika — jedna položka s počtom',
   existing: 'Pripočítať k existujúcej technike',
+  link: 'Už to mám v technike – len prepojiť (faktúra ku kusom)',
   none: 'Nepridávať do techniky (len evidovať nákup)',
 }
 
@@ -52,13 +53,15 @@ const itemSchema = z
     unitPrice: z.number('Zadajte cenu').min(0, 'Cena nemôže byť záporná'),
     mode: z.enum(ITEM_MODES),
     equipmentId: z.string(),
+    /** Pri prepojení: ktoré kusy (napr. „1-4“); prázdne = celá položka. */
+    unitNumbers: z.string().max(400).optional(),
     equipmentName: text(120),
     /** Názov kategórie; neexistujúca sa pri uložení založí. */
     category: text(80),
     kind: z.enum(EQUIPMENT_KINDS),
   })
   .superRefine((item, ctx) => {
-    if (item.mode === 'existing' && !item.equipmentId) {
+    if ((item.mode === 'existing' || item.mode === 'link') && !item.equipmentId) {
       ctx.addIssue({ code: 'custom', path: ['equipmentId'], message: 'Vyberte techniku' })
     }
     if (item.mode === 'separate' && item.quantity > MAX_SEPARATE) {
@@ -261,7 +264,9 @@ export type OrderLine = {
   quantity: number
   unitPrice: number
   categoryId: string | null
-  equipment: { equipmentId: string; quantity: number }[]
+  equipment: { equipmentId: string; quantity: number; unitNumbers: number[] }[]
+  /** Ako položka súvisí s technikou (0083: „link“ = prepojená s existujúcou bez pripočítania). */
+  mode: ItemMode
 }
 
 export type OrderDetail = OrderSummary & { lines: OrderLine[] }
@@ -276,6 +281,10 @@ export type Purchase = {
   quantity: number
   unitPrice: number
   articleNumber: string
+  /** Ktoré kusy nákup pokrýva (pri prepojení s existujúcou technikou); prázdne = bez čísel. */
+  unitNumbers: number[]
+  /** K objednávke je faktúra. */
+  hasInvoice: boolean
 }
 
 /** Riadok objednávky nájdený hľadaním naprieč objednávkami (história cien). */

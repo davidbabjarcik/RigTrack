@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ExternalLink, Trash2 } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Trash2, X } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,9 @@ import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 import { formatDate, formatMoney } from '@/lib/format'
 import { can } from '@/lib/permissions'
-import { deleteOrder, fetchOrder, orderKeys } from './api'
+import { deleteOrder, fetchOrder, orderKeys, unlinkOrderItem } from './api'
+import { LinkLineForm } from './LinkLineForm'
+import { describeUnitIds } from '@/features/equipment/model'
 import { SOURCE_LABELS, supplierProductUrl } from './model'
 import { OrderFlagsEditor } from './OrderFlagsEditor'
 import { OrderPhoto } from './OrderPhoto'
@@ -42,6 +44,10 @@ export function OrderDetailPage() {
     (order.data?.lines ?? []).map((line) => photoOf(line.equipment[0]?.equipmentId)),
   )
 
+  const unlink = useMutation({
+    mutationFn: ({ itemId, equipmentId }: { itemId: string; equipmentId: string }) => unlinkOrderItem(itemId, equipmentId),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['company', companyId] }),
+  })
   const remove = useMutation({
     mutationFn: async () => {
       const photoPath = order.data?.photoPath
@@ -164,11 +170,33 @@ export function OrderDetailPage() {
                     {index > 0 && ', '}
                     <Link to={`/equipment/${link.equipmentId}`} className="text-accent hover:underline">
                       {equipmentName(link.equipmentId)}
-                      {line.equipment.length > 1 ? ` #${index + 1}` : link.quantity > 1 ? ` (+${link.quantity} ks)` : ''}
+                      {line.mode === 'link'
+                        ? link.unitNumbers.length > 0
+                          ? ` – kusy ${describeUnitIds(link.unitNumbers)}`
+                          : ' (prepojené)'
+                        : line.equipment.length > 1
+                          ? ` #${index + 1}`
+                          : link.quantity > 1
+                            ? ` (+${link.quantity} ks)`
+                            : ''}
                     </Link>
+                    {line.mode === 'link' && can(company, 'orders.edit') && (
+                      <button
+                        type="button"
+                        aria-label={`Zrušiť prepojenie s ${equipmentName(link.equipmentId)}`}
+                        className="ml-1 inline-flex align-middle text-muted-foreground hover:text-foreground"
+                        disabled={unlink.isPending}
+                        onClick={() => window.confirm('Zrušiť prepojenie? Technika ani objednávka sa nezmažú.') && unlink.mutate({ itemId: line.id, equipmentId: link.equipmentId })}
+                      >
+                        <X className="size-3.5" aria-hidden />
+                      </button>
+                    )}
                   </span>
                 ))}
               </p>
+            )}
+            {can(company, 'orders.edit') && (line.mode === 'none' || line.mode === 'link') && (
+              <LinkLineForm companyId={companyId} itemId={line.id} equipment={equipment.data ?? []} />
             )}
           </li>
         ))}

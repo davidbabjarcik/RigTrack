@@ -1169,6 +1169,21 @@ export function parseUnitIds(text: string) {
   return [...new Set(ids)].sort((a, b) => a - b)
 }
 
+/** „1-4, 7“ → [1, 2, 3, 4, 7] – čísla kusov aj s rozsahmi (najviac 500 kusov). */
+export function parseUnitRanges(text: string) {
+  const ids = new Set<number>()
+  for (const part of text.split(/[\s,;]+/).filter(Boolean)) {
+    const range = /^(\d+)\s*[-–]\s*(\d+)$/.exec(part)
+    if (range) {
+      const [from, to] = [Number(range[1]), Number(range[2])].sort((a, b) => a - b)
+      for (let id = from; id <= to && ids.size < 500; id++) if (id > 0) ids.add(id)
+    } else if (/^\d+$/.test(part) && Number(part) > 0) {
+      ids.add(Number(part))
+    }
+  }
+  return [...ids].sort((a, b) => a - b)
+}
+
 /** [1, 4, 8] → „#1, #4, #8“; súvislý rad skráti na „#1 – #16“. */
 export function describeUnitIds(ids: number[]) {
   if (ids.length === 0) return ''

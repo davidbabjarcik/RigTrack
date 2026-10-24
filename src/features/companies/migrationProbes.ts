@@ -30,6 +30,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0080', label: 'dochádzka na firme a doma', table: 'work_sessions', column: 'id' },
   { migration: '0081', label: 'osobný profil pre všetky firmy', table: 'personal_profiles', column: 'user_id' },
   { migration: '0082', label: 'šoféri pri eventoch', table: 'event_drives', column: 'id' },
+  { migration: '0083', label: 'faktúry ku kusom techniky', table: 'order_item_equipment', column: 'unit_numbers' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

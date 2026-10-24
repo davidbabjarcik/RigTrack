@@ -5,6 +5,7 @@ import { formatDate, formatMoney } from '@/lib/format'
 import { ExternalLink } from 'lucide-react'
 import { fetchPurchases, orderKeys } from './api'
 import { supplierProductUrl } from './model'
+import { describeUnitIds } from '@/features/equipment/model'
 
 /** Nákupy daného kusu techniky; najnovší je prvý. Bez nákupov sa sekcia nezobrazí. */
 export function PurchaseHistory({ companyId, equipmentId }: { companyId: string; equipmentId: string }) {
@@ -50,6 +51,8 @@ export function PurchaseHistory({ companyId, equipmentId }: { companyId: string;
                   {purchase.source === 'marketplace'
                     ? [`bazár ${purchase.supplier}`, purchase.seller].filter(Boolean).join(' · ')
                     : purchase.supplier}
+                  {purchase.unitNumbers.length > 0 && ` · kusy ${describeUnitIds(purchase.unitNumbers)}`}
+                  {!purchase.hasInvoice && <span className="text-accent"> · bez faktúry</span>}
                 </span>
               </span>
               <span className="shrink-0 text-right">

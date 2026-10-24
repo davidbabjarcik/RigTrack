@@ -1637,6 +1637,13 @@ begin
     exception when others then raise notice 'Kontrola order_item_equipment_quantity_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.order_item_equipment') is not null then
+    begin
+      execute $sql$alter table public.order_item_equipment drop constraint if exists order_item_equipment_unit_numbers_check$sql$;
+      execute $sql$alter table public.order_item_equipment add constraint order_item_equipment_unit_numbers_check CHECK ((cardinality(unit_numbers) <= 500)) not valid$sql$;
+    exception when others then raise notice 'Kontrola order_item_equipment_unit_numbers_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.order_items') is not null then
     begin
       execute $sql$alter table public.order_items drop constraint if exists order_items_article_number_check$sql$;
@@ -1647,7 +1654,7 @@ begin
   if to_regclass('public.order_items') is not null then
     begin
       execute $sql$alter table public.order_items drop constraint if exists order_items_mode_check$sql$;
-      execute $sql$alter table public.order_items add constraint order_items_mode_check CHECK ((mode = ANY (ARRAY['none'::text, 'separate'::text, 'bulk'::text, 'existing'::text]))) not valid$sql$;
+      execute $sql$alter table public.order_items add constraint order_items_mode_check CHECK ((mode = ANY (ARRAY['none'::text, 'separate'::text, 'bulk'::text, 'existing'::text, 'link'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola order_items_mode_check: %', sqlerrm;
     end;
   end if;
@@ -3193,6 +3200,7 @@ declare
   _attributes jsonb;
   _qty integer;
   _mode text;
+  _units integer[];
   _position integer := 0;
 begin
   if jsonb_typeof(_items) is distinct from 'array' or jsonb_array_length(_items) = 0 then
@@ -3257,6 +3265,15 @@ begin
       end if;
       insert into public.order_item_equipment (company_id, order_item_id, equipment_id, quantity)
       values (_company_id, _item_id, _equipment_id, _qty);
+    elsif _mode = 'link' then
+      -- Technika už je v evidencii: len prepojenie (počet kusov sa nemení), prípadne s číslami kusov.
+      select id into _equipment_id from public.equipment where company_id = _company_id and id = (_item ->> 'equipment_id')::uuid;
+      if _equipment_id is null then
+        raise exception 'Technika na prepojenie neexistuje' using errcode = 'no_data_found';
+      end if;
+      _units := coalesce((select array_agg(distinct value::integer order by value::integer) from jsonb_array_elements_text(coalesce(_item -> 'unit_numbers', '[]'::jsonb))), '{}');
+      insert into public.order_item_equipment (company_id, order_item_id, equipment_id, quantity, unit_numbers)
+      values (_company_id, _item_id, _equipment_id, _qty, _units);
     elsif _mode <> 'none' then
       raise exception 'Neznámy režim položky: %', _mode using errcode = 'check_violation';
     end if;
@@ -3837,6 +3854,36 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia issue_loan: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.link_order_item(_item_id uuid, _equipment_id uuid, _units integer[])
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  _company uuid;
+  _qty integer;
+begin
+  select i.company_id, i.quantity into _company, _qty from public.order_items i where i.id = _item_id;
+  if _company is null or not public.can(_company, 'orders.edit') then
+    raise exception 'Na prepojenie nemáte oprávnenie' using errcode = 'insufficient_privilege';
+  end if;
+  if not exists (select 1 from public.equipment e where e.id = _equipment_id and e.company_id = _company) then
+    raise exception 'Technika na prepojenie neexistuje' using errcode = 'no_data_found';
+  end if;
+  _units := coalesce((select array_agg(distinct u order by u) from unnest(_units) u where u > 0), '{}');
+  delete from public.order_item_equipment where order_item_id = _item_id and equipment_id = _equipment_id;
+  insert into public.order_item_equipment (company_id, order_item_id, equipment_id, quantity, unit_numbers)
+  values (_company, _item_id, _equipment_id, greatest(1, coalesce(nullif(cardinality(_units), 0), _qty)), _units);
+  update public.order_items set mode = 'link' where id = _item_id and mode = 'none';
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia link_order_item: %', sqlerrm;
 end;
 $repair$;
 
@@ -5258,6 +5305,35 @@ AS $function$
   end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia unit_ids_of: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.unlink_order_item(_item_id uuid, _equipment_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  _company uuid;
+  _mode text;
+begin
+  select i.company_id, i.mode into _company, _mode from public.order_items i where i.id = _item_id;
+  if _company is null or not public.can(_company, 'orders.edit') then
+    raise exception 'Na zmenu nemáte oprávnenie' using errcode = 'insufficient_privilege';
+  end if;
+  if _mode <> 'link' then
+    raise exception 'Zrušiť sa dá len prepojenie s existujúcou technikou' using errcode = 'check_violation';
+  end if;
+  delete from public.order_item_equipment where order_item_id = _item_id and equipment_id = _equipment_id;
+  if not exists (select 1 from public.order_item_equipment where order_item_id = _item_id) then
+    update public.order_items set mode = 'none' where id = _item_id;
+  end if;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia unlink_order_item: %', sqlerrm;
 end;
 $repair$;
 

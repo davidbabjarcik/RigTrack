@@ -1,6 +1,6 @@
 import { resolveLookup } from '@/features/equipment/api'
 import { storeCompanyPhoto } from '@/features/equipment/photo'
-import type { Lookup } from '@/features/equipment/model'
+import { parseUnitRanges, type Lookup } from '@/features/equipment/model'
 import { getSupabase } from '@/lib/supabase/client'
 import { isMissingColumn } from '@/lib/supabase/errors'
 import type { FoundLine, ItemMode, OrderDetail, OrderFormValues, OrderSource, OrderSummary, Purchase } from './model'
@@ -83,18 +83,18 @@ export async function fetchOrder(companyId: string, id: string): Promise<OrderDe
     db.from('orders_overview').select(columns()).eq('company_id', companyId).eq('id', id).maybeSingle(),
     db
       .from('order_items')
-      .select('id, name, article_number, quantity, unit_price, category_id')
+      .select('id, name, article_number, quantity, unit_price, category_id, mode')
       .eq('company_id', companyId)
       .eq('order_id', id)
       .order('position'),
-    db.from('equipment_purchases').select('order_item_id, equipment_id, quantity').eq('company_id', companyId).eq('order_id', id),
+    fetchLinks(companyId, id),
   ])
   if (fallBack(order.error)) return fetchOrder(companyId, id)
   const error = order.error ?? items.error ?? links.error
   if (error) throw error
   if (!order.data) return null
 
-  const linkRows = links.data as { order_item_id: string; equipment_id: string; quantity: number }[]
+  const linkRows = links.data as unknown as { order_item_id: string; equipment_id: string; quantity: number; unit_numbers?: number[] }[]
   const itemRows = items.data as {
     id: string
     name: string
@@ -102,6 +102,7 @@ export async function fetchOrder(companyId: string, id: string): Promise<OrderDe
     quantity: number
     unit_price: number | string
     category_id: string | null
+    mode?: ItemMode
   }[]
   return {
     ...toSummary(order.data as unknown as OverviewRow),
@@ -112,9 +113,10 @@ export async function fetchOrder(companyId: string, id: string): Promise<OrderDe
       quantity: row.quantity,
       unitPrice: Number(row.unit_price),
       categoryId: row.category_id,
+      mode: row.mode ?? 'none',
       equipment: linkRows
         .filter((link) => link.order_item_id === row.id)
-        .map((link) => ({ equipmentId: link.equipment_id, quantity: link.quantity })),
+        .map((link) => ({ equipmentId: link.equipment_id, quantity: link.quantity, unitNumbers: link.unit_numbers ?? [] })),
     })),
   }
 }
@@ -134,14 +136,16 @@ export async function createOrder(companyId: string, values: OrderFormValues, ca
       known.push(category)
     }
     // „Nepridávať do techniky“ platí pre celú objednávku.
-    const mode: ItemMode = category?.consumable || values.addToStock === false ? 'none' : item.mode
+    // Prepojenie s technikou, ktorú už máme, nič nepridáva – platí aj pri „nepridávať do techniky“.
+    const mode: ItemMode = item.mode === 'link' ? 'link' : category?.consumable || values.addToStock === false ? 'none' : item.mode
     items.push({
       name: item.name,
       article_number: item.articleNumber,
       quantity: item.quantity,
       unit_price: item.unitPrice,
       mode,
-      equipment_id: mode === 'existing' ? item.equipmentId : null,
+      equipment_id: mode === 'existing' || mode === 'link' ? item.equipmentId : null,
+      unit_numbers: mode === 'link' ? parseUnitRanges(item.unitNumbers ?? '') : [],
       equipment_name: item.equipmentName,
       category_id: category?.id ?? '',
       kind: item.kind,
@@ -205,15 +209,33 @@ export async function deleteOrder(companyId: string, id: string) {
   if (data.length === 0) throw new Error('Not deleted')
 }
 
-export async function fetchPurchases(companyId: string, equipmentId: string): Promise<Purchase[]> {
-  const { data, error } = await getSupabase()
-    .from('equipment_purchases')
-    .select('order_id, source, supplier, seller, ordered_at, currency, quantity, unit_price, article_number')
-    .eq('company_id', companyId)
-    .eq('equipment_id', equipmentId)
-    .order('ordered_at', { ascending: false })
+/** Prepojenia položiek objednávky s technikou; bez migrácie 0083 bez čísel kusov. */
+async function fetchLinks(companyId: string, orderId: string) {
+  const query = (columns: string) => getSupabase().from('equipment_purchases').select(columns).eq('company_id', companyId).eq('order_id', orderId)
+  const result = await query('order_item_id, equipment_id, quantity, unit_numbers')
+  return isMissingColumn(result.error, 'unit_numbers') ? query('order_item_id, equipment_id, quantity') : result
+}
+
+/** Dodatočne prepojí položku objednávky s technikou, ktorú už máme (počet kusov sa nemení). */
+export async function linkOrderItem(itemId: string, equipmentId: string, units: number[]) {
+  const { error } = await getSupabase().rpc('link_order_item', { _item_id: itemId, _equipment_id: equipmentId, _units: units })
   if (error) throw error
-  const rows = data as {
+}
+
+export async function unlinkOrderItem(itemId: string, equipmentId: string) {
+  const { error } = await getSupabase().rpc('unlink_order_item', { _item_id: itemId, _equipment_id: equipmentId })
+  if (error) throw error
+}
+
+export async function fetchPurchases(companyId: string, equipmentId: string): Promise<Purchase[]> {
+  const query = (columns: string) =>
+    getSupabase().from('equipment_purchases').select(columns).eq('company_id', companyId).eq('equipment_id', equipmentId).order('ordered_at', { ascending: false })
+  const base = 'order_id, source, supplier, seller, ordered_at, currency, quantity, unit_price, article_number'
+  let { data, error } = await query(base + ', unit_numbers, has_invoice')
+  // Bez migrácie 0083 nákupy bez čísel kusov a značky faktúry.
+  if (isMissingColumn(error, 'unit_numbers') || isMissingColumn(error, 'has_invoice')) ({ data, error } = await query(base))
+  if (error) throw error
+  const rows = data as unknown as {
     order_id: string
     source: OrderSource
     supplier: string
@@ -223,8 +245,12 @@ export async function fetchPurchases(companyId: string, equipmentId: string): Pr
     quantity: number
     unit_price: number | string
     article_number: string
+    unit_numbers?: number[]
+    has_invoice?: boolean
   }[]
   return rows.map((row) => ({
+    unitNumbers: row.unit_numbers ?? [],
+    hasInvoice: row.has_invoice ?? true,
     orderId: row.order_id,
     source: row.source,
     supplier: row.supplier,

@@ -21,6 +21,16 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.3 – 24. 10. 2026
+
+- **Faktúra ku kusom techniky**: v objednávke pri položke „Už to mám v technike – len prepojiť“ vyberiete
+  techniku a kusy (napr. `1-4`). Počet kusov v technike sa nezmení, nákup sa len priradí.
+- Prepojiť sa dá aj **dodatočne** pri staršej objednávke („Prepojiť s technikou, ktorú už mám“) a prepojenie
+  sa dá zrušiť.
+- **Detail techniky**: pri každom kuse vidno „faktúra (dodávateľ, dátum)“ alebo „bez faktúry“; pri nákupoch
+  ktoré kusy pokrývajú a či je k nim faktúra.
+- Nové migrácie: `0083` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.2.1 – 24. 10. 2026
 
 - **„Vyberte firmu“ prehľadnejšie**: hore sú tlačidlá Firmy, Môj profil, Moje zariadenia a Moje štatistiky –

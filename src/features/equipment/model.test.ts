@@ -24,6 +24,7 @@ import {
   type Equipment,
   type EquipmentFilter,
   unitInfoFromForm,
+  parseUnitRanges,
 } from './model'
 
 const base: Equipment = {
@@ -431,5 +432,13 @@ describe('amplifier and unit details', () => {
       { unit: 9, serial: 'CT9', inv: '' },
     ]
     expect(unitInfoFromForm(rows, new Set([1, 2, 3]))).toEqual({ '1': { serial: 'CT1', inv: 'Z-01' } })
+  })
+})
+
+describe('unit ranges', () => {
+  it('parses numbers and ranges', () => {
+    expect(parseUnitRanges('1-4, 7 ; 3')).toEqual([1, 2, 3, 4, 7])
+    expect(parseUnitRanges('6–5 x 0')).toEqual([5, 6])
+    expect(parseUnitRanges('')).toEqual([])
   })
 })

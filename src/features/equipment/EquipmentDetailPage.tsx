@@ -234,7 +234,7 @@ export function EquipmentDetailPage() {
         </section>
       )}
 
-      {equipment.trackUnits && equipment.quantity > 1 && <UnitsOverview companyId={company.companyId} equipment={equipment} />}
+      {equipment.trackUnits && equipment.quantity > 1 && <UnitsOverview companyId={company.companyId} equipment={equipment} showInvoices={can(company, 'orders.view')} />}
 
       {!simple && <OperatingHours companyId={company.companyId} equipment={equipment} canEdit={can(company, 'equipment.edit')} />}
 

@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { unitIdsOf, type Equipment } from '@/features/equipment/model'
 import { useLoans } from '@/features/loans/useLoans'
+import { useQuery } from '@tanstack/react-query'
+import { fetchPurchases, orderKeys } from '@/features/orders/api'
 import { useServiceRecords } from '@/features/service/useServiceRecords'
 import { formatDate, todayIso } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -15,12 +17,16 @@ const STATE_STYLES = {
 }
 const STATE_LABELS = { free: 'Voľný', reserved: 'Rezervovaný', loaned: 'Vypožičaný', service: 'V servise' }
 
-type Props = { companyId: string; equipment: Pick<Equipment, 'id' | 'quantity' | 'unitIds' | 'unitInfo' | 'unitPurchases'> }
+type Props = { companyId: string; equipment: Pick<Equipment, 'id' | 'quantity' | 'unitIds' | 'unitInfo' | 'unitPurchases'>; showInvoices?: boolean }
 
 /** Prehľad očíslovaných kusov techniky: kde je ktorý kus teraz a čo má za sebou. */
-export function UnitsOverview({ companyId, equipment }: Props) {
+export function UnitsOverview({ companyId, equipment, showInvoices = false }: Props) {
   const loans = useLoans(companyId)
   const records = useServiceRecords(companyId)
+  // Faktúry ku kusom: nákupy prepojené s číslami kusov (vidí, kto vidí objednávky).
+  const purchases = useQuery({ queryKey: orderKeys.purchases(companyId, equipment.id), queryFn: () => fetchPurchases(companyId, equipment.id), enabled: showInvoices })
+  const byUnit = (purchases.data ?? []).filter((purchase) => purchase.unitNumbers.length > 0)
+  const invoiceOf = (unit: number) => byUnit.find((purchase) => purchase.unitNumbers.includes(unit))
   const units = unitSummaries(equipment.id, unitIdsOf(equipment), loans.data ?? [], records.data ?? [], todayIso())
 
   return (
@@ -38,6 +44,18 @@ export function UnitsOverview({ companyId, equipment }: Props) {
               })()}
               <span className="block truncate">
                 servis {unit.serviceCount}× · výpožičky {unit.loanCount}×
+                {byUnit.length > 0 &&
+                  (() => {
+                    const purchase = invoiceOf(unit.unit)
+                    return purchase ? (
+                      <span className={purchase.hasInvoice ? 'text-emerald-700 dark:text-emerald-400' : 'text-accent'}>
+                        {' · '}
+                        {purchase.hasInvoice ? 'faktúra' : 'nákup bez faktúry'} {purchase.supplier} {formatDate(purchase.orderedAt)}
+                      </span>
+                    ) : (
+                      <span className="text-accent"> · bez faktúry</span>
+                    )
+                  })()}
               </span>
               {unit.current ? (
                 <Link to={unit.current.to} className="block truncate text-accent hover:underline">

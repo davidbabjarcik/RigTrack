@@ -429,19 +429,33 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
                 </SelectField>
               )}
 
-              {mode === 'existing' && (
+              {(mode === 'existing' || mode === 'link') && (
                 <SelectField
-                  label="Ku ktorej technike pripočítať"
+                  label={mode === 'link' ? 'Ktorá technika to je' : 'Ku ktorej technike pripočítať'}
                   error={itemErrors?.equipmentId?.message}
                   {...register(`items.${index}.equipmentId`)}
                 >
                   <option value="">— vyberte —</option>
                   {equipment.map((piece) => (
                     <option key={piece.id} value={piece.id}>
-                      {piece.name} ({piece.quantity} ks)
+                      {piece.name} ({piece.quantity} ks{piece.trackUnits ? ', po kusoch' : ''})
                     </option>
                   ))}
                 </SelectField>
+              )}
+              {mode === 'link' && (
+                <Field
+                  label="Ktoré kusy (nepovinné)"
+                  placeholder="napr. 1-4 alebo 1, 2, 5"
+                  autoComplete="off"
+                  error={itemErrors?.unitNumbers?.message}
+                  {...register(`items.${index}.unitNumbers`)}
+                />
+              )}
+              {mode === 'link' && (
+                <p className="-mt-1 text-xs text-muted-foreground">
+                  Počet kusov v technike sa nezmení – nákup (faktúra) sa len priradí. Pri technike evidovanej po kusoch zadajte čísla kusov, ktorých sa faktúra týka.
+                </p>
               )}
 
               {(mode === 'separate' || mode === 'bulk') && (
