@@ -21,6 +21,11 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.7.2 – 24. 10. 2026
+
+- Karta zamestnanca: so zapnutým „Brať údaje z osobného profilu“ sú telefón, e-mail, narodeniny, meniny,
+  vodičák aj sociálne siete hneď zamknuté – menia sa v Mojom profile. Po vypnutí sa dajú upraviť v danej firme.
+
 ### 3.7.1 – 24. 10. 2026
 
 - Opravené: údaje z Môjho profilu (telefón, e-mail, narodeniny, meniny, vodičák, sociálne siete) sa znova

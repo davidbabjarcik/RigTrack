@@ -45,7 +45,7 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
   })
   const set = (patch: Partial<StaffFields>) => setFields((current) => ({ ...current, ...patch }))
   // Kým karta berie údaje z osobného profilu, tieto polia sa tu neupravujú.
-  const synced = Boolean(person.isMember && person.staffId && fields.syncProfile && person.syncProfile)
+  const synced = Boolean(person.isMember && person.staffId && fields.syncProfile)
   const refresh = () => queryClient.invalidateQueries({ queryKey: staffKeys.list(companyId) })
   const save = useMutation({
     mutationFn: () => saveStaff(companyId, person.staffId, person.memberId, fields),
@@ -92,7 +92,8 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
           <span>
             Brať údaje z osobného profilu
             <span className="block text-xs text-muted-foreground">
-              Telefón, e-mail, narodeniny, meniny a vodičák si človek zadá raz pre všetky firmy. Vypnite, ak ich chcete v tejto firme upraviť inak.
+              Telefón, e-mail, narodeniny, meniny, vodičák a sociálne siete si človek zadá raz pre všetky firmy (Vyberte firmu → Môj profil).
+              {fields.syncProfile ? ' Tu sa preto nedajú meniť – vypnite, ak ich chcete v tejto firme upraviť inak.' : ' Vypnuté: v tejto firme sa upravujú tu.'}
             </span>
           </span>
         </label>
@@ -126,7 +127,7 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
                 aria-pressed={on}
                 disabled={synced}
                 onClick={() => set({ licences: on ? (fields.licences ?? []).filter((item) => item !== licence) : [...(fields.licences ?? []), licence] })}
-                className={cn('h-9 min-w-11 rounded-lg border px-2 text-sm font-medium', on ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
+                className={cn('h-9 min-w-11 rounded-lg border px-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60', on ? 'bg-primary text-primary-foreground' : 'bg-surface enabled:hover:bg-muted')}
               >
                 {licence}
               </button>
@@ -288,7 +289,7 @@ export function StaffDetailPage() {
         </CollapsibleSection>
       )}
 
-      {person.staffId && <SocialLinks companyId={companyId} staffId={person.staffId} canEdit={canEdit} />}
+      {person.staffId && <SocialLinks companyId={companyId} staffId={person.staffId} canEdit={canEdit} fromProfile={person.isMember && person.syncProfile} />}
       <StaffOverview companyId={companyId} person={person} events={events.data ?? []} userId={userId} />
       <StaffPastEvents person={person} events={events.data ?? []} />
       <StaffDrives companyId={companyId} person={person} events={events.data ?? []} />

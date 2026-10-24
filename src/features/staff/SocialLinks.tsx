@@ -10,7 +10,9 @@ import { SOCIAL_NETWORKS, socialUrl, type Socials } from './socials'
 const key = (companyId: string, staffId: string) => ['company', companyId, 'staff', staffId, 'socials'] as const
 
 /** Sociálne siete na karte zamestnanca (0061); upraviť ich môže človek sám aj správca tímu. */
-export function SocialLinks({ companyId, staffId, canEdit }: { companyId: string; staffId: string; canEdit: boolean }) {
+export function SocialLinks({ companyId, staffId, canEdit: mayEdit, fromProfile = false }: { companyId: string; staffId: string; canEdit: boolean; fromProfile?: boolean }) {
+  // Karta berie údaje z osobného profilu: siete sa menia v Mojom profile, nie tu.
+  const canEdit = mayEdit && !fromProfile
   const queryClient = useQueryClient()
   const socials = useQuery({
     queryKey: key(companyId, staffId),
@@ -50,6 +52,7 @@ export function SocialLinks({ companyId, staffId, canEdit }: { companyId: string
         )
       }
     >
+      {fromProfile && <p className="mb-2 text-xs text-muted-foreground">Z osobného profilu – mení sa vo Vyberte firmu → Môj profil.</p>}
       {draft ? (
         <div className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
           {SOCIAL_NETWORKS.map((network) => (
