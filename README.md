@@ -21,6 +21,11 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.7.6 – 24. 10. 2026
+
+- Pódium Nivtec: zrušené samostatné „Chcem lišty na okraje“ – „Chcem plachtu“ pridá na zvolené strany
+  plachtu aj lišty, na ktoré sa vešia.
+
 ### 3.7.5 – 24. 10. 2026
 
 - **Kto káble vyrobil**: „Všetky jeden človek“ (len meno, platí pre všetky dĺžky a kusy) alebo „Rôzni ľudia“ –

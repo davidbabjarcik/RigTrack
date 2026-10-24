@@ -252,8 +252,6 @@ export function StagePage() {
   const [railing, setRailing] = useState(false)
   const [railingSides, setRailingSides] = useState<Side[]>(['back', 'left', 'right'])
   const [stairs, setStairs] = useState<Stairs[]>([])
-  const [laths, setLaths] = useState(false)
-  const [lathSides, setLathSides] = useState<Side[]>(['front', 'left', 'right'])
   const [extraDecks, setExtraDecks] = useState<{ deckId: string; count: number }[]>([])
   const [catwalk, setCatwalk] = useState<Catwalk | null>(null)
   const [risers, setRisers] = useState<Riser[]>([])
@@ -275,7 +273,8 @@ export function StagePage() {
     orientation,
     skirtSides: skirt ? skirtSides : [],
     railingSides: railing ? railingSides : [],
-    lathSides: laths ? lathSides : [],
+    // Plachta sa vešia na lišty: kde je plachta, tam sú automaticky aj lišty.
+    lathSides: skirt ? skirtSides : [],
     stairs,
     extraDecks,
     catwalk,
@@ -382,15 +381,10 @@ export function StagePage() {
           </SelectField>
 
           <label className="flex items-center gap-2 text-sm font-medium">
-            <input type="checkbox" className="size-4" checked={laths} onChange={(event) => setLaths(event.target.checked)} />
-            Chcem lišty na okraje
-          </label>
-          {laths && <SideChoice label="Lišty na stranách (vzadu a vpravo na pero, vpredu a vľavo na drážku)" sides={lathSides} onChange={setLathSides} />}
-          <label className="flex items-center gap-2 text-sm font-medium">
             <input type="checkbox" className="size-4" checked={skirt} onChange={(event) => setSkirt(event.target.checked)} />
             Chcem plachtu
           </label>
-          {skirt && <SideChoice label="Plachta na stranách" sides={skirtSides} onChange={setSkirtSides} />}
+          {skirt && <SideChoice label="Plachta na stranách (lišty na ňu sa pridajú samy)" sides={skirtSides} onChange={setSkirtSides} />}
           <label className="flex items-center gap-2 text-sm font-medium">
             <input type="checkbox" className="size-4" checked={railing} onChange={(event) => setRailing(event.target.checked)} />
             Chcem zábradlie
