@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Download, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
+import { DevNotice } from '@/components/feedback/DevNotice'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { CalculatorTabs } from '@/components/layout/ModuleTabs'
 import { Button } from '@/components/ui/button'
@@ -454,6 +455,7 @@ export function LedCalculatorPage() {
     <>
       <CalculatorTabs />
       <PageHeader title="LED kalkulačka" description="Panely, m², rozlíšenie, prúd, hliník, rigging a procesor – aj pre viac stien naraz" />
+      <DevNotice className="mb-4 print:hidden" />
 
       <div className="mb-4 flex flex-wrap items-center gap-2" role="tablist" aria-label="Steny">
         {state.walls.map((item, index) => (

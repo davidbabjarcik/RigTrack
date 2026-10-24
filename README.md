@@ -21,6 +21,13 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.7.5 – 24. 10. 2026
+
+- **Kto káble vyrobil**: „Všetky jeden človek“ (len meno, platí pre všetky dĺžky a kusy) alebo „Rôzni ľudia“ –
+  pri každej dĺžke kto koľko kusov (napr. 5 m: Jano 2, Fero 8), s počtom kusov bez výrobcu. Viac kusov, ako
+  má dĺžka, sa uložiť nedá. Predtým sa pri viacerých dĺžkach rovnakí výrobcovia skopírovali ku každej.
+- Delay a LED kalkulačka majú upozornenie „Vo fáze vývoja“ ako Pódium.
+
 ### 3.7.4 – 24. 10. 2026
 
 - Nový kábel: dĺžky a počty kusov sú v jednom zozname (Dĺžka – Kusov); „Pridať dĺžku“ pridá ďalší riadok

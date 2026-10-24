@@ -70,7 +70,7 @@ import {
 } from './model'
 import { PurchaseLinksFields } from './PurchaseLinksFields'
 import { UnitDetailsFields } from './UnitDetailsFields'
-import { CableMakersField } from './CableMakersField'
+import { CableMakersField, makerModeOf, makersOver, makersToSave, type Maker, type MakerMode } from './CableMakersField'
 import { isCollapsed, setCollapsed, subscribeCollapsed } from '@/components/layout/collapsed'
 import { CHECK_LEVEL_LABELS, CHECK_LEVELS, levelDays, useCheckLevels } from '@/features/checks/levels'
 import { useEquipmentLookups } from './useEquipmentLookups'
@@ -378,24 +378,44 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
   // Ďalšie dĺžky nového kábla (namiesto samostatnej „Sady káblov“).
-  const [extraLengths, setExtraLengths] = useState<{ lengthM: number; quantity: number }[]>([])
+  const [extraLengths, setExtraLengths] = useState<{ lengthM: number; quantity: number; makers?: Maker[] }[]>([])
+  // Kto káble vyrobil: nič, jeden človek na všetky kusy, alebo pri každej dĺžke kto koľko.
+  const savedMakers = equipment?.attributes.makers ?? []
+  const [makerMode, setMakerMode] = useState<MakerMode>(() => makerModeOf(savedMakers, equipment?.quantity ?? 0))
+  const [oneMaker, setOneMaker] = useState(() => (makerModeOf(savedMakers, equipment?.quantity ?? 0) === 'one' ? savedMakers[0].name : ''))
+  const mainMakers = useWatch({ control, name: 'makers' }) ?? []
   // Nový bežný kábel: dĺžky a počty v jednom zozname (počet kusov dole sa vtedy neukazuje).
   const multiLength = !equipment && kind === 'cable' && (cableType ?? 'cable') === 'cable'
   // Sieť a servis sa ukážu len pri technike, ktorá ich má (alebo keď ich zaškrtnete).
   const [showNetwork, setShowNetwork] = useState(() => Boolean(equipment?.macAddress || equipment?.ipAddress || equipment?.attributes.ipDhcp))
   const [showService, setShowService] = useState(() => Boolean(equipment?.serviceIntervalMonths || equipment?.lastServiceOn))
 
+  const lengthTitle = (value: number | undefined) => (value !== undefined && Number.isFinite(value) && value > 0 ? `${String(value).replace('.', ',')} m` : 'Dĺžka bez zadania')
+  const makerRows = [
+    { key: 'main', title: multiLength || lengthM ? lengthTitle(lengthM) : 'Táto položka', quantity: Number.isFinite(quantity) ? quantity : 0, makers: mainMakers },
+    ...(multiLength ? extraLengths.map((row, i) => ({ key: `x${i}`, title: lengthTitle(row.lengthM), quantity: Number.isFinite(row.quantity) ? row.quantity : 0, makers: row.makers ?? [] })) : []),
+  ]
+  const makersInvalid = kind === 'cable' && makerMode === 'split' && makerRows.some(makersOver)
+
   const save = useMutation({
     mutationFn: async (values: EquipmentFormValues) => {
       const colorEdit = values.kind === 'cable' && values.lengthM !== undefined ? colorEdits[values.lengthM] : undefined
       if (colorEdit) await saveCableColor(companyId, { lengthM: values.lengthM!, ...colorEdit })
-      const id = await saveEquipment({ companyId, id: equipment?.id ?? null, values, categories, locations })
-      // Nový kábel: každá ďalšia dĺžka je samostatná položka s rovnakým konektorom a kategóriou.
+      const isCable = values.kind === 'cable'
+      const id = await saveEquipment({
+        companyId,
+        id: equipment?.id ?? null,
+        values: isCable ? { ...values, makers: makersToSave(makerMode, oneMaker, values.quantity, values.makers ?? []) } : values,
+        categories,
+        locations,
+      })
+      // Nový kábel: každá ďalšia dĺžka je samostatná položka s rovnakým konektorom a kategóriou (a svojimi výrobcami).
       if (!equipment && values.kind === 'cable' && (values.cableType ?? 'cable') === 'cable') {
         const base = cableBaseName(values.name)
         const known = [...categories]
         for (const extra of extraLengths.filter((row) => row.lengthM > 0 && row.quantity > 0)) {
-          await saveEquipment({ companyId, id: null, values: { ...values, name: cableName(base, extra.lengthM), lengthM: extra.lengthM, quantity: extra.quantity }, categories: known, locations })
+          const makers = makersToSave(makerMode, oneMaker, extra.quantity, extra.makers ?? [])
+          await saveEquipment({ companyId, id: null, values: { ...values, name: cableName(base, extra.lengthM), lengthM: extra.lengthM, quantity: extra.quantity, makers }, categories: known, locations })
         }
       }
       return id
@@ -536,7 +556,19 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               canEdit={canEditColors}
             />
           </div>
-          <CableMakersField companyId={companyId} control={control} register={register} quantity={quantity} />
+          <CableMakersField
+            companyId={companyId}
+            mode={makerMode}
+            onMode={setMakerMode}
+            oneName={oneMaker}
+            onOneName={setOneMaker}
+            rows={makerRows}
+            onRow={(key, makers) =>
+              key === 'main'
+                ? setValue('makers', makers, { shouldDirty: true })
+                : setExtraLengths(extraLengths.map((item, i) => (`x${i}` === key ? { ...item, makers } : item)))
+            }
+          />
         </Group>
       )}
 
@@ -1242,8 +1274,9 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         </p>
       )}
 
+      {makersInvalid && <p className="text-sm text-destructive">Pri niektorej dĺžke je výrobcov viac kusov, ako má kábel – opravte „Kto káble vyrobil“.</p>}
       <div className="flex gap-3">
-        <Button type="submit" disabled={save.isPending}>
+        <Button type="submit" disabled={save.isPending || makersInvalid}>
           {save.isPending ? 'Ukladám…' : 'Uložiť'}
         </Button>
         <LinkButton to={cancelTo} variant="outline">

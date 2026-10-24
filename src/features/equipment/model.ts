@@ -507,7 +507,7 @@ export const equipmentSchema = z.object({
   boxDepthCm: optionalNumber(1000),
   boxHeightCm: optionalNumber(1000),
   subDelayMs: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(200, 'Najviac 200 ms').optional(),
-  makers: z.array(z.object({ name: z.string().trim().max(80), count: z.number('Zadajte počet').int('Celé číslo').min(1, 'Aspoň 1').max(100000) })).max(10).optional(),
+  makers: z.array(z.object({ name: z.string().trim().max(80).catch(''), count: z.number().int().min(0).max(100000).catch(0) })).max(10).optional(),
   dmxModes: z
     .array(
       z.object({

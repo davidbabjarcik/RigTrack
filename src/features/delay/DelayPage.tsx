@@ -6,6 +6,7 @@ import { SelectField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
+import { DevNotice } from '@/components/feedback/DevNotice'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { CalculatorTabs } from '@/components/layout/ModuleTabs'
 import { Field } from '@/components/ui/field'
@@ -300,6 +301,7 @@ export function DelayPage() {
     <>
       <CalculatorTabs />
       <PageHeader title="Delay kalkulačka" description="Suby a zvuk: zarovnanie, delay veža, cardioid, end-fire, rad a arc" />
+      <DevNotice className="mb-4 print:hidden" />
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Druh výpočtu">
         {MODES.map((item) => (
