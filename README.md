@@ -21,6 +21,11 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.7.1 – 24. 10. 2026
+
+- Opravené: údaje z Môjho profilu (telefón, e-mail, narodeniny, meniny, vodičák, sociálne siete) sa znova
+  prenášajú do kariet zamestnanca vo všetkých firmách; pri spustení `0086` sa všetky karty raz dorovnajú.
+
 ### 3.7 – 24. 10. 2026
 
 - **Na PC širšie a prehľadnejšie**: „Vyberte firmu“ s firmami v mriežke a dlaždicami Môj profil, Moja technika,

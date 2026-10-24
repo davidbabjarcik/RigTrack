@@ -197,8 +197,8 @@ $$;
 revoke execute on function public.split_equipment_into_case(uuid, uuid, integer), public.create_cases_bulk(uuid, text, integer, integer, uuid, uuid, integer) from public, anon;
 grant execute on function public.split_equipment_into_case(uuid, uuid, integer), public.create_cases_bulk(uuid, text, integer, integer, uuid, uuid, integer) to authenticated;
 
--- 6) Sociálne siete z profilu do kariet: funkcie prenosu nanovo (ak by ich staršia oprava prepísala verziou
---    bez sociálnych sietí) a jednorazové dorovnanie všetkých kariet.
+-- 6) Profil → karty zamestnanca (telefón, e-mail, narodeniny, meniny, vodičák, sociálne siete): funkcie aj
+--    spúšťače nanovo (ak by v databáze chýbali alebo boli staršie) a jednorazové dorovnanie všetkých kariet.
 create or replace function public.apply_personal_profile(_user_id uuid)
 returns void language plpgsql security definer set search_path = '' as $$
 declare
@@ -241,4 +241,19 @@ end;
 $$;
 revoke execute on function public.fill_staff_from_profile() from public, anon, authenticated;
 
-select public.apply_personal_profile(user_id) from public.personal_profiles where socials <> '{}'::jsonb;
+create or replace function public.personal_profile_changed()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.apply_personal_profile(new.user_id);
+  return new;
+end;
+$$;
+revoke execute on function public.personal_profile_changed() from public, anon, authenticated;
+drop trigger if exists personal_profiles_apply on public.personal_profiles;
+create trigger personal_profiles_apply after insert or update on public.personal_profiles
+  for each row execute function public.personal_profile_changed();
+drop trigger if exists staff_fill_from_profile on public.staff;
+create trigger staff_fill_from_profile before insert or update of sync_profile on public.staff
+  for each row execute function public.fill_staff_from_profile();
+
+select public.apply_personal_profile(user_id) from public.personal_profiles;
