@@ -25,6 +25,8 @@ import {
   type EquipmentFilter,
   unitInfoFromForm,
   parseUnitRanges,
+  cableMakers,
+  cableMeters,
 } from './model'
 
 const base: Equipment = {
@@ -440,5 +442,21 @@ describe('unit ranges', () => {
     expect(parseUnitRanges('1-4, 7 ; 3')).toEqual([1, 2, 3, 4, 7])
     expect(parseUnitRanges('6–5 x 0')).toEqual([5, 6])
     expect(parseUnitRanges('')).toEqual([])
+  })
+})
+
+describe('cable stats', () => {
+  const cable = (connector: string, lengthM: number, quantity: number, makers?: { name: string; count: number }[], status = 'available') =>
+    ({ kind: 'cable', quantity, status, attributes: { connector, lengthM, makers } }) as never
+  it('sums meters by connector and counts makers', () => {
+    const items = [cable('XLR', 10, 8, [{ name: 'Jano', count: 6 }, { name: 'Fero', count: 2 }]), cable('XLR', 5, 4, [{ name: 'jano ', count: 4 }]), cable('Schuko predlžovačka', 25, 3), cable('XLR', 20, 9, undefined, 'retired')]
+    expect(cableMeters(items)).toEqual([
+      { id: 'XLR', label: 'XLR', value: 100 },
+      { id: 'Schuko predlžovačka', label: 'Schuko predlžovačka', value: 75 },
+    ])
+    expect(cableMakers(items)).toEqual([
+      { id: 'jano', label: 'Jano', value: 10 },
+      { id: 'fero', label: 'Fero', value: 2 },
+    ])
   })
 })

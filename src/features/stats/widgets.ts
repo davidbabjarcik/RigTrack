@@ -30,6 +30,7 @@ export const STAT_WIDGETS = [
   { id: 'equipment.packed', section: 'equipment', kind: 'tile', label: 'V cases a mimo nich' },
   { id: 'loans.open', section: 'equipment', kind: 'tile', label: 'Otvorené výpožičky' },
   { id: 'equipment.byStatus', section: 'equipment', kind: 'ranking', label: 'Technika podľa stavu' },
+  { id: 'equipment.cableMeters', section: 'equipment', kind: 'ranking', label: 'Káble – metre podľa konektora' },
   { id: 'equipment.value', section: 'equipment', kind: 'tile', label: 'Hodnota techniky', needs: ['equipment.edit'] },
   { id: 'equipment.valueByCategory', section: 'equipment', kind: 'ranking', label: 'Hodnota techniky podľa kategórií', needs: ['equipment.edit'] },
   { id: 'loans.mostLent', section: 'equipment', kind: 'ranking', label: 'Najviac požičiavaná technika' },
@@ -44,6 +45,7 @@ export const STAT_WIDGETS = [
   { id: 'people.hours', section: 'people', kind: 'ranking', label: 'Odpracované hodiny (z výkazov)' },
   { id: 'people.duties', section: 'people', kind: 'ranking', label: 'Kto čo robil najviac (činnosti pri eventoch)' },
   { id: 'people.drives', section: 'people', kind: 'ranking', label: 'Šoféri – najazdené km pri eventoch' },
+  { id: 'people.cables', section: 'people', kind: 'ranking', label: 'Kto spravil najviac káblov' },
 ] as const satisfies readonly { id: string; section: StatSectionId; kind: 'tile' | 'ranking' | 'chart'; label: string; needs?: readonly PermissionKey[] }[]
 
 export type StatWidgetId = (typeof STAT_WIDGETS)[number]['id']

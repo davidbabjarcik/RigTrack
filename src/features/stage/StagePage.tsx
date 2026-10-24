@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Plus, Printer, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -17,6 +17,7 @@ import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { fetchStageConfig, stageKeys } from './api'
 import {
+  deckLegs,
   MAX_STAGE_M,
   planStage,
   quantitiesByEquipment,
@@ -54,8 +55,10 @@ const GROUP_ICONS: Record<string, PartKind> = {
  * Pôdorys pódia zhora: predná hrana (k publiku) dole. Pero dosiek je naznačené hrubšou čiarou
  * na zadnej a pravej hrane každej dosky; lišty zelenou, plachta prerušovane, zábradlie modrou, schody pred hranou.
  */
-export function StageDrawing({ request, plan, mainId }: { request: StageRequest; plan: StagePlan; mainId: string }) {
+export function StageDrawing({ request, plan, mainId, showLegs = false }: { request: StageRequest; plan: StagePlan; mainId: string; showLegs?: boolean }) {
   const { widthM: w, depthM: d } = request
+  // Poradie stavania a nohy: v ktorej doske noha je (rohy bez bodky ležia na nohe suseda).
+  const legs = showLegs ? deckLegs([...plan.decks, ...plan.catwalkDecks], plan.firstDeck) : []
   const longest = Math.max(0, ...plan.stairs.map((item) => item.steps * item.stepDepthM), request.catwalk?.lengthM ?? 0)
   const pad = 28 + longest * PX
   const width = w * PX + pad * 2
@@ -140,7 +143,32 @@ export function StageDrawing({ request, plan, mainId }: { request: StageRequest;
         const [x1, y1, x2, y2] = line(segment, 7)
         return <line key={`r-${index}`} x1={x1} y1={y1} x2={x2} y2={y2} className="stroke-sky-600" strokeWidth={5} strokeLinecap="round" />
       })}
-      {plan.firstDeck && (
+      {showLegs &&
+        legs.map(({ deck, order, corners }) => {
+          const cx = X(deck.x + deck.w / 2)
+          const cy = Y(deck.y + deck.d / 2)
+          const inset = 8
+          const spot = (corner: (typeof corners)[number]) => [
+            corner.endsWith('l') ? X(deck.x) + inset : X(deck.x + deck.w) - inset,
+            corner.startsWith('f') ? Y(deck.y) - inset : Y(deck.y + deck.d) + inset,
+          ]
+          return (
+            <g key={`n-${order}`}>
+              <circle cx={cx} cy={cy - 4} r={10} className={order === 1 ? 'fill-emerald-600' : 'fill-background stroke-foreground/40'} strokeWidth={1} />
+              <text x={cx} y={cy} textAnchor="middle" className={cn('text-[11px] font-bold', order === 1 ? 'fill-white' : 'fill-foreground')}>
+                {order}
+              </text>
+              <text x={cx} y={cy + 17} textAnchor="middle" className="fill-muted-foreground text-[9px]">
+                {String(deck.w).replace('.', ',')}×{String(deck.d).replace('.', ',')}
+              </text>
+              {corners.map((corner) => {
+                const [x, y] = spot(corner)
+                return <circle key={corner} cx={x} cy={y} r={4.5} className="fill-blue-600 stroke-white" strokeWidth={1} />
+              })}
+            </g>
+          )
+        })}
+      {!showLegs && plan.firstDeck && (
         <g>
           <circle cx={X(plan.firstDeck.x + plan.firstDeck.w / 2)} cy={Y(plan.firstDeck.y + plan.firstDeck.d / 2)} r={11} className="fill-emerald-600" />
           <text x={X(plan.firstDeck.x + plan.firstDeck.w / 2)} y={Y(plan.firstDeck.y + plan.firstDeck.d / 2) + 4.5} textAnchor="middle" className="fill-white text-[13px] font-bold">
@@ -233,6 +261,7 @@ export function StagePage() {
   const [stairsToTop, setStairsToTop] = useState(false)
   const [stairsRailingSides, setStairsRailingSides] = useState(0)
   const [eventId, setEventId] = useState(params.get('event') ?? '')
+  const [showLegs, setShowLegs] = useState(true)
 
   const today = todayIso()
   const upcoming = (events.data ?? []).filter((event) => isLive(event) && event.endsOn >= today).sort((a, b) => a.startsOn.localeCompare(b.startsOn))
@@ -288,17 +317,23 @@ export function StagePage() {
         title="Pódium"
         description={`Kalkulačka pódia ${config.data.name}`}
         action={
-          can(company, 'lookups.manage') && (
-            <LinkButton to="/settings?tab=stage" variant="outline">
-              Nastavenie Nivtec
-            </LinkButton>
-          )
+          <div className="flex flex-wrap gap-2 print:hidden">
+            <Button variant="outline" onClick={() => window.print()}>
+              <Printer className="size-4" aria-hidden />
+              Tlačiť / PDF
+            </Button>
+            {can(company, 'lookups.manage') && (
+              <LinkButton to="/settings?tab=stage" variant="outline">
+                Nastavenie Nivtec
+              </LinkButton>
+            )}
+          </div>
         }
       />
-      <DevNotice className="mb-4" />
+      <DevNotice className="mb-4 print:hidden" />
 
-      <div className="grid gap-6 lg:grid-cols-[22rem_1fr]">
-        <div className="flex flex-col gap-4">
+      <div className="grid gap-6 lg:grid-cols-[22rem_1fr] print:block">
+        <div className="flex flex-col gap-4 print:hidden">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Šírka (m)" type="number" min={1} max={MAX_STAGE_M} step={0.5} value={widthM} onChange={(event) => setWidth(Number(event.target.value))} />
             <Field label="Hĺbka (m)" type="number" min={1} max={MAX_STAGE_M} step={0.5} value={depthM} onChange={(event) => setDepth(Number(event.target.value))} />
@@ -552,13 +587,18 @@ export function StagePage() {
 
         <div className="flex min-w-0 flex-col gap-4">
           <div className="rounded-xl border bg-surface p-3">
-            <StageDrawing request={request} plan={plan} mainId={config.data.decks.find((item) => !item.triangle)?.id ?? ''} />
+            <label className="mb-2 flex items-center gap-2 text-sm print:hidden">
+              <input type="checkbox" className="size-4" checked={showLegs} onChange={(event) => setShowLegs(event.target.checked)} />
+              Ukázať poradie dosiek a nohy
+            </label>
+            <StageDrawing request={request} plan={plan} mainId={config.data.decks.find((item) => !item.triangle)?.id ?? ''} showLegs={showLegs} />
             <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span>
                 {request.widthM} × {request.depthM} m = {request.widthM * request.depthM} m², výška {heightCm} cm
               </span>
               <span className="text-yellow-700 dark:text-yellow-300">━ pero dosky</span>
-              <span className="text-emerald-600">● 1 – tu začať stavať</span>
+              <span className="text-emerald-600">● 1 – tu začať stavať{showLegs && ', ďalej podľa čísel'}</span>
+              {showLegs && <span className="text-blue-600">● noha – patrí do tejto dosky (roh bez bodky leží na nohe susednej dosky)</span>}
               <span className="text-amber-700 dark:text-amber-300">■ menšia doska</span>
               {plan.lathEdges.length > 0 && <span className="text-emerald-600">━ lišty</span>}
               {plan.risers.length > 0 && <span className="text-violet-600 dark:text-violet-300">▭ rizer (prerušovane na kolieskach)</span>}
@@ -634,7 +674,7 @@ export function StagePage() {
           )}
 
           {can(company, 'events.edit') && totals.size > 0 && (
-            <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-surface p-4">
+            <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-surface p-4 print:hidden">
               <SelectField label="Pridať diely na event" className="min-w-56 flex-1" value={eventId} onChange={(event) => setEventId(event.target.value)}>
                 <option value="">— vyberte event —</option>
                 {upcoming.map((event) => (

@@ -76,7 +76,7 @@ export function AppLayout() {
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
-      <aside className="hidden w-60 shrink-0 flex-col border-r bg-surface md:flex">
+      <aside className="hidden w-60 shrink-0 flex-col border-r bg-surface md:flex print:hidden">
         <div className="flex h-16 items-center gap-2 px-5">
           <Link to="/" className="flex flex-1 items-center gap-2 rounded-lg" title="Na prehľad">
             <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8 rounded-lg" />
@@ -104,7 +104,7 @@ export function AppLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <OfflineBanner />
         {/* Na mobile nie je bočný panel, preto má vlastnú úzku hlavičku. */}
-        <header className="flex h-12 items-center gap-2 border-b bg-surface px-4 md:hidden">
+        <header className="flex h-12 items-center gap-2 border-b bg-surface px-4 md:hidden print:hidden">
           <Link to="/" className="flex flex-1 items-center gap-2" title="Na prehľad">
             <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-6 rounded-md" />
             <span className="font-semibold tracking-tight">RigTrack</span>
@@ -122,7 +122,7 @@ export function AppLayout() {
 
       <nav
         aria-label="Hlavná navigácia"
-        className="fixed inset-x-0 bottom-0 z-40 flex border-t bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex border-t bg-surface pb-[env(safe-area-inset-bottom)] md:hidden print:hidden"
       >
         {pinnedItems.map((item) => (
           <TabLink key={item.id} item={item} />

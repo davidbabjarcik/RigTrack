@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { coverLength, DEFAULT_STAGE_CONFIG, legPoints, openSegments, planStage, quantitiesByEquipment, readStageConfig, type StageRequest } from './model'
+import { coverLength, DEFAULT_STAGE_CONFIG, legPoints, openSegments, planStage, quantitiesByEquipment, readStageConfig, type StageRequest, deckLegs } from './model'
 
 const config = {
   ...DEFAULT_STAGE_CONFIG,
@@ -172,5 +172,25 @@ describe('helpers', () => {
     expect(read.name).toBe('Bütec')
     expect(read.legs).toEqual(DEFAULT_STAGE_CONFIG.legs)
     expect('clamp' in read).toBe(false)
+  })
+})
+
+describe('legs per deck', () => {
+  it('gives the first deck all legs and later decks only missing corners', () => {
+    // Pódium 4 × 2 m z dosiek 2 × 1: dva stĺpce, dva rady.
+    const decks = [
+      { x: 0, y: 0, w: 2, d: 1, typeId: 'd' },
+      { x: 2, y: 0, w: 2, d: 1, typeId: 'd' },
+      { x: 0, y: 1, w: 2, d: 1, typeId: 'd' },
+      { x: 2, y: 1, w: 2, d: 1, typeId: 'd' },
+    ]
+    const legs = deckLegs(decks, decks[3])
+    expect(legs.map((item) => [item.order, item.deck.x, item.deck.y, item.corners.length])).toEqual([
+      [1, 2, 1, 4],
+      [2, 2, 0, 2],
+      [3, 0, 1, 2],
+      [4, 0, 0, 1],
+    ])
+    expect(legs.reduce((sum, item) => sum + item.corners.length, 0)).toBe(legPoints(decks))
   })
 })

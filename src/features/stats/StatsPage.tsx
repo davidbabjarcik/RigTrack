@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
-import { formatNumber } from '@/features/equipment/model'
+import { cableMakers, cableMeters, formatNumber } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { valueSummary } from '@/features/equipment/value'
 import { dutyKeys, fetchAllDuties, fetchWorkLogs, useDutyTypes } from '@/features/duties/api'
@@ -253,6 +253,9 @@ export function StatsPage() {
         empty="Technika zatiaľ nemá zadanú nákupnú cenu (Technika → Upraviť → Nákup)."
       />
     ),
+    'equipment.cableMeters': (
+      <Ranking title="Káble – metre podľa konektora" rows={cableMeters(equipment.data ?? [])} format={(value) => `${formatNumber(value)} m`} empty="Zatiaľ žiadne káble s dĺžkou." />
+    ),
     'equipment.packed': <Tile label="V cases" value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} mimo cases`} />,
     'loans.open': (
       <Tile
@@ -287,6 +290,9 @@ export function StatsPage() {
         format={(value) => `${formatNumber(value)} km`}
         empty="Zatiaľ žiadne zapísané jazdy (detail eventu → Kto šoféroval)."
       />
+    ),
+    'people.cables': (
+      <Ranking title="Kto spravil najviac káblov" rows={cableMakers(equipment.data ?? [])} format={(value) => `${value} ks`} empty="Pri kábloch zatiaľ nie je zapísané, kto ich vyrobil (Technika → kábel → Kto kábel vyrobil)." />
     ),
     'people.duties':
       dutyRankings.length === 0 ? (

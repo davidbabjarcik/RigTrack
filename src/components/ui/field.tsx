@@ -2,6 +2,7 @@ import {
   useId,
   type InputHTMLAttributes,
   type ReactNode,
+  type Ref,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react'
@@ -63,7 +64,7 @@ export function SelectField({
   id,
   children,
   ...props
-}: SelectHTMLAttributes<HTMLSelectElement> & Common) {
+}: SelectHTMLAttributes<HTMLSelectElement> & Common & { ref?: Ref<HTMLSelectElement> }) {
   const { fieldId, aria } = useFieldProps(id, error)
   return (
     <FieldWrapper id={fieldId} label={label} hideLabel={hideLabel} error={error} className={className}>

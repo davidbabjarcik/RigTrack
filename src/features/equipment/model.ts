@@ -195,6 +195,8 @@ export const COMMON_CONNECTORS = [
 export type EquipmentAttributes = {
   connector?: string
   lengthM?: number
+  /** Kábel: kto ho vyrobil a koľko kusov (z 10 XLR spravil 8 Jano a 2 Fero). */
+  makers?: { name: string; count: number }[]
   powerW?: number
   lightSource?: LightSource
   /** Typ hliníka (1–4-point, ground support, príslušenstvo, stojany / lifty). */
@@ -505,6 +507,7 @@ export const equipmentSchema = z.object({
   boxDepthCm: optionalNumber(1000),
   boxHeightCm: optionalNumber(1000),
   subDelayMs: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(200, 'Najviac 200 ms').optional(),
+  makers: z.array(z.object({ name: z.string().trim().max(80), count: z.number('Zadajte počet').int('Celé číslo').min(1, 'Aspoň 1').max(100000) })).max(10).optional(),
   dmxModes: z
     .array(
       z.object({
@@ -626,6 +629,7 @@ export function attributesFor(
         | 'stageBrand'
         | 'stageSize'
         | 'dmxModes'
+        | 'makers'
         | 'audioType'
         | 'djType'
         | 'videoType'
@@ -800,6 +804,10 @@ export function attributesFor(
     if (values.audioType === 'subwoofer' && values.subDelayMs !== undefined) attributes.subDelayMs = values.subDelayMs
   }
   if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels }))
+  if (values.kind === 'cable') {
+    const makers = (values.makers ?? []).filter((maker) => maker.name.trim() && maker.count > 0).map((maker) => ({ name: maker.name.trim(), count: maker.count }))
+    if (makers.length > 0) attributes.makers = makers
+  }
   // Pixely sa dajú zadať priamo, alebo sa dopočítajú z rozmeru a pixel pitchu (500 mm / P3.9 = 128 px).
   const pitch = values.ledPitchMm
   const pxW = values.ledPxW ?? (pitch && values.ledWidthMm ? Math.round(values.ledWidthMm / pitch) : undefined)
@@ -883,6 +891,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.madeYear !== undefined && `${a.madeYear}${a.madeIn ? ` · ${a.madeIn}` : ''}`,
     a.madeYear === undefined && a.madeIn && `vyrobené: ${a.madeIn}`,
     ampPower(a),
+    a.makers?.length && `vyrobil ${a.makers.map((maker) => `${maker.name} ${maker.count}×`).join(', ')}`,
     a.condition && CONDITION_LABELS[a.condition].toLowerCase(),
     a.cableType === 'di' && 'DI box',
     a.cableType === 'adapter' && 'Redukcia',
@@ -1189,4 +1198,36 @@ export function describeUnitIds(ids: number[]) {
   if (ids.length === 0) return ''
   const consecutive = ids.length > 2 && ids.every((id, index) => index === 0 || id === ids[index - 1] + 1)
   return consecutive ? `#${ids[0]} – #${ids[ids.length - 1]}` : ids.map((id) => `#${id}`).join(', ')
+}
+
+/** Metre káblov podľa konektora (kábel × dĺžka × kusy), od najviac; vyradené sa nerátajú. */
+export function cableMeters(items: Pick<Equipment, 'kind' | 'attributes' | 'quantity' | 'status'>[]) {
+  const totals = new Map<string, number>()
+  for (const item of items) {
+    if (item.kind !== 'cable' || item.status === 'retired' || item.attributes.cableType === 'adapter' || item.attributes.cableType === 'di') continue
+    const length = item.attributes.lengthM ?? 0
+    if (length <= 0) continue
+    const key = item.attributes.connector?.trim() || 'Bez konektora'
+    totals.set(key, (totals.get(key) ?? 0) + length * item.quantity)
+  }
+  return [...totals].map(([label, meters]) => ({ id: label, label, value: Math.round(meters * 10) / 10 })).sort((a, b) => b.value - a.value)
+}
+
+/** Kto spravil najviac káblov (súčet kusov podľa mena, bez ohľadu na veľké písmená). */
+export function cableMakers(items: Pick<Equipment, 'kind' | 'attributes'>[], limit = 10) {
+  const totals = new Map<string, { label: string; count: number }>()
+  for (const item of items) {
+    if (item.kind !== 'cable') continue
+    for (const maker of item.attributes.makers ?? []) {
+      const key = maker.name.trim().toLowerCase()
+      if (!key) continue
+      const current = totals.get(key) ?? { label: maker.name.trim(), count: 0 }
+      current.count += maker.count
+      totals.set(key, current)
+    }
+  }
+  return [...totals]
+    .map(([id, value]) => ({ id, label: value.label, value: value.count }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, limit)
 }

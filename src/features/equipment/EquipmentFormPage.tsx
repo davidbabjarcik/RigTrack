@@ -70,6 +70,7 @@ import {
 } from './model'
 import { PurchaseLinksFields } from './PurchaseLinksFields'
 import { UnitDetailsFields } from './UnitDetailsFields'
+import { CableMakersField } from './CableMakersField'
 import { isCollapsed, setCollapsed, subscribeCollapsed } from '@/components/layout/collapsed'
 import { CHECK_LEVEL_LABELS, CHECK_LEVELS, levelDays, useCheckLevels } from '@/features/checks/levels'
 import { useEquipmentLookups } from './useEquipmentLookups'
@@ -148,6 +149,7 @@ const EMPTY: EquipmentFormValues = {
   purchasedOn: '',
   unitPurchases: [],
   unitInfo: [],
+  makers: [],
   links: [],
   cloneOf: '',
   captureMatch: '',
@@ -252,6 +254,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     owner: equipment.ownerStaffId ?? '',
     purchasedOn: equipment.purchasedOn ?? '',
     unitPurchases: Object.entries(equipment.unitPurchases ?? {}).map(([unit, date]) => ({ unit: Number(unit), date })),
+    makers: equipment.attributes.makers ?? [],
     unitInfo: Object.entries(equipment.unitInfo ?? {}).map(([unit, info]) => ({ unit: Number(unit), serial: info.serial ?? '', inv: info.inv ?? '' })),
     links: equipment.links ?? [],
     cloneOf: equipment.cloneOf ?? '',
@@ -521,6 +524,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               canEdit={canEditColors}
             />
           </div>
+          <CableMakersField companyId={companyId} control={control} register={register} quantity={quantity} />
         </Group>
       )}
 

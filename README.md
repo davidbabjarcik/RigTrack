@@ -21,6 +21,16 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.4 – 24. 10. 2026
+
+- **Nivtec – plán pódia**: na nákrese má každá doska číslo (poradie stavania od dosky 1) a rozmer a modré bodky
+  ukazujú, v ktorých rohoch ktorej dosky je noha – roh bez bodky leží na nohe susednej dosky. Dá sa vypnúť.
+- **Tlačiť / PDF** pri pódiu: vytlačí sa nákres so zoznamom dielov (bez menu a ovládania).
+- **Káble – kto ich vyrobil**: pri kábli sa zapíše, kto ho spravil, aj rozdelene (z 10 XLR spravil 8 Jano
+  a 2 Fero). V Štatistikách → Ľudia je rebríček, kto spravil najviac káblov.
+- **Štatistiky → Technika**: koľko metrov káblov máte podľa konektora (XLR, predlžovačky…).
+- **Vlastník techniky**: správca tímu vie vo výbere vlastníka rovno pridať človeka bez účtu (napr. brigádnika).
+
 ### 3.3 – 24. 10. 2026
 
 - **Faktúra ku kusom techniky**: v objednávke pri položke „Už to mám v technike – len prepojiť“ vyberiete
