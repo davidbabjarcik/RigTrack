@@ -19,6 +19,7 @@ import { ROLE_LABELS } from '@/lib/roles'
 import { useMembers } from '@/features/companies/useMembers'
 import { clearStaffPhoto, deleteStaff, saveStaff, setStaffPhoto, staffKeys, type StaffFields } from './api'
 import { LICENCES, upcomingEvents, type Person } from './model'
+import { SkillChips, SkillsField } from './SkillsField'
 import { NameDayField } from './NameDayField'
 import { formatNameDay } from './celebrations'
 import { cn } from '@/lib/utils'
@@ -65,7 +66,6 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
       ['Narodeniny', person.birthDate ? formatDate(person.birthDate) : ''],
       ['Meniny', formatNameDay(person.nameDay)],
       ['Vodičák', person.licences.join(', ')],
-      ['Zručnosti', person.skills],
       ['Poznámka', person.note],
     ]
     return (
@@ -78,7 +78,15 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
               <dd className="whitespace-pre-wrap">{value}</dd>
             </div>
           ))}
-        {rows.every(([, value]) => !value) && <p className="text-sm text-muted-foreground">Zatiaľ bez ďalších údajov.</p>}
+        {person.skills && (
+          <div>
+            <dt className="text-sm text-muted-foreground">Zručnosti</dt>
+            <dd className="mt-1">
+              <SkillChips value={person.skills} />
+            </dd>
+          </div>
+        )}
+        {rows.every(([, value]) => !value) && !person.skills && <p className="text-sm text-muted-foreground">Zatiaľ bez ďalších údajov.</p>}
       </dl>
     )
   }
@@ -92,7 +100,7 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
           <span>
             Brať údaje z osobného profilu
             <span className="block text-xs text-muted-foreground">
-              Telefón, e-mail, narodeniny, meniny, vodičák a sociálne siete si človek zadá raz pre všetky firmy (Vyberte firmu → Môj profil).
+              Telefón, e-mail, narodeniny, meniny, vodičák, zručnosti a sociálne siete si človek zadá raz pre všetky firmy (Vyberte firmu → Môj profil).
               {fields.syncProfile ? ' Tu sa preto nedajú meniť – vypnite, ak ich chcete v tejto firme upraviť inak.' : ' Vypnuté: v tejto firme sa upravujú tu.'}
             </span>
           </span>
@@ -135,14 +143,7 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
           })}
         </div>
       </fieldset>
-      <TextareaField
-        label="Zručnosti"
-        rows={2}
-        placeholder="napr. práca vo výškach, GrandMA, X32"
-        maxLength={500}
-        value={fields.skills}
-        onChange={(event) => set({ skills: event.target.value })}
-      />
+      <SkillsField value={fields.skills} disabled={synced} onChange={(skills) => set({ skills })} />
       <TextareaField label="Poznámka" rows={2} maxLength={1000} value={fields.note} onChange={(event) => set({ note: event.target.value })} />
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">

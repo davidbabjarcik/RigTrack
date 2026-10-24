@@ -67,3 +67,10 @@ describe('socials from profile', () => {
     expect(await t.as('boss', 'select socials, licences from public.staff where id = $1', [card])).toEqual([{ socials: { instagram: 'jano2' }, licences: ['B', 'C'] }])
   })
 })
+
+describe('skills from profile', () => {
+  it('copies skills from the personal profile to the staff card', async () => {
+    await t.as('jano', `update public.personal_profiles set skills = 'Avolites, Crown' where user_id = $1`, [t.users.jano])
+    expect(await t.as('boss', 'select skills from public.staff where id = $1', [card])).toEqual([{ skills: 'Avolites, Crown' }])
+  })
+})

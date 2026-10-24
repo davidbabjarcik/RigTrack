@@ -69,7 +69,8 @@ with checks (migration, ok) as (
     ('0083 faktúry ku kusom', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'order_item_equipment' and column_name = 'unit_numbers')),
     ('0084 push upozornenia', to_regclass('public.push_subscriptions') is not null),
     ('0085 vlastná technika vo viacerých firmách', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'equipment' and column_name = 'shared_from')),
-    ('0086 fotka, vlastná technika, zariadenia hostí', to_regclass('public.guest_devices') is not null)
+    ('0086 fotka, vlastná technika, zariadenia hostí', to_regclass('public.guest_devices') is not null),
+    ('0087 zručnosti v profile', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'personal_profiles' and column_name = 'skills'))
 )
 select migration, case when ok then 'OK' else 'chýba' end as stav
 from checks

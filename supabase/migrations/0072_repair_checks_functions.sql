@@ -1933,6 +1933,13 @@ begin
   end if;
   if to_regclass('public.personal_profiles') is not null then
     begin
+      execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_skills_check$sql$;
+      execute $sql$alter table public.personal_profiles add constraint personal_profiles_skills_check CHECK ((char_length(skills) <= 500)) not valid$sql$;
+    exception when others then raise notice 'Kontrola personal_profiles_skills_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.personal_profiles') is not null then
+    begin
       execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_socials_check$sql$;
       execute $sql$alter table public.personal_profiles add constraint personal_profiles_socials_check CHECK (((jsonb_typeof(socials) = 'object'::text) AND (char_length((socials)::text) <= 2000))) not valid$sql$;
     exception when others then raise notice 'Kontrola personal_profiles_socials_check: %', sqlerrm;
@@ -2980,7 +2987,8 @@ begin
   if not found then return; end if;
   update public.staff s
     set phone = p.phone, email = p.email, birth_date = p.birth_date, name_day = p.name_day, licences = p.licences,
-        socials = case when p.socials = '{}'::jsonb then s.socials else p.socials end
+        socials = case when p.socials = '{}'::jsonb then s.socials else p.socials end,
+        skills = case when p.skills = '' then s.skills else p.skills end
     where s.member_id = _user_id and s.sync_profile;
   if p.home_address <> '' then
     insert into public.member_homes (company_id, user_id, address, lat, lon, updated_at)
@@ -3685,6 +3693,7 @@ begin
     new.name_day := p.name_day;
     new.licences := p.licences;
     if p.socials <> '{}'::jsonb then new.socials := p.socials; end if;
+    if p.skills <> '' then new.skills := p.skills; end if;
   end if;
   return new;
 end;

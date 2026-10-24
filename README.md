@@ -21,6 +21,13 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.7.3 – 24. 10. 2026
+
+- **Zručnosti v Mojom profile** (napr. Avolites, GrandMA, Crown, práca vo výškach): zadávajú sa ako štítky,
+  s návrhmi pri písaní, a prenesú sa do kariet zamestnanca vo všetkých firmách. Na karte aj v zozname Ľudia
+  sú ako štítky; hľadanie v Ľuďoch nájde aj podľa zručnosti.
+- Nové migrácie: `0087` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.7.2 – 24. 10. 2026
 
 - Karta zamestnanca: so zapnutým „Brať údaje z osobného profilu“ sú telefón, e-mail, narodeniny, meniny,

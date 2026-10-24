@@ -14,6 +14,7 @@ import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { saveStaff, staffKeys } from './api'
+import { SkillChips } from './SkillsField'
 import { matchesPerson, unavailableOn, upcomingEvents, type Person, type Unavailability } from './model'
 import { useStaff } from './useStaff'
 import type { CompanyEvent } from '@/features/events/model'
@@ -97,6 +98,7 @@ export function StaffPage() {
                     {[person.position || (person.isMember ? 'člen firmy' : 'brigádnik'), !person.active && 'neaktívny'].filter(Boolean).join(' · ')}
                   </span>
                   <span className={cn('block truncate text-xs', TONES[status.tone])}>{status.text}</span>
+                  {person.skills && <SkillChips value={person.skills} className="mt-1.5 max-h-12 overflow-hidden" />}
                 </span>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               </Link>
