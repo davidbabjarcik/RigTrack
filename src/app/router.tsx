@@ -86,6 +86,7 @@ const technicians = lazyPage(() => import('@/features/technicians/TechniciansPag
 const delay = lazyPage(() => import('@/features/delay/DelayPage').then((m) => m.DelayPage))
 // Verejná stránka (aj bez prihlásenia a firmy), preto bez lazyPage.
 const changelog = async () => ({ Component: (await import('@/features/changelog/ChangelogPage')).ChangelogPage })
+const about = async () => ({ Component: (await import('@/features/about/AboutPage')).AboutPage })
 const welcome = lazyPage(() => import('@/features/staff/WelcomePage').then((m) => m.WelcomePage))
 const partners = lazyPage(() => import('@/features/partners/PartnersPage').then((m) => m.PartnersPage), 'events.view')
 const partnerDetail = lazyPage(() => import('@/features/partners/PartnerDetailPage').then((m) => m.PartnerDetailPage), 'events.view')
@@ -105,6 +106,7 @@ export const routes: RouteObject[] = [
       { path: 'auth', element: <AuthPage /> },
       { path: 'auth/update-password', element: <UpdatePasswordPage /> },
       { path: 'changelog', lazy: changelog },
+      { path: 'about', lazy: about },
     ],
   },
   {

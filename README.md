@@ -21,6 +21,13 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.1 – 24. 10. 2026
+
+- **Moje štatistiky (všetky firmy)** na obrazovke „Vyberte firmu“: pri každej firme koľko akcií máte v zvolenom
+  roku, koľko ste zarobili, koľko hodín odpracovali (eventy aj firma / doma) a súčty za celý čas aj za všetky firmy.
+- **Stránka O aplikácii**: čo RigTrack vie, ako začať a ako narába s vašimi údajmi. Odkaz je v pätičke –
+  na prihlásení, pri výbere firmy aj v appke.
+
 ### 3.0 – 24. 10. 2026
 
 - **Môj profil pre všetky firmy** (obrazovka „Vyberte firmu“): meno, telefón, e-mail, narodeniny, meniny, vodičák

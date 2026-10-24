@@ -12,6 +12,7 @@ import { DemoSettings } from './DemoSettings'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { profileComplete, usePersonalProfile } from '@/features/profile/api'
 import { MyDevicesEverywhere } from '@/features/profile/MyDevicesEverywhere'
+import { MyStatsCard } from '@/features/profile/MyStatsCard'
 import { ProfileForm } from '@/features/profile/ProfileForm'
 
 export function CompanySelectPage() {
@@ -139,6 +140,12 @@ export function CompanySelectPage() {
           </ul>
         )}
       </section>
+
+      {memberships.length > 0 && (
+        <CollapsibleSection id="profile.stats" title="Moje štatistiky (všetky firmy)">
+          <MyStatsCard userId={user.id} memberships={memberships} />
+        </CollapsibleSection>
+      )}
 
       <div id="profile">
         <CollapsibleSection id="profile.personal" title="Môj profil (všetky firmy)">
