@@ -598,7 +598,7 @@ export function StagePage() {
               </span>
               <span className="text-yellow-700 dark:text-yellow-300">━ pero dosky</span>
               <span className="text-emerald-600">● 1 – tu začať stavať{showLegs && ', ďalej podľa čísel'}</span>
-              {showLegs && <span className="text-blue-600">● noha – patrí do tejto dosky (roh bez bodky leží na nohe susednej dosky)</span>}
+              {showLegs && <span className="text-blue-600">● noha</span>}
               <span className="text-amber-700 dark:text-amber-300">■ menšia doska</span>
               {plan.lathEdges.length > 0 && <span className="text-emerald-600">━ lišty</span>}
               {plan.risers.length > 0 && <span className="text-violet-600 dark:text-violet-300">▭ rizer (prerušovane na kolieskach)</span>}

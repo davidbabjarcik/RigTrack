@@ -331,18 +331,15 @@ export type Corner = 'fl' | 'fr' | 'bl' | 'br'
 export type DeckLegs = { deck: Deck; order: number; corners: Corner[] }
 
 /**
- * Poradie stavania a nohy po doskách: od prvej dosky (kde sa začína) ďalej podľa vzdialenosti.
+ * Poradie stavania a nohy po doskách: najprv celý zadný rad (od prvej dosky do strany), potom ďalšie rady
+ * smerom dopredu, v každom rade od strany, kde je prvá doska.
  * Prvá doska má nohy vo všetkých rohoch; každá ďalšia len v rohoch, kde ešte noha nie je –
  * inde si ľahne na nohu susednej dosky. Súčet nôh sedí s legPoints.
  */
 export function deckLegs(decks: Deck[], first: Deck | null): DeckLegs[] {
-  const center = (deck: Deck) => [deck.x + deck.w / 2, deck.y + deck.d / 2]
-  const [fx, fy] = first ? center(first) : [0, 0]
-  const ordered = [...decks].sort((a, b) => {
-    const [ax, ay] = center(a)
-    const [bx, by] = center(b)
-    return Math.hypot(ax - fx, ay - fy) - Math.hypot(bx - fx, by - fy) || b.y - a.y || a.x - b.x
-  })
+  const fromSide = (deck: Deck) => Math.abs(deck.x + deck.w / 2 - (first ? first.x + first.w / 2 : 0))
+  // Rad = zadná hrana dosky; zadný rad (najväčšie y) ide prvý.
+  const ordered = [...decks].sort((a, b) => b.y + b.d - (a.y + a.d) || fromSide(a) - fromSide(b))
   const taken = new Set<string>()
   const key = (x: number, y: number) => `${Math.round(x * 1000)},${Math.round(y * 1000)}`
   return ordered.map((deck, index) => {

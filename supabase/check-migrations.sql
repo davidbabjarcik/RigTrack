@@ -66,7 +66,8 @@ with checks (migration, ok) as (
     ('0080 dochádzka na firme a doma', to_regclass('public.work_sessions') is not null),
     ('0081 osobný profil pre všetky firmy', to_regclass('public.personal_profiles') is not null),
     ('0082 šoféri pri eventoch', to_regclass('public.event_drives') is not null),
-    ('0083 faktúry ku kusom', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'order_item_equipment' and column_name = 'unit_numbers'))
+    ('0083 faktúry ku kusom', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'order_item_equipment' and column_name = 'unit_numbers')),
+    ('0084 push upozornenia', to_regclass('public.push_subscriptions') is not null)
 )
 select migration, case when ok then 'OK' else 'chýba' end as stav
 from checks

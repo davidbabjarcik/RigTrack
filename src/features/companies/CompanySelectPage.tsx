@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, ChartColumn, Check, ChevronRight, Plus, Smartphone, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, Building2, ChartColumn, Check, ChevronRight, Plus, Smartphone, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/auth-context'
@@ -9,7 +9,6 @@ import { acceptInvitation, companyKeys, deleteInvitation, fetchMyInvitations } f
 import { useCompany } from './company-context'
 import { CompanyLogo } from './CompanyLogo'
 import { DemoSettings } from './DemoSettings'
-import { cn } from '@/lib/utils'
 import { profileComplete, usePersonalProfile } from '@/features/profile/api'
 import { MyDevicesEverywhere } from '@/features/profile/MyDevicesEverywhere'
 import { MyStatsCard } from '@/features/profile/MyStatsCard'
@@ -65,24 +64,6 @@ export function CompanySelectPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <nav aria-label="Časti" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {shown.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-pressed={view === item.id}
-            onClick={() => chooseView(item.id)}
-            className={cn(
-              'relative flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-sm font-medium transition-colors',
-              view === item.id ? 'border-primary bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
-            )}
-          >
-            <item.icon className="size-5" aria-hidden />
-            {item.label}
-            {item.id === 'profile' && incomplete && <span className="absolute top-2 right-2 size-2.5 rounded-full bg-accent" aria-label="nevyplnený" />}
-          </button>
-        ))}
-      </nav>
 
       {incomplete && view !== 'profile' && (
         <button
@@ -100,18 +81,30 @@ export function CompanySelectPage() {
 
       {view === 'profile' && (
         <section aria-labelledby="profile-heading">
+          <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
+            <ArrowLeft className="size-4" aria-hidden />
+            Späť na firmy
+          </button>
           <h1 id="profile-heading" className="mb-2 text-xl font-semibold">Môj profil</h1>
           <ProfileForm userId={user.id} accountEmail={user.email ?? ''} />
         </section>
       )}
       {view === 'devices' && (
         <section aria-labelledby="devices-heading">
+          <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
+            <ArrowLeft className="size-4" aria-hidden />
+            Späť na firmy
+          </button>
           <h1 id="devices-heading" className="mb-2 text-xl font-semibold">Moje zariadenia</h1>
           <MyDevicesEverywhere userId={user.id} memberships={memberships} />
         </section>
       )}
       {view === 'stats' && (
         <section aria-labelledby="stats-heading">
+          <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
+            <ArrowLeft className="size-4" aria-hidden />
+            Späť na firmy
+          </button>
           <h1 id="stats-heading" className="mb-2 text-xl font-semibold">Moje štatistiky</h1>
           <MyStatsCard userId={user.id} memberships={memberships} />
         </section>
@@ -155,9 +148,27 @@ export function CompanySelectPage() {
 
       {view === 'companies' && (
       <section aria-labelledby="companies-heading">
-        <h1 id="companies-heading" className="mb-2 text-xl font-semibold">
-          Vyberte firmu
-        </h1>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h1 id="companies-heading" className="text-xl font-semibold">
+            Vyberte firmu
+          </h1>
+          <nav aria-label="Môj účet" className="flex flex-wrap gap-1.5">
+            {shown
+              .filter((item) => item.id !== 'companies')
+              .map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => chooseView(item.id)}
+                  className="relative inline-flex h-8 items-center gap-1.5 rounded-full border bg-surface px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <item.icon className="size-3.5" aria-hidden />
+                  {item.label}
+                  {item.id === 'profile' && incomplete && <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-accent" aria-label="nevyplnený" />}
+                </button>
+              ))}
+          </nav>
+        </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">Načítavam…</p>
         ) : memberships.length === 0 ? (

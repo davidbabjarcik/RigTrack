@@ -36,6 +36,7 @@ import { DeleteCompanySettings } from '@/features/companies/DeleteCompanySetting
 import { DemoSettings } from '@/features/companies/DemoSettings'
 import { MyDevicesSettings } from '@/features/devices/MyDevicesSettings'
 import { AttendanceSettings } from '@/features/attendance/MyAttendance'
+import { PushSettings } from '@/features/push/PushSettings'
 import { DutySettings } from '@/features/duties/DutySettings'
 import { EmailPrefs } from '@/features/news/EmailPrefs'
 import { LookupSettings } from '@/features/equipment/LookupSettings'
@@ -457,6 +458,9 @@ export function SettingsPage() {
                 Odhlásiť sa
               </Button>
             </div>
+          </Section>
+          <Section title="Upozornenia na mobil">
+            <PushSettings userId={user.id} />
           </Section>
           <Section title="Dochádzka">
             <AttendanceSettings companyId={company.companyId} />

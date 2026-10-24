@@ -176,7 +176,7 @@ describe('helpers', () => {
 })
 
 describe('legs per deck', () => {
-  it('gives the first deck all legs and later decks only missing corners', () => {
+  it('builds the back row first and gives later decks only missing legs', () => {
     // Pódium 4 × 2 m z dosiek 2 × 1: dva stĺpce, dva rady.
     const decks = [
       { x: 0, y: 0, w: 2, d: 1, typeId: 'd' },
@@ -187,8 +187,8 @@ describe('legs per deck', () => {
     const legs = deckLegs(decks, decks[3])
     expect(legs.map((item) => [item.order, item.deck.x, item.deck.y, item.corners.length])).toEqual([
       [1, 2, 1, 4],
-      [2, 2, 0, 2],
-      [3, 0, 1, 2],
+      [2, 0, 1, 2],
+      [3, 2, 0, 2],
       [4, 0, 0, 1],
     ])
     expect(legs.reduce((sum, item) => sum + item.corners.length, 0)).toBe(legPoints(decks))

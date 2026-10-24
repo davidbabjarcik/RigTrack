@@ -12,27 +12,37 @@ export type PersonalProfile = {
   nameDay: string
   licences: string[]
   homeAddress: string
+  /** Sociálne siete (sieť → meno alebo odkaz). */
+  socials: Record<string, string>
 }
 
-export const EMPTY_PROFILE: PersonalProfile = { fullName: '', phone: '', email: '', birthDate: '', nameDay: '', licences: [], homeAddress: '' }
+export const EMPTY_PROFILE: PersonalProfile = { fullName: '', phone: '', email: '', birthDate: '', nameDay: '', licences: [], homeAddress: '', socials: {} }
 
 export const profileKeys = { mine: (userId: string) => ['personal-profile', userId] as const }
 
 /** Je profil vyplnený natoľko, aby sme ho prestali pripomínať? Stačí meno a telefón. */
 export const profileComplete = (profile: Pick<PersonalProfile, 'fullName' | 'phone'>) => profile.fullName.trim() !== '' && profile.phone.trim() !== ''
 
-type Row = { phone: string; email: string; birth_date: string | null; name_day: string; licences: string[]; home_address: string; home_lat: number | null; home_lon: number | null }
+type Row = { phone: string; email: string; birth_date: string | null; name_day: string; licences: string[]; home_address: string; home_lat: number | null; home_lon: number | null; socials?: Record<string, string> }
+
+/** Riadok profilu; bez migrácie 0084 bez sociálnych sietí. */
+async function personalRow(userId: string) {
+  const query = (columns: string) => getSupabase().from('personal_profiles').select(columns).eq('user_id', userId).maybeSingle()
+  const base = 'phone, email, birth_date, name_day, licences, home_address, home_lat, home_lon'
+  const result = await query(base + ', socials')
+  return result.error && /socials/.test(result.error.message ?? '') ? query(base) : result
+}
 
 /** Môj profil; `exists` = už bol uložený (inak sa pri uložení založí). */
 export async function fetchPersonalProfile(userId: string): Promise<PersonalProfile & { exists: boolean; homeLat: number | null }> {
   const db = getSupabase()
   const [own, account] = await Promise.all([
-    db.from('personal_profiles').select('phone, email, birth_date, name_day, licences, home_address, home_lat, home_lon').eq('user_id', userId).maybeSingle(),
+    personalRow(userId),
     db.from('profiles').select('full_name').eq('id', userId).single(),
   ])
   if (own.error) throw own.error
   if (account.error) throw account.error
-  const row = own.data as Row | null
+  const row = own.data as unknown as Row | null
   return {
     fullName: (account.data as { full_name: string }).full_name,
     phone: row?.phone ?? '',
@@ -41,6 +51,7 @@ export async function fetchPersonalProfile(userId: string): Promise<PersonalProf
     nameDay: row?.name_day ?? '',
     licences: row?.licences ?? [],
     homeAddress: row?.home_address ?? '',
+    socials: row?.socials ?? {},
     homeLat: row?.home_lat ?? null,
     exists: row !== null,
   }
@@ -59,6 +70,7 @@ export async function savePersonalProfile(userId: string, profile: PersonalProfi
   const name = await db.from('profiles').update({ full_name: profile.fullName.trim() }).eq('id', userId)
   if (name.error) throw name.error
   const address = profile.homeAddress.trim()
+  const socials = Object.fromEntries(Object.entries(profile.socials).map(([name, value]) => [name, value.trim()]).filter(([, value]) => value))
   const moved = address !== previous.homeAddress.trim()
   const point = moved && address ? await geocode(address).catch(() => null) : null
   const fields = {
@@ -68,6 +80,8 @@ export async function savePersonalProfile(userId: string, profile: PersonalProfi
     name_day: profile.nameDay,
     licences: profile.licences,
     home_address: address,
+    // Sociálne siete (0084) len keď sú vyplnené, aby uloženie fungovalo aj bez migrácie.
+    ...(Object.keys(profile.socials).length > 0 && { socials }),
     ...(moved && { home_lat: point?.lat ?? null, home_lon: point?.lon ?? null }),
     updated_at: new Date().toISOString(),
   }

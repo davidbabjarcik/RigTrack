@@ -1567,6 +1567,27 @@ begin
     exception when others then raise notice 'Kontrola mic_capsules_quantity_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.notifications') is not null then
+    begin
+      execute $sql$alter table public.notifications drop constraint if exists notifications_body_check$sql$;
+      execute $sql$alter table public.notifications add constraint notifications_body_check CHECK ((char_length(body) <= 300)) not valid$sql$;
+    exception when others then raise notice 'Kontrola notifications_body_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.notifications') is not null then
+    begin
+      execute $sql$alter table public.notifications drop constraint if exists notifications_title_check$sql$;
+      execute $sql$alter table public.notifications add constraint notifications_title_check CHECK (((char_length(title) >= 1) AND (char_length(title) <= 120))) not valid$sql$;
+    exception when others then raise notice 'Kontrola notifications_title_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.notifications') is not null then
+    begin
+      execute $sql$alter table public.notifications drop constraint if exists notifications_url_check$sql$;
+      execute $sql$alter table public.notifications add constraint notifications_url_check CHECK ((char_length(url) <= 300)) not valid$sql$;
+    exception when others then raise notice 'Kontrola notifications_url_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.office_items') is not null then
     begin
       execute $sql$alter table public.office_items drop constraint if exists office_items_min_quantity_check$sql$;
@@ -1859,6 +1880,41 @@ begin
       execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_phone_check$sql$;
       execute $sql$alter table public.personal_profiles add constraint personal_profiles_phone_check CHECK ((char_length(phone) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola personal_profiles_phone_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.personal_profiles') is not null then
+    begin
+      execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_socials_check$sql$;
+      execute $sql$alter table public.personal_profiles add constraint personal_profiles_socials_check CHECK (((jsonb_typeof(socials) = 'object'::text) AND (char_length((socials)::text) <= 2000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola personal_profiles_socials_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.push_subscriptions') is not null then
+    begin
+      execute $sql$alter table public.push_subscriptions drop constraint if exists push_subscriptions_auth_check$sql$;
+      execute $sql$alter table public.push_subscriptions add constraint push_subscriptions_auth_check CHECK ((char_length(auth) <= 100)) not valid$sql$;
+    exception when others then raise notice 'Kontrola push_subscriptions_auth_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.push_subscriptions') is not null then
+    begin
+      execute $sql$alter table public.push_subscriptions drop constraint if exists push_subscriptions_endpoint_check$sql$;
+      execute $sql$alter table public.push_subscriptions add constraint push_subscriptions_endpoint_check CHECK ((char_length(endpoint) <= 1000)) not valid$sql$;
+    exception when others then raise notice 'Kontrola push_subscriptions_endpoint_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.push_subscriptions') is not null then
+    begin
+      execute $sql$alter table public.push_subscriptions drop constraint if exists push_subscriptions_p256dh_check$sql$;
+      execute $sql$alter table public.push_subscriptions add constraint push_subscriptions_p256dh_check CHECK ((char_length(p256dh) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola push_subscriptions_p256dh_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.push_subscriptions') is not null then
+    begin
+      execute $sql$alter table public.push_subscriptions drop constraint if exists push_subscriptions_user_agent_check$sql$;
+      execute $sql$alter table public.push_subscriptions add constraint push_subscriptions_user_agent_check CHECK ((char_length(user_agent) <= 300)) not valid$sql$;
+    exception when others then raise notice 'Kontrola push_subscriptions_user_agent_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.role_permissions') is not null then
@@ -2874,7 +2930,8 @@ begin
   select * into p from public.personal_profiles where user_id = _user_id;
   if not found then return; end if;
   update public.staff s
-    set phone = p.phone, email = p.email, birth_date = p.birth_date, name_day = p.name_day, licences = p.licences
+    set phone = p.phone, email = p.email, birth_date = p.birth_date, name_day = p.name_day, licences = p.licences,
+        socials = case when p.socials = '{}'::jsonb then s.socials else p.socials end
     where s.member_id = _user_id and s.sync_profile;
   if p.home_address <> '' then
     insert into public.member_homes (company_id, user_id, address, lat, lon, updated_at)
@@ -3485,6 +3542,7 @@ begin
     new.birth_date := p.birth_date;
     new.name_day := p.name_day;
     new.licences := p.licences;
+    if p.socials <> '{}'::jsonb then new.socials := p.socials; end if;
   end if;
   return new;
 end;
@@ -4090,6 +4148,82 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia normalize_unit_ids: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.notify_crew_added()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  e record;
+begin
+  if new.member_id is null then return new; end if;
+  select name, starts_on, ends_on, venue into e from public.events where id = new.event_id;
+  if not found then return new; end if;
+  perform public.notify_user(
+    new.member_id, new.company_id,
+    'Si v posádke: ' || e.name,
+    concat_ws(' · ',
+      to_char(e.starts_on, 'FMDD. FMMM. YYYY') || case when e.ends_on > e.starts_on then ' – ' || to_char(e.ends_on, 'FMDD. FMMM. YYYY') else '' end,
+      nullif(e.venue, ''),
+      nullif(new.role, '')),
+    '/events/' || new.event_id
+  );
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia notify_crew_added: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.notify_task_assigned()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  assignee uuid;
+  previous uuid[] := case when tg_op = 'UPDATE' then coalesce(old.assignee_ids, '{}') || coalesce(array[old.assignee_id], '{}') else '{}' end;
+begin
+  for assignee in select distinct unnest(coalesce(new.assignee_ids, '{}') || coalesce(array[new.assignee_id], '{}')) loop
+    if assignee is null or assignee = any (previous) then continue; end if;
+    perform public.notify_user(
+      assignee, new.company_id,
+      'Nová úloha: ' || new.title,
+      case when new.due_on is not null then 'Termín ' || to_char(new.due_on, 'FMDD. FMMM. YYYY') else '' end,
+      '/todos'
+    );
+  end loop;
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia notify_task_assigned: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.notify_user(_user_id uuid, _company_id uuid, _title text, _body text, _url text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  if _user_id is null or _user_id = auth.uid() then return; end if;
+  insert into public.notifications (user_id, company_id, title, body, url)
+  values (_user_id, _company_id, left(_title, 120), left(coalesce(_body, ''), 300), left(coalesce(_url, ''), 300));
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia notify_user: %', sqlerrm;
 end;
 $repair$;
 

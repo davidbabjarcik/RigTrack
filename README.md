@@ -21,6 +21,19 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.5 – 24. 10. 2026
+
+- **Push upozornenia na mobil** (Nastavenia → Účet → Upozornenia na mobil): upozornenie príde, keď vás niekto
+  pridá do posádky eventu alebo vám priradí úlohu – aj keď appku nemáte otvorenú. Zapína sa na každom
+  zariadení zvlášť, tlačidlom „Poslať skúšobné“ overíte, že chodia. Na iPhone len z appky pridanej na plochu.
+- **Môj profil – sociálne siete**: Instagram, Facebook, TikTok, LinkedIn, YouTube a web sa zadajú raz a prenesú
+  sa do kariet zamestnanca vo všetkých firmách.
+- **„Vyberte firmu“**: firmy sú znova hlavné; Môj profil, Moje zariadenia a Moje štatistiky sú malé tlačidlá
+  vedľa nadpisu (s odkazom späť na firmy).
+- **Nivtec**: poradie stavania ide po radoch – najprv celý zadný rad, potom ďalšie smerom dopredu.
+- Nové migrácie: `0084` (opravné `0071` a `0072` sú aktualizované). Nastavenie push je v časti
+  „Push upozornenia na mobil – nastavenie“.
+
 ### 3.4 – 24. 10. 2026
 
 - **Nivtec – plán pódia**: na nákrese má každá doska číslo (poradie stavania od dosky 1) a rozmer a modré bodky
@@ -844,6 +857,23 @@ Hlásenia fungujú v aplikácii hneď po migrácii `0048`. Aby chodili aj e-mail
    ```
 E-mail dostanú vývojári a admini firmy, v ktorej bola chyba nahlásená. Kým funkcia nie je nasadená,
 hlásenia sa len uložia a ukážu v aplikácii.
+
+## Push upozornenia na mobil – nastavenie
+
+Po migrácii `0084` appka upozorní, keď niekoho pridajú do posádky eventu alebo mu priradia úlohu. Aby
+upozornenia chodili na mobily, treba raz:
+
+1. **Vygenerovať kľúče VAPID** (z koreňa repozitára): `npx web-push generate-vapid-keys`
+2. **Uložiť ich ako tajomstvá** v Supabase (nikdy nie do kódu ani do `.env`):
+   ```bash
+   npx supabase secrets set VAPID_PUBLIC_KEY=<public> VAPID_PRIVATE_KEY=<private> VAPID_SUBJECT=mailto:tvoj@email PUSH_WEBHOOK_SECRET=<náhodný dlhý text>
+   ```
+3. **Nasadiť funkciu**: `npx supabase functions deploy send-push --no-verify-jwt`
+4. **Database Webhook** v Supabase → Database → Webhooks → Create: tabuľka `notifications`, udalosť `Insert`,
+   typ *Supabase Edge Functions*, funkcia `send-push`, metóda POST a HTTP hlavička
+   `x-webhook-secret` = hodnota `PUSH_WEBHOOK_SECRET`.
+5. Každý si upozornenia zapne na svojom mobile v **Nastavenia → Účet → Upozornenia na mobil** (na iPhone len
+   z appky pridanej na plochu, iOS 16.4+) a tlačidlom „Poslať skúšobné“ overí, že chodia.
 
 ## Nasadenie na GitHub Pages
 

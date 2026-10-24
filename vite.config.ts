@@ -59,6 +59,8 @@ export default defineConfig({
         globIgnores: ['**/pdf-*.js'],
         navigateFallback: `${base}index.html`,
         cleanupOutdatedCaches: true,
+        // Push upozornenia (public/push-sw.js): zobrazenie a otvorenie appky po ťuknutí.
+        importScripts: ['push-sw.js'],
       },
     }),
   ],

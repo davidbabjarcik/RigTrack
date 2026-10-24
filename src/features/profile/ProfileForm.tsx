@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { LICENCES } from '@/features/staff/model'
 import { NameDayField } from '@/features/staff/NameDayField'
+import { SOCIAL_NETWORKS } from '@/features/staff/socials'
 import { cn } from '@/lib/utils'
 import { profileComplete, profileKeys, savePersonalProfile, usePersonalProfile, type PersonalProfile } from './api'
 
@@ -15,7 +16,7 @@ export function ProfileForm({ userId, accountEmail }: { userId: string; accountE
   const [draft, setDraft] = useState<PersonalProfile | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [saved, setSaved] = useState(false)
-  const values: PersonalProfile = draft ?? { ...(profile.data ?? { fullName: '', phone: '', email: '', birthDate: '', nameDay: '', licences: [], homeAddress: '' }) }
+  const values: PersonalProfile = draft ?? { ...(profile.data ?? { fullName: '', phone: '', email: '', birthDate: '', nameDay: '', licences: [], homeAddress: '', socials: {} }) }
   const set = (patch: Partial<PersonalProfile>) => {
     setSaved(false)
     setDraft({ ...values, ...patch })
@@ -71,6 +72,21 @@ export function ProfileForm({ userId, accountEmail }: { userId: string; accountE
               </button>
             )
           })}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend className="mb-1 text-sm font-medium">Sociálne siete</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {SOCIAL_NETWORKS.map((network) => (
+            <Field
+              key={network.key}
+              label={network.label}
+              maxLength={200}
+              placeholder={network.key === 'web' ? 'www.mojweb.sk' : 'meno alebo odkaz'}
+              value={values.socials[network.key] ?? ''}
+              onChange={(e) => set({ socials: { ...values.socials, [network.key]: e.target.value } })}
+            />
+          ))}
         </div>
       </fieldset>
       {notFound && <p className="text-sm text-accent">Adresu domov sa nepodarilo nájsť na mape – napíšte ju presnejšie (ulica, číslo, mesto).</p>}
