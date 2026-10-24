@@ -379,6 +379,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
   // Ďalšie dĺžky nového kábla (namiesto samostatnej „Sady káblov“).
   const [extraLengths, setExtraLengths] = useState<{ lengthM: number; quantity: number }[]>([])
+  // Nový bežný kábel: dĺžky a počty v jednom zozname (počet kusov dole sa vtedy neukazuje).
+  const multiLength = !equipment && kind === 'cable' && (cableType ?? 'cable') === 'cable'
   // Sieť a servis sa ukážu len pri technike, ktorá ich má (alebo keď ich zaškrtnete).
   const [showNetwork, setShowNetwork] = useState(() => Boolean(equipment?.macAddress || equipment?.ipAddress || equipment?.attributes.ipDhcp))
   const [showService, setShowService] = useState(() => Boolean(equipment?.serviceIntervalMonths || equipment?.lastServiceOn))
@@ -464,56 +466,66 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
               <option key={connector} value={connector} />
             ))}
           </datalist>
-          <Field
-            label="Dĺžka (m)"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="0.1"
-            error={errors.lengthM?.message}
-            {...register('lengthM', asOptionalNumber)}
-          />
-          {!equipment && cableType !== 'adapter' && cableType !== 'di' && (
+          {multiLength ? (
+            // Nový kábel: jeden zoznam dĺžok – prvý riadok je táto položka, každý ďalší samostatná položka.
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-sm font-medium">Ďalšie dĺžky</p>
-              {extraLengths.length > 0 && (
-                <ul className="mb-2 flex flex-col gap-2">
-                  {extraLengths.map((row, index) => (
-                    <li key={index} className="flex items-end gap-2">
-                      <Field
-                        label="Dĺžka (m)"
-                        hideLabel={index > 0}
-                        className="flex-1"
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        step="0.1"
-                        value={Number.isNaN(row.lengthM) ? '' : row.lengthM}
-                        onChange={(e) => setExtraLengths(extraLengths.map((item, i) => (i === index ? { ...item, lengthM: e.target.valueAsNumber } : item)))}
-                      />
-                      <Field
-                        label="Kusov"
-                        hideLabel={index > 0}
-                        className="w-24"
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
-                        value={Number.isNaN(row.quantity) ? '' : row.quantity}
-                        onChange={(e) => setExtraLengths(extraLengths.map((item, i) => (i === index ? { ...item, quantity: e.target.valueAsNumber } : item)))}
-                      />
-                      <Button variant="ghost" aria-label={`Odobrať dĺžku ${index + 1}`} onClick={() => setExtraLengths(extraLengths.filter((_, i) => i !== index))}>
-                        <Trash2 className="size-4" aria-hidden />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <Button variant="outline" size="sm" onClick={() => setExtraLengths([...extraLengths, { lengthM: Number.NaN, quantity: 1 }])}>
+              <div className="mb-1 grid grid-cols-[1fr_6rem_2.5rem] gap-2 text-sm font-medium">
+                <span>Dĺžka (m)</span>
+                <span>Kusov</span>
+                <span />
+              </div>
+              <ul className="flex flex-col gap-2">
+                <li className="grid grid-cols-[1fr_6rem_2.5rem] items-start gap-2">
+                  <Field label="Dĺžka (m)" hideLabel type="number" inputMode="decimal" min={0} step="0.1" placeholder="napr. 5" error={errors.lengthM?.message} {...register('lengthM', asOptionalNumber)} />
+                  <Field label="Kusov" hideLabel type="number" inputMode="numeric" min={0} step={1} error={errors.quantity?.message} {...register('quantity', { valueAsNumber: true })} />
+                  <span />
+                </li>
+                {extraLengths.map((row, index) => (
+                  <li key={index} className="grid grid-cols-[1fr_6rem_2.5rem] items-start gap-2">
+                    <Field
+                      label={`Dĺžka (m) – riadok ${index + 2}`}
+                      hideLabel
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step="0.1"
+                      placeholder="napr. 10"
+                      value={Number.isNaN(row.lengthM) ? '' : row.lengthM}
+                      onChange={(e) => setExtraLengths(extraLengths.map((item, i) => (i === index ? { ...item, lengthM: e.target.valueAsNumber } : item)))}
+                    />
+                    <Field
+                      label={`Kusov – riadok ${index + 2}`}
+                      hideLabel
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      value={Number.isNaN(row.quantity) ? '' : row.quantity}
+                      onChange={(e) => setExtraLengths(extraLengths.map((item, i) => (i === index ? { ...item, quantity: e.target.valueAsNumber } : item)))}
+                    />
+                    <Button variant="ghost" className="h-11 px-0" aria-label={`Odobrať dĺžku ${index + 2}`} onClick={() => setExtraLengths(extraLengths.filter((_, i) => i !== index))}>
+                      <Trash2 className="size-4" aria-hidden />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+              <Button variant="outline" size="sm" className="mt-2" onClick={() => setExtraLengths([...extraLengths, { lengthM: Number.NaN, quantity: 1 }])}>
                 <Plus className="size-4" aria-hidden />
-                Pridať ďalšiu dĺžku
+                Pridať dĺžku
               </Button>
-              <p className="mt-1 text-xs text-muted-foreground">Každá dĺžka sa uloží ako samostatná položka, napr. „XLR kábel 5 m“, „XLR kábel 10 m“.</p>
+              {extraLengths.length > 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">Každá dĺžka sa uloží ako samostatná položka, napr. „XLR kábel 5 m“, „XLR kábel 10 m“.</p>
+              )}
             </div>
+          ) : (
+            <Field
+              label="Dĺžka (m)"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.1"
+              error={errors.lengthM?.message}
+              {...register('lengthM', asOptionalNumber)}
+            />
           )}
           <div className="sm:col-span-2">
             <LengthColorField
@@ -1053,15 +1065,17 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           error={errors.inventoryNumber?.message}
           {...register('inventoryNumber')}
         />
-        <Field
-          label="Počet kusov"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          step={1}
-          error={errors.quantity?.message}
-          {...register('quantity', { valueAsNumber: true })}
-        />
+        {!multiLength && (
+          <Field
+            label="Počet kusov"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={1}
+            error={errors.quantity?.message}
+            {...register('quantity', { valueAsNumber: true })}
+          />
+        )}
         <Field
           label="Upozorniť, keď ostane (ks)"
           type="number"

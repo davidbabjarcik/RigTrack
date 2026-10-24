@@ -21,6 +21,11 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.7.4 – 24. 10. 2026
+
+- Nový kábel: dĺžky a počty kusov sú v jednom zozname (Dĺžka – Kusov); „Pridať dĺžku“ pridá ďalší riadok
+  a každá dĺžka sa uloží ako samostatná položka. Dĺžka už nie je vo formulári dvakrát.
+
 ### 3.7.3 – 24. 10. 2026
 
 - **Zručnosti v Mojom profile** (napr. Avolites, GrandMA, Crown, práca vo výškach): zadávajú sa ako štítky,
