@@ -75,10 +75,16 @@ export function CasesListPage() {
     if (item.caseId) counts.set(item.caseId, (counts.get(item.caseId) ?? 0) + 1)
   }
 
+  // Fotka v zozname: vlastná fotka case, inak hlavný prvok štítku, inak prvá technika vnútri s fotkou.
+  const contentPhoto = new Map<string, string>()
+  for (const item of [...(equipment.data ?? [])].sort((a, b) => Number(b.labelRole === 'main') - Number(a.labelRole === 'main'))) {
+    if (item.caseId && item.photoPath && !contentPhoto.has(item.caseId)) contentPhoto.set(item.caseId, item.photoPath)
+  }
+  const photoOf = (item: { id: string; photoPath: string }) => item.photoPath || contentPhoto.get(item.id) || ''
   const unpacked = unpackedEquipment(equipment.data ?? [])
   const thumbs = usePhotoThumbs(
     company.companyId,
-    (cases.data ?? []).map((item) => item.photoPath),
+    (cases.data ?? []).map(photoOf).filter(Boolean),
   )
   const all = cases.data ?? []
   const visible = filterCases(all, filter, counts, now, checkDays)
@@ -143,19 +149,19 @@ export function CasesListPage() {
 
       <div className="mb-4 flex flex-col gap-3">
         <Field label="Hľadať" hideLabel type="search" placeholder="Názov, označenie, kategória štítku, poznámka" value={filter.search} onChange={(e) => set({ search: e.target.value })} />
-        <div className="flex flex-wrap items-end gap-2">
-          <Button variant="outline" size="sm" aria-expanded={more} onClick={() => setMore(!more)}>
-            <SlidersHorizontal className="size-4" aria-hidden />
-            Filter{extra > 0 && ` (${extra})`}
-          </Button>
-          <SelectField label="Triediť" hideLabel className="w-56" value={filter.sort} onChange={(e) => set({ sort: e.target.value as CaseFilter['sort'] })}>
+        <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap">
+          <SelectField label="Triediť" hideLabel className="sm:w-56" value={filter.sort} onChange={(e) => set({ sort: e.target.value as CaseFilter['sort'] })}>
             <option value="name">Podľa názvu</option>
             <option value="priority">Podľa priority kontroly</option>
             <option value="lastCheck">Najdlhšie nekontrolované</option>
             <option value="pieces">Najviac techniky</option>
           </SelectField>
+          <Button variant="outline" aria-expanded={more} onClick={() => setMore(!more)}>
+            <SlidersHorizontal className="size-4" aria-hidden />
+            Viac filtrov{extra > 0 && ` (${extra})`}
+          </Button>
           {extra > 0 && (
-            <button type="button" className="px-2 py-2 text-sm text-accent hover:underline" onClick={() => setFilter({ ...NO_CASE_FILTER, search: filter.search, sort: filter.sort })}>
+            <button type="button" className="col-span-2 px-2 py-2 text-left text-sm text-accent hover:underline" onClick={() => setFilter({ ...NO_CASE_FILTER, search: filter.search, sort: filter.sort })}>
               Zrušiť filter
             </button>
           )}
@@ -239,7 +245,7 @@ export function CasesListPage() {
             return (
               <li key={item.id}>
                 <Link to={`/cases/${item.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
-                  {item.photoPath && <PhotoThumb url={thumbs[item.photoPath]} />}
+                  <PhotoThumb url={thumbs[photoOf(item)]} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <span className="truncate font-medium">{item.name}</span>

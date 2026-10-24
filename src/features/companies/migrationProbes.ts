@@ -33,6 +33,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0083', label: 'faktúry ku kusom techniky', table: 'order_item_equipment', column: 'unit_numbers' },
   { migration: '0084', label: 'push upozornenia, sociálne siete v profile', table: 'push_subscriptions', column: 'id' },
   { migration: '0085', label: 'vlastná technika vo viacerých firmách', table: 'equipment', column: 'shared_from' },
+  { migration: '0086', label: 'moja fotka, vlastná technika z Vyberte firmu, zariadenia hostí', table: 'guest_devices', column: 'id' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

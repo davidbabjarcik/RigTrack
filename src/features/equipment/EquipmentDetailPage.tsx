@@ -142,11 +142,18 @@ export function EquipmentDetailPage() {
     ['Kúpené', equipment.purchasedOn && formatDate(equipment.purchasedOn)],
     [
       'Kúpené po kusoch',
-      Object.keys(equipment.unitPurchases ?? {}).length > 0 &&
-        Object.entries(equipment.unitPurchases ?? {})
-          .sort(([a], [b]) => Number(a) - Number(b))
-          .map(([unit, date]) => `#${unit} ${formatDate(date)}`)
-          .join(' · '),
+      (() => {
+        // Kus: dátum nákupu a odkiaľ je kúpený („#1 14. 2. 2025 (Thomann)“).
+        const purchases = equipment.unitPurchases ?? {}
+        const info = equipment.unitInfo ?? {}
+        const units = [...new Set([...Object.keys(purchases), ...Object.keys(info).filter((unit) => info[unit]?.from)])].sort((a, b) => Number(a) - Number(b))
+        return (
+          units.length > 0 &&
+          units
+            .map((unit) => [`#${unit}`, purchases[unit] && formatDate(purchases[unit]), info[unit]?.from && `(${info[unit].from})`].filter(Boolean).join(' '))
+            .join(' · ')
+        )
+      })(),
     ],
     [
       'Nákupná cena',

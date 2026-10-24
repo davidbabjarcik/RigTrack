@@ -94,7 +94,7 @@ export type CaseCheck = {
   note: string
 }
 
-export const LABEL_CATEGORIES = ['Sound', 'Light', 'Cables', 'Video', 'Rigging', 'Power']
+export const LABEL_CATEGORIES = ['Sound', 'Light', 'Cables', 'Video', 'Truss', 'Stage', 'Rigging', 'Power']
 
 const text = (max: number) => z.string().trim().max(max, `Najviac ${max} znakov`)
 const size = (max: number) => z.number('Zadajte číslo').positive('Musí byť viac ako 0').max(max).optional()

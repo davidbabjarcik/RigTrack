@@ -469,7 +469,7 @@ export const equipmentSchema = z.object({
   ampW8: optionalNumber(100000),
   ampBridge4: optionalNumber(100000),
   ampBridge8: optionalNumber(100000),
-  unitInfo: z.array(z.object({ unit: z.number(), serial: text(80), inv: text(40) })).optional(),
+  unitInfo: z.array(z.object({ unit: z.number(), serial: text(80), inv: text(40), from: text(120).optional() })).optional(),
   color: text(40).optional(),
   condition: z.enum(['new', 'excellent', 'good', 'worn', 'damaged', '']).optional(),
   mixerKind: z.enum(['analog', 'digital', '']).optional(),
@@ -1026,7 +1026,7 @@ export function advancedFilterCount(filter: EquipmentFilter) {
 }
 
 /** Všetky dátumy nákupu techniky (celá položka aj kusy). */
-export type UnitInfo = { serial?: string; inv?: string }
+export type UnitInfo = { serial?: string; inv?: string; /** Odkiaľ je kus kúpený (obchod, od koho). */ from?: string }
 
 /** Výkon zosilňovača do jedného riadku: „2 Ω 1 800 W · 4 Ω 2 000 W · 8 Ω 1 250 W · bridge 4 Ω 3 600 W“. */
 export function ampPower(a: Pick<EquipmentAttributes, 'ampW2' | 'ampW4' | 'ampW8' | 'ampBridge4' | 'ampBridge8'>) {
@@ -1041,14 +1041,15 @@ export function ampPower(a: Pick<EquipmentAttributes, 'ampW2' | 'ampW4' | 'ampW8
 }
 
 /** Údaje kusov z formulára do databázy: len kusy, ktoré existujú, a len vyplnené údaje. */
-export function unitInfoFromForm(rows: { unit: number; serial: string; inv: string }[], units: Set<number>): Record<string, UnitInfo> {
+export function unitInfoFromForm(rows: { unit: number; serial: string; inv: string; from?: string }[], units: Set<number>): Record<string, UnitInfo> {
   const info: Record<string, UnitInfo> = {}
   for (const row of rows) {
     if (!units.has(row.unit)) continue
     const serial = row.serial.trim()
     const inv = row.inv.trim()
-    if (!serial && !inv) continue
-    info[String(row.unit)] = { ...(serial && { serial }), ...(inv && { inv }) }
+    const from = (row.from ?? '').trim()
+    if (!serial && !inv && !from) continue
+    info[String(row.unit)] = { ...(serial && { serial }), ...(inv && { inv }), ...(from && { from }) }
   }
   return info
 }

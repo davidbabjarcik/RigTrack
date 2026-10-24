@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FlaskConical, RotateCcw, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { errorDetail } from '@/lib/supabase/errors'
@@ -8,7 +9,8 @@ import { useCompany } from './company-context'
 import { createDemo, deleteDemo, demoKeys, fetchMyDemo, resetDemo } from './demo'
 
 /** Vlastná demo firma používateľa: založiť, otvoriť, vrátiť do pôvodného stavu, zmazať. */
-export function DemoSettings({ userId }: { userId: string }) {
+export function DemoSettings({ userId, realCompanies = 0 }: { userId: string; realCompanies?: number }) {
+  const [expanded, setExpanded] = useState(false)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { active, setActive } = useCompany()
@@ -37,6 +39,15 @@ export function DemoSettings({ userId }: { userId: string }) {
   })
   const busy = create.isPending || reset.isPending || remove.isPending
   const failed = create.isError || reset.isError || remove.isError || demo.isError
+
+  // Kto už má vlastné firmy a demo nemá, vidí len malý odkaz – demo nezavadzia na hlavnej obrazovke.
+  if (!expanded && !demo.data && !failed && realCompanies >= 1)
+    return (
+      <button type="button" onClick={() => setExpanded(true)} className="inline-flex items-center justify-center gap-1.5 self-center text-xs text-muted-foreground hover:text-foreground">
+        <FlaskConical className="size-3.5" aria-hidden />
+        Vyskúšať demo firmu
+      </button>
+    )
 
   return (
     <div className="rounded-xl border bg-surface p-4">

@@ -255,7 +255,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     purchasedOn: equipment.purchasedOn ?? '',
     unitPurchases: Object.entries(equipment.unitPurchases ?? {}).map(([unit, date]) => ({ unit: Number(unit), date })),
     makers: equipment.attributes.makers ?? [],
-    unitInfo: Object.entries(equipment.unitInfo ?? {}).map(([unit, info]) => ({ unit: Number(unit), serial: info.serial ?? '', inv: info.inv ?? '' })),
+    unitInfo: Object.entries(equipment.unitInfo ?? {}).map(([unit, info]) => ({ unit: Number(unit), serial: info.serial ?? '', inv: info.inv ?? '', from: info.from ?? '' })),
     links: equipment.links ?? [],
     cloneOf: equipment.cloneOf ?? '',
     captureMatch: equipment.captureMatch ?? '',
@@ -1218,7 +1218,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         </>
       )}
 
-      <PurchaseLinksFields control={control} register={register} errors={errors} />
+      <PurchaseLinksFields control={control} register={register} errors={errors} perUnit={Boolean(trackUnits)} />
 
       <TextareaField label="Poznámka" error={errors.note?.message} {...register('note')} />
 

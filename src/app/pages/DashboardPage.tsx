@@ -33,31 +33,40 @@ export function DashboardPage() {
         </div>
       )}
 
-      {isSupabaseConfigured && active && (
-        <>
-          {isAdminRole(active.role) && <MigrationBanner />}
-          <MyAttendance companyId={active.companyId} />
-          <MyTasks companyId={active.companyId} />
-          <LoanAlerts companyId={active.companyId} />
-          <VehicleDeadlineAlerts companyId={active.companyId} />
-          <RestockList companyId={active.companyId} />
-        </>
-      )}
+      {/* Na PC sú moje úlohy v stĺpci na kraji; na mobile hore nad ostatným. */}
+      <div className="flex flex-col xl:grid xl:grid-cols-[1fr_20rem] xl:items-start xl:gap-6">
+        {isSupabaseConfigured && active && (
+          <aside className="xl:sticky xl:top-4 xl:order-2">
+            <MyTasks companyId={active.companyId} />
+          </aside>
+        )}
+        <div className="min-w-0 xl:order-1">
+          {isSupabaseConfigured && active && (
+            <>
+              {isAdminRole(active.role) && <MigrationBanner />}
+              <MyAttendance companyId={active.companyId} />
+              <LoanAlerts companyId={active.companyId} />
+              <VehicleDeadlineAlerts companyId={active.companyId} />
+              <RestockList companyId={active.companyId} />
+            </>
+          )}
 
-      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        {modules.map((item) => (
-          <li key={item.id}>
-            <Link
-              to={item.to}
-              className="flex h-full flex-col gap-2 rounded-xl border bg-surface p-4 transition-colors hover:bg-muted"
-            >
-              <item.icon className="size-6 text-accent" aria-hidden />
-              <span className="font-medium">{item.label}</span>
-              <span className="text-xs text-muted-foreground">{item.description}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+          <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            {modules.map((item) => (
+              <li key={item.id}>
+                <Link
+                  to={item.to}
+                  className="flex h-full flex-col gap-2 rounded-xl border bg-surface p-4 transition-colors hover:bg-muted"
+                >
+                  <item.icon className="size-6 text-accent" aria-hidden />
+                  <span className="font-medium">{item.label}</span>
+                  <span className="text-xs text-muted-foreground">{item.description}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </>
   )
 }

@@ -8,17 +8,19 @@ type Props = {
   control: Control<EquipmentFormValues>
   register: UseFormRegister<EquipmentFormValues>
   errors: FieldErrors<EquipmentFormValues>
+  /** Evidencia po kusoch: dátum nákupu je pri kusoch, tu ostáva len cena. */
+  perUnit?: boolean
 }
 
 /** Dátum a cena nákupu a odkazy na návody, fixtúry, firmvér. */
-export function PurchaseLinksFields({ control, register, errors }: Props) {
+export function PurchaseLinksFields({ control, register, errors, perUnit = false }: Props) {
   const links = useFieldArray({ control, name: 'links' })
   return (
     <>
       <fieldset className="rounded-xl border bg-surface p-4">
         <legend className="px-1 text-sm font-medium text-muted-foreground">Nákup (nepovinné)</legend>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Dátum nákupu" type="date" error={errors.purchasedOn?.message} {...register('purchasedOn')} />
+          {!perUnit && <Field label="Dátum nákupu" type="date" error={errors.purchasedOn?.message} {...register('purchasedOn')} />}
           <Field
             label="Nákupná cena za kus (€)"
             type="number"

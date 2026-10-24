@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { getSupabase } from '@/lib/supabase/client'
-import type { RouterLogin, WifiFormValues, WifiNetwork, WifiSecurity } from './model'
+import type { GuestDevice, RouterLogin, WifiFormValues, WifiNetwork, WifiSecurity } from './model'
 
 export const networkKeys = {
   list: (companyId: string) => ['company', companyId, 'wifi'] as const,
   logins: (companyId: string) => ['company', companyId, 'wifi', 'logins'] as const,
+  guests: (companyId: string) => ['company', companyId, 'wifi', 'guests'] as const,
 }
 
 type Row = {
@@ -106,4 +107,48 @@ export async function deleteNetwork(companyId: string, id: string) {
   const { data, error } = await getSupabase().from('wifi_networks').delete().eq('company_id', companyId).eq('id', id).select('id')
   if (error) throw error
   if (data.length === 0) throw new Error('Not deleted')
+}
+
+type GuestRow = { id: string; person_name: string; contact: string; device_name: string; mac: string; ip: string; network_id: string | null; note: string; valid_until: string | null }
+
+/** Zariadenia hostí (0086); bez migrácie prázdny zoznam. */
+export async function fetchGuestDevices(companyId: string): Promise<GuestDevice[]> {
+  const { data, error } = await getSupabase()
+    .from('guest_devices')
+    .select('id, person_name, contact, device_name, mac, ip, network_id, note, valid_until')
+    .eq('company_id', companyId)
+    .order('person_name')
+  if (error) throw error
+  return (data as GuestRow[]).map((row) => ({
+    id: row.id,
+    personName: row.person_name,
+    contact: row.contact,
+    deviceName: row.device_name,
+    mac: row.mac,
+    ip: row.ip,
+    networkId: row.network_id,
+    note: row.note,
+    validUntil: row.valid_until,
+  }))
+}
+
+export async function saveGuestDevice(companyId: string, id: string | null, guest: Omit<GuestDevice, 'id'>) {
+  const row = {
+    person_name: guest.personName.trim(),
+    contact: guest.contact.trim(),
+    device_name: guest.deviceName.trim(),
+    mac: guest.mac,
+    ip: guest.ip.trim(),
+    network_id: guest.networkId,
+    note: guest.note.trim(),
+    valid_until: guest.validUntil || null,
+  }
+  const db = getSupabase().from('guest_devices')
+  const { error } = id ? await db.update(row).eq('company_id', companyId).eq('id', id) : await db.insert({ ...row, company_id: companyId })
+  if (error) throw error
+}
+
+export async function deleteGuestDevice(companyId: string, id: string) {
+  const { error } = await getSupabase().from('guest_devices').delete().eq('company_id', companyId).eq('id', id)
+  if (error) throw error
 }

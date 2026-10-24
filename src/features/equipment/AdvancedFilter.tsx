@@ -43,10 +43,6 @@ export function AdvancedFilter({ filter, onChange, items, owners, linkedCompanie
     <div className="sm:col-span-2 lg:col-span-4">
       {/* Na mobile vedľa seba rovnako veľké. */}
       <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap">
-        <Button variant="outline" aria-expanded={open} onClick={() => setOpen(!open)}>
-          <SlidersHorizontal className="size-4" aria-hidden />
-          Viac filtrov{count > 0 && ` (${count})`}
-        </Button>
         <SelectField label="Triediť" hideLabel className="sm:w-56" value={filter.sort ?? 'name'} onChange={(e) => onChange({ sort: e.target.value as EquipmentFilter['sort'] })}>
           {EQUIPMENT_SORTS.map((sort) => (
             <option key={sort} value={sort}>
@@ -54,6 +50,10 @@ export function AdvancedFilter({ filter, onChange, items, owners, linkedCompanie
             </option>
           ))}
         </SelectField>
+        <Button variant="outline" aria-expanded={open} onClick={() => setOpen(!open)}>
+          <SlidersHorizontal className="size-4" aria-hidden />
+          Viac filtrov{count > 0 && ` (${count})`}
+        </Button>
         {count > 0 && (
           <button
             type="button"

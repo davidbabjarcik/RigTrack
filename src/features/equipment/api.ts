@@ -247,7 +247,7 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     // Údaje z 0060 len keď ich databáza pozná alebo sú vyplnené (inak chyba povie, čo chýba).
     ...(hasExtraColumns() || extrasFilled(values) ? extraFields(values) : {}),
     // Údaje po kusoch (0078) len keď ich databáza pozná alebo sú vyplnené.
-    ...(hasUnitInfo() || values.unitInfo?.some((unit) => unit.serial.trim() || unit.inv.trim()) ? { unit_info: unitInfoOf(values) } : {}),
+    ...(hasUnitInfo() || values.unitInfo?.some((unit) => unit.serial.trim() || unit.inv.trim() || (unit.from ?? '').trim()) ? { unit_info: unitInfoOf(values) } : {}),
   }
   const write = (row: Record<string, unknown>) => {
     const table = getSupabase().from('equipment')
@@ -403,4 +403,11 @@ export async function addHourReading(companyId: string, equipmentId: string, rea
       ...(reading.unit ? { unit: reading.unit } : {}),
     })
   if (error) throw error
+}
+
+/** Dá časť kusov do case (napr. 2 zo 16 svetiel); ostatné ostanú v pôvodnej položke. Vráti id položky v case (0086). */
+export async function splitEquipmentIntoCase(equipmentId: string, caseId: string | null, count: number): Promise<string> {
+  const { data, error } = await getSupabase().rpc('split_equipment_into_case', { _equipment_id: equipmentId, _case_id: caseId, _count: count })
+  if (error) throw error
+  return data as string
 }

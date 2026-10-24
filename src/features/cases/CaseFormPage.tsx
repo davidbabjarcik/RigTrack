@@ -13,6 +13,7 @@ import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { can } from '@/lib/permissions'
 import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { saveCase } from './api'
+import { equipmentKeys, fetchEquipmentList, splitEquipmentIntoCase } from '@/features/equipment/api'
 import { useCheckLevels, levelDays } from '@/features/checks/levels'
 import { caseSchema, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
 import { addCaseTemplate, caseTemplateKeys, describeTemplate, fetchCaseTemplates, numberedCaseNames, type CaseTemplate } from './templates'
@@ -36,6 +37,14 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
   const categoryListId = useId()
   const [templateId, setTemplateId] = useState('')
   const [copies, setCopies] = useState(1)
+  // Rozdelenie techniky do nových cases: napr. 16 svetiel → 8 cases po 2 ks.
+  const [fillId, setFillId] = useState('')
+  const [perCase, setPerCase] = useState(1)
+  const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: !current })
+  const fillable = (equipment.data ?? []).filter((item) => item.status !== 'retired' && !item.caseId).sort((a, b) => a.name.localeCompare(b.name, 'sk'))
+  const fillItem = fillable.find((item) => item.id === fillId)
+  const fillNeeded = copies * perCase
+  const fillShort = Boolean(fillItem) && fillNeeded > (fillItem?.quantity ?? 0)
   const [searchParams] = useSearchParams()
   const checkDays = useCheckLevels(companyId).days
   const ownerPreset = searchParams.get('owner') ?? ''
@@ -69,17 +78,11 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
   const save = useMutation({
     mutationFn: async (values: CaseFormValues) => {
       if (current || copies <= 1) return [await saveCase({ companyId, id: current?.id ?? null, values, locations })]
-      // Viac kusov naraz: rovnaké údaje, názvy s poradovým číslom. Označenie musí byť jedinečné, preto ho dostane len prvý.
-      const ids: string[] = []
-      for (const [index, name] of numberedCaseNames(values.name, copies, caseNames).entries()) {
-        ids.push(await saveCase({ companyId, id: null, values: { ...values, name, inventoryNumber: index === 0 ? values.inventoryNumber : '' }, locations }))
-      }
-      return ids
+      return createMany(values)
     },
-    onSuccess: async (ids) => {
-      // Uloženie mohlo založiť nové umiestnenie, preto celý strom firmy.
-      await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
-      navigate(ids.length === 1 ? `/cases/${ids[0]}` : '/cases', { replace: true })
+    onSuccess: async (ids: string[]) => {
+      if (fillItem && !fillShort && !current) for (const id of ids) await splitEquipmentIntoCase(fillItem.id, id, perCase)
+      await afterSave(ids)
     },
     onError: (error: { code?: string; message?: string }) => {
       if (error.code === '23505' && error.message?.includes('inventory_number')) {
@@ -87,6 +90,21 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
       }
     },
   })
+
+  async function afterSave(ids: string[]) {
+    // Uloženie mohlo založiť nové umiestnenie, preto celý strom firmy.
+    await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
+    navigate(ids.length === 1 ? `/cases/${ids[0]}` : '/cases', { replace: true })
+  }
+
+  async function createMany(values: CaseFormValues) {
+    // Viac kusov naraz: rovnaké údaje, názvy s poradovým číslom. Označenie musí byť jedinečné, preto ho dostane len prvý.
+    const ids: string[] = []
+    for (const [index, name] of numberedCaseNames(values.name, copies, caseNames).entries()) {
+      ids.push(await saveCase({ companyId, id: null, values: { ...values, name, inventoryNumber: index === 0 ? values.inventoryNumber : '' }, locations }))
+    }
+    return ids
+  }
 
   // Šablóna prepíše rozmery, hmotnosť a kategóriu; názov navrhne len do prázdneho poľa.
   const applyTemplate = (id: string) => {
@@ -116,30 +134,56 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
 
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
-      {!current && templates.length > 0 && (
+      {!current && (
         <div className="grid gap-4 rounded-xl border border-accent/40 bg-accent/10 p-4 sm:grid-cols-[1fr_10rem]">
-          <SelectField label="Šablóna case" value={templateId} onChange={(event) => applyTemplate(event.target.value)}>
-            <option value="">— bez šablóny —</option>
-            {templates.map((template) => (
-              <option key={template.id} value={template.id}>
-                {template.name}
-                {describeTemplate(template) && ` (${describeTemplate(template)})`}
+          {templates.length > 0 ? (
+            <SelectField label="Šablóna case" value={templateId} onChange={(event) => applyTemplate(event.target.value)}>
+              <option value="">— bez šablóny —</option>
+              {templates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.name}
+                  {describeTemplate(template) && ` (${describeTemplate(template)})`}
+                </option>
+              ))}
+            </SelectField>
+          ) : (
+            <p className="self-end text-sm text-muted-foreground">Viac rovnakých case naraz – zadajte počet. Šablónu (rozmery, hmotnosť) si uložíte dole.</p>
+          )}
+          <Field
+            label="Koľko case vytvoriť"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={50}
+            step={1}
+            value={copies}
+            onChange={(event) => setCopies(Math.min(Math.max(Math.trunc(Number(event.target.value)) || 1, 1), 50))}
+          />
+          <SelectField label="Rovno do nich dať techniku (nepovinné)" value={fillId} onChange={(event) => setFillId(event.target.value)}>
+            <option value="">— nič —</option>
+            {fillable.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name} ({item.quantity} ks)
               </option>
             ))}
           </SelectField>
           <Field
-            label="Koľko kusov vytvoriť"
+            label="Kusov do každého"
             type="number"
             inputMode="numeric"
             min={1}
-            max={20}
             step={1}
-            value={copies}
-            onChange={(event) => setCopies(Math.min(Math.max(Math.trunc(Number(event.target.value)) || 1, 1), 20))}
+            disabled={!fillId}
+            value={perCase}
+            onChange={(event) => setPerCase(Math.max(Math.trunc(Number(event.target.value)) || 1, 1))}
           />
-          <p className="text-sm text-muted-foreground sm:col-span-2">
-            Šablóna doplní rozmery, hmotnosť a kategóriu.
-            {copies > 1 && ` Vznikne ${copies} rovnakých cases s názvami „${numberedCaseNames(getValues('name') || 'Case', copies, caseNames)[0]}“ a ďalej podľa poradia.`}
+          <p className={fillShort ? 'text-sm text-destructive sm:col-span-2' : 'text-sm text-muted-foreground sm:col-span-2'}>
+            {templates.length > 0 && 'Šablóna doplní rozmery, hmotnosť a kategóriu. '}
+            {copies > 1 && `Vznikne ${copies} case s názvami „${numberedCaseNames(getValues('name') || 'Case', copies, caseNames)[0]}“ a ďalej podľa poradia. `}
+            {fillItem &&
+              (fillShort
+                ? `Nie je dosť kusov: treba ${fillNeeded}, „${fillItem.name}“ má ${fillItem.quantity}.`
+                : `Do každého pôjde ${perCase} ks „${fillItem.name}“ (spolu ${fillNeeded} z ${fillItem.quantity}).`)}
           </p>
         </div>
       )}
@@ -258,7 +302,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
       )}
 
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={save.isPending}>
+        <Button type="submit" disabled={save.isPending || fillShort}>
           {save.isPending ? 'Ukladám…' : !current && copies > 1 ? `Vytvoriť ${copies} cases` : 'Uložiť'}
         </Button>
         <LinkButton to={current ? `/cases/${current.id}` : '/cases'} variant="outline">

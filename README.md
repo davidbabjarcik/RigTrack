@@ -21,6 +21,31 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.7 – 24. 10. 2026
+
+- **Na PC širšie a prehľadnejšie**: „Vyberte firmu“ s firmami v mriežke a dlaždicami Môj profil, Moja technika,
+  Moje zariadenia a Moje štatistiky; širšie sú aj O aplikácii a Čo je nové (s bočným zoznamom verzií).
+  Na Prehľade sú Moje úlohy na PC v stĺpci na kraji. Demo firma je pri vlastných firmách len malý odkaz.
+- **Môj profil – fotka**: nahrá sa do vašej karty zamestnanca vo všetkých firmách naraz (aj pomocníkom).
+- **Moja technika**: vlastnú techniku aj vlastný case / rack pridáte priamo z „Vyberte firmu“ – do jednej
+  alebo do všetkých svojich firiem; „Upraviť“ otvorí položku vo firme.
+- **Moje zariadenia → „Aj do techniky“**: výkonný notebook či tablet sa dá dať na event ako vaša technika.
+- **Moje štatistiky**: filter podľa firmy, roka a mesiaca; akcie a dni na akciách, odpracované hodiny
+  (eventy, firma, doma), odmeny a priemer na akciu, jazdy a kilometre, graf po mesiacoch, čo ste robili
+  najčastejšie, najčastejší klienti a miesta.
+- **Siete**: hore prepínač Wi-Fi siete / IP tabuľka / MAC adresy (IP zoradené podľa čísel).
+  **Zariadenia hostí** (napr. hosťujúci zvukár): meno a priezvisko, kontakt, zariadenie, MAC, pevná IP
+  (s návrhom voľnej) a dokedy platí – vidí ich len kto upravuje techniku.
+- **Cases**: viac case naraz ide vždy (aj bez šablóny) a rovno sa do nich rozdelí technika – napr. 8 case
+  po 2 svetlá zo 16. V detaile case pri technike s viac kusmi zvolíte, koľko kusov dať dnu (zvyšok ostane).
+  V zozname cases sa ukáže fotka case, inak fotka hlavného prvku štítku alebo techniky vnútri.
+  Na štítku pribudli kategórie Truss a Stage.
+- **Technika po kusoch**: stĺpce Sériové číslo, Dátum nákupu a nové **Odkiaľ kúpené**; inventárne číslo pri
+  kuse odpadlo (kus označuje jeho číslo #1, #2…). Dátum nákupu dole sa pri evidencii po kusoch neukazuje.
+- Filtre v Technike a Cases: triedenie vľavo, vedľa „Viac filtrov“.
+- Opravené: sociálne siete z profilu sa znova prenášajú do kariet zamestnanca.
+- Nové migrácie: `0086` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.6 – 24. 10. 2026
 
 - **Moja technika vo viacerých firmách** („Vyberte firmu“ → Moja technika): technika, ktorej vlastníkom ste vy,

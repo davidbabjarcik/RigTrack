@@ -121,6 +121,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'work_sessions', sheet: 'Dochádzka mimo eventov' },
       { table: 'member_devices', sheet: 'Zariadenia členov' },
       { table: 'wifi_networks', sheet: 'Wi-Fi siete' },
+      { table: 'guest_devices', sheet: 'Zariadenia hostí' },
     ],
   },
   {

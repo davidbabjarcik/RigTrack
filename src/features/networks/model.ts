@@ -153,9 +153,24 @@ export const macKey = (mac: string) => mac.toUpperCase().replace(/[^0-9A-F]/g, '
 // Všetky adresy: technika aj zariadenia členov
 // ---------------------------------------------------------------------------
 
+/** Zariadenie hosťa (napr. hosťujúci zvukár) – 0086. */
+export type GuestDevice = {
+  id: string
+  personName: string
+  contact: string
+  deviceName: string
+  mac: string
+  ip: string
+  networkId: string | null
+  note: string
+  validUntil: string | null
+}
+
 export type AddressRow = {
   key: string
-  source: 'equipment' | 'device'
+  source: 'equipment' | 'device' | 'guest'
+  /** Pri zariadení hosťa jeho id (na úpravu a zmazanie). */
+  guestId?: string
   name: string
   /** Výrobca a model / majiteľ a druh zariadenia. */
   detail: string
@@ -175,7 +190,7 @@ export type AddressRow = {
 
 type Owner = (userId: string) => { name: string; to: string | null }
 
-export function addressRows(equipment: Equipment[], devices: MemberDevice[], networks: WifiNetwork[], owner: Owner): AddressRow[] {
+export function addressRows(equipment: Equipment[], devices: MemberDevice[], networks: WifiNetwork[], owner: Owner, guests: GuestDevice[] = []): AddressRow[] {
   const byIp = (ip: string) => (ip ? (networks.find((network) => inNetwork(ip, network))?.id ?? null) : null)
   const rows: Omit<AddressRow, 'duplicateIp' | 'duplicateMac'>[] = []
   for (const item of equipment) {
@@ -214,6 +229,21 @@ export function addressRows(equipment: Equipment[], devices: MemberDevice[], net
         networkId: bySsid ?? byIp(entry.ip),
         to: who.to,
       })
+    })
+  }
+  for (const guest of guests) {
+    rows.push({
+      key: `g-${guest.id}`,
+      source: 'guest',
+      guestId: guest.id,
+      name: guest.deviceName || guest.personName,
+      detail: [guest.deviceName ? guest.personName : '', guest.contact, guest.validUntil ? `do ${guest.validUntil.split('-').reverse().join('. ')}` : ''].filter(Boolean).join(' · '),
+      ip: guest.ip,
+      dhcp: !guest.ip,
+      prefix: null,
+      mac: guest.mac,
+      networkId: guest.networkId ?? byIp(guest.ip),
+      to: null,
     })
   }
   // Rovnaká IP v tej istej sieti (alebo obe bez siete) by sa bila; rovnaká MAC na rôznych veciach je asi preklep.

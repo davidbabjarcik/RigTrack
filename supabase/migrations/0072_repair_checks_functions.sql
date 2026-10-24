@@ -1266,6 +1266,55 @@ begin
     exception when others then raise notice 'Kontrola events_weather_place_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.guest_devices') is not null then
+    begin
+      execute $sql$alter table public.guest_devices drop constraint if exists guest_devices_check$sql$;
+      execute $sql$alter table public.guest_devices add constraint guest_devices_check CHECK (((mac <> ''::text) OR (ip <> ''::text))) not valid$sql$;
+    exception when others then raise notice 'Kontrola guest_devices_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.guest_devices') is not null then
+    begin
+      execute $sql$alter table public.guest_devices drop constraint if exists guest_devices_contact_check$sql$;
+      execute $sql$alter table public.guest_devices add constraint guest_devices_contact_check CHECK ((char_length(contact) <= 120)) not valid$sql$;
+    exception when others then raise notice 'Kontrola guest_devices_contact_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.guest_devices') is not null then
+    begin
+      execute $sql$alter table public.guest_devices drop constraint if exists guest_devices_device_name_check$sql$;
+      execute $sql$alter table public.guest_devices add constraint guest_devices_device_name_check CHECK ((char_length(device_name) <= 80)) not valid$sql$;
+    exception when others then raise notice 'Kontrola guest_devices_device_name_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.guest_devices') is not null then
+    begin
+      execute $sql$alter table public.guest_devices drop constraint if exists guest_devices_ip_check$sql$;
+      execute $sql$alter table public.guest_devices add constraint guest_devices_ip_check CHECK ((char_length(ip) <= 45)) not valid$sql$;
+    exception when others then raise notice 'Kontrola guest_devices_ip_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.guest_devices') is not null then
+    begin
+      execute $sql$alter table public.guest_devices drop constraint if exists guest_devices_mac_check$sql$;
+      execute $sql$alter table public.guest_devices add constraint guest_devices_mac_check CHECK (((mac = ''::text) OR (mac ~ '^([0-9A-F]{2}:){5}[0-9A-F]{2}$'::text))) not valid$sql$;
+    exception when others then raise notice 'Kontrola guest_devices_mac_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.guest_devices') is not null then
+    begin
+      execute $sql$alter table public.guest_devices drop constraint if exists guest_devices_note_check$sql$;
+      execute $sql$alter table public.guest_devices add constraint guest_devices_note_check CHECK ((char_length(note) <= 300)) not valid$sql$;
+    exception when others then raise notice 'Kontrola guest_devices_note_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.guest_devices') is not null then
+    begin
+      execute $sql$alter table public.guest_devices drop constraint if exists guest_devices_person_name_check$sql$;
+      execute $sql$alter table public.guest_devices add constraint guest_devices_person_name_check CHECK (((char_length(TRIM(BOTH FROM person_name)) >= 1) AND (char_length(TRIM(BOTH FROM person_name)) <= 120))) not valid$sql$;
+    exception when others then raise notice 'Kontrola guest_devices_person_name_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.incidents') is not null then
     begin
       execute $sql$alter table public.incidents drop constraint if exists incidents_cost_check$sql$;
@@ -3129,6 +3178,57 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.create_cases_bulk(_company_id uuid, _base_name text, _count integer, _start integer DEFAULT 1, _template_id uuid DEFAULT NULL::uuid, _equipment_id uuid DEFAULT NULL::uuid, _per_case integer DEFAULT NULL::integer)
+ RETURNS uuid[]
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  t public.case_templates%rowtype;
+  _ids uuid[] := '{}';
+  _case uuid;
+  _available integer;
+  i integer;
+begin
+  if not public.can(_company_id, 'cases.edit') then
+    raise exception 'Nemôžete pridávať case' using errcode = 'insufficient_privilege';
+  end if;
+  if _count is null or _count < 1 or _count > 100 then
+    raise exception 'Počet case musí byť 1 až 100' using errcode = 'check_violation';
+  end if;
+  if _template_id is not null then
+    select * into t from public.case_templates where id = _template_id and company_id = _company_id;
+  end if;
+  if _equipment_id is not null then
+    if not public.can(_company_id, 'equipment.edit') then
+      raise exception 'Techniku nemôžete meniť' using errcode = 'insufficient_privilege';
+    end if;
+    select quantity into _available from public.equipment where id = _equipment_id and company_id = _company_id and deleted_at is null;
+    if _available is null or coalesce(_per_case, 0) < 1 or _available < _count * _per_case then
+      raise exception 'Nie je dosť kusov: treba %, je %', _count * coalesce(_per_case, 0), coalesce(_available, 0) using errcode = 'check_violation';
+    end if;
+  end if;
+
+  for i in 0 .. _count - 1 loop
+    insert into public.cases (company_id, name, label_number, label_category, weight_kg, width_cm, length_cm, depth_cm)
+    values (_company_id, trim(_base_name) || ' ' || (coalesce(_start, 1) + i), (coalesce(_start, 1) + i)::text,
+            coalesce(t.label_category, ''), t.weight_kg, t.width_cm, t.length_cm, t.depth_cm)
+    returning id into _case;
+    _ids := _ids || _case;
+    if _equipment_id is not null then
+      perform public.split_equipment_into_case(_equipment_id, _case, _per_case);
+    end if;
+  end loop;
+  return _ids;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia create_cases_bulk: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.create_company(_name text)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -3340,6 +3440,48 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia create_order: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.create_own_case(_company_id uuid, _name text, _note text DEFAULT ''::text)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  _id uuid;
+begin
+  insert into public.cases (company_id, name, note, owner_staff_id)
+  values (_company_id, trim(_name), coalesce(trim(_note), ''), public.my_staff_card(_company_id))
+  returning id into _id;
+  return _id;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia create_own_case: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.create_own_equipment(_company_id uuid, _name text, _kind text, _quantity integer, _manufacturer text DEFAULT ''::text, _model text DEFAULT ''::text)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  _id uuid;
+begin
+  insert into public.equipment (company_id, name, kind, quantity, manufacturer, model, owner_staff_id)
+  values (_company_id, trim(_name), _kind, greatest(1, coalesce(_quantity, 1)), coalesce(trim(_manufacturer), ''), coalesce(trim(_model), ''), public.my_staff_card(_company_id))
+  returning id into _id;
+  return _id;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia create_own_equipment: %', sqlerrm;
 end;
 $repair$;
 
@@ -4124,6 +4266,31 @@ AS $function$
   where public.can(_company_id, d.permission);
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia my_permissions: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.my_staff_card(_company_id uuid)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  _card uuid;
+begin
+  if not public.is_company_member(_company_id) then
+    raise exception 'Nie ste členom tejto firmy' using errcode = 'insufficient_privilege';
+  end if;
+  select id into _card from public.staff where company_id = _company_id and member_id = auth.uid();
+  if _card is null then
+    insert into public.staff (company_id, member_id, name) values (_company_id, auth.uid(), '') returning id into _card;
+  end if;
+  return _card;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia my_staff_card: %', sqlerrm;
 end;
 $repair$;
 
@@ -4997,6 +5164,60 @@ AS $function$
   );
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia shares_company: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.split_equipment_into_case(_equipment_id uuid, _case_id uuid, _count integer)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  e public.equipment%rowtype;
+  _id uuid;
+  _units integer[];
+begin
+  select * into e from public.equipment where id = _equipment_id and deleted_at is null;
+  if e.id is null or not public.can(e.company_id, 'equipment.edit') then
+    raise exception 'Túto techniku nemôžete meniť' using errcode = 'insufficient_privilege';
+  end if;
+  if _case_id is not null and not exists (select 1 from public.cases where id = _case_id and company_id = e.company_id and deleted_at is null) then
+    raise exception 'Case nepatrí tejto firme' using errcode = 'insufficient_privilege';
+  end if;
+  if _count is null or _count < 1 then
+    raise exception 'Počet musí byť aspoň 1' using errcode = 'check_violation';
+  end if;
+  if _count >= e.quantity then
+    update public.equipment set case_id = _case_id, label_role = null where id = e.id;
+    return e.id;
+  end if;
+
+  _units := coalesce(e.unit_ids, '{}');
+  _id := gen_random_uuid();
+  insert into public.equipment
+  select (jsonb_populate_record(null::public.equipment,
+    to_jsonb(e) || jsonb_build_object(
+      'id', _id,
+      'case_id', _case_id,
+      'label_role', null,
+      'quantity', _count,
+      'inventory_number', '',
+      'unit_ids', case when cardinality(_units) > 0 then to_jsonb(_units[1:_count]) else to_jsonb(_units) end,
+      'shared_from', null,
+      'created_at', now(),
+      'updated_at', now()
+    ))).*;
+  update public.equipment
+    set quantity = e.quantity - _count,
+        unit_ids = case when cardinality(_units) > 0 then _units[_count + 1:] else unit_ids end
+    where id = e.id;
+  return _id;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia split_equipment_into_case: %', sqlerrm;
 end;
 $repair$;
 

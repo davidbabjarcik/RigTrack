@@ -6,7 +6,7 @@ import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
-import { equipmentKeys, fetchEquipmentList, setEquipmentCase, setEquipmentLabelRole } from '@/features/equipment/api'
+import { equipmentKeys, fetchEquipmentList, setEquipmentCase, setEquipmentLabelRole, splitEquipmentIntoCase } from '@/features/equipment/api'
 import { filterEquipment, type LabelRole } from '@/features/equipment/model'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { StatusBadge } from '@/features/equipment/StatusBadge'
@@ -53,8 +53,9 @@ export function CaseDetailPage() {
   )
 
   const move = useMutation({
-    mutationFn: ({ equipmentId, caseId }: { equipmentId: string; caseId: string | null }) =>
-      setEquipmentCase(companyId, equipmentId, caseId),
+    // S počtom menším ako všetky kusy sa položka rozdelí (časť ide do case, zvyšok ostane).
+    mutationFn: ({ equipmentId, caseId, count }: { equipmentId: string; caseId: string | null; count?: number }) =>
+      count ? splitEquipmentIntoCase(equipmentId, caseId, count).then(() => undefined) : setEquipmentCase(companyId, equipmentId, caseId),
     onSettled: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) }),
   })
 
@@ -215,7 +216,10 @@ export function CaseDetailPage() {
               <li key={item.id} className="flex items-center gap-3 px-4 py-3">
                 <PhotoThumb url={thumbs[item.photoPath]} />
                 <Link to={`/equipment/${item.id}`} className="min-w-0 flex-1 hover:underline">
-                  <span className="block truncate font-medium">{item.name}</span>
+                  <span className="block truncate font-medium">
+                    {item.name}
+                    {item.quantity > 1 && <span className="font-normal text-muted-foreground"> · {item.quantity} ks</span>}
+                  </span>
                   {item.inventoryNumber && (
                     <span className="block truncate text-sm text-muted-foreground">inv. č. {item.inventoryNumber}</span>
                   )}
@@ -307,14 +311,12 @@ export function CaseDetailPage() {
                         .join(' · ')}
                     </span>
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
+<AddToCase
+                    quantity={item.quantity}
+                    label={item.caseId ? 'Presunúť' : 'Pridať'}
                     disabled={move.isPending}
-                    onClick={() => move.mutate({ equipmentId: item.id, caseId: id })}
-                  >
-                    {item.caseId ? 'Presunúť' : 'Pridať'}
-                  </Button>
+                    onAdd={(count) => move.mutate({ equipmentId: item.id, caseId: id, count: count < item.quantity ? count : undefined })}
+                  />
                 </li>
               ))}
             </ul>
@@ -327,5 +329,31 @@ export function CaseDetailPage() {
         </section>
       )}
     </>
+  )
+}
+
+/** Tlačidlo Pridať; pri viacerých kusoch aj počet, koľko z nich ide do case. */
+function AddToCase({ quantity, label, disabled, onAdd }: { quantity: number; label: string; disabled: boolean; onAdd: (count: number) => void }) {
+  const [count, setCount] = useState(quantity)
+  return (
+    <span className="flex items-center gap-1.5">
+      {quantity > 1 && (
+        <label className="flex items-center gap-1 text-sm text-muted-foreground">
+          <input
+            type="number"
+            min={1}
+            max={quantity}
+            value={count}
+            aria-label="Koľko kusov dať do case"
+            onChange={(event) => setCount(Math.min(quantity, Math.max(1, Math.trunc(Number(event.target.value)) || 1)))}
+            className="h-9 w-16 rounded-lg border bg-background px-2 text-right text-foreground"
+          />
+          / {quantity} ks
+        </label>
+      )}
+      <Button variant="outline" size="sm" disabled={disabled} onClick={() => onAdd(count)}>
+        {label}
+      </Button>
+    </span>
   )
 }
