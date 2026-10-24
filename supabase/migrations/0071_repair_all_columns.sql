@@ -117,7 +117,7 @@ begin
     execute $sql$alter table public.cases add column if not exists check_priority text default 'normal'::text not null$sql$;
     execute $sql$alter table public.cases add column if not exists old_numbers text default ''::text not null$sql$;
     execute $sql$grant insert, select, delete on public.cases to authenticated$sql$;
-    execute $sql$grant update (check_priority, category_id, depth_cm, label_photo_path, label_number, label_category, inventory_number, old_numbers, note, name, location_id, length_cm, label_title, photo_path, owner_staff_id, width_cm, weight_kg, spot_level, spot_id) on public.cases to authenticated$sql$;
+    execute $sql$grant update (check_priority, category_id, depth_cm, label_number, label_category, inventory_number, old_numbers, note, name, location_id, length_cm, label_title, label_photo_path, photo_path, owner_staff_id, width_cm, weight_kg, spot_level, spot_id) on public.cases to authenticated$sql$;
   end if;
   if to_regclass('public.companies') is not null then
     execute $sql$alter table public.companies add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -260,6 +260,7 @@ begin
     execute $sql$alter table public.equipment add column if not exists capture_match text default ''::text not null$sql$;
     execute $sql$alter table public.equipment add column if not exists capture_note text default ''::text not null$sql$;
     execute $sql$alter table public.equipment add column if not exists unit_info jsonb default '{}'::jsonb not null$sql$;
+    execute $sql$alter table public.equipment add column if not exists shared_from uuid$sql$;
     execute $sql$grant insert, select, delete on public.equipment to authenticated$sql$;
     execute $sql$grant update (clone_of, category_id, case_id, capture_note, capture_match, attributes, kind, ip_address, inventory_number, hours_interval_months, note, name, model, min_quantity, manufacturer, mac_address, location_id, links, last_service_on, label_role, service_interval_months, serial_number, rental_price, quantity, purchased_on, photo_path, owner_staff_id, unit_purchases, unit_info, unit_ids, track_units, status) on public.equipment to authenticated$sql$;
   end if;
@@ -868,7 +869,7 @@ begin
     execute $sql$alter table public.personal_profiles add column if not exists updated_at timestamp with time zone default now() not null$sql$;
     execute $sql$alter table public.personal_profiles add column if not exists socials jsonb default '{}'::jsonb not null$sql$;
     execute $sql$grant insert, select on public.personal_profiles to authenticated$sql$;
-    execute $sql$grant update (birth_date, email, home_lon, home_lat, home_address, name_day, licences, socials, phone, updated_at) on public.personal_profiles to authenticated$sql$;
+    execute $sql$grant update (birth_date, home_lon, home_lat, home_address, email, name_day, licences, phone, updated_at, socials) on public.personal_profiles to authenticated$sql$;
   end if;
   if to_regclass('public.profiles') is not null then
     execute $sql$alter table public.profiles add column if not exists id uuid$sql$;
@@ -1134,7 +1135,7 @@ begin
     execute $sql$alter table public.warehouse_spots add column if not exists levels integer default 1 not null$sql$;
     execute $sql$alter table public.warehouse_spots add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$grant insert, select, delete on public.warehouse_spots to authenticated$sql$;
-    execute $sql$grant update (kind, name, levels, length, y, x, width) on public.warehouse_spots to authenticated$sql$;
+    execute $sql$grant update (kind, name, levels, length, x, width, y) on public.warehouse_spots to authenticated$sql$;
   end if;
   if to_regclass('public.warehouses') is not null then
     execute $sql$alter table public.warehouses add column if not exists company_id uuid$sql$;

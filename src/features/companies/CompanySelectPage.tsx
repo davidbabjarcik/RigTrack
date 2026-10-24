@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Building2, ChartColumn, Check, ChevronRight, Plus, Smartphone, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, Building2, ChartColumn, Check, ChevronRight, Plus, Smartphone, Speaker, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/auth-context'
@@ -12,11 +12,13 @@ import { DemoSettings } from './DemoSettings'
 import { profileComplete, usePersonalProfile } from '@/features/profile/api'
 import { MyDevicesEverywhere } from '@/features/profile/MyDevicesEverywhere'
 import { MyStatsCard } from '@/features/profile/MyStatsCard'
+import { MyEquipmentEverywhere } from '@/features/profile/MyEquipmentEverywhere'
 import { ProfileForm } from '@/features/profile/ProfileForm'
 
-const VIEWS: { id: 'companies' | 'profile' | 'devices' | 'stats'; label: string; icon: LucideIcon }[] = [
+const VIEWS: { id: 'companies' | 'profile' | 'equipment' | 'devices' | 'stats'; label: string; icon: LucideIcon }[] = [
   { id: 'companies', label: 'Firmy', icon: Building2 },
   { id: 'profile', label: 'Môj profil', icon: UserRound },
+  { id: 'equipment', label: 'Moja technika', icon: Speaker },
   { id: 'devices', label: 'Moje zariadenia', icon: Smartphone },
   { id: 'stats', label: 'Moje štatistiky', icon: ChartColumn },
 ]
@@ -87,6 +89,16 @@ export function CompanySelectPage() {
           </button>
           <h1 id="profile-heading" className="mb-2 text-xl font-semibold">Môj profil</h1>
           <ProfileForm userId={user.id} accountEmail={user.email ?? ''} />
+        </section>
+      )}
+      {view === 'equipment' && (
+        <section aria-labelledby="equipment-heading">
+          <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
+            <ArrowLeft className="size-4" aria-hidden />
+            Späť na firmy
+          </button>
+          <h1 id="equipment-heading" className="mb-2 text-xl font-semibold">Moja technika</h1>
+          <MyEquipmentEverywhere userId={user.id} memberships={memberships} />
         </section>
       )}
       {view === 'devices' && (

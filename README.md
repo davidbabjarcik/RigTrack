@@ -21,6 +21,14 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.6 – 24. 10. 2026
+
+- **Moja technika vo viacerých firmách** („Vyberte firmu“ → Moja technika): technika, ktorej vlastníkom ste vy,
+  sa dá jedným klikom pridať aj do ďalšej vašej firmy – bude tam ako vaša vlastná technika (dá sa dať na event).
+  Pri každom kuse vidno, v ktorých firmách je; „Aktualizovať kópie“ prenesie zmeny (názov, počet, parametre)
+  a z firmy sa dá aj odobrať.
+- Nové migrácie: `0085` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.5 – 24. 10. 2026
 
 - **Push upozornenia na mobil** (Nastavenia → Účet → Upozornenia na mobil): upozornenie príde, keď vás niekto
