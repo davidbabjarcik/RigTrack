@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils'
 import { SocialLinks } from './SocialLinks'
 import { StaffDevices, StaffOverview, StaffOwnGear, StaffPastEvents } from './StaffExtras'
 import { useStaff } from './useStaff'
+import { StaffDrives } from '@/features/drives/StaffDrives'
 
 function Details({ companyId, person, canEdit }: { companyId: string; person: Person; canEdit: boolean }) {
   const queryClient = useQueryClient()
@@ -290,6 +291,7 @@ export function StaffDetailPage() {
       {person.staffId && <SocialLinks companyId={companyId} staffId={person.staffId} canEdit={canEdit} />}
       <StaffOverview companyId={companyId} person={person} events={events.data ?? []} userId={userId} />
       <StaffPastEvents person={person} events={events.data ?? []} />
+      <StaffDrives companyId={companyId} person={person} events={events.data ?? []} />
       <StaffDevices companyId={companyId} person={person} userId={userId} />
       <StaffOwnGear companyId={companyId} person={person} />
     </>

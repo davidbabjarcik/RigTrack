@@ -11,6 +11,8 @@ import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { valueSummary } from '@/features/equipment/value'
 import { dutyKeys, fetchAllDuties, fetchWorkLogs, useDutyTypes } from '@/features/duties/api'
 import { dutyRanking, hoursByPerson } from '@/features/duties/model'
+import { useAllDrives } from '@/features/drives/api'
+import { driverRanking } from '@/features/drives/model'
 import { isoToLocal, workedMinutes } from '@/features/attendance/model'
 import { fetchSessions, workKeys } from '@/features/attendance/workApi'
 import { useLoans } from '@/features/loans/useLoans'
@@ -155,6 +157,7 @@ export function StatsPage() {
   const workLogs = useQuery({ queryKey: dutyKeys.workLogs(companyId), queryFn: () => fetchWorkLogs(companyId), retry: false })
   const dutyTypes = useDutyTypes(companyId)
   const duties = useQuery({ queryKey: dutyKeys.all(companyId), queryFn: () => fetchAllDuties(companyId), retry: false })
+  const drives = useAllDrives(companyId)
   const sessions = useQuery({ queryKey: [...workKeys.sessions(companyId), 'all'], queryFn: () => fetchSessions(companyId, '2000-01-01T00:00:00Z'), retry: false })
   const sources = [equipment, loans, service, vehicles, vehicleCosts, payments, events]
 
@@ -276,6 +279,14 @@ export function StatsPage() {
     'vehicles.due': <Tile label="Termíny na vybavenie" value={String(stats.vehicles.due)} hint="po termíne alebo do 30 dní" />,
     'people.hours': (
       <Ranking title={`Odpracované hodiny ${period} (eventy, firma, doma)`} rows={hours} format={(value) => `${formatNumber(value)} h`} empty="Žiadne zapísané výkazy času." />
+    ),
+    'people.drives': (
+      <Ranking
+        title={`Šoféri – najazdené km ${period}`}
+        rows={driverRanking(drives.data ?? [], year, (drive) => (drive.memberId ? personName(drive.memberId) : drive.driverName.trim())).map((row) => ({ ...row, label: `${row.label} (${row.drives}×)` }))}
+        format={(value) => `${formatNumber(value)} km`}
+        empty="Zatiaľ žiadne zapísané jazdy (detail eventu → Kto šoféroval)."
+      />
     ),
     'people.duties':
       dutyRankings.length === 0 ? (

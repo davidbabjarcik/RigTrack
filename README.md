@@ -21,6 +21,15 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.2 – 24. 10. 2026
+
+- **Kto šoféroval** (detail eventu, pod Dopravou): ku každému dňu sa zapíše šofér (člen alebo externista), auto,
+  smer (tam, späť, tam aj späť) a kilometre – prázdne km sa dopočítajú podľa vzdialenosti zo skladu. Šofér
+  z posádky sa môže zapísať aj sám.
+- **Karta zamestnanca**: nová sekcia „Šoféroval“ – kde, kedy, akým autom a koľko km spolu.
+- **Štatistiky → Ľudia**: rebríček šoférov podľa najazdených km (aj s počtom jázd) za zvolený rok.
+- Nové migrácie: `0082` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.1 – 24. 10. 2026
 
 - **Moje štatistiky (všetky firmy)** na obrazovke „Vyberte firmu“: pri každej firme koľko akcií máte v zvolenom

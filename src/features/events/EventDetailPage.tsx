@@ -1,5 +1,6 @@
 import { EventAttendanceSection } from '@/features/attendance/EventAttendanceSection'
 import { EventDutiesSection } from '@/features/duties/EventDutiesSection'
+import { EventDrivesSection } from '@/features/drives/EventDrivesSection'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CalendarClock, ListChecks, Pencil, Printer, Receipt, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -217,6 +218,7 @@ export function EventDetailPage() {
       <EventAttendanceSection companyId={companyId} event={event} canEdit={canEdit} />
       <EventDutiesSection companyId={companyId} event={event} canEdit={canEdit} />
       <EventTravelSection companyId={companyId} event={event} canEdit={canEdit} />
+      <EventDrivesSection companyId={companyId} event={event} canEdit={canEdit} />
       <EventLogSection companyId={companyId} event={event} />
       {can(company, 'payouts.manage') && <EventIncomeSection companyId={companyId} eventId={event.id} />}
       <EventPhotosSection companyId={companyId} eventId={event.id} canEdit={canEdit} />

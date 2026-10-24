@@ -43,6 +43,7 @@ export const STAT_WIDGETS = [
   { id: 'vehicles.costs', section: 'vehicles', kind: 'ranking', label: 'Náklady na prevádzku podľa vozidla' },
   { id: 'people.hours', section: 'people', kind: 'ranking', label: 'Odpracované hodiny (z výkazov)' },
   { id: 'people.duties', section: 'people', kind: 'ranking', label: 'Kto čo robil najviac (činnosti pri eventoch)' },
+  { id: 'people.drives', section: 'people', kind: 'ranking', label: 'Šoféri – najazdené km pri eventoch' },
 ] as const satisfies readonly { id: string; section: StatSectionId; kind: 'tile' | 'ranking' | 'chart'; label: string; needs?: readonly PermissionKey[] }[]
 
 export type StatWidgetId = (typeof STAT_WIDGETS)[number]['id']

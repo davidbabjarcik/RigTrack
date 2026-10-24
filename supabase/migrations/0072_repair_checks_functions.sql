@@ -797,6 +797,41 @@ begin
     exception when others then raise notice 'Kontrola event_documents_size_bytes_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.event_drives') is not null then
+    begin
+      execute $sql$alter table public.event_drives drop constraint if exists event_drives_check$sql$;
+      execute $sql$alter table public.event_drives add constraint event_drives_check CHECK (((member_id IS NULL) <> (TRIM(BOTH FROM driver_name) = ''::text))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_drives_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_drives') is not null then
+    begin
+      execute $sql$alter table public.event_drives drop constraint if exists event_drives_direction_check$sql$;
+      execute $sql$alter table public.event_drives add constraint event_drives_direction_check CHECK ((direction = ANY (ARRAY['there'::text, 'back'::text, 'both'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_drives_direction_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_drives') is not null then
+    begin
+      execute $sql$alter table public.event_drives drop constraint if exists event_drives_driver_name_check$sql$;
+      execute $sql$alter table public.event_drives add constraint event_drives_driver_name_check CHECK ((char_length(driver_name) <= 80)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_drives_driver_name_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_drives') is not null then
+    begin
+      execute $sql$alter table public.event_drives drop constraint if exists event_drives_km_check$sql$;
+      execute $sql$alter table public.event_drives add constraint event_drives_km_check CHECK (((km >= (0)::numeric) AND (km < (100000)::numeric))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_drives_km_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_drives') is not null then
+    begin
+      execute $sql$alter table public.event_drives drop constraint if exists event_drives_route_check$sql$;
+      execute $sql$alter table public.event_drives add constraint event_drives_route_check CHECK ((char_length(route) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_drives_route_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.event_duties') is not null then
     begin
       execute $sql$alter table public.event_duties drop constraint if exists event_duties_check$sql$;
