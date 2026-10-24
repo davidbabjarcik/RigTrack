@@ -27,6 +27,7 @@ export type EventPartner = { partnerId: string; kind: 'organizer' | 'partner' }
 export const partnerKeys = {
   list: (companyId: string) => ['company', companyId, 'partners'] as const,
   ofEvent: (companyId: string, eventId: string) => ['company', companyId, 'events', eventId, 'partners'] as const,
+  links: (companyId: string) => ['company', companyId, 'event-partners'] as const,
 }
 
 export async function fetchPartners(companyId: string): Promise<Partner[]> {
@@ -133,4 +134,11 @@ export async function setEventOrganizer(
     const { error } = await db.from('event_partners').update({ kind: 'organizer' }).eq('event_id', eventId).eq('partner_id', partnerId)
     if (error) throw error
   }
+}
+
+/** Všetky väzby firiem na eventy (pre históriu klientov). */
+export async function fetchAllEventPartners(companyId: string) {
+  const { data, error } = await getSupabase().from('event_partners').select('event_id, partner_id, kind').eq('company_id', companyId)
+  if (error) throw error
+  return (data as { event_id: string; partner_id: string; kind: EventPartner['kind'] }[]).map((row) => ({ eventId: row.event_id, partnerId: row.partner_id, kind: row.kind }))
 }

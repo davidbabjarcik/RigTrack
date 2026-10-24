@@ -9,7 +9,6 @@ export function OrdersTabs() {
     <SectionTabs
       tabs={[
         { to: '/orders', label: 'Objednávky', shown: !company || can(company, 'orders.view') },
-        { to: '/orders/stats', label: 'Štatistiky', shown: !company || can(company, 'orders.view') },
         { to: '/shopping', label: 'Wantlist', shown: !company || can(company, 'shopping.view') },
       ]}
     />

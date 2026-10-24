@@ -21,6 +21,16 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 2.19 – 24. 10. 2026
+
+- **Klienti a ich história**: firma v „Firmy a kontakty“ má vlastnú stránku – počet akcií, prvá, posledná
+  a najbližšia akcia, tržby z akcií (pre toho, kto vidí príjmy), zoznam všetkých akcií (ako organizátor aj
+  partner) s odkazom na ponuku a výpožičky (podľa IČO alebo mena).
+- Rátajú sa aj staršie akcie, kde je firma len napísaná ako organizátor.
+- V zozname firiem je pri každej počet akcií a dá sa zoradiť podľa názvu, počtu akcií alebo poslednej akcie.
+  V detaile eventu je pri firme odkaz „História“.
+- Objednávky: Štatistiky už nie sú dvakrát – ostalo tlačidlo vedľa „Pridať“.
+
 ### 2.18 – 23. 10. 2026
 
 - **Dochádzka aj mimo eventov**: na Prehľade „Začať na firme“ a „Začať doma“ – začať sa dá na mieste (do 300 m

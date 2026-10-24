@@ -60,6 +60,9 @@ export function EventPartnersSection({ companyId, event, canEdit }: { companyId:
                 actions={
                   <>
                     <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">{KIND_LABELS[row.kind]}</span>
+                    <Link to={`/partners/${row.partner!.id}`} className="shrink-0 text-sm text-accent hover:underline">
+                      História
+                    </Link>
                     {canEdit && (
                       <Button variant="ghost" size="sm" aria-label={`Odobrať ${row.partner!.name} z eventu`} disabled={unlink.isPending} onClick={() => unlink.mutate(row.partnerId)}>
                         <X className="size-4" aria-hidden />
