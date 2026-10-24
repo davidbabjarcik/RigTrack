@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, Check, ChevronRight, Plus, UserRoundPen } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Building2, ChartColumn, Check, ChevronRight, Plus, Smartphone, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/auth-context'
 import { ROLE_LABELS } from '@/lib/roles'
@@ -9,11 +9,19 @@ import { acceptInvitation, companyKeys, deleteInvitation, fetchMyInvitations } f
 import { useCompany } from './company-context'
 import { CompanyLogo } from './CompanyLogo'
 import { DemoSettings } from './DemoSettings'
-import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
+import { cn } from '@/lib/utils'
 import { profileComplete, usePersonalProfile } from '@/features/profile/api'
 import { MyDevicesEverywhere } from '@/features/profile/MyDevicesEverywhere'
 import { MyStatsCard } from '@/features/profile/MyStatsCard'
 import { ProfileForm } from '@/features/profile/ProfileForm'
+
+const VIEWS: { id: 'companies' | 'profile' | 'devices' | 'stats'; label: string; icon: LucideIcon }[] = [
+  { id: 'companies', label: 'Firmy', icon: Building2 },
+  { id: 'profile', label: 'Môj profil', icon: UserRound },
+  { id: 'devices', label: 'Moje zariadenia', icon: Smartphone },
+  { id: 'stats', label: 'Moje štatistiky', icon: ChartColumn },
+]
+type View = (typeof VIEWS)[number]['id']
 
 export function CompanySelectPage() {
   const { session } = useAuth()
@@ -49,18 +57,67 @@ export function CompanySelectPage() {
   const pending = invitations.data ?? []
   const profile = usePersonalProfile(user.id)
   const incomplete = profile.isSuccess && !profileComplete(profile.data)
+  // Zvolená časť je v adrese (?view=profile), aby na ňu viedli odkazy z upozornení.
+  const [params, setParams] = useSearchParams()
+  const shown = VIEWS.filter((item) => memberships.length > 0 || item.id === 'companies' || item.id === 'profile')
+  const view: View = shown.find((item) => item.id === params.get('view'))?.id ?? 'companies'
+  const chooseView = (next: View) => setParams(next === 'companies' ? {} : { view: next }, { replace: true })
 
   return (
     <div className="flex flex-col gap-6">
-      {incomplete && (
-        <a href="#profile" role="alert" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
+      <nav aria-label="Časti" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {shown.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            aria-pressed={view === item.id}
+            onClick={() => chooseView(item.id)}
+            className={cn(
+              'relative flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-sm font-medium transition-colors',
+              view === item.id ? 'border-primary bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
+            )}
+          >
+            <item.icon className="size-5" aria-hidden />
+            {item.label}
+            {item.id === 'profile' && incomplete && <span className="absolute top-2 right-2 size-2.5 rounded-full bg-accent" aria-label="nevyplnený" />}
+          </button>
+        ))}
+      </nav>
+
+      {incomplete && view !== 'profile' && (
+        <button
+          type="button"
+          role="alert"
+          onClick={() => chooseView('profile')}
+          className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-left text-sm hover:bg-accent/20"
+        >
           <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />
           <span className="flex-1">
             <span className="font-medium">Doplňte svoj profil</span> – meno a telefón stačí zadať raz, prenesú sa do všetkých vašich firiem.
           </span>
-        </a>
+        </button>
       )}
-      {pending.length > 0 && (
+
+      {view === 'profile' && (
+        <section aria-labelledby="profile-heading">
+          <h1 id="profile-heading" className="mb-2 text-xl font-semibold">Môj profil</h1>
+          <ProfileForm userId={user.id} accountEmail={user.email ?? ''} />
+        </section>
+      )}
+      {view === 'devices' && (
+        <section aria-labelledby="devices-heading">
+          <h1 id="devices-heading" className="mb-2 text-xl font-semibold">Moje zariadenia</h1>
+          <MyDevicesEverywhere userId={user.id} memberships={memberships} />
+        </section>
+      )}
+      {view === 'stats' && (
+        <section aria-labelledby="stats-heading">
+          <h1 id="stats-heading" className="mb-2 text-xl font-semibold">Moje štatistiky</h1>
+          <MyStatsCard userId={user.id} memberships={memberships} />
+        </section>
+      )}
+
+      {view === 'companies' && pending.length > 0 && (
         <section aria-labelledby="invitations-heading">
           <h2 id="invitations-heading" className="mb-2 text-sm font-medium text-muted-foreground">
             Pozvánky
@@ -96,6 +153,7 @@ export function CompanySelectPage() {
         </section>
       )}
 
+      {view === 'companies' && (
       <section aria-labelledby="companies-heading">
         <h1 id="companies-heading" className="mb-2 text-xl font-semibold">
           Vyberte firmu
@@ -141,23 +199,9 @@ export function CompanySelectPage() {
         )}
       </section>
 
-      {memberships.length > 0 && (
-        <CollapsibleSection id="profile.stats" title="Moje štatistiky (všetky firmy)">
-          <MyStatsCard userId={user.id} memberships={memberships} />
-        </CollapsibleSection>
       )}
 
-      <div id="profile">
-        <CollapsibleSection id="profile.personal" title="Môj profil (všetky firmy)">
-          <ProfileForm userId={user.id} accountEmail={user.email ?? ''} />
-        </CollapsibleSection>
-        {memberships.length > 0 && (
-          <CollapsibleSection id="profile.devices" title="Moje zariadenia (všetky firmy)">
-            <MyDevicesEverywhere userId={user.id} memberships={memberships} />
-          </CollapsibleSection>
-        )}
-      </div>
-
+      {view === 'companies' && (
       <div className="flex flex-col gap-3">
         <Link
           to="/company/create"
@@ -171,6 +215,7 @@ export function CompanySelectPage() {
           Odhlásiť sa
         </Button>
       </div>
+      )}
     </div>
   )
 }

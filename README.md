@@ -21,6 +21,11 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.2.1 – 24. 10. 2026
+
+- **„Vyberte firmu“ prehľadnejšie**: hore sú tlačidlá Firmy, Môj profil, Moje zariadenia a Moje štatistiky –
+  ukáže sa vždy len vybraná časť. Pri nevyplnenom profile svieti na tlačidle bodka.
+
 ### 3.2 – 24. 10. 2026
 
 - **Kto šoféroval** (detail eventu, pod Dopravou): ku každému dňu sa zapíše šofér (člen alebo externista), auto,

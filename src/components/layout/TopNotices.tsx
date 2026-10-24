@@ -175,7 +175,7 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
       <UpdateNotice />
       <YearReportNotice />
       {profileIncomplete && (
-        <Link to="/company/select#profile" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
+        <Link to="/company/select?view=profile" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
           <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />
           <span className="flex-1">
             <span className="font-medium">Doplňte svoj profil</span> – meno, telefón a ďalšie údaje zadáte raz pre všetky firmy.
