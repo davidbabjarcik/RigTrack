@@ -3,7 +3,7 @@ import type { CompanyEvent } from '@/features/events/model'
 import { clashes, crewAvailability, matchesPerson, mergeStaff, unavailableOn, upcomingEvents, upcomingPeriods, type Person, type StaffRow } from './model'
 
 const row = (patch: Partial<StaffRow>): StaffRow => ({
-  id: 's1', memberId: null, name: '', position: '', phone: '', email: '', photoPath: '', skills: '', note: '', active: true, birthDate: null, nameDay: '', licences: [], onboarded: true, ...patch,
+  id: 's1', memberId: null, name: '', position: '', phone: '', email: '', photoPath: '', skills: '', note: '', active: true, birthDate: null, nameDay: '', licences: [], onboarded: true, syncProfile: false, ...patch,
 })
 const members = [
   { userId: 'u1', email: 'peter@x.sk', fullName: 'Peter Zvukár', role: 'technik' as const },

@@ -1,3 +1,4 @@
+import { profileComplete, usePersonalProfile } from '@/features/profile/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bell, CheckCheck, FileChartColumn, Gift, Smartphone, Sparkles, UserRoundPen, X } from 'lucide-react'
 import { useState } from 'react'
@@ -166,12 +167,22 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
   const missing = devices.isSuccess && exemptions.isSuccess ? missingDeviceKinds(devices.data, exemptions.data, userId) : []
   const celebrations = upcomingCelebrations(staff.people, today, 2)
   const onWelcome = location.pathname === '/welcome'
+  const profile = usePersonalProfile(userId)
+  const profileIncomplete = profile.isSuccess && !profileComplete(profile.data)
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-4 pt-4 empty:hidden md:px-8 print:hidden">
       <UpdateNotice />
       <YearReportNotice />
-      {me && !me.onboarded && !onWelcome && (
+      {profileIncomplete && (
+        <Link to="/company/select#profile" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
+          <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />
+          <span className="flex-1">
+            <span className="font-medium">Doplňte svoj profil</span> – meno, telefón a ďalšie údaje zadáte raz pre všetky firmy.
+          </span>
+        </Link>
+      )}
+      {me && !me.onboarded && !onWelcome && !profileIncomplete && (
         <Link to="/welcome" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
           <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />
           <span className="flex-1">

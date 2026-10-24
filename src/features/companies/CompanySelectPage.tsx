@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, Check, ChevronRight, Plus } from 'lucide-react'
+import { Building2, Check, ChevronRight, Plus, UserRoundPen } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/auth-context'
@@ -9,6 +9,10 @@ import { acceptInvitation, companyKeys, deleteInvitation, fetchMyInvitations } f
 import { useCompany } from './company-context'
 import { CompanyLogo } from './CompanyLogo'
 import { DemoSettings } from './DemoSettings'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
+import { profileComplete, usePersonalProfile } from '@/features/profile/api'
+import { MyDevicesEverywhere } from '@/features/profile/MyDevicesEverywhere'
+import { ProfileForm } from '@/features/profile/ProfileForm'
 
 export function CompanySelectPage() {
   const { session } = useAuth()
@@ -42,9 +46,19 @@ export function CompanySelectPage() {
   })
 
   const pending = invitations.data ?? []
+  const profile = usePersonalProfile(user.id)
+  const incomplete = profile.isSuccess && !profileComplete(profile.data)
 
   return (
     <div className="flex flex-col gap-6">
+      {incomplete && (
+        <a href="#profile" role="alert" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
+          <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />
+          <span className="flex-1">
+            <span className="font-medium">Doplňte svoj profil</span> – meno a telefón stačí zadať raz, prenesú sa do všetkých vašich firiem.
+          </span>
+        </a>
+      )}
       {pending.length > 0 && (
         <section aria-labelledby="invitations-heading">
           <h2 id="invitations-heading" className="mb-2 text-sm font-medium text-muted-foreground">
@@ -125,6 +139,17 @@ export function CompanySelectPage() {
           </ul>
         )}
       </section>
+
+      <div id="profile">
+        <CollapsibleSection id="profile.personal" title="Môj profil (všetky firmy)">
+          <ProfileForm userId={user.id} accountEmail={user.email ?? ''} />
+        </CollapsibleSection>
+        {memberships.length > 0 && (
+          <CollapsibleSection id="profile.devices" title="Moje zariadenia (všetky firmy)">
+            <MyDevicesEverywhere userId={user.id} memberships={memberships} />
+          </CollapsibleSection>
+        )}
+      </div>
 
       <div className="flex flex-col gap-3">
         <Link

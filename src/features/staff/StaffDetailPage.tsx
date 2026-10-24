@@ -40,8 +40,11 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
     birthDate: person.birthDate ?? '',
     nameDay: person.nameDay,
     licences: person.licences,
+    ...(person.isMember && person.staffId ? { syncProfile: person.syncProfile } : {}),
   })
   const set = (patch: Partial<StaffFields>) => setFields((current) => ({ ...current, ...patch }))
+  // Kým karta berie údaje z osobného profilu, tieto polia sa tu neupravujú.
+  const synced = Boolean(person.isMember && person.staffId && fields.syncProfile && person.syncProfile)
   const refresh = () => queryClient.invalidateQueries({ queryKey: staffKeys.list(companyId) })
   const save = useMutation({
     mutationFn: () => saveStaff(companyId, person.staffId, person.memberId, fields),
@@ -82,18 +85,33 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
   return (
     <form onSubmit={submit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
       {!person.isMember && <Field label="Meno *" maxLength={120} value={fields.name} onChange={(event) => set({ name: event.target.value })} />}
+      {person.isMember && person.staffId && (
+        <label className="flex items-start gap-2 rounded-lg border border-accent/40 bg-accent/10 p-3 text-sm">
+          <input type="checkbox" className="mt-0.5 size-4" checked={fields.syncProfile ?? false} onChange={(event) => set({ syncProfile: event.target.checked })} />
+          <span>
+            Brať údaje z osobného profilu
+            <span className="block text-xs text-muted-foreground">
+              Telefón, e-mail, narodeniny, meniny a vodičák si človek zadá raz pre všetky firmy. Vypnite, ak ich chcete v tejto firme upraviť inak.
+            </span>
+          </span>
+        </label>
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Pozícia" placeholder="napr. Osvetľovač, Zvukár, Stagehand" maxLength={80} value={fields.position} onChange={(event) => set({ position: event.target.value })} />
-        <Field label="Telefón" type="tel" maxLength={40} value={fields.phone} onChange={(event) => set({ phone: event.target.value })} />
-        <Field label="E-mail na kontakt" type="email" maxLength={120} value={fields.email} onChange={(event) => set({ email: event.target.value })} />
+        <Field label="Telefón" type="tel" maxLength={40} disabled={synced} value={fields.phone} onChange={(event) => set({ phone: event.target.value })} />
+        <Field label="E-mail na kontakt" type="email" maxLength={120} disabled={synced} value={fields.email} onChange={(event) => set({ email: event.target.value })} />
         <label className="flex items-center gap-2 self-end pb-3 text-sm">
           <input type="checkbox" className="size-4" checked={fields.active} onChange={(event) => set({ active: event.target.checked })} />
           Aktívny v tíme
         </label>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Dátum narodenia" type="date" value={fields.birthDate ?? ''} onChange={(event) => set({ birthDate: event.target.value })} />
-        <NameDayField value={fields.nameDay ?? ''} onChange={(nameDay) => set({ nameDay })} />
+        <Field label="Dátum narodenia" type="date" disabled={synced} value={fields.birthDate ?? ''} onChange={(event) => set({ birthDate: event.target.value })} />
+        {synced ? (
+          <Field label="Meniny" disabled value={formatNameDay(fields.nameDay ?? '')} onChange={() => {}} />
+        ) : (
+          <NameDayField value={fields.nameDay ?? ''} onChange={(nameDay) => set({ nameDay })} />
+        )}
       </div>
       <fieldset>
         <legend className="mb-1 text-sm font-medium">Vodičský preukaz</legend>
@@ -105,6 +123,7 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
                 key={licence}
                 type="button"
                 aria-pressed={on}
+                disabled={synced}
                 onClick={() => set({ licences: on ? (fields.licences ?? []).filter((item) => item !== licence) : [...(fields.licences ?? []), licence] })}
                 className={cn('h-9 min-w-11 rounded-lg border px-2 text-sm font-medium', on ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
               >

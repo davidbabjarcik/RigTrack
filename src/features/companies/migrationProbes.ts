@@ -28,6 +28,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0078', label: 'údaje po kusoch, staré čísla cases', table: 'cases', column: 'old_numbers' },
   { migration: '0079', label: 'skupiny ľudí v oprávneniach', table: 'permission_groups', column: 'id' },
   { migration: '0080', label: 'dochádzka na firme a doma', table: 'work_sessions', column: 'id' },
+  { migration: '0081', label: 'osobný profil pre všetky firmy', table: 'personal_profiles', column: 'user_id' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

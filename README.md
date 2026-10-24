@@ -21,6 +21,19 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.0 – 24. 10. 2026
+
+- **Môj profil pre všetky firmy** (obrazovka „Vyberte firmu“): meno, telefón, e-mail, narodeniny, meniny, vodičák
+  a adresa domov sa zadávajú raz. Do karty zamestnanca v každej firme sa prepíšu samy – aj v novej firme hneď
+  po vstupe. Kým profil nie je vyplnený (meno a telefón), appka to pripomína.
+- **Karta zamestnanca – „Brať údaje z osobného profilu“**: predvolene zapnuté; po vypnutí sa karta v danej firme
+  upravuje samostatne, po zapnutí sa znova dorovná s profilom.
+- **Moje zariadenia pre všetky firmy**: mobil, notebook či tablet s MAC adresou sa zapíše naraz do všetkých
+  firiem; pri zariadení vidno, v ktorej firme chýba, a jedným klikom ho tam doplníte. Siete a IP adresy ostávajú
+  pre každú firmu zvlášť.
+- Adresa domov z profilu sa prenesie aj do dochádzky (práca doma).
+- Nové migrácie: `0081` (opravné `0071` a `0072` sú aktualizované).
+
 ### 2.19 – 24. 10. 2026
 
 - **Klienti a ich história**: firma v „Firmy a kontakty“ má vlastnú stránku – počet akcií, prvá, posledná

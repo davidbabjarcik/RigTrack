@@ -23,16 +23,22 @@ type Row = {
   name_day?: string
   licences?: string[]
   onboarded?: boolean
+  sync_profile?: boolean
 }
 
-// Narodeniny, meniny, vodičák a dotazník (0057); bez migrácie sa karty načítajú bez nich.
+// Narodeniny, meniny, vodičák a dotazník (0057) a sync s osobným profilom (0081); bez migrácií sa karty načítajú bez nich.
 let extraColumns = ', birth_date, name_day, licences, onboarded'
+let syncColumn = ', sync_profile'
 
 export async function fetchStaff(companyId: string): Promise<StaffRow[]> {
   const { data, error } = await getSupabase()
     .from('staff')
-    .select('id, member_id, name, position, phone, email, photo_path, skills, note, active' + extraColumns)
+    .select('id, member_id, name, position, phone, email, photo_path, skills, note, active' + extraColumns + syncColumn)
     .eq('company_id', companyId)
+  if (syncColumn && isMissingColumn(error, 'sync_profile')) {
+    syncColumn = ''
+    return fetchStaff(companyId)
+  }
   if (extraColumns && isMissingColumn(error, 'birth_date')) {
     extraColumns = ''
     return fetchStaff(companyId)
@@ -54,6 +60,7 @@ export async function fetchStaff(companyId: string): Promise<StaffRow[]> {
     licences: row.licences ?? [],
     // Bez migrácie dotazník nepýtame.
     onboarded: row.onboarded ?? true,
+    syncProfile: row.sync_profile ?? false,
   }))
 }
 
@@ -74,7 +81,7 @@ export async function fetchUnavailability(companyId: string): Promise<Unavailabi
 }
 
 export type StaffFields = Pick<StaffRow, 'name' | 'position' | 'phone' | 'email' | 'skills' | 'note' | 'active'> &
-  Partial<Pick<StaffRow, 'birthDate' | 'nameDay' | 'licences' | 'onboarded'>>
+  Partial<Pick<StaffRow, 'birthDate' | 'nameDay' | 'licences' | 'onboarded' | 'syncProfile'>>
 
 const columns = (fields: StaffFields) => ({
   name: fields.name.trim(),
@@ -89,6 +96,7 @@ const columns = (fields: StaffFields) => ({
   ...(fields.nameDay !== undefined && { name_day: fields.nameDay }),
   ...(fields.licences !== undefined && { licences: fields.licences }),
   ...(fields.onboarded !== undefined && { onboarded: fields.onboarded }),
+  ...(fields.syncProfile !== undefined && { sync_profile: fields.syncProfile }),
 })
 
 /** Uloží kartu; člen firmy bez karty ju dostane založenú. Vráti id karty. */

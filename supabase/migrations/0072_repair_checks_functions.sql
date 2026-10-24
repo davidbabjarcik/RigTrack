@@ -1770,6 +1770,55 @@ begin
     exception when others then raise notice 'Kontrola permission_groups_name_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.personal_profiles') is not null then
+    begin
+      execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_email_check$sql$;
+      execute $sql$alter table public.personal_profiles add constraint personal_profiles_email_check CHECK ((char_length(email) <= 120)) not valid$sql$;
+    exception when others then raise notice 'Kontrola personal_profiles_email_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.personal_profiles') is not null then
+    begin
+      execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_home_address_check$sql$;
+      execute $sql$alter table public.personal_profiles add constraint personal_profiles_home_address_check CHECK ((char_length(home_address) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola personal_profiles_home_address_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.personal_profiles') is not null then
+    begin
+      execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_home_lat_check$sql$;
+      execute $sql$alter table public.personal_profiles add constraint personal_profiles_home_lat_check CHECK (((home_lat >= ('-90'::integer)::double precision) AND (home_lat <= (90)::double precision))) not valid$sql$;
+    exception when others then raise notice 'Kontrola personal_profiles_home_lat_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.personal_profiles') is not null then
+    begin
+      execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_home_lon_check$sql$;
+      execute $sql$alter table public.personal_profiles add constraint personal_profiles_home_lon_check CHECK (((home_lon >= ('-180'::integer)::double precision) AND (home_lon <= (180)::double precision))) not valid$sql$;
+    exception when others then raise notice 'Kontrola personal_profiles_home_lon_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.personal_profiles') is not null then
+    begin
+      execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_licences_check$sql$;
+      execute $sql$alter table public.personal_profiles add constraint personal_profiles_licences_check CHECK ((licences <@ ARRAY['AM'::text, 'A1'::text, 'A2'::text, 'A'::text, 'B1'::text, 'B'::text, 'BE'::text, 'C1'::text, 'C1E'::text, 'C'::text, 'CE'::text, 'D1'::text, 'D1E'::text, 'D'::text, 'DE'::text, 'T'::text])) not valid$sql$;
+    exception when others then raise notice 'Kontrola personal_profiles_licences_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.personal_profiles') is not null then
+    begin
+      execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_name_day_check$sql$;
+      execute $sql$alter table public.personal_profiles add constraint personal_profiles_name_day_check CHECK (((name_day = ''::text) OR (name_day ~ '^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'::text))) not valid$sql$;
+    exception when others then raise notice 'Kontrola personal_profiles_name_day_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.personal_profiles') is not null then
+    begin
+      execute $sql$alter table public.personal_profiles drop constraint if exists personal_profiles_phone_check$sql$;
+      execute $sql$alter table public.personal_profiles add constraint personal_profiles_phone_check CHECK ((char_length(phone) <= 40)) not valid$sql$;
+    exception when others then raise notice 'Kontrola personal_profiles_phone_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.role_permissions') is not null then
     begin
       execute $sql$alter table public.role_permissions drop constraint if exists role_permissions_permission_check$sql$;
@@ -2771,6 +2820,34 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.apply_personal_profile(_user_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  p public.personal_profiles%rowtype;
+begin
+  select * into p from public.personal_profiles where user_id = _user_id;
+  if not found then return; end if;
+  update public.staff s
+    set phone = p.phone, email = p.email, birth_date = p.birth_date, name_day = p.name_day, licences = p.licences
+    where s.member_id = _user_id and s.sync_profile;
+  if p.home_address <> '' then
+    insert into public.member_homes (company_id, user_id, address, lat, lon, updated_at)
+      select m.company_id, _user_id, p.home_address, p.home_lat, p.home_lon, now()
+      from public.company_members m where m.user_id = _user_id
+    on conflict (company_id, user_id) do update set address = excluded.address, lat = excluded.lat, lon = excluded.lon, updated_at = now();
+  end if;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia apply_personal_profile: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.apply_service_status()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -3338,6 +3415,34 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.fill_staff_from_profile()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  p public.personal_profiles%rowtype;
+begin
+  if new.member_id is null or not new.sync_profile then return new; end if;
+  if tg_op = 'UPDATE' and old.sync_profile then return new; end if;
+  select * into p from public.personal_profiles where user_id = new.member_id;
+  if found then
+    new.phone := p.phone;
+    new.email := p.email;
+    new.birth_date := p.birth_date;
+    new.name_day := p.name_day;
+    new.licences := p.licences;
+  end if;
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia fill_staff_from_profile: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.finish_attendance()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -3814,6 +3919,23 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.member_joined_profile()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  perform public.apply_personal_profile(new.user_id);
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia member_joined_profile: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.my_demo_company()
  RETURNS uuid
  LANGUAGE sql
@@ -3941,6 +4063,23 @@ AS $function$
     ('report.money', array[]::public.app_role[])
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia permission_defaults: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.personal_profile_changed()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  perform public.apply_personal_profile(new.user_id);
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia personal_profile_changed: %', sqlerrm;
 end;
 $repair$;
 

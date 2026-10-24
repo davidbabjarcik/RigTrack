@@ -21,6 +21,8 @@ export type StaffRow = {
   licences: string[]
   /** Prešiel úvodným dotazníkom po prvom prihlásení. */
   onboarded: boolean
+  /** Údaje berie z osobného profilu člena (0081); vypnuté = karta sa upravuje len vo firme. */
+  syncProfile: boolean
 }
 
 /** Skupiny vodičského oprávnenia na Slovensku. */
@@ -44,7 +46,7 @@ export const memberKey = (memberId: string) => `m-${memberId}`
 export function mergeStaff(members: Member[], rows: StaffRow[]): Person[] {
   const people: Person[] = members.map((member) => {
     const row = rows.find((candidate) => candidate.memberId === member.userId)
-    const base = { position: '', phone: '', email: '', photoPath: '', skills: '', note: '', active: true, birthDate: null, nameDay: '', licences: [], onboarded: false }
+    const base = { position: '', phone: '', email: '', photoPath: '', skills: '', note: '', active: true, birthDate: null, nameDay: '', licences: [], onboarded: false, syncProfile: true }
     return {
       ...base,
       ...(row ?? {}),
