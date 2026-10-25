@@ -32,6 +32,7 @@ const MODES: { id: PriceMode; label: string }[] = [
 /** Jedna časť ponuky (A, B… alebo A1, A2): texty, cena ručne alebo zo zoznamu techniky a vlastných položiek. */
 export function PartEditor({ part, index, subIndex, equipment, defaultDays, remaining, eventItems, onChange, onRemove, onMove, onSaveTemplate }: Props) {
   const [search, setSearch] = useState('')
+  const [itemSearch, setItemSearch] = useState('')
   const set = (patch: Partial<OfferPart>) => onChange({ ...part, ...patch })
   const setLine = (id: string, patch: Partial<OfferLine>) => set({ lines: part.lines.map((line) => (line.id === id ? { ...line, ...patch } : line)) })
   const code = partCode(index, subIndex)
@@ -49,6 +50,22 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
     setSearch('')
   }
   const isSub = subIndex !== undefined
+  // Zoznam (odrážky) sa dá klikať z vlastnej techniky: „2 × Názov“, ďalší klik pridá kus.
+  const itemQuery = itemSearch.trim().toLowerCase()
+  const itemFound = itemQuery
+    ? equipment.filter((item) => item.status !== 'retired' && `${item.name} ${item.manufacturer} ${item.model}`.toLowerCase().includes(itemQuery)).slice(0, 8)
+    : []
+  const addItem = (item: Equipment) => {
+    const label = [item.manufacturer, item.model].filter(Boolean).join(' ') || item.name
+    const rows = part.items.split('\n').filter((row) => row.trim())
+    const index = rows.findIndex((row) => row.replace(/^\s*\d+\s*×\s*/, '').trim() === label)
+    if (index >= 0) {
+      const count = Number(/^\s*(\d+)\s*×/.exec(rows[index])?.[1] ?? 1)
+      rows[index] = `${count + 1} × ${label}`
+    } else rows.push(`1 × ${label}`)
+    set({ items: rows.join('\n') })
+    setItemSearch('')
+  }
 
   return (
     <div className={cn('flex flex-col gap-3 rounded-xl border p-4', isSub ? 'bg-background' : 'bg-surface')}>
@@ -74,6 +91,23 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
       <TextareaField label="Popis" rows={2} maxLength={2000} placeholder="Čo časť obsahuje – jedna-dve vety pre klienta." value={part.description} onChange={(e) => set({ description: e.target.value })} />
       <div>
         <TextareaField label="Zoznam (jeden riadok = jedna odrážka)" rows={3} maxLength={4000} placeholder={'napr.\n4 × Reprobox\n2 × Subwoofer'} value={part.items} onChange={(e) => set({ items: e.target.value })} />
+        <div className="relative mt-1">
+          <Search className="pointer-events-none absolute top-3 left-3 size-4 text-muted-foreground" aria-hidden />
+          <Field label="Pridať do zoznamu z našej techniky" hideLabel placeholder="Pridať do zoznamu z našej techniky – hľadať…" className="[&_input]:h-10 [&_input]:pl-9" value={itemSearch} onChange={(e) => setItemSearch(e.target.value)} />
+        </div>
+        {itemFound.length > 0 && (
+          <ul className="mt-1 divide-y rounded-lg border text-sm">
+            {itemFound.map((item) => (
+              <li key={item.id}>
+                <button type="button" onClick={() => addItem(item)} className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-muted">
+                  <Plus className="size-4 text-accent" aria-hidden />
+                  <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                  <span className="text-xs text-muted-foreground">{item.quantity} ks</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="mt-1 flex flex-wrap gap-2">
           {part.lines.length > 0 && (
             <button type="button" className="inline-flex items-center gap-1 text-xs text-accent hover:underline" onClick={() => set({ items: itemsFromLines(part.lines) })}>

@@ -2108,6 +2108,13 @@ begin
   end if;
   if to_regclass('public.quote_issuers') is not null then
     begin
+      execute $sql$alter table public.quote_issuers drop constraint if exists quote_issuers_kind_check$sql$;
+      execute $sql$alter table public.quote_issuers add constraint quote_issuers_kind_check CHECK ((kind = ANY (ARRAY['sro'::text, 'zivnost'::text, 'other'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola quote_issuers_kind_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quote_issuers') is not null then
+    begin
       execute $sql$alter table public.quote_issuers drop constraint if exists quote_issuers_name_check$sql$;
       execute $sql$alter table public.quote_issuers add constraint quote_issuers_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 160))) not valid$sql$;
     exception when others then raise notice 'Kontrola quote_issuers_name_check: %', sqlerrm;
@@ -2174,6 +2181,13 @@ begin
       execute $sql$alter table public.quotes drop constraint if exists quotes_place_check$sql$;
       execute $sql$alter table public.quotes add constraint quotes_place_check CHECK ((char_length(place) <= 200)) not valid$sql$;
     exception when others then raise notice 'Kontrola quotes_place_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_response_note_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_response_note_check CHECK ((char_length(response_note) <= 1000)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_response_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.quotes') is not null then
@@ -4294,6 +4308,27 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.get_shared_offer(_token uuid)
+ RETURNS jsonb
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select jsonb_build_object(
+    'number', q.number, 'status', q.status, 'client', q.client, 'issuer', q.issuer, 'title', q.title, 'place', q.place,
+    'serviceDates', q.service_dates, 'issuedOn', q.issued_on, 'sections', q.sections, 'vatMode', q.vat_mode, 'vatPct', q.vat_pct,
+    'totalOverride', q.total_override, 'notes', q.notes, 'authorName', q.author_name, 'respondedAt', q.responded_at,
+    'responseNote', q.response_note, 'companyName', c.name
+  )
+  from public.quotes q join public.companies c on c.id = q.company_id
+  where _token is not null and q.share_token = _token;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia get_shared_offer: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.guard_suggestion_status()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5415,6 +5450,42 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.respond_shared_offer(_token uuid, _accept boolean, _note text DEFAULT ''::text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  q public.quotes%rowtype;
+begin
+  select * into q from public.quotes where _token is not null and share_token = _token;
+  if not found then
+    raise exception 'Ponuka sa nenašla' using errcode = 'no_data_found';
+  end if;
+  if q.responded_at is not null then
+    raise exception 'Na ponuku už bolo odpovedané' using errcode = 'check_violation';
+  end if;
+  update public.quotes
+    set status = case when _accept then 'accepted' else 'rejected' end, responded_at = now(), response_note = left(coalesce(_note, ''), 1000)
+    where id = q.id;
+  if q.created_by is not null then
+    insert into public.notifications (user_id, company_id, title, body, url)
+    values (
+      q.created_by, q.company_id,
+      left((case when _accept then 'Ponuka prijatá: ' else 'Ponuka odmietnutá: ' end) || coalesce(nullif(q.title, ''), q.number), 120),
+      left(concat_ws(' · ', nullif(q.client ->> 'name', ''), nullif(_note, '')), 300),
+      '/offers/' || q.id
+    );
+  end if;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia respond_shared_offer: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.responsibility_due(_company_id uuid)
  RETURNS TABLE(responsibility_id uuid, name text, task text, due_count integer, items text[], member_ids uuid[])
  LANGUAGE sql
@@ -5871,6 +5942,33 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia set_partner_part: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.share_offer(_id uuid)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  _company uuid;
+  _token uuid;
+begin
+  select company_id, share_token into _company, _token from public.quotes where id = _id;
+  if _company is null or not public.can(_company, 'offers.edit') then
+    raise exception 'Ponuka neexistuje alebo nemáte oprávnenie' using errcode = 'insufficient_privilege';
+  end if;
+  if _token is null then
+    _token := gen_random_uuid();
+    update public.quotes set share_token = _token, status = case when status = 'draft' then 'sent' else status end where id = _id;
+  end if;
+  return _token;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia share_offer: %', sqlerrm;
 end;
 $repair$;
 
@@ -6558,6 +6656,28 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia unlink_order_item: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.unshare_offer(_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  _company uuid;
+begin
+  select company_id into _company from public.quotes where id = _id;
+  if _company is null or not public.can(_company, 'offers.edit') then
+    raise exception 'Ponuka neexistuje alebo nemáte oprávnenie' using errcode = 'insufficient_privilege';
+  end if;
+  update public.quotes set share_token = null where id = _id;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia unshare_offer: %', sqlerrm;
 end;
 $repair$;
 

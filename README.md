@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-3.17-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-3.18-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -39,10 +39,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **3.18** | Ponuka odkazom pre klienta, event z ponuky, s.r.o./živnosť, nové PDF, presety zosilňovačov |
 | **3.17** | Cenové ponuky s časťami, rozpočtom, technikou zo skladu, vystavovateľmi a oprávneniami |
 | **3.16** | Pack list funguje aj bez signálu, záložka Vývojár v Nastaveniach |
 | **3.15** | Plán pódia Nivtec uložený k eventu, karta Pódium v detaile eventu |
-| **3.14** | Zakladanie nových firiem len so schválením správcu aplikácie (žiadosti a upozornenia) |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

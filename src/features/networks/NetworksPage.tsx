@@ -227,7 +227,14 @@ export function NetworksPage() {
                     </td>
                   )
                   const macCell = (
-                    <td className={cn('px-4 py-2 font-mono whitespace-nowrap', row.duplicateMac && 'font-semibold text-destructive', tab === 'ip' && 'text-muted-foreground')}>{row.mac || '—'}</td>
+                    <td className={cn('px-4 py-2 font-mono whitespace-nowrap', row.duplicateMac && 'font-semibold text-destructive', tab === 'ip' && 'text-muted-foreground')}>
+                      {row.mac || '—'}
+                      {row.mac && row.iface && (
+                        <span className="ml-2 rounded bg-muted px-1.5 py-0.5 font-sans text-xs text-muted-foreground" title={row.iface === 'lan' ? 'MAC ethernetovej (LAN) karty' : 'MAC Wi-Fi karty'}>
+                          {row.iface === 'lan' ? 'LAN' : 'Wi-Fi'}
+                        </span>
+                      )}
+                    </td>
                   )
                   return (
                     <tr key={row.key} className="hover:bg-muted">

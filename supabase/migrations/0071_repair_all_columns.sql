@@ -117,7 +117,7 @@ begin
     execute $sql$alter table public.cases add column if not exists check_priority text default 'normal'::text not null$sql$;
     execute $sql$alter table public.cases add column if not exists old_numbers text default ''::text not null$sql$;
     execute $sql$grant insert, select, delete on public.cases to authenticated$sql$;
-    execute $sql$grant update (category_id, check_priority, depth_cm, location_id, length_cm, label_title, label_photo_path, label_number, label_category, inventory_number, owner_staff_id, old_numbers, note, name, spot_level, spot_id, photo_path, width_cm, weight_kg) on public.cases to authenticated$sql$;
+    execute $sql$grant update (check_priority, category_id, depth_cm, location_id, length_cm, label_title, label_photo_path, label_number, label_category, inventory_number, owner_staff_id, old_numbers, note, name, photo_path, spot_level, spot_id, width_cm, weight_kg) on public.cases to authenticated$sql$;
   end if;
   if to_regclass('public.companies') is not null then
     execute $sql$alter table public.companies add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -202,6 +202,12 @@ begin
     execute $sql$alter table public.company_news add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$grant select on public.company_news to authenticated$sql$;
   end if;
+  if to_regclass('public.company_pins') is not null then
+    execute $sql$alter table public.company_pins add column if not exists user_id uuid default auth.uid() not null$sql$;
+    execute $sql$alter table public.company_pins add column if not exists company_id uuid$sql$;
+    execute $sql$alter table public.company_pins add column if not exists created_at timestamp with time zone default now() not null$sql$;
+    execute $sql$grant insert, select, delete on public.company_pins to authenticated$sql$;
+  end if;
   if to_regclass('public.company_profile') is not null then
     execute $sql$alter table public.company_profile add column if not exists company_id uuid$sql$;
     execute $sql$alter table public.company_profile add column if not exists legal_name text default ''::text not null$sql$;
@@ -216,7 +222,7 @@ begin
     execute $sql$alter table public.company_profile add column if not exists warehouse_address text default ''::text not null$sql$;
     execute $sql$alter table public.company_profile add column if not exists updated_at timestamp with time zone default now() not null$sql$;
     execute $sql$grant insert, select on public.company_profile to authenticated$sql$;
-    execute $sql$grant update (ceo_name, address, ic_dph, email, dic, legal_name, ico, phone, web, warehouse_address, updated_at) on public.company_profile to authenticated$sql$;
+    execute $sql$grant update (address, ceo_name, email, dic, legal_name, ico, ic_dph, phone, updated_at, web, warehouse_address) on public.company_profile to authenticated$sql$;
   end if;
   if to_regclass('public.company_requests') is not null then
     execute $sql$alter table public.company_requests add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -279,7 +285,7 @@ begin
     execute $sql$alter table public.equipment add column if not exists unit_info jsonb default '{}'::jsonb not null$sql$;
     execute $sql$alter table public.equipment add column if not exists shared_from uuid$sql$;
     execute $sql$grant insert, select, delete on public.equipment to authenticated$sql$;
-    execute $sql$grant update (category_id, case_id, capture_note, capture_match, attributes, clone_of, hours_interval_months, manufacturer, mac_address, location_id, links, last_service_on, label_role, kind, ip_address, inventory_number, owner_staff_id, note, name, model, min_quantity, service_interval_months, serial_number, rental_price, quantity, purchased_on, photo_path, unit_purchases, unit_info, unit_ids, track_units, status) on public.equipment to authenticated$sql$;
+    execute $sql$grant update (case_id, capture_note, capture_match, attributes, clone_of, category_id, mac_address, location_id, links, last_service_on, label_role, kind, ip_address, inventory_number, hours_interval_months, owner_staff_id, note, name, model, min_quantity, manufacturer, service_interval_months, serial_number, rental_price, quantity, purchased_on, photo_path, unit_purchases, unit_info, unit_ids, track_units, status) on public.equipment to authenticated$sql$;
   end if;
   if to_regclass('public.equipment_aliases') is not null then
     execute $sql$alter table public.equipment_aliases add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -311,7 +317,7 @@ begin
     execute $sql$alter table public.equipment_hour_readings add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$alter table public.equipment_hour_readings add column if not exists unit integer$sql$;
     execute $sql$grant select, delete on public.equipment_hour_readings to authenticated$sql$;
-    execute $sql$grant insert (company_id, hours, equipment_id, note, read_on, unit) on public.equipment_hour_readings to authenticated$sql$;
+    execute $sql$grant insert (company_id, equipment_id, hours, note, read_on, unit) on public.equipment_hour_readings to authenticated$sql$;
   end if;
   if to_regclass('public.equipment_packages') is not null then
     execute $sql$alter table public.equipment_packages add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -344,7 +350,7 @@ begin
     execute $sql$alter table public.event_attendance add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$grant select, delete on public.event_attendance to authenticated$sql$;
     execute $sql$grant insert (company_id, event_id, distance_m, meeting_id, verified) on public.event_attendance to authenticated$sql$;
-    execute $sql$grant update (break_minutes, ended_at, paused_at, pause_kind, started_at, wait_minutes) on public.event_attendance to authenticated$sql$;
+    execute $sql$grant update (break_minutes, ended_at, paused_at, pause_kind, wait_minutes, started_at) on public.event_attendance to authenticated$sql$;
   end if;
   if to_regclass('public.event_capsules') is not null then
     execute $sql$alter table public.event_capsules add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -467,7 +473,7 @@ begin
     execute $sql$alter table public.event_meetings add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$alter table public.event_meetings add column if not exists reminded_at timestamp with time zone$sql$;
     execute $sql$grant insert, select, delete on public.event_meetings to authenticated$sql$;
-    execute $sql$grant update (address, meet_at, lon, lat, note, radius_m, place_kind) on public.event_meetings to authenticated$sql$;
+    execute $sql$grant update (address, lon, lat, note, meet_at, radius_m, place_kind) on public.event_meetings to authenticated$sql$;
   end if;
   if to_regclass('public.event_pack_checks') is not null then
     execute $sql$alter table public.event_pack_checks add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -506,7 +512,7 @@ begin
     execute $sql$alter table public.event_patch add column if not exists phantom boolean default false not null$sql$;
     execute $sql$alter table public.event_patch add column if not exists note text default ''::text not null$sql$;
     execute $sql$grant insert, select, delete on public.event_patch to authenticated$sql$;
-    execute $sql$grant update (channel, capsule_id, connector, equipment_id, note, name, stand, stagebox_input, stagebox, source, phantom) on public.event_patch to authenticated$sql$;
+    execute $sql$grant update (capsule_id, connector, channel, equipment_id, note, name, source, phantom, stand, stagebox_input, stagebox) on public.event_patch to authenticated$sql$;
   end if;
   if to_regclass('public.event_payments') is not null then
     execute $sql$alter table public.event_payments add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -620,7 +626,7 @@ begin
     execute $sql$alter table public.events add column if not exists address text default ''::text not null$sql$;
     execute $sql$alter table public.events add column if not exists distance_km numeric(7,1)$sql$;
     execute $sql$grant insert, select, delete on public.events to authenticated$sql$;
-    execute $sql$grant update (address, client, get_in_time, ends_on, distance_km, description, organizer_phone, organizer_person, organizer_email, organizer, note, name, starts_on, show_time, show_end_time, setting, power_note, power_count, power, weather_place, venue, status) on public.events to authenticated$sql$;
+    execute $sql$grant update (address, client, get_in_time, ends_on, distance_km, description, organizer_phone, organizer_person, organizer_email, organizer, note, name, show_time, show_end_time, setting, power_note, power_count, power, venue, status, starts_on, weather_place) on public.events to authenticated$sql$;
   end if;
   if to_regclass('public.guest_devices') is not null then
     execute $sql$alter table public.guest_devices add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -655,7 +661,7 @@ begin
     execute $sql$alter table public.incidents add column if not exists created_by uuid default auth.uid()$sql$;
     execute $sql$alter table public.incidents add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$grant insert, select, delete on public.incidents to authenticated$sql$;
-    execute $sql$grant update (cost, event_id, equipment_id, description, member_id, kind, paid_by, occurred_on, severity, resolved, person_name, title) on public.incidents to authenticated$sql$;
+    execute $sql$grant update (cost, event_id, equipment_id, description, kind, paid_by, occurred_on, member_id, severity, resolved, person_name, title) on public.incidents to authenticated$sql$;
   end if;
   if to_regclass('public.loan_items') is not null then
     execute $sql$alter table public.loan_items add column if not exists company_id uuid$sql$;
@@ -781,7 +787,7 @@ begin
     execute $sql$alter table public.mic_capsules add column if not exists note text default ''::text not null$sql$;
     execute $sql$alter table public.mic_capsules add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$grant insert, select, delete on public.mic_capsules to authenticated$sql$;
-    execute $sql$grant update (fits, manufacturer, note, name, quantity) on public.mic_capsules to authenticated$sql$;
+    execute $sql$grant update (fits, note, name, manufacturer, quantity) on public.mic_capsules to authenticated$sql$;
   end if;
   if to_regclass('public.news_reads') is not null then
     execute $sql$alter table public.news_reads add column if not exists company_id uuid$sql$;
@@ -906,7 +912,7 @@ begin
     execute $sql$alter table public.partners add column if not exists ic_dph text default ''::text not null$sql$;
     execute $sql$alter table public.partners add column if not exists ceo text default ''::text not null$sql$;
     execute $sql$grant insert, select, delete on public.partners to authenticated$sql$;
-    execute $sql$grant update (ceo, address, ic_dph, dic, legal_name, ico, note, name, shared, uses_app) on public.partners to authenticated$sql$;
+    execute $sql$grant update (address, ceo, dic, legal_name, ico, ic_dph, note, name, shared, uses_app) on public.partners to authenticated$sql$;
   end if;
   if to_regclass('public.permission_group_members') is not null then
     execute $sql$alter table public.permission_group_members add column if not exists company_id uuid$sql$;
@@ -974,6 +980,7 @@ begin
     execute $sql$alter table public.quote_issuers add column if not exists vat_payer boolean default true not null$sql$;
     execute $sql$alter table public.quote_issuers add column if not exists sort integer default 0 not null$sql$;
     execute $sql$alter table public.quote_issuers add column if not exists created_at timestamp with time zone default now() not null$sql$;
+    execute $sql$alter table public.quote_issuers add column if not exists kind text default 'other'::text not null$sql$;
     execute $sql$grant insert, select, update, delete on public.quote_issuers to authenticated$sql$;
   end if;
   if to_regclass('public.quote_templates') is not null then
@@ -1007,6 +1014,9 @@ begin
     execute $sql$alter table public.quotes add column if not exists created_by uuid default auth.uid()$sql$;
     execute $sql$alter table public.quotes add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$alter table public.quotes add column if not exists updated_at timestamp with time zone default now() not null$sql$;
+    execute $sql$alter table public.quotes add column if not exists share_token uuid$sql$;
+    execute $sql$alter table public.quotes add column if not exists responded_at timestamp with time zone$sql$;
+    execute $sql$alter table public.quotes add column if not exists response_note text default ''::text not null$sql$;
     execute $sql$grant insert, select, update, delete on public.quotes to authenticated$sql$;
   end if;
   if to_regclass('public.responsibilities') is not null then
@@ -1054,7 +1064,7 @@ begin
     execute $sql$alter table public.service_records add column if not exists unit_numbers integer[] default '{}'::integer[] not null$sql$;
     execute $sql$alter table public.service_records add column if not exists technician_id uuid$sql$;
     execute $sql$grant insert, select, delete on public.service_records to authenticated$sql$;
-    execute $sql$grant update (cost, hours, happened_on, kind, quantity, problem, work_done, unit_numbers, technician_id, technician, status) on public.service_records to authenticated$sql$;
+    execute $sql$grant update (cost, happened_on, kind, hours, quantity, problem, unit_numbers, technician_id, technician, status, work_done) on public.service_records to authenticated$sql$;
   end if;
   if to_regclass('public.service_requests') is not null then
     execute $sql$alter table public.service_requests add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -1088,7 +1098,7 @@ begin
     execute $sql$alter table public.service_technicians add column if not exists note text default ''::text not null$sql$;
     execute $sql$alter table public.service_technicians add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$grant insert, select, delete on public.service_technicians to authenticated$sql$;
-    execute $sql$grant update (address, firm, email, note, name, specialization, scope, phone) on public.service_technicians to authenticated$sql$;
+    execute $sql$grant update (address, firm, email, note, name, scope, phone, specialization) on public.service_technicians to authenticated$sql$;
   end if;
   if to_regclass('public.shopping_items') is not null then
     execute $sql$alter table public.shopping_items add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -1260,7 +1270,7 @@ begin
     execute $sql$alter table public.vehicles add column if not exists cargo_obstacles jsonb default '[]'::jsonb not null$sql$;
     execute $sql$alter table public.vehicles add column if not exists technician_id uuid$sql$;
     execute $sql$grant insert, select, delete on public.vehicles to authenticated$sql$;
-    execute $sql$grant update (casco_until, cargo_width_cm, cargo_obstacles, cargo_length_cm, cargo_height_cm, ek_until, driver, leasing_until, payload_kg, odometer_km, note, model, pzp_until, plate, photo_path, vin, vignette_until, technician_id, stk_until, status) on public.vehicles to authenticated$sql$;
+    execute $sql$grant update (casco_until, cargo_width_cm, cargo_obstacles, cargo_length_cm, cargo_height_cm, ek_until, driver, leasing_until, odometer_km, note, model, pzp_until, plate, photo_path, payload_kg, vin, vignette_until, technician_id, stk_until, status) on public.vehicles to authenticated$sql$;
   end if;
   if to_regclass('public.warehouse_spots') is not null then
     execute $sql$alter table public.warehouse_spots add column if not exists id uuid default gen_random_uuid() not null$sql$;
@@ -1302,7 +1312,7 @@ begin
     execute $sql$alter table public.wifi_networks add column if not exists note text default ''::text not null$sql$;
     execute $sql$alter table public.wifi_networks add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$grant insert, select, delete on public.wifi_networks to authenticated$sql$;
-    execute $sql$grant update (hidden, equipment_id, dhcp_start, dhcp_end, dhcp, management_ip, password, note, ssid, security, router_model, router_ip, place, subnet) on public.wifi_networks to authenticated$sql$;
+    execute $sql$grant update (hidden, equipment_id, dhcp_start, dhcp_end, dhcp, management_ip, note, security, router_model, router_ip, place, password, subnet, ssid) on public.wifi_networks to authenticated$sql$;
   end if;
   if to_regclass('public.wifi_router_logins') is not null then
     execute $sql$alter table public.wifi_router_logins add column if not exists network_id uuid$sql$;
@@ -1330,7 +1340,7 @@ begin
     execute $sql$alter table public.work_sessions add column if not exists created_at timestamp with time zone default now() not null$sql$;
     execute $sql$grant select, delete on public.work_sessions to authenticated$sql$;
     execute $sql$grant insert (company_id, distance_m, note, place, verified) on public.work_sessions to authenticated$sql$;
-    execute $sql$grant update (break_minutes, ended_at, paused_at, pause_kind, note, started_at, wait_minutes) on public.work_sessions to authenticated$sql$;
+    execute $sql$grant update (break_minutes, ended_at, note, paused_at, pause_kind, wait_minutes, started_at) on public.work_sessions to authenticated$sql$;
   end if;
 end;
 $repair$;

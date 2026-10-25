@@ -5,6 +5,23 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.18 – 25. 10. 2026
+
+- **Cenová ponuka odkazom**: „Odkaz pre klienta“ vytvorí adresu, cez ktorú si klient ponuku pozrie bez prihlásenia,
+  vytlačí ju a **potvrdí alebo odmietne** (aj s poznámkou). Stav ponuky sa zmení sám a príde vám upozornenie.
+- **Event z ponuky**: jedným klikom vznikne event s názvom, miestom a klientom z ponuky; technika vybraná zo skladu
+  v cenách sa pridá na event.
+- **S.r.o. / živnosť pri firme** (Nastavenia → Firma → Vystavovanie ponúk): zaškrtnete, ako firma vystavuje, a
+  vyplníte údaje; v ponuke sú tlačidlá len pre to, čo je zapnuté.
+- **Ponuka**: „Vyhotovil“ jedným klikom ja alebo CEO; klienta uložíte do Firiem a kontaktov; zoznam v časti sa dá
+  klikať z vlastnej techniky; **nový dizajn PDF** ako klasický doklad (dodávateľ / odberateľ, tabuľka, podpis).
+- **Zosilňovač analógový / digitálny**; pri digitálnom počet presetov (pri známych modeloch sa navrhne sám) a
+  zoznam presetov s prepojením na reprobox – v detaile reproboxu vidno, v ktorom zosilňovači má preset.
+- **Siete → MAC adresy**: pri zariadeniach členov je označené, či ide o Wi-Fi alebo LAN (ethernet) kartu.
+- **Pripnuté firmy** sa pamätajú pri účte – rovnaké na každom zariadení.
+- **Skontrolovať aktualizácie** v Nastaveniach → Účet a v O aplikácii.
+- Nové migrácie: `0097` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.17.1 – 25. 10. 2026
 
 - Technická údržba: formulár techniky je rozdelený na menšie časti (Svetlo, Zvuk, Video zvlášť), takže ďalšie

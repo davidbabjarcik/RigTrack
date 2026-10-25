@@ -18,6 +18,7 @@ import { deleteEquipment, equipmentKeys, fetchEquipment } from './api'
 import { EquipmentPhoto } from './EquipmentPhoto'
 import { ItemHistory } from './ItemHistory'
 import { OwnerLink } from '@/features/staff/OwnerLink'
+import { AmpPresetsInfo } from './AmpPresetsInfo'
 import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { EquipmentLinks } from './PurchaseLinksFields'
 import { CAPTURE_MATCH_LABELS, hoursSinceLamp, describeAttributes, describeUnitIds, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
@@ -245,6 +246,7 @@ export function EquipmentDetailPage() {
 
       {equipment.trackUnits && equipment.quantity > 1 && <UnitsOverview companyId={company.companyId} equipment={equipment} showInvoices={can(company, 'orders.view')} />}
 
+      <AmpPresetsInfo companyId={company.companyId} equipment={equipment} />
       {!simple && <OperatingHours companyId={company.companyId} equipment={equipment} canEdit={can(company, 'equipment.edit')} />}
 
       {!simple && <EquipmentServiceHistory companyId={company.companyId} equipmentId={equipment.id} canEdit={can(company, 'service.edit')} />}

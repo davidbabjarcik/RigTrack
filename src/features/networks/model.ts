@@ -180,6 +180,8 @@ export type AddressRow = {
   /** Prefix siete pri IP (24 = /24), ak je zadaný. */
   prefix: number | null
   mac: string
+  /** Pri zariadení člena: MAC Wi-Fi karty alebo ethernetovej (LAN) karty. */
+  iface?: 'wifi' | 'lan'
   /** Sieť, do ktorej adresa patrí (podľa SSID pri zariadení alebo podľa rozsahu IP). */
   networkId: string | null
   /** Kam vedie klik (technika); pri zariadení karta majiteľa. */
@@ -226,6 +228,7 @@ export function addressRows(equipment: Equipment[], devices: MemberDevice[], net
         dhcp: Boolean(entry.dhcp) && !entry.ip,
         prefix: null,
         mac: entry.mac || (entry.via === 'ethernet' && device.ethernetMac ? device.ethernetMac : device.mac),
+        iface: entry.via === 'ethernet' ? 'lan' : 'wifi',
         networkId: bySsid ?? byIp(entry.ip),
         to: who.to,
       })

@@ -43,6 +43,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0094', label: 'zakladanie firiem so schválením', table: 'company_requests', column: 'id' },
   { migration: '0095', label: 'plán pódia k eventu', table: 'event_stage_plans', column: 'event_id' },
   { migration: '0096', label: 'cenové ponuky, vystavovatelia a oprávnenia', table: 'quotes', column: 'id' },
+  { migration: '0097', label: 'odkaz na ponuku pre klienta, s.r.o. / živnosť, pripnuté firmy na účet', table: 'company_pins', column: 'company_id' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

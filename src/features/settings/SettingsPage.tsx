@@ -38,6 +38,8 @@ import { DemoSettings } from '@/features/companies/DemoSettings'
 import { MyDevicesSettings } from '@/features/devices/MyDevicesSettings'
 import { AttendanceSettings } from '@/features/attendance/MyAttendance'
 import { PushSettings } from '@/features/push/PushSettings'
+import { CheckUpdateButton } from '@/components/feedback/CheckUpdateButton'
+import { CompanyIssuersSettings } from '@/features/offers/CompanyIssuersSettings'
 import { PushSetupGuide } from '@/features/push/PushSetupGuide'
 import { ResponsibilitiesSettings } from '@/features/responsibilities/ResponsibilitiesSettings'
 import { DutySettings } from '@/features/duties/DutySettings'
@@ -347,6 +349,12 @@ export function SettingsPage() {
           </Section>
 
           {isAdmin && (
+            <Section title="Vystavovanie ponúk – s.r.o. / živnosť">
+              <CompanyIssuersSettings companyId={company.companyId} />
+            </Section>
+          )}
+
+          {isAdmin && (
             <Section title="Logo a štítky na cases">
               <BrandingSettings companyId={company.companyId} />
             </Section>
@@ -498,9 +506,12 @@ export function SettingsPage() {
             <DemoSettings userId={user.id} />
           </Section>
           <Section title="O aplikácii">
-            <p className="rounded-xl border bg-surface p-4 text-sm">
-              RigTrack <strong>verzia {APP_VERSION}</strong>
-            </p>
+            <div className="flex flex-col gap-3 rounded-xl border bg-surface p-4 text-sm">
+              <p>
+                RigTrack <strong>verzia {APP_VERSION}</strong>
+              </p>
+              <CheckUpdateButton />
+            </div>
           </Section>
         </>
       )}

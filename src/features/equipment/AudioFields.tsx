@@ -5,6 +5,7 @@ import { Field, SelectField } from '@/components/ui/field'
 import { useCapsules } from '@/features/capsules/api'
 import { cn } from '@/lib/utils'
 import { asOptionalNumber, AUDIO_TYPE_LABELS, AUDIO_TYPES, PA_TYPES, STAND_TYPES, SUB_DESIGN_LABELS, hasBox, isAudio, type EquipmentFormValues } from './model'
+import { AmpPresetsFields } from './AmpPresetsFields'
 import { Group } from './FormGroup'
 
 /** Časť formulára Zvuk: typ, reproboxy a suby, pulty, mikrofóny a kapsule, zosilňovače. */
@@ -19,6 +20,7 @@ export function AudioFields({ companyId }: { companyId: string }) {
   const categoryText = useWatch({ control, name: 'category' })
   // Časť Svetlo sa ukáže pri druhu Svetlo aj pri kategórii, ktorá je o svetlách.
   const audio = isAudio(kind, categoryText ?? '')
+  const ampKind = useWatch({ control, name: 'ampKind' })
   const audioType = useWatch({ control, name: 'audioType' })
   const powered = useWatch({ control, name: 'powered' })
   const mixerKind = useWatch({ control, name: 'mixerKind' })
@@ -66,6 +68,12 @@ export function AudioFields({ companyId }: { companyId: string }) {
             <Field label="Bridge 4 Ω (W)" type="number" inputMode="numeric" min={0} placeholder="napr. 3600" error={errors.ampBridge4?.message} {...register('ampBridge4', asOptionalNumber)} />
             <Field label="Bridge 8 Ω (W)" type="number" inputMode="numeric" min={0} placeholder="napr. 4000" error={errors.ampBridge8?.message} {...register('ampBridge8', asOptionalNumber)} />
             <Field label="Krajina výroby" placeholder="napr. Kórea, Čína" maxLength={60} {...register('madeIn')} />
+            <SelectField label="Zosilňovač" {...register('ampKind')}>
+              <option value="">— nezadané —</option>
+              <option value="analog">Analógový</option>
+              <option value="digital">Digitálny (DSP, presety)</option>
+            </SelectField>
+            {ampKind === 'digital' && <AmpPresetsFields companyId={companyId} />}
           </>
         )}
         {audioType === 'mixer' && (

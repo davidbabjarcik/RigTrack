@@ -460,3 +460,15 @@ describe('cable stats', () => {
     ])
   })
 })
+
+describe('amplifier presets', () => {
+  it('suggests preset slots for known models and finds presets of a speaker', async () => {
+    const { suggestPresetSlots, presetsForSpeaker } = await import('./model')
+    expect(suggestPresetSlots('Crown', 'I-Tech HD 12000')).toEqual({ slots: 50, factorySlot: 1 })
+    expect(suggestPresetSlots('Crown', 'I-Tech 4x3500HD')).toEqual({ slots: 50, factorySlot: 1 })
+    expect(suggestPresetSlots('Crown', 'I-Tech 5000')).toEqual({ slots: 20 })
+    expect(suggestPresetSlots('Iná', 'X')).toBeNull()
+    const amps = [{ id: 'a', name: 'Amp 1', attributes: { ampPresets: [{ slot: 2, name: 'Top', speakerId: 's' }, { slot: 3, name: 'Sub', speakerId: 'x' }] } }] as never
+    expect(presetsForSpeaker('s', amps)).toEqual([{ ampId: 'a', ampName: 'Amp 1', slot: 2, name: 'Top', speakerId: 's' }])
+  })
+})

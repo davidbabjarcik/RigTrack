@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, Printer, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, Plus, Printer, Save, Trash2, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -12,11 +12,11 @@ import { memberName, useMembers } from '@/features/companies/useMembers'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { eventDates } from '@/features/events/plan'
 import { useEvents } from '@/features/events/useEvents'
-import { usePartners } from '@/features/partners/api'
+import { partnerKeys, savePartner, usePartners } from '@/features/partners/api'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { deleteOffer, offerKeys, saveOffer, saveTemplate, useIssuers, useOffer, useTemplates, type OfferFields } from './api'
+import { deleteOffer, ISSUER_KIND_LABELS, offerKeys, saveOffer, saveTemplate, useIssuers, useOffer, useTemplates, type OfferFields } from './api'
 import {
   EMPTY_CLIENT,
   EMPTY_ISSUER,
@@ -31,6 +31,7 @@ import {
   type OfferStatus,
   type VatMode,
 } from './model'
+import { OfferActions } from './OfferActions'
 import { PartEditor } from './PartEditor'
 
 const money = (value: number) => formatMoney(value, 'EUR')
@@ -119,6 +120,17 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
       navigate('/offers', { replace: true })
     },
   })
+  const profile = useCompanyProfile(companyId)
+  const members = useMembers(companyId)
+  const userId = useAuth().session?.user.id ?? null
+  // „Vyhotovil“: ja alebo CEO firmy (iné meno sa dá napísať).
+  const authors = [...new Set([memberName(members.data, userId), profile.data?.ceoName ?? ''].map((name) => name.trim()).filter(Boolean))]
+  const knownClient = (partners.data ?? []).some((partner) => [partner.name, partner.legalName].some((name) => name && name.trim().toLowerCase() === draft.client.name.trim().toLowerCase()))
+  const addPartner = useMutation({
+    mutationFn: () =>
+      savePartner(companyId, null, { name: draft.client.name, legalName: '', ico: draft.client.ico, dic: draft.client.dic, icDph: '', ceo: '', address: draft.client.address, usesApp: false, note: draft.client.contact }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: partnerKeys.list(companyId) }),
+  })
   const keepTemplate = useMutation({ mutationFn: (part: OfferPart) => saveTemplate(companyId, part), onSettled: () => queryClient.invalidateQueries({ queryKey: offerKeys.templates(companyId) }) })
 
   const event = events.data?.find((item) => item.id === draft.eventId)
@@ -166,6 +178,8 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
       </div>
       <h1 className="text-2xl font-semibold tracking-tight">{id ? `Cenová ponuka ${draft.number}` : 'Nová cenová ponuka'}</h1>
       {save.isError && <p className="text-sm text-destructive">Ponuku sa nepodarilo uložiť. Táto časť databázy ešte nemusí byť pripravená (migrácia 0096).</p>}
+
+      {id && <OfferActions companyId={companyId} id={id} draft={draft} canEdit={canEdit} />}
 
       {/* Rozpočet a súčet – stále na očiach pri skladaní. */}
       <div className="sticky top-0 z-10 flex flex-col gap-2 rounded-xl border bg-surface/95 p-3 backdrop-blur">
@@ -232,40 +246,53 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
 
         <div className="grid gap-4 lg:grid-cols-2">
           <section className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="font-medium">Vystavovateľ</h2>
-              {(issuers.data ?? []).length > 0 && (
-                <select
-                  aria-label="Vybrať vystavovateľa"
-                  className="h-9 rounded-lg border bg-background px-2 text-sm"
-                  value={draft.issuerId ?? ''}
-                  onChange={(e) => {
-                    const issuer = issuers.data!.find((item) => item.id === e.target.value)
-                    if (!issuer) return
-                    const { id: issuerId, ...fields } = issuer
-                    set({ issuerId, issuer: fields, vatMode: fields.vatPayer ? (draft.vatMode === 'none' ? 'with' : draft.vatMode) : 'none' })
-                  }}
-                >
-                  <option value="" disabled>
-                    — vybrať —
-                  </option>
-                  {issuers.data!.map((issuer) => (
-                    <option key={issuer.id} value={issuer.id}>
-                      {issuer.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-            <Field label="Názov" maxLength={160} value={draft.issuer.name} onChange={(e) => set({ issuer: { ...draft.issuer, name: e.target.value } })} />
-            <TextareaField label="Adresa" rows={2} maxLength={300} value={draft.issuer.address} onChange={(e) => set({ issuer: { ...draft.issuer, address: e.target.value } })} />
-            <div className="grid gap-2 sm:grid-cols-3">
-              <Field label="IČO" maxLength={20} value={draft.issuer.ico} onChange={(e) => set({ issuer: { ...draft.issuer, ico: e.target.value } })} />
-              <Field label="DIČ" maxLength={20} value={draft.issuer.dic} onChange={(e) => set({ issuer: { ...draft.issuer, dic: e.target.value } })} />
-              <Field label="IČ DPH" maxLength={20} value={draft.issuer.icDph} onChange={(e) => set({ issuer: { ...draft.issuer, icDph: e.target.value } })} />
-            </div>
-            <TextareaField label="Kontakt (telefón, e-mail)" rows={2} maxLength={300} value={draft.issuer.contact} onChange={(e) => set({ issuer: { ...draft.issuer, contact: e.target.value } })} />
-            <p className="text-xs text-muted-foreground">Vystavovateľov (napr. s.r.o. a živnosť) si uložíte v zozname Cenových ponúk.</p>
+            <h2 className="font-medium">Vystavuje</h2>
+            {(issuers.data ?? []).length > 0 ? (
+              <div role="radiogroup" aria-label="Vystavovateľ" className="flex flex-wrap gap-1 rounded-lg bg-muted p-1 sm:self-start">
+                {issuers.data!.map((issuer) => (
+                  <button
+                    key={issuer.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={draft.issuerId === issuer.id}
+                    onClick={() => {
+                      const fields = { name: issuer.name, address: issuer.address, ico: issuer.ico, dic: issuer.dic, icDph: issuer.icDph, contact: issuer.contact, vatPayer: issuer.vatPayer }
+                      set({ issuerId: issuer.id, issuer: fields, vatMode: fields.vatPayer ? (draft.vatMode === 'none' ? 'with' : draft.vatMode) : 'none' })
+                    }}
+                    className={cn('rounded-md px-3 py-1.5 text-sm font-medium', draft.issuerId === issuer.id ? 'bg-surface text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+                  >
+                    {issuer.kind === 'other' ? issuer.name : ISSUER_KIND_LABELS[issuer.kind]}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Použijú sa Údaje o firme. Či firma vystavuje ako s.r.o. alebo živnosť, nastavíte v{' '}
+                <Link to="/settings" className="text-accent hover:underline">
+                  Nastavenia → Firma
+                </Link>
+                .
+              </p>
+            )}
+            <p className="text-sm whitespace-pre-line">
+              <span className="font-medium">{draft.issuer.name || '—'}</span>
+              {[draft.issuer.address, draft.issuer.ico && `IČO ${draft.issuer.ico}`, draft.issuer.dic && `DIČ ${draft.issuer.dic}`, draft.issuer.icDph && `IČ DPH ${draft.issuer.icDph}`, draft.issuer.vatPayer ? '' : 'neplatiteľ DPH', draft.issuer.contact]
+                .filter(Boolean)
+                .map((line) => `\n${line}`)}
+            </p>
+            <details className="text-sm">
+              <summary className="cursor-pointer text-muted-foreground">Upraviť údaje len v tejto ponuke</summary>
+              <div className="mt-2 flex flex-col gap-2">
+                <Field label="Názov" maxLength={160} value={draft.issuer.name} onChange={(e) => set({ issuer: { ...draft.issuer, name: e.target.value } })} />
+                <TextareaField label="Adresa" rows={2} maxLength={300} value={draft.issuer.address} onChange={(e) => set({ issuer: { ...draft.issuer, address: e.target.value } })} />
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <Field label="IČO" maxLength={20} value={draft.issuer.ico} onChange={(e) => set({ issuer: { ...draft.issuer, ico: e.target.value } })} />
+                  <Field label="DIČ" maxLength={20} value={draft.issuer.dic} onChange={(e) => set({ issuer: { ...draft.issuer, dic: e.target.value } })} />
+                  <Field label="IČ DPH" maxLength={20} value={draft.issuer.icDph} onChange={(e) => set({ issuer: { ...draft.issuer, icDph: e.target.value } })} />
+                </div>
+                <TextareaField label="Kontakt" rows={2} maxLength={300} value={draft.issuer.contact} onChange={(e) => set({ issuer: { ...draft.issuer, contact: e.target.value } })} />
+              </div>
+            </details>
           </section>
 
           <section className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
@@ -307,6 +334,13 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
               <Field label="DIČ" maxLength={20} value={draft.client.dic} onChange={(e) => set({ client: { ...draft.client, dic: e.target.value } })} />
             </div>
             <Field label="Kontaktná osoba" maxLength={200} value={draft.client.contact} onChange={(e) => set({ client: { ...draft.client, contact: e.target.value } })} />
+            {draft.client.name.trim() && !knownClient && (
+              <Button variant="outline" size="sm" className="self-start" disabled={addPartner.isPending} onClick={() => addPartner.mutate()}>
+                <UserPlus className="size-4" aria-hidden />
+                {addPartner.isPending ? 'Ukladám…' : 'Uložiť do Firiem a kontaktov'}
+              </Button>
+            )}
+            {addPartner.isSuccess && <p className="text-xs text-muted-foreground">Uložené do Firiem a kontaktov.</p>}
           </section>
         </div>
 
@@ -373,7 +407,21 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
             value={draft.totalOverride ?? ''}
             onChange={(e) => set({ totalOverride: e.target.value === '' ? null : Math.max(0, Number(e.target.value)) })}
           />
-          <Field label="Vyhotovil" maxLength={120} value={draft.authorName} onChange={(e) => set({ authorName: e.target.value })} />
+          <div className="flex flex-col gap-1">
+            <Field label="Vyhotovil" maxLength={120} value={draft.authorName} onChange={(e) => set({ authorName: e.target.value })} />
+            <div className="flex flex-wrap gap-1">
+              {authors.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  className={cn('rounded-full border px-2 py-0.5 text-xs', draft.authorName === name ? 'border-primary bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted')}
+                  onClick={() => set({ authorName: name })}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
           <TextareaField
             label="Poznámky na konci ponuky"
             className="sm:col-span-2 lg:col-span-4"

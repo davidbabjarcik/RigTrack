@@ -73,6 +73,7 @@ const pack = lazyPage(() => import('@/features/pack/PackPage').then((m) => m.Pac
 const quote = lazyPage(() => import('@/features/quote/QuotePage').then((m) => m.QuotePage), 'events.view')
 const offersList = lazyPage(() => import('@/features/offers/OffersPage').then((m) => m.OffersPage), 'offers.view')
 const offerEditor = lazyPage(() => import('@/features/offers/OfferEditorPage').then((m) => m.OfferEditorPage), 'offers.view')
+const sharedOffer = lazyPage(() => import('@/features/offers/SharedOfferPage').then((m) => m.SharedOfferPage))
 const offerPrint = lazyPage(() => import('@/features/offers/OfferPrintPage').then((m) => m.OfferPrintPage), 'offers.view')
 const attendance = lazyPage(() => import('@/features/attendance/AttendancePage').then((m) => m.AttendancePage))
 const qrLabels = lazyPage(() => import('@/features/scan/QrLabelsPage').then((m) => m.QrLabelsPage), 'equipment.view')
@@ -102,6 +103,8 @@ const orderDetail = lazyPage(() => import('@/features/orders/OrderDetailPage').t
 const orderForm = lazyPage(() => import('@/features/orders/OrderFormPage').then((m) => m.OrderFormPage), 'orders.view')
 
 export const routes: RouteObject[] = [
+  // Ponuka pre klienta cez odkaz – bez prihlásenia a bez menu.
+  { path: 'o/:token', lazy: sharedOffer, errorElement: <RouteErrorPage /> },
   {
     element: <CenteredLayout />,
     errorElement: <RouteErrorPage />,

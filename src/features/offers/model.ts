@@ -51,6 +51,10 @@ export type Offer = {
   notes: string
   authorName: string
   updatedAt: string
+  /** Odkaz pre klienta (0097): token, kedy a s akou poznámkou klient odpovedal. */
+  shareToken?: string | null
+  respondedAt?: string | null
+  responseNote?: string
 }
 
 export const OFFER_STATUS_LABELS: Record<OfferStatus, string> = { draft: 'koncept', sent: 'poslaná', accepted: 'prijatá', rejected: 'odmietnutá' }

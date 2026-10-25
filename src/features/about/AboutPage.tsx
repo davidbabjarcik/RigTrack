@@ -1,5 +1,6 @@
 import { ArrowLeft, Building2, ListChecks, Sparkles, ShieldCheck, Smartphone, UserRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { CheckUpdateButton } from '@/components/feedback/CheckUpdateButton'
 import { useAuth } from '@/features/auth/auth-context'
 import { CREDITS } from '@/lib/credits'
 import { NAV_ITEMS } from '@/lib/navigation'
@@ -29,6 +30,7 @@ export function AboutPage() {
               <Sparkles className="size-4" aria-hidden />
               Čo je nové vo verzii {APP_VERSION}
             </Link>
+            <CheckUpdateButton />
             {!signedIn && (
               <Link to="/auth" className="inline-flex h-9 items-center rounded-lg border px-3 text-sm font-medium hover:bg-muted">
                 Prihlásiť sa

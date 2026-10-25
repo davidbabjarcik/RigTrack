@@ -233,6 +233,11 @@ export type EquipmentAttributes = {
   ampW8?: number
   ampBridge4?: number
   ampBridge8?: number
+  /** Zosilňovač analógový alebo digitálny (DSP s presetmi). */
+  ampKind?: 'analog' | 'digital'
+  /** Digitálny zosilňovač: koľko presetov sa doň zmestí a ktoré sú zapísané (aj ku ktorému reproboxu). */
+  ampPresetSlots?: number
+  ampPresets?: AmpPreset[]
   color?: string
   condition?: Condition
   /** Mixpult: analógový / digitálny, počet kanálov a pri digitálnom karta (Dante, MADI, USB…). */
@@ -469,6 +474,12 @@ export const equipmentSchema = z.object({
   ampW8: optionalNumber(100000),
   ampBridge4: optionalNumber(100000),
   ampBridge8: optionalNumber(100000),
+  ampKind: z.enum(['analog', 'digital', '']).optional(),
+  ampPresetSlots: z.number('Zadajte počet').int('Celé číslo').min(1).max(999).optional(),
+  ampPresets: z
+    .array(z.object({ slot: z.number().int().min(1).max(999).catch(1), name: z.string().trim().max(80).catch(''), speakerId: z.string().catch(''), note: z.string().trim().max(200).catch(''), locked: z.boolean().catch(false) }))
+    .max(999)
+    .optional(),
   unitInfo: z.array(z.object({ unit: z.number(), serial: text(80), inv: text(40), from: text(120).optional() })).optional(),
   color: text(40).optional(),
   condition: z.enum(['new', 'excellent', 'good', 'worn', 'damaged', '']).optional(),
@@ -644,6 +655,9 @@ export function attributesFor(
         | 'ampW8'
         | 'ampBridge4'
         | 'ampBridge8'
+        | 'ampKind'
+        | 'ampPresetSlots'
+        | 'ampPresets'
         | 'color'
         | 'condition'
         | 'mixerKind'
@@ -778,6 +792,15 @@ export function attributesFor(
   if (audio && values.audioType === 'amplifier') {
     for (const key of ['ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8'] as const) if (values[key] !== undefined) attributes[key] = values[key]
     if (values.madeIn?.trim()) attributes.madeIn = values.madeIn.trim()
+    if (values.ampKind) attributes.ampKind = values.ampKind
+    if (values.ampKind === 'digital') {
+      if (values.ampPresetSlots !== undefined) attributes.ampPresetSlots = values.ampPresetSlots
+      const presets = (values.ampPresets ?? [])
+        .filter((preset) => preset.name.trim() || preset.speakerId || preset.locked)
+        .map((preset) => ({ slot: preset.slot, name: preset.name.trim(), ...(preset.speakerId && { speakerId: preset.speakerId }), ...(preset.note.trim() && { note: preset.note.trim() }), ...(preset.locked && { locked: true }) }))
+        .sort((a, b) => a.slot - b.slot)
+      if (presets.length > 0) attributes.ampPresets = presets
+    }
   }
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipAddress && values.ipPrefix !== undefined) attributes.ipPrefix = values.ipPrefix
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipDhcp && !values.ipAddress) attributes.ipDhcp = true
@@ -891,6 +914,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.madeYear !== undefined && `${a.madeYear}${a.madeIn ? ` · ${a.madeIn}` : ''}`,
     a.madeYear === undefined && a.madeIn && `vyrobené: ${a.madeIn}`,
     ampPower(a),
+    a.ampKind && (a.ampKind === 'digital' ? `digitálny${a.ampPresetSlots ? ` · presety ${(a.ampPresets ?? []).length}/${a.ampPresetSlots}` : ''}` : 'analógový'),
     a.makers?.length && `vyrobil ${a.makers.map((maker) => `${maker.name} ${maker.count}×`).join(', ')}`,
     a.condition && CONDITION_LABELS[a.condition].toLowerCase(),
     a.cableType === 'di' && 'DI box',
@@ -1029,6 +1053,27 @@ export function advancedFilterCount(filter: EquipmentFilter) {
 export type UnitInfo = { serial?: string; inv?: string; /** Odkiaľ je kus kúpený (obchod, od koho). */ from?: string }
 
 /** Výkon zosilňovača do jedného riadku: „2 Ω 1 800 W · 4 Ω 2 000 W · 8 Ω 1 250 W · bridge 4 Ω 3 600 W“. */
+/** Preset v digitálnom zosilňovači: číslo, názov, reprobox, pre ktorý je, a či je výrobný (nedá sa prepísať). */
+export type AmpPreset = { slot: number; name: string; speakerId?: string; note?: string; locked?: boolean }
+
+/**
+ * Návrh počtu presetov podľa modelu (verejne známe údaje výrobcu): Crown I-Tech HD 50 (č. 1 výrobný),
+ * Crown I-Tech 20. Neznámy model → null.
+ */
+export function suggestPresetSlots(manufacturer: string, model: string): { slots: number; factorySlot?: number } | null {
+  const text = `${manufacturer} ${model}`.toLowerCase()
+  if (!/crown/.test(text) && !/i-?tech/.test(text)) return null
+  // „I-Tech HD 12000“ aj „I-Tech 4x3500HD“.
+  if (/i-?tech/.test(text) && /hd/.test(text)) return { slots: 50, factorySlot: 1 }
+  if (/i-?tech/.test(text)) return { slots: 20 }
+  return null
+}
+
+/** Presety zosilňovačov, ktoré patria k reproboxu (na detail reproboxu). */
+export function presetsForSpeaker(speakerId: string, amps: Pick<Equipment, 'id' | 'name' | 'attributes'>[]) {
+  return amps.flatMap((amp) => (amp.attributes.ampPresets ?? []).filter((preset) => preset.speakerId === speakerId).map((preset) => ({ ampId: amp.id, ampName: amp.name, ...preset })))
+}
+
 export function ampPower(a: Pick<EquipmentAttributes, 'ampW2' | 'ampW4' | 'ampW8' | 'ampBridge4' | 'ampBridge8'>) {
   const parts = [
     a.ampW2 !== undefined && `2 Ω ${formatNumber(a.ampW2)} W`,

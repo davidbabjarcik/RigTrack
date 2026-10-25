@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
 import { ArrowLeft, Building2, CalendarDays, ChartColumn, Check, ChevronRight, Pin, Smartphone, Speaker, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -13,6 +12,7 @@ import { CompanyLogo } from './CompanyLogo'
 import { demoKeys, fetchMyDemo } from './demo'
 import { DemoSettings } from './DemoSettings'
 import { NewCompanyButton } from './NewCompanyButton'
+import { useCompanyPins } from './pins'
 import { profileComplete, usePersonalProfile } from '@/features/profile/api'
 import { MyCalendar } from '@/features/profile/MyCalendarView'
 import { MyDevicesEverywhere } from '@/features/profile/MyDevicesEverywhere'
@@ -30,17 +30,6 @@ const VIEWS: { id: 'companies' | 'profile' | 'calendar' | 'equipment' | 'devices
   { id: 'stats', label: 'Moje štatistiky', hint: 'Akcie, hodiny, odmeny', icon: ChartColumn },
 ]
 type View = (typeof VIEWS)[number]['id']
-
-/** Pripnuté firmy sú hore; pamätá si ich tento prehliadač (pre každého používateľa zvlášť). */
-const pinKey = (userId: string) => `rigtrack:pinned-companies:${userId}`
-function readPins(userId: string): string[] {
-  try {
-    const saved = JSON.parse(localStorage.getItem(pinKey(userId)) ?? '[]') as unknown
-    return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string') : []
-  } catch {
-    return []
-  }
-}
 
 export function CompanySelectPage() {
   const { session } = useAuth()
@@ -83,16 +72,8 @@ export function CompanySelectPage() {
   const chooseView = (next: View) => setParams(next === 'companies' ? {} : { view: next }, { replace: true })
   const demo = useQuery({ queryKey: demoKeys.mine(user.id), queryFn: fetchMyDemo })
   const realCompanies = memberships.filter((item) => item.companyId !== demo.data).length
-  const [pins, setPins] = useState(() => readPins(user.id))
-  const togglePin = (companyId: string) => {
-    const next = pins.includes(companyId) ? pins.filter((id) => id !== companyId) : [...pins, companyId]
-    setPins(next)
-    try {
-      localStorage.setItem(pinKey(user.id), JSON.stringify(next))
-    } catch {
-      // Bez úložiska sa pripnutie len nezapamätá.
-    }
-  }
+  // Pripnuté firmy sú hore – pri účte, rovnaké na každom zariadení.
+  const { pins, toggle: togglePin } = useCompanyPins(user.id)
   const sortedMemberships = [...memberships].sort((a, b) => Number(pins.includes(b.companyId)) - Number(pins.includes(a.companyId)))
 
   return (
