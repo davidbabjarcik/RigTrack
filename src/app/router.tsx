@@ -71,6 +71,9 @@ const eventDetail = lazyPage(() => import('@/features/events/EventDetailPage').t
 const eventImport = lazyPage(() => import('@/features/events/import/EventImportPage').then((m) => m.EventImportPage), 'events.view')
 const pack = lazyPage(() => import('@/features/pack/PackPage').then((m) => m.PackPage), 'events.view')
 const quote = lazyPage(() => import('@/features/quote/QuotePage').then((m) => m.QuotePage), 'events.view')
+const offersList = lazyPage(() => import('@/features/offers/OffersPage').then((m) => m.OffersPage), 'offers.view')
+const offerEditor = lazyPage(() => import('@/features/offers/OfferEditorPage').then((m) => m.OfferEditorPage), 'offers.view')
+const offerPrint = lazyPage(() => import('@/features/offers/OfferPrintPage').then((m) => m.OfferPrintPage), 'offers.view')
 const attendance = lazyPage(() => import('@/features/attendance/AttendancePage').then((m) => m.AttendancePage))
 const qrLabels = lazyPage(() => import('@/features/scan/QrLabelsPage').then((m) => m.QrLabelsPage), 'equipment.view')
 const crewSheet = lazyPage(() => import('@/features/events/CrewSheetPage').then((m) => m.CrewSheetPage), 'events.view')
@@ -128,6 +131,7 @@ export const routes: RouteObject[] = [
           { path: 'events/:id/print', lazy: eventPrint },
           { path: 'events/:id/patch', lazy: patchPrint },
           { path: 'events/:id/quote', lazy: quote },
+          { path: 'offers/:id/print', lazy: offerPrint },
           { path: 'qr/:type', lazy: qrLabels },
           {
             path: '/',
@@ -178,6 +182,8 @@ export const routes: RouteObject[] = [
               { path: 'attendance', lazy: attendance },
               { path: 'report', lazy: report },
               { path: 'events', lazy: eventsList },
+              { path: 'offers', lazy: offersList },
+              { path: 'offers/:id', lazy: offerEditor },
               { path: 'events/new', lazy: eventForm },
               { path: 'events/:id', lazy: eventDetail },
               { path: 'events/:id/edit', lazy: eventForm },

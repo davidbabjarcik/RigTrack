@@ -72,7 +72,7 @@ export function OrganizerField({ partners, value, onChange, register, setValue, 
               }}
             />
           </div>
-          <Field label="Organizátor (firma / skupina)" placeholder="napr. JESKO, Mesto Stropkov" error={errors.organizer?.message} {...register('organizer')} />
+          <Field label="Organizátor (firma / skupina)" placeholder="napr. mesto, agentúra alebo klub" error={errors.organizer?.message} {...register('organizer')} />
           <Field label="Kontaktná osoba" placeholder="napr. Simeon" error={errors.organizerPerson?.message} {...register('organizerPerson')} />
           <Field label="Telefón" type="tel" autoComplete="off" error={errors.organizerPhone?.message} {...register('organizerPhone')} />
           <Field label="E-mail" type="email" autoComplete="off" error={errors.organizerEmail?.message} {...register('organizerEmail')} />

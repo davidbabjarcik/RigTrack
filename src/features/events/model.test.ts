@@ -95,27 +95,27 @@ describe('recurring events', () => {
     id, name, client: '', venue: '', startsOn, endsOn: startsOn, status: 'done', note: '', equipment: [], crew: [], ...EMPTY_EVENT_DETAILS, ...patch,
   })
   const events = [
-    edition('j24', 'JESKO Medzilaborce 2024', '2024-08-10'),
-    edition('j25', 'Jesko – Medzilaborce 2025', '2025-08-09', { venue: 'Amfiteáter' }),
-    edition('j25x', 'JESKO Medzilaborce', '2025-09-01', { status: 'cancelled' }),
+    edition('j24', 'Letný fest Ukážkovo 2024', '2024-08-10'),
+    edition('j25', 'Letný fest – Ukážkovo 2025', '2025-08-09', { venue: 'Amfiteáter' }),
+    edition('j25x', 'Letný fest Ukážkovo', '2025-09-01', { status: 'cancelled' }),
     edition('k25', 'Deň kapusty 2025', '2025-09-20'),
   ]
 
   it('treats the same name without the year, case and diacritics as one event', () => {
-    expect(seriesKey('JESKO Medzilaborce 2025')).toBe(seriesKey('jesko – medzilaborce'))
+    expect(seriesKey('Letný fest Ukážkovo 2025')).toBe(seriesKey('letný fest – ukážkovo'))
     expect(seriesKey('Deň kapusty 2025')).toBe('den kapusty')
     expect(seriesKey('2025')).toBe('')
   })
 
   it('finds the latest earlier edition and skips cancelled ones', () => {
-    expect(previousEdition(events, { name: 'JESKO Medzilaborce 2026', startsOn: '2026-08-08' })?.id).toBe('j25')
-    expect(previousEdition(events, { id: 'j25', name: 'Jesko – Medzilaborce 2025', startsOn: '2025-08-09' })?.id).toBe('j24')
+    expect(previousEdition(events, { name: 'Letný fest Ukážkovo 2026', startsOn: '2026-08-08' })?.id).toBe('j25')
+    expect(previousEdition(events, { id: 'j25', name: 'Letný fest – Ukážkovo 2025', startsOn: '2025-08-09' })?.id).toBe('j24')
     expect(previousEdition(events, { name: 'Nová akcia', startsOn: '2026-01-01' })).toBeNull()
     expect(previousEdition(events, { name: '', startsOn: '2026-01-01' })).toBeNull()
   })
 
   it('offers each past event once, newest first', () => {
-    expect(pastEventNames(events)).toEqual(['Deň kapusty 2025', 'Jesko – Medzilaborce 2025'])
+    expect(pastEventNames(events)).toEqual(['Deň kapusty 2025', 'Letný fest – Ukážkovo 2025'])
   })
 })
 

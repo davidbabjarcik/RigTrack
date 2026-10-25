@@ -5,6 +5,7 @@ import {
   Calculator,
   CalendarDays,
   Coffee,
+  FileText,
   ChartColumn,
   Car,
   ArrowLeftRight,
@@ -58,6 +59,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'vehicles', permission: 'vehicles.view', label: 'Vozidlá', to: '/vehicles', icon: Car, description: 'Autá, STK, známky a poistky' },
   { id: 'loans', permission: 'loans.view', label: 'Výpožičky', to: '/loans', icon: ArrowLeftRight, description: 'Vydaná a vrátená technika' },
   { id: 'events', permission: 'events.view', label: 'Eventy', to: '/events', icon: Ticket, description: 'Akcie, technika, posádka a dokumenty' },
+  { id: 'offers', permission: 'offers.view', label: 'Cenové ponuky', to: '/offers', icon: FileText, description: 'Ponuky pre klientov s časťami, cenami a rozpočtom', hiddenFor: ['helper'] },
   { id: 'partners', permission: 'events.view', label: 'Firmy a kontakty', to: '/partners', icon: Building2, description: 'Organizátori, partneri a ich ľudia' },
   { id: 'calculators', label: 'Kalkulačky', to: '/calculators', icon: Calculator, description: 'Pódium Nivtec, delay subov, LED stena, DMX dip switch', hiddenFor: ['helper'] },
   {

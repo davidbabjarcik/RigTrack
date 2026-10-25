@@ -2,7 +2,7 @@ import { EventAttendanceSection } from '@/features/attendance/EventAttendanceSec
 import { EventDutiesSection } from '@/features/duties/EventDutiesSection'
 import { EventDrivesSection } from '@/features/drives/EventDrivesSection'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CalendarClock, ListChecks, Pencil, Printer, Receipt, Trash2 } from 'lucide-react'
+import { ArrowLeft, CalendarClock, FileText, ListChecks, Pencil, Printer, Receipt, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
@@ -99,9 +99,15 @@ export function EventDetailPage() {
             Pack list
           </LinkButton>
           {canEdit && (
-            <LinkButton to={`/events/${id}/quote`} variant="outline" size="sm">
+            <LinkButton to={`/events/${id}/quote`} variant="outline" size="sm" title="Rýchla ponuka z techniky eventu podľa cenníka">
               <Receipt className="size-4" aria-hidden />
-              Ponuka
+              Rýchla ponuka
+            </LinkButton>
+          )}
+          {can(company, 'offers.edit') && (
+            <LinkButton to={`/offers/new?event=${id}`} variant="outline" size="sm" title="Cenová ponuka s časťami, rozpočtom a vystavovateľom">
+              <FileText className="size-4" aria-hidden />
+              Cenová ponuka
             </LinkButton>
           )}
           <LinkButton to={`/events/${id}/print`} variant="outline" size="sm">

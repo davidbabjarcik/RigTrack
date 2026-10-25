@@ -132,7 +132,7 @@ function EventForm({ companyId, current, events }: FormProps) {
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Miesto" placeholder="napr. Dom kultúry Stropkov" error={errors.venue?.message} {...register('venue')} />
+        <Field label="Miesto" placeholder="napr. Dom kultúry" error={errors.venue?.message} {...register('venue')} />
         <Field label="Od *" type="date" error={errors.startsOn?.message} {...register('startsOn')} />
         <Field label="Do *" type="date" error={errors.endsOn?.message} {...register('endsOn')} />
         <SelectField label="Stav" error={errors.status?.message} {...register('status')}>
@@ -162,7 +162,7 @@ function EventForm({ companyId, current, events }: FormProps) {
         {(setting === 'outdoor' || setting === 'mixed') && (
           <Field
             label="Miesto pre počasie"
-            placeholder={venue ? `ak nie ${venue}` : 'napr. Stropkov'}
+            placeholder={venue ? `ak nie ${venue}` : 'napr. Mesto'}
             maxLength={120}
             error={errors.weatherPlace?.message}
             {...register('weatherPlace')}

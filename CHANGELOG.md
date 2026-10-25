@@ -5,6 +5,23 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.17 – 25. 10. 2026
+
+- **Cenové ponuky** (nový modul v menu; aj z detailu eventu tlačidlom „Cenová ponuka“): hlavička s číslom a dátumom,
+  podujatie, miesto a termín dodania, **Ponuka pre** (dá sa vybrať z Firiem a kontaktov) a **časti A, B, C…**
+  aj s podčasťami **A1, A2** – popis, zoznam (odrážky), „Cena zahŕňa“ a cena.
+- **Cena časti tromi spôsobmi**: napíšete sumu (alebo text, napr. „podľa dopytu“), poskladáte ju **z techniky zo
+  skladu** (kusy × dni × cena prenájmu) alebo z **vlastných položiek** (doprava, technik…) – aj kombinovane.
+- **Max. rozpočet**: hore stále vidno súčet, koľko ostáva a lištu; pri výbere techniky je vidno, čo je nad rozpočet.
+- **Vystavovatelia**: jedna firma môže ponuky vystavovať za viac subjektov (napr. s.r.o. a živnosť) – vyberiete pri
+  ponuke; neplatiteľ DPH má ceny bez DPH. Ceny s DPH, + DPH alebo bez DPH.
+- **Zhrnutie** a **celková (zvýhodnená) cena**, poznámky a „Vyhotovil“; **šablóny častí** na opakované použitie;
+  **Náhľad a tlač / PDF** na A4 s logom firmy; stav ponuky (koncept, poslaná, prijatá, odmietnutá).
+- **Oprávnenia** v Nastaveniach → Oprávnenia → Cenové ponuky: kto ich vidí, kto ich vytvára a upravuje a kto maže
+  (predvolene skladník vidí a upravuje, mazať len admin).
+- Pôvodná ponuka z eventu podľa cenníka ostáva ako „Rýchla ponuka“.
+- Nové migrácie: `0096` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.16 – 25. 10. 2026
 
 - **Pack list bez signálu**: odškrtnutie sa ukáže hneď; bez siete sa uloží do telefónu a odošle sa samo, keď sa

@@ -78,7 +78,7 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
         <Field label="DIČ" maxLength={20} value={fields.dic} onChange={(event) => set({ dic: event.target.value })} />
         <Field label="IČ DPH" placeholder="napr. SK2020123456" maxLength={20} value={fields.icDph} onChange={(event) => set({ icDph: event.target.value })} />
         <Field label="CEO / konateľ" maxLength={120} value={fields.ceo} onChange={(event) => set({ ceo: event.target.value })} />
-        <Field label="Adresa" className="sm:col-span-2" placeholder="napr. Medzilaborce" maxLength={200} value={fields.address} onChange={(event) => set({ address: event.target.value })} />
+        <Field label="Adresa" className="sm:col-span-2" placeholder="napr. Ulica 1, Mesto" maxLength={200} value={fields.address} onChange={(event) => set({ address: event.target.value })} />
       </div>
 
       {linkable && (

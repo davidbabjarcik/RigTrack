@@ -89,6 +89,9 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'partners', sheet: 'Firmy' },
       { table: 'partner_contacts', sheet: 'Kontakty' },
       { table: 'company_profile', sheet: 'Údaje o našej firme' },
+      { table: 'quote_issuers', sheet: 'Vystavovatelia ponúk' },
+      { table: 'quotes', sheet: 'Cenové ponuky (vlastné)' },
+      { table: 'quote_templates', sheet: 'Šablóny častí ponúk' },
     ],
   },
   {
@@ -259,6 +262,7 @@ const RESTORE_FIRST = [
   'vehicles',
   'partners',
   'events',
+  'quote_issuers',
   'loans',
   'orders',
   'order_items',

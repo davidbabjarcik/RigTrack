@@ -6,15 +6,15 @@ describe('parseVCards', () => {
     const text = [
       'BEGIN:VCARD',
       'VERSION:3.0',
-      'N:Simeon;Ješko;;;',
-      'FN:Ješko Simeon',
-      'ORG:JESKO s.r.o.;',
+      'N:Vzor;Ján;;;',
+      'FN:Ján Vzor',
+      'ORG:Ukážka s.r.o.;',
       'item1.TEL;type=CELL;type=VOICE;type=pref:+421 900 123 456',
       'TEL;type=WORK:+421 2 1234',
-      'item2.EMAIL;type=INTERNET:jesko@example.sk',
+      'item2.EMAIL;type=INTERNET:jan@example.sk',
       'END:VCARD',
     ].join('\r\n')
-    expect(parseVCards(text)).toEqual([{ name: 'Ješko Simeon', org: 'JESKO s.r.o.', phone: '+421 900 123 456', email: 'jesko@example.sk' }])
+    expect(parseVCards(text)).toEqual([{ name: 'Ján Vzor', org: 'Ukážka s.r.o.', phone: '+421 900 123 456', email: 'jan@example.sk' }])
   })
 
   it('falls back to N, joins folded lines and reads several cards', () => {

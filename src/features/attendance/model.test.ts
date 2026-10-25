@@ -5,7 +5,7 @@ const meeting = (id: string, meetAt: string) => ({ id, meetAt }) as Meeting
 
 describe('attendance model', () => {
   it('measures distance between points', () => {
-    // Stropkov – Svidník je zhruba 15 km vzdušnou čiarou.
+    // dve mestá zhruba 15 km vzdušnou čiarou od seba.
     const km = distanceM({ lat: 49.2026, lon: 21.6513 }, { lat: 49.3056, lon: 21.5703 }) / 1000
     expect(km).toBeGreaterThan(12)
     expect(km).toBeLessThan(15)

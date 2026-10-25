@@ -199,7 +199,7 @@ export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
 
 /**
  * Kľúč opakovanej akcie: názov bez letopočtu, diakritiky a veľkých písmen.
- * „JESKO Medzilaborce 2025“ a „Jesko Medzilaborce 2026“ sú tá istá akcia.
+ * „Letný fest Ukážkovo 2025“ a „Letný fest Ukážkovo 2026“ sú tá istá akcia.
  */
 export function seriesKey(name: string) {
   return name

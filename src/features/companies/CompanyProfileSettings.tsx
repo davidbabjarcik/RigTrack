@@ -39,7 +39,7 @@ export function CompanyProfileSettings({ companyId, canEdit }: { companyId: stri
         {field('Telefón', 'phone', { type: 'tel' })}
         {field('E-mail', 'email', { type: 'email' })}
         {field('Web', 'web', { placeholder: 'https://', className: 'sm:col-span-2' })}
-        {field('Adresa skladu', 'warehouseAddress', { placeholder: 'napr. Šarišská, Stropkov', className: 'sm:col-span-2' })}
+        {field('Adresa skladu', 'warehouseAddress', { placeholder: 'napr. Skladová 1, Mesto', className: 'sm:col-span-2' })}
       </div>
       <p className="text-xs text-muted-foreground">Z adresy skladu sa pri evente vypočítajú kilometre na akciu. Údaje môže meniť admin firmy.</p>
       {save.isError && <p className="text-sm text-destructive">Uloženie zlyhalo.</p>}

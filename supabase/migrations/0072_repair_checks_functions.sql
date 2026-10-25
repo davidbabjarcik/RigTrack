@@ -2071,6 +2071,160 @@ begin
     exception when others then raise notice 'Kontrola push_subscriptions_user_agent_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.quote_issuers') is not null then
+    begin
+      execute $sql$alter table public.quote_issuers drop constraint if exists quote_issuers_address_check$sql$;
+      execute $sql$alter table public.quote_issuers add constraint quote_issuers_address_check CHECK ((char_length(address) <= 300)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quote_issuers_address_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quote_issuers') is not null then
+    begin
+      execute $sql$alter table public.quote_issuers drop constraint if exists quote_issuers_contact_check$sql$;
+      execute $sql$alter table public.quote_issuers add constraint quote_issuers_contact_check CHECK ((char_length(contact) <= 300)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quote_issuers_contact_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quote_issuers') is not null then
+    begin
+      execute $sql$alter table public.quote_issuers drop constraint if exists quote_issuers_dic_check$sql$;
+      execute $sql$alter table public.quote_issuers add constraint quote_issuers_dic_check CHECK ((char_length(dic) <= 20)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quote_issuers_dic_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quote_issuers') is not null then
+    begin
+      execute $sql$alter table public.quote_issuers drop constraint if exists quote_issuers_ic_dph_check$sql$;
+      execute $sql$alter table public.quote_issuers add constraint quote_issuers_ic_dph_check CHECK ((char_length(ic_dph) <= 20)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quote_issuers_ic_dph_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quote_issuers') is not null then
+    begin
+      execute $sql$alter table public.quote_issuers drop constraint if exists quote_issuers_ico_check$sql$;
+      execute $sql$alter table public.quote_issuers add constraint quote_issuers_ico_check CHECK ((char_length(ico) <= 20)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quote_issuers_ico_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quote_issuers') is not null then
+    begin
+      execute $sql$alter table public.quote_issuers drop constraint if exists quote_issuers_name_check$sql$;
+      execute $sql$alter table public.quote_issuers add constraint quote_issuers_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 160))) not valid$sql$;
+    exception when others then raise notice 'Kontrola quote_issuers_name_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quote_templates') is not null then
+    begin
+      execute $sql$alter table public.quote_templates drop constraint if exists quote_templates_part_check$sql$;
+      execute $sql$alter table public.quote_templates add constraint quote_templates_part_check CHECK (((jsonb_typeof(part) = 'object'::text) AND (char_length((part)::text) <= 20000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola quote_templates_part_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quote_templates') is not null then
+    begin
+      execute $sql$alter table public.quote_templates drop constraint if exists quote_templates_title_check$sql$;
+      execute $sql$alter table public.quote_templates add constraint quote_templates_title_check CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 120))) not valid$sql$;
+    exception when others then raise notice 'Kontrola quote_templates_title_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_author_name_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_author_name_check CHECK ((char_length(author_name) <= 120)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_author_name_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_budget_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_budget_check CHECK ((budget >= (0)::numeric)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_budget_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_client_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_client_check CHECK (((jsonb_typeof(client) = 'object'::text) AND (char_length((client)::text) <= 2000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_client_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_issuer_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_issuer_check CHECK (((jsonb_typeof(issuer) = 'object'::text) AND (char_length((issuer)::text) <= 2000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_issuer_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_notes_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_notes_check CHECK ((char_length(notes) <= 3000)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_notes_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_number_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_number_check CHECK ((char_length(number) <= 40)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_number_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_place_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_place_check CHECK ((char_length(place) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_place_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_sections_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_sections_check CHECK (((jsonb_typeof(sections) = 'array'::text) AND (char_length((sections)::text) <= 100000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_sections_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_service_dates_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_service_dates_check CHECK ((char_length(service_dates) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_service_dates_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_status_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'sent'::text, 'accepted'::text, 'rejected'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_status_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_title_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_title_check CHECK ((char_length(title) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_title_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_total_override_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_total_override_check CHECK ((total_override >= (0)::numeric)) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_total_override_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_vat_mode_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_vat_mode_check CHECK ((vat_mode = ANY (ARRAY['with'::text, 'plus'::text, 'none'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_vat_mode_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.quotes') is not null then
+    begin
+      execute $sql$alter table public.quotes drop constraint if exists quotes_vat_pct_check$sql$;
+      execute $sql$alter table public.quotes add constraint quotes_vat_pct_check CHECK (((vat_pct >= (0)::numeric) AND (vat_pct <= (100)::numeric))) not valid$sql$;
+    exception when others then raise notice 'Kontrola quotes_vat_pct_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.responsibilities') is not null then
     begin
       execute $sql$alter table public.responsibilities drop constraint if exists responsibilities_check_every_days_check$sql$;
@@ -4930,7 +5084,10 @@ AS $function$
     ('staff.view', array['skladnik', 'technik', 'viewer', 'helper']::public.app_role[]),
     ('staff.manage', array['skladnik']::public.app_role[]),
     ('report.view', array['skladnik', 'technik']::public.app_role[]),
-    ('report.money', array[]::public.app_role[])
+    ('report.money', array[]::public.app_role[]),
+    ('offers.view', array['skladnik']::public.app_role[]),
+    ('offers.edit', array['skladnik']::public.app_role[]),
+    ('offers.delete', array[]::public.app_role[])
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia permission_defaults: %', sqlerrm;
 end;

@@ -59,7 +59,7 @@ export function SocialLinks({ companyId, staffId, canEdit: mayEdit, fromProfile 
             <Field
               key={network.key}
               label={network.label}
-              placeholder={network.key === 'web' ? 'napr. jefproduction.sk' : 'meno alebo odkaz'}
+              placeholder={network.key === 'web' ? 'napr. mojafirma.sk' : 'meno alebo odkaz'}
               maxLength={200}
               value={draft[network.key] ?? ''}
               onChange={(e) => setDraft({ ...draft, [network.key]: e.target.value })}

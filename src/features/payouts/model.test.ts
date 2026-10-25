@@ -96,7 +96,7 @@ describe('lastEditionPayout', () => {
   const edition = (id: string, name: string, startsOn: string): CompanyEvent => ({
     id, name, client: '', venue: '', startsOn, endsOn: startsOn, status: 'done', note: '', equipment: [], crew: [], ...EMPTY_EVENT_DETAILS,
   })
-  const events = [edition('j25', 'JESKO Medzilaborce 2025', '2025-08-09'), edition('j26', 'JESKO Medzilaborce 2026', '2026-08-08'), edition('new', 'Nová akcia', '2026-09-01')]
+  const events = [edition('j25', 'Letný fest Ukážkovo 2025', '2025-08-09'), edition('j26', 'Letný fest Ukážkovo 2026', '2026-08-08'), edition('new', 'Nová akcia', '2026-09-01')]
   const payments = [
     payment({ memberId: 'jano', eventId: 'j25', amount: 100 }),
     payment({ memberId: 'jano', eventId: 'j25', amount: 20, kind: 'bonus' }),

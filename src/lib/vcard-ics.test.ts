@@ -21,13 +21,13 @@ describe('vCard', () => {
 })
 
 describe('iCalendar', () => {
-  const item = { uid: 'event-1', title: 'Festival; Stropkov', startsOn: '2026-11-06', endsOn: '2026-11-08', location: 'Námestie', description: 'Get-in 8:00' }
+  const item = { uid: 'event-1', title: 'Festival; Ukážkovo', startsOn: '2026-11-06', endsOn: '2026-11-08', location: 'Námestie', description: 'Get-in 8:00' }
 
   it('writes all-day events with an exclusive end date', () => {
     const ics = buildIcs([item], new Date('2026-10-18T10:00:00Z'))
     expect(ics).toContain('DTSTART;VALUE=DATE:20261106')
     expect(ics).toContain('DTEND;VALUE=DATE:20261109')
-    expect(ics).toContain('SUMMARY:Festival\\; Stropkov')
+    expect(ics).toContain('SUMMARY:Festival\\; Ukážkovo')
     expect(ics).toContain('UID:event-1@rigtrack')
     expect(ics).toContain('DTSTAMP:20261018T100000Z')
   })
@@ -41,7 +41,7 @@ describe('iCalendar', () => {
   it('builds a Google Calendar link', () => {
     const url = new URL(googleCalendarUrl(item))
     expect(url.searchParams.get('dates')).toBe('20261106/20261109')
-    expect(url.searchParams.get('text')).toBe('Festival; Stropkov')
+    expect(url.searchParams.get('text')).toBe('Festival; Ukážkovo')
   })
 })
 
