@@ -21,6 +21,19 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.10 – 25. 10. 2026
+
+- **Zvonček s upozorneniami** v hlavičke: počet neprečítaných, zoznam upozornení zo všetkých firiem (aj bez
+  zapnutého push), ťuknutím sa otvorí event / úloha (pri inej firme sa firma prepne sama), „Všetko prečítané“
+  a „Zmazať prečítané“.
+- **Nové upozornenia**:
+  - posádke, keď sa eventu zmení termín alebo miesto, alebo keď sa zruší,
+  - tomu, kto event založil, keď niekto z posádky odmietne (aj s dôvodom),
+  - posádke hodinu pred stretávkou,
+  - tomu, kto výpožičku založil, keď je po termíne (raz za týždeň).
+  Stretávky a výpožičky kontroluje plánovač `pg_cron` v Supabase (každých 15 minút).
+- Nové migrácie: `0090` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.9.1 – 25. 10. 2026
 
 - Firmy a kontakty: nové nápovedy v poliach Názov a Obchodné meno.

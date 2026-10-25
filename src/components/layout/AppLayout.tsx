@@ -7,6 +7,7 @@ import { BinAutoPurge } from '@/features/bin/BinAutoPurge'
 import { useCompany } from '@/features/companies/company-context'
 import { CompanyLogo } from '@/features/companies/CompanyLogo'
 import { Credits } from './Credits'
+import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { TopNotices } from './TopNotices'
 import { ThemeToggle } from './ThemeToggle'
 import { FIXED_PINNED, visibleNavItems, type NavItem } from '@/lib/navigation'
@@ -82,6 +83,7 @@ export function AppLayout() {
             <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8 rounded-lg" />
             <span className="text-lg font-semibold tracking-tight">RigTrack</span>
           </Link>
+          <NotificationBell />
           <ThemeToggle className="-mr-2" />
         </div>
         {active && (
@@ -109,6 +111,7 @@ export function AppLayout() {
             <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-6 rounded-md" />
             <span className="font-semibold tracking-tight">RigTrack</span>
           </Link>
+          <NotificationBell />
           <ThemeToggle className="-mr-2" />
         </header>
         <TopNotices />
