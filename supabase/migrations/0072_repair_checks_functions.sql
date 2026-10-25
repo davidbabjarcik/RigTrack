@@ -1070,6 +1070,27 @@ begin
     exception when others then raise notice 'Kontrola event_payments_vat_rate_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.event_quotes') is not null then
+    begin
+      execute $sql$alter table public.event_quotes drop constraint if exists event_quotes_data_check$sql$;
+      execute $sql$alter table public.event_quotes add constraint event_quotes_data_check CHECK (((jsonb_typeof(data) = 'object'::text) AND (char_length((data)::text) <= 200000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_quotes_data_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_quotes') is not null then
+    begin
+      execute $sql$alter table public.event_quotes drop constraint if exists event_quotes_note_check$sql$;
+      execute $sql$alter table public.event_quotes add constraint event_quotes_note_check CHECK ((char_length(note) <= 500)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_quotes_note_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_quotes') is not null then
+    begin
+      execute $sql$alter table public.event_quotes drop constraint if exists event_quotes_status_check$sql$;
+      execute $sql$alter table public.event_quotes add constraint event_quotes_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'sent'::text, 'accepted'::text, 'rejected'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_quotes_status_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.event_rules') is not null then
     begin
       execute $sql$alter table public.event_rules drop constraint if exists event_rules_rules_check$sql$;
@@ -3770,6 +3791,47 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia drop_attachments: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.equipment_sync_copies()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  if new.shared_from is not null then return new; end if;
+  update public.equipment c
+    set name = new.name, kind = new.kind, attributes = new.attributes, manufacturer = new.manufacturer, model = new.model,
+        serial_number = new.serial_number, quantity = new.quantity, track_units = new.track_units, unit_ids = new.unit_ids, note = new.note
+    where c.shared_from = new.id
+      and (c.name, c.kind, c.attributes, c.manufacturer, c.model, c.serial_number, c.quantity, c.track_units, c.unit_ids, c.note)
+          is distinct from (new.name, new.kind, new.attributes, new.manufacturer, new.model, new.serial_number, new.quantity, new.track_units, new.unit_ids, new.note);
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia equipment_sync_copies: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.event_quotes_number()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  perform pg_advisory_xact_lock(hashtext('event_quotes:' || new.company_id::text || ':' || new.year::text));
+  select coalesce(max(number), 0) + 1 into new.number from public.event_quotes where company_id = new.company_id and year = new.year;
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia event_quotes_number: %', sqlerrm;
 end;
 $repair$;
 

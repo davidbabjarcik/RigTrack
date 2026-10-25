@@ -75,7 +75,8 @@ with checks (migration, ok) as (
     ('0089 zodpovedné osoby', to_regclass('public.responsibilities') is not null),
     ('0090 zvonček s upozorneniami', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'notifications' and column_name = 'read_at')),
     ('0091 kolízie naprieč firmami', to_regprocedure('public.crew_busy_elsewhere(uuid, date, date)') is not null),
-    ('0092 hodinové sadzby', to_regclass('public.member_rates') is not null)
+    ('0092 hodinové sadzby', to_regclass('public.member_rates') is not null),
+    ('0093 história ponúk', to_regclass('public.event_quotes') is not null)
 )
 select migration, case when ok then 'OK' else 'chýba' end as stav
 from checks

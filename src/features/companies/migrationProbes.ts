@@ -39,6 +39,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0089', label: 'zodpovedné osoby', table: 'responsibilities', column: 'id' },
   { migration: '0090', label: 'zvonček s upozorneniami, viac upozornení', table: 'notifications', column: 'read_at' },
   { migration: '0092', label: 'hodinové sadzby a mesačný výkaz', table: 'member_rates', column: 'member_id' },
+  { migration: '0093', label: 'história cenových ponúk', table: 'event_quotes', column: 'id' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

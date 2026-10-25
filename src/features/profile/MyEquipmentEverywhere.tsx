@@ -83,7 +83,7 @@ export function MyEquipmentEverywhere({ userId, memberships }: { userId: string;
           Technika
         </h2>
         <p className="text-sm text-muted-foreground">
-          Technika, ktorá patrí vám. Vo firme je vedená ako vaša a dá sa dať na event. Pridajte ju aj do ďalšej firmy; zmeny prenesiete tlačidlom „Aktualizovať kópie“.
+          Technika, ktorá patrí vám. Vo firme je vedená ako vaša a dá sa dať na event. Pridajte ju aj do ďalšej firmy; zmeny pôvodnej položky sa do kópií prenesú samy.
         </p>
 
         {memberships.length > 0 && (
@@ -129,9 +129,9 @@ export function MyEquipmentEverywhere({ userId, memberships }: { userId: string;
                     </span>
                     <span className="flex gap-1">
                       {copies.length > 0 && (
-                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => sync.mutate(original.id)}>
+                        <Button size="sm" variant="ghost" title="Kópie sa aktualizujú samy; toto ich dorovná hneď" disabled={busy} onClick={() => sync.mutate(original.id)}>
                           <RefreshCw className="size-4" aria-hidden />
-                          Aktualizovať kópie
+                          Dorovnať kópie
                         </Button>
                       )}
                       <Button size="sm" variant="ghost" onClick={() => open(original.companyId, `/equipment/${original.id}`)}>

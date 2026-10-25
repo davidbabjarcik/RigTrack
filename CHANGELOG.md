@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.13 – 25. 10. 2026
+
+- **História cenových ponúk**: na stránke ponuky „Uložiť ponuku“ uloží presnú kópiu (riadky, sumy, DPH) s číslom
+  v rámci roka (napr. 2026/012). V zozname „Uložené ponuky“ je dátum, suma a stav (koncept, poslaná, prijatá,
+  odmietnutá); „Zobraziť“ otvorí uloženú verziu presne tak, ako bola, a dá sa vytlačiť.
+- **Vlastná technika vo viacerých firmách**: zmena pôvodnej položky (názov, počet, parametre) sa do kópií
+  v iných firmách prenesie sama – tlačidlo „Dorovnať kópie“ ostalo len pre istotu.
+- Nové migrácie: `0093` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.12 – 25. 10. 2026
 
 - **Mesačný výkaz dochádzky** (Dochádzka, pre admina): za zvolený mesiac po ľuďoch hodiny na firme, doma

@@ -79,6 +79,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'event_drives', sheet: 'Kto šoféroval' },
       { table: 'event_capsules', sheet: 'Kapsule' },
       { table: 'event_patch', sheet: 'Patch list' },
+      { table: 'event_quotes', sheet: 'Cenové ponuky' },
     ],
   },
   {
