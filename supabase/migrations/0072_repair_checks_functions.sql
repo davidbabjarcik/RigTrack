@@ -1133,6 +1133,13 @@ begin
     exception when others then raise notice 'Kontrola event_shares_partner_part_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.event_stage_plans') is not null then
+    begin
+      execute $sql$alter table public.event_stage_plans drop constraint if exists event_stage_plans_request_check$sql$;
+      execute $sql$alter table public.event_stage_plans add constraint event_stage_plans_request_check CHECK (((jsonb_typeof(request) = 'object'::text) AND (char_length((request)::text) <= 20000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_stage_plans_request_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.event_travel') is not null then
     begin
       execute $sql$alter table public.event_travel drop constraint if exists event_travel_extra_km_check$sql$;

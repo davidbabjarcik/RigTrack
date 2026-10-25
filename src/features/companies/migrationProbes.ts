@@ -41,6 +41,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0092', label: 'hodinové sadzby a mesačný výkaz', table: 'member_rates', column: 'member_id' },
   { migration: '0093', label: 'história cenových ponúk', table: 'event_quotes', column: 'id' },
   { migration: '0094', label: 'zakladanie firiem so schválením', table: 'company_requests', column: 'id' },
+  { migration: '0095', label: 'plán pódia k eventu', table: 'event_stage_plans', column: 'event_id' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

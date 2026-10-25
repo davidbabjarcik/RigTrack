@@ -28,6 +28,7 @@ import { usePartners } from '@/features/partners/api'
 import { EventDocumentsSection } from './EventDocumentsSection'
 import { EventIncomeSection } from './EventIncomeSection'
 import { EventPhotosSection } from './EventPhotosSection'
+import { EventStagePlan } from '@/features/stage/EventStagePlan'
 import { EventEquipmentSection } from './EventEquipmentSection'
 import { EventStatusBadge } from './EventStatusBadge'
 import { describeTimes, POWER_LABELS, SETTING_LABELS } from './model'
@@ -210,6 +211,7 @@ export function EventDetailPage() {
       <EventSharesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
       <EventLinksSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
       <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+      <EventStagePlan companyId={companyId} eventId={event.id} />
       <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
       {can(company, 'equipment.view') && <EventPowerSection companyId={companyId} event={event} />}
       {can(company, 'equipment.view') && <EventCapsulesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />}

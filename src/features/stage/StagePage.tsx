@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, Plus, Printer, Trash2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Plus, Printer, Save, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -15,7 +15,7 @@ import { useEvents } from '@/features/events/useEvents'
 import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { fetchStageConfig, stageKeys } from './api'
+import { fetchStageConfig, saveEventStagePlan, stageKeys, stagePlanKeys, useEventStagePlan } from './api'
 import {
   deckLegs,
   MAX_STAGE_M,
@@ -260,6 +260,28 @@ export function StagePage() {
   const [stairsRailingSides, setStairsRailingSides] = useState(0)
   const [eventId, setEventId] = useState(params.get('event') ?? '')
   const [showLegs, setShowLegs] = useState(true)
+  // Plán uložený k eventu (0095): pri otvorení z eventu (?event=…) sa načíta sám, inak tlačidlom.
+  const savedPlan = useEventStagePlan(companyId, eventId)
+  const [loadedFor, setLoadedFor] = useState('')
+  const applyPlan = (saved: Partial<StageRequest>) => {
+    if (saved.widthM) setWidth(saved.widthM)
+    if (saved.depthM) setDepth(saved.depthM)
+    if (saved.heightCm) setHeight(saved.heightCm)
+    if (saved.orientation) setOrientation(saved.orientation)
+    setSkirt((saved.skirtSides ?? []).length > 0)
+    if ((saved.skirtSides ?? []).length > 0) setSkirtSides(saved.skirtSides!)
+    setRailing((saved.railingSides ?? []).length > 0)
+    if ((saved.railingSides ?? []).length > 0) setRailingSides(saved.railingSides!)
+    setStairs(saved.stairs ?? [])
+    setExtraDecks(saved.extraDecks ?? [])
+    setCatwalk(saved.catwalk ?? null)
+    setRisers(saved.risers ?? [])
+    setFillerIds(saved.fillerIds ?? null)
+    setStairsToTop(Boolean(saved.stairsToTop))
+    setStairsRailingSides(saved.stairsRailingSides ?? 0)
+    setLoadedFor(eventId)
+  }
+  if (savedPlan.data && loadedFor !== eventId && eventId === params.get('event')) applyPlan(savedPlan.data.request)
 
   const today = todayIso()
   const upcoming = (events.data ?? []).filter((event) => isLive(event) && event.endsOn >= today).sort((a, b) => a.startsOn.localeCompare(b.startsOn))
@@ -288,9 +310,16 @@ export function StagePage() {
   const totals = plan ? quantitiesByEquipment(plan.lines) : new Map<string, number>()
   const target = upcoming.find((event) => event.id === eventId)
 
+  const savePlan = useMutation({
+    mutationFn: () => saveEventStagePlan(companyId, eventId, request),
+    onSuccess: () => setLoadedFor(eventId),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: stagePlanKeys.ofEvent(companyId, eventId) }),
+  })
   const addToEvent = useMutation({
     mutationFn: async () => {
       if (!target) return
+      // Spolu s dielmi sa k eventu uloží aj plán (nákres a zadanie).
+      await saveEventStagePlan(companyId, target.id, request).catch(() => {})
       for (const [equipmentId, quantity] of totals) {
         if (!target.equipment.some((item) => item.equipmentId === equipmentId)) await addEventEquipment(companyId, target.id, equipmentId)
         await setEventEquipmentQuantity(target.id, equipmentId, quantity)
@@ -667,34 +696,52 @@ export function StagePage() {
             </p>
           )}
 
-          {can(company, 'events.edit') && totals.size > 0 && (
-            <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-surface p-4 print:hidden">
-              <SelectField label="Pridať diely na event" className="min-w-56 flex-1" value={eventId} onChange={(event) => setEventId(event.target.value)}>
-                <option value="">— vyberte event —</option>
-                {upcoming.map((event) => (
-                  <option key={event.id} value={event.id}>
-                    {event.name} ({formatDate(event.startsOn)})
-                  </option>
-                ))}
-              </SelectField>
-              <Button
-                disabled={!target || addToEvent.isPending}
-                onClick={() => {
-                  if (window.confirm(`Pridať diely pódia na event „${target!.name}“? Počty techniky, ktorá už na evente je, sa nastavia na vypočítané.`)) addToEvent.mutate()
-                }}
-              >
-                {addToEvent.isPending ? 'Pridávam…' : 'Pridať na event'}
-              </Button>
+          {can(company, 'events.edit') && (
+            <div className="flex flex-col gap-3 rounded-xl border bg-surface p-4 print:hidden">
+              <div className="flex flex-wrap items-end gap-3">
+                <SelectField label="Event" className="min-w-56 flex-1" value={eventId} onChange={(event) => setEventId(event.target.value)}>
+                  <option value="">— vyberte event —</option>
+                  {upcoming.map((event) => (
+                    <option key={event.id} value={event.id}>
+                      {event.name} ({formatDate(event.startsOn)})
+                    </option>
+                  ))}
+                </SelectField>
+                <Button variant="outline" disabled={!target || savePlan.isPending} onClick={() => savePlan.mutate()}>
+                  <Save className="size-4" aria-hidden />
+                  {savePlan.isPending ? 'Ukladám…' : 'Uložiť plán k eventu'}
+                </Button>
+                {totals.size > 0 && (
+                  <Button
+                    disabled={!target || addToEvent.isPending}
+                    onClick={() => {
+                      if (window.confirm(`Pridať diely pódia na event „${target!.name}“? Počty techniky, ktorá už na evente je, sa nastavia na vypočítané.`)) addToEvent.mutate()
+                    }}
+                  >
+                    {addToEvent.isPending ? 'Pridávam…' : 'Pridať diely na event'}
+                  </Button>
+                )}
+              </div>
+              {savedPlan.data && loadedFor !== eventId && (
+                <p className="flex flex-wrap items-center gap-2 text-sm">
+                  K eventu je uložený plán {savedPlan.data.request.widthM} × {savedPlan.data.request.depthM} m ({formatDate(savedPlan.data.updatedAt.slice(0, 10))}).
+                  <Button size="sm" variant="outline" onClick={() => applyPlan(savedPlan.data!.request)}>
+                    Načítať uložený plán
+                  </Button>
+                </p>
+              )}
+              {savePlan.isSuccess && <p role="status" className="text-sm text-muted-foreground">Plán je uložený k eventu – nájdete ho v detaile eventu.</p>}
+              {savePlan.isError && <p role="alert" className="text-sm text-destructive">Plán sa nepodarilo uložiť. Táto časť databázy ešte nemusí byť pripravená (migrácia 0095).</p>}
               {addToEvent.isSuccess && target && (
-                <p role="status" className="w-full text-sm">
-                  Pridané.{' '}
+                <p role="status" className="text-sm">
+                  Pridané aj s plánom.{' '}
                   <Link to={`/events/${target.id}`} className="font-medium text-accent hover:underline">
                     Otvoriť event
                   </Link>
                 </p>
               )}
               {addToEvent.isError && (
-                <p role="alert" className="w-full text-sm text-destructive">
+                <p role="alert" className="text-sm text-destructive">
                   Pridanie zlyhalo. Možno už nie je dosť voľných kusov v termíne eventu.
                 </p>
               )}

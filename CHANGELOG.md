@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.15 – 25. 10. 2026
+
+- **Plán pódia Nivtec k eventu**: v kalkulačke pódia vyberte event a „Uložiť plán k eventu“ – uloží sa celé zadanie
+  (rozmery, výška, schody, plachta, zábradlie, molo, rizery). Ukladá sa aj pri „Pridať diely na event“.
+- V **detaile eventu** je karta „Pódium 8 × 5 m“ so súhrnom; „Otvoriť plán a tlač“ otvorí kalkulačku s načítaným
+  plánom (nákres, poradie dosiek, nohy, tlač). Pri inom evente sa uložený plán dá načítať tlačidlom.
+- Uložiť plán ide aj vtedy, keď diely ešte nie sú priradené k technike.
+- Nové migrácie: `0095` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.14 – 25. 10. 2026
 
 - **Zakladanie nových firiem so schválením**: novú firmu založí len správca aplikácie (vývojár) alebo ten, komu to
