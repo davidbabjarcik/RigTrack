@@ -5,10 +5,12 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { addTodoFromField, taskKeys } from './api'
-import { cleanLabel, pushKey, stripKeyword, todoTitle } from './todoKeyword'
+import { cleanLabel, DATE_KEYWORD, hasKeyword, pushKey, stripKeyword, todoTitle } from './todoKeyword'
 
 type Field = HTMLInputElement | HTMLTextAreaElement
 const SKIPPED = new Set(['password', 'checkbox', 'radio', 'file', 'submit', 'button', 'range', 'color', 'hidden'])
+// Dátum sa nepíše po znakoch do hodnoty – v ňom sa hľadá zadaný dátum 31. 12. 1800.
+const DATE_TYPES = new Set(['date', 'datetime-local', 'month'])
 
 /** Názov políčka: popis (label), inak aria-label alebo placeholder. */
 function fieldLabel(field: Field) {
@@ -32,7 +34,7 @@ function setNativeValue(field: Field, value: string) {
 }
 
 /**
- * Kdekoľvek v appke: napíšete do políčka @todo (alebo @addtodo) a vznikne úloha „Doplniť: Váha – LED Par“
+ * Kdekoľvek v appke: napíšete do políčka @todo (alebo @addtodo; do čísla 31121800, do dátumu 31. 12. 1800) a vznikne úloha „Doplniť: Váha – LED Par“
  * s odkazom späť na túto stránku. Dá sa použiť viackrát, aj v jednom formulári.
  */
 export function TodoKeywordWatcher() {
@@ -56,16 +58,23 @@ function Watcher({ userId }: { userId: string }) {
     function onKey(event: KeyboardEvent) {
       const field = event.target
       if (!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) return
-      if (field instanceof HTMLInputElement && SKIPPED.has(field.type)) return
+      if (field instanceof HTMLInputElement && (SKIPPED.has(field.type) || DATE_TYPES.has(field.type))) return
       const { buffer, hit } = pushKey(buffers.current.get(field) ?? '', event.key)
       buffers.current.set(field, buffer)
-      if (!hit) return
+      if (hit) addTodo(field)
+    }
+    function onDate(event: Event) {
+      const field = event.target
+      if (field instanceof HTMLInputElement && DATE_TYPES.has(field.type) && field.value.startsWith(DATE_KEYWORD.slice(0, field.type === 'month' ? 7 : 10))) addTodo(field)
+    }
+    function addTodo(field: Field) {
       const { companyId, userId: me, link } = context.current
       if (!companyId || !me) return
       const title = todoTitle(fieldLabel(field), itemName(field))
-      // Kľúčové slovo z textového políčka zmizne (číselné ho ani neprijme).
+      // Kľúčové slovo (aj 31121800 a dátum 31. 12. 1800) z políčka zmizne.
       window.setTimeout(() => {
-        if (/@(add)?todo/i.test(field.value)) setNativeValue(field, stripKeyword(field.value))
+        if (field instanceof HTMLInputElement && DATE_TYPES.has(field.type)) setNativeValue(field, '')
+        else if (hasKeyword(field.value)) setNativeValue(field, stripKeyword(field.value))
       }, 0)
       addTodoFromField(companyId, me, title, link)
         .then(() => {
@@ -75,7 +84,11 @@ function Watcher({ userId }: { userId: string }) {
         .catch(() => setToast({ ok: false, text: 'Úlohu sa nepodarilo pridať – možno nemáte oprávnenie pridávať úlohy.' }))
     }
     document.addEventListener('keydown', onKey, true)
-    return () => document.removeEventListener('keydown', onKey, true)
+    document.addEventListener('change', onDate, true)
+    return () => {
+      document.removeEventListener('keydown', onKey, true)
+      document.removeEventListener('change', onDate, true)
+    }
   }, [queryClient])
 
   useEffect(() => {

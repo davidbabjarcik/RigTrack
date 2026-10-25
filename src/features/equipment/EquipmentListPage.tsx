@@ -8,6 +8,7 @@ import { ScanButton } from '@/features/scan/ScanButton'
 import { LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
+import { caseTitle } from '@/features/cases/model'
 import { useCompany } from '@/features/companies/company-context'
 import { formatUnits, piecesInService, unitsInService } from '@/features/service/model'
 import { useServiceRecords } from '@/features/service/useServiceRecords'
@@ -64,6 +65,10 @@ export function EquipmentListPage() {
     }
   }, [filter])
   const cases = useCases(company.companyId)
+  const caseLabel = (caseId: string) => {
+    const box = cases.data?.find((item) => item.id === caseId)
+    return box ? caseTitle(box) : ''
+  }
   const { categories, locations } = useEquipmentLookups(company.companyId)
   const list = useQuery({
     queryKey: equipmentKeys.list(company.companyId),
@@ -192,6 +197,9 @@ export function EquipmentListPage() {
               ownerName(item.ownerStaffId) && `patrí: ${ownerName(item.ownerStaffId)}`,
               item.inventoryNumber && `inv. č. ${item.inventoryNumber}`,
               item.quantity !== 1 && `${item.quantity} ks`,
+              // Rozdelená technika: ktoré kusy a v ktorom case sú.
+              item.trackUnits && item.unitIds.length > 0 && item.unitIds.length <= 12 && item.unitIds.map((unit) => `#${unit}`).join(', '),
+              item.caseId && caseLabel(item.caseId) && `v ${caseLabel(item.caseId)}`,
             ].filter(Boolean)
             const service = serviceState(item, today).state
             const servicing = inService.get(item.id) ?? 0

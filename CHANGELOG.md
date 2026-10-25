@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.19.1 – 25. 10. 2026
+
+- **Do case presné kusy**: pri pridávaní techniky do case „Vybrať čísla“ – zvolíte napr. #7 a #8 a do case idú
+  presne tie; zvyšok si nechá svoje čísla. Doteraz odtrhnutá časť dostala znova #1, #2.
+- **Technika**: pri rozdelenej technike vidno čísla kusov a v ktorom case sú („#7, #8 · v Beam 7R Case #4“).
+- **Úloha z čísla a dátumu**: do číselného políčka (kg, ks…) sa „@“ napísať nedá – napíšte **31121800**;
+  do dátumu zadajte **31. 12. 1800**. Vznikne úloha „Doplniť: …“ ako pri @todo a hodnota sa vymaže.
+- Nová migrácia: `0100` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.19 – 25. 10. 2026
 
 - **@todo v ľubovoľnom políčku**: napíšete `@todo` (alebo `@addtodo`) napr. do Hmotnosti a vznikne úloha

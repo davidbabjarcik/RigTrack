@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pushKey, stripKeyword, todoTitle } from './todoKeyword'
+import { hasKeyword, pushKey, stripKeyword, todoTitle } from './todoKeyword'
 
 const type = (text: string) => {
   let buffer = ''
@@ -18,6 +18,8 @@ describe('@todo keyword', () => {
     expect(type('@addtodo')).toBe(1)
     expect(type('12@todo3@TODO')).toBe(2)
     expect(type('todo')).toBe(0)
+    expect(type('31121800')).toBe(1)
+    expect(type('3112180')).toBe(0)
   })
 
   it('ignores the keyword after it was erased with backspace', () => {
@@ -29,6 +31,9 @@ describe('@todo keyword', () => {
   it('cleans the field and builds the task title', () => {
     expect(stripKeyword('LED Par @todo')).toBe('LED Par')
     expect(stripKeyword('@addtodo')).toBe('')
+    expect(stripKeyword('31121800')).toBe('')
+    expect(hasKeyword('1800-12-31')).toBe(true)
+    expect(hasKeyword('12,5')).toBe(false)
     expect(todoTitle('Hmotnosť (kg) *', 'LED Par')).toBe('Doplniť: Hmotnosť (kg) – LED Par')
     expect(todoTitle('', '')).toBe('Doplniť: údaj')
   })

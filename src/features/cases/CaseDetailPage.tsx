@@ -6,7 +6,8 @@ import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
-import { equipmentKeys, fetchEquipmentList, setEquipmentCase, setEquipmentLabelRole, splitEquipmentIntoCase } from '@/features/equipment/api'
+import { equipmentKeys, fetchEquipmentList, setEquipmentCase, setEquipmentLabelRole, splitEquipmentIntoCase, splitEquipmentUnits } from '@/features/equipment/api'
+import { unitIdsOf } from '@/features/equipment/model'
 import { filterEquipment, type LabelRole } from '@/features/equipment/model'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { StatusBadge } from '@/features/equipment/StatusBadge'
@@ -55,8 +56,8 @@ export function CaseDetailPage() {
 
   const move = useMutation({
     // S počtom menším ako všetky kusy sa položka rozdelí (časť ide do case, zvyšok ostane).
-    mutationFn: ({ equipmentId, caseId, count }: { equipmentId: string; caseId: string | null; count?: number }) =>
-      count ? splitEquipmentIntoCase(equipmentId, caseId, count).then(() => undefined) : setEquipmentCase(companyId, equipmentId, caseId),
+    mutationFn: ({ equipmentId, caseId, count, units }: { equipmentId: string; caseId: string | null; count?: number; units?: number[] }) =>
+      units ? splitEquipmentUnits(equipmentId, caseId, units).then(() => undefined) : count ? splitEquipmentIntoCase(equipmentId, caseId, count).then(() => undefined) : setEquipmentCase(companyId, equipmentId, caseId),
     onSettled: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) }),
   })
 
@@ -314,11 +315,13 @@ export function CaseDetailPage() {
                         .join(' · ')}
                     </span>
                   </span>
-<AddToCase
+                  <AddToCase
                     quantity={item.quantity}
+                    units={unitIdsOf(item)}
                     label={item.caseId ? 'Presunúť' : 'Pridať'}
                     disabled={move.isPending}
                     onAdd={(count) => move.mutate({ equipmentId: item.id, caseId: id, count: count < item.quantity ? count : undefined })}
+                    onAddUnits={(units) => move.mutate({ equipmentId: item.id, caseId: id, units })}
                   />
                 </li>
               ))}
@@ -335,11 +338,50 @@ export function CaseDetailPage() {
   )
 }
 
-/** Tlačidlo Pridať; pri viacerých kusoch aj počet, koľko z nich ide do case. */
-function AddToCase({ quantity, label, disabled, onAdd }: { quantity: number; label: string; disabled: boolean; onAdd: (count: number) => void }) {
+type AddProps = { quantity: number; units: number[]; label: string; disabled: boolean; onAdd: (count: number) => void; onAddUnits: (units: number[]) => void }
+
+/** Tlačidlo Pridať; pri viacerých kusoch počet, koľko z nich ide do case, alebo presné čísla kusov (#7, #8). */
+function AddToCase({ quantity, units, label, disabled, onAdd, onAddUnits }: AddProps) {
   const [count, setCount] = useState(quantity)
+  const [picking, setPicking] = useState(false)
+  const [picked, setPicked] = useState<number[]>([])
+  if (picking) {
+    return (
+      <span className="flex max-w-xs flex-col items-end gap-1.5">
+        <span className="flex flex-wrap justify-end gap-1" role="group" aria-label="Čísla kusov">
+          {units.map((unit) => {
+            const on = picked.includes(unit)
+            return (
+              <button
+                key={unit}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setPicked(on ? picked.filter((value) => value !== unit) : [...picked, unit].sort((a, b) => a - b))}
+                className={on ? 'h-8 min-w-9 rounded-md bg-primary px-2 text-sm font-medium text-primary-foreground' : 'h-8 min-w-9 rounded-md border px-2 text-sm hover:bg-muted'}
+              >
+                #{unit}
+              </button>
+            )
+          })}
+        </span>
+        <span className="flex gap-1.5">
+          <Button variant="ghost" size="sm" onClick={() => (setPicking(false), setPicked([]))}>
+            Späť
+          </Button>
+          <Button variant="outline" size="sm" disabled={disabled || picked.length === 0} onClick={() => onAddUnits(picked)}>
+            {label} {picked.length > 0 && `(${picked.map((unit) => `#${unit}`).join(', ')})`}
+          </Button>
+        </span>
+      </span>
+    )
+  }
   return (
-    <span className="flex items-center gap-1.5">
+    <span className="flex flex-wrap items-center justify-end gap-1.5">
+      {quantity > 1 && (
+        <button type="button" className="text-sm text-accent hover:underline" onClick={() => setPicking(true)}>
+          Vybrať čísla
+        </button>
+      )}
       {quantity > 1 && (
         <label className="flex items-center gap-1 text-sm text-muted-foreground">
           <input

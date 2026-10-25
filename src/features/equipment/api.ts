@@ -406,6 +406,13 @@ export async function addHourReading(companyId: string, equipmentId: string, rea
 }
 
 /** Dá časť kusov do case (napr. 2 zo 16 svetiel); ostatné ostanú v pôvodnej položke. Vráti id položky v case (0086). */
+/** Do case idú vybrané čísla kusov (napr. #7 a #8), zvyšok ostane s pôvodnými číslami (0100). */
+export async function splitEquipmentUnits(equipmentId: string, caseId: string | null, unitIds: number[]): Promise<string> {
+  const { data, error } = await getSupabase().rpc('split_equipment_units', { _equipment_id: equipmentId, _case_id: caseId, _unit_ids: unitIds })
+  if (error) throw error
+  return data as string
+}
+
 export async function splitEquipmentIntoCase(equipmentId: string, caseId: string | null, count: number): Promise<string> {
   const { data, error } = await getSupabase().rpc('split_equipment_into_case', { _equipment_id: equipmentId, _case_id: caseId, _count: count })
   if (error) throw error
