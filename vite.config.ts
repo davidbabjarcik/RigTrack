@@ -76,5 +76,10 @@ export default defineConfig({
     testTimeout: 30_000,
     // Testy bežia vždy bez backendu, aj keď existuje .env.local.
     env: { VITE_SUPABASE_URL: '', VITE_SUPABASE_PUBLISHABLE_KEY: '' },
+    // Edge funkcia send-push (Deno) importuje knižnice cez jsr:/npm:; v teste ich nahradia náhrady.
+    alias: {
+      'jsr:@supabase/supabase-js@2': fileURLToPath(new URL('./supabase/tests/stubs/supabase-js.ts', import.meta.url)),
+      'npm:web-push@3.6.7': fileURLToPath(new URL('./supabase/tests/stubs/web-push.ts', import.meta.url)),
+    },
   },
 })

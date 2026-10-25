@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.17.1 – 25. 10. 2026
+
+- Technická údržba: formulár techniky je rozdelený na menšie časti (Svetlo, Zvuk, Video zvlášť), takže ďalšie
+  úpravy sú rýchlejšie a bezpečnejšie; funkcia na posielanie push upozornení má automatické testy.
+
 ### 3.17 – 25. 10. 2026
 
 - **Cenové ponuky** (nový modul v menu; aj z detailu eventu tlačidlom „Cenová ponuka“): hlavička s číslom a dátumom,
