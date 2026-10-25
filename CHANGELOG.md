@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.19.4 – 25. 10. 2026
+
+- **Pridať techniku do case** ponúka len techniku, ktorá ešte nie je v žiadnom case. Presun z iného case
+  je na zaškrtnutie „Aj technika, ktorá už je v inom case“; pri technike vidno aj čísla kusov a celý názov case (#).
+
 ### 3.19.3 – 25. 10. 2026
 
 - **Technika v jednom riadku**: technika rozdelená do cases (napr. 12 ks v sklade a po 2 ks v cases) je v zozname

@@ -39,6 +39,8 @@ export function CaseDetailPage() {
   const queryClient = useQueryClient()
   const [adding, setAdding] = useState(false)
   const [search, setSearch] = useState('')
+  // Technika, ktorá už je v inom case, sa ponúkne len na požiadanie (presun z case do case).
+  const [fromOtherCases, setFromOtherCases] = useState(false)
 
   const cases = useCases(companyId)
   // Plán skladu je len doplnok: ak sa nenačíta, detail case funguje ďalej bez neho.
@@ -108,12 +110,16 @@ export function CaseDetailPage() {
   const all = equipment.data ?? []
   const content = all.filter((item) => item.caseId === id)
   const onLabelCount = content.filter((item) => item.labelRole).length
+  const inOtherCases = all.filter((item) => item.caseId && item.caseId !== id && item.status !== 'retired').length
   const candidates = filterEquipment(
-    all.filter((item) => item.caseId !== id),
+    all.filter((item) => item.caseId !== id && item.status !== 'retired' && (fromOtherCases || !item.caseId)),
     { search, status: '', categoryId: '', locationId: '', caseId: '' },
   )
   const spot = warehouse.data?.spots.find((item) => item.id === current.spotId)
-  const caseName = (caseId: string | null) => cases.data.find((c) => c.id === caseId)?.name
+  const caseName = (caseId: string | null) => {
+    const box = cases.data.find((c) => c.id === caseId)
+    return box ? caseTitle(box) : ''
+  }
   const info = [
     kindLabel(current),
     current.inventoryNumber,
@@ -325,8 +331,14 @@ export function CaseDetailPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {inOtherCases > 0 && (
+            <label className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+              <input type="checkbox" className="size-4" checked={fromOtherCases} onChange={(e) => setFromOtherCases(e.target.checked)} />
+              Aj technika, ktorá už je v inom case (presunúť sem)
+            </label>
+          )}
           {candidates.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">Žiadna ďalšia technika.</p>
+            <p className="mt-3 text-sm text-muted-foreground">{fromOtherCases ? 'Žiadna ďalšia technika.' : 'Všetka technika už je v cases.'}</p>
           ) : (
             <ul className="mt-3 divide-y">
               {candidates.slice(0, PICKER_LIMIT).map((item) => (
@@ -334,7 +346,11 @@ export function CaseDetailPage() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{item.name}</span>
                     <span className="block truncate text-sm text-muted-foreground">
-                      {[item.inventoryNumber && `inv. č. ${item.inventoryNumber}`, item.caseId && `teraz v: ${caseName(item.caseId)}`]
+                      {[
+                        item.inventoryNumber && `inv. č. ${item.inventoryNumber}`,
+                        item.trackUnits && item.unitIds.length > 0 && item.unitIds.length <= 16 && item.unitIds.map((unit) => `#${unit}`).join(', '),
+                        item.caseId && `teraz v: ${caseName(item.caseId)}`,
+                      ]
                         .filter(Boolean)
                         .join(' · ')}
                     </span>
