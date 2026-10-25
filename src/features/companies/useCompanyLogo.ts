@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { brandingKeys, fetchBranding, fetchLogoForDisplay } from './branding'
+import { brandingKeys, fetchBranding, fetchLogoForDisplay, type LogoStyle } from './branding'
 import type { LogoTone } from './logoImage'
 
 /**
  * Logo firmy na zobrazenie: adresa (data URL; prázdna, kým sa načíta alebo keď firma logo nemá)
  * a tón, podľa ktorého sa logo prispôsobí svetlému či tmavému podkladu.
  */
-export function useCompanyLogo(companyId: string): { url: string; tone: LogoTone } {
+export function useCompanyLogo(companyId: string): { url: string; tone: LogoTone; style: LogoStyle } {
   const branding = useQuery({ queryKey: brandingKeys.branding(companyId), queryFn: () => fetchBranding(companyId) })
   const path = branding.data?.logoPath ?? ''
   const logo = useQuery({
@@ -16,5 +16,5 @@ export function useCompanyLogo(companyId: string): { url: string; tone: LogoTone
     // Cesta loga sa pri každej zmene mení, takže obsah pod jednou cestou je nemenný.
     staleTime: Infinity,
   })
-  return logo.data ?? { url: '', tone: 'mixed' }
+  return { ...(logo.data ?? { url: '', tone: 'mixed' as const }), style: branding.data?.logoStyle ?? 'auto' }
 }

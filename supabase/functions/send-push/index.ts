@@ -1,15 +1,12 @@
 // RigTrack: push notifikácie na mobil (Supabase Edge Function, Deno).
 //
 // GET  → verejný VAPID kľúč (appka ho potrebuje na prihlásenie mobilu na upozornenia).
-// POST → volá ho Database Webhook pri novom riadku v public.notifications; pošle upozornenie na všetky
-//        mobily daného človeka a odbery, ktoré už neplatia (mobil sa odhlásil), zmaže.
+// POST → volá ho databáza (spúšťač z migrácie 0088 cez pg_net, alebo Database Webhook) pri novom riadku
+//        v public.notifications; pošle upozornenie na všetky mobily daného človeka a odbery, ktoré už
+//        neplatia (mobil sa odhlásil), zmaže.
 //
-// Nasadenie (raz):
-//   npx web-push generate-vapid-keys
-//   npx supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... VAPID_SUBJECT=mailto:tvoj@email PUSH_WEBHOOK_SECRET=<náhodný text>
-//   npx supabase functions deploy send-push --no-verify-jwt
-// a v Supabase → Database → Webhooks: tabuľka notifications, udalosť INSERT, typ Supabase Edge Functions,
-// funkcia send-push, hlavička x-webhook-secret = PUSH_WEBHOOK_SECRET.
+// Nastavenie (raz): v appke Nastavenia → Účet → „Push upozornenia – nastavenie“ – sprievodca vygeneruje
+// kľúče, dá odkazy do Supabase a SQL pre Vault. Funkcia musí mať vypnuté overovanie JWT (Verify JWT).
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'

@@ -288,6 +288,13 @@ begin
   end if;
   if to_regclass('public.companies') is not null then
     begin
+      execute $sql$alter table public.companies drop constraint if exists companies_logo_style_check$sql$;
+      execute $sql$alter table public.companies add constraint companies_logo_style_check CHECK ((logo_style = ANY (ARRAY['auto'::text, 'original'::text, 'plate'::text, 'white'::text, 'black'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola companies_logo_style_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.companies') is not null then
+    begin
       execute $sql$alter table public.companies drop constraint if exists companies_name_check$sql$;
       execute $sql$alter table public.companies add constraint companies_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 120))) not valid$sql$;
     exception when others then raise notice 'Kontrola companies_name_check: %', sqlerrm;
@@ -1842,6 +1849,13 @@ begin
   end if;
   if to_regclass('public.partners') is not null then
     begin
+      execute $sql$alter table public.partners drop constraint if exists partners_ceo_check$sql$;
+      execute $sql$alter table public.partners add constraint partners_ceo_check CHECK ((char_length(ceo) <= 120)) not valid$sql$;
+    exception when others then raise notice 'Kontrola partners_ceo_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.partners') is not null then
+    begin
       execute $sql$alter table public.partners drop constraint if exists partners_dic_check$sql$;
       execute $sql$alter table public.partners add constraint partners_dic_check CHECK ((char_length(dic) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola partners_dic_check: %', sqlerrm;
@@ -1849,9 +1863,23 @@ begin
   end if;
   if to_regclass('public.partners') is not null then
     begin
+      execute $sql$alter table public.partners drop constraint if exists partners_ic_dph_check$sql$;
+      execute $sql$alter table public.partners add constraint partners_ic_dph_check CHECK ((char_length(ic_dph) <= 20)) not valid$sql$;
+    exception when others then raise notice 'Kontrola partners_ic_dph_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.partners') is not null then
+    begin
       execute $sql$alter table public.partners drop constraint if exists partners_ico_check$sql$;
       execute $sql$alter table public.partners add constraint partners_ico_check CHECK ((char_length(ico) <= 20)) not valid$sql$;
     exception when others then raise notice 'Kontrola partners_ico_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.partners') is not null then
+    begin
+      execute $sql$alter table public.partners drop constraint if exists partners_legal_name_check$sql$;
+      execute $sql$alter table public.partners add constraint partners_legal_name_check CHECK ((char_length(legal_name) <= 160)) not valid$sql$;
+    exception when others then raise notice 'Kontrola partners_legal_name_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.partners') is not null then
@@ -3514,8 +3542,9 @@ begin
   end if;
   insert into public.companies (name, created_by, founded_by) values (left(trim(_partner.name), 120), auth.uid(), _partner.company_id) returning id into _id;
   insert into public.company_members (company_id, user_id, role) values (_id, auth.uid(), 'admin');
-  insert into public.company_profile (company_id, legal_name, ico, dic, address)
-  values (_id, left(_partner.name, 160), left(_partner.ico, 20), left(_partner.dic, 20), left(_partner.address, 200));
+  insert into public.company_profile (company_id, legal_name, ico, dic, ic_dph, address, ceo_name)
+  values (_id, left(coalesce(nullif(trim(_partner.legal_name), ''), _partner.name), 160), left(_partner.ico, 20), left(_partner.dic, 20),
+          left(_partner.ic_dph, 20), left(_partner.address, 200), left(_partner.ceo, 120));
   update public.partners set linked_company_id = _id, uses_app = true where id = _partner_id;
   return _id;
 end;
@@ -3699,6 +3728,31 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia fill_staff_from_profile: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.find_rigtrack_companies(_ico text, _name text, _legal_name text DEFAULT ''::text)
+ RETURNS TABLE(id uuid, name text, legal_name text)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select c.id, c.name, coalesce(p.legal_name, '')
+  from public.companies c
+  left join public.company_profile p on p.company_id = c.id
+  where auth.uid() is not null
+    and (
+      (length(regexp_replace(coalesce(_ico, ''), '\s', '', 'g')) >= 6
+        and regexp_replace(coalesce(p.ico, ''), '\s', '', 'g') = regexp_replace(_ico, '\s', '', 'g'))
+      or (trim(coalesce(_name, '')) <> '' and (lower(trim(c.name)) = lower(trim(_name)) or lower(trim(coalesce(p.legal_name, ''))) = lower(trim(_name))))
+      or (trim(coalesce(_legal_name, '')) <> '' and (lower(trim(c.name)) = lower(trim(_legal_name)) or lower(trim(coalesce(p.legal_name, ''))) = lower(trim(_legal_name))))
+    )
+  order by c.name
+  limit 5;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia find_rigtrack_companies: %', sqlerrm;
 end;
 $repair$;
 
@@ -4098,6 +4152,31 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.link_partner_company(_partner_id uuid, _company_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  _owner uuid;
+begin
+  select company_id into _owner from public.partners where id = _partner_id;
+  if _owner is null or not public.can(_owner, 'events.edit') then
+    raise exception 'Firma neexistuje alebo nemáte oprávnenie' using errcode = 'insufficient_privilege';
+  end if;
+  if _company_id = _owner then
+    raise exception 'Firmu nemožno prepojiť samu so sebou' using errcode = 'check_violation';
+  end if;
+  update public.partners set linked_company_id = _company_id, uses_app = (_company_id is not null) or uses_app where id = _partner_id;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia link_partner_company: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.linked_companies(_company_id uuid)
  RETURNS TABLE(link_id uuid, company_id uuid, name text, status text, incoming boolean, i_share_equipment boolean, they_share_equipment boolean, i_share_contacts boolean, they_share_contacts boolean)
  LANGUAGE sql
@@ -4324,6 +4403,35 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia normalize_unit_ids: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.notification_send_push()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  _url text;
+  _secret text;
+begin
+  begin
+    execute 'select decrypted_secret from vault.decrypted_secrets where name = $1' into _url using 'push_function_url';
+    execute 'select decrypted_secret from vault.decrypted_secrets where name = $1' into _secret using 'push_webhook_secret';
+    if coalesce(_url, '') = '' or coalesce(_secret, '') = '' then return new; end if;
+    execute 'select net.http_post(url := $1, headers := $2, body := $3)'
+      using _url, jsonb_build_object('Content-Type', 'application/json', 'x-webhook-secret', _secret), jsonb_build_object('record', to_jsonb(new));
+  exception when others then
+    -- Chýba Vault alebo pg_net: upozornenie ostane v appke, len nepríde na mobil.
+    return new;
+  end;
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia notification_send_push: %', sqlerrm;
 end;
 $repair$;
 
@@ -4587,6 +4695,31 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia purge_bin: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.push_setup_status()
+ RETURNS TABLE(has_pg_net boolean, has_url boolean, has_secret boolean)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  _url boolean := false;
+  _secret boolean := false;
+begin
+  begin
+    execute 'select exists (select 1 from vault.decrypted_secrets where name = $1 and decrypted_secret <> '''')' into _url using 'push_function_url';
+    execute 'select exists (select 1 from vault.decrypted_secrets where name = $1 and decrypted_secret <> '''')' into _secret using 'push_webhook_secret';
+  exception when others then
+    null;
+  end;
+  return query select exists (select 1 from pg_extension where extname = 'pg_net'), _url, _secret;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia push_setup_status: %', sqlerrm;
 end;
 $repair$;
 

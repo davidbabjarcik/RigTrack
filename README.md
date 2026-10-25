@@ -21,6 +21,22 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.8 – 25. 10. 2026
+
+- **Push upozornenia – sprievodca** (Nastavenia → Účet, pre admina): kľúče sa vygenerujú v prehliadači, odkazy
+  vedú rovno na správne miesta v Supabase, kód funkcie sa skopíruje jedným tlačidlom a namiesto Database
+  Webhooku stačí jeden SQL príkaz. Tlačidlo „Skontrolovať nastavenie“ ukáže, čo ešte chýba.
+- **Firmy a kontakty**:
+  - pri firme **obchodné meno** (napr. CVR Production → ARMPRO COMPOSITE s.r.o.), **IČ DPH** a **CEO / konateľ**,
+  - voľba **RigTrack: Nepoužívajú / Už majú firmu v RigTracku / Založiť im firmu**; existujúcu firmu nájde podľa
+    IČO, názvu alebo obchodného mena a sama ponúkne prepojenie – už sa neponúka zakladať firmu, ktorá existuje,
+  - ľudí pri firme sa dá **upravovať** a majú aj **dátum narodenia**.
+- **Logo firmy**: pri nahratí sa dá vypnúť odstránenie pozadia a v nastavení zvoliť zobrazenie – automaticky,
+  pôvodné farby bez podložky, s bielou podložkou, vždy biele alebo vždy čierne (s náhľadom na svetlom aj tmavom).
+- **Vyberte firmu**: firmu si pripnete špendlíkom – pripnuté sú hore.
+- Nový kábel: aj prvá dĺžka má dĺžku v názve („XLR 5 m“, „XLR 10 m“), nevznikne „XLR“ a vedľa „XLR 1 m“.
+- Nové migrácie: `0088` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.7.6 – 24. 10. 2026
 
 - Pódium Nivtec: zrušené samostatné „Chcem lišty na okraje“ – „Chcem plachtu“ pridá na zvolené strany
@@ -927,20 +943,24 @@ hlásenia sa len uložia a ukážu v aplikácii.
 
 ## Push upozornenia na mobil – nastavenie
 
-Po migrácii `0084` appka upozorní, keď niekoho pridajú do posádky eventu alebo mu priradia úlohu. Aby
-upozornenia chodili na mobily, treba raz:
+Najjednoduchšie cez sprievodcu v appke: **Nastavenia → Účet → Push upozornenia – nastavenie** (vidí ho admin).
+Príkazový riadok ani Database Webhook netreba. Predtým spusti migrácie `0084` a `0088`.
 
-1. **Vygenerovať kľúče VAPID** (z koreňa repozitára): `npx web-push generate-vapid-keys`
-2. **Uložiť ich ako tajomstvá** v Supabase (nikdy nie do kódu ani do `.env`):
-   ```bash
-   npx supabase secrets set VAPID_PUBLIC_KEY=<public> VAPID_PRIVATE_KEY=<private> VAPID_SUBJECT=mailto:tvoj@email PUSH_WEBHOOK_SECRET=<náhodný dlhý text>
-   ```
-3. **Nasadiť funkciu**: `npx supabase functions deploy send-push --no-verify-jwt`
-4. **Database Webhook** v Supabase → Database → Webhooks → Create: tabuľka `notifications`, udalosť `Insert`,
-   typ *Supabase Edge Functions*, funkcia `send-push`, metóda POST a HTTP hlavička
-   `x-webhook-secret` = hodnota `PUSH_WEBHOOK_SECRET`.
-5. Každý si upozornenia zapne na svojom mobile v **Nastavenia → Účet → Upozornenia na mobil** (na iPhone len
-   z appky pridanej na plochu, iOS 16.4+) a tlačidlom „Poslať skúšobné“ overí, že chodia.
+1. **Vygeneruj kľúče** tlačidlom v sprievodcovi (vzniknú v prehliadači, nikam sa neukladajú).
+2. **Ulož ich** v Supabase → Edge Functions → Secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+   (mailto:…), `PUSH_WEBHOOK_SECRET` – len tam, nikdy nie do kódu, `.env` ani do chatu.
+3. **Nasaď funkciu**: Edge Functions → Deploy a new function → Via Editor, názov `send-push`, vlož kód
+   (tlačidlo „Kopírovať kód funkcie“; je to `supabase/functions/send-push/index.ts`) → Deploy. V nastaveniach
+   funkcie vypni **Verify JWT**.
+4. **Prepoj databázu**: v SQL Editore spusti SQL zo sprievodcu – uloží adresu funkcie a tajomstvo do Vault.
+   Databáza potom pri každom upozornení zavolá funkciu sama (`pg_net`). Ak máš z minula Database Webhook pre
+   `notifications`, zmaž ho, inak príde upozornenie dvakrát.
+5. **Skontroluj** tlačidlom v sprievodcovi; keď je všetko zelené, každý si upozornenia zapne v
+   **Nastavenia → Účet → Upozornenia na mobil** (na iPhone len z appky pridanej na plochu, iOS 16.4+)
+   a tlačidlom „Poslať skúšobné“ overí, že chodia.
+
+S príkazovým riadkom to ide aj postaru: `npx web-push generate-vapid-keys`,
+`npx supabase secrets set …` a `npx supabase functions deploy send-push --no-verify-jwt`; krok 4 je rovnaký.
 
 ## Nasadenie na GitHub Pages
 

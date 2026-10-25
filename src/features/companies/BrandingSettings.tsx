@@ -3,7 +3,35 @@ import { ImageUp, Trash2 } from 'lucide-react'
 import { useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
-import { brandingKeys, fetchBranding, fetchLogoBlob, removeLogo, saveLabelFooter, uploadLogo } from './branding'
+import { cn } from '@/lib/utils'
+import { brandingKeys, fetchBranding, fetchLogoBlob, LOGO_STYLES, removeLogo, saveLabelFooter, saveLogoStyle, uploadLogo, type LogoStyle } from './branding'
+import type { LogoTone } from './logoImage'
+import { useCompanyLogo } from './useCompanyLogo'
+
+/** Ako bude logo vyzerať na svetlom a tmavom podklade aplikácie (bez ohľadu na aktuálny režim). */
+function previewClass(style: LogoStyle, tone: LogoTone, dark: boolean) {
+  const kind = style === 'auto' ? (tone === 'mixed' ? 'plate' : tone) : style
+  if (kind === 'white') return 'brightness-0 invert'
+  if (kind === 'black') return 'brightness-0'
+  if (kind === 'dark') return dark ? 'brightness-0 invert' : ''
+  if (kind === 'light') return dark ? '' : 'brightness-0'
+  if (kind === 'plate') return dark ? 'rounded-md bg-white p-1' : ''
+  return ''
+}
+
+function AppLogoPreview({ companyId, style }: { companyId: string; style: LogoStyle }) {
+  const { url, tone } = useCompanyLogo(companyId)
+  if (!url) return null
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {[false, true].map((dark) => (
+        <div key={String(dark)} className={cn('flex h-20 items-center justify-center rounded-lg border p-3', dark ? 'bg-slate-900' : 'bg-white')}>
+          <img src={url} alt={dark ? 'Logo v tmavom režime' : 'Logo vo svetlom režime'} className={cn('max-h-full max-w-full object-contain', previewClass(style, tone, dark))} />
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function blobToDataUrl(blob: Blob) {
   return new Promise<string>((resolve, reject) => {
@@ -45,11 +73,13 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
   const [footer, setFooter] = useState<string | null>(null)
   const refresh = () => queryClient.invalidateQueries({ queryKey: brandingKeys.branding(companyId) })
 
+  const [removeBackground, setRemoveBackground] = useState(true)
   const upload = useMutation({
-    mutationFn: (file: File) => uploadLogo(companyId, file, branding.data?.logoPath ?? ''),
+    mutationFn: (file: File) => uploadLogo(companyId, file, branding.data?.logoPath ?? '', { removeBackground }),
     onSettled: refresh,
   })
   const remove = useMutation({ mutationFn: () => removeLogo(companyId, branding.data!.logoPath), onSettled: refresh })
+  const style = useMutation({ mutationFn: (value: LogoStyle) => saveLogoStyle(companyId, value), onSettled: refresh })
   const saveFooter = useMutation({
     mutationFn: (text: string) => saveLabelFooter(companyId, text),
     onSuccess: () => setFooter(null),
@@ -114,9 +144,36 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
               Odstrániť
             </Button>
           )}
-          <p className="text-sm text-muted-foreground">PNG, JPG alebo WebP. Jednofarebné pozadie sa odstráni samo a prázdne okraje sa orežú. Tmavé logo sa v tmavom režime zobrazí biele, svetlé sa na bielom papieri vytlačí čierne.</p>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" className="size-4" checked={removeBackground} onChange={(event) => setRemoveBackground(event.target.checked)} />
+            Pri nahratí odstrániť jednofarebné pozadie
+          </label>
+          <p className="text-sm text-muted-foreground">PNG, JPG alebo WebP. Prázdne okraje sa orežú. Svetlé logo sa na bielom papieri vytlačí čierne.</p>
         </div>
       </div>
+      {logoPath && (
+        <div className="flex flex-col gap-2 border-t pt-4">
+          <label className="flex flex-col gap-1 text-sm font-medium sm:max-w-sm">
+            Zobrazenie loga v aplikácii
+            <select
+              className="h-10 rounded-lg border bg-background px-3 font-normal"
+              value={branding.data.logoStyle}
+              disabled={style.isPending}
+              onChange={(event) => style.mutate(event.target.value as LogoStyle)}
+            >
+              {LOGO_STYLES.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="sm:max-w-sm">
+            <AppLogoPreview companyId={companyId} style={branding.data.logoStyle} />
+          </div>
+          {style.isError && <p className="text-sm text-destructive">Nepodarilo sa uložiť. Táto časť databázy ešte nemusí byť pripravená.</p>}
+        </div>
+      )}
       {(upload.isError || remove.isError) && (
         <p role="alert" className="text-sm text-destructive">
           Logo sa nepodarilo uložiť. Skúste iný obrázok.

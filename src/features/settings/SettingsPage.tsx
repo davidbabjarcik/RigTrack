@@ -37,6 +37,7 @@ import { DemoSettings } from '@/features/companies/DemoSettings'
 import { MyDevicesSettings } from '@/features/devices/MyDevicesSettings'
 import { AttendanceSettings } from '@/features/attendance/MyAttendance'
 import { PushSettings } from '@/features/push/PushSettings'
+import { PushSetupGuide } from '@/features/push/PushSetupGuide'
 import { DutySettings } from '@/features/duties/DutySettings'
 import { EmailPrefs } from '@/features/news/EmailPrefs'
 import { LookupSettings } from '@/features/equipment/LookupSettings'
@@ -468,6 +469,11 @@ export function SettingsPage() {
           <Section title={`Moje zariadenia (${company.companyName})`}>
             <MyDevicesSettings companyId={company.companyId} userId={user.id} />
           </Section>
+          {isAdminRole(company.role) && (
+            <Section title="Push upozornenia – nastavenie (raz pre appku)">
+              <PushSetupGuide email={user.email ?? ''} />
+            </Section>
+          )}
           {isAdminRole(company.role) && (
             <Section title="E-mailové upozornenia">
               <EmailPrefs companyId={company.companyId} />

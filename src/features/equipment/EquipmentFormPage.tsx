@@ -405,7 +405,14 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
       const id = await saveEquipment({
         companyId,
         id: equipment?.id ?? null,
-        values: isCable ? { ...values, makers: makersToSave(makerMode, oneMaker, values.quantity, values.makers ?? []) } : values,
+        values: isCable
+          ? {
+              ...values,
+              // Nový kábel s dĺžkou: aj prvá dĺžka má dĺžku v názve („XLR 5 m“), rovnako ako ďalšie dĺžky.
+              name: multiLength && values.lengthM ? cableName(cableBaseName(values.name), values.lengthM) : values.name,
+              makers: makersToSave(makerMode, oneMaker, values.quantity, values.makers ?? []),
+            }
+          : values,
         categories,
         locations,
       })

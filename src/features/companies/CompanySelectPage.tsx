@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Building2, ChartColumn, Check, ChevronRight, Plus, Smartphone, Speaker, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowLeft, Building2, ChartColumn, Check, ChevronRight, Pin, Plus, Smartphone, Speaker, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -26,6 +27,17 @@ const VIEWS: { id: 'companies' | 'profile' | 'equipment' | 'devices' | 'stats'; 
   { id: 'stats', label: 'Moje štatistiky', hint: 'Akcie, hodiny, odmeny', icon: ChartColumn },
 ]
 type View = (typeof VIEWS)[number]['id']
+
+/** Pripnuté firmy sú hore; pamätá si ich tento prehliadač (pre každého používateľa zvlášť). */
+const pinKey = (userId: string) => `rigtrack:pinned-companies:${userId}`
+function readPins(userId: string): string[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(pinKey(userId)) ?? '[]') as unknown
+    return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string') : []
+  } catch {
+    return []
+  }
+}
 
 export function CompanySelectPage() {
   const { session } = useAuth()
@@ -68,6 +80,17 @@ export function CompanySelectPage() {
   const chooseView = (next: View) => setParams(next === 'companies' ? {} : { view: next }, { replace: true })
   const demo = useQuery({ queryKey: demoKeys.mine(user.id), queryFn: fetchMyDemo })
   const realCompanies = memberships.filter((item) => item.companyId !== demo.data).length
+  const [pins, setPins] = useState(() => readPins(user.id))
+  const togglePin = (companyId: string) => {
+    const next = pins.includes(companyId) ? pins.filter((id) => id !== companyId) : [...pins, companyId]
+    setPins(next)
+    try {
+      localStorage.setItem(pinKey(user.id), JSON.stringify(next))
+    } catch {
+      // Bez úložiska sa pripnutie len nezapamätá.
+    }
+  }
+  const sortedMemberships = [...memberships].sort((a, b) => Number(pins.includes(b.companyId)) - Number(pins.includes(a.companyId)))
 
   return (
     <div className="flex flex-col gap-6">
@@ -180,8 +203,8 @@ export function CompanySelectPage() {
           </p>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
-            {memberships.map((membership) => (
-              <li key={membership.companyId}>
+            {sortedMemberships.map((membership) => (
+              <li key={membership.companyId} className="relative">
                 <button
                   type="button"
                   onClick={() => choose(membership.companyId)}
@@ -208,6 +231,21 @@ export function CompanySelectPage() {
                   ) : (
                     <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
                   )}
+                  {/* Miesto pre tlačidlo pripnutia. */}
+                  <span className="w-7" aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => togglePin(membership.companyId)}
+                  aria-pressed={pins.includes(membership.companyId)}
+                  aria-label={pins.includes(membership.companyId) ? `Odopnúť ${membership.companyName}` : `Pripnúť ${membership.companyName} hore`}
+                  title={pins.includes(membership.companyId) ? 'Odopnúť' : 'Pripnúť hore'}
+                  className={cn(
+                    'absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1.5 hover:bg-muted',
+                    pins.includes(membership.companyId) ? 'text-accent' : 'text-muted-foreground/60 hover:text-foreground',
+                  )}
+                >
+                  <Pin className={cn('size-4', pins.includes(membership.companyId) && 'fill-current')} aria-hidden />
                 </button>
               </li>
             ))}

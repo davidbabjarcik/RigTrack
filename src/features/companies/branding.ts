@@ -6,21 +6,43 @@ import { contentBounds, detectBackground, logoTone, recolor, removeBackground, t
 const BUCKET = 'company-logos'
 const MAX_SIDE = 1200
 
-export type Branding = { logoPath: string; labelFooter: string }
+/** Ako sa logo zobrazí v aplikácii (0088); „auto“ podľa farieb loga. */
+export type LogoStyle = 'auto' | 'original' | 'plate' | 'white' | 'black'
+export const LOGO_STYLES: { id: LogoStyle; label: string }[] = [
+  { id: 'auto', label: 'Automaticky' },
+  { id: 'original', label: 'Pôvodné farby, bez podložky' },
+  { id: 'plate', label: 'S bielou podložkou v tmavom režime' },
+  { id: 'white', label: 'Vždy biele' },
+  { id: 'black', label: 'Vždy čierne' },
+]
+
+export type Branding = { logoPath: string; labelFooter: string; logoStyle: LogoStyle }
 
 export const brandingKeys = {
   branding: (companyId: string) => ['company', companyId, 'branding'] as const,
   logo: (companyId: string, path: string) => ['company', companyId, 'branding', 'logo', path] as const,
 }
 
+let hasLogoStyle = true
+
 export async function fetchBranding(companyId: string): Promise<Branding> {
-  const { data, error } = await getSupabase().from('companies').select('logo_path, label_footer').eq('id', companyId).single()
+  const columns = hasLogoStyle ? 'logo_path, label_footer, logo_style' : 'logo_path, label_footer'
+  const { data, error } = await getSupabase().from('companies').select(columns).eq('id', companyId).single()
+  // Bez migrácie 0088 stĺpec logo_style chýba – logo sa zobrazí automaticky.
+  if (error && hasLogoStyle && /logo_style/.test(error.message ?? '')) {
+    hasLogoStyle = false
+    return fetchBranding(companyId)
+  }
   if (error) throw error
-  const row = data as { logo_path: string; label_footer: string }
-  return { logoPath: row.logo_path, labelFooter: row.label_footer }
+  const row = data as unknown as { logo_path: string; label_footer: string; logo_style?: LogoStyle }
+  return { logoPath: row.logo_path, labelFooter: row.label_footer, logoStyle: row.logo_style ?? 'auto' }
 }
 
-async function updateCompany(companyId: string, fields: { logo_path?: string; label_footer?: string }) {
+export function saveLogoStyle(companyId: string, style: LogoStyle) {
+  return updateCompany(companyId, { logo_style: style })
+}
+
+async function updateCompany(companyId: string, fields: { logo_path?: string; label_footer?: string; logo_style?: LogoStyle }) {
   const { data, error } = await getSupabase().from('companies').update(fields).eq('id', companyId).select('id')
   if (error) throw error
   if (data.length === 0) throw new Error('Not updated')
@@ -52,9 +74,9 @@ async function readImage(source: Blob, maxSide: number) {
  * Pripraví logo na uloženie: zmenší ho, jednofarebné pozadie spriehľadní a oreže prázdne okraje.
  * Logo, ktoré pozadie nemá, sa len oreže. Výsledok je PNG kvôli priehľadnosti.
  */
-export async function prepareLogo(file: Blob): Promise<Blob> {
+export async function prepareLogo(file: Blob, options: { removeBackground?: boolean } = {}): Promise<Blob> {
   const { canvas, context, image } = await readImage(file, MAX_SIDE)
-  const background = detectBackground(image.data, canvas.width, canvas.height)
+  const background = options.removeBackground === false ? null : detectBackground(image.data, canvas.width, canvas.height)
   if (background) {
     removeBackground(image.data, background)
     context.putImageData(image, 0, 0)
@@ -70,10 +92,10 @@ export async function prepareLogo(file: Blob): Promise<Blob> {
   return toPng(cropped)
 }
 
-export async function uploadLogo(companyId: string, file: File, previousPath: string) {
+export async function uploadLogo(companyId: string, file: File, previousPath: string, options: { removeBackground?: boolean } = {}) {
   const db = getSupabase()
   const path = `${companyId}/logo-${Date.now()}.png`
-  const upload = await db.storage.from(BUCKET).upload(path, await prepareLogo(file), { contentType: 'image/png' })
+  const upload = await db.storage.from(BUCKET).upload(path, await prepareLogo(file, options), { contentType: 'image/png' })
   if (upload.error) throw upload.error
   await updateCompany(companyId, { logo_path: path })
   if (previousPath) await db.storage.from(BUCKET).remove([previousPath])
