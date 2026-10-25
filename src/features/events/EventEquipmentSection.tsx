@@ -16,6 +16,7 @@ import { useLoans } from '@/features/loans/useLoans'
 import { formatDate, todayIso } from '@/lib/format'
 import { addEventCase, addEventEquipment, eventKeys, removeEventCase, removeEventEquipment, setEventEquipmentQuantity } from './api'
 import { EventReminders } from './EventReminders'
+import { useGearBusyElsewhere } from './elsewhere'
 import { PackagePicker } from '@/features/packages/PackagePicker'
 import { busyElsewhere, eventsSinceCheck, type CompanyEvent } from './model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
@@ -93,7 +94,10 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
   const mutations = [add, addCase, remove, removeCase, quantity, addCount, addPackage]
   const busy = mutations.some((mutation) => mutation.isPending)
 
-  const freeOf = (equipmentId: string, total: number) => total - busyElsewhere(event, equipmentId, events, loans.data ?? [], today)
+  // Vlastná technika zdieľaná s inou firmou: kusy, ktoré sú v termíne na evente tej firmy (0091).
+  const gearElsewhere = useGearBusyElsewhere(companyId, event.startsOn, event.endsOn)
+  const otherCompany = (equipmentId: string) => gearElsewhere.data?.find((item) => item.equipmentId === equipmentId)?.quantity ?? 0
+  const freeOf = (equipmentId: string, total: number) => total - busyElsewhere(event, equipmentId, events, loans.data ?? [], today) - otherCompany(equipmentId)
   const grouped = groupByCase(event.equipment)
 
   return (
@@ -238,6 +242,12 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                   <p className="mt-2 flex items-center gap-2 text-sm text-destructive">
                     <TriangleAlert className="size-4 shrink-0" aria-hidden />
                     {COLLISION}
+                  </p>
+                )}
+                {otherCompany(item.equipmentId) > 0 && (
+                  <p className="mt-1 flex items-center gap-2 text-sm text-accent">
+                    <TriangleAlert className="size-4 shrink-0" aria-hidden />
+                    {otherCompany(item.equipmentId)} ks tejto vlastnej techniky je v tomto termíne na evente inej firmy.
                   </p>
                 )}
               </li>

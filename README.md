@@ -21,6 +21,16 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.11 – 25. 10. 2026
+
+- **Môj kalendár** („Vyberte firmu“ → Môj kalendár): všetky akcie zo všetkých firiem, kde ste v posádke, po
+  mesiacoch, s farbou firmy; akcie, ktoré sa prekrývajú, sú červené („Prekrýva sa s …“). Ťuknutím sa otvorí event.
+- **Posádka eventu**: kto je v termíne v posádke inej firmy, je v skupine „V inej firme“ (s dátumom) a vo výbere
+  „– v inej firme“; firma sa nedozvie kde.
+- **Technika eventu**: pri vlastnej technike zdieľanej s inou firmou sa odpočítajú kusy, ktoré sú v termíne na
+  evente tej firmy, s upozornením.
+- Nové migrácie: `0091` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.10 – 25. 10. 2026
 
 - **Zvonček s upozorneniami** v hlavičke: počet neprečítaných, zoznam upozornení zo všetkých firiem (aj bez

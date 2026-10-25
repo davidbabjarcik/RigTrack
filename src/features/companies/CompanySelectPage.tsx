@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ArrowLeft, Building2, ChartColumn, Check, ChevronRight, Pin, Plus, Smartphone, Speaker, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, Building2, CalendarDays, ChartColumn, Check, ChevronRight, Pin, Plus, Smartphone, Speaker, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -13,15 +13,17 @@ import { CompanyLogo } from './CompanyLogo'
 import { demoKeys, fetchMyDemo } from './demo'
 import { DemoSettings } from './DemoSettings'
 import { profileComplete, usePersonalProfile } from '@/features/profile/api'
+import { MyCalendar } from '@/features/profile/MyCalendarView'
 import { MyDevicesEverywhere } from '@/features/profile/MyDevicesEverywhere'
 import { MyStatsCard } from '@/features/profile/MyStatsCard'
 import { MyEquipmentEverywhere } from '@/features/profile/MyEquipmentEverywhere'
 import { ProfileForm } from '@/features/profile/ProfileForm'
 import { ProfilePhoto } from '@/features/profile/ProfilePhoto'
 
-const VIEWS: { id: 'companies' | 'profile' | 'equipment' | 'devices' | 'stats'; label: string; hint: string; icon: LucideIcon }[] = [
+const VIEWS: { id: 'companies' | 'profile' | 'calendar' | 'equipment' | 'devices' | 'stats'; label: string; hint: string; icon: LucideIcon }[] = [
   { id: 'companies', label: 'Firmy', hint: '', icon: Building2 },
   { id: 'profile', label: 'Môj profil', hint: 'Meno, fotka, kontakty', icon: UserRound },
+  { id: 'calendar', label: 'Môj kalendár', hint: 'Akcie zo všetkých firiem', icon: CalendarDays },
   { id: 'equipment', label: 'Moja technika', hint: 'Vo všetkých firmách', icon: Speaker },
   { id: 'devices', label: 'Moje zariadenia', hint: 'Mobil, notebook, MAC', icon: Smartphone },
   { id: 'stats', label: 'Moje štatistiky', hint: 'Akcie, hodiny, odmeny', icon: ChartColumn },
@@ -120,6 +122,16 @@ export function CompanySelectPage() {
             <ProfilePhoto userId={user.id} memberships={memberships} />
             <ProfileForm userId={user.id} accountEmail={user.email ?? ''} />
           </div>
+        </section>
+      )}
+      {view === 'calendar' && (
+        <section aria-labelledby="calendar-heading">
+          <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
+            <ArrowLeft className="size-4" aria-hidden />
+            Späť na firmy
+          </button>
+          <h1 id="calendar-heading" className="mb-3 text-2xl font-semibold">Môj kalendár</h1>
+          <MyCalendar userId={user.id} memberships={memberships} />
         </section>
       )}
       {view === 'equipment' && (
@@ -258,7 +270,7 @@ export function CompanySelectPage() {
       {view === 'companies' && (
         <nav aria-label="Môj účet">
           <h2 className="mb-2 text-sm font-medium text-muted-foreground">Môj účet – platí vo všetkých firmách</h2>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
             {shown
               .filter((item) => item.id !== 'companies')
               .map((item) => (

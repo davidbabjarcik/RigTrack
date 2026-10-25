@@ -8,6 +8,7 @@ import { memberName, useMembers } from '@/features/companies/useMembers'
 import { addEventCrew, eventKeys, removeEventCrew, setCrewResponse } from './api'
 import { previousEdition, type CompanyEvent, type CrewResponse, type EventCrew } from './model'
 import { clashes, crewAvailability, type CrewAvailability } from '@/features/staff/model'
+import { useCrewBusyElsewhere } from './elsewhere'
 import { useStaff } from '@/features/staff/useStaff'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -115,6 +116,7 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
   const valid = who === EXTERNAL ? name.trim() !== '' : who !== ''
   // Kto z členov, čo ešte nie sú v posádke, v termíne môže, nemôže alebo je na inom evente.
   const range = (from: string, to: string) => (from === to ? formatDate(from) : `${formatDate(from)} – ${formatDate(to)}`)
+  const elsewhere = useCrewBusyElsewhere(companyId, event.startsOn, event.endsOn)
   const availability = new Map<string, CrewAvailability>(
     (members.data ?? []).filter((member) => !here.has(member.userId)).map((member) => [member.userId, crewAvailability(member.userId, staff.people, staff.unavailability, events, event)]),
   )
@@ -125,7 +127,13 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
         ? `na evente ${state.events.map((other) => other.name).join(', ')}`
         : ''
   const nameOf = (memberId: string) => memberName(members.data, memberId) || 'člen'
-  const groups = (['free', 'away', 'busy'] as const).map((state) => ({ state, ids: [...availability].filter(([, value]) => value.state === state).map(([id]) => id) }))
+  // V termíne v posádke eventu inej firmy (0091) – firma sa nedozvie kde, len od–do.
+  const elsewhereOf = (memberId: string | null) => (memberId ? elsewhere.data?.find((item) => item.memberId === memberId) : undefined)
+  const notHere = (elsewhere.data ?? []).filter((item) => availability.has(item.memberId))
+  const groups = (['free', 'away', 'busy'] as const).map((state) => ({
+    state,
+    ids: [...availability].filter(([id, value]) => value.state === state && !(state === 'free' && elsewhereOf(id))).map(([id]) => id),
+  }))
   const chosen = who && who !== EXTERNAL ? availability.get(who) : undefined
   function handleSubmit(submit: FormEvent) {
     submit.preventDefault()
@@ -147,6 +155,12 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
                     {[person.role, !person.memberId && 'externista'].filter(Boolean).join(' · ')}
                   </span>
                   <CrewResponseLine companyId={companyId} person={person} mine={person.memberId === userId} />
+                  {elsewhereOf(person.memberId) && (
+                    <span className="mt-0.5 flex items-center gap-1 text-sm text-accent">
+                      <CalendarX className="size-4 shrink-0" aria-hidden />
+                      V termíne je v posádke inej firmy ({range(elsewhereOf(person.memberId)!.startsOn, elsewhereOf(person.memberId)!.endsOn)})
+                    </span>
+                  )}
                   {awayDuring(person).map((period) => (
                     <span key={period.id} className="mt-0.5 flex items-center gap-1 text-sm text-destructive">
                       <CalendarX className="size-4 shrink-0" aria-hidden />
@@ -201,6 +215,11 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
                 </p>
               ),
           )}
+          {notHere.length > 0 && (
+            <p className="text-accent">
+              <span className="font-medium">V inej firme ({notHere.length}):</span> {notHere.map((item) => `${nameOf(item.memberId)} (${range(item.startsOn, item.endsOn)})`).join(', ')}
+            </p>
+          )}
           <p className="mt-1 text-xs text-muted-foreground">Kedy nemôžu si každý zapisuje sám v Kalendári („Kedy nemôžem“).</p>
         </div>
       )}
@@ -212,7 +231,13 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
             {(members.data ?? []).map((member) => (
               <option key={member.userId} value={member.userId}>
                 {member.fullName || member.email}
-                {availability.get(member.userId)?.state === 'away' ? ' – nemôže' : availability.get(member.userId)?.state === 'busy' ? ' – na inom evente' : ''}
+                {availability.get(member.userId)?.state === 'away'
+                  ? ' – nemôže'
+                  : availability.get(member.userId)?.state === 'busy'
+                    ? ' – na inom evente'
+                    : elsewhereOf(member.userId)
+                      ? ' – v inej firme'
+                      : ''}
               </option>
             ))}
             <option value={EXTERNAL}>Externista (napísať meno)</option>
