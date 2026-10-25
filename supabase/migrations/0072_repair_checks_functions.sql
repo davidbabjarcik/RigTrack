@@ -1588,6 +1588,27 @@ begin
     exception when others then raise notice 'Kontrola member_permissions_permission_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.member_rates') is not null then
+    begin
+      execute $sql$alter table public.member_rates drop constraint if exists member_rates_company_rate_check$sql$;
+      execute $sql$alter table public.member_rates add constraint member_rates_company_rate_check CHECK ((company_rate >= (0)::numeric)) not valid$sql$;
+    exception when others then raise notice 'Kontrola member_rates_company_rate_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.member_rates') is not null then
+    begin
+      execute $sql$alter table public.member_rates drop constraint if exists member_rates_event_rate_check$sql$;
+      execute $sql$alter table public.member_rates add constraint member_rates_event_rate_check CHECK ((event_rate >= (0)::numeric)) not valid$sql$;
+    exception when others then raise notice 'Kontrola member_rates_event_rate_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.member_rates') is not null then
+    begin
+      execute $sql$alter table public.member_rates drop constraint if exists member_rates_home_rate_check$sql$;
+      execute $sql$alter table public.member_rates add constraint member_rates_home_rate_check CHECK ((home_rate >= (0)::numeric)) not valid$sql$;
+    exception when others then raise notice 'Kontrola member_rates_home_rate_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.mic_capsules') is not null then
     begin
       execute $sql$alter table public.mic_capsules drop constraint if exists mic_capsules_fits_check$sql$;

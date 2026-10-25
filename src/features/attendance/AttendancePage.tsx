@@ -10,7 +10,9 @@ import { memberName, useMembers } from '@/features/companies/useMembers'
 import { formatDate } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
+import { isAdminRole } from '@/lib/roles'
 import { CorrectForm } from './CorrectForm'
+import { MonthlyReport } from './MonthlyReport'
 import { attendanceEnabled, formatDistance, formatMinutes, isoToLocal, PAUSE_LABELS, timeOf, workedMinutes } from './model'
 import { WorkCard } from './WorkCard'
 import { correctSession, deleteSession, fetchSessions, WORK_PLACE_LABELS, workKeys, type WorkSession } from './workApi'
@@ -67,6 +69,7 @@ export function AttendancePage() {
           <WorkCard companyId={companyId} userId={userId} />
         </div>
       )}
+      {isAdminRole(company.role) && <MonthlyReport companyId={companyId} />}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {PERIODS.map((period) => (
           <button

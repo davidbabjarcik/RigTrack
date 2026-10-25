@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.12 – 25. 10. 2026
+
+- **Mesačný výkaz dochádzky** (Dochádzka, pre admina): za zvolený mesiac po ľuďoch hodiny na firme, doma
+  a na eventoch (z výkazov pri evente), hodinové sadzby a navrhovaná odmena.
+- **Hodinové sadzby** na firme, doma a na evente sa zadajú priamo v tabuľke; vidí ich len admin a daný človek.
+- **Zapísať do Odmien**: odmena sa pridá jedným klikom aj s rozpisom („Dochádzka 10/2026 – firma 8 h, …“);
+  pri už zapísanej je „v Odmenách“.
+- **Export do Excelu** pre účtovníka: hárok Súhrn (hodiny a odmeny po ľuďoch) a Záznamy (každý deň zvlášť).
+- Nové migrácie: `0092` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.11 – 25. 10. 2026
 
 - **Môj kalendár** („Vyberte firmu“ → Môj kalendár): všetky akcie zo všetkých firiem, kde ste v posádke, po
