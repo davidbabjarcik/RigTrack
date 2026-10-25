@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ArrowLeft, Building2, CalendarDays, ChartColumn, Check, ChevronRight, Pin, Plus, Smartphone, Speaker, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, Building2, CalendarDays, ChartColumn, Check, ChevronRight, Pin, Smartphone, Speaker, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/auth-context'
@@ -12,6 +12,7 @@ import { useCompany } from './company-context'
 import { CompanyLogo } from './CompanyLogo'
 import { demoKeys, fetchMyDemo } from './demo'
 import { DemoSettings } from './DemoSettings'
+import { NewCompanyButton } from './NewCompanyButton'
 import { profileComplete, usePersonalProfile } from '@/features/profile/api'
 import { MyCalendar } from '@/features/profile/MyCalendarView'
 import { MyDevicesEverywhere } from '@/features/profile/MyDevicesEverywhere'
@@ -296,13 +297,7 @@ export function CompanySelectPage() {
 
       {view === 'companies' && (
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <Link
-          to="/company/create"
-          className="flex h-11 items-center justify-center gap-2 rounded-lg border bg-surface px-4 text-sm font-medium hover:bg-muted"
-        >
-          <Plus className="size-4" aria-hidden />
-          Vytvoriť novú firmu
-        </Link>
+        <NewCompanyButton userId={user.id} />
         <Button variant="ghost" className="sm:ml-auto" onClick={() => void getSupabase().auth.signOut()}>
           Odhlásiť sa
         </Button>

@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.14 – 25. 10. 2026
+
+- **Zakladanie nových firiem so schválením**: novú firmu založí len správca aplikácie (vývojár) alebo ten, komu to
+  povolí. Ostatní namiesto „Vytvoriť novú firmu“ pošlú **žiadosť** (názov a poznámka) a vidia, že čaká na
+  schválenie. Správca dostane upozornenie a v Nastaveniach žiadosť schváli alebo zamietne; žiadateľovi príde
+  upozornenie a po schválení si firmu založí sám. Demo firma a založenie firmy partnerovi ostávajú bez zmeny.
+- Nové migrácie: `0094` (opravné `0071` a `0072` sú aktualizované). Správcu (vývojára) zapíšete v SQL Editore
+  do tabuľky `app_developers` – kým tam nikto nie je, zakladať firmy môže každý.
+
 ### 3.13 – 25. 10. 2026
 
 - **História cenových ponúk**: na stránke ponuky „Uložiť ponuku“ uloží presnú kópiu (riadky, sumy, DPH) s číslom

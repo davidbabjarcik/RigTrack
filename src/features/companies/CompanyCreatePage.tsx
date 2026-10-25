@@ -7,6 +7,7 @@ import { useAuth } from '@/features/auth/auth-context'
 import { companyKeys, createCompany } from './api'
 import { fetchSuggestedProfiles, saveSuggestedProfile, type SuggestedProfile } from './partnerCompany'
 import { useCompany } from './company-context'
+import { useCanCreateCompany } from './creation'
 
 export function CompanyCreatePage() {
   const { session } = useAuth()
@@ -31,9 +32,22 @@ export function CompanyCreatePage() {
     },
   })
 
+  const allowed = useCanCreateCompany(session!.user.id)
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     create.mutate(name.trim())
+  }
+
+  if (allowed.data === false) {
+    return (
+      <div className="rounded-2xl border bg-surface p-6 text-sm">
+        <h1 className="mb-2 text-xl font-semibold">Nová firma</h1>
+        <p className="text-muted-foreground">Novú firmu zakladá správca aplikácie. Na obrazovke „Vyberte firmu“ mu pošlite žiadosť – po schválení si ju tu založíte.</p>
+        <Link to="/company/select" className="mt-4 inline-block text-accent hover:underline">
+          Späť na Vyberte firmu
+        </Link>
+      </div>
+    )
   }
 
   return (

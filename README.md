@@ -6,10 +6,12 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-3.13-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-3.14-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
+
+### 🔗 [Otvoriť RigTrack → davidbabjarcik.github.io/RigTrack](https://davidbabjarcik.github.io/RigTrack)
 
 [Čo je nové](CHANGELOG.md) · [Funkcie](#moduly) · [Spustenie](#spustenie) · [Pre vývojárov](#pre-vývojárov)
 
@@ -37,10 +39,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **3.14** | Zakladanie nových firiem len so schválením správcu aplikácie (žiadosti a upozornenia) |
 | **3.13** | História cenových ponúk s číslom a stavom, automatické prenášanie zmien vlastnej techniky |
 | **3.12** | Mesačný výkaz dochádzky s hodinovými sadzbami, zápis do Odmien a export do Excelu |
 | **3.11** | Môj kalendár naprieč firmami, kolízie posádky a vlastnej techniky s inými firmami |
-| **3.10** | Zvonček s upozorneniami, upozornenia na zmenu eventu, odmietnutie, stretávku a výpožičku po termíne |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

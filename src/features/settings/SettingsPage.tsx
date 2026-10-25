@@ -31,6 +31,7 @@ import { RulesSettings } from '@/features/events/RulesSettings'
 import { PackagesSettings } from '@/features/packages/PackagesSettings'
 import { useCompany, type Membership } from '@/features/companies/company-context'
 import { BrandingSettings } from '@/features/companies/BrandingSettings'
+import { CompanyRequestsAdmin } from '@/features/companies/CompanyRequestsAdmin'
 import { CompanyProfileSettings } from '@/features/companies/CompanyProfileSettings'
 import { DeleteCompanySettings } from '@/features/companies/DeleteCompanySettings'
 import { DemoSettings } from '@/features/companies/DemoSettings'
@@ -356,6 +357,11 @@ export function SettingsPage() {
             </Section>
           )}
 
+          {isDeveloper && (
+            <Section title="Žiadosti o novú firmu (vývojár)">
+              <CompanyRequestsAdmin />
+            </Section>
+          )}
           {isDeveloper && (
             <Section title="Stav databázy (vývojár)">
               <MigrationStatus />

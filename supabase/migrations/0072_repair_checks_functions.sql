@@ -440,6 +440,27 @@ begin
     exception when others then raise notice 'Kontrola company_profile_web_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.company_requests') is not null then
+    begin
+      execute $sql$alter table public.company_requests drop constraint if exists company_requests_company_name_check$sql$;
+      execute $sql$alter table public.company_requests add constraint company_requests_company_name_check CHECK (((char_length(TRIM(BOTH FROM company_name)) >= 1) AND (char_length(TRIM(BOTH FROM company_name)) <= 120))) not valid$sql$;
+    exception when others then raise notice 'Kontrola company_requests_company_name_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.company_requests') is not null then
+    begin
+      execute $sql$alter table public.company_requests drop constraint if exists company_requests_note_check$sql$;
+      execute $sql$alter table public.company_requests add constraint company_requests_note_check CHECK ((char_length(note) <= 500)) not valid$sql$;
+    exception when others then raise notice 'Kontrola company_requests_note_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.company_requests') is not null then
+    begin
+      execute $sql$alter table public.company_requests drop constraint if exists company_requests_status_check$sql$;
+      execute $sql$alter table public.company_requests add constraint company_requests_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola company_requests_status_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.device_exemptions') is not null then
     begin
       execute $sql$alter table public.device_exemptions drop constraint if exists device_exemptions_kind_check$sql$;
@@ -3209,6 +3230,24 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.can_create_company()
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select auth.uid() is not null and (
+    not exists (select 1 from public.app_developers)
+    or public.is_developer()
+    or exists (select 1 from public.company_creators c where c.user_id = auth.uid())
+  );
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia can_create_company: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.check_service_units()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -3346,6 +3385,9 @@ declare
 begin
   if auth.uid() is null then
     raise exception 'Not authenticated' using errcode = '28000';
+  end if;
+  if not public.can_create_company() then
+    raise exception 'Založenie novej firmy musí povoliť správca aplikácie' using errcode = 'insufficient_privilege';
   end if;
   insert into public.companies (name, created_by) values (trim(_name), auth.uid()) returning id into _id;
   insert into public.company_members (company_id, user_id, role) values (_id, auth.uid(), 'admin');
@@ -3724,6 +3766,39 @@ AS $function$
   where u.id = auth.uid() and u.email_confirmed_at is not null;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia current_email: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.decide_company_request(_request_id uuid, _approve boolean)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  r public.company_requests%rowtype;
+begin
+  if not public.is_developer() then
+    raise exception 'Len vývojár aplikácie' using errcode = 'insufficient_privilege';
+  end if;
+  select * into r from public.company_requests where id = _request_id;
+  if not found then return; end if;
+  update public.company_requests set status = case when _approve then 'approved' else 'rejected' end, decided_at = now() where id = _request_id;
+  if _approve then
+    insert into public.company_creators (user_id, granted_by) values (r.user_id, auth.uid()) on conflict (user_id) do nothing;
+  end if;
+  insert into public.notifications (user_id, title, body, url)
+  values (
+    r.user_id,
+    case when _approve then 'Môžete založiť firmu' else 'Žiadosť o firmu zamietnutá' end,
+    left(case when _approve then 'Založte ju na „Vyberte firmu“ → Vytvoriť novú firmu: ' else 'Firma: ' end || r.company_name, 300),
+    case when _approve then '/company/create' else '/company/select' end
+  );
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia decide_company_request: %', sqlerrm;
 end;
 $repair$;
 
@@ -4611,6 +4686,25 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.notify_company_request()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  insert into public.notifications (user_id, title, body, url)
+  select d.user_id, left('Žiadosť o novú firmu: ' || new.company_name, 120), left(new.note, 300), '/settings'
+  from public.app_developers d where d.user_id <> new.user_id;
+  return new;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia notify_company_request: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.notify_crew_added()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -4758,6 +4852,25 @@ AS $function$
   )
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia owns_equipment: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.pending_company_requests()
+ RETURNS TABLE(id uuid, user_id uuid, full_name text, email text, company_name text, note text, created_at timestamp with time zone)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select r.id, r.user_id, coalesce(p.full_name, ''), coalesce(u.email, ''), r.company_name, r.note, r.created_at
+  from public.company_requests r
+  left join public.profiles p on p.id = r.user_id
+  left join auth.users u on u.id = r.user_id
+  where public.is_developer() and r.status = 'pending'
+  order by r.created_at;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia pending_company_requests: %', sqlerrm;
 end;
 $repair$;
 
