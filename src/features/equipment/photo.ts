@@ -56,6 +56,17 @@ export async function storeCompanyPhoto(companyId: string, name: string, file: F
   return path
 }
 
+/** Kópia fotky (aj s náhľadom) pod novým názvom – napr. pri duplikovaní case; vráti novú cestu. */
+export async function copyCompanyPhoto(companyId: string, path: string, name: string): Promise<string> {
+  const storage = getSupabase().storage.from(BUCKET)
+  const target = `${companyId}/${name}-${Date.now()}.jpg`
+  const { error } = await storage.copy(path, target)
+  if (error) throw error
+  // Náhľad nemusí existovať (staršie fotky); bez neho sa použije veľká fotka.
+  await storage.copy(thumbPath(path), thumbPath(target))
+  return target
+}
+
 /**
  * Odstráni fotku záznamu do koša: súbor ostáva v úložisku, kým ju admin neobnoví alebo kým
  * sa kôš nevyčistí. `owner` hovorí, čia fotka to je.

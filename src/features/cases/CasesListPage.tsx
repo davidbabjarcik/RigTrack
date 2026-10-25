@@ -102,6 +102,8 @@ export function CasesListPage() {
   const all = cases.data ?? []
   const visible = filterCases(all, filter, counts, now, checkDays)
   const due = all.filter((item) => needsCheck(item, now, checkDays)).length
+  // Prázdne sa rátajú, až keď je technika načítaná (inak by boli prázdne všetky).
+  const empty = equipment.data ? all.filter((item) => !counts.get(item.id)).length : 0
   const ownerIds = new Set(all.map((item) => item.ownerStaffId).filter(Boolean))
   const owners = staff.people.filter((person) => person.staffId && ownerIds.has(person.staffId))
   const labelCategories = [...new Set(all.map((item) => item.labelCategory).filter(Boolean))].sort()
@@ -109,7 +111,7 @@ export function CasesListPage() {
 
   const row = (item: Case, title: string, inGroup: boolean) => {
     const details = inGroup
-      ? [(contents.get(item.id) ?? []).join(', ') || 'prázdny', item.inventoryNumber]
+      ? [(contents.get(item.id) ?? []).join(', ') || (equipment.data && 'prázdny'), item.inventoryNumber]
       : [item.kind === 'rack' && kindLabel(item), item.inventoryNumber, locations.find((l) => l.id === item.locationId)?.name, equipment.data && pieces(counts.get(item.id) ?? 0)]
     const check = item.lastCheck ? `Kontrola ${formatDateTime(item.lastCheck.checkedAt)} · ${item.lastCheck.checkedByName || 'neznámy'}` : 'Zatiaľ nekontrolované'
     const priority = item.checkPriority ?? 'normal'
@@ -120,6 +122,7 @@ export function CasesListPage() {
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
             <span className="truncate font-medium">{title}</span>
+            {equipment.data && !counts.get(item.id) && <span className="shrink-0 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent">prázdny</span>}
             {priority !== 'normal' && (
               <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium', priority === 'high' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>
                 {priority === 'none' ? 'bez kontroly' : `${CHECK_PRIORITY_LABELS[priority].toLowerCase()} kontrola`}
@@ -173,6 +176,21 @@ export function CasesListPage() {
           </span>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         </Link>
+      )}
+
+      {empty > 0 && filter.content !== 'empty' && (
+        <button
+          type="button"
+          onClick={() => set({ content: 'empty' })}
+          className="mb-4 flex w-full items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-4 text-left hover:bg-accent/15"
+        >
+          <PackageOpen className="size-5 shrink-0 text-accent" aria-hidden />
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium">Prázdne cases a racky: {empty}</span>
+            <span className="block text-sm text-muted-foreground">Nie je v nich žiadna technika. Zobraziť ich.</span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+        </button>
       )}
 
       {due > 0 && filter.check !== 'due' && (

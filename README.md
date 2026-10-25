@@ -39,9 +39,9 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **3.19.2** | Duplikovanie case (bez techniky, s fotkou a rozmermi), upozornenie na prázdny case |
 | **3.19.1** | Do case presné čísla kusov, úloha cez 31121800 v čísle a 31. 12. 1800 v dátume |
 | **3.19** | @todo v políčkach, kanban a farebné priority úloh, vlastný stĺpec na Prehľade, racky v U, platiteľ DPH |
-| **3.18** | Ponuka odkazom pre klienta, event z ponuky, s.r.o./živnosť, nové PDF, presety zosilňovačov |
 | **3.16** | Pack list funguje aj bez signálu, záložka Vývojár v Nastaveniach |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).

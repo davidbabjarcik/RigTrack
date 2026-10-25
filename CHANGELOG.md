@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.19.2 – 25. 10. 2026
+
+- **Duplikovať case**: tlačidlo v detaile case vytvorí ďalší kus sady s ďalším číslom (Case 3 → Case 4) –
+  rovnaké rozmery, hmotnosť, kategória, case / rack (aj U), umiestnenie, vlastník, priorita kontroly, poznámka
+  a fotka (aj fotka na štítku). **Technika sa nekopíruje** – nový case je prázdny.
+- **Prázdny case**: upozornenie v detaile (s tlačidlom Pridať techniku), štítok „prázdny“ v zozname a pruh
+  „Prázdne cases a racky“, ktorý ich jedným klikom vyfiltruje.
+
 ### 3.19.1 – 25. 10. 2026
 
 - **Do case presné kusy**: pri pridávaní techniky do case „Vybrať čísla“ – zvolíte napr. #7 a #8 a do case idú

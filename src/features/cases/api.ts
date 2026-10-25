@@ -1,9 +1,9 @@
 import { resolveLookup, resolveOwner } from '@/features/equipment/api'
-import { storeCompanyPhoto } from '@/features/equipment/photo'
+import { copyCompanyPhoto, storeCompanyPhoto } from '@/features/equipment/photo'
 import type { Lookup } from '@/features/equipment/model'
 import { getSupabase } from '@/lib/supabase/client'
 import { isMissingColumn } from '@/lib/supabase/errors'
-import type { Case, CaseCheck, CaseFormValues, CheckPriority } from './model'
+import { duplicateName, type Case, type CaseCheck, type CaseFormValues, type CheckPriority } from './model'
 
 export const caseKeys = {
   list: (companyId: string) => ['company', companyId, 'cases'] as const,
@@ -192,4 +192,39 @@ export async function setCasePhoto(companyId: string, caseId: string, file: File
   const { data, error } = await getSupabase().from('cases').update({ photo_path: path }).eq('company_id', companyId).eq('id', caseId).select('id')
   if (error) throw error
   if (data.length === 0) throw new Error('Not updated')
+}
+
+/**
+ * Kópia case: ďalšie číslo v sade („Beam case 3“ → „Beam case 4“), rovnaké rozmery, hmotnosť, kategória,
+ * case / rack, umiestnenie, vlastník, priorita kontroly, poznámka a fotky. Technika vnútri sa nekopíruje.
+ */
+export async function duplicateCase(companyId: string, source: Case, all: Case[]): Promise<string> {
+  const { name, labelNumber } = duplicateName(source, all)
+  const row: Record<string, unknown> = {
+    company_id: companyId,
+    name,
+    location_id: source.locationId,
+    label_number: labelNumber,
+    label_category: source.labelCategory,
+    label_title: source.labelTitle,
+    weight_kg: source.weightKg,
+    width_cm: source.widthCm,
+    length_cm: source.lengthCm,
+    depth_cm: source.depthCm,
+    note: source.note,
+    ...(hasOwnerColumn() ? { owner_staff_id: source.ownerStaffId ?? null } : {}),
+    ...(hasPriorityColumn() ? { check_priority: source.checkPriority ?? 'normal' } : {}),
+    ...(rackColumns ? { kind: source.kind ?? 'case', rack_units: source.rackUnits ?? null } : {}),
+  }
+  const { data, error } = await getSupabase().from('cases').insert(row).select('id').single()
+  if (error) throw error
+  const id = (data as { id: string }).id
+  // Fotky sa skopírujú ako samostatné súbory (zmazanie jednej neodstráni druhú); keď sa to nepodarí, case ostane bez nich.
+  const photos: Record<string, string> = {}
+  for (const [column, path] of [['photo_path', source.photoPath], ['label_photo_path', source.labelPhotoPath]] as const) {
+    if (path) photos[column] = await copyCompanyPhoto(companyId, path, `case-${id}`).catch(() => '')
+  }
+  const filled = Object.fromEntries(Object.entries(photos).filter(([, path]) => path))
+  if (Object.keys(filled).length > 0) await getSupabase().from('cases').update(filled).eq('company_id', companyId).eq('id', id)
+  return id
 }

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CirclePlus, ClipboardList, MapPin, Pencil, Plus, QrCode, Star, Tag, Trash2, X } from 'lucide-react'
+import { ArrowLeft, CirclePlus, ClipboardList, Copy, MapPin, Pencil, Plus, QrCode, Star, Tag, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -19,7 +19,7 @@ import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { describeSpot } from '@/features/warehouse/model'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { caseKeys, deleteCase } from './api'
+import { caseKeys, deleteCase, duplicateCase } from './api'
 import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { CaseChecks } from './CaseChecks'
 import { CasePhoto } from './CasePhoto'
@@ -59,6 +59,15 @@ export function CaseDetailPage() {
     mutationFn: ({ equipmentId, caseId, count, units }: { equipmentId: string; caseId: string | null; count?: number; units?: number[] }) =>
       units ? splitEquipmentUnits(equipmentId, caseId, units).then(() => undefined) : count ? splitEquipmentIntoCase(equipmentId, caseId, count).then(() => undefined) : setEquipmentCase(companyId, equipmentId, caseId),
     onSettled: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) }),
+  })
+
+  // Kópia s ďalším číslom (rozmery, fotka, kategória…), bez techniky; otvorí sa nový case.
+  const duplicate = useMutation({
+    mutationFn: () => duplicateCase(companyId, cases.data!.find((c) => c.id === id)!, cases.data ?? []),
+    onSuccess: async (newId) => {
+      await queryClient.invalidateQueries({ queryKey: caseKeys.list(companyId) })
+      navigate(`/cases/${newId}`)
+    },
   })
 
   const mark = useMutation({
@@ -149,6 +158,12 @@ export function CaseDetailPage() {
               Upraviť
             </LinkButton>
           )}
+          {canEdit && (
+            <Button variant="outline" size="sm" disabled={duplicate.isPending} onClick={() => duplicate.mutate()}>
+              <Copy className="size-4" aria-hidden />
+              {duplicate.isPending ? 'Kopírujem…' : 'Duplikovať'}
+            </Button>
+          )}
           {can(company, 'cases.delete') && (
             <Button
               variant="destructive"
@@ -211,9 +226,17 @@ export function CaseDetailPage() {
         ) : equipment.isError ? (
           <ErrorBlock message="Obsah sa nepodarilo načítať." onRetry={() => void equipment.refetch()} />
         ) : content.length === 0 ? (
-          <p className="rounded-xl border border-dashed bg-surface px-6 py-10 text-center text-sm text-muted-foreground">
-            Case je prázdny.
-          </p>
+          <div role="status" className="flex flex-col items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 px-6 py-8 text-center text-sm">
+            <p>
+              <strong>{current.kind === 'rack' ? 'Rack je prázdny' : 'Case je prázdny'}</strong> – zatiaľ v ňom nie je žiadna technika.
+            </p>
+            {canEdit && !adding && (
+              <Button size="sm" onClick={() => setAdding(true)}>
+                <Plus className="size-4" aria-hidden />
+                Pridať techniku
+              </Button>
+            )}
+          </div>
         ) : (
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {content.map((item) => (

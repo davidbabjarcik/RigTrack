@@ -179,3 +179,16 @@ export function formatDimensions(item: Pick<Case, 'widthCm' | 'lengthCm' | 'dept
 }
 
 export type CaseFormValues = z.infer<typeof caseSchema>
+
+/**
+ * Názov a číslo kópie case: ďalšie číslo v sade. „Beam case 3“ → „Beam case 4“; pri rovnakom názve
+ * a čísle len na štítku ostane názov a číslo na štítku bude ďalšie.
+ */
+export function duplicateName(source: Pick<Case, 'name' | 'labelNumber'>, all: Pick<Case, 'name' | 'labelNumber'>[]) {
+  const base = caseBaseName(source)
+  const next = Math.max(0, ...all.filter((item) => plain(caseBaseName(item)) === plain(base)).map((item) => Number(caseNumber(item)) || 1)) + 1
+  const numberedName = NUMBER_SUFFIX.test(source.name.trim()) && caseBaseName(source) !== source.name.trim()
+  return numberedName
+    ? { name: `${base} ${next}`, labelNumber: source.labelNumber.trim() ? String(next) : '' }
+    : { name: source.name, labelNumber: String(next) }
+}

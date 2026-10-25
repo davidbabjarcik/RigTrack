@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { caseBaseName, caseNumber, caseTitle, groupCases, kindLabel, type Case } from './model'
+import { caseBaseName, caseNumber, caseTitle, duplicateName, groupCases, kindLabel, type Case } from './model'
 
 const box = (name: string, labelNumber = '', id = name): Case => ({ id, name, labelNumber }) as Case
 
@@ -19,6 +19,14 @@ describe('case groups', () => {
       ['Svetlá case', ['c', 'b', 'a']],
       ['Káble', ['k']],
     ])
+  })
+
+  it('gives a copy the next number in the set', () => {
+    const set = [box('Svetlá case', '1'), box('Svetlá case', '2'), box('Svetlá case', '3')]
+    expect(duplicateName(set[1], set)).toEqual({ name: 'Svetlá case', labelNumber: '4' })
+    const named = [box('Thon 1'), box('Thon 2')]
+    expect(duplicateName(named[0], named)).toEqual({ name: 'Thon 3', labelNumber: '' })
+    expect(duplicateName(box('Káble'), [box('Káble')])).toEqual({ name: 'Káble', labelNumber: '2' })
   })
 
   it('labels racks with their height', () => {
