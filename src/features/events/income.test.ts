@@ -24,7 +24,7 @@ describe('event income', () => {
   it('adds up cash, account and invoices', () => {
     const totals = incomeTotals([
       payment({ amount: 1500, method: 'cash', vat: 'with' }),
-      payment({ amount: 1500, method: 'invoice', invoicedBy: 'JEF', vat: 'without' }),
+      payment({ amount: 1500, method: 'invoice', invoicedBy: 'Firma A', vat: 'without' }),
     ])
     expect(totals.byMethod).toEqual({ cash: 1500, account: 0, invoice: 1500 })
     expect(totals).toMatchObject({ gross: 3345, net: 2719.51, complete: true })

@@ -3,6 +3,7 @@ import { Building, Search, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field, TextareaField } from '@/components/ui/field'
+import { VatPayerField } from '@/features/companies/VatPayerField'
 import { useAuth } from '@/features/auth/auth-context'
 import { companyKeys } from '@/features/companies/api'
 import { createPartnerCompany } from '@/features/companies/partnerCompany'
@@ -76,7 +77,7 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
         <Field label="Obchodné meno" placeholder="napr. Firma s.r.o." maxLength={160} value={fields.legalName} onChange={(event) => set({ legalName: event.target.value })} onBlur={search} />
         <Field label="IČO" maxLength={20} value={fields.ico} onChange={(event) => set({ ico: event.target.value })} onBlur={search} />
         <Field label="DIČ" maxLength={20} value={fields.dic} onChange={(event) => set({ dic: event.target.value })} />
-        <Field label="IČ DPH" placeholder="napr. SK2020123456" maxLength={20} value={fields.icDph} onChange={(event) => set({ icDph: event.target.value })} />
+        <VatPayerField value={fields.icDph ?? ''} onChange={(icDph) => set({ icDph })} />
         <Field label="CEO / konateľ" maxLength={120} value={fields.ceo} onChange={(event) => set({ ceo: event.target.value })} />
         <Field label="Adresa" className="sm:col-span-2" placeholder="napr. Ulica 1, Mesto" maxLength={200} value={fields.address} onChange={(event) => set({ address: event.target.value })} />
       </div>

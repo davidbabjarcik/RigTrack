@@ -190,6 +190,13 @@ begin
   end if;
   if to_regclass('public.cases') is not null then
     begin
+      execute $sql$alter table public.cases drop constraint if exists cases_kind_check$sql$;
+      execute $sql$alter table public.cases add constraint cases_kind_check CHECK ((kind = ANY (ARRAY['case'::text, 'rack'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola cases_kind_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.cases') is not null then
+    begin
       execute $sql$alter table public.cases drop constraint if exists cases_label_category_check$sql$;
       execute $sql$alter table public.cases add constraint cases_label_category_check CHECK ((char_length(label_category) <= 40)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_label_category_check: %', sqlerrm;
@@ -249,6 +256,13 @@ begin
       execute $sql$alter table public.cases drop constraint if exists cases_photo_path_check$sql$;
       execute $sql$alter table public.cases add constraint cases_photo_path_check CHECK ((char_length(photo_path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_photo_path_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.cases') is not null then
+    begin
+      execute $sql$alter table public.cases drop constraint if exists cases_rack_units_check$sql$;
+      execute $sql$alter table public.cases add constraint cases_rack_units_check CHECK (((rack_units >= 1) AND (rack_units <= 60))) not valid$sql$;
+    exception when others then raise notice 'Kontrola cases_rack_units_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.cases') is not null then
@@ -2682,6 +2696,13 @@ begin
   end if;
   if to_regclass('public.tasks') is not null then
     begin
+      execute $sql$alter table public.tasks drop constraint if exists tasks_link_check$sql$;
+      execute $sql$alter table public.tasks add constraint tasks_link_check CHECK ((char_length(link) <= 300)) not valid$sql$;
+    exception when others then raise notice 'Kontrola tasks_link_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.tasks') is not null then
+    begin
       execute $sql$alter table public.tasks drop constraint if exists tasks_note_check$sql$;
       execute $sql$alter table public.tasks add constraint tasks_note_check CHECK ((char_length(note) <= 2000)) not valid$sql$;
     exception when others then raise notice 'Kontrola tasks_note_check: %', sqlerrm;
@@ -2690,7 +2711,7 @@ begin
   if to_regclass('public.tasks') is not null then
     begin
       execute $sql$alter table public.tasks drop constraint if exists tasks_priority_check$sql$;
-      execute $sql$alter table public.tasks add constraint tasks_priority_check CHECK ((priority = ANY (ARRAY['low'::text, 'normal'::text, 'high'::text]))) not valid$sql$;
+      execute $sql$alter table public.tasks add constraint tasks_priority_check CHECK ((priority = ANY (ARRAY['none'::text, 'low'::text, 'normal'::text, 'high'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola tasks_priority_check: %', sqlerrm;
     end;
   end if;
@@ -2720,6 +2741,13 @@ begin
       execute $sql$alter table public.trashed_photos drop constraint if exists trashed_photos_path_check$sql$;
       execute $sql$alter table public.trashed_photos add constraint trashed_photos_path_check CHECK ((char_length(path) <= 300)) not valid$sql$;
     exception when others then raise notice 'Kontrola trashed_photos_path_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.user_prefs') is not null then
+    begin
+      execute $sql$alter table public.user_prefs drop constraint if exists user_prefs_prefs_check$sql$;
+      execute $sql$alter table public.user_prefs add constraint user_prefs_prefs_check CHECK ((pg_column_size(prefs) <= 16000)) not valid$sql$;
+    exception when others then raise notice 'Kontrola user_prefs_prefs_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.vehicle_records') is not null then

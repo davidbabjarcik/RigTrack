@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useId, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -15,7 +15,7 @@ import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { saveCase } from './api'
 import { equipmentKeys, fetchEquipmentList, splitEquipmentIntoCase } from '@/features/equipment/api'
 import { useCheckLevels, levelDays } from '@/features/checks/levels'
-import { caseSchema, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
+import { CASE_KIND_LABELS, CASE_KINDS, caseSchema, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
 import { addCaseTemplate, caseTemplateKeys, describeTemplate, fetchCaseTemplates, numberedCaseNames, type CaseTemplate } from './templates'
 import { useCases } from './useCases'
 
@@ -53,6 +53,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
     register,
     getValues,
     setValue,
+    control,
     handleSubmit,
     setError,
     formState: { errors },
@@ -72,8 +73,11 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
       owner: current?.ownerStaffId ?? ownerPreset,
       checkPriority: current?.checkPriority ?? 'normal',
       oldNumbers: current?.oldNumbers ?? '',
+      kind: current?.kind ?? (searchParams.get('kind') === 'rack' ? 'rack' : 'case'),
+      rackUnits: current?.rackUnits ?? undefined,
     },
   })
+  const kind = useWatch({ control, name: 'kind' }) ?? 'case'
 
   const save = useMutation({
     mutationFn: async (values: CaseFormValues) => {
@@ -187,6 +191,36 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
           </p>
         </div>
       )}
+      <div className="flex flex-wrap items-end gap-3">
+        <div role="radiogroup" aria-label="Case alebo rack" className="flex gap-1 rounded-lg bg-muted p-1">
+          {CASE_KINDS.map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={kind === value}
+              onClick={() => setValue('kind', value, { shouldDirty: true })}
+              className={kind === value ? 'h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground' : 'h-9 rounded-md px-4 text-sm font-medium hover:bg-surface'}
+            >
+              {CASE_KIND_LABELS[value]}
+            </button>
+          ))}
+        </div>
+        {kind === 'rack' && (
+          <Field
+            label="Výška (U)"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={60}
+            step={1}
+            placeholder="napr. 12"
+            className="w-32"
+            error={errors.rackUnits?.message}
+            {...register('rackUnits', asOptionalNumber)}
+          />
+        )}
+      </div>
       <Field label="Názov *" autoFocus={!current} error={errors.name?.message} {...register('name')} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
@@ -363,7 +397,7 @@ export function CaseFormPage() {
 
   return (
     <>
-      <PageHeader title={id ? 'Úprava case' : 'Nový case'} />
+      <PageHeader title={id ? `Úprava – ${current?.kind === 'rack' ? 'rack' : 'case'}` : 'Nový case / rack'} />
       {body}
     </>
   )

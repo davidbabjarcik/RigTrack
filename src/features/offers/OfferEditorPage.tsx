@@ -20,6 +20,7 @@ import { deleteOffer, ISSUER_KIND_LABELS, offerKeys, saveOffer, saveTemplate, us
 import {
   EMPTY_CLIENT,
   EMPTY_ISSUER,
+  joinContact,
   emptyPart,
   itemsFromEquipment,
   normalizePart,
@@ -70,7 +71,7 @@ export function OfferEditorPage() {
       issuerId: issuer?.id ?? null,
       issuer: issuer
         ? { name: issuer.name, address: issuer.address, ico: issuer.ico, dic: issuer.dic, icDph: issuer.icDph, contact: issuer.contact, vatPayer: issuer.vatPayer }
-        : { ...EMPTY_ISSUER, name: firm?.legalName || company.companyName, address: firm?.address ?? '', ico: firm?.ico ?? '', dic: firm?.dic ?? '', icDph: firm?.icDph ?? '', contact: [firm?.phone, firm?.email].filter(Boolean).join('\n') },
+        : { ...EMPTY_ISSUER, name: firm?.legalName || company.companyName, address: firm?.address ?? '', ico: firm?.ico ?? '', dic: firm?.dic ?? '', icDph: firm?.icDph ?? '', contact: joinContact({ phone: firm?.phone ?? '', email: firm?.email ?? '', web: firm?.web ?? '' }) },
       budget: null,
       title: event?.name ?? '',
       place: event?.venue ?? '',
@@ -276,7 +277,7 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
             )}
             <p className="text-sm whitespace-pre-line">
               <span className="font-medium">{draft.issuer.name || '—'}</span>
-              {[draft.issuer.address, draft.issuer.ico && `IČO ${draft.issuer.ico}`, draft.issuer.dic && `DIČ ${draft.issuer.dic}`, draft.issuer.icDph && `IČ DPH ${draft.issuer.icDph}`, draft.issuer.vatPayer ? '' : 'neplatiteľ DPH', draft.issuer.contact]
+              {[draft.issuer.address, draft.issuer.ico && `IČO ${draft.issuer.ico}`, draft.issuer.dic && `DIČ ${draft.issuer.dic}`, draft.issuer.vatPayer && draft.issuer.icDph && `IČ DPH ${draft.issuer.icDph}`, draft.issuer.vatPayer ? '' : 'neplatiteľ DPH', draft.issuer.contact]
                 .filter(Boolean)
                 .map((line) => `\n${line}`)}
             </p>
@@ -288,7 +289,7 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
                 <div className="grid gap-2 sm:grid-cols-3">
                   <Field label="IČO" maxLength={20} value={draft.issuer.ico} onChange={(e) => set({ issuer: { ...draft.issuer, ico: e.target.value } })} />
                   <Field label="DIČ" maxLength={20} value={draft.issuer.dic} onChange={(e) => set({ issuer: { ...draft.issuer, dic: e.target.value } })} />
-                  <Field label="IČ DPH" maxLength={20} value={draft.issuer.icDph} onChange={(e) => set({ issuer: { ...draft.issuer, icDph: e.target.value } })} />
+                  {draft.issuer.vatPayer && <Field label="IČ DPH" maxLength={20} value={draft.issuer.icDph} onChange={(e) => set({ issuer: { ...draft.issuer, icDph: e.target.value } })} />}
                 </div>
                 <TextareaField label="Kontakt" rows={2} maxLength={300} value={draft.issuer.contact} onChange={(e) => set({ issuer: { ...draft.issuer, contact: e.target.value } })} />
               </div>

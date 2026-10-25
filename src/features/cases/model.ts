@@ -32,6 +32,56 @@ export type Case = {
   checkPriority?: CheckPriority
   /** Staré čísla (napr. pôvodné nálepky), podľa ktorých sa case dá nájsť (0078). */
   oldNumbers?: string
+  /** Case alebo rack (0099); bez migrácie „case“. */
+  kind?: CaseKind
+  /** Výška racku v U (napr. 12). */
+  rackUnits?: number | null
+}
+
+export const CASE_KINDS = ['case', 'rack'] as const
+export type CaseKind = (typeof CASE_KINDS)[number]
+export const CASE_KIND_LABELS: Record<CaseKind, string> = { case: 'Case', rack: 'Rack' }
+
+/** „Rack 12U“, „Rack“ alebo „Case“. */
+export const kindLabel = (item: Pick<Case, 'kind' | 'rackUnits'>) =>
+  item.kind === 'rack' ? `Rack${item.rackUnits ? ` ${item.rackUnits}U` : ''}` : 'Case'
+
+const NUMBER_SUFFIX = /^(.*?)\s*(?:#|č\.\s*)?(\d+)$/
+
+/** Číslo case v sade: „Číslo case na štítku“, inak číslo na konci názvu („Beam case 4“). */
+export function caseNumber(item: Pick<Case, 'name' | 'labelNumber'>) {
+  return item.labelNumber.trim() || NUMBER_SUFFIX.exec(item.name.trim())?.[2] || ''
+}
+
+/** Typ case bez poradového čísla: „Beam case 4“ → „Beam case“. */
+export function caseBaseName(item: Pick<Case, 'name' | 'labelNumber'>) {
+  const name = item.name.trim()
+  const match = NUMBER_SUFFIX.exec(name)
+  return (match && match[1].trim() && (!item.labelNumber.trim() || item.labelNumber.trim() === match[2]) ? match[1] : name).trim()
+}
+
+/** Názov s číslom v sade: „Beam case #4“. */
+export function caseTitle(item: Pick<Case, 'name' | 'labelNumber'>) {
+  const number = caseNumber(item)
+  return number ? `${caseBaseName(item)} #${number}` : item.name
+}
+
+export type CaseGroup = { key: string; name: string; items: Case[] }
+
+/** Rovnaké cases (rovnaký názov bez čísla) pod jeden riadok, zoradené podľa čísla; poradie skupín ostáva. */
+export function groupCases(items: Case[]): CaseGroup[] {
+  const groups = new Map<string, CaseGroup>()
+  for (const item of items) {
+    const name = caseBaseName(item)
+    const key = plain(name)
+    const group = groups.get(key) ?? { key, name, items: [] }
+    group.items.push(item)
+    groups.set(key, group)
+  }
+  for (const group of groups.values()) {
+    group.items.sort((a, b) => (Number(caseNumber(a)) || 0) - (Number(caseNumber(b)) || 0) || a.name.localeCompare(b.name, 'sk'))
+  }
+  return [...groups.values()]
 }
 
 /** Úroveň kontroly case (spoločná s prevádzkovými hodinami; dni nastaví admin v Nastaveniach). */
@@ -58,6 +108,8 @@ export type CaseFilter = {
   labelCategory: string
   /** „empty“ = prázdne cases, „filled“ = s technikou. */
   content: '' | 'empty' | 'filled'
+  /** Len cases alebo len racky. */
+  kind?: CaseKind | ''
   sort: 'name' | 'priority' | 'lastCheck' | 'pieces'
 }
 
@@ -78,6 +130,7 @@ export function filterCases(items: Case[], filter: CaseFilter, pieces: Map<strin
     if (filter.labelCategory && item.labelCategory !== filter.labelCategory) return false
     if (filter.content === 'empty' && (pieces.get(item.id) ?? 0) > 0) return false
     if (filter.content === 'filled' && (pieces.get(item.id) ?? 0) === 0) return false
+    if (filter.kind && (item.kind ?? 'case') !== filter.kind) return false
     const haystack = plain([item.name, item.inventoryNumber, item.labelNumber, item.oldNumbers ?? '', item.labelCategory, item.note].join(' '))
     return words.every((word) => haystack.includes(word))
   })
@@ -115,6 +168,8 @@ export const caseSchema = z.object({
   owner: z.string().optional(),
   checkPriority: z.enum(['high', 'normal', 'low', 'none']).optional(),
   oldNumbers: text(200).optional(),
+  kind: z.enum(CASE_KINDS).optional(),
+  rackUnits: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Aspoň 1U').max(60, 'Najviac 60U').optional(),
 })
 
 /** „120 × 60 × 40 cm“ z rozmerov, ktoré sú vyplnené; bez rozmerov prázdny text. */

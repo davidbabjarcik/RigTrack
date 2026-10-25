@@ -49,6 +49,7 @@ import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { PermissionsSettings } from '@/features/permissions/PermissionsSettings'
 import { can } from '@/lib/permissions'
 import { isAdminRole, ROLE_LABELS, ROLES, type Role } from '@/lib/roles'
+import { PriorityColorsSettings } from '@/features/tasks/PriorityColorsSettings'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -484,6 +485,9 @@ export function SettingsPage() {
                 Odhlásiť sa
               </Button>
             </div>
+          </Section>
+          <Section title="Farby priorít úloh">
+            <PriorityColorsSettings />
           </Section>
           <Section title="Upozornenia na mobil">
             <PushSettings userId={user.id} />

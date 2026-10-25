@@ -100,7 +100,7 @@ export function EventIncomeSection({ companyId, eventId }: { companyId: string; 
               <Field
                 label="Faktúra cez firmu"
                 list={invoicedListId}
-                placeholder="napr. JEF alebo JEF Production"
+                placeholder="napr. skratka alebo celý názov firmy"
                 maxLength={120}
                 value={form.invoicedBy}
                 onChange={(e) => set({ invoicedBy: e.target.value })}

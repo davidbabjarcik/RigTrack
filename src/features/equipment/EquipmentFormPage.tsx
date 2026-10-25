@@ -80,6 +80,7 @@ const EMPTY: EquipmentFormValues = {
   lightSource: '',
   lightType: '',
   trackHours: false,
+  noCase: false,
   hoursPriority: 'normal',
   lampChangedOn: '',
   trussType: '',
@@ -167,6 +168,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     lightSource: equipment.attributes.lightSource ?? '',
     lightType: equipment.attributes.lightType ?? '',
     // Staršia technika s intervalom v mesiacoch prejde na sledovanie so strednou úrovňou.
+    noCase: equipment.attributes.noCase ?? false,
     trackHours: equipment.attributes.trackHours ?? (equipment.hoursIntervalMonths !== null || equipment.operatingHours !== null),
     hoursPriority: equipment.attributes.hoursPriority ?? 'normal',
     lampChangedOn: equipment.attributes.lampChangedOn ?? '',
@@ -324,6 +326,7 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const isDisplay = useWatch({ control, name: 'isDisplay' })
   const cableType = useWatch({ control, name: 'cableType' })
   const trackHours = useWatch({ control, name: 'trackHours' })
+  const caseValue = useWatch({ control, name: 'caseId' })
   const checkDays = useCheckLevels(companyId).days
   const trussType = useWatch({ control, name: 'trussType' })
   const stageType = useWatch({ control, name: 'stageType' })
@@ -770,6 +773,12 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
           </option>
         ))}
       </SelectField>
+      {!caseValue && (
+        <label className="-mt-2 flex items-center gap-2 text-sm">
+          <input type="checkbox" className="size-4" {...register('noCase')} />
+          Nepatrí do case ani racku (nehlásiť ako „mimo case“)
+        </label>
+      )}
 
       {!simple && (
         <>

@@ -23,7 +23,7 @@ import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { CaseChecks } from './CaseChecks'
 import { CasePhoto } from './CasePhoto'
 import { formatWeight } from './label'
-import { formatDimensions } from './model'
+import { caseTitle, formatDimensions, kindLabel } from './model'
 import { useCases } from './useCases'
 
 // Pri veľkom sklade nemá zmysel vykresliť tisíce riadkov; používateľ zúži výber hľadaním.
@@ -105,6 +105,7 @@ export function CaseDetailPage() {
   const spot = warehouse.data?.spots.find((item) => item.id === current.spotId)
   const caseName = (caseId: string | null) => cases.data.find((c) => c.id === caseId)?.name
   const info = [
+    kindLabel(current),
     current.inventoryNumber,
     current.oldNumbers && `staré č. ${current.oldNumbers}`,
     locations.find((l) => l.id === current.locationId)?.name,
@@ -117,7 +118,7 @@ export function CaseDetailPage() {
       {back}
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight break-words">{current.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight break-words">{caseTitle(current)}</h1>
           {info.length > 0 && <p className="mt-1 text-sm text-muted-foreground">{info.join(' · ')}</p>}
           <OwnerLink companyId={companyId} staffId={current.ownerStaffId} className="mt-1" />
           <ResponsibleFor companyId={companyId} caseId={id} kinds={[...new Set(all.filter((item) => item.caseId === id).map((item) => item.kind))]} className="mt-1" />

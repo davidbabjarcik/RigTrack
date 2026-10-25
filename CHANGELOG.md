@@ -5,6 +5,24 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.19 – 25. 10. 2026
+
+- **@todo v ľubovoľnom políčku**: napíšete `@todo` (alebo `@addtodo`) napr. do Hmotnosti a vznikne úloha
+  „Doplniť: Hmotnosť – názov techniky“ s odkazom späť na formulár. Dá sa použiť viackrát, aj pri jednej veci.
+- **Úlohy**: farebná priorita (sivá bez priority, modrá nízka, žltá stredná, červená vysoká – farby si zmeníte
+  v Nastaveniach → Účet), filter podľa priority, človeka a textu a **zobrazenie Kanban** (presúvanie medzi stĺpcami).
+- **Prehľad**: stĺpec na kraji je stále – Moje úlohy (aj keď žiadne nemáte), **kalendár mesiaca**, **čísla**;
+  „Upraviť tento stĺpec“ – zapnete, vypnete a zoradíte bloky (uloží sa k účtu).
+- **Case alebo rack**: pri racku výška v **U** (napr. 12U), filter „len racky“. Rovnaké cases sú v zozname pod
+  jedným riadkom („4× case“); po rozkliknutí Case #1, #2… aj s tým, ktoré kusy sú vnútri. V detaile „… #4“.
+- **Štítok**: tlačidlo „Z názvu case“ pri vlastnom obsahu štítku.
+- **Technika, ktorá nepatrí do case** (zaškrtnete vo formulári) sa už nehlási ako „mimo case“.
+- **Štatistiky a zoznam cases** rátajú **kusy** (20 káblov pod jednou položkou = 20 kusov).
+- **Upozornenia na prevádzkové hodiny a servis** vidí len ten, kto za danú techniku zodpovedá (ak je určený).
+- **Platiteľ DPH**: IČ DPH sa ukáže až po zaškrtnutí „Platiteľ DPH“ (firma, partneri, s.r.o. / živnosť, ponuka).
+  Kontakt vystavovateľa je v troch políčkach – telefón, e-mail, web (web je aj v PDF).
+- Nové migrácie: `0098`, `0099` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.18.1 – 25. 10. 2026
 
 - **PDF cenovej ponuky** v rozložení bežnej firemnej ponuky: „CENOVÁ PONUKA“ s číslom, vpravo dodávateľ

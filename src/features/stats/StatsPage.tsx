@@ -256,7 +256,7 @@ export function StatsPage() {
     'equipment.cableMeters': (
       <Ranking title="Káble – metre podľa konektora" rows={cableMeters(equipment.data ?? [])} format={(value) => `${formatNumber(value)} m`} empty="Zatiaľ žiadne káble s dĺžkou." />
     ),
-    'equipment.packed': <Tile label="V cases" value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} mimo cases`} />,
+    'equipment.packed': <Tile label="Kusov v cases" value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} ks mimo cases`} />,
     'loans.open': (
       <Tile
         label="Otvorené výpožičky"

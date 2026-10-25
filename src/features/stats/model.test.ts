@@ -47,7 +47,7 @@ describe('buildStats', () => {
         equipment({ id: 'fluid', kind: 'consumable', quantity: 5 }),
       ],
     }).equipment
-    expect(result).toMatchObject({ items: 4, pieces: 23, packed: 1, unpacked: 2 })
+    expect(result).toMatchObject({ items: 4, pieces: 23, packed: 20, unpacked: 2 })
     // 21 dostupných z 22 nevyradených kusov
     expect(result.availability).toBeCloseTo(21 / 22)
     expect(result.byStatus).toEqual([

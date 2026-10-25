@@ -5,7 +5,7 @@ import { Field, TextareaField } from '@/components/ui/field'
 import { useCompanyProfile } from '@/features/companies/profile'
 import { cn } from '@/lib/utils'
 import { deleteIssuer, ISSUER_KIND_LABELS, offerKeys, saveIssuer, useIssuers, type Issuer, type IssuerKind } from './api'
-import { EMPTY_ISSUER, type OfferIssuer } from './model'
+import { EMPTY_ISSUER, joinContact, splitContact, type OfferIssuer } from './model'
 
 const KINDS: { kind: Exclude<IssuerKind, 'other'>; hint: string; placeholder: string }[] = [
   { kind: 'sro', hint: 'Firma vystavuje ponuky a faktúry ako s.r.o.', placeholder: 'napr. Firma s.r.o.' },
@@ -38,8 +38,11 @@ function IssuerCard({ companyId, kind, hint, placeholder, current }: { companyId
   const profile = useCompanyProfile(companyId)
   const [editing, setEditing] = useState(false)
   const [fields, setFields] = useState<OfferIssuer>(current ?? EMPTY_ISSUER)
+  // Kontakt sa ukladá ako jeden text; vo formulári sú telefón, e-mail a web zvlášť.
+  const [contact, setContact] = useState(() => splitContact(current?.contact ?? ''))
+  const edit = (issuer: OfferIssuer) => (setFields(issuer), setContact(splitContact(issuer.contact)), setEditing(true))
   const refresh = () => queryClient.invalidateQueries({ queryKey: offerKeys.issuers(companyId) })
-  const save = useMutation({ mutationFn: () => saveIssuer(companyId, current?.id ?? null, fields, kind), onSuccess: () => setEditing(false), onSettled: refresh })
+  const save = useMutation({ mutationFn: () => saveIssuer(companyId, current?.id ?? null, { ...fields, contact: joinContact(contact) }, kind), onSuccess: () => setEditing(false), onSettled: refresh })
   const remove = useMutation({ mutationFn: () => deleteIssuer(companyId, current!.id), onSettled: refresh })
   const set = (patch: Partial<OfferIssuer>) => setFields({ ...fields, ...patch })
   const enabled = Boolean(current) || editing
@@ -48,13 +51,12 @@ function IssuerCard({ companyId, kind, hint, placeholder, current }: { companyId
     if (on) {
       // Prvé zapnutie s.r.o.: predvyplní sa z Údajov o firme.
       const firm = profile.data
-      setFields(
+      edit(
         current ??
           (kind === 'sro' && firm
-            ? { ...EMPTY_ISSUER, name: firm.legalName, address: firm.address, ico: firm.ico, dic: firm.dic, icDph: firm.icDph, contact: [firm.phone, firm.email].filter(Boolean).join('\n'), vatPayer: Boolean(firm.icDph) }
+            ? { ...EMPTY_ISSUER, name: firm.legalName, address: firm.address, ico: firm.ico, dic: firm.dic, icDph: firm.icDph, contact: joinContact({ phone: firm.phone, email: firm.email, web: firm.web }), vatPayer: Boolean(firm.icDph) }
             : { ...EMPTY_ISSUER, vatPayer: kind !== 'zivnost' }),
       )
-      setEditing(true)
     } else if (current) {
       if (window.confirm(`Vypnúť vystavovanie ako ${ISSUER_KIND_LABELS[kind]}? Staršie ponuky si údaje nechajú.`)) remove.mutate()
     } else setEditing(false)
@@ -79,7 +81,7 @@ function IssuerCard({ companyId, kind, hint, placeholder, current }: { companyId
             <span className="font-medium text-foreground">{current.name}</span>
             {[current.address, current.ico && `IČO ${current.ico}`, current.vatPayer ? 'platiteľ DPH' : 'neplatiteľ DPH'].filter(Boolean).map((line) => `\n${line}`)}
           </p>
-          <Button variant="outline" size="sm" onClick={() => (setFields(current), setEditing(true))}>
+          <Button variant="outline" size="sm" onClick={() => edit(current)}>
             Upraviť
           </Button>
         </div>
@@ -90,12 +92,28 @@ function IssuerCard({ companyId, kind, hint, placeholder, current }: { companyId
           <TextareaField label="Adresa / sídlo" className="sm:col-span-2" rows={2} maxLength={300} value={fields.address} onChange={(e) => set({ address: e.target.value })} />
           <Field label="IČO" maxLength={20} value={fields.ico} onChange={(e) => set({ ico: e.target.value })} />
           <Field label="DIČ" maxLength={20} value={fields.dic} onChange={(e) => set({ dic: e.target.value })} />
-          <Field label="IČ DPH" maxLength={20} value={fields.icDph} onChange={(e) => set({ icDph: e.target.value })} />
           <label className="flex items-center gap-2 self-end pb-3 text-sm">
-            <input type="checkbox" className="size-4" checked={fields.vatPayer} onChange={(e) => set({ vatPayer: e.target.checked })} />
+            <input type="checkbox" className="size-4" checked={fields.vatPayer} onChange={(e) => set({ vatPayer: e.target.checked, ...(e.target.checked ? {} : { icDph: '' }) })} />
             Platiteľ DPH
           </label>
-          <TextareaField label="Kontakt (telefón, e-mail, web)" className="sm:col-span-2" rows={2} maxLength={300} value={fields.contact} onChange={(e) => set({ contact: e.target.value })} />
+          {fields.vatPayer ? (
+            <Field label="IČ DPH" placeholder="napr. SK2020123456" maxLength={20} value={fields.icDph} onChange={(e) => set({ icDph: e.target.value })} />
+          ) : (
+            <p className="self-end pb-3 text-sm text-muted-foreground">Neplatiteľ DPH nemá IČ DPH.</p>
+          )}
+          <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
+            {(['phone', 'email', 'web'] as const).map((key) => (
+              <Field
+                key={key}
+                label={{ phone: 'Telefón', email: 'E-mail', web: 'Web' }[key]}
+                type={{ phone: 'tel', email: 'email', web: 'url' }[key]}
+                placeholder={{ phone: 'napr. +421 900 000 000', email: 'napr. info@firma.sk', web: 'napr. www.firma.sk' }[key]}
+                maxLength={100}
+                value={contact[key]}
+                onChange={(e) => setContact({ ...contact, [key]: e.target.value })}
+              />
+            ))}
+          </div>
           {save.isError && <p className="text-sm text-destructive sm:col-span-2">Nepodarilo sa uložiť.</p>}
           <div className="flex gap-2 sm:col-span-2">
             <Button type="submit" size="sm" disabled={!fields.name.trim() || save.isPending}>

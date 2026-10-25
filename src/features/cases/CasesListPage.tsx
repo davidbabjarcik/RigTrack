@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronRight, ClipboardCheck, PackageOpen, Plus, QrCode as QrCodeIcon, SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, ChevronRight, ClipboardCheck, PackageOpen, Plus, QrCode as QrCodeIcon, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -18,7 +18,7 @@ import { can } from '@/lib/permissions'
 import { useCheckLevels } from '@/features/checks/levels'
 import { useStaff } from '@/features/staff/useStaff'
 import { cn } from '@/lib/utils'
-import { CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, filterCases, needsCheck, NO_CASE_FILTER, type CaseFilter } from './model'
+import { CASE_KIND_LABELS, CASE_KINDS, caseNumber, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, filterCases, groupCases, kindLabel, needsCheck, NO_CASE_FILTER, type Case, type CaseFilter } from './model'
 import { useCases } from './useCases'
 
 const FILTER_KEY = 'rigtrack.cases.filter'
@@ -32,7 +32,7 @@ function savedFilter(): CaseFilter {
   }
 }
 
-const advancedCount = (filter: CaseFilter) => [filter.check, filter.priority, filter.locationId, filter.owner, filter.labelCategory, filter.content].filter(Boolean).length
+const advancedCount = (filter: CaseFilter) => [filter.check, filter.priority, filter.locationId, filter.owner, filter.labelCategory, filter.content, filter.kind].filter(Boolean).length
 
 function unpackedLabel(count: number) {
   if (count === 1) return '1 položka techniky nie je v žiadnom case'
@@ -71,9 +71,22 @@ export function CasesListPage() {
   })
 
   const counts = new Map<string, number>()
+  // Čo je v case: „Beam 7R #7, #8“ – pri rozbalenej sade cases je hneď vidno, ktoré kusy kde sú.
+  const contents = new Map<string, string[]>()
   for (const item of equipment.data ?? []) {
-    if (item.caseId) counts.set(item.caseId, (counts.get(item.caseId) ?? 0) + 1)
+    if (!item.caseId) continue
+    counts.set(item.caseId, (counts.get(item.caseId) ?? 0) + item.quantity)
+    const units = item.unitIds.length > 0 ? ` ${item.unitIds.map((unit) => `#${unit}`).join(', ')}` : item.quantity > 1 ? ` ${item.quantity}×` : ''
+    contents.set(item.caseId, [...(contents.get(item.caseId) ?? []), `${item.name}${units}`])
   }
+  const [open, setOpen] = useState<Set<string>>(() => new Set())
+  const toggleGroup = (key: string) =>
+    setOpen((current) => {
+      const next = new Set(current)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
 
   // Fotka v zozname: vlastná fotka case, inak hlavný prvok štítku, inak prvá technika vnútri s fotkou.
   const contentPhoto = new Map<string, string>()
@@ -93,6 +106,36 @@ export function CasesListPage() {
   const owners = staff.people.filter((person) => person.staffId && ownerIds.has(person.staffId))
   const labelCategories = [...new Set(all.map((item) => item.labelCategory).filter(Boolean))].sort()
   const extra = advancedCount(filter)
+
+  const row = (item: Case, title: string, inGroup: boolean) => {
+    const details = inGroup
+      ? [(contents.get(item.id) ?? []).join(', ') || 'prázdny', item.inventoryNumber]
+      : [item.kind === 'rack' && kindLabel(item), item.inventoryNumber, locations.find((l) => l.id === item.locationId)?.name, equipment.data && pieces(counts.get(item.id) ?? 0)]
+    const check = item.lastCheck ? `Kontrola ${formatDateTime(item.lastCheck.checkedAt)} · ${item.lastCheck.checkedByName || 'neznámy'}` : 'Zatiaľ nekontrolované'
+    const priority = item.checkPriority ?? 'normal'
+    const late = needsCheck(item, now, checkDays)
+    return (
+      <Link to={`/cases/${item.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
+        {!inGroup && <PhotoThumb url={thumbs[photoOf(item)]} />}
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2">
+            <span className="truncate font-medium">{title}</span>
+            {priority !== 'normal' && (
+              <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium', priority === 'high' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>
+                {priority === 'none' ? 'bez kontroly' : `${CHECK_PRIORITY_LABELS[priority].toLowerCase()} kontrola`}
+              </span>
+            )}
+          </span>
+          <span className="block truncate text-sm text-muted-foreground">{details.filter(Boolean).join(' · ')}</span>
+          <span className={cn('block truncate text-sm', late ? 'text-accent' : 'text-muted-foreground')}>
+            {check}
+            {late && ' · treba skontrolovať'}
+          </span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+      </Link>
+    )
+  }
 
   return (
     <>
@@ -207,6 +250,14 @@ export function CasesListPage() {
                 </option>
               ))}
             </SelectField>
+            <SelectField label="Case alebo rack" value={filter.kind ?? ''} onChange={(e) => set({ kind: e.target.value as CaseFilter['kind'] })}>
+              <option value="">Oboje</option>
+              {CASE_KINDS.map((kind) => (
+                <option key={kind} value={kind}>
+                  {kind === 'case' ? 'Len cases' : 'Len racky'}
+                </option>
+              ))}
+            </SelectField>
             <SelectField label="Obsah" value={filter.content} onChange={(e) => set({ content: e.target.value as CaseFilter['content'] })}>
               <option value="">Bez ohľadu</option>
               <option value="filled">S technikou</option>
@@ -231,38 +282,39 @@ export function CasesListPage() {
         </div>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
-          {visible.map((item) => {
-            const details = [
-              item.inventoryNumber,
-              locations.find((l) => l.id === item.locationId)?.name,
-              equipment.data && pieces(counts.get(item.id) ?? 0),
-            ].filter(Boolean)
-            const check = item.lastCheck
-              ? `Kontrola ${formatDateTime(item.lastCheck.checkedAt)} · ${item.lastCheck.checkedByName || 'neznámy'}`
-              : 'Zatiaľ nekontrolované'
-            const priority = item.checkPriority ?? 'normal'
-            const late = needsCheck(item, now, checkDays)
+          {groupCases(visible).map((group) => {
+            if (group.items.length === 1) return <li key={group.key}>{row(group.items[0], group.items[0].name, false)}</li>
+            const expanded = open.has(group.key) || filter.search.trim() !== ''
+            const first = group.items[0]
+            const total = group.items.reduce((sum, item) => sum + (counts.get(item.id) ?? 0), 0)
+            const late = group.items.filter((item) => needsCheck(item, now, checkDays)).length
             return (
-              <li key={item.id}>
-                <Link to={`/cases/${item.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
-                  <PhotoThumb url={thumbs[photoOf(item)]} />
+              <li key={group.key}>
+                <button type="button" aria-expanded={expanded} onClick={() => toggleGroup(group.key)} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted">
+                  <PhotoThumb url={thumbs[photoOf(first)]} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
-                      <span className="truncate font-medium">{item.name}</span>
-                      {priority !== 'normal' && (
-                        <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium', priority === 'high' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>
-                          {priority === 'none' ? 'bez kontroly' : `${CHECK_PRIORITY_LABELS[priority].toLowerCase()} kontrola`}
-                        </span>
-                      )}
+                      <span className="truncate font-medium">{group.name}</span>
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                        {group.items.length}× {first.kind === 'rack' ? 'rack' : 'case'}
+                      </span>
                     </span>
-                    <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
-                    <span className={cn('block truncate text-sm', late ? 'text-accent' : 'text-muted-foreground')}>
-                      {check}
-                      {late && ' · treba skontrolovať'}
+                    <span className="block truncate text-sm text-muted-foreground">
+                      {[first.kind === 'rack' && kindLabel(first), equipment.data && pieces(total), group.items.map((item) => `#${caseNumber(item) || '?'}`).join(' ')].filter(Boolean).join(' · ')}
                     </span>
+                    {late > 0 && <span className="block text-sm text-accent">Na kontrolu: {late}</span>}
                   </span>
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                </Link>
+                  <ChevronDown className={cn('size-4 shrink-0 text-muted-foreground transition-transform', expanded && 'rotate-180')} aria-hidden />
+                </button>
+                {expanded && (
+                  <ul className="divide-y border-t bg-muted/30">
+                    {group.items.map((item) => (
+                      <li key={item.id} className="pl-6">
+                        {row(item, `${CASE_KIND_LABELS[item.kind ?? 'case']} ${caseNumber(item) ? `#${caseNumber(item)}` : item.name}`, true)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             )
           })}

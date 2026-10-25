@@ -12,6 +12,7 @@ import { useVehicles } from '@/features/vehicles/useVehicles'
 import { todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
+import { useResponsibilities } from '@/features/responsibilities/api'
 import { buildNotifications } from './model'
 
 /** Upozornenia hore v appke (servis, výpožičky, autá, úlohy, pozvánky) – zbalené, klikom sa rozbalia. */
@@ -24,6 +25,7 @@ export function NotificationsStrip() {
   const loans = useLoans(companyId)
   const tasks = useTasks(companyId)
   const vehicles = useVehicles(companyId)
+  const responsibilities = useResponsibilities(companyId)
   const invitations = useQuery({ queryKey: companyKeys.myInvitations(user.id), queryFn: () => fetchMyInvitations(user.email!) })
   const all = buildNotifications(
     {
@@ -32,6 +34,7 @@ export function NotificationsStrip() {
       tasks: tasks.data ?? [],
       vehicles: vehicles.data ?? [],
       invitations: invitations.data ?? [],
+      responsibilities: responsibilities.data ?? [],
     },
     todayIso(),
     user.id,

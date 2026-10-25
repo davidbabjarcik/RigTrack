@@ -31,12 +31,17 @@ type Row = {
   owner_staff_id?: string | null
   check_priority?: CheckPriority
   old_numbers?: string
+  kind?: 'case' | 'rack'
+  rack_units?: number | null
 }
 
 const COLUMNS = 'id, name, inventory_number, location_id, label_number, label_category, label_title, label_photo_path, photo_path, weight_kg, width_cm, length_cm, depth_cm, spot_id, spot_level, note, updated_at'
 // Vlastník (0052), priorita kontroly (0060) a staré čísla (0078); bez migrácie sa cases načítajú bez nich.
 const OPTIONAL_COLUMNS = [', owner_staff_id, check_priority, old_numbers', ', owner_staff_id, check_priority', ', owner_staff_id', '']
 let optionalLevel = 0
+// Case / rack a výška v U (0099).
+let rackColumns = ', kind, rack_units'
+const missingRack = (error: { code?: string; message?: string } | null) => Boolean(rackColumns) && (isMissingColumn(error, 'kind') || isMissingColumn(error, 'rack_units'))
 const hasOldNumbers = () => optionalLevel === 0
 const hasOwnerColumn = () => optionalLevel < 3
 const hasPriorityColumn = () => optionalLevel < 2
@@ -60,9 +65,13 @@ function toCheck(row: CheckRow): CaseCheck {
 export async function fetchCases(companyId: string): Promise<Case[]> {
   const db = getSupabase()
   const [cases, checks] = await Promise.all([
-    db.from('cases').select(COLUMNS + OPTIONAL_COLUMNS[optionalLevel]).eq('company_id', companyId).order('name'),
+    db.from('cases').select(COLUMNS + OPTIONAL_COLUMNS[optionalLevel] + rackColumns).eq('company_id', companyId).order('name'),
     db.from('case_last_checks').select('case_id, checked_at, checked_by_name, note').eq('company_id', companyId),
   ])
+  if (missingRack(cases.error)) {
+    rackColumns = ''
+    return fetchCases(companyId)
+  }
   if (fallBack(cases.error)) return fetchCases(companyId)
   const error = cases.error ?? checks.error
   if (error) throw error
@@ -90,6 +99,8 @@ export async function fetchCases(companyId: string): Promise<Case[]> {
     ownerStaffId: row.owner_staff_id ?? null,
     checkPriority: row.check_priority ?? 'normal',
     oldNumbers: row.old_numbers ?? '',
+    kind: row.kind ?? 'case',
+    rackUnits: row.rack_units ?? null,
   }))
 }
 
@@ -129,6 +140,7 @@ export async function saveCase({ companyId, id, values, locations }: SaveArgs): 
     ...(values.owner !== undefined && (values.owner !== '' || hasOwnerColumn()) ? { owner_staff_id: await resolveOwner(companyId, values.owner) } : {}),
     ...(values.checkPriority && (values.checkPriority !== 'normal' || hasPriorityColumn()) ? { check_priority: values.checkPriority } : {}),
     ...(hasOldNumbers() || values.oldNumbers?.trim() ? { old_numbers: (values.oldNumbers ?? '').trim() } : {}),
+    ...(rackColumns || values.kind === 'rack' ? { kind: values.kind ?? 'case', rack_units: values.kind === 'rack' ? (values.rackUnits ?? null) : null } : {}),
   }
   const write = (row: Record<string, unknown>) => {
     const table = getSupabase().from('cases')
@@ -137,8 +149,13 @@ export async function saveCase({ companyId, id, values, locations }: SaveArgs): 
   let row: Record<string, unknown> = fields
   let { data, error } = await write(row)
   // Databáza bez migrácie 0060 / 0052 nepozná prioritu / vlastníka – uloží sa bez nich.
-  while (error && fallBack(error)) {
+  while (error && (missingRack(error) || fallBack(error))) {
     row = { ...row }
+    if (missingRack(error)) rackColumns = ''
+    if (!rackColumns) {
+      delete row.kind
+      delete row.rack_units
+    }
     if (!hasOldNumbers()) delete row.old_numbers
     if (!hasPriorityColumn()) delete row.check_priority
     if (!hasOwnerColumn()) delete row.owner_staff_id

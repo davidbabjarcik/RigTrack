@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
+import { VatPayerField } from './VatPayerField'
 import { profileKey, saveProfile, useCompanyProfile, type CompanyProfile } from './profile'
 
 /** Údaje o firme: IČO, DIČ, adresa, CEO, kontakt a adresa skladu (odkiaľ sa rátajú km na akcie). */
@@ -30,10 +31,10 @@ export function CompanyProfileSettings({ companyId, canEdit }: { companyId: stri
   return (
     <form onSubmit={submit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        {field('Obchodné meno', 'legalName', { placeholder: 'napr. JEF Production s.r.o.', className: 'sm:col-span-2' })}
+        {field('Obchodné meno', 'legalName', { placeholder: 'napr. Vaša firma s.r.o.', className: 'sm:col-span-2' })}
         {field('IČO', 'ico')}
         {field('DIČ', 'dic')}
-        {field('IČ DPH', 'icDph')}
+        <VatPayerField value={values.icDph} disabled={!canEdit} onChange={(icDph) => set({ icDph })} />
         {field('CEO / konateľ', 'ceoName')}
         {field('Sídlo / adresa', 'address', { className: 'sm:col-span-2' })}
         {field('Telefón', 'phone', { type: 'tel' })}

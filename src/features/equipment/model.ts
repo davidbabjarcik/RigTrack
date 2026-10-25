@@ -206,6 +206,8 @@ export type EquipmentAttributes = {
   stageType?: StageType
   stageBrand?: string
   stageSize?: string
+  /** Technika, ktorá do case ani racku nepatrí (napr. stojany, kabeláž na cievke) – nehlási sa ako „mimo case“. */
+  noCase?: boolean
   /** Sledovať prevádzkové hodiny (zosilňovače, svetlá) a s akou úrovňou kontroly odčítavať počítadlo. */
   trackHours?: boolean
   hoursPriority?: CheckLevel
@@ -452,6 +454,7 @@ export const equipmentSchema = z.object({
   lightSource: z.enum([...LIGHT_SOURCES, '']),
   lightType: z.enum([...(LIGHT_TYPES as LightType[]), '']).optional(),
   trackHours: z.boolean().optional(),
+  noCase: z.boolean().optional(),
   hoursPriority: z.enum(['none', 'low', 'normal', 'high', '']).optional(),
   lampChangedOn: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Zadajte dátum').optional(),
   lampChangedHours: z.number('Zadajte číslo').min(0).max(1_000_000).optional(),
@@ -631,6 +634,8 @@ export function attributesFor(
         | 'category'
         | 'lightType'
         | 'trackHours'
+        | 'noCase'
+        | 'caseId'
         | 'hoursPriority'
         | 'lampChangedOn'
         | 'lampChangedHours'
@@ -728,6 +733,7 @@ export function attributesFor(
     >,
 ) {
   const attributes: EquipmentAttributes = {}
+  if (values.noCase && !values.caseId) attributes.noCase = true
   const lighting = isLighting(values.kind, values.category ?? '')
   const audio = isAudio(values.kind, values.category ?? '')
   if (values.kind === 'cable') {
@@ -1165,7 +1171,7 @@ export function sortEquipment(items: Equipment[], sort: EquipmentSort) {
 
 /** Technika, ktorá by mala byť v nejakom case, ale nie je. Vyradená a spotrebný materiál sa nerátajú. */
 export function unpackedEquipment(items: Equipment[]) {
-  return items.filter((item) => item.caseId === null && item.status !== 'retired' && item.kind !== 'consumable')
+  return items.filter((item) => item.caseId === null && item.status !== 'retired' && item.kind !== 'consumable' && !item.attributes.noCase)
 }
 
 // ---------------------------------------------------------------------------

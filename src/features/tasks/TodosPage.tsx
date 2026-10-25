@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus } from 'lucide-react'
+import { Columns3, List, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
-import { SelectField } from '@/components/ui/field'
+import { Field, SelectField } from '@/components/ui/field'
+import { useUserPrefs } from '@/features/settings/userPrefs'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
@@ -13,7 +14,8 @@ import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { createPostEventTasks, setTaskStatus, taskKeys } from './api'
-import { assigneesOf, isAssignedTo, isTaskOverdue, isTaskStale, sortTasks, TASK_STATUS_LABELS } from './model'
+import { assigneesOf, isAssignedTo, isTaskOverdue, isTaskStale, priorityColor, sortTasks, TASK_PRIORITIES, TASK_PRIORITY_LABELS, TASK_STATUS_LABELS, type Task, type TaskPriority, type TaskStatus } from './model'
+import { TaskKanban } from './TaskKanban'
 import { TaskTemplatesSection } from './TaskTemplatesSection'
 import { TaskEditor } from './TaskEditor'
 import { useTasks } from './useTasks'
@@ -31,6 +33,11 @@ export function TodosPage() {
   const [scope, setScope] = useState<Scope>('mine')
   const [showDone, setShowDone] = useState(false)
   const [category, setCategory] = useState('')
+  const [priority, setPriority] = useState<TaskPriority | ''>('')
+  const [person, setPerson] = useState('')
+  const [search, setSearch] = useState('')
+  const { prefs, update } = useUserPrefs()
+  const view = prefs.tasksView ?? 'list'
   // Po skončených eventoch sa úlohy zo šablón založia samé (raz za načítanie stránky).
   const postEvent = useQuery({
     queryKey: ['company', companyId, 'tasks', 'post-event'],
@@ -46,6 +53,10 @@ export function TodosPage() {
   const [editing, setEditing] = useState<string | null>(null)
   const today = todayIso()
 
+  const move = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: TaskStatus }) => setTaskStatus(companyId, id, status),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.list(companyId) }),
+  })
   const toggle = useMutation({
     mutationFn: ({ id, done }: { id: string; done: boolean }) => setTaskStatus(companyId, id, done ? 'done' : 'open'),
     onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.list(companyId) }),
@@ -53,7 +64,14 @@ export function TodosPage() {
 
   const all = sortTasks(tasks.data ?? [], today)
   const categories = [...new Set(all.map((task) => task.category ?? '').filter(Boolean))].sort((a, b) => a.localeCompare(b, 'sk'))
-  const scoped = (scope === 'mine' ? all.filter((task) => isAssignedTo(task, userId)) : all).filter((task) => !category || task.category === category)
+  const words = search.toLowerCase().split(/\s+/).filter(Boolean)
+  const scoped = (scope === 'mine' ? all.filter((task) => isAssignedTo(task, userId)) : all).filter(
+    (task) =>
+      (!category || task.category === category) &&
+      (!priority || task.priority === priority) &&
+      (!person || isAssignedTo(task, person)) &&
+      words.every((word) => `${task.title} ${task.note}`.toLowerCase().includes(word)),
+  )
   const stale = scoped.filter((task) => isTaskStale(task, today))
   const open = scoped.filter((task) => task.status !== 'done')
   const done = scoped.filter((task) => task.status === 'done')
@@ -69,6 +87,65 @@ export function TodosPage() {
       canDelete={can(company, 'tasks.delete') || task?.createdBy === userId}
       onClose={() => setEditing(null)}
     />
+  )
+
+  const card = (task: Task, compact: boolean) => (
+    <div className="flex items-start gap-3 rounded-xl border border-l-4 bg-surface px-4 py-3" style={{ borderLeftColor: priorityColor(task.priority, prefs.priorityColors) }}>
+      <input
+        type="checkbox"
+        className="mt-1 size-5 shrink-0 accent-(--accent)"
+        aria-label={`Hotovo: ${task.title}`}
+        checked={task.status === 'done'}
+        disabled={!canEdit || toggle.isPending}
+        onChange={(e) => toggle.mutate({ id: task.id, done: e.target.checked })}
+      />
+      <div className="min-w-0 flex-1">
+        <p className={cn('font-medium break-words', task.status === 'done' && 'text-muted-foreground line-through')}>{task.title}</p>
+        <p className="text-sm text-muted-foreground">
+          {task.priority !== 'none' && (
+            <span className="mr-1 inline-flex items-center gap-1 font-medium" style={{ color: priorityColor(task.priority, prefs.priorityColors) }}>
+              <span className="size-2 rounded-full" style={{ background: priorityColor(task.priority, prefs.priorityColors) }} aria-hidden />
+              {TASK_PRIORITY_LABELS[task.priority].toLowerCase()}
+              {' · '}
+            </span>
+          )}
+          {[
+            assigneesOf(task)
+              .map((id) => memberName(members.data, id))
+              .filter(Boolean)
+              .join(', '),
+            task.category,
+            !compact && task.status === 'in_progress' && TASK_STATUS_LABELS.in_progress,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+          {task.dueOn && (
+            <span className={isTaskOverdue(task, today) ? 'text-destructive' : undefined}>
+              {' '}
+              · do {formatDate(task.dueOn)}
+              {isTaskOverdue(task, today) && ' (po termíne)'}
+            </span>
+          )}
+        </p>
+        {isTaskStale(task, today) && <p className="text-sm text-accent">Visí viac ako mesiac</p>}
+        {task.eventId && (
+          <Link to={`/events/${task.eventId}`} className="text-sm text-accent hover:underline">
+            Otvoriť event
+          </Link>
+        )}
+        {task.note && <p className={cn('mt-1 text-sm whitespace-pre-wrap', compact && 'line-clamp-3')}>{task.note}</p>}
+        {task.link && (
+          <Link to={task.link} className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
+            Otvoriť a doplniť
+          </Link>
+        )}
+      </div>
+      {canEdit && (
+        <Button variant="ghost" size="sm" aria-label={`Upraviť: ${task.title}`} onClick={() => setEditing(task.id)}>
+          <Pencil className="size-4" aria-hidden />
+        </Button>
+      )}
+    </div>
   )
 
   return (
@@ -121,6 +198,44 @@ export function TodosPage() {
             ))}
           </SelectField>
         )}
+        <SelectField label="Priorita" hideLabel className="w-40" value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority | '')}>
+          <option value="">Každá priorita</option>
+          {TASK_PRIORITIES.map((value) => (
+            <option key={value} value={value}>
+              {TASK_PRIORITY_LABELS[value]}
+            </option>
+          ))}
+        </SelectField>
+        {scope === 'all' && (members.data ?? []).length > 1 && (
+          <SelectField label="Kto" hideLabel className="w-44" value={person} onChange={(e) => setPerson(e.target.value)}>
+            <option value="">Ktokoľvek</option>
+            {(members.data ?? []).map((member) => (
+              <option key={member.userId} value={member.userId}>
+                {member.fullName || member.email}
+              </option>
+            ))}
+          </SelectField>
+        )}
+        <Field label="Hľadať" hideLabel type="search" placeholder="Hľadať v úlohách" className="w-full sm:w-52" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="flex gap-1 rounded-lg border bg-surface p-1" role="group" aria-label="Zobrazenie">
+          {(
+            [
+              ['list', 'Zoznam', List],
+              ['kanban', 'Kanban', Columns3],
+            ] as const
+          ).map(([value, label, Icon]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={view === value}
+              onClick={() => update({ tasksView: value })}
+              className={cn('flex h-7 items-center gap-1 rounded-md px-2 text-sm', view === value ? 'bg-primary text-primary-foreground' : 'hover:bg-muted')}
+            >
+              <Icon className="size-4" aria-hidden />
+              {label}
+            </button>
+          ))}
+        </div>
         <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
           <input type="checkbox" className="size-4 accent-(--accent)" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} />
           aj hotové ({done.length})
@@ -142,7 +257,7 @@ export function TodosPage() {
         <LoadingBlock />
       ) : tasks.isError ? (
         <ErrorBlock message="Úlohy sa nepodarilo načítať." onRetry={() => void tasks.refetch()} />
-      ) : visible.length === 0 ? (
+      ) : (view === 'kanban' ? scoped.length === 0 : visible.length === 0) ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
           <p className="font-medium">{scope === 'mine' ? 'Nemáte žiadne otvorené úlohy' : 'Žiadne otvorené úlohy'}</p>
           {scope === 'mine' && all.some((task) => task.status !== 'done') && (
@@ -152,61 +267,22 @@ export function TodosPage() {
           )}
         </div>
       ) : (
-        <ul className="flex flex-col gap-2">
-          {visible.map((task) =>
-            editing === task.id ? (
-              <li key={task.id}>{editor(task)}</li>
-            ) : (
-              <li key={task.id} className="flex items-start gap-3 rounded-xl border bg-surface px-4 py-3">
-                <input
-                  type="checkbox"
-                  className="mt-1 size-5 shrink-0 accent-(--accent)"
-                  aria-label={`Hotovo: ${task.title}`}
-                  checked={task.status === 'done'}
-                  disabled={!canEdit || toggle.isPending}
-                  onChange={(e) => toggle.mutate({ id: task.id, done: e.target.checked })}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className={cn('font-medium break-words', task.status === 'done' && 'text-muted-foreground line-through')}>
-                    {task.title}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {[
-                      assigneesOf(task)
-                        .map((id) => memberName(members.data, id))
-                        .filter(Boolean)
-                        .join(', '),
-                      task.category,
-                      task.status === 'in_progress' && TASK_STATUS_LABELS.in_progress,
-                      task.priority === 'high' && 'vysoká priorita',
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                    {task.dueOn && (
-                      <span className={isTaskOverdue(task, today) ? 'text-destructive' : undefined}>
-                        {' '}
-                        · do {formatDate(task.dueOn)}
-                        {isTaskOverdue(task, today) && ' (po termíne)'}
-                      </span>
-                    )}
-                  </p>
-                  {isTaskStale(task, today) && <p className="text-sm text-accent">Visí viac ako mesiac</p>}
-                  {task.eventId && (
-                    <Link to={`/events/${task.eventId}`} className="text-sm text-accent hover:underline">
-                      Otvoriť event
-                    </Link>
-                  )}
-                  {task.note && <p className="mt-1 text-sm whitespace-pre-wrap">{task.note}</p>}
-                </div>
-                {canEdit && (
-                  <Button variant="ghost" size="sm" aria-label={`Upraviť: ${task.title}`} onClick={() => setEditing(task.id)}>
-                    <Pencil className="size-4" aria-hidden />
-                  </Button>
-                )}
-              </li>
-            ),
-          )}
-        </ul>
+        view === 'kanban' ? (
+          <TaskKanban
+            tasks={scoped}
+            showDone={showDone}
+            canEdit={canEdit}
+            colors={prefs.priorityColors}
+            onMove={(id, status) => move.mutate({ id, status })}
+            renderCard={(task) => (editing === task.id ? editor(task) : card(task, true))}
+          />
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {visible.map((task) => (
+              <li key={task.id}>{editing === task.id ? editor(task) : card(task, false)}</li>
+            ))}
+          </ul>
+        )
       )}
 
       {toggle.isError && (

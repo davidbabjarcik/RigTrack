@@ -80,7 +80,9 @@ with checks (migration, ok) as (
     ('0094 zakladanie firiem so schválením', to_regclass('public.company_requests') is not null),
     ('0095 plán pódia k eventu', to_regclass('public.event_stage_plans') is not null),
     ('0096 cenové ponuky', to_regclass('public.quotes') is not null),
-    ('0097 odkaz na ponuku, pripnuté firmy', to_regclass('public.company_pins') is not null)
+    ('0097 odkaz na ponuku, pripnuté firmy', to_regclass('public.company_pins') is not null),
+    ('0098 odkaz pri úlohe (@todo)', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tasks' and column_name = 'link')),
+    ('0099 racky, úlohy bez priority, nastavenia účtu', to_regclass('public.user_prefs') is not null)
 )
 select migration, case when ok then 'OK' else 'chýba' end as stav
 from checks

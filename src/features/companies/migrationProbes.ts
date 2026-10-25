@@ -44,6 +44,8 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0095', label: 'plán pódia k eventu', table: 'event_stage_plans', column: 'event_id' },
   { migration: '0096', label: 'cenové ponuky, vystavovatelia a oprávnenia', table: 'quotes', column: 'id' },
   { migration: '0097', label: 'odkaz na ponuku pre klienta, s.r.o. / živnosť, pripnuté firmy na účet', table: 'company_pins', column: 'company_id' },
+  { migration: '0098', label: 'úloha z políčka cez @todo s odkazom späť', table: 'tasks', column: 'link' },
+  { migration: '0099', label: 'case alebo rack (U), úlohy bez priority, nastavenia účtu', table: 'user_prefs', column: 'prefs' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

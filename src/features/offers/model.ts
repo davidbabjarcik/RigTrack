@@ -144,3 +144,16 @@ export const bulletLines = (items: string) =>
     .split('\n')
     .map((line) => line.replace(/^\s*[-•*]\s*/, '').trim())
     .filter(Boolean)
+
+/** Kontakt vystavovateľa je jeden text po riadkoch; vo formulári ho rozdelíme na telefón, e-mail a web. */
+export function splitContact(contact: string) {
+  const lines = contact.split('\n').map((line) => line.trim()).filter(Boolean)
+  const email = lines.find((line) => line.includes('@')) ?? ''
+  const web = lines.find((line) => line !== email && /^(https?:\/\/|www\.)|^[^\s@]+\.[a-z]{2,}(\/\S*)?$/i.test(line)) ?? ''
+  const phone = lines.find((line) => line !== email && line !== web && /\d{3}/.test(line)) ?? ''
+  const other = lines.filter((line) => line !== email && line !== web && line !== phone)
+  return { phone, email, web, other }
+}
+
+export const joinContact = (parts: { phone: string; email: string; web: string; other?: string[] }) =>
+  [parts.phone, parts.email, parts.web, ...(parts.other ?? [])].map((line) => line.trim()).filter(Boolean).join('\n')

@@ -1,5 +1,5 @@
 import { formatDate, formatMoney } from '@/lib/format'
-import { bulletLines, partCode, priceLabel, sumPrices, summaryRows, type Offer, type OfferPart } from './model'
+import { splitContact, bulletLines, partCode, priceLabel, sumPrices, summaryRows, type Offer, type OfferPart } from './model'
 
 // Rozloženie ako bežná firemná ponuka: nadpis s číslom, vpravo dodávateľ, „Ponuka pre“, údaje o podujatí,
 // časti A., B. s popisom, zoznamom, „Cena zahŕňa“ a „Cena za časť“, celková cena, zhrnutie a „Vyhotovil“.
@@ -44,10 +44,7 @@ export function OfferDocument({ offer, logoUrl }: { offer: Offer; logoUrl?: stri
   const issuer = offer.issuer
   const money = (value: number) => formatMoney(value, 'EUR')
   const codes = offer.sections.map((_, index) => partCode(index))
-  const contactLines = issuer.contact.split('\n').map((line) => line.trim()).filter(Boolean)
-  const phone = contactLines.find((line) => /\d{3}/.test(line) && !line.includes('@'))
-  const email = contactLines.find((line) => line.includes('@'))
-  const otherContact = contactLines.filter((line) => line !== phone && line !== email)
+  const { phone, email, web, other: otherContact } = splitContact(issuer.contact)
 
   return (
     <article className="mx-auto max-w-[190mm] font-[Arial,Helvetica,sans-serif] text-[12px] leading-[1.45] text-black">
@@ -63,10 +60,11 @@ export function OfferDocument({ offer, logoUrl }: { offer: Offer; logoUrl?: stri
           {issuer.address && <p className="whitespace-pre-line">{issuer.address}</p>}
           {issuer.ico && <p>IČO: {issuer.ico}</p>}
           {issuer.dic && <p>DIČ: {issuer.dic}</p>}
-          {issuer.icDph && <p>IČ DPH: {issuer.icDph}</p>}
+          {issuer.vatPayer && issuer.icDph && <p>IČ DPH: {issuer.icDph}</p>}
           {!issuer.vatPayer && <p>Nie je platiteľ DPH</p>}
           {phone && <p>TELEFÓN: {phone}</p>}
           {email && <p>EMAIL: {email}</p>}
+          {web && <p>WEB: {web}</p>}
           {otherContact.map((line) => (
             <p key={line}>{line}</p>
           ))}

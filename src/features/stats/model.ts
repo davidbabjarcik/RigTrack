@@ -89,8 +89,8 @@ export function buildStats(sources: StatsSources, today: string, yearAgo: string
         label: STATUS_LABELS[status],
         value: gear.filter((item) => item.status === status).length,
       })).filter((row) => row.value > 0),
-      packed: active.filter((item) => item.caseId !== null).length,
-      unpacked: active.filter((item) => item.caseId === null).length,
+      packed: pieces(active.filter((item) => item.caseId !== null)),
+      unpacked: pieces(active.filter((item) => item.caseId === null && !item.attributes.noCase)),
     },
     loans: {
       total: loans.length,

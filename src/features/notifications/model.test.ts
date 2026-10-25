@@ -3,7 +3,7 @@ import type { Equipment } from '@/features/equipment/model'
 import type { Loan } from '@/features/loans/model'
 import type { Task } from '@/features/tasks/model'
 import type { Vehicle } from '@/features/vehicles/model'
-import { buildNotifications, type NotificationSources } from './model'
+import { buildNotifications, concernsMe, type NotificationSources } from './model'
 
 const today = '2026-10-13'
 const me = 'user-me'
@@ -75,5 +75,15 @@ describe('buildNotifications', () => {
         invitations: [{ id: 'i1', companyName: 'Iná firma' }],
       }),
     ).toEqual(['urgent: Inventúra — vaša úloha je po termíne', 'soon: Iná firma — pozvánka do firmy'])
+  })
+})
+
+describe('responsibilities', () => {
+  it('reminds only the responsible person about their equipment', () => {
+    const owned = [{ kinds: ['audio'], caseIds: [], memberIds: ['me'] }]
+    expect(concernsMe({ kind: 'audio', caseId: null }, owned, 'me')).toBe(true)
+    expect(concernsMe({ kind: 'audio', caseId: null }, owned, 'other')).toBe(false)
+    expect(concernsMe({ kind: 'light', caseId: null }, owned, 'other')).toBe(true)
+    expect(concernsMe({ kind: 'light', caseId: 'c1' }, [{ kinds: [], caseIds: ['c1'], memberIds: ['me'] }], 'other')).toBe(false)
   })
 })

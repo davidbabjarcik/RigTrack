@@ -1,4 +1,4 @@
-import type { Priority } from '@/lib/priority'
+import type { TaskPriority } from './model'
 import { getSupabase } from '@/lib/supabase/client'
 import { isMissingColumn } from '@/lib/supabase/errors'
 import type { Task, TaskFormValues, TaskStatus } from './model'
@@ -11,13 +11,15 @@ export const taskKeys = {
 // Viac riešiteľov, kategória a event (0061); bez migrácie sa úlohy načítajú bez nich.
 const EXTRA_COLUMNS = ', assignee_ids, category, event_id, created_at'
 let extraColumns = EXTRA_COLUMNS
+// Odkaz pri úlohe (0098).
+let linkColumn = ', link'
 
 type Row = {
   id: string
   title: string
   note: string
   assignee_id: string | null
-  priority: Priority
+  priority: TaskPriority
   due_on: string | null
   status: TaskStatus
   created_by: string | null
@@ -25,13 +27,18 @@ type Row = {
   category?: string
   event_id?: string | null
   created_at?: string
+  link?: string
 }
 
 export async function fetchTasks(companyId: string): Promise<Task[]> {
   const { data, error } = await getSupabase()
     .from('tasks')
-    .select('id, title, note, assignee_id, priority, due_on, status, created_by' + extraColumns)
+    .select('id, title, note, assignee_id, priority, due_on, status, created_by' + extraColumns + (extraColumns ? linkColumn : ''))
     .eq('company_id', companyId)
+  if (linkColumn && extraColumns && isMissingColumn(error, 'link')) {
+    linkColumn = ''
+    return fetchTasks(companyId)
+  }
   if (extraColumns && isMissingColumn(error, 'assignee_ids')) {
     extraColumns = ''
     return fetchTasks(companyId)
@@ -50,7 +57,25 @@ export async function fetchTasks(companyId: string): Promise<Task[]> {
     category: row.category ?? '',
     eventId: row.event_id ?? null,
     createdAt: row.created_at,
+    link: row.link ?? '',
   }))
+}
+
+/**
+ * Úloha z kľúčového slova @todo: „Doplniť: Váha – LED Par“, priradená tomu, kto ju napísal, s odkazom späť.
+ * Bez migrácie 0098 sa odkaz zapíše do poznámky.
+ */
+export async function addTodoFromField(companyId: string, userId: string, title: string, link: string) {
+  const base = { company_id: companyId, title: title.slice(0, 200), status: 'open', assignee_id: userId }
+  const table = () => getSupabase().from('tasks')
+  const withLink = await table().insert({ ...base, assignee_ids: [userId], category: 'Doplniť', link })
+  if (!withLink.error) return
+  if (isMissingColumn(withLink.error, 'link') || isMissingColumn(withLink.error, 'assignee_ids') || isMissingColumn(withLink.error, 'category')) {
+    const { error } = await table().insert({ ...base, note: `Odkaz: ${link}` })
+    if (error) throw error
+    return
+  }
+  throw withLink.error
 }
 
 export async function saveTask(companyId: string, id: string | null, values: TaskFormValues) {
@@ -65,11 +90,15 @@ export async function saveTask(companyId: string, id: string | null, values: Tas
     due_on: values.dueOn || null,
     status: values.status,
   }
-  const table = getSupabase().from('tasks')
-  const { data, error } = id
-    ? await table.update(fields).eq('company_id', companyId).eq('id', id).select('id')
-    : await table.insert({ ...fields, company_id: companyId }).select('id')
+  const write = (row: typeof fields) => {
+    const table = getSupabase().from('tasks')
+    return id ? table.update(row).eq('company_id', companyId).eq('id', id).select('id') : table.insert({ ...row, company_id: companyId }).select('id')
+  }
+  let { data, error } = await write(fields)
+  // Bez migrácie 0099 databáza „bez priority“ nepozná – uloží sa ako stredná (ako doteraz).
+  if (error?.code === '23514' && fields.priority === 'none') ({ data, error } = await write({ ...fields, priority: 'normal' }))
   if (error) throw error
+  if (!data) throw new Error('Not saved')
   if (data.length === 0) throw new Error('Not saved')
 }
 

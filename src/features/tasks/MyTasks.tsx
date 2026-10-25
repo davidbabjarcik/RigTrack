@@ -2,22 +2,22 @@ import { ListTodo } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/features/auth/auth-context'
 import { formatDate, todayIso } from '@/lib/format'
-import { isAssignedTo, isTaskOverdue, sortTasks } from './model'
+import { useUserPrefs } from '@/features/settings/userPrefs'
+import { isAssignedTo, isTaskOverdue, priorityColor, sortTasks } from './model'
 import { useTasks } from './useTasks'
 
 const SHOWN = 5
 
-/** Moje otvorené úlohy na prehľade; bez úloh sa blok nezobrazí. */
+/** Moje otvorené úlohy na prehľade (blok je tam stále, aj bez úloh). */
 export function MyTasks({ companyId }: { companyId: string }) {
   const userId = useAuth().session?.user.id
   const tasks = useTasks(companyId)
+  const { prefs } = useUserPrefs()
   const today = todayIso()
   const mine = sortTasks(
     (tasks.data ?? []).filter((task) => isAssignedTo(task, userId) && task.status !== 'done'),
     today,
   )
-  if (mine.length === 0) return null
-
   return (
     <section aria-labelledby="my-tasks-heading" className="mb-6 rounded-xl border bg-surface p-4">
       <h2 id="my-tasks-heading" className="mb-2 flex items-center gap-2 font-medium">
@@ -26,10 +26,21 @@ export function MyTasks({ companyId }: { companyId: string }) {
           Moje úlohy ({mine.length})
         </Link>
       </h2>
+      {mine.length === 0 && (
+        <p className="py-2 text-sm text-muted-foreground">
+          Nemáte žiadne otvorené úlohy.{' '}
+          <Link to="/todos" className="text-accent hover:underline">
+            Pridať úlohu
+          </Link>
+        </p>
+      )}
       <ul className="divide-y">
         {mine.slice(0, SHOWN).map((task) => (
           <li key={task.id} className="flex items-center justify-between gap-4 py-2">
-            <span className="min-w-0 truncate">{task.title}</span>
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="size-2 shrink-0 rounded-full" style={{ background: priorityColor(task.priority, prefs.priorityColors) }} aria-hidden />
+              <span className="truncate">{task.title}</span>
+            </span>
             {task.dueOn && (
               <span className={isTaskOverdue(task, today) ? 'shrink-0 text-sm text-destructive' : 'shrink-0 text-sm text-muted-foreground'}>
                 do {formatDate(task.dueOn)}

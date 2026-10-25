@@ -1,6 +1,7 @@
 import { hoursState, needsRestock, serviceState, type Equipment } from '@/features/equipment/model'
 import { isAwaitingIssue, isOverdue, type Loan } from '@/features/loans/model'
 import { isAssignedTo, isTaskOverdue, isTaskStale, type Task } from '@/features/tasks/model'
+import type { Responsibility } from '@/features/responsibilities/api'
 import { describeDays, upcomingDeadlines, type Vehicle } from '@/features/vehicles/model'
 
 // Upozornenia sú odvodené: vznikajú z aktuálneho stavu údajov a zmiznú, keď sa vec vybaví.
@@ -21,6 +22,14 @@ export type NotificationSources = {
   vehicles: Vehicle[]
   /** Pozvánky do firiem čakajúce na prihláseného používateľa. */
   invitations: { id: string; companyName: string }[]
+  /** Zodpovednosti (0089): technika, za ktorú niekto zodpovedá, sa pripomína len jemu. */
+  responsibilities?: Pick<Responsibility, 'kinds' | 'caseIds' | 'memberIds'>[]
+}
+
+/** Je to moja starosť? Ak za techniku (druh alebo case) niekto zodpovedá, len jeho; inak všetkých. */
+export function concernsMe(item: Pick<Equipment, 'kind' | 'caseId'>, responsibilities: NotificationSources['responsibilities'], userId: string) {
+  const owners = (responsibilities ?? []).filter((r) => r.memberIds.length > 0 && (r.kinds.includes(item.kind) || (item.caseId !== null && r.caseIds.includes(item.caseId))))
+  return owners.length === 0 || owners.some((r) => r.memberIds.includes(userId))
 }
 
 export function buildNotifications(sources: NotificationSources, today: string, userId: string): Notification[] {
@@ -50,6 +59,7 @@ export function buildNotifications(sources: NotificationSources, today: string, 
 
   for (const item of sources.equipment) {
     if (item.status === 'retired') continue
+    if (!concernsMe(item, sources.responsibilities, userId)) continue
     const service = serviceState(item, today).state
     if (service === 'overdue' || service === 'soon') {
       list.push({

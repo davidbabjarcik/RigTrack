@@ -6,8 +6,7 @@ import { MigrationBanner } from '@/features/companies/MigrationStatus'
 import { RestockList } from '@/features/equipment/RestockList'
 import { LoanAlerts } from '@/features/loans/LoanAlerts'
 import { MyAttendance } from '@/features/attendance/MyAttendance'
-import { MyResponsibilities } from '@/features/responsibilities/MyResponsibilities'
-import { MyTasks } from '@/features/tasks/MyTasks'
+import { SideWidgets } from '@/features/dashboard/SideWidgets'
 import { VehicleDeadlineAlerts } from '@/features/vehicles/VehicleDeadlineAlerts'
 import { visibleNavItems } from '@/lib/navigation'
 import { isAdminRole } from '@/lib/roles'
@@ -34,15 +33,14 @@ export function DashboardPage() {
         </div>
       )}
 
-      {/* Na PC sú moje úlohy v stĺpci na kraji; na mobile hore nad ostatným. */}
-      <div className="flex flex-col xl:grid xl:grid-cols-[1fr_20rem] xl:items-start xl:gap-6">
+      {/* Na PC (od 1024 px) je stĺpec s blokmi vpravo; na mobile hore nad ostatným. */}
+      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_18rem] lg:items-start lg:gap-6 xl:grid-cols-[1fr_20rem]">
         {isSupabaseConfigured && active && (
-          <aside className="xl:sticky xl:top-4 xl:order-2">
-            <MyResponsibilities companyId={active.companyId} />
-            <MyTasks companyId={active.companyId} />
+          <aside className="lg:sticky lg:top-4 lg:order-2">
+            <SideWidgets company={active} />
           </aside>
         )}
-        <div className="min-w-0 xl:order-1">
+        <div className="min-w-0 lg:order-1">
           {isSupabaseConfigured && active && (
             <>
               {isAdminRole(active.role) && <MigrationBanner />}
@@ -53,7 +51,7 @@ export function DashboardPage() {
             </>
           )}
 
-          <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-3 xl:grid-cols-3">
             {modules.map((item) => (
               <li key={item.id}>
                 <Link

@@ -6,10 +6,9 @@ import { useForm, useWatch } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import type { Member } from '@/features/companies/api'
-import { PRIORITIES, PRIORITY_LABELS } from '@/lib/priority'
 import { deleteTask, saveTask, taskKeys } from './api'
 import { cn } from '@/lib/utils'
-import { assigneesOf, TASK_CATEGORIES, TASK_STATUS_LABELS, TASK_STATUSES, taskSchema, type Task, type TaskFormValues } from './model'
+import { assigneesOf, TASK_PRIORITIES, TASK_PRIORITY_LABELS, TASK_CATEGORIES, TASK_STATUS_LABELS, TASK_STATUSES, taskSchema, type Task, type TaskFormValues } from './model'
 
 type Props = {
   companyId: string
@@ -40,7 +39,7 @@ export function TaskEditor({ companyId, task, members, defaultAssigneeId, canDel
       assigneeId: task ? (task.assigneeId ?? '') : defaultAssigneeId,
       assigneeIds: task ? assigneesOf(task) : defaultAssigneeId ? [defaultAssigneeId] : [],
       category: task?.category ?? '',
-      priority: task?.priority ?? 'normal',
+      priority: task?.priority ?? 'none',
       dueOn: task?.dueOn ?? '',
       status: task?.status ?? 'open',
     },
@@ -99,9 +98,9 @@ export function TaskEditor({ companyId, task, members, defaultAssigneeId, canDel
           ))}
         </datalist>
         <SelectField label="Priorita" error={errors.priority?.message} {...register('priority')}>
-          {PRIORITIES.map((value) => (
+          {TASK_PRIORITIES.map((value) => (
             <option key={value} value={value}>
-              {PRIORITY_LABELS[value]}
+              {TASK_PRIORITY_LABELS[value]}
             </option>
           ))}
         </SelectField>

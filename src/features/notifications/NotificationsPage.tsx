@@ -11,6 +11,7 @@ import { useLoans } from '@/features/loans/useLoans'
 import { useTasks } from '@/features/tasks/useTasks'
 import { useVehicles } from '@/features/vehicles/useVehicles'
 import { todayIso } from '@/lib/format'
+import { useResponsibilities } from '@/features/responsibilities/api'
 import { buildNotifications, type Notification } from './model'
 import { bugKeys, fetchBugReports } from '@/features/bugs/api'
 import { openReports } from '@/features/bugs/model'
@@ -51,6 +52,7 @@ export function NotificationsPage() {
   const loans = useLoans(companyId)
   const tasks = useTasks(companyId)
   const vehicles = useVehicles(companyId)
+  const responsibilities = useResponsibilities(companyId)
   const invitations = useQuery({
     queryKey: companyKeys.myInvitations(user.id),
     queryFn: () => fetchMyInvitations(user.email!),
@@ -67,6 +69,7 @@ export function NotificationsPage() {
       tasks: tasks.data ?? [],
       vehicles: vehicles.data ?? [],
       invitations: invitations.data ?? [],
+      responsibilities: responsibilities.data ?? [],
     },
     todayIso(),
     user.id,

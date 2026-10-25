@@ -8,6 +8,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { CompanyLogo } from '@/features/companies/CompanyLogo'
 import { Credits } from './Credits'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
+import { TodoKeywordWatcher } from '@/features/tasks/TodoKeywordWatcher'
 import { TopNotices } from './TopNotices'
 import { ThemeToggle } from './ThemeToggle'
 import { FIXED_PINNED, visibleNavItems, type NavItem } from '@/lib/navigation'
@@ -119,6 +120,7 @@ export function AppLayout() {
           <Outlet />
         </main>
         <ReportBugLink />
+        <TodoKeywordWatcher />
         {/* Na mobile leží pod pätičkou spodná navigácia, preto väčší spodný okraj. */}
         <Credits className="px-4 pb-24 md:pb-6" />
       </div>

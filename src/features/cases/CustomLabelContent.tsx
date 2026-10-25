@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { discardPhotoFile, storeCompanyPhoto, trashPhoto } from '@/features/equipment/photo'
 import { caseKeys, saveCaseLabelCustom } from './api'
-import type { Case } from './model'
+import { caseBaseName, type Case } from './model'
 
 type Props = { companyId: string; current: Case; canEdit: boolean }
 
@@ -56,6 +56,9 @@ export function CustomLabelContent({ companyId, current, canEdit }: Props) {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+        <Button type="button" variant="outline" onClick={() => setTitle(caseBaseName(current).slice(0, 80))} disabled={titleValue === caseBaseName(current).slice(0, 80)}>
+          Z názvu case
+        </Button>
         <Field
           label="Názov na štítku"
           placeholder="napr. Blindre 2-Lite"
