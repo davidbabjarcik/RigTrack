@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.18.1 – 25. 10. 2026
+
+- **PDF cenovej ponuky** v rozložení bežnej firemnej ponuky: „CENOVÁ PONUKA“ s číslom, vpravo dodávateľ
+  (IČO, DIČ, telefón, e-mail), „Ponuka pre:“, dátum vystavenia, podujatie, miesto a termín dodania služby,
+  časti „A. …“ s riadkom „Cena za časť A“, celková cena, ZHRNUTIE a „Vyhotovil“.
+
 ### 3.18 – 25. 10. 2026
 
 - **Cenová ponuka odkazom**: „Odkaz pre klienta“ vytvorí adresu, cez ktorú si klient ponuku pozrie bez prihlásenia,

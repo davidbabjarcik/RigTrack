@@ -1,37 +1,38 @@
 import { formatDate, formatMoney } from '@/lib/format'
-import { bulletLines, partCode, partPrice, sumPrices, summaryRows, type Offer, type OfferPart } from './model'
+import { bulletLines, partCode, priceLabel, sumPrices, summaryRows, type Offer, type OfferPart } from './model'
 
-// Klasický obchodný doklad na A4: tenké čiary, sivé hlavičky tabuliek, ceny vpravo, podpis a pätička s údajmi.
-const vatSuffix = (offer: Pick<Offer, 'vatMode' | 'vatPct'>) =>
-  offer.vatMode === 'with' ? 's DPH' : offer.vatMode === 'plus' ? `bez DPH (+ ${String(offer.vatPct).replace('.', ',')} % DPH)` : ''
+// Rozloženie ako bežná firemná ponuka: nadpis s číslom, vpravo dodávateľ, „Ponuka pre“, údaje o podujatí,
+// časti A., B. s popisom, zoznamom, „Cena zahŕňa“ a „Cena za časť“, celková cena, zhrnutie a „Vyhotovil“.
+const vatText = (offer: Pick<Offer, 'vatMode' | 'vatPct'>) =>
+  offer.vatMode === 'with' ? 's DPH' : offer.vatMode === 'plus' ? `+ ${String(offer.vatPct).replace('.', ',')}% DPH` : ''
 
-function Label({ children }: { children: string }) {
-  return <p className="text-[9px] font-semibold tracking-[0.08em] text-neutral-500 uppercase">{children}</p>
-}
-
-function PartRow({ part, code, sub }: { part: OfferPart; code: string; sub?: boolean }) {
+function PartBlock({ part, code, offer, sub }: { part: OfferPart; code: string; offer: Offer; sub?: boolean }) {
   const items = bulletLines(part.items)
-  const price = partPrice(part)
-  const money = (value: number) => formatMoney(value, 'EUR')
+  const price = priceLabel(part, offer.vatMode, offer.vatPct)
   return (
-    <tr className="break-inside-avoid border-b border-neutral-300 align-top">
-      <td className={`py-2 pr-2 ${sub ? 'pl-3 text-neutral-600' : 'font-bold'}`}>{code}</td>
-      <td className="py-2 pr-4">
-        <p className={sub ? 'font-semibold' : 'font-bold'}>{part.title}</p>
-        {part.description && <p className="mt-0.5 whitespace-pre-wrap text-neutral-700">{part.description}</p>}
-        {items.length > 0 && (
-          <ul className="mt-1 columns-2 gap-6 text-neutral-700">
-            {items.map((item, index) => (
-              <li key={index} className="break-inside-avoid">
-                – {item}
-              </li>
-            ))}
-          </ul>
-        )}
-        {part.includes && <p className="mt-1 text-[10px] text-neutral-500 italic">Cena zahŕňa: {part.includes}</p>}
-      </td>
-      <td className="py-2 text-right font-semibold whitespace-nowrap">{price !== null ? money(price) : part.priceNote}</td>
-    </tr>
+    <section className={sub ? 'mt-3 break-inside-avoid' : 'mt-6 break-inside-avoid'}>
+      <h2 className={sub ? 'text-[13px] font-bold' : 'text-[15px] font-bold'}>
+        {sub ? `${code} - ${part.title}` : `${code}. ${part.title}`}
+      </h2>
+      {part.description && <p className="mt-1 whitespace-pre-wrap">{part.description}</p>}
+      {items.length > 0 && (
+        <ul className="mt-1.5 list-disc pl-6">
+          {items.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      )}
+      {part.includes && (
+        <p className="mt-2">
+          <span className="font-bold">Cena zahŕňa:</span> {part.includes}
+        </p>
+      )}
+      {price && (
+        <p className="mt-2 font-bold">
+          Cena za časť {code}: {price}
+        </p>
+      )}
+    </section>
   )
 }
 
@@ -42,139 +43,126 @@ export function OfferDocument({ offer, logoUrl }: { offer: Offer; logoUrl?: stri
   const total = offer.totalOverride ?? sum
   const issuer = offer.issuer
   const money = (value: number) => formatMoney(value, 'EUR')
-  const vat = offer.vatMode === 'plus' ? Math.round(total * offer.vatPct) / 100 : 0
-  const info = [
-    ['Podujatie', offer.title],
-    ['Miesto dodania', offer.place],
-    ['Termín dodania', offer.serviceDates],
-    ['Dátum vystavenia', formatDate(offer.issuedOn)],
-  ].filter(([, value]) => value)
+  const codes = offer.sections.map((_, index) => partCode(index))
+  const contactLines = issuer.contact.split('\n').map((line) => line.trim()).filter(Boolean)
+  const phone = contactLines.find((line) => /\d{3}/.test(line) && !line.includes('@'))
+  const email = contactLines.find((line) => line.includes('@'))
+  const otherContact = contactLines.filter((line) => line !== phone && line !== email)
 
   return (
-    <article className="mx-auto max-w-[190mm] text-[11px] leading-snug text-neutral-900">
-      <header className="flex items-end justify-between gap-6 border-b-2 border-neutral-900 pb-3">
-        <div className="flex items-center gap-3">
-          {logoUrl && <img src={logoUrl} alt="" className="h-12 max-w-36 object-contain" />}
-          <p className="text-base font-bold">{issuer.name}</p>
+    <article className="mx-auto max-w-[190mm] font-[Arial,Helvetica,sans-serif] text-[12px] leading-[1.45] text-black">
+      <header className="flex items-start justify-between gap-8">
+        <div>
+          {logoUrl && <img src={logoUrl} alt="" className="mb-3 h-14 max-w-44 object-contain" />}
+          <h1 className="text-[22px] font-bold tracking-wide">
+            CENOVÁ PONUKA {offer.number && <span className="ml-2 font-normal">{offer.number}</span>}
+          </h1>
         </div>
         <div className="text-right">
-          <p className="text-xl font-bold tracking-wide">Cenová ponuka</p>
-          {offer.number && <p className="text-neutral-600">č. {offer.number}</p>}
+          <p className="font-bold">{issuer.name}</p>
+          {issuer.address && <p className="whitespace-pre-line">{issuer.address}</p>}
+          {issuer.ico && <p>IČO: {issuer.ico}</p>}
+          {issuer.dic && <p>DIČ: {issuer.dic}</p>}
+          {issuer.icDph && <p>IČ DPH: {issuer.icDph}</p>}
+          {!issuer.vatPayer && <p>Nie je platiteľ DPH</p>}
+          {phone && <p>TELEFÓN: {phone}</p>}
+          {email && <p>EMAIL: {email}</p>}
+          {otherContact.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
         </div>
       </header>
 
-      <table className="mt-4 w-full border-collapse">
-        <thead>
-          <tr className="bg-neutral-100 text-left">
-            <th className="w-1/2 border border-neutral-300 px-2 py-1">
-              <Label>Dodávateľ</Label>
-            </th>
-            <th className="w-1/2 border border-neutral-300 px-2 py-1">
-              <Label>Odberateľ</Label>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="align-top">
-            <td className="border border-neutral-300 px-2 py-2">
-              <p className="font-semibold">{issuer.name}</p>
-              {issuer.address && <p className="whitespace-pre-line">{issuer.address}</p>}
-              <p className="mt-1">
-                {[issuer.ico && `IČO: ${issuer.ico}`, issuer.dic && `DIČ: ${issuer.dic}`, issuer.icDph && `IČ DPH: ${issuer.icDph}`].filter(Boolean).join('   ')}
-              </p>
-              {!issuer.vatPayer && <p>Nie je platiteľ DPH</p>}
-            </td>
-            <td className="border border-neutral-300 px-2 py-2">
-              <p className="font-semibold">{offer.client.name || '—'}</p>
-              {offer.client.address && <p className="whitespace-pre-line">{offer.client.address}</p>}
-              {(offer.client.ico || offer.client.dic) && <p className="mt-1">{[offer.client.ico && `IČO: ${offer.client.ico}`, offer.client.dic && `DIČ: ${offer.client.dic}`].filter(Boolean).join('   ')}</p>}
-              {offer.client.contact && <p className="mt-1">{offer.client.contact}</p>}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <hr className="my-4 border-black" />
 
-      {info.length > 0 && (
-        <table className="mt-2 w-full border-collapse">
-          <tbody>
-            <tr className="align-top">
-              {info.map(([label, value]) => (
-                <td key={label} className="border border-neutral-300 px-2 py-1.5">
-                  <Label>{label}</Label>
-                  <p className="font-medium">{value}</p>
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
+      <div className="flex flex-wrap justify-between gap-6">
+        <div>
+          <p className="font-bold">Ponuka pre:</p>
+          <p className="font-bold">{offer.client.name || '—'}</p>
+          {offer.client.address && <p className="whitespace-pre-line">{offer.client.address}</p>}
+          {offer.client.ico && <p>IČO: {offer.client.ico}</p>}
+          {offer.client.dic && <p>DIČ: {offer.client.dic}</p>}
+          {offer.client.contact && <p>{offer.client.contact}</p>}
+        </div>
+        <div className="text-right">
+          <p>
+            <span className="font-bold">Dátum vystavenia:</span> {formatDate(offer.issuedOn)}
+          </p>
+        </div>
+      </div>
+
+      {(offer.title || offer.place || offer.serviceDates) && (
+        <div className="mt-5">
+          {offer.title && <p className="text-[15px] font-bold">{offer.title}</p>}
+          {offer.place && (
+            <p>
+              <span className="font-bold">Miesto dodania:</span> {offer.place}
+            </p>
+          )}
+          {offer.serviceDates && (
+            <p>
+              <span className="font-bold">Termín dodania služby:</span> {offer.serviceDates}
+            </p>
+          )}
+        </div>
       )}
 
-      <table className="mt-5 w-full border-collapse">
-        <thead>
-          <tr className="border-y border-neutral-900 bg-neutral-100 text-left">
-            <th className="w-10 px-0 py-1.5">
-              <Label>Časť</Label>
-            </th>
-            <th className="py-1.5">
-              <Label>Predmet ponuky</Label>
-            </th>
-            <th className="w-32 py-1.5 text-right">
-              <Label>{`Cena ${vatSuffix(offer) ? `(${offer.vatMode === 'with' ? 's DPH' : 'bez DPH'})` : ''}`.trim()}</Label>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {offer.sections.map((section, index) => [
-            <PartRow key={section.id} part={section} code={partCode(index)} />,
-            ...section.parts.map((part, subIndex) => <PartRow key={part.id} part={part} code={partCode(index, subIndex)} sub />),
-          ])}
-        </tbody>
-      </table>
-
-      <div className="mt-3 flex justify-end break-inside-avoid">
-        <table className="w-72 border-collapse">
-          <tbody>
-            {rows.length > 1 && sum > 0 && (
-              <tr>
-                <td className="py-0.5 text-neutral-600">Súčet častí</td>
-                <td className={`py-0.5 text-right ${offer.totalOverride !== null ? 'text-neutral-500 line-through' : ''}`}>{money(sum)}</td>
-              </tr>
-            )}
-            {offer.totalOverride !== null && (
-              <tr>
-                <td className="py-0.5 text-neutral-600">Zvýhodnená cena</td>
-                <td className="py-0.5 text-right">{money(offer.totalOverride)}</td>
-              </tr>
-            )}
-            {offer.vatMode === 'plus' && total > 0 && (
-              <tr>
-                <td className="py-0.5 text-neutral-600">DPH {String(offer.vatPct).replace('.', ',')} %</td>
-                <td className="py-0.5 text-right">{money(vat)}</td>
-              </tr>
-            )}
-            {total > 0 && (
-              <tr className="border-t-2 border-neutral-900 bg-neutral-100">
-                <td className="px-1 py-1.5 font-bold">Spolu {offer.vatMode === 'none' ? '' : 's DPH'}</td>
-                <td className="px-1 py-1.5 text-right text-sm font-bold">{money(offer.vatMode === 'plus' ? total + vat : total)}</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {offer.notes && <p className="mt-5 whitespace-pre-wrap text-neutral-700">{offer.notes}</p>}
-
-      <div className="mt-10 flex items-end justify-between gap-8 break-inside-avoid">
-        <div>
-          <Label>Vyhotovil</Label>
-          <p className="font-medium">{offer.authorName || ' '}</p>
+      {offer.sections.map((section, index) => (
+        <div key={section.id}>
+          <PartBlock part={section} code={partCode(index)} offer={offer} />
+          {section.parts.map((part, subIndex) => (
+            <div key={part.id} className="pl-4">
+              <PartBlock part={part} code={partCode(index, subIndex)} offer={offer} sub />
+            </div>
+          ))}
         </div>
-        <div className="w-56 border-t border-neutral-400 pt-1 text-center text-[9px] text-neutral-500">podpis a pečiatka</div>
-      </div>
+      ))}
 
-      <footer className="mt-8 border-t border-neutral-300 pt-2 text-center text-[9px] text-neutral-500">
-        {[issuer.name, issuer.ico && `IČO ${issuer.ico}`, issuer.dic && `DIČ ${issuer.dic}`, issuer.contact.replace(/\n/g, ' · ')].filter(Boolean).join(' · ')}
-      </footer>
+      {total > 0 && (codes.length > 1 || offer.totalOverride !== null) && (
+        <p className="mt-6 text-[14px] font-bold break-inside-avoid">
+          Celková cena za časti {codes.join(' + ')}
+          {offer.totalOverride !== null && ' (zvýhodnená)'}: {money(total)} {vatText(offer)}
+        </p>
+      )}
+
+      {rows.length > 1 && (
+        <section className="mt-6 break-inside-avoid">
+          <h2 className="text-[15px] font-bold">ZHRNUTIE</h2>
+          <table className="mt-2 w-full border-collapse">
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.code} className="border-b border-neutral-400">
+                  <td className="w-14 py-1 font-bold">{row.code}</td>
+                  <td className="py-1">{row.title}</td>
+                  <td className="py-1 text-right whitespace-nowrap">{row.price === null ? row.priceNote : `${money(row.price)} ${vatText(offer)}`}</td>
+                </tr>
+              ))}
+              <tr>
+                <td className="py-1.5 font-bold">SPOLU</td>
+                <td />
+                <td className="py-1.5 text-right font-bold whitespace-nowrap">
+                  {money(total)} {vatText(offer)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      {total > 0 && codes.length === 1 && offer.totalOverride === null && rows.length <= 1 && (
+        <p className="mt-6 text-[14px] font-bold">
+          Celková cena: {money(total)} {vatText(offer)}
+        </p>
+      )}
+
+      {offer.notes && <p className="mt-6 whitespace-pre-wrap">{offer.notes}</p>}
+
+      {offer.authorName && (
+        <div className="mt-10 break-inside-avoid">
+          <p className="font-bold">Vyhotovil:</p>
+          <p>{offer.authorName}</p>
+        </div>
+      )}
     </article>
   )
 }
