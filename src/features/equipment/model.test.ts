@@ -485,3 +485,18 @@ describe('groupSplitEquipment', () => {
     expect(groups.map((group) => group.items.map((item) => item.id))).toEqual([['b', 'a'], ['c']])
   })
 })
+
+describe('groupSplitEquipment order', () => {
+  it('orders the parts in cases by piece numbers, then by case number', () => {
+    const part = { name: 'Hlava', manufacturer: '', model: '', kind: 'light' as const, categoryId: null, ownerStaffId: null, quantity: 2 }
+    const byUnits = groupSplitEquipment([
+      { ...part, id: 'c8', caseId: 'k8', unitIds: [15, 16] },
+      { ...part, id: 'c2', caseId: 'k2', unitIds: [3, 4] },
+      { ...part, id: 'free', caseId: null, unitIds: [] },
+    ])
+    expect(byUnits[0].items.map((item) => item.id)).toEqual(['free', 'c2', 'c8'])
+    const names: Record<string, string> = { k10: 'Case #10', k2: 'Case #2' }
+    const byCase = groupSplitEquipment([{ ...part, id: 'a', caseId: 'k10' }, { ...part, id: 'b', caseId: 'k2' }], (id) => names[id])
+    expect(byCase[0].items.map((item) => item.id)).toEqual(['b', 'a'])
+  })
+})

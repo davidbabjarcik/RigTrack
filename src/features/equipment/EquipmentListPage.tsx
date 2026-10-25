@@ -241,7 +241,7 @@ export function EquipmentListPage() {
         </div>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
-          {groupSplitEquipment(visible).map((group) => {
+          {groupSplitEquipment(visible, caseLabel).map((group) => {
             if (group.items.length === 1) return <li key={group.key}>{row(group.items[0], false)}</li>
             const main = group.items[0]
             const total = group.items.reduce((sum, item) => sum + item.quantity, 0)

@@ -357,7 +357,7 @@ export function CaseDetailPage() {
                   </span>
                   <AddToCase
                     quantity={item.quantity}
-                    units={unitIdsOf(item)}
+                    units={item.trackUnits ? unitIdsOf(item) : null}
                     label={item.caseId ? 'Presunúť' : 'Pridať'}
                     disabled={move.isPending}
                     onAdd={(count) => move.mutate({ equipmentId: item.id, caseId: id, count: count < item.quantity ? count : undefined })}
@@ -378,14 +378,16 @@ export function CaseDetailPage() {
   )
 }
 
-type AddProps = { quantity: number; units: number[]; label: string; disabled: boolean; onAdd: (count: number) => void; onAddUnits: (units: number[]) => void }
+type AddProps = { quantity: number; units: number[] | null; label: string; disabled: boolean; onAdd: (count: number) => void; onAddUnits: (units: number[]) => void }
 
-/** Tlačidlo Pridať; pri viacerých kusoch počet, koľko z nich ide do case, alebo presné čísla kusov (#7, #8). */
+/**
+ * Tlačidlo Pridať. Technika len na počet: koľko kusov ide do case („10 / 10 ks“).
+ * Technika po kusoch (s číslami): vyberú sa presné čísla kusov (#13, #14).
+ */
 function AddToCase({ quantity, units, label, disabled, onAdd, onAddUnits }: AddProps) {
   const [count, setCount] = useState(quantity)
-  const [picking, setPicking] = useState(false)
   const [picked, setPicked] = useState<number[]>([])
-  if (picking) {
+  if (units && units.length > 1) {
     return (
       <span className="flex max-w-xs flex-col items-end gap-1.5">
         <span className="flex flex-wrap justify-end gap-1" role="group" aria-label="Čísla kusov">
@@ -404,12 +406,13 @@ function AddToCase({ quantity, units, label, disabled, onAdd, onAddUnits }: AddP
             )
           })}
         </span>
-        <span className="flex gap-1.5">
-          <Button variant="ghost" size="sm" onClick={() => (setPicking(false), setPicked([]))}>
-            Späť
-          </Button>
-          <Button variant="outline" size="sm" disabled={disabled || picked.length === 0} onClick={() => onAddUnits(picked)}>
-            {label} {picked.length > 0 && `(${picked.map((unit) => `#${unit}`).join(', ')})`}
+        <span className="flex items-center gap-2">
+          <button type="button" className="text-sm text-accent hover:underline" onClick={() => setPicked(picked.length === units.length ? [] : units)}>
+            {picked.length === units.length ? 'Zrušiť výber' : 'Všetky'}
+          </button>
+          <Button variant="outline" size="sm" disabled={disabled || picked.length === 0} onClick={() => (picked.length === units.length ? onAdd(quantity) : onAddUnits(picked))}>
+            {label}
+            {picked.length > 0 && ` (${picked.length} ks)`}
           </Button>
         </span>
       </span>
@@ -417,11 +420,6 @@ function AddToCase({ quantity, units, label, disabled, onAdd, onAddUnits }: AddP
   }
   return (
     <span className="flex flex-wrap items-center justify-end gap-1.5">
-      {quantity > 1 && (
-        <button type="button" className="text-sm text-accent hover:underline" onClick={() => setPicking(true)}>
-          Vybrať čísla
-        </button>
-      )}
       {quantity > 1 && (
         <label className="flex items-center gap-1 text-sm text-muted-foreground">
           <input

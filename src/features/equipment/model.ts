@@ -1289,7 +1289,11 @@ export function cableMakers(items: Pick<Equipment, 'kind' | 'attributes'>[], lim
  * Rovnaké = názov, výrobca, model, druh, kategória a vlastník. Poradie podľa prvého výskytu; hlavná položka
  * (bez case, inak s najviac kusmi) je prvá.
  */
-export function groupSplitEquipment<T extends Pick<Equipment, 'name' | 'manufacturer' | 'model' | 'kind' | 'categoryId' | 'ownerStaffId' | 'caseId' | 'quantity'>>(items: T[]) {
+export function groupSplitEquipment<T extends Pick<Equipment, 'name' | 'manufacturer' | 'model' | 'kind' | 'categoryId' | 'ownerStaffId' | 'caseId' | 'quantity'> & { unitIds?: number[] }>(
+  items: T[],
+  caseOrder: (caseId: string) => string = () => '',
+) {
+  const firstUnit = (item: T) => (item.unitIds && item.unitIds.length > 0 ? Math.min(...item.unitIds) : Infinity)
   const groups = new Map<string, T[]>()
   for (const item of items) {
     const key = [item.name.trim().toLowerCase(), item.manufacturer, item.model, item.kind, item.categoryId, item.ownerStaffId ?? ''].join('|')
@@ -1297,6 +1301,13 @@ export function groupSplitEquipment<T extends Pick<Equipment, 'name' | 'manufact
   }
   return [...groups.entries()].map(([key, members]) => ({
     key,
-    items: [...members].sort((a, b) => Number(a.caseId !== null) - Number(b.caseId !== null) || b.quantity - a.quantity),
+    // Mimo case prvé, potom podľa čísel kusov (#1, #3…), inak podľa názvu case s číslom (prirodzene: #2 pred #10).
+    items: [...members].sort(
+      (a, b) =>
+        Number(a.caseId !== null) - Number(b.caseId !== null) ||
+        firstUnit(a) - firstUnit(b) ||
+        (a.caseId && b.caseId ? caseOrder(a.caseId).localeCompare(caseOrder(b.caseId), 'sk', { numeric: true }) : 0) ||
+        b.quantity - a.quantity,
+    ),
   }))
 }

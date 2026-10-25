@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.19.5 – 25. 10. 2026
+
+- **Pridať do case** podľa druhu techniky: technika len na počet má „10 / 10 ks“ a Pridať; technika po kusoch
+  rovno čísla kusov na výber (#13 #14 …, aj „Všetky“) – bez počtu.
+- **Technika v jednom riadku** je po rozbalení zoradená: najprv kusy mimo case, potom cases podľa čísel kusov
+  (Case #1, #2 … #8).
+
 ### 3.19.4 – 25. 10. 2026
 
 - **Pridať techniku do case** ponúka len techniku, ktorá ešte nie je v žiadnom case. Presun z iného case

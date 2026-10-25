@@ -39,9 +39,9 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **3.19.5** | Pridať do case: počet alebo čísla kusov podľa druhu techniky, zoradené časti v Technike |
 | **3.19.4** | Pridať do case ponúka len techniku mimo cases |
 | **3.19.3** | Rozdelená technika v jednom riadku, čísla kusov v obsahu case |
-| **3.19.2** | Duplikovanie case (bez techniky, s fotkou a rozmermi), upozornenie na prázdny case |
 | **3.19** | @todo v políčkach, kanban a farebné priority úloh, vlastný stĺpec na Prehľade, racky v U, platiteľ DPH |
 | **3.16** | Pack list funguje aj bez signálu, záložka Vývojár v Nastaveniach |
 
