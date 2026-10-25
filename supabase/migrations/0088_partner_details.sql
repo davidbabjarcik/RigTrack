@@ -1,5 +1,5 @@
 -- RigTrack: Firmy a kontakty podrobnejšie (3.8).
--- 1) Firma: obchodné meno (napr. CVR Production funguje pod ARMPRO COMPOSITE s.r.o.), IČ DPH a CEO.
+-- 1) Firma: obchodné meno (oficiálny názov, ak sa líši od bežného), IČ DPH a CEO.
 -- 2) Kontakt: dátum narodenia.
 -- 3) Prepojenie s firmou, ktorá už v RigTracku je: nájde sa podľa IČO alebo presného názvu / obchodného mena
 --    a partner sa s ňou prepojí (namiesto zakladania druhej firmy).

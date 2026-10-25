@@ -21,6 +21,10 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.9.1 – 25. 10. 2026
+
+- Firmy a kontakty: nové nápovedy v poliach Názov a Obchodné meno.
+
 ### 3.9 – 25. 10. 2026
 
 - **Zodpovedné osoby** (Nastavenia → Oprávnenia → Zodpovedné osoby, pre admina): napr. „Svetlá“ – všetka technika
@@ -39,7 +43,7 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
   vedú rovno na správne miesta v Supabase, kód funkcie sa skopíruje jedným tlačidlom a namiesto Database
   Webhooku stačí jeden SQL príkaz. Tlačidlo „Skontrolovať nastavenie“ ukáže, čo ešte chýba.
 - **Firmy a kontakty**:
-  - pri firme **obchodné meno** (napr. CVR Production → ARMPRO COMPOSITE s.r.o.), **IČ DPH** a **CEO / konateľ**,
+  - pri firme **obchodné meno** (oficiálny názov, ak sa líši od toho, ako firmu voláte), **IČ DPH** a **CEO / konateľ**,
   - voľba **RigTrack: Nepoužívajú / Už majú firmu v RigTracku / Založiť im firmu**; existujúcu firmu nájde podľa
     IČO, názvu alebo obchodného mena a sama ponúkne prepojenie – už sa neponúka zakladať firmu, ktorá existuje,
   - ľudí pri firme sa dá **upravovať** a majú aj **dátum narodenia**.

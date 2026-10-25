@@ -72,8 +72,8 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
   return (
     <form onSubmit={submit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Názov firmy / skupiny *" placeholder="napr. CVR Production" autoFocus maxLength={160} value={fields.name} onChange={(event) => set({ name: event.target.value })} onBlur={search} />
-        <Field label="Obchodné meno" placeholder="napr. ARMPRO COMPOSITE s.r.o." maxLength={160} value={fields.legalName} onChange={(event) => set({ legalName: event.target.value })} onBlur={search} />
+        <Field label="Názov firmy / skupiny *" placeholder="ako firmu voláte" autoFocus maxLength={160} value={fields.name} onChange={(event) => set({ name: event.target.value })} onBlur={search} />
+        <Field label="Obchodné meno" placeholder="napr. Firma s.r.o." maxLength={160} value={fields.legalName} onChange={(event) => set({ legalName: event.target.value })} onBlur={search} />
         <Field label="IČO" maxLength={20} value={fields.ico} onChange={(event) => set({ ico: event.target.value })} onBlur={search} />
         <Field label="DIČ" maxLength={20} value={fields.dic} onChange={(event) => set({ dic: event.target.value })} />
         <Field label="IČ DPH" placeholder="napr. SK2020123456" maxLength={20} value={fields.icDph} onChange={(event) => set({ icDph: event.target.value })} />
