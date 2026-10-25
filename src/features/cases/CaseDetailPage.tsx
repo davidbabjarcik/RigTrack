@@ -246,6 +246,7 @@ export function CaseDetailPage() {
                   <span className="block truncate font-medium">
                     {item.name}
                     {item.quantity > 1 && <span className="font-normal text-muted-foreground"> · {item.quantity} ks</span>}
+                    {item.trackUnits && <span className="font-normal text-muted-foreground"> · {unitIdsOf(item).map((unit) => `#${unit}`).join(', ')}</span>}
                   </span>
                   {item.inventoryNumber && (
                     <span className="block truncate text-sm text-muted-foreground">inv. č. {item.inventoryNumber}</span>

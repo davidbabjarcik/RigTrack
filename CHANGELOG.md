@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.19.3 – 25. 10. 2026
+
+- **Technika v jednom riadku**: technika rozdelená do cases (napr. 12 ks v sklade a po 2 ks v cases) je v zozname
+  techniky pod jedným riadkom – „16 ks · 12 mimo case · 4 v 2 cases“; po kliknutí sa rozbalí, ktoré kusy sú
+  v ktorom case.
+- **Obsah case** ukazuje aj čísla kusov („Beam 7R · 2 ks · #1, #2“).
+
 ### 3.19.2 – 25. 10. 2026
 
 - **Duplikovať case**: tlačidlo v detaile case vytvorí ďalší kus sady s ďalším číslom (Case 3 → Case 4) –

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronRight, Plus, Search } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -19,11 +19,13 @@ import {
   describeAttributes,
   EQUIPMENT_STATUSES,
   filterEquipment,
+  groupSplitEquipment,
   hoursState,
   needsRestock,
   NO_CASE,
   serviceState,
   STATUS_LABELS,
+  type Equipment,
   type EquipmentFilter,
 } from './model'
 import { useLinkedEquipment } from '@/features/links/api'
@@ -95,6 +97,57 @@ export function EquipmentListPage() {
     company.companyId,
     all.map((item) => item.photoPath),
   )
+
+  // Rozdelená technika (časť v cases) je pod jedným riadkom; rozbalí sa na jednotlivé časti.
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set())
+  const toggleGroup = (key: string) =>
+    setOpenGroups((current) => {
+      const next = new Set(current)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+
+  const row = (item: Equipment, sub: boolean) => {
+    const color = colorOf(item, categories)
+    const details = [
+      !sub && [item.manufacturer, item.model].filter(Boolean).join(' '),
+      ...(sub ? [] : describeAttributes(item)),
+      !sub && categoryName(item.categoryId),
+      ownerName(item.ownerStaffId) && `patrí: ${ownerName(item.ownerStaffId)}`,
+      item.inventoryNumber && `inv. č. ${item.inventoryNumber}`,
+      item.quantity !== 1 && `${item.quantity} ks`,
+      // Rozdelená technika: ktoré kusy a v ktorom case sú.
+      item.trackUnits && item.unitIds.length > 0 && item.unitIds.length <= 12 && item.unitIds.map((unit) => `#${unit}`).join(', '),
+      !sub && item.caseId && caseLabel(item.caseId) && `v ${caseLabel(item.caseId)}`,
+    ].filter(Boolean)
+    const service = serviceState(item, today).state
+    const servicing = inService.get(item.id) ?? 0
+    return (
+      <Link to={`/equipment/${item.id}`} className={`relative flex min-h-16 items-center gap-3 py-3 pr-4 hover:bg-muted ${sub ? 'pl-10' : 'pl-5'}`}>
+          {/* Farba kategórie: prúžok úplne vľavo pred fotkou. */}
+          {color && <span className={`absolute inset-y-0 left-0 w-1.5 ${COLOR_CLASSES[color]}`} aria-hidden />}
+          {!sub && <PhotoThumb url={thumbs[item.photoPath]} />}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-medium">{sub ? (item.caseId ? caseLabel(item.caseId) || 'V case' : 'Mimo case') : item.name}</span>
+            {details.length > 0 && <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>}
+            {servicing > 0 && item.status !== 'in_service' && (
+              <span className="block text-sm text-sky-700 dark:text-sky-400">
+                V servise {unitsOut.has(item.id) ? `kus ${formatUnits(unitsOut.get(item.id)!)}` : `${servicing} z ${item.quantity} ks`}
+              </span>
+            )}
+            {needsRestock(item) && <span className="block text-sm text-destructive">Treba dokúpiť</span>}
+            {['overdue', 'unknown'].includes(hoursState(item, today, checkDays).state) && (
+              <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>
+            )}
+            {service === 'overdue' && <span className="block text-sm text-destructive">Servis po termíne</span>}
+            {service === 'soon' && <span className="block text-sm text-accent">Servis do 30 dní</span>}
+          </span>
+          <StatusBadge status={item.status} />
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+      </Link>
+    )
+  }
 
   return (
     <>
@@ -188,45 +241,43 @@ export function EquipmentListPage() {
         </div>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
-          {visible.map((item) => {
-            const color = colorOf(item, categories)
+          {groupSplitEquipment(visible).map((group) => {
+            if (group.items.length === 1) return <li key={group.key}>{row(group.items[0], false)}</li>
+            const main = group.items[0]
+            const total = group.items.reduce((sum, item) => sum + item.quantity, 0)
+            const free = group.items.filter((item) => !item.caseId).reduce((sum, item) => sum + item.quantity, 0)
+            const inCases = group.items.filter((item) => item.caseId)
+            const expanded = openGroups.has(group.key)
+            const color = colorOf(main, categories)
             const details = [
-              [item.manufacturer, item.model].filter(Boolean).join(' '),
-              ...describeAttributes(item),
-              categoryName(item.categoryId),
-              ownerName(item.ownerStaffId) && `patrí: ${ownerName(item.ownerStaffId)}`,
-              item.inventoryNumber && `inv. č. ${item.inventoryNumber}`,
-              item.quantity !== 1 && `${item.quantity} ks`,
-              // Rozdelená technika: ktoré kusy a v ktorom case sú.
-              item.trackUnits && item.unitIds.length > 0 && item.unitIds.length <= 12 && item.unitIds.map((unit) => `#${unit}`).join(', '),
-              item.caseId && caseLabel(item.caseId) && `v ${caseLabel(item.caseId)}`,
+              [main.manufacturer, main.model].filter(Boolean).join(' '),
+              ...describeAttributes(main),
+              categoryName(main.categoryId),
+              `${total} ks`,
+              free > 0 && `${free} mimo case`,
+              inCases.length > 0 && `${inCases.reduce((sum, item) => sum + item.quantity, 0)} v ${inCases.length === 1 ? caseLabel(inCases[0].caseId!) || 'case' : `${inCases.length} cases`}`,
             ].filter(Boolean)
-            const service = serviceState(item, today).state
-            const servicing = inService.get(item.id) ?? 0
+            const late = group.items.some((item) => ['overdue', 'unknown'].includes(hoursState(item, today, checkDays).state))
             return (
-              <li key={item.id}>
-                <Link to={`/equipment/${item.id}`} className="relative flex min-h-16 items-center gap-3 py-3 pr-4 pl-5 hover:bg-muted">
-                  {/* Farba kategórie: prúžok úplne vľavo pred fotkou. */}
+              <li key={group.key}>
+                <button type="button" aria-expanded={expanded} onClick={() => toggleGroup(group.key)} className="relative flex min-h-16 w-full items-center gap-3 py-3 pr-4 pl-5 text-left hover:bg-muted">
                   {color && <span className={`absolute inset-y-0 left-0 w-1.5 ${COLOR_CLASSES[color]}`} aria-hidden />}
-                  <PhotoThumb url={thumbs[item.photoPath]} />
+                  <PhotoThumb url={thumbs[main.photoPath]} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{item.name}</span>
-                    {details.length > 0 && <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>}
-                    {servicing > 0 && item.status !== 'in_service' && (
-                      <span className="block text-sm text-sky-700 dark:text-sky-400">
-                        V servise {unitsOut.has(item.id) ? `kus ${formatUnits(unitsOut.get(item.id)!)}` : `${servicing} z ${item.quantity} ks`}
-                      </span>
-                    )}
-                    {needsRestock(item) && <span className="block text-sm text-destructive">Treba dokúpiť</span>}
-                    {['overdue', 'unknown'].includes(hoursState(item, today, checkDays).state) && (
-                      <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>
-                    )}
-                    {service === 'overdue' && <span className="block text-sm text-destructive">Servis po termíne</span>}
-                    {service === 'soon' && <span className="block text-sm text-accent">Servis do 30 dní</span>}
+                    <span className="block truncate font-medium">{main.name}</span>
+                    <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
+                    {late && <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>}
                   </span>
-                  <StatusBadge status={item.status} />
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                </Link>
+                  <StatusBadge status={main.status} />
+                  <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden />
+                </button>
+                {expanded && (
+                  <ul className="divide-y border-t bg-muted/30">
+                    {group.items.map((item) => (
+                      <li key={item.id}>{row(item, true)}</li>
+                    ))}
+                  </ul>
+                )}
               </li>
             )
           })}

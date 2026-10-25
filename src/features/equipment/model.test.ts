@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  groupSplitEquipment,
   ampPower,
   attributesFor,
   cableBaseName,
@@ -470,5 +471,17 @@ describe('amplifier presets', () => {
     expect(suggestPresetSlots('Iná', 'X')).toBeNull()
     const amps = [{ id: 'a', name: 'Amp 1', attributes: { ampPresets: [{ slot: 2, name: 'Top', speakerId: 's' }, { slot: 3, name: 'Sub', speakerId: 'x' }] } }] as never
     expect(presetsForSpeaker('s', amps)).toEqual([{ ampId: 'a', ampName: 'Amp 1', slot: 2, name: 'Top', speakerId: 's' }])
+  })
+})
+
+describe('groupSplitEquipment', () => {
+  it('puts equipment split into cases under one row, the part outside cases first', () => {
+    const part = { name: 'Hlava', manufacturer: 'X', model: '', kind: 'light' as const, categoryId: null, ownerStaffId: null }
+    const groups = groupSplitEquipment([
+      { ...part, id: 'a', caseId: 'c1', quantity: 2 },
+      { ...part, id: 'b', caseId: null, quantity: 14 },
+      { ...part, name: 'Iné', id: 'c', caseId: null, quantity: 1 },
+    ])
+    expect(groups.map((group) => group.items.map((item) => item.id))).toEqual([['b', 'a'], ['c']])
   })
 })

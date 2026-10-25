@@ -1283,3 +1283,20 @@ export function cableMakers(items: Pick<Equipment, 'kind' | 'attributes'>[], lim
     .sort((a, b) => b.value - a.value)
     .slice(0, limit)
 }
+
+/**
+ * Rovnaká technika rozdelená do cases (napr. Beam 7R: 14 ks v sklade a 2 ks v case) pod jedným riadkom.
+ * Rovnaké = názov, výrobca, model, druh, kategória a vlastník. Poradie podľa prvého výskytu; hlavná položka
+ * (bez case, inak s najviac kusmi) je prvá.
+ */
+export function groupSplitEquipment<T extends Pick<Equipment, 'name' | 'manufacturer' | 'model' | 'kind' | 'categoryId' | 'ownerStaffId' | 'caseId' | 'quantity'>>(items: T[]) {
+  const groups = new Map<string, T[]>()
+  for (const item of items) {
+    const key = [item.name.trim().toLowerCase(), item.manufacturer, item.model, item.kind, item.categoryId, item.ownerStaffId ?? ''].join('|')
+    groups.set(key, [...(groups.get(key) ?? []), item])
+  }
+  return [...groups.entries()].map(([key, members]) => ({
+    key,
+    items: [...members].sort((a, b) => Number(a.caseId !== null) - Number(b.caseId !== null) || b.quantity - a.quantity),
+  }))
+}
