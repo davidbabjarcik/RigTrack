@@ -21,6 +21,18 @@ nainštalovať ako aplikácia. Jedna inštalácia obslúži viac firiem – kaž
 
 ## Čo je nové
 
+### 3.9 – 25. 10. 2026
+
+- **Zodpovedné osoby** (Nastavenia → Oprávnenia → Zodpovedné osoby, pre admina): napr. „Svetlá“ – všetka technika
+  druhu svetlo, „Zvuk“ alebo „Case LED“ – konkrétne case; kto za ne zodpovedá (aj viac ľudí) a čo má robiť:
+  odčítať prevádzkové hodiny každých N dní, skontrolovať case každých N dní.
+- Zodpovedný vidí na **Prehľade** „Moje zodpovednosti“ – čo je po termíne (napr. odčítať hodiny 16 svetiel),
+  s odkazom do Techniky alebo Cases.
+- **Upozornenie na mobil** príde ráno, keď je niečo po termíne (najviac raz za týždeň za úlohu) – ak je v Supabase
+  zapnutý plánovač `pg_cron` a nastavený push.
+- V detaile **case** aj **techniky** je „Zodpovedá: Jano (Svetlá)“.
+- Nové migrácie: `0089` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.8 – 25. 10. 2026
 
 - **Push upozornenia – sprievodca** (Nastavenia → Účet, pre admina): kľúče sa vygenerujú v prehliadači, odkazy

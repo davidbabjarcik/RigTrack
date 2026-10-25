@@ -19,6 +19,7 @@ import { describeSpot } from '@/features/warehouse/model'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { caseKeys, deleteCase } from './api'
+import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { CaseChecks } from './CaseChecks'
 import { CasePhoto } from './CasePhoto'
 import { formatWeight } from './label'
@@ -119,6 +120,7 @@ export function CaseDetailPage() {
           <h1 className="text-2xl font-semibold tracking-tight break-words">{current.name}</h1>
           {info.length > 0 && <p className="mt-1 text-sm text-muted-foreground">{info.join(' · ')}</p>}
           <OwnerLink companyId={companyId} staffId={current.ownerStaffId} className="mt-1" />
+          <ResponsibleFor companyId={companyId} caseId={id} kinds={[...new Set(all.filter((item) => item.caseId === id).map((item) => item.kind))]} className="mt-1" />
           {spot && (
             <Link to={`/warehouse?spot=${spot.id}`} className="mt-1 inline-flex items-center gap-1 text-sm text-accent hover:underline">
               <MapPin className="size-4" aria-hidden />

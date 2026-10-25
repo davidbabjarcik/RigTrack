@@ -2001,6 +2001,34 @@ begin
     exception when others then raise notice 'Kontrola push_subscriptions_user_agent_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.responsibilities') is not null then
+    begin
+      execute $sql$alter table public.responsibilities drop constraint if exists responsibilities_check_every_days_check$sql$;
+      execute $sql$alter table public.responsibilities add constraint responsibilities_check_every_days_check CHECK (((check_every_days >= 1) AND (check_every_days <= 365))) not valid$sql$;
+    exception when others then raise notice 'Kontrola responsibilities_check_every_days_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.responsibilities') is not null then
+    begin
+      execute $sql$alter table public.responsibilities drop constraint if exists responsibilities_hours_every_days_check$sql$;
+      execute $sql$alter table public.responsibilities add constraint responsibilities_hours_every_days_check CHECK (((hours_every_days >= 1) AND (hours_every_days <= 365))) not valid$sql$;
+    exception when others then raise notice 'Kontrola responsibilities_hours_every_days_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.responsibilities') is not null then
+    begin
+      execute $sql$alter table public.responsibilities drop constraint if exists responsibilities_name_check$sql$;
+      execute $sql$alter table public.responsibilities add constraint responsibilities_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) not valid$sql$;
+    exception when others then raise notice 'Kontrola responsibilities_name_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.responsibilities') is not null then
+    begin
+      execute $sql$alter table public.responsibilities drop constraint if exists responsibilities_note_check$sql$;
+      execute $sql$alter table public.responsibilities add constraint responsibilities_note_check CHECK ((char_length(note) <= 500)) not valid$sql$;
+    exception when others then raise notice 'Kontrola responsibilities_note_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.role_permissions') is not null then
     begin
       execute $sql$alter table public.role_permissions drop constraint if exists role_permissions_permission_check$sql$;
@@ -4359,6 +4387,22 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.my_responsibility_tasks(_company_id uuid)
+ RETURNS TABLE(responsibility_id uuid, name text, task text, due_count integer, items text[])
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select d.responsibility_id, d.name, d.task, d.due_count, d.items
+  from public.responsibility_due(_company_id) d
+  where public.is_company_member(_company_id) and auth.uid() = any (d.member_ids);
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia my_responsibility_tasks: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.my_staff_card(_company_id uuid)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -4770,6 +4814,49 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.remind_responsibilities()
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  d record;
+  _member uuid;
+  _company uuid;
+  _count integer := 0;
+begin
+  for _company in select distinct company_id from public.responsibilities loop
+    for d in select * from public.responsibility_due(_company) loop
+      foreach _member in array d.member_ids loop
+        continue when not exists (select 1 from public.company_members m where m.company_id = _company and m.user_id = _member);
+        continue when exists (
+          select 1 from public.responsibility_reminders x
+          where x.responsibility_id = d.responsibility_id and x.member_id = _member and x.task = d.task and x.reminded_on > current_date - 7
+        );
+        insert into public.notifications (user_id, company_id, title, body, url)
+        values (
+          _member, _company,
+          left(case d.task when 'hours' then 'Odčítať prevádzkové hodiny: ' else 'Skontrolovať case: ' end || d.name, 120),
+          left(d.due_count || ' ks – ' || array_to_string(d.items, ', '), 300),
+          case d.task when 'hours' then '/equipment' else '/cases' end
+        );
+        insert into public.responsibility_reminders (responsibility_id, member_id, task, reminded_on)
+        values (d.responsibility_id, _member, d.task, current_date)
+        on conflict (responsibility_id, member_id, task) do update set reminded_on = excluded.reminded_on;
+        _count := _count + 1;
+      end loop;
+    end loop;
+  end loop;
+  return _count;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia remind_responsibilities: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.request_company_link(_company_id uuid, _code text)
  RETURNS text
  LANGUAGE plpgsql
@@ -4813,6 +4900,52 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia reset_demo_company: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.responsibility_due(_company_id uuid)
+ RETURNS TABLE(responsibility_id uuid, name text, task text, due_count integer, items text[], member_ids uuid[])
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  with r as (
+    select * from public.responsibilities where company_id = _company_id
+  ),
+  scope_equipment as (
+    select r.id as rid, e.id, e.name, e.case_id
+    from r join public.equipment e on e.company_id = r.company_id
+    where e.deleted_at is null and e.status <> 'retired' and (e.kind = any (r.kinds) or e.case_id = any (r.case_ids))
+  ),
+  hours as (
+    select se.rid, se.name, (select max(h.read_on) from public.equipment_hour_readings h where h.equipment_id = se.id) as last_read
+    from scope_equipment se
+    join public.equipment e on e.id = se.id
+    where coalesce(e.attributes ->> 'trackHours', '') = 'true'
+  ),
+  scope_cases as (
+    select distinct r.id as rid, c.id, c.name
+    from r join public.cases c on c.company_id = r.company_id
+    where c.deleted_at is null
+      and (c.id = any (r.case_ids) or exists (select 1 from scope_equipment se where se.rid = r.id and se.case_id = c.id))
+  ),
+  checks as (
+    select sc.rid, sc.name, (select max(k.checked_at) from public.case_checks k where k.case_id = sc.id) as last_check
+    from scope_cases sc
+  )
+  select r.id, r.name, 'hours', count(*)::integer, (array_agg(h.name order by h.last_read nulls first))[1:10], r.member_ids
+  from r join hours h on h.rid = r.id
+  where r.hours_every_days is not null and (h.last_read is null or h.last_read < current_date - r.hours_every_days)
+  group by r.id, r.name, r.member_ids
+  union all
+  select r.id, r.name, 'check', count(*)::integer, (array_agg(k.name order by k.last_check nulls first))[1:10], r.member_ids
+  from r join checks k on k.rid = r.id
+  where r.check_every_days is not null and (k.last_check is null or k.last_check < now() - make_interval(days => r.check_every_days))
+  group by r.id, r.name, r.member_ids;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia responsibility_due: %', sqlerrm;
 end;
 $repair$;
 

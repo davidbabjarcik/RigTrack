@@ -6,6 +6,7 @@ import { MigrationBanner } from '@/features/companies/MigrationStatus'
 import { RestockList } from '@/features/equipment/RestockList'
 import { LoanAlerts } from '@/features/loans/LoanAlerts'
 import { MyAttendance } from '@/features/attendance/MyAttendance'
+import { MyResponsibilities } from '@/features/responsibilities/MyResponsibilities'
 import { MyTasks } from '@/features/tasks/MyTasks'
 import { VehicleDeadlineAlerts } from '@/features/vehicles/VehicleDeadlineAlerts'
 import { visibleNavItems } from '@/lib/navigation'
@@ -37,6 +38,7 @@ export function DashboardPage() {
       <div className="flex flex-col xl:grid xl:grid-cols-[1fr_20rem] xl:items-start xl:gap-6">
         {isSupabaseConfigured && active && (
           <aside className="xl:sticky xl:top-4 xl:order-2">
+            <MyResponsibilities companyId={active.companyId} />
             <MyTasks companyId={active.companyId} />
           </aside>
         )}

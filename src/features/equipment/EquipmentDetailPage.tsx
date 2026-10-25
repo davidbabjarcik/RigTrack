@@ -18,6 +18,7 @@ import { deleteEquipment, equipmentKeys, fetchEquipment } from './api'
 import { EquipmentPhoto } from './EquipmentPhoto'
 import { ItemHistory } from './ItemHistory'
 import { OwnerLink } from '@/features/staff/OwnerLink'
+import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { EquipmentLinks } from './PurchaseLinksFields'
 import { CAPTURE_MATCH_LABELS, hoursSinceLamp, describeAttributes, describeUnitIds, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
 import { OperatingHours } from './OperatingHours'
@@ -174,6 +175,7 @@ export function EquipmentDetailPage() {
           <div className="mt-2">
             <StatusBadge status={equipment.status} />
           </div>
+          <ResponsibleFor companyId={company.companyId} caseId={equipment.caseId} kinds={[equipment.kind]} className="mt-2" />
         </div>
         <div className="flex flex-wrap gap-2">
           <LinkButton to={`/service/requests/new?equipment=${equipment.id}`} variant="outline" size="sm">

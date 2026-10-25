@@ -36,6 +36,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0086', label: 'moja fotka, vlastná technika z Vyberte firmu, zariadenia hostí', table: 'guest_devices', column: 'id' },
   { migration: '0087', label: 'zručnosti v osobnom profile', table: 'personal_profiles', column: 'skills' },
   { migration: '0088', label: 'Firmy a kontakty (obchodné meno, CEO, prepojenie), zobrazenie loga, push bez webhooku', table: 'partners', column: 'legal_name' },
+  { migration: '0089', label: 'zodpovedné osoby', table: 'responsibilities', column: 'id' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

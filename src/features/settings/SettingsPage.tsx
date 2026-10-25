@@ -38,6 +38,7 @@ import { MyDevicesSettings } from '@/features/devices/MyDevicesSettings'
 import { AttendanceSettings } from '@/features/attendance/MyAttendance'
 import { PushSettings } from '@/features/push/PushSettings'
 import { PushSetupGuide } from '@/features/push/PushSetupGuide'
+import { ResponsibilitiesSettings } from '@/features/responsibilities/ResponsibilitiesSettings'
 import { DutySettings } from '@/features/duties/DutySettings'
 import { EmailPrefs } from '@/features/news/EmailPrefs'
 import { LookupSettings } from '@/features/equipment/LookupSettings'
@@ -415,6 +416,11 @@ export function SettingsPage() {
       {tab === 'permissions' && (
         <Section title="Oprávnenia">
           <PermissionsSection companyId={company.companyId} />
+        </Section>
+      )}
+      {tab === 'permissions' && (
+        <Section title="Zodpovedné osoby">
+          <ResponsibilitiesSettings companyId={company.companyId} />
         </Section>
       )}
 
