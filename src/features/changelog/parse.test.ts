@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import readme from '../../../README.md?raw'
+import readme from '../../../CHANGELOG.md?raw'
 import { forUsers, parseChangelog, parseInline, sameVersion } from './parse'
 
 const sample = `# App

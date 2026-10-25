@@ -2,7 +2,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
-import readme from '../../../README.md?raw'
+import readme from '../../../CHANGELOG.md?raw'
 import { forUsers, parseChangelog, parseInline, sameVersion } from './parse'
 
 function Inline({ text }: { text: string }) {

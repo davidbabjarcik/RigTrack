@@ -1,4 +1,4 @@
-// „Čo je nové“ sa číta priamo z README (sekcia „## Čo je nové“), aby sa zmeny písali len raz.
+// „Čo je nové“ sa číta priamo z CHANGELOG.md (sekcia „## Čo je nové“), aby sa zmeny písali len raz.
 
 export type Release = {
   version: string
