@@ -4701,7 +4701,7 @@ begin
 AS $function$
 begin
   insert into public.notifications (user_id, title, body, url)
-  select d.user_id, left('Žiadosť o novú firmu: ' || new.company_name, 120), left(new.note, 300), '/settings'
+  select d.user_id, left('Žiadosť o novú firmu: ' || new.company_name, 120), left(new.note, 300), '/settings?tab=developer'
   from public.app_developers d where d.user_id <> new.user_id;
   return new;
 end;

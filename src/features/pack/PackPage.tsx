@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, ScanLine } from 'lucide-react'
-import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Check, CloudOff, ScanLine } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,8 @@ import { parseQr } from '@/features/scan/qr'
 import { formatDate } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { packKeys, setPackCheck, usePackChecks, type PackPhase } from './api'
+import { fetchPackChecks, packKeys, setPackCheck, usePackChecks, type PackPhase } from './api'
+import { enqueue, isNetworkError, mergeChecks, readQueue, readSnapshot, writeQueue, writeSnapshot, type PendingTick } from './offline'
 import { checkOf, packProgress, packRows, type PackRow } from './model'
 
 const PHASE_LABELS: Record<PackPhase, string> = { out: 'Nakladanie', back: 'Návrat' }
@@ -32,20 +33,75 @@ export function PackPage() {
   const checks = usePackChecks(companyId, id)
   const [phase, setPhase] = useState<PackPhase>('out')
   const [scanning, setScanning] = useState(false)
-  const toggle = useMutation({
-    mutationFn: ({ row, checked, existingId }: { row: PackRow; checked: boolean; existingId?: string }) =>
-      setPackCheck(companyId, id, { equipmentId: row.equipmentId, caseId: row.caseId }, phase, checked, existingId),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: packKeys.ofEvent(companyId, id) }),
-  })
+  // Odškrtnutia idú najprv do fronty v telefóne a odošlú sa hneď, alebo keď sa chytí sieť.
+  const [queue, setQueueState] = useState<PendingTick[]>(() => readQueue(id))
+  const [failed, setFailed] = useState(false)
+  const flushing = useRef(false)
+  const setQueue = useCallback(
+    (next: PendingTick[]) => {
+      writeQueue(id, next)
+      setQueueState(next)
+    },
+    [id],
+  )
+  const flush = useCallback(async () => {
+    if (flushing.current || !navigator.onLine) return
+    let pending = readQueue(id)
+    if (pending.length === 0) return
+    flushing.current = true
+    try {
+      const server = await fetchPackChecks(companyId, id)
+      for (const tick of [...pending]) {
+        const existing = server.find((check) => check.phase === tick.phase && (tick.caseId ? check.caseId === tick.caseId : check.equipmentId === tick.equipmentId))
+        try {
+          if (tick.checked !== Boolean(existing)) await setPackCheck(companyId, id, { equipmentId: tick.equipmentId, caseId: tick.caseId }, tick.phase, tick.checked, existing?.id)
+        } catch (error) {
+          if (isNetworkError(error)) break
+          setFailed(true)
+        }
+        pending = pending.filter((item) => item !== tick)
+        setQueue(pending)
+      }
+    } catch {
+      // Sieť ešte nie je – skúsi sa znova pri ďalšej zmene alebo keď sa chytí signál.
+    } finally {
+      flushing.current = false
+      void queryClient.invalidateQueries({ queryKey: packKeys.ofEvent(companyId, id) })
+    }
+  }, [companyId, id, queryClient, setQueue])
+  useEffect(() => {
+    // Pri otvorení odoslať, čo ostalo vo fronte; potom vždy, keď sa chytí signál.
+    const timer = window.setTimeout(() => void flush(), 0)
+    window.addEventListener('online', flush)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('online', flush)
+    }
+  }, [flush])
+  const tick = (row: PackRow, checked: boolean) => {
+    setFailed(false)
+    setQueue(enqueue(readQueue(id), { rowKey: row.key, equipmentId: row.equipmentId, caseId: row.caseId, phase, checked, at: new Date().toISOString() }))
+    void flush()
+  }
 
-  if (events.isPending || checks.isPending) return <LoadingBlock />
+  // Posledný načítaný pack list sa pamätá – offline sa otvorí z telefónu.
   const event = events.data?.find((item) => item.id === id)
-  if (!event) return <ErrorBlock message="Event sa nenašiel." />
-  if (checks.isError) return <ErrorBlock message="Pack list sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." />
+  const liveRows = event ? packRows(event.equipment, equipment.data ?? [], cases.data ?? []) : null
+  const liveCanTick = event ? can(company, 'events.edit') || event.crew.some((person) => person.memberId === userId) : false
+  useEffect(() => {
+    if (event && liveRows && checks.data) writeSnapshot(id, { eventName: event.name, startsOn: event.startsOn, rows: liveRows, checks: checks.data, canTick: liveCanTick, savedAt: new Date().toISOString() })
+  })
+  const snapshot = !event || checks.isError ? readSnapshot(id) : null
 
-  const rows = packRows(event.equipment, equipment.data ?? [], cases.data ?? [])
-  const all = checks.data ?? []
-  const canTick = can(company, 'events.edit') || event.crew.some((person) => person.memberId === userId)
+  if (!snapshot && (events.isPending || checks.isPending)) return <LoadingBlock />
+  if (!snapshot && !event) return <ErrorBlock message="Event sa nenašiel." />
+  if (!snapshot && checks.isError) return <ErrorBlock message="Pack list sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." />
+
+  const eventName = event?.name ?? snapshot!.eventName
+  const startsOn = event?.startsOn ?? snapshot!.startsOn
+  const rows = liveRows ?? snapshot!.rows
+  const all = mergeChecks(checks.data ?? snapshot?.checks ?? [], queue)
+  const canTick = event ? liveCanTick : snapshot!.canTick
   const progress = packProgress(rows, all, phase)
   const missingBack = rows.filter((row) => checkOf(row, all, 'out') && !checkOf(row, all, 'back'))
 
@@ -53,12 +109,21 @@ export function PackPage() {
     <>
       <Link to={`/events/${id}`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" aria-hidden />
-        {event.name}
+        {eventName}
       </Link>
       <h1 className="text-2xl font-semibold tracking-tight">Pack list</h1>
       <p className="mb-4 text-sm text-muted-foreground">
-        {event.name} · {formatDate(event.startsOn)}
+        {eventName} · {formatDate(startsOn)}
       </p>
+      {(queue.length > 0 || snapshot) && (
+        <p role="status" className="mb-3 flex items-start gap-2 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+          <CloudOff className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+          <span>
+            {snapshot && `Bez spojenia – pack list z ${new Date(snapshot.savedAt).toLocaleString('sk-SK', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}. `}
+            {queue.length > 0 && `Čaká na odoslanie: ${queue.length}. Odošle sa samo, keď bude signál.`}
+          </span>
+        </p>
+      )}
 
       {canTick && rows.length > 0 && (
         <Button variant="outline" className="mb-3 w-full" onClick={() => setScanning(true)}>
@@ -79,7 +144,7 @@ export function PackPage() {
               return `✗ ${name ?? 'Toto'} nie je v pack liste eventu.`
             }
             if (checkOf(row, all, phase)) return `✓ ${row.name} už je odškrtnuté.`
-            toggle.mutate({ row, checked: true })
+            tick(row, true)
             return `✓ ${row.name}`
           }}
         />
@@ -122,8 +187,8 @@ export function PackPage() {
               <li key={row.key}>
                 <button
                   type="button"
-                  disabled={!canTick || toggle.isPending}
-                  onClick={() => toggle.mutate({ row, checked: !check, existingId: check?.id })}
+                  disabled={!canTick}
+                  onClick={() => tick(row, !check)}
                   className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left enabled:hover:bg-muted"
                   aria-pressed={Boolean(check)}
                 >
@@ -148,7 +213,7 @@ export function PackPage() {
         </ul>
       )}
       {!canTick && <p className="mt-3 text-sm text-muted-foreground">Odškrtávať môže posádka eventu a kto upravuje eventy.</p>}
-      {toggle.isError && <p className="mt-3 text-sm text-destructive">Zmena sa nepodarila.</p>}
+      {failed && <p className="mt-3 text-sm text-destructive">Niektorú zmenu databáza neprijala – skontrolujte odškrtnutia.</p>}
     </>
   )
 }

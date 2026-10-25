@@ -300,6 +300,7 @@ export function SettingsPage() {
     { id: 'packages', label: 'Balíky', shown: can(company, 'lookups.manage') },
     { id: 'reminders', label: 'Pripomienky', shown: can(company, 'lookups.manage') },
     { id: 'account', label: 'Účet', shown: true },
+    { id: 'developer', label: 'Vývojár', shown: isDeveloper },
   ].filter((tab) => tab.shown)
   // Záložka je v adrese, aby sa na ňu dalo odkázať a aby ju prežilo obnovenie stránky.
   const [params, setParams] = useSearchParams()
@@ -357,16 +358,6 @@ export function SettingsPage() {
             </Section>
           )}
 
-          {isDeveloper && (
-            <Section title="Žiadosti o novú firmu (vývojár)">
-              <CompanyRequestsAdmin />
-            </Section>
-          )}
-          {isDeveloper && (
-            <Section title="Stav databázy (vývojár)">
-              <MigrationStatus />
-            </Section>
-          )}
 
           {isAdmin && (
             <Section title="Import a export">
@@ -462,6 +453,20 @@ export function SettingsPage() {
         </Section>
       )}
 
+      {tab === 'developer' && isDeveloper && (
+        <>
+          <Section title="Stav databázy">
+            <MigrationStatus />
+          </Section>
+          <Section title="Push upozornenia – nastavenie (raz pre appku)">
+            <PushSetupGuide email={user.email ?? ''} />
+          </Section>
+          <Section title="Žiadosti o novú firmu">
+            <CompanyRequestsAdmin />
+          </Section>
+        </>
+      )}
+
       {tab === 'account' && (
         <>
           <Section title="Účet">
@@ -481,11 +486,6 @@ export function SettingsPage() {
           <Section title={`Moje zariadenia (${company.companyName})`}>
             <MyDevicesSettings companyId={company.companyId} userId={user.id} />
           </Section>
-          {isAdminRole(company.role) && (
-            <Section title="Push upozornenia – nastavenie (raz pre appku)">
-              <PushSetupGuide email={user.email ?? ''} />
-            </Section>
-          )}
           {isAdminRole(company.role) && (
             <Section title="E-mailové upozornenia">
               <EmailPrefs companyId={company.companyId} />

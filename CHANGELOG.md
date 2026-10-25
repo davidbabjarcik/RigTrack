@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.16 – 25. 10. 2026
+
+- **Pack list bez signálu**: odškrtnutie sa ukáže hneď; bez siete sa uloží do telefónu a odošle sa samo, keď sa
+  chytí signál (hore „Čaká na odoslanie: 3“, pri položke „čaká na odoslanie“). Posledný načítaný pack list sa
+  pamätá, takže sa dá otvoriť aj offline.
+- **Nastavenia → Vývojár** (vidí len vývojár aplikácie): Stav databázy, sprievodca nastavením push upozornení
+  a žiadosti o novú firmu sú na jednom mieste.
+
 ### 3.15 – 25. 10. 2026
 
 - **Plán pódia Nivtec k eventu**: v kalkulačke pódia vyberte event a „Uložiť plán k eventu“ – uloží sa celé zadanie

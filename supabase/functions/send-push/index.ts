@@ -5,7 +5,7 @@
 //        v public.notifications; pošle upozornenie na všetky mobily daného človeka a odbery, ktoré už
 //        neplatia (mobil sa odhlásil), zmaže.
 //
-// Nastavenie (raz): v appke Nastavenia → Účet → „Push upozornenia – nastavenie“ – sprievodca vygeneruje
+// Nastavenie (raz): v appke Nastavenia → Vývojár → „Push upozornenia – nastavenie“ – sprievodca vygeneruje
 // kľúče, dá odkazy do Supabase a SQL pre Vault. Funkcia musí mať vypnuté overovanie JWT (Verify JWT).
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
