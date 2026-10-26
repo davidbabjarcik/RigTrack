@@ -59,13 +59,22 @@ export function CaseDetailPage() {
   const move = useMutation({
     // S počtom menším ako všetky kusy sa položka rozdelí (časť ide do case, zvyšok ostane).
     mutationFn: ({ equipmentId, caseId, count, units }: { equipmentId: string; caseId: string | null; count?: number; units?: number[] }) =>
-      units ? splitEquipmentUnits(equipmentId, caseId, units).then(() => undefined) : count ? splitEquipmentIntoCase(equipmentId, caseId, count).then(() => undefined) : setEquipmentCase(companyId, equipmentId, caseId),
+      units
+        ? splitEquipmentUnits(equipmentId, caseId, units).then(() => undefined)
+        : count
+          ? splitEquipmentIntoCase(equipmentId, caseId, count).then(() => undefined)
+          : setEquipmentCase(companyId, equipmentId, caseId),
     onSettled: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) }),
   })
 
   // Kópia s ďalším číslom (rozmery, fotka, kategória…), bez techniky; otvorí sa nový case.
   const duplicate = useMutation({
-    mutationFn: () => duplicateCase(companyId, cases.data!.find((c) => c.id === id)!, cases.data ?? []),
+    mutationFn: () =>
+      duplicateCase(
+        companyId,
+        cases.data!.find((c) => c.id === id)!,
+        cases.data ?? [],
+      ),
     onSuccess: async (newId) => {
       await queryClient.invalidateQueries({ queryKey: caseKeys.list(companyId) })
       navigate(`/cases/${newId}`)
@@ -73,8 +82,7 @@ export function CaseDetailPage() {
   })
 
   const mark = useMutation({
-    mutationFn: ({ equipmentId, role }: { equipmentId: string; role: LabelRole | null }) =>
-      setEquipmentLabelRole(companyId, equipmentId, role),
+    mutationFn: ({ equipmentId, role }: { equipmentId: string; role: LabelRole | null }) => setEquipmentLabelRole(companyId, equipmentId, role),
     onSettled: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) }),
   })
 
@@ -140,8 +148,7 @@ export function CaseDetailPage() {
           <ResponsibleFor companyId={companyId} caseId={id} kinds={[...new Set(all.filter((item) => item.caseId === id).map((item) => item.kind))]} className="mt-1" />
           {spot && (
             <Link to={`/warehouse?spot=${spot.id}`} className="mt-1 inline-flex items-center gap-1 text-sm text-accent hover:underline">
-              <MapPin className="size-4" aria-hidden />
-              V sklade: {describeSpot(spot, current.spotLevel)}
+              <MapPin className="size-4" aria-hidden />V sklade: {describeSpot(spot, current.spotLevel)}
             </Link>
           )}
         </div>
@@ -202,22 +209,14 @@ export function CaseDetailPage() {
       <CaseChecks companyId={companyId} caseId={id} canCheck={can(company, 'cases.check') || canEdit} />
 
       <div className="mb-6">
-        <UsageHistory
-          companyId={companyId}
-          equipmentIds={(equipment.data ?? []).filter((item) => item.caseId === id).map((item) => item.id)}
-          caseId={id}
-        />
+        <UsageHistory companyId={companyId} equipmentIds={(equipment.data ?? []).filter((item) => item.caseId === id).map((item) => item.id)} caseId={id} />
       </div>
 
       <section aria-labelledby="content-heading">
         <div className="mb-2 flex items-center justify-between gap-3">
           <h2 id="content-heading" className="text-sm font-medium text-muted-foreground">
             Obsah ({content.length}){onLabelCount > 0 && ` · na štítku ${onLabelCount}`}
-            {canEdit && content.length > 0 && (
-              <span className="mt-1 block font-normal">
-                Hviezdička = hlavný prvok štítku (jeden, s fotkou), plus = vedľajší prvok.
-              </span>
-            )}
+            {canEdit && content.length > 0 && <span className="mt-1 block font-normal">Hviezdička = hlavný prvok štítku (jeden, s fotkou), plus = vedľajší prvok.</span>}
           </h2>
           {canEdit && !adding && (
             <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
@@ -246,66 +245,61 @@ export function CaseDetailPage() {
         ) : (
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {content.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 px-4 py-3">
+              <li key={item.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
+                {/* Na mobile názov na celú šírku, stav a tlačidlá pod ním. */}
                 <PhotoThumb url={thumbs[item.photoPath]} />
-                <Link to={`/equipment/${item.id}`} className="min-w-0 flex-1 hover:underline">
-                  <span className="block truncate font-medium">
+                <Link to={`/equipment/${item.id}`} className="min-w-0 flex-1 basis-40 hover:underline">
+                  <span className="block font-medium break-words">
                     {item.name}
                     {item.quantity > 1 && <span className="font-normal text-muted-foreground"> · {item.quantity} ks</span>}
-                    {item.trackUnits && <span className="font-normal text-muted-foreground"> · {unitIdsOf(item).map((unit) => `#${unit}`).join(', ')}</span>}
+                    {item.trackUnits && (
+                      <span className="font-normal text-muted-foreground">
+                        {' '}
+                        ·{' '}
+                        {unitIdsOf(item)
+                          .map((unit) => `#${unit}`)
+                          .join(', ')}
+                      </span>
+                    )}
                   </span>
-                  {item.inventoryNumber && (
-                    <span className="block truncate text-sm text-muted-foreground">inv. č. {item.inventoryNumber}</span>
-                  )}
+                  {item.inventoryNumber && <span className="block truncate text-sm text-muted-foreground">inv. č. {item.inventoryNumber}</span>}
                 </Link>
-                <StatusBadge status={item.status} />
-                {canEdit ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      aria-pressed={item.labelRole === 'main'}
-                      aria-label={`Hlavný prvok štítku: ${item.name}`}
-                      title={item.labelRole === 'main' ? 'Hlavný prvok štítku — kliknutím zrušiť' : 'Nastaviť ako hlavný prvok štítku'}
-                      disabled={mark.isPending}
-                      onClick={() => mark.mutate({ equipmentId: item.id, role: item.labelRole === 'main' ? null : 'main' })}
-                    >
-                      <Star
-                        className={cn('size-4', item.labelRole === 'main' ? 'fill-accent text-accent' : 'text-muted-foreground')}
-                        aria-hidden
-                      />
+                <div className="ml-auto flex shrink-0 items-center gap-1">
+                  <StatusBadge status={item.status} />
+                  {canEdit ? (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-pressed={item.labelRole === 'main'}
+                        aria-label={`Hlavný prvok štítku: ${item.name}`}
+                        title={item.labelRole === 'main' ? 'Hlavný prvok štítku — kliknutím zrušiť' : 'Nastaviť ako hlavný prvok štítku'}
+                        disabled={mark.isPending}
+                        onClick={() => mark.mutate({ equipmentId: item.id, role: item.labelRole === 'main' ? null : 'main' })}
+                      >
+                        <Star className={cn('size-4', item.labelRole === 'main' ? 'fill-accent text-accent' : 'text-muted-foreground')} aria-hidden />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-pressed={item.labelRole === 'secondary'}
+                        aria-label={`Vedľajší prvok štítku: ${item.name}`}
+                        title={item.labelRole === 'secondary' ? 'Vedľajší prvok štítku — kliknutím zrušiť' : 'Pridať na štítok ako vedľajší prvok'}
+                        disabled={mark.isPending}
+                        onClick={() => mark.mutate({ equipmentId: item.id, role: item.labelRole === 'secondary' ? null : 'secondary' })}
+                      >
+                        <CirclePlus className={cn('size-4', item.labelRole === 'secondary' ? 'text-accent' : 'text-muted-foreground')} aria-hidden />
+                      </Button>
+                    </>
+                  ) : (
+                    item.labelRole && <span className="text-xs text-muted-foreground">{item.labelRole === 'main' ? 'hlavný' : 'vedľajší'}</span>
+                  )}
+                  {canEdit && (
+                    <Button variant="ghost" size="sm" aria-label={`Vybrať z case: ${item.name}`} disabled={move.isPending} onClick={() => move.mutate({ equipmentId: item.id, caseId: null })}>
+                      <X className="size-4" aria-hidden />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      aria-pressed={item.labelRole === 'secondary'}
-                      aria-label={`Vedľajší prvok štítku: ${item.name}`}
-                      title={item.labelRole === 'secondary' ? 'Vedľajší prvok štítku — kliknutím zrušiť' : 'Pridať na štítok ako vedľajší prvok'}
-                      disabled={mark.isPending}
-                      onClick={() => mark.mutate({ equipmentId: item.id, role: item.labelRole === 'secondary' ? null : 'secondary' })}
-                    >
-                      <CirclePlus
-                        className={cn('size-4', item.labelRole === 'secondary' ? 'text-accent' : 'text-muted-foreground')}
-                        aria-hidden
-                      />
-                    </Button>
-                  </>
-                ) : (
-                  item.labelRole && (
-                    <span className="text-xs text-muted-foreground">{item.labelRole === 'main' ? 'hlavný' : 'vedľajší'}</span>
-                  )
-                )}
-                {canEdit && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`Vybrať z case: ${item.name}`}
-                    disabled={move.isPending}
-                    onClick={() => move.mutate({ equipmentId: item.id, caseId: null })}
-                  >
-                    <X className="size-4" aria-hidden />
-                  </Button>
-                )}
+                  )}
+                </div>
               </li>
             ))}
           </ul>
@@ -322,15 +316,7 @@ export function CaseDetailPage() {
               Hotovo
             </Button>
           </div>
-          <Field
-            label="Hľadať techniku"
-            hideLabel
-            type="search"
-            autoFocus
-            placeholder="Názov, výrobca, sériové alebo inventárne číslo"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <Field label="Hľadať techniku" hideLabel type="search" autoFocus placeholder="Názov, výrobca, sériové alebo inventárne číslo" value={search} onChange={(e) => setSearch(e.target.value)} />
           {inOtherCases > 0 && (
             <label className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
               <input type="checkbox" className="size-4" checked={fromOtherCases} onChange={(e) => setFromOtherCases(e.target.checked)} />

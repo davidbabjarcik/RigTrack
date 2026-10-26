@@ -32,6 +32,7 @@ const lazyPage = (load: () => Promise<ComponentType>, permission?: PermissionKey
 
 const equipmentList = lazyPage(() => import('@/features/equipment/EquipmentListPage').then((m) => m.EquipmentListPage), 'equipment.view')
 const equipmentDetail = lazyPage(() => import('@/features/equipment/EquipmentDetailPage').then((m) => m.EquipmentDetailPage), 'equipment.view')
+const equipmentGroup = lazyPage(() => import('@/features/equipment/EquipmentGroupPage').then((m) => m.EquipmentGroupPage), 'equipment.view')
 const equipmentForm = lazyPage(() => import('@/features/equipment/EquipmentFormPage').then((m) => m.EquipmentFormPage), 'equipment.view')
 const equipmentExcel = lazyPage(() => import('@/features/equipment/EquipmentExcelPage').then((m) => m.EquipmentExcelPage), 'equipment.view')
 const networks = lazyPage(() => import('@/features/networks/NetworksPage').then((m) => m.NetworksPage))
@@ -153,6 +154,7 @@ export const routes: RouteObject[] = [
               { path: 'partners/:id', lazy: partnerDetail },
               { path: 'equipment/excel', lazy: equipmentExcel },
               { path: 'equipment/capsules', lazy: capsules },
+              { path: 'equipment/group', lazy: equipmentGroup },
               { path: 'equipment/:id', lazy: equipmentDetail },
               { path: 'equipment/:id/edit', lazy: equipmentForm },
               { path: 'cases', lazy: casesList },

@@ -239,6 +239,8 @@ export type EquipmentAttributes = {
   ampKind?: 'analog' | 'digital'
   /** Digitálny zosilňovač: koľko presetov sa doň zmestí a ktoré sú zapísané (aj ku ktorému reproboxu). */
   ampPresetSlots?: number
+  /** ID digitálneho zosilňovača v sieti (napr. HiQnet / Device ID); pri viacerých kusoch „#1: 101, #2: 102“. */
+  ampDeviceId?: string
   ampPresets?: AmpPreset[]
   color?: string
   condition?: Condition
@@ -479,6 +481,7 @@ export const equipmentSchema = z.object({
   ampBridge8: optionalNumber(100000),
   ampKind: z.enum(['analog', 'digital', '']).optional(),
   ampPresetSlots: z.number('Zadajte počet').int('Celé číslo').min(1).max(999).optional(),
+  ampDeviceId: z.string().trim().max(200, 'Najviac 200 znakov').optional(),
   ampPresets: z
     .array(z.object({ slot: z.number().int().min(1).max(999).catch(1), name: z.string().trim().max(80).catch(''), speakerId: z.string().catch(''), note: z.string().trim().max(200).catch(''), locked: z.boolean().catch(false) }))
     .max(999)
@@ -662,6 +665,7 @@ export function attributesFor(
         | 'ampBridge8'
         | 'ampKind'
         | 'ampPresetSlots'
+        | 'ampDeviceId'
         | 'ampPresets'
         | 'color'
         | 'condition'
@@ -801,6 +805,7 @@ export function attributesFor(
     if (values.ampKind) attributes.ampKind = values.ampKind
     if (values.ampKind === 'digital') {
       if (values.ampPresetSlots !== undefined) attributes.ampPresetSlots = values.ampPresetSlots
+      if (values.ampDeviceId?.trim()) attributes.ampDeviceId = values.ampDeviceId.trim()
       const presets = (values.ampPresets ?? [])
         .filter((preset) => preset.name.trim() || preset.speakerId || preset.locked)
         .map((preset) => ({ slot: preset.slot, name: preset.name.trim(), ...(preset.speakerId && { speakerId: preset.speakerId }), ...(preset.note.trim() && { note: preset.note.trim() }), ...(preset.locked && { locked: true }) }))
@@ -921,6 +926,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.madeYear === undefined && a.madeIn && `vyrobené: ${a.madeIn}`,
     ampPower(a),
     a.ampKind && (a.ampKind === 'digital' ? `digitálny${a.ampPresetSlots ? ` · presety ${(a.ampPresets ?? []).length}/${a.ampPresetSlots}` : ''}` : 'analógový'),
+    a.ampKind === 'digital' && a.ampDeviceId && `ID ${a.ampDeviceId}`,
     a.makers?.length && `vyrobil ${a.makers.map((maker) => `${maker.name} ${maker.count}×`).join(', ')}`,
     a.condition && CONDITION_LABELS[a.condition].toLowerCase(),
     a.cableType === 'di' && 'DI box',
@@ -1136,7 +1142,8 @@ export function filterEquipment(items: Equipment[], filter: EquipmentFilter, tod
     if (filter.withLinks && !item.links?.length) return false
     if (filter.categoryId && item.categoryId !== filter.categoryId) return false
     if (filter.locationId && item.locationId !== filter.locationId) return false
-    if (filter.caseId === NO_CASE ? item.caseId !== null : filter.caseId && item.caseId !== filter.caseId) return false
+    // „Mimo cases“ = čo by v case byť malo (technika s „Nepatrí do case“ sa neukáže).
+    if (filter.caseId === NO_CASE ? item.caseId !== null || Boolean(item.attributes.noCase) : filter.caseId && item.caseId !== filter.caseId) return false
     if (words.length === 0) return true
     const haystack = normalize(
       [

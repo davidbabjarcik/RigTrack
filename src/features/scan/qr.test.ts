@@ -18,3 +18,12 @@ describe('qr', () => {
     expect(parseQr(`https://x.sk/equipment/${ID}x`)).toBeNull()
   })
 })
+
+describe('unit QR', () => {
+  it('links to one piece of equipment tracked by units', () => {
+    const id = '0b6f3c1e-2d4a-4b8c-9e1f-123456789abc'
+    expect(qrPath({ kind: 'equipment', id, unit: 7 })).toBe(`/equipment/${id}?unit=7`)
+    expect(parseQr(`https://app.example.com/equipment/${id}?unit=7`)).toEqual({ kind: 'equipment', id, unit: 7 })
+    expect(parseQr(`https://app.example.com/equipment/${id}`)).toEqual({ kind: 'equipment', id })
+  })
+})

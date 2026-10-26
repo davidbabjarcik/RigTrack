@@ -263,17 +263,28 @@ export function EquipmentListPage() {
             const late = group.items.some((item) => ['overdue', 'unknown'].includes(hoursState(item, today, checkDays).state))
             return (
               <li key={group.key}>
-                <button type="button" aria-expanded={expanded} onClick={() => toggleGroup(group.key)} className="relative flex min-h-16 w-full items-center gap-3 py-3 pr-4 pl-5 text-left hover:bg-muted">
+                {/* Klik na riadok otvorí prehľad všetkých častí; šípka vpravo rozbalí časti priamo v zozname. */}
+                <div className="relative flex min-h-16 items-center hover:bg-muted">
                   {color && <span className={`absolute inset-y-0 left-0 w-1.5 ${COLOR_CLASSES[color]}`} aria-hidden />}
-                  <PhotoThumb url={thumbs[main.photoPath]} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{cables ? cableBaseName(main.name) : main.name}</span>
-                    <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
-                    {late && <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>}
-                  </span>
-                  <StatusBadge status={main.status} />
-                  <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden />
-                </button>
+                  <Link to={`/equipment/group?ids=${group.items.map((item) => item.id).join(',')}`} className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-5">
+                    <PhotoThumb url={thumbs[main.photoPath]} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{cables ? cableBaseName(main.name) : main.name}</span>
+                      <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
+                      {late && <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>}
+                    </span>
+                    <StatusBadge status={main.status} />
+                  </Link>
+                  <button
+                    type="button"
+                    aria-expanded={expanded}
+                    aria-label={expanded ? 'Zbaliť časti' : 'Rozbaliť časti'}
+                    onClick={() => toggleGroup(group.key)}
+                    className="flex h-16 w-12 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
+                  >
+                    <ChevronDown className={`size-5 transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden />
+                  </button>
+                </div>
                 {expanded && (
                   <ul className="divide-y border-t bg-muted/30">
                     {canWrite && !cables && (

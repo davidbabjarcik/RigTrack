@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Pencil, QrCode, Trash2, Wrench } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { useCases } from '@/features/cases/useCases'
@@ -14,14 +14,14 @@ import { UnitsOverview } from '@/features/usage/UnitsOverview'
 import { UsageHistory } from '@/features/usage/UsageHistory'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
-import { deleteEquipment, equipmentKeys, fetchEquipment } from './api'
+import { deleteEquipment, equipmentKeys, fetchEquipment, fetchEquipmentList } from './api'
 import { EquipmentPhoto } from './EquipmentPhoto'
 import { ItemHistory } from './ItemHistory'
 import { OwnerLink } from '@/features/staff/OwnerLink'
 import { AmpPresetsInfo } from './AmpPresetsInfo'
 import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { EquipmentLinks } from './PurchaseLinksFields'
-import { CAPTURE_MATCH_LABELS, hoursSinceLamp, describeAttributes, describeUnitIds, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
+import { CAPTURE_MATCH_LABELS, hoursSinceLamp, describeAttributes, describeUnitIds, groupSplitEquipment, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
 import { OperatingHours } from './OperatingHours'
 import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
@@ -40,6 +40,10 @@ export function EquipmentDetailPage() {
     queryKey: equipmentKeys.detail(company.companyId, id),
     queryFn: () => fetchEquipment(company.companyId, id),
   })
+  // QR kusu (?unit=7): ak kus medzitým presunuli do inej časti (iný case), otvorí sa tá.
+  const [params] = useSearchParams()
+  const unit = Number(params.get('unit')) || null
+  const list = useQuery({ queryKey: equipmentKeys.list(company.companyId), queryFn: () => fetchEquipmentList(company.companyId), enabled: unit !== null })
 
   const remove = useMutation({
     mutationFn: () => deleteEquipment(id),
@@ -68,6 +72,11 @@ export function EquipmentDetailPage() {
   }
 
   const equipment = item.data
+  if (unit !== null && equipment.trackUnits && !unitIdsOf(equipment).includes(unit) && list.data) {
+    const group = groupSplitEquipment(list.data).find((candidate) => candidate.items.some((part) => part.id === equipment.id))
+    const holder = group?.items.find((part) => part.trackUnits && unitIdsOf(part).includes(unit))
+    if (holder) return <Navigate to={`/equipment/${holder.id}?unit=${unit}`} replace />
+  }
   const inCase = cases.data?.find((c) => c.id === equipment.caseId)
   const inService = piecesInService(serviceRecords.data ?? []).get(equipment.id) ?? 0
   const unitsOut = unitsInService(serviceRecords.data ?? []).get(equipment.id) ?? []
@@ -172,7 +181,10 @@ export function EquipmentDetailPage() {
       {back}
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight break-words">{equipment.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight break-words">
+            {equipment.name}
+            {unit !== null && unitIdsOf(equipment).includes(unit) && <span className="ml-2 text-accent">#{unit}</span>}
+          </h1>
           <div className="mt-2">
             <StatusBadge status={equipment.status} />
           </div>

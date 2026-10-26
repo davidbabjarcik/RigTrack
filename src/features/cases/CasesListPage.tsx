@@ -34,10 +34,11 @@ function savedFilter(): CaseFilter {
 
 const advancedCount = (filter: CaseFilter) => [filter.check, filter.priority, filter.locationId, filter.owner, filter.labelCategory, filter.content, filter.kind].filter(Boolean).length
 
+/** Ráta kusy, nie položky: 10 hláv v jednej položke je 10 kusov. */
 function unpackedLabel(count: number) {
-  if (count === 1) return '1 položka techniky nie je v žiadnom case'
-  if (count >= 2 && count <= 4) return `${count} položky techniky nie sú v žiadnom case`
-  return `${count} položiek techniky nie je v žiadnom case`
+  if (count === 1) return '1 kus techniky nie je v žiadnom case'
+  if (count >= 2 && count <= 4) return `${count} kusy techniky nie sú v žiadnom case`
+  return `${count} kusov techniky nie je v žiadnom case`
 }
 
 function pieces(count: number) {
@@ -171,8 +172,14 @@ export function CasesListPage() {
         >
           <PackageOpen className="size-5 shrink-0 text-accent" aria-hidden />
           <span className="min-w-0 flex-1">
-            <span className="block font-medium">{unpackedLabel(unpacked.length)}</span>
-            <span className="block text-sm text-muted-foreground">Zobraziť a dať do poriadku</span>
+            <span className="block font-medium">{unpackedLabel(unpacked.reduce((sum, item) => sum + item.quantity, 0))}</span>
+            <span className="block truncate text-sm text-muted-foreground">
+              {unpacked
+                .slice(0, 4)
+                .map((item) => `${item.quantity > 1 ? `${item.quantity}× ` : ''}${item.name}`)
+                .join(', ')}
+              {unpacked.length > 4 && ' …'} – zaradiť do case, alebo pri technike zaškrtnúť „Nepatrí do case“
+            </span>
           </span>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         </Link>

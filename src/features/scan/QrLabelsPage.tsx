@@ -4,9 +4,11 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
 import { downloadCanvas, fileSlug, qrCanvas } from '@/features/cases/canvas'
+import { caseTitle } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { unitIdsOf } from '@/features/equipment/model'
 import { QrCode } from '@/features/networks/QrCode'
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { qrUrl } from './qr'
@@ -18,7 +20,7 @@ async function downloadQr(item: { url: string; name: string; number: string }) {
 }
 
 const PRINT_CSS = `
-@page { size: A4; margin: 10mm; }
+@page { size: A4; margin: 10mm; @top-left { content: ""; } @top-center { content: ""; } @top-right { content: ""; } @bottom-left { content: ""; } @bottom-center { content: ""; } @bottom-right { content: ""; } }
 @media print { html, body { background: #fff !important; } }
 `
 
@@ -38,12 +40,20 @@ export function QrLabelsPage() {
   if (source.isError) return <ErrorBlock message="Štítky sa nepodarilo načítať." />
 
   const ids = new Set((params.get('ids') ?? '').split(',').filter(Boolean))
-  const records = isSpots
-    ? (plan.data?.spots ?? []).map((spot) => ({ id: spot.id, name: spot.name, number: spot.levels > 1 ? `${spot.levels} poschodia` : '', kind: 'spot' as const }))
-    : (isCases ? (cases.data ?? []) : (equipment.data ?? [])).map((item) => ({ id: item.id, name: item.name, number: item.inventoryNumber, kind: isCases ? ('case' as const) : ('equipment' as const) }))
+  type LabelRecord = { id: string; key: string; name: string; number: string; kind: 'spot' | 'case' | 'equipment'; unit?: number }
+  const records: LabelRecord[] = isSpots
+    ? (plan.data?.spots ?? []).map((spot) => ({ id: spot.id, key: spot.id, name: spot.name, number: spot.levels > 1 ? `${spot.levels} poschodia` : '', kind: 'spot' as const }))
+    : isCases
+      ? (cases.data ?? []).map((item) => ({ id: item.id, key: item.id, name: caseTitle(item), number: item.inventoryNumber, kind: 'case' as const }))
+      : // Technika po kusoch: každý kus (#1, #2…) má vlastný štítok s QR.
+        (equipment.data ?? []).flatMap((item) =>
+          item.trackUnits && item.quantity > 1
+            ? unitIdsOf(item).map((unit) => ({ id: item.id, key: `${item.id}-${unit}`, name: `${item.name} #${unit}`, number: item.unitInfo?.[unit]?.inv ?? '', kind: 'equipment' as const, unit }))
+            : [{ id: item.id, key: item.id, name: item.name, number: item.inventoryNumber, kind: 'equipment' as const }],
+        )
   const items = records
     .filter((item) => ids.size === 0 || ids.has(item.id))
-    .map((item) => ({ id: item.id, name: item.name, number: item.number, url: qrUrl({ kind: item.kind, id: item.id }, window.location.origin) }))
+    .map((item) => ({ id: item.key, name: item.name, number: item.number, url: qrUrl({ kind: item.kind, id: item.id, unit: item.unit }, window.location.origin) }))
     .sort((a, b) => a.name.localeCompare(b.name, 'sk', { numeric: true }))
   const base = isSpots ? '/warehouse' : `/${isCases ? 'cases' : 'equipment'}`
   const back = ids.size === 1 && !isSpots ? `${base}/${[...ids][0]}` : base
@@ -61,6 +71,7 @@ export function QrLabelsPage() {
           {items.length > 0 && (
             <Button
               variant="outline"
+              className="border-neutral-300 bg-white text-black hover:bg-neutral-100"
               title="Stiahne každý QR kód ako samostatný PNG obrázok (prehliadač sa môže spýtať, či povoliť viac súborov)"
               onClick={async () => {
                 for (const item of items) {

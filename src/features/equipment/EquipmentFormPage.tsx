@@ -222,6 +222,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     ampBridge8: equipment.attributes.ampBridge8,
     ampKind: equipment.attributes.ampKind ?? '',
     ampPresetSlots: equipment.attributes.ampPresetSlots,
+    ampDeviceId: equipment.attributes.ampDeviceId ?? '',
     ampPresets: (equipment.attributes.ampPresets ?? []).map((preset) => ({ slot: preset.slot, name: preset.name, speakerId: preset.speakerId ?? '', note: preset.note ?? '', locked: Boolean(preset.locked) })),
     color: equipment.attributes.color ?? '',
     condition: equipment.attributes.condition ?? '',

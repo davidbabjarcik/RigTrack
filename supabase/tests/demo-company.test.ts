@@ -73,3 +73,14 @@ describe('richer demo', () => {
     expect(Number((await t.as('cyril', 'select count(*)::int as n from public.wifi_networks where company_id = $1', [again]))[0].n)).toBe(2)
   })
 })
+
+describe('demo company 4.0', () => {
+  it('shows the new features: a numbered case set, a rack in U, split lights and tasks', async () => {
+    await t.signUp('cyril', 'cyril@example.com')
+    const demo = (await t.as('cyril', 'select public.create_demo_company() as id'))[0].id
+    expect(await t.as('cyril', `select count(*)::int as n from public.cases where company_id = $1 and name = 'Svetlá case'`, [demo])).toEqual([{ n: 5 }])
+    expect(await t.as('cyril', `select rack_units from public.cases where company_id = $1 and kind = 'rack'`, [demo])).toEqual([{ rack_units: 12 }])
+    expect(await t.as('cyril', `select sum(quantity)::int as q from public.equipment where company_id = $1 and name = 'Beam 230'`, [demo])).toEqual([{ q: 10 }])
+    expect(await t.as('cyril', `select count(*)::int as n from public.tasks where company_id = $1 and category = 'Doplniť'`, [demo])).toEqual([{ n: 1 }])
+  })
+})

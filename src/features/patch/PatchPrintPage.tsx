@@ -13,7 +13,7 @@ import { describeSource, patchSummary, STAND_LABELS } from './model'
 
 // Tlačí sa z prehliadača (Tlačiť → Uložiť ako PDF), vždy čierna na bielom.
 const PRINT_CSS = `
-@page { size: A4; margin: 12mm; }
+@page { size: A4; margin: 12mm; @top-left { content: ""; } @top-center { content: ""; } @top-right { content: ""; } @bottom-left { content: ""; } @bottom-center { content: ""; } @bottom-right { content: ""; } }
 @media print { html, body { background: #fff !important; } }
 `
 

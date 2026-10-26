@@ -48,6 +48,14 @@ export function AmpPresetsFields({ companyId }: { companyId: string }) {
             Podľa modelu: {suggestion.slots} presetov{suggestion.factorySlot ? `, č. ${suggestion.factorySlot} výrobný` : ''}
           </Button>
         )}
+        <Field
+          label="ID zosilňovača"
+          placeholder="napr. 101 (HiQnet / ID v sieti); viac kusov: #1: 101, #2: 102"
+          className="min-w-56 flex-1"
+          autoComplete="off"
+          error={errors.ampDeviceId?.message}
+          {...register('ampDeviceId')}
+        />
         <span className="pb-2.5 text-sm text-muted-foreground">
           Zapísané {rows.length}
           {slots ? ` z ${slots}` : ''}

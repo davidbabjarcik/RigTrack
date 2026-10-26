@@ -17,7 +17,7 @@ import { signatureOf, useLoanSignatures } from './signatures'
 // Listina sa tlačí z prehliadača (Tlačiť → Uložiť ako PDF), preto je vždy čierna na bielom
 // a stojí mimo rozloženia aplikácie.
 const PRINT_CSS = `
-@page { size: A4; margin: 14mm; }
+@page { size: A4; margin: 14mm; @top-left { content: ""; } @top-center { content: ""; } @top-right { content: ""; } @bottom-left { content: ""; } @bottom-center { content: ""; } @bottom-right { content: ""; } }
 @media print { html, body { background: #fff !important; } }
 `
 

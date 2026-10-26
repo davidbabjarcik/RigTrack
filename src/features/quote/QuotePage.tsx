@@ -16,7 +16,7 @@ import { buildQuote, DEFAULT_QUOTE, type QuoteSettings } from './model'
 import { deleteQuote, QUOTE_STATUS_LABELS, quoteNumber, saveQuote, savedQuoteKeys, setQuoteStatus, useSavedQuotes, type QuoteDoc, type QuoteStatus } from './saved'
 
 const PRINT_CSS = `
-@page { size: A4; margin: 14mm; }
+@page { size: A4; margin: 14mm; @top-left { content: ""; } @top-center { content: ""; } @top-right { content: ""; } @bottom-left { content: ""; } @bottom-center { content: ""; } @bottom-right { content: ""; } }
 @media print { html, body { background: #fff !important; } }
 `
 

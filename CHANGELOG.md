@@ -5,6 +5,24 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.0 – 26. 10. 2026
+
+Veľká verzia: technika a cases po kusoch, úlohy ako tabuľa, vlastný Prehľad. Spolu s 3.19–3.20:
+
+- **Prehľad skupiny techniky**: klik na zoskupený riadok (napr. Beam 7R alebo XLR) otvorí stránku so všetkými
+  kusmi #1…#16 – pri každom, v ktorom case je (odkaz na case), stav, časti a dĺžky; odtiaľ **Upraviť všetky naraz**
+  a **QR štítky všetkých**. Šípka vpravo v zozname rozbalí časti priamo v zozname.
+- **QR pre každý kus**: technika po kusoch má na štítkoch vlastný QR pre každý kus (Beam 7R #7). QR nájde kus,
+  aj keď ho presuniete do iného case. Štítky cases majú aj číslo (Beam 7R Case #4).
+- **Tlač bez hlavičky a pätičky prehliadača** (dátum, adresa, číslo strany) – QR štítky, ponuky, listy, event.
+- **Zosilňovač digitálny**: **ID zosilňovača** (napr. HiQnet / ID v sieti; pri viacerých kusoch „#1: 101, #2: 102“).
+- **Mimo case** sa ráta v kusoch („37 kusov techniky nie je v žiadnom case“) s tým, o čo ide; technika s „Nepatrí
+  do case“ sa nezobrazí ani vo filtri „Mimo cases“.
+- **Demo firma** ukazuje novinky: sadu cases s číslami, rack 12U, svetlá po kusoch v cases, digitálny zosilňovač
+  s ID a presetmi, XLR v dĺžkach, prázdny case, úlohy s prioritami a úlohu „Doplniť“ (aj existujúce demo firmy).
+- **Mobil**: v obsahu case je celý názov techniky (stav a tlačidlá sú pod ním).
+- Nové migrácie: `0101` (opravné `0071` a `0072` sú aktualizované).
+
 ### 3.20 – 26. 10. 2026
 
 - **Kanban úloh podľa čohokoľvek**: stĺpce podľa stavu, priority, kategórie, človeka alebo termínu. Presunom karty
