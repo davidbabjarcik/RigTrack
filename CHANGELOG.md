@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.2.1 – 26. 10. 2026
+
+- **Svetlá – DMX pri každom kuse** (nepovinné): pri evidencii po kusoch ku každému kusu predvolená linka (universe),
+  DMX adresa a mód (výber z DMX módov svetla). V detaile pri kuse „linka A · adr. 017 · mód 16ch“.
+
 ### 4.2 – 26. 10. 2026
 
 - **Kontroly** (nová karta): na jednom mieste cases a racky na kontrolu, technika na odčítanie prevádzkových hodín

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
-import { unitIdsOf, type Equipment } from '@/features/equipment/model'
+import { describeUnitDmx, unitIdsOf, type Equipment } from '@/features/equipment/model'
 import { useLoans } from '@/features/loans/useLoans'
 import { useQuery } from '@tanstack/react-query'
 import { fetchPurchases, orderKeys } from '@/features/orders/api'
@@ -39,7 +39,7 @@ export function UnitsOverview({ companyId, equipment, showInvoices = false }: Pr
               {(() => {
                 const info = equipment.unitInfo?.[String(unit.unit)]
                 const bought = equipment.unitPurchases?.[String(unit.unit)]
-                const ids = [info?.inv && `inv. ${info.inv}`, info?.serial && `SN ${info.serial}`, bought && `kúpené ${formatDate(bought)}`].filter(Boolean)
+                const ids = [info?.inv && `inv. ${info.inv}`, info?.serial && `SN ${info.serial}`, bought && `kúpené ${formatDate(bought)}`, describeUnitDmx(info)].filter(Boolean)
                 return ids.length > 0 ? <span className="block truncate font-medium text-foreground">{ids.join(' · ')}</span> : null
               })()}
               <span className="block truncate">

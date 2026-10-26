@@ -11,13 +11,15 @@ type Props = {
   errors: FieldErrors<EquipmentFormValues>
   unitIdsText: string
   quantity: number
+  /** Svetlá: názvy DMX módov na výber pri kuse; null = nie je svetlo (DMX sa nepýta). */
+  dmxModes?: string[] | null
 }
 
 /**
  * Kusy pri evidencii po kusoch: pri každom sériové číslo, dátum nákupu a odkiaľ je kúpený (číslo kusu #1, #2… slúži ako označenie).
  * Vlastné čísla kusov (keď nejdú po sebe) sú schované – bežne stačí počet kusov.
  */
-export function UnitDetailsFields({ control, register, errors, unitIdsText, quantity }: Props) {
+export function UnitDetailsFields({ control, register, errors, unitIdsText, quantity, dmxModes = null }: Props) {
   const custom = parseUnitIds(unitIdsText)
   const units = custom.length > 0 ? custom : unitRange(Number.isFinite(quantity) ? quantity : 0)
   const unitDates = useController({ control, name: 'unitPurchases' })
@@ -27,7 +29,7 @@ export function UnitDetailsFields({ control, register, errors, unitIdsText, quan
   const unitInfo = useController({ control, name: 'unitInfo' })
   const infos = unitInfo.field.value ?? []
   const infoOf = (unit: number) => infos.find((item) => item.unit === unit) ?? { unit, serial: '', inv: '', from: '' }
-  const setInfo = (unit: number, patch: { serial?: string; inv?: string; from?: string }) =>
+  const setInfo = (unit: number, patch: { serial?: string; inv?: string; from?: string; dmxLine?: string; dmxAddress?: string; dmxMode?: string }) =>
     unitInfo.field.onChange([...infos.filter((item) => item.unit !== unit), { ...infoOf(unit), ...patch }])
 
   return (
@@ -71,6 +73,28 @@ export function UnitDetailsFields({ control, register, errors, unitIdsText, quan
                   value={infoOf(unit).from ?? ''}
                   onChange={(event) => setInfo(unit, { from: event.target.value })}
                 />
+                {dmxModes && (
+                  <>
+                    <span className="hidden sm:block" />
+                    {/* Svetlá: predvolené DMX zapojenie kusu (nepovinné). */}
+                    <div className="col-span-1 grid grid-cols-3 gap-2 sm:col-span-3">
+                      <Field label={`DMX linka kusu #${unit}`} hideLabel placeholder="linka (napr. 1, A)" maxLength={20} autoComplete="off" value={infoOf(unit).dmxLine ?? ''} onChange={(event) => setInfo(unit, { dmxLine: event.target.value })} />
+                      <Field label={`DMX adresa kusu #${unit}`} hideLabel type="number" inputMode="numeric" min={1} max={512} placeholder="adresa 1–512" value={infoOf(unit).dmxAddress ?? ''} onChange={(event) => setInfo(unit, { dmxAddress: event.target.value })} />
+                      {dmxModes.length > 0 ? (
+                        <select aria-label={`DMX mód kusu #${unit}`} className="h-10 rounded-lg border bg-background px-2 text-sm" value={infoOf(unit).dmxMode ?? ''} onChange={(event) => setInfo(unit, { dmxMode: event.target.value })}>
+                          <option value="">mód –</option>
+                          {dmxModes.map((mode) => (
+                            <option key={mode} value={mode}>
+                              {mode}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <Field label={`DMX mód kusu #${unit}`} hideLabel placeholder="mód (napr. 16ch)" maxLength={40} autoComplete="off" value={infoOf(unit).dmxMode ?? ''} onChange={(event) => setInfo(unit, { dmxMode: event.target.value })} />
+                      )}
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  describeUnitDmx,
+  unitInfoToForm,
   groupSplitEquipment,
   ampPower,
   attributesFor,
@@ -510,5 +512,14 @@ describe('groupSplitEquipment cables', () => {
       { ...cable, id: 'p', name: 'Powercon 5 m', attributes: { lengthM: 5 } },
     ])
     expect(groups.map((group) => group.items.map((item) => item.id))).toEqual([['1', '10'], ['p']])
+  })
+})
+
+describe('unit DMX', () => {
+  it('keeps the optional default DMX line, address and mode of each piece', () => {
+    const info = unitInfoFromForm([{ unit: 1, serial: '', inv: '', dmxLine: 'A', dmxAddress: '17', dmxMode: '16ch' }, { unit: 2, serial: '', inv: '' }], new Set([1, 2]))
+    expect(info).toEqual({ '1': { dmxLine: 'A', dmxAddress: 17, dmxMode: '16ch' } })
+    expect(describeUnitDmx(info['1'])).toBe('linka A · adr. 017 · mód 16ch')
+    expect(unitInfoToForm(info)[0]).toMatchObject({ unit: 1, dmxAddress: '17' })
   })
 })

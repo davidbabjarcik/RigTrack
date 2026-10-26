@@ -39,9 +39,9 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **4.2.1** | Svetlá: predvolená DMX linka, adresa a mód pri každom kuse |
 | **4.2** | Karta Kontroly (moje / všetky), celý názov case s číslom, hromadná úprava sa vracia na prehľad |
 | **4.1.2** | Zariadenia z profilu jedným klikom aj do ďalšej firmy, bez zbytočnej výzvy na údaje |
-| **4.1.1** | Odčítanie hodín všetkým kusom naraz na prehľade skupiny |
 | **3.19** | @todo v políčkach, kanban a farebné priority úloh, vlastný stĺpec na Prehľade, racky v U, platiteľ DPH |
 | **3.16** | Pack list funguje aj bez signálu, záložka Vývojár v Nastaveniach |
 

@@ -486,7 +486,19 @@ export const equipmentSchema = z.object({
     .array(z.object({ slot: z.number().int().min(1).max(999).catch(1), name: z.string().trim().max(80).catch(''), speakerId: z.string().catch(''), note: z.string().trim().max(200).catch(''), locked: z.boolean().catch(false) }))
     .max(999)
     .optional(),
-  unitInfo: z.array(z.object({ unit: z.number(), serial: text(80), inv: text(40), from: text(120).optional() })).optional(),
+  unitInfo: z
+    .array(
+      z.object({
+        unit: z.number(),
+        serial: text(80),
+        inv: text(40),
+        from: text(120).optional(),
+        dmxLine: text(20).optional(),
+        dmxAddress: z.string().regex(/^(\d{1,3})?$/, 'Adresa 1–512').refine((value) => value === '' || (Number(value) >= 1 && Number(value) <= 512), 'Adresa 1–512').optional(),
+        dmxMode: text(40).optional(),
+      }),
+    )
+    .optional(),
   color: text(40).optional(),
   condition: z.enum(['new', 'excellent', 'good', 'worn', 'damaged', '']).optional(),
   mixerKind: z.enum(['analog', 'digital', '']).optional(),
@@ -1062,7 +1074,22 @@ export function advancedFilterCount(filter: EquipmentFilter) {
 }
 
 /** Všetky dátumy nákupu techniky (celá položka aj kusy). */
-export type UnitInfo = { serial?: string; inv?: string; /** Odkiaľ je kus kúpený (obchod, od koho). */ from?: string }
+export type UnitInfo = {
+  serial?: string
+  inv?: string
+  /** Odkiaľ je kus kúpený (obchod, od koho). */
+  from?: string
+  /** Svetlá: predvolená DMX linka (universe), adresa a mód kusu – nepovinné. */
+  dmxLine?: string
+  dmxAddress?: number
+  dmxMode?: string
+}
+
+/** „L1 · adr. 001 · 16ch“ – predvolené DMX zapojenie kusu do jedného riadku. */
+export function describeUnitDmx(info: UnitInfo | undefined) {
+  if (!info) return ''
+  return [info.dmxLine && `linka ${info.dmxLine}`, info.dmxAddress && `adr. ${String(info.dmxAddress).padStart(3, '0')}`, info.dmxMode && `mód ${info.dmxMode}`].filter(Boolean).join(' · ')
+}
 
 /** Výkon zosilňovača do jedného riadku: „2 Ω 1 800 W · 4 Ω 2 000 W · 8 Ω 1 250 W · bridge 4 Ω 3 600 W“. */
 /** Preset v digitálnom zosilňovači: číslo, názov, reprobox, pre ktorý je, a či je výrobný (nedá sa prepísať). */
@@ -1098,17 +1125,42 @@ export function ampPower(a: Pick<EquipmentAttributes, 'ampW2' | 'ampW4' | 'ampW8
 }
 
 /** Údaje kusov z formulára do databázy: len kusy, ktoré existujú, a len vyplnené údaje. */
-export function unitInfoFromForm(rows: { unit: number; serial: string; inv: string; from?: string }[], units: Set<number>): Record<string, UnitInfo> {
+type UnitInfoRow = { unit: number; serial: string; inv: string; from?: string; dmxLine?: string; dmxAddress?: string; dmxMode?: string }
+
+export function unitInfoFromForm(rows: UnitInfoRow[], units: Set<number>): Record<string, UnitInfo> {
   const info: Record<string, UnitInfo> = {}
   for (const row of rows) {
     if (!units.has(row.unit)) continue
     const serial = row.serial.trim()
     const inv = row.inv.trim()
     const from = (row.from ?? '').trim()
-    if (!serial && !inv && !from) continue
-    info[String(row.unit)] = { ...(serial && { serial }), ...(inv && { inv }), ...(from && { from }) }
+    const dmxLine = (row.dmxLine ?? '').trim()
+    const dmxAddress = Number(row.dmxAddress) || 0
+    const dmxMode = (row.dmxMode ?? '').trim()
+    if (!serial && !inv && !from && !dmxLine && !dmxAddress && !dmxMode) continue
+    info[String(row.unit)] = {
+      ...(serial && { serial }),
+      ...(inv && { inv }),
+      ...(from && { from }),
+      ...(dmxLine && { dmxLine }),
+      ...(dmxAddress > 0 && { dmxAddress }),
+      ...(dmxMode && { dmxMode }),
+    }
   }
   return info
+}
+
+/** Údaje kusov z uloženej techniky do formulára. */
+export function unitInfoToForm(unitInfo: Record<string, UnitInfo> | undefined): UnitInfoRow[] {
+  return Object.entries(unitInfo ?? {}).map(([unit, info]) => ({
+    unit: Number(unit),
+    serial: info.serial ?? '',
+    inv: info.inv ?? '',
+    from: info.from ?? '',
+    dmxLine: info.dmxLine ?? '',
+    dmxAddress: info.dmxAddress ? String(info.dmxAddress) : '',
+    dmxMode: info.dmxMode ?? '',
+  }))
 }
 
 export function purchaseDates(item: Pick<Equipment, 'purchasedOn' | 'unitPurchases'>) {

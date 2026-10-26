@@ -272,7 +272,7 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     // Údaje z 0060 len keď ich databáza pozná alebo sú vyplnené (inak chyba povie, čo chýba).
     ...(hasExtraColumns() || extrasFilled(values) ? extraFields(values) : {}),
     // Údaje po kusoch (0078) len keď ich databáza pozná alebo sú vyplnené.
-    ...(hasUnitInfo() || values.unitInfo?.some((unit) => unit.serial.trim() || unit.inv.trim() || (unit.from ?? '').trim()) ? { unit_info: unitInfoOf(values) } : {}),
+    ...(hasUnitInfo() || values.unitInfo?.some((unit) => unit.serial.trim() || unit.inv.trim() || (unit.from ?? '').trim() || (unit.dmxLine ?? '').trim() || unit.dmxAddress || (unit.dmxMode ?? '').trim()) ? { unit_info: unitInfoOf(values) } : {}),
   }
   const write = (row: Record<string, unknown>) => {
     const table = getSupabase().from('equipment')

@@ -35,6 +35,7 @@ import {
   equipmentSchema,
   isAudio,
   isLighting,
+  unitInfoToForm,
   isSimpleKind,
   KIND_LABELS,
   isTrussSection,
@@ -273,7 +274,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     purchasedOn: equipment.purchasedOn ?? '',
     unitPurchases: Object.entries(equipment.unitPurchases ?? {}).map(([unit, date]) => ({ unit: Number(unit), date })),
     makers: equipment.attributes.makers ?? [],
-    unitInfo: Object.entries(equipment.unitInfo ?? {}).map(([unit, info]) => ({ unit: Number(unit), serial: info.serial ?? '', inv: info.inv ?? '', from: info.from ?? '' })),
+    unitInfo: unitInfoToForm(equipment.unitInfo),
     links: equipment.links ?? [],
     cloneOf: equipment.cloneOf ?? '',
     captureMatch: equipment.captureMatch ?? '',
@@ -357,6 +358,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
     formState: { errors },
   } = methods
   const kind = useWatch({ control, name: 'kind' })
+  const dmxModesValue = useWatch({ control, name: 'dmxModes' })
   const categoryText = useWatch({ control, name: 'category' })
   // Časť Svetlo sa ukáže pri druhu Svetlo aj pri kategórii, ktorá je o svetlách.
   const lighting = isLighting(kind, categoryText ?? '')
@@ -819,7 +821,14 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           </span>
         </label>
         {trackUnits && !groupMode && (
-          <UnitDetailsFields control={control} register={register} errors={errors} unitIdsText={unitIdsText ?? ''} quantity={quantity} />
+          <UnitDetailsFields
+            control={control}
+            register={register}
+            errors={errors}
+            unitIdsText={unitIdsText ?? ''}
+            quantity={quantity}
+            dmxModes={lighting ? (dmxModesValue ?? []).map((mode) => mode.name || `${mode.channels} ch`).filter(Boolean) : null}
+          />
         )}
         <SelectField label="Stav" className={groupMode ? 'hidden' : undefined} error={errors.status?.message} {...register('status')}>
           {EQUIPMENT_STATUSES.map((status) => (
