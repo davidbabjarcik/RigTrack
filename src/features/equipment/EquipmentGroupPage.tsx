@@ -1,16 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, ChevronRight, Package, Pencil, QrCode } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, ChevronRight, Combine, Package, Pencil, QrCode } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { GroupDmx } from './GroupDmx'
 import { GroupHours } from './GroupHours'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { LinkButton } from '@/components/ui/button'
+import { Button, LinkButton } from '@/components/ui/button'
 import { caseTitle } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
-import { equipmentKeys, fetchEquipmentList } from './api'
+import { equipmentKeys, fetchEquipmentList, mergeEquipment } from './api'
 import { PhotoThumb } from './PhotoThumb'
 import { usePhotoThumbs } from './usePhotoThumbs'
 import { cableBaseName, describeAttributes, groupSplitEquipment, STATUS_LABELS, unitIdsOf } from './model'
@@ -28,6 +28,19 @@ export function EquipmentGroupPage() {
   const cases = useCases(companyId)
   const parts = groupSplitEquipment((list.data ?? []).filter((item) => ids.includes(item.id)))[0]?.items ?? []
   const [hoursOpen, setHoursOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const merge = useMutation({
+    mutationFn: async () => {
+      const free = parts.filter((item) => !item.caseId && item.name.trim().toLowerCase() === parts[0].name.trim().toLowerCase()).sort((a, b) => b.quantity - a.quantity)
+      for (const item of free.slice(1)) await mergeEquipment(item.id, free[0].id)
+      return free.slice(1).map((item) => item.id)
+    },
+    onSuccess: async (gone) => {
+      await queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) })
+      navigate(`/equipment/group?ids=${ids.filter((value) => !gone.includes(value)).join(',')}`, { replace: true })
+    },
+  })
   const [dmxOpen, setDmxOpen] = useState(false)
   const thumbs = usePhotoThumbs(companyId, parts.slice(0, 1).map((item) => item.photoPath))
 
@@ -52,6 +65,10 @@ export function EquipmentGroupPage() {
   const isDmx = parts.some((item) => item.trackUnits) && (main.kind === 'light' || Boolean(main.attributes.dmxModes?.length))
   const tracksHours = parts.some((item) => Boolean(item.attributes.trackHours) || item.hoursIntervalMonths !== null || item.operatingHours !== null)
   const cables = main.kind === 'cable'
+  // Viac častí mimo case (napr. po omyle pri pridávaní do case) sa dá spojiť do jednej.
+  const freeParts = parts.filter((item) => !item.caseId && item.name.trim().toLowerCase() === main.name.trim().toLowerCase())
+  const freePieces = freeParts.reduce((sum, item) => sum + item.quantity, 0)
+  const canMerge = !cables && freeParts.length > 1 && can(company, 'equipment.edit')
   const caseName = (caseId: string | null) => {
     const box = cases.data?.find((item) => item.id === caseId)
     return box ? caseTitle(box) : ''
@@ -99,6 +116,12 @@ export function EquipmentGroupPage() {
             QR štítky všetkých{units.length > 0 && ` (${units.length})`}
           </LinkButton>
           {isDmx && !dmxOpen && can(company, 'equipment.edit') && <GroupDmx companyId={companyId} parts={parts} caseName={caseName} open={false} onOpen={() => setDmxOpen(true)} onClose={() => {}} />}
+          {canMerge && (
+            <Button variant="outline" size="sm" disabled={merge.isPending} onClick={() => window.confirm(`Spojiť ${freeParts.length} časti mimo case do jednej (${freePieces} ks)? História sa prenesie.`) && merge.mutate()}>
+              <Combine className="size-4" aria-hidden />
+              {merge.isPending ? 'Spájam…' : 'Spojiť časti mimo case'}
+            </Button>
+          )}
           {tracksHours && !hoursOpen && can(company, 'equipment.edit') && <GroupHours companyId={companyId} parts={parts} caseName={caseName} onOpen={() => setHoursOpen(true)} />}
         </div>
       </header>

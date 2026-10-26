@@ -16,6 +16,8 @@ import { addCaseCheck, caseKeys, duplicateCase } from './api'
 import { caseNumber, formatDimensions, groupCases, kindLabel, kindWord, needsCheck, type Case } from './model'
 import { useCases } from './useCases'
 
+const ROLE_ORDER: Record<string, number> = { main: 0, secondary: 1, '': 2 }
+
 /**
  * Prehľad sady rovnakých cases (napr. 8× Beam 7R Case): čo je v ktorom, kontrola, úprava všetkých naraz,
  * QR štítky všetkých, ďalší kus sady a „skontrolované“ pre všetky naraz.
@@ -125,12 +127,21 @@ export function CaseGroupPage() {
               <Link to={`/cases/${item.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
                 <span className="w-14 shrink-0 text-lg font-semibold">#{caseNumber(item) || '?'}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">
-                    {inside.length === 0
-                      ? 'prázdny'
-                      : inside
-                          .map((part) => `${part.name}${part.trackUnits && part.unitIds.length > 0 ? ` ${part.unitIds.map((unit) => `#${unit}`).join(', ')}` : part.quantity > 1 ? ` ${part.quantity}×` : ''}`)
-                          .join(', ')}
+                  {/* Hlavný prvok štítku tučne, vedľajší normálne, ostatné menšie a sivé. */}
+                  <span className="block truncate">
+                    {inside.length === 0 ? (
+                      <span className="font-medium">prázdny</span>
+                    ) : (
+                      [...inside]
+                        .sort((a, b) => ROLE_ORDER[a.labelRole ?? ''] - ROLE_ORDER[b.labelRole ?? ''])
+                        .map((part, index) => (
+                          <span key={part.id} className={part.labelRole === 'main' ? 'font-semibold' : part.labelRole === 'secondary' ? 'font-medium' : 'text-sm text-muted-foreground'}>
+                            {index > 0 && ', '}
+                            {part.name}
+                            {part.trackUnits && part.unitIds.length > 0 ? ` ${part.unitIds.map((unit) => `#${unit}`).join(', ')}` : part.quantity > 1 ? ` ${part.quantity}×` : ''}
+                          </span>
+                        ))
+                    )}
                   </span>
                   <span className={cn('block truncate text-sm', late ? 'text-accent' : 'text-muted-foreground')}>
                     {item.lastCheck ? `Kontrola ${formatDate(item.lastCheck.checkedAt.slice(0, 10))} · ${item.lastCheck.checkedByName || 'neznámy'}` : 'Zatiaľ nekontrolované'}

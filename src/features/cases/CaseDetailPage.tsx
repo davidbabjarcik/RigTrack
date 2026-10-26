@@ -6,7 +6,7 @@ import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
-import { equipmentKeys, fetchEquipmentList, setEquipmentCase, setEquipmentLabelRole, splitEquipmentIntoCase, splitEquipmentUnits } from '@/features/equipment/api'
+import { equipmentKeys, fetchEquipmentList, setEquipmentCase, setEquipmentLabelRole, splitEquipmentIntoCase, splitEquipmentUnits, takeOutOfCase } from '@/features/equipment/api'
 import { unitIdsOf } from '@/features/equipment/model'
 import { filterEquipment, type LabelRole } from '@/features/equipment/model'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
@@ -63,7 +63,10 @@ export function CaseDetailPage() {
         ? splitEquipmentUnits(equipmentId, caseId, units).then(() => undefined)
         : count
           ? splitEquipmentIntoCase(equipmentId, caseId, count).then(() => undefined)
-          : setEquipmentCase(companyId, equipmentId, caseId),
+          : // Vybratie z case spojí kusy späť so zvyškom (2 + 8 = 10 ks).
+            caseId === null
+            ? takeOutOfCase(companyId, equipmentId)
+            : setEquipmentCase(companyId, equipmentId, caseId),
     onSettled: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) }),
   })
 

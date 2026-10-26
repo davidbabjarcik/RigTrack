@@ -475,6 +475,19 @@ export async function addHourReading(companyId: string, equipmentId: string, rea
 }
 
 /** Dá časť kusov do case (napr. 2 zo 16 svetiel); ostatné ostanú v pôvodnej položke. Vráti id položky v case (0086). */
+/** Vybrať z case: technika ide von a spojí sa s tou istou technikou mimo case (0110). Bez migrácie len vyberie. */
+export async function takeOutOfCase(companyId: string, equipmentId: string) {
+  const { error } = await getSupabase().rpc('take_out_of_case', { _id: equipmentId })
+  if (error && /take_out_of_case/.test(error.message ?? '')) return setEquipmentCase(companyId, equipmentId, null)
+  if (error) throw error
+}
+
+/** Spojí časť rozdelenej techniky do inej (kusy, čísla kusov aj história) – 0110. */
+export async function mergeEquipment(fromId: string, intoId: string) {
+  const { error } = await getSupabase().rpc('merge_equipment', { _from: fromId, _into: intoId })
+  if (error) throw error
+}
+
 /** Do case idú vybrané čísla kusov (napr. #7 a #8), zvyšok ostane s pôvodnými číslami (0100). */
 export async function splitEquipmentUnits(equipmentId: string, caseId: string | null, unitIds: number[]): Promise<string> {
   const { data, error } = await getSupabase().rpc('split_equipment_units', { _equipment_id: equipmentId, _case_id: caseId, _unit_ids: unitIds })

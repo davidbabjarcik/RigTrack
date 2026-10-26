@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.11 – 26. 10. 2026
+
+- **Vybrať z case = spojiť späť**: keď kusy vyberiete z case (krížik), spoja sa s tou istou technikou mimo case
+  (napr. omylom 2 ks do case a späť → znova 10 ks v jednom riadku).
+- **Spojiť časti mimo case**: na prehľade skupiny techniky tlačidlo, ktoré spojí rozdelené časti mimo case do jednej
+  – kusy, čísla kusov aj história (eventy, výpožičky, servis, hodiny) sa prenesú.
+- **Sada cases**: v obsahu case je hlavný prvok štítku tučne, vedľajší normálne a technika bez označenia menšia a sivá.
+- Nová migrácia: `0110` (je aj v `supabase/update-all.sql`).
+
 ### 4.10 – 26. 10. 2026
 
 - **DIP prepínače pri svetlách**: vo formulári svetla „DMX adresa sa nastavuje“ – displejom / v menu, alebo
