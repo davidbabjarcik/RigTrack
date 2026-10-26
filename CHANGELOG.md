@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.3.1 – 26. 10. 2026
+
+- **Pohľad na jeden kus** (QR alebo klik na #1): namiesto počtu kusov „Kus #1 · v tejto časti spolu 2 ks“,
+  prevádzkové hodiny len tohto kusu a zápis odčítania rovno preň.
+
 ### 4.3 – 26. 10. 2026
 
 - **Cases ako technika**: sada rovnakých cases má vlastný prehľad – klik na riadok (šípka vpravo rozbalí v zozname).

@@ -122,7 +122,13 @@ export function EquipmentDetailPage() {
         </Link>
       ),
     ],
-    [
+    focusUnit !== null ? [
+      'Kus',
+      <span key="unit">
+        #{focusUnit}
+        <span className="text-sm font-normal text-muted-foreground"> · v tejto časti spolu {equipment.quantity} ks</span>
+      </span>,
+    ] : [
       'Počet kusov',
       <span key="quantity" className="inline-flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
         {needsRestock(equipment) && <span className="text-sm font-normal text-destructive">treba dokúpiť</span>}
@@ -138,7 +144,7 @@ export function EquipmentDetailPage() {
       'V servise',
       inService > 0 ? [unitsOut.length > 0 && `kus ${formatUnits(unitsOut)}`, `${inService} z ${equipment.quantity} ks`].filter(Boolean).join(' · ') : undefined,
     ],
-    ['Evidencia', equipment.quantity > 1 ? (equipment.trackUnits ? `po kusoch (${describeUnitIds(unitIdsOf(equipment))})` : 'len počet kusov') : undefined],
+    ['Evidencia', focusUnit !== null ? undefined : equipment.quantity > 1 ? (equipment.trackUnits ? `po kusoch (${describeUnitIds(unitIdsOf(equipment))})` : 'len počet kusov') : undefined],
     ['Cena prenájmu', equipment.rentalPrice !== null ? `${formatMoney(equipment.rentalPrice, 'EUR')} za kus a deň` : undefined],
     ['Upozorniť pri počte', equipment.minQuantity !== null ? `${equipment.minQuantity} ks a menej` : undefined],
     ['Výrobca', equipment.manufacturer],
@@ -257,7 +263,7 @@ export function EquipmentDetailPage() {
       {/* Prázdne údaje sa neukazujú – kábel tak nemá MAC, IP ani servis, reprák DMX módy. */}
       <dl className="divide-y overflow-hidden rounded-xl border bg-surface">
         {rows
-          .filter(([label, value]) => (value !== undefined && value !== null && value !== '' && value !== false) || label === 'Počet kusov')
+          .filter(([label, value]) => (value !== undefined && value !== null && value !== '' && value !== false) || label === 'Počet kusov' || label === 'Kus')
           .map(([label, value]) => (
             <div key={label} className="flex justify-between gap-4 px-4 py-3">
               <dt className="text-sm text-muted-foreground">{label}</dt>
@@ -278,7 +284,7 @@ export function EquipmentDetailPage() {
       {equipment.trackUnits && equipment.quantity > 1 && <UnitsOverview companyId={company.companyId} equipment={equipment} showInvoices={can(company, 'orders.view')} only={focusUnit} />}
 
       <AmpPresetsInfo companyId={company.companyId} equipment={equipment} />
-      {!simple && <OperatingHours companyId={company.companyId} equipment={equipment} canEdit={can(company, 'equipment.edit')} />}
+      {!simple && <OperatingHours companyId={company.companyId} equipment={equipment} canEdit={can(company, 'equipment.edit')} only={focusUnit} />}
 
       {!simple && <EquipmentServiceHistory companyId={company.companyId} equipmentId={equipment.id} canEdit={can(company, 'service.edit')} />}
 

@@ -9,14 +9,14 @@ import { useCheckLevels } from '@/features/checks/levels'
 import { HoursChart } from './HoursChart'
 import { formatNumber, hoursState, unitIdsOf, type Equipment } from './model'
 
-type Props = { companyId: string; equipment: Equipment; canEdit: boolean }
+type Props = { companyId: string; equipment: Equipment; canEdit: boolean; /** Len tento kus (pohľad na jeden kus). */ only?: number | null }
 
 /**
  * Prevádzkové hodiny zariadenia s vlastným počítadlom (hlavy, zosilňovače):
  * posledný odčítaný stav, kedy ho treba odčítať znova a história odčítaní.
  * Bez nastaveného intervalu a bez odčítaní sa sekcia nezobrazí.
  */
-export function OperatingHours({ companyId, equipment, canEdit }: Props) {
+export function OperatingHours({ companyId, equipment, canEdit, only = null }: Props) {
   const queryClient = useQueryClient()
   const today = todayIso()
   const [open, setOpen] = useState(false)
@@ -24,9 +24,9 @@ export function OperatingHours({ companyId, equipment, canEdit }: Props) {
   const [readOn, setReadOn] = useState(today)
   const [note, setNote] = useState('')
   // Pri evidencii po kusoch sa odčítava každý kus zvlášť (napr. každý zosilňovač má svoje počítadlo).
-  const units = equipment.trackUnits && equipment.quantity > 1 ? unitIdsOf(equipment) : []
-  const [unit, setUnit] = useState('')
-  const [chartUnit, setChartUnit] = useState('')
+  const units = equipment.trackUnits && equipment.quantity > 1 ? (only !== null ? [only] : unitIdsOf(equipment)) : []
+  const [unit, setUnit] = useState(only !== null ? String(only) : '')
+  const [chartUnit, setChartUnit] = useState(only !== null ? String(only) : '')
   const checkDays = useCheckLevels(companyId).days
   const tracked = Boolean(equipment.attributes.trackHours) || equipment.hoursIntervalMonths !== null || equipment.operatingHours !== null
 
