@@ -86,7 +86,8 @@ with checks (migration, ok) as (
     ('0100 do case presné čísla kusov', to_regprocedure('public.split_equipment_units(uuid, uuid, integer[])') is not null),
     ('0101 demo firma 4.0', to_regprocedure('public.seed_demo_v4(uuid, uuid)') is not null),
     ('0102 právna forma firiem', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'partners' and column_name = 'legal_form')),
-    ('0103 oprávnenia sietí a kontrol', to_regprocedure('public.wifi_passwords(uuid)') is not null)
+    ('0103 oprávnenia sietí a kontrol', to_regprocedure('public.wifi_passwords(uuid)') is not null),
+    ('0104 šablóny patch listov, DMX patch', to_regclass('public.event_dmx_patch') is not null)
 )
 select migration, case when ok then 'OK' else 'chýba' end as stav
 from checks

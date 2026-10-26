@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Copy, Plus, Printer, Trash2 } from 'lucide-react'
+import { BookmarkPlus, Copy, Plus, Printer, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import type { CompanyEvent } from '@/features/events/model'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { copyPatch, deletePatchLine, patchKeys, savePatchLine, usePatch } from './api'
+import { applySoundTemplate, dmxKeys, savePatchTemplate, usePatchTemplates } from './dmxApi'
 import {
   CONNECTOR_LABELS,
   CONNECTORS,
@@ -166,6 +167,18 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
   })
   const remove = useMutation({ mutationFn: deletePatchLine, onSuccess: () => setEditing(null), onSettled: refresh })
   const copy = useMutation({ mutationFn: () => copyPatch(companyId, copyFrom, event.id), onSuccess: () => setCopyFrom(''), onSettled: refresh })
+  // Šablóny (0104): „Kapela – základ“ a pod. – načítať jedným klikom, alebo uložiť tento patch list ako šablónu.
+  const templates = usePatchTemplates(companyId)
+  const [templateId, setTemplateId] = useState('')
+  const fromTemplate = useMutation({
+    mutationFn: (lines: PatchFields[]) => applySoundTemplate(companyId, event.id, lines),
+    onSuccess: () => setTemplateId(''),
+    onSettled: refresh,
+  })
+  const saveTemplate = useMutation({
+    mutationFn: (name: string) => savePatchTemplate(companyId, null, { kind: 'sound', name, lines: (patch.data ?? []).map(({ id: _omit, ...fields }) => (void _omit, fields)) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: dmxKeys.templates(companyId) }),
+  })
   // Bez migrácie 0066 sa sekcia neukáže.
   if (patch.isError || !patch.data) return null
 
@@ -240,6 +253,47 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
             <Plus className="size-4" aria-hidden />
             Pridať kanál
           </Button>
+          {(templates.data ?? []).some((template) => template.kind === 'sound') && (
+            <>
+              <SelectField label="Šablóna" hideLabel className="w-52" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+                <option value="">Zo šablóny…</option>
+                {(templates.data ?? [])
+                  .filter((template) => template.kind === 'sound')
+                  .map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name} ({template.lines.length})
+                    </option>
+                  ))}
+              </SelectField>
+              {templateId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={fromTemplate.isPending}
+                  onClick={() => {
+                    const template = templates.data?.find((item) => item.id === templateId)
+                    if (template && (lines.length === 0 || window.confirm('Nahradiť doterajší patch list šablónou?'))) fromTemplate.mutate(template.lines as PatchFields[])
+                  }}
+                >
+                  Načítať
+                </Button>
+              )}
+            </>
+          )}
+          {lines.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={saveTemplate.isPending}
+              onClick={() => {
+                const name = window.prompt('Názov šablóny patch listu (napr. Kapela – základ):', event.name)
+                if (name?.trim()) saveTemplate.mutate(name.trim())
+              }}
+            >
+              <BookmarkPlus className="size-4" aria-hidden />
+              Uložiť ako šablónu
+            </Button>
+          )}
           {otherEvents.length > 0 && (
             <>
               <SelectField label="Načítať z eventu" hideLabel className="w-56" value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)}>
@@ -265,7 +319,8 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
           )}
         </div>
       )}
-      {(save.isError || remove.isError || copy.isError) && <p className="mt-2 text-sm text-destructive">Zmena sa nepodarila.</p>}
+      {saveTemplate.isSuccess && <p className="mt-2 text-sm text-muted-foreground">Šablóna je uložená (Patch listy).</p>}
+      {(save.isError || remove.isError || copy.isError || fromTemplate.isError || saveTemplate.isError) && <p className="mt-2 text-sm text-destructive">Zmena sa nepodarila.</p>}
     </CollapsibleSection>
   )
 }

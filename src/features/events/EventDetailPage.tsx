@@ -24,6 +24,7 @@ import { EventPartnersSection } from '@/features/partners/EventPartnersSection'
 import { EventCapsulesSection } from '@/features/capsules/EventCapsulesSection'
 import { EventSharesSection } from '@/features/links/EventSharesSection'
 import { PatchSection } from '@/features/patch/PatchSection'
+import { DmxPatchSection } from '@/features/patch/DmxPatchSection'
 import { usePartners } from '@/features/partners/api'
 import { EventDocumentsSection } from './EventDocumentsSection'
 import { EventIncomeSection } from './EventIncomeSection'
@@ -219,6 +220,7 @@ export function EventDetailPage() {
       <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
       <EventStagePlan companyId={companyId} eventId={event.id} />
       <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+      <DmxPatchSection companyId={companyId} event={event} canEdit={canEdit} />
       {can(company, 'equipment.view') && <EventPowerSection companyId={companyId} event={event} />}
       {can(company, 'equipment.view') && <EventCapsulesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />}
       {can(company, 'vehicles.view') && <EventLoadingSection companyId={companyId} event={event} />}

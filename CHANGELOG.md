@@ -5,6 +5,18 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.4 – 26. 10. 2026
+
+- **DMX patch list pri evente** (nová sekcia v detaile eventu): linka, adresa od–do, počet kanálov, mód a svetlo
+  z techniky. **Zo svetiel eventu** – naplní sa zo svetiel na evente s ich predvolenou linkou, adresou a módom
+  (chýbajúce adresy doplní za sebou); kontrola prekrytia adries a presahu 512; **tlač / PDF** po linkách
+  s počtom použitých kanálov.
+- **Šablóny patch listov** zvuku aj DMX: pri evente **Uložiť ako šablónu** a **Zo šablóny** jedným klikom.
+- **Patch listy** (nová karta): všetky šablóny na jednom mieste – vytvoriť, upraviť riadky (kanály / svetlá),
+  premenovať, zmazať.
+- Záloha obsahuje aj DMX patch listy a šablóny.
+- Nová migrácia: `0104` (opravné `0071` a `0072` sú aktualizované).
+
 ### 4.3.1 – 26. 10. 2026
 
 - **Pohľad na jeden kus** (QR alebo klik na #1): namiesto počtu kusov „Kus #1 · v tejto časti spolu 2 ks“,

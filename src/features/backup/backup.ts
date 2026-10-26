@@ -79,6 +79,8 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'event_drives', sheet: 'Kto šoféroval' },
       { table: 'event_capsules', sheet: 'Kapsule' },
       { table: 'event_patch', sheet: 'Patch list' },
+      { table: 'event_dmx_patch', sheet: 'DMX patch list' },
+      { table: 'patch_templates', sheet: 'Šablóny patch listov' },
       { table: 'event_quotes', sheet: 'Cenové ponuky' },
       { table: 'event_stage_plans', sheet: 'Plány pódia' },
     ],

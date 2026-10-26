@@ -818,6 +818,55 @@ begin
     exception when others then raise notice 'Kontrola event_days_note_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.event_dmx_patch') is not null then
+    begin
+      execute $sql$alter table public.event_dmx_patch drop constraint if exists event_dmx_patch_address_check$sql$;
+      execute $sql$alter table public.event_dmx_patch add constraint event_dmx_patch_address_check CHECK (((address >= 1) AND (address <= 512))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_dmx_patch_address_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_dmx_patch') is not null then
+    begin
+      execute $sql$alter table public.event_dmx_patch drop constraint if exists event_dmx_patch_channels_check$sql$;
+      execute $sql$alter table public.event_dmx_patch add constraint event_dmx_patch_channels_check CHECK (((channels >= 1) AND (channels <= 512))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_dmx_patch_channels_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_dmx_patch') is not null then
+    begin
+      execute $sql$alter table public.event_dmx_patch drop constraint if exists event_dmx_patch_mode_check$sql$;
+      execute $sql$alter table public.event_dmx_patch add constraint event_dmx_patch_mode_check CHECK ((char_length(mode) <= 40)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_dmx_patch_mode_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_dmx_patch') is not null then
+    begin
+      execute $sql$alter table public.event_dmx_patch drop constraint if exists event_dmx_patch_name_check$sql$;
+      execute $sql$alter table public.event_dmx_patch add constraint event_dmx_patch_name_check CHECK ((char_length(name) <= 80)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_dmx_patch_name_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_dmx_patch') is not null then
+    begin
+      execute $sql$alter table public.event_dmx_patch drop constraint if exists event_dmx_patch_note_check$sql$;
+      execute $sql$alter table public.event_dmx_patch add constraint event_dmx_patch_note_check CHECK ((char_length(note) <= 200)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_dmx_patch_note_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_dmx_patch') is not null then
+    begin
+      execute $sql$alter table public.event_dmx_patch drop constraint if exists event_dmx_patch_unit_check$sql$;
+      execute $sql$alter table public.event_dmx_patch add constraint event_dmx_patch_unit_check CHECK (((unit >= 1) AND (unit <= 100000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_dmx_patch_unit_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_dmx_patch') is not null then
+    begin
+      execute $sql$alter table public.event_dmx_patch drop constraint if exists event_dmx_patch_universe_check$sql$;
+      execute $sql$alter table public.event_dmx_patch add constraint event_dmx_patch_universe_check CHECK ((char_length(universe) <= 20)) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_dmx_patch_universe_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.event_documents') is not null then
     begin
       execute $sql$alter table public.event_documents drop constraint if exists event_documents_name_check$sql$;
@@ -1985,6 +2034,34 @@ begin
       execute $sql$alter table public.partners drop constraint if exists partners_note_check$sql$;
       execute $sql$alter table public.partners add constraint partners_note_check CHECK ((char_length(note) <= 1000)) not valid$sql$;
     exception when others then raise notice 'Kontrola partners_note_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.patch_templates') is not null then
+    begin
+      execute $sql$alter table public.patch_templates drop constraint if exists patch_templates_kind_check$sql$;
+      execute $sql$alter table public.patch_templates add constraint patch_templates_kind_check CHECK ((kind = ANY (ARRAY['sound'::text, 'dmx'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola patch_templates_kind_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.patch_templates') is not null then
+    begin
+      execute $sql$alter table public.patch_templates drop constraint if exists patch_templates_lines_check$sql$;
+      execute $sql$alter table public.patch_templates add constraint patch_templates_lines_check CHECK (((jsonb_typeof(lines) = 'array'::text) AND (jsonb_array_length(lines) <= 512))) not valid$sql$;
+    exception when others then raise notice 'Kontrola patch_templates_lines_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.patch_templates') is not null then
+    begin
+      execute $sql$alter table public.patch_templates drop constraint if exists patch_templates_name_check$sql$;
+      execute $sql$alter table public.patch_templates add constraint patch_templates_name_check CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80))) not valid$sql$;
+    exception when others then raise notice 'Kontrola patch_templates_name_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.patch_templates') is not null then
+    begin
+      execute $sql$alter table public.patch_templates drop constraint if exists patch_templates_note_check$sql$;
+      execute $sql$alter table public.patch_templates add constraint patch_templates_note_check CHECK ((char_length(note) <= 300)) not valid$sql$;
+    exception when others then raise notice 'Kontrola patch_templates_note_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.permission_group_rules') is not null then

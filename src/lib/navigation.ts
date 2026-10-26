@@ -1,4 +1,5 @@
 import {
+  Cable,
   ClipboardCheck,
   Timer,
   Briefcase,
@@ -75,6 +76,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'networks', permission: 'networks.view', label: 'Siete', to: '/networks', icon: Wifi, description: 'Wi-Fi siete, routery, IP a MAC adresy', hiddenFor: ['helper'] },
   { id: 'calendar', label: 'Kalendár', to: '/calendar', icon: CalendarDays, description: 'Kalendárový prehľad' },
   { id: 'todos', permission: 'tasks.view', label: 'Úlohy', to: '/todos', icon: ListTodo, description: 'Úlohy pre viac ľudí, kategórie, úlohy po evente' },
+  { id: 'patch', permission: 'events.view', label: 'Patch listy', to: '/patch', icon: Cable, description: 'Šablóny patch listov zvuku a DMX pre eventy', hiddenFor: ['helper'] },
   { id: 'checks', permission: 'equipment.view', label: 'Kontroly', to: '/checks', icon: ClipboardCheck, description: 'Cases na kontrolu, odčítanie hodín a servis – moje alebo všetky' },
   { id: 'office', label: 'Kancelária', to: '/office', icon: Coffee, description: 'Voda, káva, poháre… – kto čo kúpil', hiddenFor: ['helper'] },
   { id: 'incidents', label: 'Škody a úrazy', to: '/incidents', icon: ShieldAlert, description: 'Rozbitá technika a úrazy, štatistiky' },
