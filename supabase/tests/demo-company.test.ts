@@ -84,3 +84,16 @@ describe('demo company 4.0', () => {
     expect(await t.as('cyril', `select count(*)::int as n from public.tasks where company_id = $1 and category = 'Doplniť'`, [demo])).toEqual([{ n: 1 }])
   })
 })
+
+describe('demo company 4.6', () => {
+  it('shows DMX of pieces, patch lists, templates and a civic association', async () => {
+    await t.signUp('dora', 'dora@example.com')
+    const demo = (await t.as('dora', 'select public.create_demo_company() as id'))[0].id
+    expect(await t.as('dora', `select count(*)::int as n from public.patch_templates where company_id = $1`, [demo])).toEqual([{ n: 2 }])
+    expect(await t.as('dora', `select count(*)::int as n from public.event_dmx_patch where company_id = $1`, [demo])).toEqual([{ n: 8 }])
+    expect((await t.as('dora', `select count(*)::int as n from public.event_patch where company_id = $1`, [demo]))[0].n).toBeGreaterThan(5)
+    expect(await t.as('dora', `select legal_form from public.partners where company_id = $1 and legal_form = 'oz'`, [demo])).toEqual([{ legal_form: 'oz' }])
+    const beam = await t.as('dora', `select unit_info -> '3' ->> 'dmxAddress' as a from public.equipment where company_id = $1 and name = 'Beam 230' and 3 = any (unit_ids)`, [demo])
+    expect(beam).toEqual([{ a: '33' }])
+  })
+})

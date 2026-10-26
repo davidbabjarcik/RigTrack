@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.6.1 – 26. 10. 2026
+
+- **Demo firma** ukazuje novinky od 4.0: DMX adresy pri každom kuse svetla, príkon a váhu (štítky na pásku),
+  zvukový aj DMX patch list na festivale, šablóny patch listov, občianske združenie medzi firmami a zapnuté
+  „Našli ste…“ pri QR. Existujúce demo firmy sa doplnia samé.
+- **Upozornenia** (celý zoznam): pri zlúčenej technike počet kusov („Beam 7R (16 ks)“).
+- Nová migrácia: `0106` (opravné `0071` a `0072` sú aktualizované).
+
 ### 4.6 – 26. 10. 2026
 
 - **QR bez účtu – „Našli ste…“**: kto naskenuje QR štítok fotoaparátom a nemá účet, uvidí názov veci (aj číslo kusu),

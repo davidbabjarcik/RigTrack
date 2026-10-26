@@ -39,9 +39,9 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **4.6.1** | Demo firma s novinkami od 4.0 (DMX, patch listy, OZ, Našli ste…) |
 | **4.6** | QR štítok bez účtu ukáže „Našli ste…“ s kontaktom firmy (zapína admin) |
 | **4.5** | Štítky na pásku Brother P-touch: QR, DMX adresa, DMX módy, odber a váha – aj pre cases |
-| **4.4** | DMX patch list pri evente (zo svetiel eventu, tlač), šablóny patch listov, karta Patch listy |
 | **3.19** | @todo v políčkach, kanban a farebné priority úloh, vlastný stĺpec na Prehľade, racky v U, platiteľ DPH |
 | **3.16** | Pack list funguje aj bez signálu, záložka Vývojár v Nastaveniach |
 

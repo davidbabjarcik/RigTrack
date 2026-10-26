@@ -32,7 +32,10 @@ function NotificationList({ title, items }: { title: string; items: Notification
           <li key={item.id}>
             <Link to={item.to} className="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-muted">
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">{item.title}</span>
+                <span className="block truncate font-medium">
+                  {item.title}
+                  {item.count && item.count > 1 && ` (${item.pieces ? `${item.pieces} ks` : `${item.count}×`})`}
+                </span>
                 <span className="block truncate text-sm text-muted-foreground">{item.detail}</span>
               </span>
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
