@@ -13,7 +13,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { can } from '@/lib/permissions'
 import { errorDetail } from '@/lib/supabase/errors'
-import { equipmentKeys, fetchEquipment, saveEquipment } from './api'
+import { equipmentKeys, fetchEquipment, saveEquipment, syncEquipmentGroup } from './api'
 import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import {
@@ -297,6 +297,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const connectorListId = useId()
   const cancelTo = equipment ? `/equipment/${equipment.id}` : '/equipment'
   const [searchParams] = useSearchParams()
+  // ?group=id1,id2 – úprava všetkých častí rozdelenej techniky naraz (zo zoznamu techniky).
+  const groupIds = (searchParams.get('group') ?? '').split(',').filter(Boolean)
   const ownerPreset = searchParams.get('owner') ?? ''
 
   const methods = useForm<EquipmentFormValues>({
@@ -373,6 +375,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         categories,
         locations,
       })
+      // „Upraviť všetky naraz“: spoločné údaje aj do ostatných častí rozdelenej techniky.
+      if (equipment && groupIds.length > 1) await syncEquipmentGroup(companyId, id, groupIds)
       // Nový kábel: každá ďalšia dĺžka je samostatná položka s rovnakým konektorom a kategóriou (a svojimi výrobcami).
       if (!equipment && values.kind === 'cable' && (values.cableType ?? 'cable') === 'cable') {
         const base = cableBaseName(values.name)
@@ -399,6 +403,13 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   return (
     <FormProvider {...methods}>
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
+      {equipment && groupIds.length > 1 && (
+        <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
+          <strong>Úprava všetkých {groupIds.length} častí naraz.</strong> Názov, výrobca, model, kategória, parametre, poznámka, fotka a
+          ďalšie spoločné údaje sa po uložení prenesú do všetkých. Počet kusov, čísla kusov, case, sériové a inventárne čísla a stav
+          ostanú pri každej časti vlastné.
+        </p>
+      )}
       <div className="grid gap-4 sm:grid-cols-[12rem_1fr]">
         <SelectField
           label="Druh"

@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.19.6 – 26. 10. 2026
+
+- **Upraviť všetky naraz** – technika: po rozbalení rozdelenej techniky (napr. Beam 7R v 8 cases) jeden formulár
+  pre všetky časti. Názov, výrobca, model, kategória, parametre, poznámka, fotka a ďalšie spoločné údaje sa prenesú
+  do všetkých; počet, čísla kusov, case, sériové a inventárne čísla a stav ostanú pri každej časti.
+- **Upraviť všetky naraz** – cases: pri sade rovnakých cases rozmery, hmotnosť, kategória na štítku, case / rack (U),
+  priorita kontroly, vlastník a poznámka pre všetky naraz.
+
 ### 3.19.5 – 25. 10. 2026
 
 - **Pridať do case** podľa druhu techniky: technika len na počet má „10 / 10 ks“ a Pridať; technika po kusoch

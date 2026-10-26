@@ -12,7 +12,7 @@ import { asOptionalNumber, type Lookup } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { can } from '@/lib/permissions'
 import { OwnerSelect } from '@/features/staff/OwnerSelect'
-import { saveCase } from './api'
+import { saveCase, syncCaseGroup } from './api'
 import { equipmentKeys, fetchEquipmentList, splitEquipmentIntoCase } from '@/features/equipment/api'
 import { useCheckLevels, levelDays } from '@/features/checks/levels'
 import { CASE_KIND_LABELS, CASE_KINDS, caseSchema, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
@@ -48,6 +48,8 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
   const [searchParams] = useSearchParams()
   const checkDays = useCheckLevels(companyId).days
   const ownerPreset = searchParams.get('owner') ?? ''
+  // ?group=id1,id2 – úprava celej sady cases naraz (zo zoznamu cases).
+  const groupIds = (searchParams.get('group') ?? '').split(',').filter(Boolean)
 
   const {
     register,
@@ -81,6 +83,11 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
 
   const save = useMutation({
     mutationFn: async (values: CaseFormValues) => {
+      if (current && groupIds.length > 1) {
+        const id = await saveCase({ companyId, id: current.id, values, locations })
+        await syncCaseGroup(companyId, id, groupIds)
+        return [id]
+      }
       if (current || copies <= 1) return [await saveCase({ companyId, id: current?.id ?? null, values, locations })]
       return createMany(values)
     },
@@ -138,6 +145,13 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
 
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
+      {current && groupIds.length > 1 && (
+        <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
+          <strong>Úprava všetkých {groupIds.length} cases v sade.</strong> Rozmery, hmotnosť, kategória na štítku, case / rack (U),
+          priorita kontroly, vlastník a poznámka sa po uložení prenesú do všetkých. Názov, číslo, umiestnenie a fotky ostanú pri
+          každom vlastné.
+        </p>
+      )}
       {!current && (
         <div className="grid gap-4 rounded-xl border border-accent/40 bg-accent/10 p-4 sm:grid-cols-[1fr_10rem]">
           {templates.length > 0 ? (

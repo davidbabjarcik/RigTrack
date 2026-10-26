@@ -214,6 +214,23 @@ type SaveArgs = {
   locations: Lookup[]
 }
 
+/** Čo sa pri „Upraviť všetky naraz“ prenesie na ostatné časti rozdelenej techniky (nie počet, čísla kusov, case, stav). */
+const GROUP_COLUMNS = ['name', 'kind', 'attributes', 'category_id', 'manufacturer', 'model', 'service_interval_months', 'hours_interval_months', 'rental_price', 'min_quantity', 'note', 'photo_path', 'owner_staff_id']
+
+/** Prenesie spoločné údaje z jednej časti rozdelenej techniky na ostatné (napr. Beam 7R v 8 cases). */
+export async function syncEquipmentGroup(companyId: string, sourceId: string, ids: string[]) {
+  const others = ids.filter((id) => id !== sourceId)
+  if (others.length === 0) return
+  const db = getSupabase()
+  const { data, error } = await db.from('equipment').select('*').eq('company_id', companyId).eq('id', sourceId).single()
+  if (error) throw error
+  const source = data as Record<string, unknown>
+  // Len stĺpce, ktoré databáza má (staršie databázy nemusia mať všetky).
+  const shared = Object.fromEntries(GROUP_COLUMNS.filter((column) => column in source).map((column) => [column, source[column]]))
+  const { error: updateError } = await db.from('equipment').update(shared).eq('company_id', companyId).in('id', others)
+  if (updateError) throw updateError
+}
+
 export async function saveEquipment({ companyId, id, values, categories, locations }: SaveArgs): Promise<string> {
   // Polia, na ktoré sa formulár pri danom druhu nepýta, sa vyprázdnia, aby po zmene druhu neostali staré hodnoty.
   const simple = isSimpleKind(values.kind, values.category)

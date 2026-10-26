@@ -228,3 +228,19 @@ export async function duplicateCase(companyId: string, source: Case, all: Case[]
   if (Object.keys(filled).length > 0) await getSupabase().from('cases').update(filled).eq('company_id', companyId).eq('id', id)
   return id
 }
+
+/** Čo sa pri „Upraviť všetky naraz“ prenesie na ostatné cases v sade (nie názov, číslo, umiestnenie, fotky). */
+const GROUP_COLUMNS = ['label_category', 'weight_kg', 'width_cm', 'length_cm', 'depth_cm', 'note', 'owner_staff_id', 'check_priority', 'kind', 'rack_units']
+
+/** Prenesie spoločné údaje z jedného case na ostatné v sade (napr. 8× Beam case). */
+export async function syncCaseGroup(companyId: string, sourceId: string, ids: string[]) {
+  const others = ids.filter((id) => id !== sourceId)
+  if (others.length === 0) return
+  const db = getSupabase()
+  const { data, error } = await db.from('cases').select('*').eq('company_id', companyId).eq('id', sourceId).single()
+  if (error) throw error
+  const source = data as Record<string, unknown>
+  const shared = Object.fromEntries(GROUP_COLUMNS.filter((column) => column in source).map((column) => [column, source[column]]))
+  const { error: updateError } = await db.from('cases').update(shared).eq('company_id', companyId).in('id', others)
+  if (updateError) throw updateError
+}

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight, ClipboardCheck, PackageOpen, Plus, QrCode as QrCodeIcon, SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, ChevronRight, ClipboardCheck, Pencil, PackageOpen, Plus, QrCode as QrCodeIcon, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -326,6 +326,14 @@ export function CasesListPage() {
                 </button>
                 {expanded && (
                   <ul className="divide-y border-t bg-muted/30">
+                    {canEdit && (
+                      <li className="py-2 pr-4 pl-10">
+                        <Link to={`/cases/${first.id}/edit?group=${group.items.map((item) => item.id).join(',')}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline">
+                          <Pencil className="size-4" aria-hidden />
+                          Upraviť všetky naraz ({group.items.length})
+                        </Link>
+                      </li>
+                    )}
                     {group.items.map((item) => (
                       <li key={item.id} className="pl-6">
                         {row(item, `${CASE_KIND_LABELS[item.kind ?? 'case']} ${caseNumber(item) ? `#${caseNumber(item)}` : item.name}`, true)}
