@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-3.19-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-3.20-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -39,9 +39,9 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **3.20** | Kanban úloh podľa stavu, priority, kategórie, človeka či termínu, veľký filter a triedenie, „Doplniť“ |
 | **3.19.7** | Duplikovanie techniky s úpravou, káble všetkých dĺžok v jednom riadku |
 | **3.19.6** | Upraviť všetky naraz – rozdelená technika aj sada cases |
-| **3.19.5** | Pridať do case: počet alebo čísla kusov podľa druhu techniky, zoradené časti v Technike |
 | **3.19** | @todo v políčkach, kanban a farebné priority úloh, vlastný stĺpec na Prehľade, racky v U, platiteľ DPH |
 | **3.16** | Pack list funguje aj bez signálu, záložka Vývojár v Nastaveniach |
 

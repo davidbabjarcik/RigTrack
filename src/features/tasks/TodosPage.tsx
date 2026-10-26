@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Columns3, List, Pencil, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { Columns3, List, Pencil, Plus, SlidersHorizontal } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -13,14 +13,26 @@ import { memberName, useMembers } from '@/features/companies/useMembers'
 import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { createPostEventTasks, setTaskStatus, taskKeys } from './api'
-import { assigneesOf, isAssignedTo, isTaskOverdue, isTaskStale, priorityColor, sortTasks, TASK_PRIORITIES, TASK_PRIORITY_LABELS, TASK_STATUS_LABELS, type Task, type TaskPriority, type TaskStatus } from './model'
+import { createPostEventTasks, setTaskStatus, taskKeys, updateTaskFields } from './api'
+import { assigneesOf, isTaskOverdue, isTaskStale, priorityColor, TASK_PRIORITIES, TASK_PRIORITY_LABELS, TASK_STATUS_LABELS, TASK_STATUSES, type Task, type TaskStatus } from './model'
+import { BOARD_BY_LABELS, boardColumns, boardKey, canDragBy, filterTasks, NO_TASK_FILTER, sortTaskList, TASK_SORT_LABELS, type BoardBy, type TaskFilter, type TaskSort } from './board'
 import { TaskKanban } from './TaskKanban'
 import { TaskTemplatesSection } from './TaskTemplatesSection'
 import { TaskEditor } from './TaskEditor'
 import { useTasks } from './useTasks'
 
-type Scope = 'mine' | 'all'
+const FILTER_KEY = 'rigtrack.tasks.filter'
+
+function savedFilter(): TaskFilter {
+  try {
+    const saved = sessionStorage.getItem(FILTER_KEY)
+    return saved ? { ...NO_TASK_FILTER, ...(JSON.parse(saved) as TaskFilter) } : NO_TASK_FILTER
+  } catch {
+    return NO_TASK_FILTER
+  }
+}
+
+const extraCount = (filter: TaskFilter) => [filter.person, filter.category, filter.priority, filter.status, filter.due, filter.fill].filter(Boolean).length
 
 export function TodosPage() {
   const company = useCompany().active!
@@ -30,14 +42,20 @@ export function TodosPage() {
   const queryClient = useQueryClient()
   const tasks = useTasks(companyId)
   const members = useMembers(companyId)
-  const [scope, setScope] = useState<Scope>('mine')
-  const [showDone, setShowDone] = useState(false)
-  const [category, setCategory] = useState('')
-  const [priority, setPriority] = useState<TaskPriority | ''>('')
-  const [person, setPerson] = useState('')
-  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<TaskFilter>(savedFilter)
+  const [more, setMore] = useState(() => extraCount(savedFilter()) > 0)
+  const set = (patch: Partial<TaskFilter>) => setFilter((current) => ({ ...current, ...patch }))
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(FILTER_KEY, JSON.stringify(filter))
+    } catch {
+      // Bez úložiska sa filter len nezapamätá.
+    }
+  }, [filter])
   const { prefs, update } = useUserPrefs()
   const view = prefs.tasksView ?? 'list'
+  const boardBy: BoardBy = prefs.tasksBoardBy ?? 'status'
+  const sort: TaskSort = prefs.tasksSort ?? 'smart'
   // Po skončených eventoch sa úlohy zo šablón založia samé (raz za načítanie stránky).
   const postEvent = useQuery({
     queryKey: ['company', companyId, 'tasks', 'post-event'],
@@ -53,8 +71,16 @@ export function TodosPage() {
   const [editing, setEditing] = useState<string | null>(null)
   const today = todayIso()
 
+  // Presun v kanbane mení to, podľa čoho sú stĺpce (stav, priorita, kategória, kto).
   const move = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: TaskStatus }) => setTaskStatus(companyId, id, status),
+    mutationFn: ({ task, column }: { task: Task; column: string }) =>
+      boardBy === 'status'
+        ? setTaskStatus(companyId, task.id, column as TaskStatus)
+        : boardBy === 'priority'
+          ? updateTaskFields(companyId, task.id, { priority: column })
+          : boardBy === 'category'
+            ? updateTaskFields(companyId, task.id, { category: column })
+            : updateTaskFields(companyId, task.id, { assigneeId: column || null }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.list(companyId) }),
   })
   const toggle = useMutation({
@@ -62,20 +88,16 @@ export function TodosPage() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.list(companyId) }),
   })
 
-  const all = sortTasks(tasks.data ?? [], today)
+  const all = tasks.data ?? []
   const categories = [...new Set(all.map((task) => task.category ?? '').filter(Boolean))].sort((a, b) => a.localeCompare(b, 'sk'))
-  const words = search.toLowerCase().split(/\s+/).filter(Boolean)
-  const scoped = (scope === 'mine' ? all.filter((task) => isAssignedTo(task, userId)) : all).filter(
-    (task) =>
-      (!category || task.category === category) &&
-      (!priority || task.priority === priority) &&
-      (!person || isAssignedTo(task, person)) &&
-      words.every((word) => `${task.title} ${task.note}`.toLowerCase().includes(word)),
-  )
-  const stale = scoped.filter((task) => isTaskStale(task, today))
-  const open = scoped.filter((task) => task.status !== 'done')
-  const done = scoped.filter((task) => task.status === 'done')
-  const visible = showDone ? scoped : open
+  // Kanban podľa stavu ukazuje aj stĺpec Hotovo, preto tam filter stavu nechá všetky.
+  const effective = view === 'kanban' && boardBy === 'status' && filter.status === '' ? { ...filter, status: 'all' as const } : filter
+  const visible = sortTaskList(filterTasks(all, effective, userId, today), sort, today)
+  const stale = visible.filter((task) => isTaskStale(task, today))
+  const fillCount = filterTasks(all, { ...NO_TASK_FILTER, scope: filter.scope, fill: true }, userId, today).length
+  const people = (members.data ?? []).map((member) => ({ id: member.userId, name: member.fullName || member.email }))
+  const columns = boardColumns(boardBy, visible, people, (value) => priorityColor(value, prefs.priorityColors))
+  const extra = extraCount(filter)
 
   const editor = (task: (typeof all)[number] | null) => (
     <TaskEditor
@@ -166,80 +188,138 @@ export function TodosPage() {
 
       {editing === 'new' && <div className="mb-4">{editor(null)}</div>}
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="flex gap-2" role="group" aria-label="Čie úlohy">
-          {(
-            [
-              ['mine', 'Moje'],
-              ['all', 'Všetky'],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={scope === value}
-              onClick={() => setScope(value)}
-              className={cn(
-                'h-9 rounded-lg border px-3 text-sm font-medium',
-                scope === value ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        {categories.length > 0 && (
-          <SelectField label="Kategória" hideLabel className="w-44" value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option value="">Všetky kategórie</option>
-            {categories.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
+      <div className="mb-4 flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-2" role="group" aria-label="Čie úlohy">
+            {(
+              [
+                ['mine', 'Moje'],
+                ['all', 'Všetky'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={filter.scope === value}
+                onClick={() => set({ scope: value })}
+                className={cn('h-9 rounded-lg border px-3 text-sm font-medium', filter.scope === value ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
+              >
+                {label}
+              </button>
             ))}
-          </SelectField>
-        )}
-        <SelectField label="Priorita" hideLabel className="w-40" value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority | '')}>
-          <option value="">Každá priorita</option>
-          {TASK_PRIORITIES.map((value) => (
-            <option key={value} value={value}>
-              {TASK_PRIORITY_LABELS[value]}
-            </option>
-          ))}
-        </SelectField>
-        {scope === 'all' && (members.data ?? []).length > 1 && (
-          <SelectField label="Kto" hideLabel className="w-44" value={person} onChange={(e) => setPerson(e.target.value)}>
-            <option value="">Ktokoľvek</option>
-            {(members.data ?? []).map((member) => (
-              <option key={member.userId} value={member.userId}>
-                {member.fullName || member.email}
-              </option>
-            ))}
-          </SelectField>
-        )}
-        <Field label="Hľadať" hideLabel type="search" placeholder="Hľadať v úlohách" className="w-full sm:w-52" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <div className="flex gap-1 rounded-lg border bg-surface p-1" role="group" aria-label="Zobrazenie">
-          {(
-            [
-              ['list', 'Zoznam', List],
-              ['kanban', 'Kanban', Columns3],
-            ] as const
-          ).map(([value, label, Icon]) => (
+          </div>
+          {fillCount > 0 && (
             <button
-              key={value}
               type="button"
-              aria-pressed={view === value}
-              onClick={() => update({ tasksView: value })}
-              className={cn('flex h-7 items-center gap-1 rounded-md px-2 text-sm', view === value ? 'bg-primary text-primary-foreground' : 'hover:bg-muted')}
+              aria-pressed={filter.fill}
+              onClick={() => set({ fill: !filter.fill })}
+              className={cn('h-9 rounded-lg border px-3 text-sm font-medium', filter.fill ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
             >
-              <Icon className="size-4" aria-hidden />
-              {label}
+              Doplniť ({fillCount})
             </button>
-          ))}
+          )}
+          <Field label="Hľadať" hideLabel type="search" placeholder="Hľadať v úlohách" className="min-w-40 flex-1" value={filter.search} onChange={(e) => set({ search: e.target.value })} />
+          <Button variant="outline" aria-expanded={more} onClick={() => setMore(!more)}>
+            <SlidersHorizontal className="size-4" aria-hidden />
+            Filter a triedenie{extra > 0 && ` (${extra})`}
+          </Button>
+          <div className="flex gap-1 rounded-lg border bg-surface p-1" role="group" aria-label="Zobrazenie">
+            {(
+              [
+                ['list', 'Zoznam', List],
+                ['kanban', 'Kanban', Columns3],
+              ] as const
+            ).map(([value, label, Icon]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={view === value}
+                onClick={() => update({ tasksView: value })}
+                className={cn('flex h-7 items-center gap-1 rounded-md px-2 text-sm', view === value ? 'bg-primary text-primary-foreground' : 'hover:bg-muted')}
+              >
+                <Icon className="size-4" aria-hidden />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-        <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-          <input type="checkbox" className="size-4 accent-(--accent)" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} />
-          aj hotové ({done.length})
-        </label>
+        {view === 'kanban' && (
+          <div className="flex flex-wrap items-center gap-1 text-sm" role="group" aria-label="Stĺpce kanbanu podľa">
+            <span className="mr-1 text-muted-foreground">Stĺpce podľa:</span>
+            {(Object.keys(BOARD_BY_LABELS) as BoardBy[]).map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={boardBy === value}
+                onClick={() => update({ tasksBoardBy: value })}
+                className={cn('h-8 rounded-lg border px-3 font-medium', boardBy === value ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
+              >
+                {BOARD_BY_LABELS[value]}
+              </button>
+            ))}
+          </div>
+        )}
+        {more && (
+          <div className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
+            <SelectField label="Triediť" value={sort} onChange={(e) => update({ tasksSort: e.target.value as TaskSort })}>
+              {(Object.keys(TASK_SORT_LABELS) as TaskSort[]).map((value) => (
+                <option key={value} value={value}>
+                  {TASK_SORT_LABELS[value]}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField label="Stav" value={filter.status} onChange={(e) => set({ status: e.target.value as TaskFilter['status'] })}>
+              <option value="">Nehotové</option>
+              {TASK_STATUSES.map((value) => (
+                <option key={value} value={value}>
+                  {TASK_STATUS_LABELS[value]}
+                </option>
+              ))}
+              <option value="all">Všetky aj hotové</option>
+            </SelectField>
+            <SelectField label="Priorita" value={filter.priority} onChange={(e) => set({ priority: e.target.value })}>
+              <option value="">Každá</option>
+              {TASK_PRIORITIES.map((value) => (
+                <option key={value} value={value}>
+                  {TASK_PRIORITY_LABELS[value]}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField label="Kategória" value={filter.category} onChange={(e) => set({ category: e.target.value })}>
+              <option value="">Všetky</option>
+              {categories.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField label="Kto" value={filter.person} onChange={(e) => set({ person: e.target.value, ...(e.target.value ? { scope: 'all' as const } : {}) })}>
+              <option value="">Ktokoľvek</option>
+              {people.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.name}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField label="Termín" value={filter.due} onChange={(e) => set({ due: e.target.value as TaskFilter['due'] })}>
+              <option value="">Kedykoľvek</option>
+              <option value="overdue">Po termíne</option>
+              <option value="today">Dnes</option>
+              <option value="week">Do 7 dní</option>
+              <option value="later">Neskôr</option>
+              <option value="none">Bez termínu</option>
+            </SelectField>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" className="size-4" checked={filter.fill} onChange={(e) => set({ fill: e.target.checked })} />
+              Len „Doplniť“ (z @todo / 31121800)
+            </label>
+            {extra > 0 && (
+              <button type="button" className="self-center text-left text-sm text-accent hover:underline" onClick={() => setFilter({ ...NO_TASK_FILTER, scope: filter.scope, search: filter.search })}>
+                Zrušiť filter
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {stale.length > 0 && (
@@ -257,11 +337,11 @@ export function TodosPage() {
         <LoadingBlock />
       ) : tasks.isError ? (
         <ErrorBlock message="Úlohy sa nepodarilo načítať." onRetry={() => void tasks.refetch()} />
-      ) : (view === 'kanban' ? scoped.length === 0 : visible.length === 0) ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">{scope === 'mine' ? 'Nemáte žiadne otvorené úlohy' : 'Žiadne otvorené úlohy'}</p>
-          {scope === 'mine' && all.some((task) => task.status !== 'done') && (
-            <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => setScope('all')}>
+          <p className="font-medium">{extra > 0 || filter.search ? 'Filtru nič nezodpovedá' : filter.scope === 'mine' ? 'Nemáte žiadne otvorené úlohy' : 'Žiadne otvorené úlohy'}</p>
+          {filter.scope === 'mine' && all.some((task) => task.status !== 'done') && (
+            <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => set({ scope: 'all' })}>
               Zobraziť úlohy všetkých
             </button>
           )}
@@ -269,11 +349,10 @@ export function TodosPage() {
       ) : (
         view === 'kanban' ? (
           <TaskKanban
-            tasks={scoped}
-            showDone={showDone}
-            canEdit={canEdit}
-            colors={prefs.priorityColors}
-            onMove={(id, status) => move.mutate({ id, status })}
+            tasks={visible}
+            columns={columns}
+            columnOf={(task) => boardKey(task, boardBy, today)}
+            onMove={canEdit && canDragBy(boardBy) ? (task, column) => move.mutate({ task, column }) : undefined}
             renderCard={(task) => (editing === task.id ? editor(task) : card(task, true))}
           />
         ) : (

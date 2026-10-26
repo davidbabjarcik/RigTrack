@@ -102,6 +102,20 @@ export async function saveTask(companyId: string, id: string | null, values: Tas
   if (data.length === 0) throw new Error('Not saved')
 }
 
+/** Presun v kanbane: zmena priority, kategórie alebo riešiteľa jednej úlohy. */
+export async function updateTaskFields(companyId: string, id: string, patch: { priority?: string; category?: string; assigneeId?: string | null }) {
+  const row: Record<string, unknown> = {}
+  if (patch.priority !== undefined) row.priority = patch.priority
+  if (patch.category !== undefined) row.category = patch.category
+  if (patch.assigneeId !== undefined) {
+    row.assignee_id = patch.assigneeId
+    row.assignee_ids = patch.assigneeId ? [patch.assigneeId] : []
+  }
+  const { data, error } = await getSupabase().from('tasks').update(row).eq('company_id', companyId).eq('id', id).select('id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Not updated')
+}
+
 export async function setTaskStatus(companyId: string, id: string, status: TaskStatus) {
   const { data, error } = await getSupabase().from('tasks').update({ status }).eq('company_id', companyId).eq('id', id).select('id')
   if (error) throw error

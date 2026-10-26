@@ -13,7 +13,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { can } from '@/lib/permissions'
 import { errorDetail } from '@/lib/supabase/errors'
-import { copyEquipmentPhoto, equipmentKeys, fetchEquipment, saveEquipment, syncEquipmentGroup } from './api'
+import { copyEquipmentPhoto, equipmentKeys, fetchEquipment, fetchEquipmentList, saveEquipment, syncEquipmentGroup } from './api'
 import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import {
@@ -158,6 +158,18 @@ function copyFormValues(source: Equipment, categories: Lookup[], locations: Look
     lastServiceOn: '',
     status: 'available',
   }
+}
+
+/** „#1–#16“ alebo „#1–#4, #9“: súvislé čísla kusov ako rozsah. */
+function formatUnitList(units: number[]) {
+  const parts: string[] = []
+  for (let index = 0; index < units.length; index++) {
+    let end = index
+    while (end + 1 < units.length && units[end + 1] === units[end] + 1) end++
+    parts.push(end > index ? `#${units[index]}–#${units[end]}` : `#${units[index]}`)
+    index = end
+  }
+  return parts.join(', ')
 }
 
 function toFormValues(equipment: Equipment, categories: Lookup[], locations: Lookup[]): EquipmentFormValues {
@@ -317,6 +329,11 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const [searchParams] = useSearchParams()
   // ?group=id1,id2 – úprava všetkých častí rozdelenej techniky naraz (zo zoznamu techniky).
   const groupIds = (searchParams.get('group') ?? '').split(',').filter(Boolean)
+  const groupMode = Boolean(equipment) && groupIds.length > 1
+  const groupList = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: groupMode })
+  const groupParts = (groupList.data ?? []).filter((item) => groupIds.includes(item.id))
+  const groupPieces = groupParts.reduce((sum, item) => sum + item.quantity, 0)
+  const groupUnits = groupParts.flatMap((item) => (item.trackUnits ? item.unitIds : [])).sort((a, b) => a - b)
   const ownerPreset = searchParams.get('owner') ?? ''
 
   const methods = useForm<EquipmentFormValues>({
@@ -738,16 +755,26 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         <Field label="Váha kusu (kg)" type="number" inputMode="decimal" min={0} step="0.1" error={errors.weightKg?.message} {...register('weightKg', asOptionalNumber)} />
         <Field label="Model" error={errors.model?.message} {...register('model')} />
         {/* Pri evidencii po kusoch má každý kus svoje sériové a inventárne číslo (nižšie, Údaje po kusoch). */}
-        {!simple && !trackUnits && (
+        {!simple && !trackUnits && !groupMode && (
           <Field label="Sériové číslo" autoComplete="off" error={errors.serialNumber?.message} {...register('serialNumber')} />
         )}
-        <Field
-          label={trackUnits ? 'Inventárne číslo položky (spoločné, nepovinné)' : 'Inventárne číslo'}
-          autoComplete="off"
-          error={errors.inventoryNumber?.message}
-          {...register('inventoryNumber')}
-        />
-        {!multiLength && (
+        {!groupMode && (
+          <Field
+            label={trackUnits ? 'Inventárne číslo položky (spoločné, nepovinné)' : 'Inventárne číslo'}
+            autoComplete="off"
+            error={errors.inventoryNumber?.message}
+            {...register('inventoryNumber')}
+          />
+        )}
+        {groupMode && (
+          <div className="rounded-lg border bg-muted/40 p-3 text-sm sm:col-span-2">
+            <p className="font-medium">
+              Spolu {groupPieces} ks v {groupIds.length} častiach{groupUnits.length > 0 && ` (${formatUnitList(groupUnits)})`}
+            </p>
+            <p className="text-muted-foreground">Počet kusov, čísla kusov, sériové a inventárne čísla, stav a case sa menia pri každej časti zvlášť.</p>
+          </div>
+        )}
+        {!multiLength && !groupMode && (
           <Field
             label="Počet kusov"
             type="number"
@@ -778,7 +805,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           error={errors.rentalPrice?.message}
           {...register('rentalPrice', asOptionalNumber)}
         />
-        <label className="flex cursor-pointer items-start gap-3 sm:col-span-2">
+        <label className={groupMode ? 'hidden' : 'flex cursor-pointer items-start gap-3 sm:col-span-2'}>
           <input type="checkbox" className="mt-0.5 size-5 shrink-0" {...register('trackUnits')} />
           <span>
             Evidovať každý kus zvlášť
@@ -788,10 +815,10 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
             </span>
           </span>
         </label>
-        {trackUnits && (
+        {trackUnits && !groupMode && (
           <UnitDetailsFields control={control} register={register} errors={errors} unitIdsText={unitIdsText ?? ''} quantity={quantity} />
         )}
-        <SelectField label="Stav" error={errors.status?.message} {...register('status')}>
+        <SelectField label="Stav" className={groupMode ? 'hidden' : undefined} error={errors.status?.message} {...register('status')}>
           {EQUIPMENT_STATUSES.map((status) => (
             <option key={status} value={status}>
               {STATUS_LABELS[status]}
@@ -806,7 +833,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
 
       <OwnerSelect companyId={companyId} error={errors.owner?.message} {...register('owner')} />
 
-      <SelectField label="Case" error={errors.caseId?.message} {...register('caseId')}>
+      <SelectField label="Case" className={groupMode ? 'hidden' : undefined} error={errors.caseId?.message} {...register('caseId')}>
         <option value="">— nie je v žiadnom case —</option>
         {cases.map((item) => (
           <option key={item.id} value={item.id}>
@@ -814,7 +841,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           </option>
         ))}
       </SelectField>
-      {!caseValue && (
+      {!caseValue && !groupMode && (
         <label className="-mt-2 flex items-center gap-2 text-sm">
           <input type="checkbox" className="size-4" {...register('noCase')} />
           Nepatrí do case ani racku (nehlásiť ako „mimo case“)

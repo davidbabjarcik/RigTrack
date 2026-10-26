@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.20 – 26. 10. 2026
+
+- **Kanban úloh podľa čohokoľvek**: stĺpce podľa stavu, priority, kategórie, človeka alebo termínu. Presunom karty
+  sa zmení stav, priorita, kategória alebo riešiteľ (termín sa mení v úlohe).
+- **Filter a triedenie úloh**: stav (aj hotové), priorita, kategória, kto, termín (po termíne, dnes, do 7 dní…),
+  hľadanie; triedenie podľa dôležitosti, termínu, priority, názvu alebo najnovšie. Zapamätá sa.
+- **Doplniť**: tlačidlo s počtom úloh z @todo / 31121800 – jedným klikom len to, čo treba doplniť.
+- **Upraviť všetky naraz** (technika) namiesto počtu a čísel jednej časti ukazuje súhrn „16 ks v 8 častiach (#1–#16)“.
+
 ### 3.19.7 – 26. 10. 2026
 
 - **Duplikovať techniku**: tlačidlo v detaile techniky otvorí formulár novej techniky predvyplnený údajmi

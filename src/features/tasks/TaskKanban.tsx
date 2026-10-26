@@ -1,74 +1,72 @@
 import { useState, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { priorityColor, TASK_STATUS_LABELS, TASK_STATUSES, type Task, type TaskStatus } from './model'
+import { type BoardColumn } from './board'
+import type { Task } from './model'
 
 type Props = {
   tasks: Task[]
-  showDone: boolean
-  canEdit: boolean
-  colors?: Partial<Record<string, string>>
-  onMove: (id: string, status: TaskStatus) => void
+  columns: BoardColumn[]
+  columnOf: (task: Task) => string
+  /** Presun myšou / výberom; bez neho sa stĺpce len zobrazujú (napr. podľa termínu). */
+  onMove?: (task: Task, column: string) => void
   renderCard: (task: Task) => ReactNode
 }
 
-/** Úlohy v stĺpcoch podľa stavu; kartu presuniete myšou alebo výberom stavu pod ňou (na mobile). */
-export function TaskKanban({ tasks, showDone, canEdit, colors, onMove, renderCard }: Props) {
-  const [over, setOver] = useState<TaskStatus | null>(null)
-  const columns = TASK_STATUSES.filter((status) => showDone || status !== 'done')
+/** Úlohy v stĺpcoch (stav, priorita, kategória, kto, termín); kartu presuniete myšou alebo výberom pod ňou (mobil). */
+export function TaskKanban({ tasks, columns, columnOf, onMove, renderCard }: Props) {
+  const [over, setOver] = useState<string | null>(null)
 
   return (
-    <div className={cn('grid gap-3', columns.length === 3 ? 'lg:grid-cols-3' : 'md:grid-cols-2')}>
-      {columns.map((status) => {
-        const items = tasks.filter((task) => task.status === status)
-        return (
-          <section
-            key={status}
-            aria-label={TASK_STATUS_LABELS[status]}
-            className={cn('flex min-h-32 flex-col gap-2 rounded-xl border bg-muted/40 p-2', over === status && 'ring-2 ring-accent')}
-            onDragOver={(event) => {
-              if (!canEdit) return
-              event.preventDefault()
-              setOver(status)
-            }}
-            onDragLeave={() => setOver(null)}
-            onDrop={(event) => {
-              setOver(null)
-              const id = event.dataTransfer.getData('text/task')
-              const task = tasks.find((item) => item.id === id)
-              if (task && task.status !== status) onMove(id, status)
-            }}
-          >
-            <h2 className="flex items-center justify-between px-2 pt-1 text-sm font-medium">
-              {TASK_STATUS_LABELS[status]}
-              <span className="text-muted-foreground">{items.length}</span>
-            </h2>
-            {items.length === 0 && <p className="px-2 py-4 text-center text-sm text-muted-foreground">{canEdit ? 'Presuňte sem úlohu' : 'Nič'}</p>}
-            {items.map((task) => (
-              <div
-                key={task.id}
-                draggable={canEdit}
-                onDragStart={(event) => event.dataTransfer.setData('text/task', task.id)}
-                className={cn(canEdit && 'cursor-grab active:cursor-grabbing')}
-              >
-                {renderCard(task)}
-                {canEdit && (
-                  <label className="mt-1 flex items-center justify-end gap-1 text-xs text-muted-foreground lg:hidden">
-                    <span className="size-2 rounded-full" style={{ background: priorityColor(task.priority, colors) }} aria-hidden />
-                    Presunúť do
-                    <select className="rounded border bg-surface px-1 py-0.5" value={task.status} onChange={(event) => onMove(task.id, event.target.value as TaskStatus)}>
-                      {TASK_STATUSES.map((value) => (
-                        <option key={value} value={value}>
-                          {TASK_STATUS_LABELS[value]}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-              </div>
-            ))}
-          </section>
-        )
-      })}
+    <div className="-mx-4 overflow-x-auto px-4 pb-2">
+      <div className="grid auto-cols-[minmax(16rem,1fr)] grid-flow-col gap-3">
+        {columns.map((column) => {
+          const items = tasks.filter((task) => columnOf(task) === column.key)
+          return (
+            <section
+              key={column.key || '-'}
+              aria-label={column.label}
+              className={cn('flex min-h-32 flex-col gap-2 rounded-xl border bg-muted/40 p-2', over === column.key && 'ring-2 ring-accent')}
+              onDragOver={(event) => {
+                if (!onMove) return
+                event.preventDefault()
+                setOver(column.key)
+              }}
+              onDragLeave={() => setOver(null)}
+              onDrop={(event) => {
+                setOver(null)
+                const task = tasks.find((item) => item.id === event.dataTransfer.getData('text/task'))
+                if (task && onMove && columnOf(task) !== column.key) onMove(task, column.key)
+              }}
+            >
+              <h2 className="flex items-center justify-between gap-2 px-2 pt-1 text-sm font-medium">
+                <span className="flex items-center gap-2">
+                  {column.color && <span className="size-2.5 rounded-full" style={{ background: column.color }} aria-hidden />}
+                  {column.label}
+                </span>
+                <span className="text-muted-foreground">{items.length}</span>
+              </h2>
+              {items.length === 0 && <p className="px-2 py-4 text-center text-sm text-muted-foreground">{onMove ? 'Presuňte sem úlohu' : 'Nič'}</p>}
+              {items.map((task) => (
+                <div key={task.id} draggable={Boolean(onMove)} onDragStart={(event) => event.dataTransfer.setData('text/task', task.id)} className={cn(onMove && 'cursor-grab active:cursor-grabbing')}>
+                  {renderCard(task)}
+                  {onMove && (
+                    <label className="mt-1 flex items-center justify-end gap-1 text-xs text-muted-foreground lg:hidden">
+                      Presunúť do
+                      <select className="max-w-40 rounded border bg-surface px-1 py-0.5" value={columnOf(task)} onChange={(event) => onMove(task, event.target.value)}>
+                        {columns.map((value) => (
+                          <option key={value.key || '-'} value={value.key}>
+                            {value.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </div>
+              ))}
+            </section>
+          )
+        })}
+      </div>
     </div>
   )
 }

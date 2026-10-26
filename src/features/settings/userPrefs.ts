@@ -11,6 +11,10 @@ export type UserPrefs = {
   dashboardWidgets?: string[]
   /** Zobrazenie úloh. */
   tasksView?: 'list' | 'kanban'
+  /** Podľa čoho sú stĺpce kanbanu úloh. */
+  tasksBoardBy?: 'status' | 'priority' | 'category' | 'person' | 'due'
+  /** Triedenie úloh. */
+  tasksSort?: 'smart' | 'due' | 'priority' | 'title' | 'newest'
 }
 
 const LOCAL_KEY = 'rigtrack.prefs'
