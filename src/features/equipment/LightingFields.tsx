@@ -1,6 +1,7 @@
 import { Plus, Trash2 } from 'lucide-react'
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form'
 import { ampsAt230 } from '@/features/labels/tape'
+import { DmxNodeFields } from './DmxNodeFields'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { asOptionalNumber, CAPTURE_MATCH_LABELS, CAPTURE_MATCHES, LIGHT_SOURCE_LABELS, LIGHT_SOURCES, LIGHT_TYPE_GROUPS, LIGHT_TYPE_LABELS, type EquipmentFormValues } from './model'
@@ -43,6 +44,7 @@ export function LightingFields() {
             <p className="mt-1 text-xs text-muted-foreground">{powerW ? `≈ ${String(ampsAt230(powerW)).replace('.', ',')} A pri 230 V` : 'Stačí watty – ampéry sa dopočítajú.'}</p>
           </div>
         )}
+        {lightType === 'acc_converter' && <DmxNodeFields />}
         {!lightAccessory && (
           <div className="grid gap-2 sm:grid-cols-2">
             {/* Adresa cez DIP prepínače (staršie a lacnejšie svetlá) – podľa nich appka ukáže, ktoré prepínače zapnúť. */}

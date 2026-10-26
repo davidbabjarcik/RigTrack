@@ -211,6 +211,9 @@ export type EquipmentAttributes = {
   /** Svetlo: adresa sa nastavuje DIP prepínačmi (inak displejom / menu) – počet prepínačov a poznámka. */
   dipSwitches?: number
   dipNote?: string
+  /** Art-Net / sACN node: aktuálne zapnuté protokoly a výstupy s universe. */
+  nodeProtocols?: ('artnet' | 'sacn')[]
+  nodePorts?: { port: number; universe: number | null; protocol?: 'artnet' | 'sacn'; note?: string }[]
   /** Technika vo vlastnom obale (napr. reprobox v obale) – nie je v case, ale ani „mimo case“. */
   inCover?: boolean
   /** Aký obal (nepovinné), napr. „obal na top“. */
@@ -466,6 +469,11 @@ export const equipmentSchema = z.object({
   noCase: z.boolean().optional(),
   dipSwitches: z.number().int().min(4).max(16).optional(),
   dipNote: z.string().trim().max(80, 'Najviac 80 znakov').optional(),
+  nodeProtocols: z.array(z.enum(['artnet', 'sacn'])).optional(),
+  nodePorts: z
+    .array(z.object({ port: z.number().int(), universe: z.number().int().min(0).max(63999).nullable(), protocol: z.enum(['artnet', 'sacn']).optional(), note: z.string().optional() }))
+    .max(64)
+    .optional(),
   inCover: z.boolean().optional(),
   coverNote: z.string().trim().max(80, 'Najviac 80 znakov').optional(),
   hoursPriority: z.enum(['none', 'low', 'normal', 'high', '']).optional(),
@@ -663,6 +671,8 @@ export function attributesFor(
         | 'noCase'
         | 'dipSwitches'
         | 'dipNote'
+        | 'nodeProtocols'
+        | 'nodePorts'
         | 'inCover'
         | 'coverNote'
         | 'caseId'
@@ -868,6 +878,11 @@ export function attributesFor(
     if (values.boxHeightCm !== undefined) attributes.boxHeightCm = values.boxHeightCm
     if (values.audioType === 'subwoofer' && values.subDelayMs !== undefined) attributes.subDelayMs = values.subDelayMs
   }
+  // Prevodník (Art-Net / sACN node) – aj keď je to príslušenstvo.
+  if (values.lightType === 'acc_converter') {
+    if (values.nodeProtocols?.length) attributes.nodeProtocols = values.nodeProtocols
+    if (values.nodePorts?.length) attributes.nodePorts = values.nodePorts.map((item) => ({ port: item.port, universe: item.universe, ...(item.protocol ? { protocol: item.protocol } : {}) }))
+  }
   if (lighting && values.dipSwitches) {
     attributes.dipSwitches = values.dipSwitches
     if (values.dipNote?.trim()) attributes.dipNote = values.dipNote.trim()
@@ -986,6 +1001,8 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.boxWidthCm !== undefined && a.boxDepthCm !== undefined && `${formatNumber(a.boxWidthCm)}×${formatNumber(a.boxDepthCm)}${a.boxHeightCm !== undefined ? `×${formatNumber(a.boxHeightCm)}` : ''} cm`,
     a.dmxModes?.length && `DMX ${a.dmxModes.map((mode) => mode.channels).join('/')} ch`,
     a.dipSwitches && `DIP ${a.dipSwitches}`,
+    a.nodeProtocols?.length && a.nodeProtocols.map((value) => (value === 'artnet' ? 'Art-Net' : 'sACN')).join(' + '),
+    a.nodePorts?.length && `${a.nodePorts.length} ${a.nodePorts.length === 1 ? 'port' : a.nodePorts.length < 5 ? 'porty' : 'portov'}`,
     a.ledPanel && `LED${a.ledPanel.pitchMm ? ` P${formatNumber(a.ledPanel.pitchMm)}` : ''} ${a.ledPanel.widthMm}×${a.ledPanel.heightMm} mm, ${a.ledPanel.pxW}×${a.ledPanel.pxH} px`,
     a.display &&
       [DISPLAY_TYPE_LABELS[a.display.type], a.display.diagonalIn && `${formatNumber(a.display.diagonalIn)}″`, a.display.resW && `${a.display.resW}×${a.display.resH}`, a.display.lumens && `${a.display.lumens} lm`]

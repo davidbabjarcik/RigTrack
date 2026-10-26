@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Printer } from 'lucide-react'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { dipOn } from '@/features/labels/tape'
+import { portsForUniverse } from '@/features/equipment/dmxNode'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,8 @@ export function DmxPrintPage() {
   const patch = useDmxPatch(companyId, id)
   // Svetlá s DIP prepínačmi: na papieri aj ktoré prepínače zapnúť.
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
+  const nodes = (equipment.data ?? []).filter((item) => item.attributes.nodePorts?.length)
+  const outputsOf = (universe: string) => (universe !== '' && Number.isFinite(Number(universe)) ? portsForUniverse(nodes, Number(universe)) : [])
   const dipOf = (equipmentId: string | null, address: number | null) => {
     const count = equipment.data?.find((item) => item.id === equipmentId)?.attributes.dipSwitches
     return count && address ? dipOn(address, count) : ''
@@ -66,6 +69,12 @@ export function DmxPrintPage() {
             <h2 className="mb-1 text-sm font-bold">
               Linka {universe || '–'} <span className="font-normal text-neutral-600">· {lines.length} svetiel · {used} / 512 kanálov</span>
             </h2>
+            {/* Ktoré nody (Art-Net / sACN) túto universe posielajú a na ktorom porte. */}
+            {outputsOf(universe).length > 0 && (
+              <p className="mb-1 text-xs text-neutral-700">
+                Výstup: {outputsOf(universe).map((item) => `${item.node.name} port ${item.port}${item.protocol ? ` (${item.protocol === 'artnet' ? 'Art-Net' : 'sACN'})` : ''}`).join(', ')}
+              </p>
+            )}
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b-2 border-black text-left">

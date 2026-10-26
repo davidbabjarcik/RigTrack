@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.12 – 26. 10. 2026
+
+- **Art-Net / sACN node** (svetlá → typ „Prevodníky (DMX / sieť)“): aktuálne zapnuté protokoly (Art-Net, sACN
+  alebo oba), počet výstupov a ktorý port posiela ktorú universe – aj pri oboch protokoloch po portoch.
+  Rýchle tlačidlá „Všetkým rovnaká“ (splitter, napr. porty 1–4 = universe 0) a „Za sebou od“ (9, 10, 11 …).
+  V detaile „1–4 → U0“, na tlači DMX patch listu pri každej linke, z ktorého nodu a portu ide.
+
 ### 4.11 – 26. 10. 2026
 
 - **Vybrať z case = spojiť späť**: keď kusy vyberiete z case (krížik), spoja sa s tou istou technikou mimo case

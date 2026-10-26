@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Pencil, QrCode, Trash2, Wrench } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { caseTitle } from '@/features/cases/model'
+import { describePorts } from './dmxNode'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -122,6 +123,7 @@ export function EquipmentDetailPage() {
         </Link>
       ),
     ],
+    ['Výstupy nodu', equipment.attributes.nodePorts?.length ? describePorts(equipment.attributes.nodePorts) : undefined],
     ['Obal', !equipment.caseId && equipment.attributes.inCover ? equipment.attributes.coverNote || 'vlastný obal' : undefined],
     focusUnit !== null ? [
       'Kus',

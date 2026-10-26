@@ -203,6 +203,8 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     // Staršia technika s intervalom v mesiacoch prejde na sledovanie so strednou úrovňou.
     noCase: equipment.attributes.noCase ?? false,
     dipSwitches: equipment.attributes.dipSwitches,
+    nodeProtocols: equipment.attributes.nodeProtocols ?? [],
+    nodePorts: equipment.attributes.nodePorts ?? [],
     dipNote: equipment.attributes.dipNote ?? '',
     inCover: equipment.attributes.inCover ?? false,
     coverNote: equipment.attributes.coverNote ?? '',
