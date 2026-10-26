@@ -72,7 +72,7 @@ export function DmxPrintPage() {
             {/* Ktoré nody (Art-Net / sACN) túto universe posielajú a na ktorom porte. */}
             {outputsOf(universe).length > 0 && (
               <p className="mb-1 text-xs text-neutral-700">
-                Výstup: {outputsOf(universe).map((item) => `${item.node.name} port ${item.port}${item.protocol ? ` (${item.protocol === 'artnet' ? 'Art-Net' : 'sACN'})` : ''}`).join(', ')}
+                Výstup: {outputsOf(universe).map((item) => `${item.node.name} port ${item.port} (${item.protocol === 'artnet' ? 'Art-Net' : 'sACN'})`).join(', ')}
               </p>
             )}
             <table className="w-full border-collapse text-sm">

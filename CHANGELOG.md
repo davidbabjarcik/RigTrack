@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.12.1 – 26. 10. 2026
+
+- **Art-Net / sACN node**: každý port má universe pre Art-Net aj pre sACN zvlášť (napr. port 1 = Art-Net 0,
+  sACN 9); „Všetkým rovnaká“ a „Za sebou od“ pre zvolený protokol. V detaile „Art-Net 1–4 → U0 · sACN 1 → U9 …“.
+
 ### 4.12 – 26. 10. 2026
 
 - **Art-Net / sACN node** (svetlá → typ „Prevodníky (DMX / sieť)“): aktuálne zapnuté protokoly (Art-Net, sACN

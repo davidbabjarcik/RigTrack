@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { DEFAULT_CHECK_DAYS, levelDays, type CheckLevel, type CheckLevelDays } from '@/features/checks/levels'
 import type { CategoryColor } from './categoryColors'
+import { normalizePort } from './dmxNode'
 
 export const EQUIPMENT_STATUSES = ['available', 'loaned', 'in_service', 'damaged', 'retired'] as const
 export type EquipmentStatus = (typeof EQUIPMENT_STATUSES)[number]
@@ -213,7 +214,7 @@ export type EquipmentAttributes = {
   dipNote?: string
   /** Art-Net / sACN node: aktuálne zapnuté protokoly a výstupy s universe. */
   nodeProtocols?: ('artnet' | 'sacn')[]
-  nodePorts?: { port: number; universe: number | null; protocol?: 'artnet' | 'sacn'; note?: string }[]
+  nodePorts?: { port: number; artnet?: number | null; sacn?: number | null; universe?: number | null; protocol?: 'artnet' | 'sacn'; note?: string }[]
   /** Technika vo vlastnom obale (napr. reprobox v obale) – nie je v case, ale ani „mimo case“. */
   inCover?: boolean
   /** Aký obal (nepovinné), napr. „obal na top“. */
@@ -471,7 +472,16 @@ export const equipmentSchema = z.object({
   dipNote: z.string().trim().max(80, 'Najviac 80 znakov').optional(),
   nodeProtocols: z.array(z.enum(['artnet', 'sacn'])).optional(),
   nodePorts: z
-    .array(z.object({ port: z.number().int(), universe: z.number().int().min(0).max(63999).nullable(), protocol: z.enum(['artnet', 'sacn']).optional(), note: z.string().optional() }))
+    .array(
+      z.object({
+        port: z.number().int(),
+        artnet: z.number().int().min(0).max(63999).nullable().optional(),
+        sacn: z.number().int().min(0).max(63999).nullable().optional(),
+        universe: z.number().int().min(0).max(63999).nullable().optional(),
+        protocol: z.enum(['artnet', 'sacn']).optional(),
+        note: z.string().optional(),
+      }),
+    )
     .max(64)
     .optional(),
   inCover: z.boolean().optional(),
@@ -881,7 +891,12 @@ export function attributesFor(
   // Prevodník (Art-Net / sACN node) – aj keď je to príslušenstvo.
   if (values.lightType === 'acc_converter') {
     if (values.nodeProtocols?.length) attributes.nodeProtocols = values.nodeProtocols
-    if (values.nodePorts?.length) attributes.nodePorts = values.nodePorts.map((item) => ({ port: item.port, universe: item.universe, ...(item.protocol ? { protocol: item.protocol } : {}) }))
+    if (values.nodePorts?.length) {
+      attributes.nodePorts = values.nodePorts.map((item) => {
+        const port = normalizePort(item)
+        return { port: port.port, artnet: port.artnet ?? null, sacn: port.sacn ?? null }
+      })
+    }
   }
   if (lighting && values.dipSwitches) {
     attributes.dipSwitches = values.dipSwitches
