@@ -36,8 +36,12 @@ function Secret({ label, value }: { label: string; value: string }) {
 }
 
 /** Karta Wi-Fi siete: heslo, QR kód na pripojenie, router a jeho správa. */
-export function WifiCard({ network, login, equipment, onEdit }: { network: WifiNetwork; login: RouterLogin | undefined; equipment: Equipment | undefined; onEdit?: () => void }) {
+type Props = { network: WifiNetwork; login: RouterLogin | undefined; equipment: Equipment | undefined; onEdit?: () => void; showAddresses?: boolean }
+
+export function WifiCard({ network: full, login, equipment, onEdit, showAddresses = true }: Props) {
   const [qr, setQr] = useState(false)
+  // Bez oprávnenia „Vidieť IP a MAC adresy“ sa IP rozsahy a adresy routera neukazujú.
+  const network = showAddresses ? full : { ...full, subnet: '', routerIp: '', managementIp: '', dhcpStart: '', dhcpEnd: '' }
   const admin = managementUrl(network)
   return (
     <div className="flex flex-col gap-2 rounded-xl border bg-surface p-4">
@@ -46,7 +50,7 @@ export function WifiCard({ network, login, equipment, onEdit }: { network: WifiN
         <div className="min-w-0 flex-1">
           <p className="font-medium break-words">{network.ssid}</p>
           <p className="text-sm text-muted-foreground">
-            {[network.place, network.hidden && 'skrytá sieť', network.security === 'nopass' && 'bez hesla'].filter(Boolean).join(' · ') || 'Wi-Fi'}
+            {[network.scope === 'company' && 'sieť firmy', network.place, network.hidden && 'skrytá sieť', network.security === 'nopass' && 'bez hesla'].filter(Boolean).join(' · ') || 'Wi-Fi'}
           </p>
         </div>
         {onEdit && (
@@ -56,7 +60,8 @@ export function WifiCard({ network, login, equipment, onEdit }: { network: WifiN
         )}
       </div>
 
-      {network.security !== 'nopass' && <Secret label="Heslo" value={network.password} />}
+      {network.security !== 'nopass' && <Secret label="Heslo" value={network.password ?? ''} />}
+      {network.security !== 'nopass' && network.passwordHidden && <p className="text-sm text-muted-foreground">Heslo nevidíte – nemáte oprávnenie „Vidieť heslá Wi-Fi“.</p>}
 
       <div className="flex flex-wrap gap-2">
         <Button size="sm" onClick={() => setQr(!qr)} aria-expanded={qr}>

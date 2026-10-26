@@ -5,6 +5,25 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.3 – 26. 10. 2026
+
+- **Cases ako technika**: sada rovnakých cases má vlastný prehľad – klik na riadok (šípka vpravo rozbalí v zozname).
+  Pri každom case čo je vnútri (aj čísla kusov) a kontrola; **Upraviť všetky naraz**, **QR štítky všetkých**,
+  **Skontrolované všetky** a **Pridať ďalší do sady**.
+- **Kus techniky**: QR alebo klik na kus (#1) ukáže len ten kus, s odkazom na celú časť.
+- **DMX všetkým naraz** (prehľad skupiny svetiel): linka, adresa a mód pri každom kuse; **Rozpočítať adresy**
+  podľa kanálov módu (1, 17, 33…), upozornenie na prekročenie 512.
+- **Oprávnenia sietí** (Nastavenia → Oprávnenia → Siete): vidieť siete, vidieť IP a MAC adresy, vidieť heslá Wi-Fi
+  (stráži databáza), správa sietí (prihlásenie do routerov).
+- **Kontroly – oprávnenie** „Vidieť aj veci, za ktoré zodpovedajú iní“; bez neho len moje.
+- **Wi-Fi firmy**: sieť môže patriť k technike, alebo byť sieťou firmy (sídlo, kancelária, sklad).
+- **Právna forma** pri firmách a kontaktoch a v „Ponuka pre“: s.r.o., a.s., živnosť, občianske združenie (OZ),
+  nadácia, obec; podľa nej konateľ / štatutár / predseda… (v PDF ponuky aj štatutár).
+- **Upozornenia**: technika sa ráta v kusoch („Beam 7R (16 ks)“); po **Do úloh** upozornenie zmizne, kým je úloha
+  otvorená.
+- **Cenové ponuky**: nápoveda o vystavovateľoch sa neukazuje, keď sú nastavení.
+- Nové migrácie: `0102`, `0103` (opravné `0071` a `0072` sú aktualizované).
+
 ### 4.2.1 – 26. 10. 2026
 
 - **Svetlá – DMX pri každom kuse** (nepovinné): pri evidencii po kusoch ku každému kusu predvolená linka (universe),

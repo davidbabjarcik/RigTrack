@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Building, Search, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
-import { Field, TextareaField } from '@/components/ui/field'
+import { Field, SelectField, TextareaField } from '@/components/ui/field'
+import { LEGAL_FORM_LABELS, LEGAL_FORMS, statutoryLabel } from './legalForms'
 import { VatPayerField } from '@/features/companies/VatPayerField'
 import { useAuth } from '@/features/auth/auth-context'
 import { companyKeys } from '@/features/companies/api'
@@ -28,6 +29,7 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
     dic: current?.dic ?? '',
     icDph: current?.icDph ?? '',
     ceo: current?.ceo ?? '',
+    legalForm: current?.legalForm ?? '',
     address: current?.address ?? '',
     usesApp: current?.usesApp ?? false,
     note: current?.note ?? '',
@@ -78,7 +80,15 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
         <Field label="IČO" maxLength={20} value={fields.ico} onChange={(event) => set({ ico: event.target.value })} onBlur={search} />
         <Field label="DIČ" maxLength={20} value={fields.dic} onChange={(event) => set({ dic: event.target.value })} />
         <VatPayerField value={fields.icDph ?? ''} onChange={(icDph) => set({ icDph })} />
-        <Field label="CEO / konateľ" maxLength={120} value={fields.ceo} onChange={(event) => set({ ceo: event.target.value })} />
+        <SelectField label="Právna forma" value={fields.legalForm ?? ''} onChange={(event) => set({ legalForm: event.target.value })}>
+          <option value="">— nezadané —</option>
+          {LEGAL_FORMS.map((form) => (
+            <option key={form} value={form}>
+              {LEGAL_FORM_LABELS[form]}
+            </option>
+          ))}
+        </SelectField>
+        <Field label={statutoryLabel(fields.legalForm)} placeholder="hlavná osoba (meno)" maxLength={120} value={fields.ceo} onChange={(event) => set({ ceo: event.target.value })} />
         <Field label="Adresa" className="sm:col-span-2" placeholder="napr. Ulica 1, Mesto" maxLength={200} value={fields.address} onChange={(event) => set({ address: event.target.value })} />
       </div>
 

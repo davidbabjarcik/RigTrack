@@ -17,6 +17,8 @@ export type Notification = {
   equipmentId?: string
   /** Koľko rovnakých upozornení je zlúčených do jedného (napr. Beam 7R v 8 cases). */
   count?: number
+  /** Koľko kusov techniky sa upozornenie týka (16 ks v 8 cases). */
+  pieces?: number
 }
 
 export type NotificationSources = {
@@ -73,6 +75,7 @@ export function buildNotifications(sources: NotificationSources, today: string, 
         detail: service === 'overdue' ? 'servis po termíne' : 'servis do 30 dní',
         to: `/equipment/${item.id}`,
         equipmentId: item.id,
+        pieces: item.quantity,
       })
     }
     const hours = hoursState(item, today).state
@@ -84,6 +87,7 @@ export function buildNotifications(sources: NotificationSources, today: string, 
         detail: hours === 'unknown' ? 'prevádzkové hodiny ešte neboli odčítané' : hours === 'overdue' ? 'treba odčítať prevádzkové hodiny' : 'odčítanie prevádzkových hodín do 30 dní',
         to: `/equipment/${item.id}`,
         equipmentId: item.id,
+        pieces: item.quantity,
       })
     }
     if (needsRestock(item)) {
@@ -94,6 +98,7 @@ export function buildNotifications(sources: NotificationSources, today: string, 
         detail: item.quantity === 0 ? 'došlo, treba kúpiť' : `ostáva ${item.quantity} ks, treba kúpiť`,
         to: `/equipment/${item.id}`,
         equipmentId: item.id,
+        pieces: item.quantity,
       })
     }
   }
@@ -107,7 +112,11 @@ export function buildNotifications(sources: NotificationSources, today: string, 
     }
   }
 
-  return mergeSame(list).sort((a, b) => Number(b.severity === 'urgent') - Number(a.severity === 'urgent'))
+  // Upozornenie, z ktorého už je otvorená úloha (tlačidlo „Do úloh“), sa neukazuje.
+  const inTasks = new Set(sources.tasks.filter((task) => task.status !== 'done' && task.link).map((task) => task.link))
+  return mergeSame(list)
+    .filter((item) => !inTasks.has(item.to))
+    .sort((a, b) => Number(b.severity === 'urgent') - Number(a.severity === 'urgent'))
 }
 
 /** Rovnaké upozornenia (napr. tá istá technika rozdelená do 8 cases) ako jedno „Beam 7R (8×)“. */
@@ -119,6 +128,7 @@ export function mergeSame(list: Notification[]): Notification[] {
     if (!found) merged.set(key, { ...item, ids: item.equipmentId ? [item.equipmentId] : [] })
     else {
       found.count = (found.count ?? 1) + 1
+      if (item.pieces !== undefined) found.pieces = (found.pieces ?? 0) + item.pieces
       if (item.equipmentId) found.ids.push(item.equipmentId)
       if (item.severity === 'urgent') found.severity = 'urgent'
     }

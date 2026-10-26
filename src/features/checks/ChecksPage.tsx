@@ -54,7 +54,10 @@ export function ChecksPage() {
   const company = useCompany().active!
   const companyId = company.companyId
   const userId = useAuth().session!.user.id
-  const [onlyMine, setOnlyMine] = useState(true)
+  // Veci ostatných vidí len ten, kto má oprávnenie „Kontroly – vidieť aj veci iných“ (admin vždy).
+  const canSeeAll = can(company, 'checks.all')
+  const [onlyMineChoice, setOnlyMine] = useState(true)
+  const onlyMine = onlyMineChoice || !canSeeAll
   const cases = useCases(companyId)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
   const responsibilities = useResponsibilities(companyId).data ?? []
@@ -81,7 +84,7 @@ export function ChecksPage() {
   return (
     <>
       <PageHeader title="Kontroly" description="Čo treba skontrolovať, odčítať a dať do servisu" />
-      <label className="mb-4 flex items-center gap-2 text-sm">
+      <label className={canSeeAll ? 'mb-4 flex items-center gap-2 text-sm' : 'hidden'}>
         <input type="checkbox" className="size-4" checked={onlyMine} onChange={(event) => setOnlyMine(event.target.checked)} />
         Len to, za čo zodpovedám
         {!someoneResponsible && <span className="text-muted-foreground">(zodpovednosti nie sú nastavené – vidíte všetko)</span>}

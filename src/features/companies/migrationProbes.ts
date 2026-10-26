@@ -46,6 +46,8 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0097', label: 'odkaz na ponuku pre klienta, s.r.o. / živnosť, pripnuté firmy na účet', table: 'company_pins', column: 'company_id' },
   { migration: '0098', label: 'úloha z políčka cez @todo s odkazom späť', table: 'tasks', column: 'link' },
   { migration: '0099', label: 'case alebo rack (U), úlohy bez priority, nastavenia účtu', table: 'user_prefs', column: 'prefs' },
+  { migration: '0102', label: 'právna forma pri firmách a kontaktoch', table: 'partners', column: 'legal_form' },
+  { migration: '0103', label: 'oprávnenia sietí a kontrol, Wi-Fi firmy', table: 'wifi_networks', column: 'scope' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

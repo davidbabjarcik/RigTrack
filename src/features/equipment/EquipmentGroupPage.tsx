@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, ChevronRight, Package, Pencil, QrCode } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { GroupDmx } from './GroupDmx'
 import { GroupHours } from './GroupHours'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { LinkButton } from '@/components/ui/button'
@@ -27,6 +28,7 @@ export function EquipmentGroupPage() {
   const cases = useCases(companyId)
   const parts = groupSplitEquipment((list.data ?? []).filter((item) => ids.includes(item.id)))[0]?.items ?? []
   const [hoursOpen, setHoursOpen] = useState(false)
+  const [dmxOpen, setDmxOpen] = useState(false)
   const thumbs = usePhotoThumbs(companyId, parts.slice(0, 1).map((item) => item.photoPath))
 
   const back = (
@@ -47,6 +49,7 @@ export function EquipmentGroupPage() {
   }
 
   const main = parts[0]
+  const isDmx = parts.some((item) => item.trackUnits) && (main.kind === 'light' || Boolean(main.attributes.dmxModes?.length))
   const tracksHours = parts.some((item) => Boolean(item.attributes.trackHours) || item.hoursIntervalMonths !== null || item.operatingHours !== null)
   const cables = main.kind === 'cable'
   const caseName = (caseId: string | null) => {
@@ -95,9 +98,11 @@ export function EquipmentGroupPage() {
             <QrCode className="size-4" aria-hidden />
             QR štítky všetkých{units.length > 0 && ` (${units.length})`}
           </LinkButton>
+          {isDmx && !dmxOpen && can(company, 'equipment.edit') && <GroupDmx companyId={companyId} parts={parts} caseName={caseName} open={false} onOpen={() => setDmxOpen(true)} onClose={() => {}} />}
           {tracksHours && !hoursOpen && can(company, 'equipment.edit') && <GroupHours companyId={companyId} parts={parts} caseName={caseName} onOpen={() => setHoursOpen(true)} />}
         </div>
       </header>
+      {dmxOpen && <GroupDmx companyId={companyId} parts={parts} caseName={caseName} open onOpen={() => {}} onClose={() => setDmxOpen(false)} />}
       {hoursOpen && <GroupHours companyId={companyId} parts={parts} caseName={caseName} open onClose={() => setHoursOpen(false)} />}
 
       {units.length > 0 && (

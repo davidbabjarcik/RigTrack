@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight, ClipboardCheck, Pencil, PackageOpen, Plus, QrCode as QrCodeIcon, SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, ChevronRight, ClipboardCheck, PackageOpen, Plus, QrCode as QrCodeIcon, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -315,7 +315,9 @@ export function CasesListPage() {
             const late = group.items.filter((item) => needsCheck(item, now, checkDays)).length
             return (
               <li key={group.key}>
-                <button type="button" aria-expanded={expanded} onClick={() => toggleGroup(group.key)} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted">
+                {/* Ako pri technike: klik na riadok otvorí prehľad sady, šípka vpravo ju rozbalí v zozname. */}
+                <div className="flex min-h-16 items-center hover:bg-muted">
+                <Link to={`/cases/group?ids=${group.items.map((item) => item.id).join(',')}`} className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4">
                   <PhotoThumb url={thumbs[photoOf(first)]} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
@@ -329,18 +331,19 @@ export function CasesListPage() {
                     </span>
                     {late > 0 && <span className="block text-sm text-accent">Na kontrolu: {late}</span>}
                   </span>
-                  <ChevronDown className={cn('size-4 shrink-0 text-muted-foreground transition-transform', expanded && 'rotate-180')} aria-hidden />
+                </Link>
+                <button
+                  type="button"
+                  aria-expanded={expanded}
+                  aria-label={expanded ? 'Zbaliť sadu' : 'Rozbaliť sadu'}
+                  onClick={() => toggleGroup(group.key)}
+                  className="flex h-16 w-12 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
+                >
+                  <ChevronDown className={cn('size-5 transition-transform', expanded && 'rotate-180')} aria-hidden />
                 </button>
+                </div>
                 {expanded && (
                   <ul className="divide-y border-t bg-muted/30">
-                    {canEdit && (
-                      <li className="py-2 pr-4 pl-10">
-                        <Link to={`/cases/${first.id}/edit?group=${group.items.map((item) => item.id).join(',')}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline">
-                          <Pencil className="size-4" aria-hidden />
-                          Upraviť všetky naraz ({group.items.length})
-                        </Link>
-                      </li>
-                    )}
                     {group.items.map((item) => (
                       <li key={item.id} className="pl-6">
                         {row(item, `${CASE_KIND_LABELS[item.kind ?? 'case']} ${caseNumber(item) ? `#${caseNumber(item)}` : item.name}`, true)}

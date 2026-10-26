@@ -72,7 +72,7 @@ export const NAV_ITEMS: NavItem[] = [
     description: 'Servisné záznamy, žiadosti o servis a servisní technici',
     fallback: { to: '/service/requests' },
   },
-  { id: 'networks', label: 'Siete', to: '/networks', icon: Wifi, description: 'Wi-Fi siete, routery, IP a MAC adresy', hiddenFor: ['helper'] },
+  { id: 'networks', permission: 'networks.view', label: 'Siete', to: '/networks', icon: Wifi, description: 'Wi-Fi siete, routery, IP a MAC adresy', hiddenFor: ['helper'] },
   { id: 'calendar', label: 'Kalendár', to: '/calendar', icon: CalendarDays, description: 'Kalendárový prehľad' },
   { id: 'todos', permission: 'tasks.view', label: 'Úlohy', to: '/todos', icon: ListTodo, description: 'Úlohy pre viac ľudí, kategórie, úlohy po evente' },
   { id: 'checks', permission: 'equipment.view', label: 'Kontroly', to: '/checks', icon: ClipboardCheck, description: 'Cases na kontrolu, odčítanie hodín a servis – moje alebo všetky' },

@@ -6,6 +6,8 @@ import { useForm, useWatch } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import type { Equipment } from '@/features/equipment/model'
+import { useCompany } from '@/features/companies/company-context'
+import { can } from '@/lib/permissions'
 import { deleteNetwork, networkKeys, saveNetwork } from './api'
 import { parseWifiQr, SECURITY_LABELS, WIFI_SECURITIES, wifiSchema, type RouterLogin, type WifiFormValues, type WifiNetwork } from './model'
 import { QrScanButton } from './QrScanButton'
@@ -45,11 +47,16 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
       loginUser: login?.username ?? '',
       loginPassword: login?.password ?? '',
       equipmentId: current?.equipmentId ?? '',
+      scope: current?.scope ?? 'equipment',
+      keepPassword: Boolean(current?.passwordHidden),
       place: current?.place ?? '',
       note: current?.note ?? '',
     },
   })
   const dhcp = useWatch({ control, name: 'dhcp' })
+  // Prihlásenie do routera len so „Správou sietí“ (inak by ho databáza aj tak neuložila).
+  const canAdmin = can(useCompany().active!, 'networks.admin')
+  const scope = useWatch({ control, name: 'scope' })
   const refresh = () => queryClient.invalidateQueries({ queryKey: networkKeys.list(companyId) })
   const save = useMutation({ mutationFn: (values: WifiFormValues) => saveNetwork(companyId, current?.id ?? null, values), onSuccess: async () => (await refresh(), onDone()) })
   const remove = useMutation({ mutationFn: () => deleteNetwork(companyId, current!.id), onSuccess: async () => (await refresh(), onDone()) })
@@ -77,7 +84,13 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
       <fieldset className="grid gap-3 sm:grid-cols-2">
         <legend className="mb-1 text-sm font-medium">Wi-Fi</legend>
         <Field label="Názov siete (SSID) *" autoComplete="off" error={errors.ssid?.message} {...register('ssid')} />
-        <Field label="Heslo" autoComplete="off" error={errors.password?.message} {...register('password')} />
+        <Field
+          label="Heslo"
+          autoComplete="off"
+          placeholder={current?.passwordHidden ? 'heslo nevidíte – prázdne = nemeniť' : undefined}
+          error={errors.password?.message}
+          {...register('password')}
+        />
         <SelectField label="Zabezpečenie" error={errors.security?.message} {...register('security')}>
           {WIFI_SECURITIES.map((security) => (
             <option key={security} value={security}>
@@ -94,7 +107,11 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
       <fieldset className="grid gap-3 sm:grid-cols-2">
         <legend className="mb-1 text-sm font-medium">Router a IP adresy</legend>
         <Field label="Model routera" placeholder="napr. Ubiquiti UniFi U6, TP-Link Archer" error={errors.routerModel?.message} {...register('routerModel')} />
-        <SelectField label="Patrí k technike" error={errors.equipmentId?.message} {...register('equipmentId')}>
+        <SelectField label="Čia je sieť" {...register('scope')}>
+          <option value="equipment">K technike (router v racku, mix…)</option>
+          <option value="company">Sieť firmy (sídlo, kancelária, sklad)</option>
+        </SelectField>
+        <SelectField label="Patrí k technike" className={scope === 'company' ? 'hidden' : undefined} error={errors.equipmentId?.message} {...register('equipmentId')}>
           <option value="">— nie je priradená —</option>
           {options.map((item) => (
             <option key={item.id} value={item.id}>
@@ -120,11 +137,11 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
         )}
       </fieldset>
 
-      <fieldset className="grid gap-3 sm:grid-cols-2">
+      <fieldset className={canAdmin ? 'grid gap-3 sm:grid-cols-2' : 'hidden'}>
         <legend className="mb-1 text-sm font-medium">Prihlásenie do správy routera</legend>
         <Field label="Meno" autoComplete="off" error={errors.loginUser?.message} {...register('loginUser')} />
         <Field label="Heslo" autoComplete="off" error={errors.loginPassword?.message} {...register('loginPassword')} />
-        <p className="text-xs text-muted-foreground sm:col-span-2">Prihlásenie do správy vidí len ten, kto smie upravovať techniku. Heslo Wi-Fi vidia všetci členovia firmy.</p>
+        <p className="text-xs text-muted-foreground sm:col-span-2">Kto vidí heslo Wi-Fi, IP a MAC adresy a prihlásenie do správy, nastaví admin v Nastaveniach → Oprávnenia → Siete.</p>
       </fieldset>
 
       <TextareaField label="Poznámka" rows={2} error={errors.note?.message} {...register('note')} />

@@ -73,6 +73,7 @@ export function EquipmentDetailPage() {
   }
 
   const equipment = item.data
+  const focusUnit = unit !== null && equipment.trackUnits && unitIdsOf(equipment).includes(unit) ? unit : null
   if (unit !== null && equipment.trackUnits && !unitIdsOf(equipment).includes(unit) && list.data) {
     const group = groupSplitEquipment(list.data).find((candidate) => candidate.items.some((part) => part.id === equipment.id))
     const holder = group?.items.find((part) => part.trackUnits && unitIdsOf(part).includes(unit))
@@ -180,6 +181,17 @@ export function EquipmentDetailPage() {
   return (
     <>
       {back}
+      {focusUnit !== null && (
+        <p role="status" className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm">
+          <span>
+            Zobrazujete <strong>kus #{focusUnit}</strong>
+            {equipment.quantity > 1 && ` – v tejto časti sú ${equipment.quantity} ks (${unitIdsOf(equipment).map((value) => `#${value}`).join(', ')}), napr. spolu v jednom case`}.
+          </span>
+          <Link to={`/equipment/${equipment.id}`} className="font-medium text-accent hover:underline">
+            Zobraziť celú časť
+          </Link>
+        </p>
+      )}
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight break-words">
@@ -263,7 +275,7 @@ export function EquipmentDetailPage() {
         </section>
       )}
 
-      {equipment.trackUnits && equipment.quantity > 1 && <UnitsOverview companyId={company.companyId} equipment={equipment} showInvoices={can(company, 'orders.view')} />}
+      {equipment.trackUnits && equipment.quantity > 1 && <UnitsOverview companyId={company.companyId} equipment={equipment} showInvoices={can(company, 'orders.view')} only={focusUnit} />}
 
       <AmpPresetsInfo companyId={company.companyId} equipment={equipment} />
       {!simple && <OperatingHours companyId={company.companyId} equipment={equipment} canEdit={can(company, 'equipment.edit')} />}

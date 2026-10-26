@@ -8,7 +8,7 @@ import { formatDate, formatMoney } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { isAdminRole } from '@/lib/roles'
 import { cn } from '@/lib/utils'
-import { useOffers } from './api'
+import { useIssuers, useOffers } from './api'
 import { OFFER_STATUS_LABELS, sumPrices } from './model'
 
 const STATUS_TONES = { draft: 'bg-muted text-muted-foreground', sent: 'bg-sky-500/15 text-sky-700 dark:text-sky-300', accepted: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', rejected: 'bg-destructive/10 text-destructive' } as const
@@ -17,6 +17,7 @@ const STATUS_TONES = { draft: 'bg-muted text-muted-foreground', sent: 'bg-sky-50
 export function OffersPage() {
   const company = useCompany().active!
   const companyId = company.companyId
+  const issuers = useIssuers(companyId)
   const offers = useOffers(companyId)
   const canEdit = can(company, 'offers.edit')
 
@@ -64,7 +65,7 @@ export function OffersPage() {
           })}
         </ul>
       )}
-      {isAdminRole(company.role) && (
+      {isAdminRole(company.role) && issuers.isSuccess && issuers.data.length === 0 && (
         <p className="mt-6 text-sm text-muted-foreground">
           Za koho sa ponuky vystavujú (s.r.o., živnosť), nastavíte v{' '}
           <Link to="/settings" className="text-accent hover:underline">

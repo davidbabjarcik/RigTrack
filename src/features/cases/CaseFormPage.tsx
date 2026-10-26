@@ -105,7 +105,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
   async function afterSave(ids: string[]) {
     // Uloženie mohlo založiť nové umiestnenie, preto celý strom firmy.
     await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
-    navigate(ids.length === 1 ? `/cases/${ids[0]}` : '/cases', { replace: true })
+    navigate(groupIds.length > 1 ? `/cases/group?ids=${groupIds.join(',')}` : ids.length === 1 ? `/cases/${ids[0]}` : '/cases', { replace: true })
   }
 
   async function createMany(values: CaseFormValues) {
@@ -353,7 +353,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
         <Button type="submit" disabled={save.isPending || fillShort}>
           {save.isPending ? 'Ukladám…' : !current && copies > 1 ? `Vytvoriť ${copies} cases` : 'Uložiť'}
         </Button>
-        <LinkButton to={current ? `/cases/${current.id}` : '/cases'} variant="outline">
+        <LinkButton to={current ? (groupIds.length > 1 ? `/cases/group?ids=${groupIds.join(',')}` : `/cases/${current.id}`) : '/cases'} variant="outline">
           Zrušiť
         </LinkButton>
         {canManageTemplates && (

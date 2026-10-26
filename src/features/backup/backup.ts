@@ -169,6 +169,10 @@ export function rowsToSheet(rows: Record<string, unknown>[]): Cell[][] {
 }
 
 const PAGE = 1000
+// Tabuľky so stĺpcami, ktoré sa bežne čítať nedajú (heslo Wi-Fi od 0103) – záloha ich vynechá.
+const SELECT_COLUMNS: Record<string, string> = {
+  wifi_networks: 'id, company_id, ssid, security, hidden, subnet, router_ip, management_ip, router_model, dhcp, dhcp_start, dhcp_end, equipment_id, place, note, created_at',
+}
 
 /** Všetky riadky tabuľky firmy, po stránkach (server vracia najviac 1000 naraz). */
 async function fetchAll(table: string, companyId: string) {
@@ -176,11 +180,11 @@ async function fetchAll(table: string, companyId: string) {
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await getSupabase()
       .from(table)
-      .select('*')
+      .select(SELECT_COLUMNS[table] ?? '*')
       .eq('company_id', companyId)
       .range(from, from + PAGE - 1)
     if (error) throw error
-    rows.push(...(data as Record<string, unknown>[]))
+    rows.push(...(data as unknown as Record<string, unknown>[]))
     if (data.length < PAGE) return rows
   }
 }

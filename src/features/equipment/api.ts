@@ -222,6 +222,12 @@ export async function copyEquipmentPhoto(companyId: string, equipmentId: string,
   if (error) throw error
 }
 
+/** Údaje kusov (sériové čísla, DMX…) jednej položky – napr. DMX všetkým naraz z prehľadu skupiny. */
+export async function saveUnitInfo(companyId: string, equipmentId: string, unitInfo: Record<string, UnitInfo>) {
+  const { error } = await getSupabase().from('equipment').update({ unit_info: unitInfo }).eq('company_id', companyId).eq('id', equipmentId)
+  if (error) throw error
+}
+
 /** Čo sa pri „Upraviť všetky naraz“ prenesie na ostatné časti rozdelenej techniky (nie počet, čísla kusov, case, stav). */
 const GROUP_COLUMNS = ['name', 'kind', 'attributes', 'category_id', 'manufacturer', 'model', 'service_interval_months', 'hours_interval_months', 'rental_price', 'min_quantity', 'note', 'photo_path', 'owner_staff_id']
 

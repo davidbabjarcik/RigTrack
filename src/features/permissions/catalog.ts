@@ -70,6 +70,13 @@ export const PERMISSION_GROUPS = [
     { key: 'offers.edit', label: 'Vytvárať a upravovať ponuky', roles: KEEPER },
     { key: 'offers.delete', label: 'Mazať ponuky', roles: NOBODY },
   ]),
+  group('networks', 'Siete', [
+    { key: 'networks.view', label: 'Vidieť siete (názov, kde je, router)', roles: ALL },
+    { key: 'networks.addresses', label: 'Vidieť IP rozsahy, IP a MAC adresy', roles: STAFF },
+    { key: 'networks.passwords', label: 'Vidieť heslá Wi-Fi', roles: ALL },
+    { key: 'networks.admin', label: 'Správa sietí (prihlásenie do routerov)', roles: STAFF },
+  ]),
+  group('checks', 'Kontroly', [{ key: 'checks.all', label: 'Vidieť aj veci, za ktoré zodpovedajú iní', roles: KEEPER }]),
   group('report', 'Ročná správa', [
     { key: 'report.view', label: 'Vidieť ročnú správu', roles: STAFF },
     { key: 'report.money', label: 'Vidieť v nej peniaze (príjmy, nákupy, odmeny)', roles: NOBODY },

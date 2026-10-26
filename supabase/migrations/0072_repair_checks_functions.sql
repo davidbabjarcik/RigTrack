@@ -1961,6 +1961,13 @@ begin
   end if;
   if to_regclass('public.partners') is not null then
     begin
+      execute $sql$alter table public.partners drop constraint if exists partners_legal_form_check$sql$;
+      execute $sql$alter table public.partners add constraint partners_legal_form_check CHECK ((legal_form = ANY (ARRAY[''::text, 'sro'::text, 'as'::text, 'zivnost'::text, 'oz'::text, 'nadacia'::text, 'obec'::text, 'ine'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola partners_legal_form_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.partners') is not null then
+    begin
       execute $sql$alter table public.partners drop constraint if exists partners_legal_name_check$sql$;
       execute $sql$alter table public.partners add constraint partners_legal_name_check CHECK ((char_length(legal_name) <= 160)) not valid$sql$;
     exception when others then raise notice 'Kontrola partners_legal_name_check: %', sqlerrm;
@@ -2993,6 +3000,13 @@ begin
       execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_router_model_check$sql$;
       execute $sql$alter table public.wifi_networks add constraint wifi_networks_router_model_check CHECK ((char_length(router_model) <= 80)) not valid$sql$;
     exception when others then raise notice 'Kontrola wifi_networks_router_model_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.wifi_networks') is not null then
+    begin
+      execute $sql$alter table public.wifi_networks drop constraint if exists wifi_networks_scope_check$sql$;
+      execute $sql$alter table public.wifi_networks add constraint wifi_networks_scope_check CHECK ((scope = ANY (ARRAY['equipment'::text, 'company'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola wifi_networks_scope_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.wifi_networks') is not null then
@@ -5151,7 +5165,12 @@ AS $function$
     ('report.money', array[]::public.app_role[]),
     ('offers.view', array['skladnik']::public.app_role[]),
     ('offers.edit', array['skladnik']::public.app_role[]),
-    ('offers.delete', array[]::public.app_role[])
+    ('offers.delete', array[]::public.app_role[]),
+    ('networks.view', array['skladnik', 'technik', 'viewer']::public.app_role[]),
+    ('networks.addresses', array['skladnik', 'technik']::public.app_role[]),
+    ('networks.passwords', array['skladnik', 'technik', 'viewer']::public.app_role[]),
+    ('networks.admin', array['skladnik', 'technik']::public.app_role[]),
+    ('checks.all', array['skladnik']::public.app_role[])
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia permission_defaults: %', sqlerrm;
 end;
@@ -6894,6 +6913,21 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia update_loan: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.wifi_passwords(_company_id uuid)
+ RETURNS TABLE(id uuid, password text)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select n.id, n.password from public.wifi_networks n
+  where n.company_id = _company_id and public.can(_company_id, 'networks.passwords');
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia wifi_passwords: %', sqlerrm;
 end;
 $repair$;
 

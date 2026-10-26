@@ -17,17 +17,23 @@ const STATE_STYLES = {
 }
 const STATE_LABELS = { free: 'Voľný', reserved: 'Rezervovaný', loaned: 'Vypožičaný', service: 'V servise' }
 
-type Props = { companyId: string; equipment: Pick<Equipment, 'id' | 'quantity' | 'unitIds' | 'unitInfo' | 'unitPurchases'>; showInvoices?: boolean }
+type Props = {
+  companyId: string
+  equipment: Pick<Equipment, 'id' | 'quantity' | 'unitIds' | 'unitInfo' | 'unitPurchases'>
+  showInvoices?: boolean
+  /** Len jeden kus (otvorený cez QR alebo z prehľadu kusov). */
+  only?: number | null
+}
 
 /** Prehľad očíslovaných kusov techniky: kde je ktorý kus teraz a čo má za sebou. */
-export function UnitsOverview({ companyId, equipment, showInvoices = false }: Props) {
+export function UnitsOverview({ companyId, equipment, showInvoices = false, only = null }: Props) {
   const loans = useLoans(companyId)
   const records = useServiceRecords(companyId)
   // Faktúry ku kusom: nákupy prepojené s číslami kusov (vidí, kto vidí objednávky).
   const purchases = useQuery({ queryKey: orderKeys.purchases(companyId, equipment.id), queryFn: () => fetchPurchases(companyId, equipment.id), enabled: showInvoices })
   const byUnit = (purchases.data ?? []).filter((purchase) => purchase.unitNumbers.length > 0)
   const invoiceOf = (unit: number) => byUnit.find((purchase) => purchase.unitNumbers.includes(unit))
-  const units = unitSummaries(equipment.id, unitIdsOf(equipment), loans.data ?? [], records.data ?? [], todayIso())
+  const units = unitSummaries(equipment.id, only !== null ? [only] : unitIdsOf(equipment), loans.data ?? [], records.data ?? [], todayIso())
 
   return (
     <CollapsibleSection id="equipment.units" title={<>Kusy ({units.length})</>} className="mt-6">

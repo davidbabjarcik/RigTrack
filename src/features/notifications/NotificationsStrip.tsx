@@ -16,6 +16,9 @@ import { useResponsibilities } from '@/features/responsibilities/api'
 import { addTodoFromField, taskKeys } from '@/features/tasks/api'
 import { buildNotifications, type Notification } from './model'
 
+/** „16 ks“ pri zlúčenej technike (kusy, nie časti), inak „3×“. */
+const countLabel = (item: Notification) => (item.count && item.count > 1 ? (item.pieces ? `${item.pieces} ks` : `${item.count}×`) : '')
+
 /** Upozornenia hore v appke (servis, výpožičky, autá, úlohy, pozvánky) – zbalené, klikom sa rozbalia. */
 export function NotificationsStrip() {
   const company = useCompany().active!
@@ -28,7 +31,7 @@ export function NotificationsStrip() {
   const toTask = useMutation({
     mutationFn: (item: Notification) => {
       const what = item.detail.charAt(0).toUpperCase() + item.detail.slice(1)
-      return addTodoFromField(companyId, user.id, `${what} – ${item.title}${item.count && item.count > 1 ? ` (${item.count}×)` : ''}`, item.to, { category: 'Upozornenie', priority: 'high' })
+      return addTodoFromField(companyId, user.id, `${what} – ${item.title}${countLabel(item) ? ` (${countLabel(item)})` : ''}`, item.to, { category: 'Upozornenie', priority: 'high' })
     },
     onSuccess: (_, item) => {
       setAdded((current) => new Set(current).add(item.id))
@@ -77,7 +80,7 @@ export function NotificationsStrip() {
                   <span className={cn('size-2 shrink-0 rounded-full', item.severity === 'urgent' ? 'bg-destructive' : 'bg-accent')} aria-hidden />
                   <span className="min-w-0 flex-1">
                     <span className="font-medium">{item.title}</span>
-                    {item.count && item.count > 1 && <span className="font-medium"> ({item.count}×)</span>}
+                    {countLabel(item) && <span className="font-medium"> ({countLabel(item)})</span>}
                     <span className="text-muted-foreground"> – {item.detail}</span>
                   </span>
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />

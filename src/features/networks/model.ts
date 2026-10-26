@@ -34,6 +34,10 @@ export type WifiNetwork = {
   dhcpEnd: string
   /** Technika, ku ktorej sieť patrí (mix, router). */
   equipmentId: string | null
+  /** K technike, alebo sieť firmy (sídlo, kancelária) – 0103. */
+  scope?: 'equipment' | 'company'
+  /** Heslo existuje, ale používateľ ho nesmie vidieť (oprávnenie „Vidieť heslá Wi-Fi“). */
+  passwordHidden?: boolean
   place: string
   note: string
 }
@@ -59,10 +63,14 @@ export const wifiSchema = z
     loginUser: text(80),
     loginPassword: z.string().max(128, 'Najviac 128 znakov'),
     equipmentId: z.string(),
+    /** K technike, alebo sieť firmy (sídlo, kancelária) – 0103. */
+    scope: z.enum(['equipment', 'company']).optional(),
+    /** Heslo existuje, ale používateľ ho nevidí – prázdne políčko ho nechá tak. */
+    keepPassword: z.boolean().optional(),
     place: text(120),
     note: text(1000),
   })
-  .refine((values) => values.security === 'nopass' || values.password.length >= (values.security === 'WEP' ? 5 : 8), {
+  .refine((values) => values.security === 'nopass' || (values.keepPassword && values.password === '') || values.password.length >= (values.security === 'WEP' ? 5 : 8), {
     path: ['password'],
     message: 'Heslo Wi-Fi má aspoň 8 znakov',
   })

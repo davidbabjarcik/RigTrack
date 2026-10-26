@@ -35,7 +35,7 @@ const equipmentDetail = lazyPage(() => import('@/features/equipment/EquipmentDet
 const equipmentGroup = lazyPage(() => import('@/features/equipment/EquipmentGroupPage').then((m) => m.EquipmentGroupPage), 'equipment.view')
 const equipmentForm = lazyPage(() => import('@/features/equipment/EquipmentFormPage').then((m) => m.EquipmentFormPage), 'equipment.view')
 const equipmentExcel = lazyPage(() => import('@/features/equipment/EquipmentExcelPage').then((m) => m.EquipmentExcelPage), 'equipment.view')
-const networks = lazyPage(() => import('@/features/networks/NetworksPage').then((m) => m.NetworksPage))
+const networks = lazyPage(() => import('@/features/networks/NetworksPage').then((m) => m.NetworksPage), 'networks.view')
 const capsules = lazyPage(() => import('@/features/capsules/CapsulesPage').then((m) => m.CapsulesPage), 'equipment.view')
 const serviceRequests = lazyPage(() => import('@/features/requests/ServiceRequestsPage').then((m) => m.ServiceRequestsPage))
 const serviceRequestForm = lazyPage(() => import('@/features/requests/ServiceRequestFormPage').then((m) => m.ServiceRequestFormPage))
@@ -66,6 +66,7 @@ const shopping = lazyPage(() => import('@/features/shopping/ShoppingPage').then(
 const calendar = lazyPage(() => import('@/features/calendar/CalendarPage').then((m) => m.CalendarPage))
 const suggestions = lazyPage(() => import('@/features/suggestions/SuggestionsPage').then((m) => m.SuggestionsPage), 'suggestions.view')
 const notifications = lazyPage(() => import('@/features/notifications/NotificationsPage').then((m) => m.NotificationsPage))
+const caseGroup = lazyPage(() => import('@/features/cases/CaseGroupPage').then((m) => m.CaseGroupPage), 'cases.view')
 const checks = lazyPage(() => import('@/features/checks/ChecksPage').then((m) => m.ChecksPage), 'equipment.view')
 const panel = lazyPage(() => import('@/features/dashboard/PanelPage').then((m) => m.PanelPage))
 const stats = lazyPage(() => import('@/features/stats/StatsPage').then((m) => m.StatsPage))
@@ -161,6 +162,7 @@ export const routes: RouteObject[] = [
               { path: 'equipment/:id/edit', lazy: equipmentForm },
               { path: 'cases', lazy: casesList },
               { path: 'cases/new', lazy: caseForm },
+              { path: 'cases/group', lazy: caseGroup },
               { path: 'cases/:id', lazy: caseDetail },
               { path: 'cases/:id/edit', lazy: caseForm },
               { path: 'cases/:id/label', lazy: caseLabel },

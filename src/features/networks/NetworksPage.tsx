@@ -34,8 +34,11 @@ export function NetworksPage() {
   const company = useCompany().active!
   const companyId = company.companyId
   const canEdit = can(company, 'equipment.edit')
+  // Oprávnenia sietí (0103): IP a MAC adresy, správa routerov.
+  const canAddresses = can(company, 'networks.addresses')
+  const canAdmin = can(company, 'networks.admin')
   const networks = useNetworks(companyId)
-  const logins = useQuery({ queryKey: networkKeys.logins(companyId), queryFn: () => fetchRouterLogins(companyId), enabled: canEdit, retry: false })
+  const logins = useQuery({ queryKey: networkKeys.logins(companyId), queryFn: () => fetchRouterLogins(companyId), enabled: canAdmin, retry: false })
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
   const devices = useDevices(companyId)
   const guests = useQuery({ queryKey: networkKeys.guests(companyId), queryFn: () => fetchGuestDevices(companyId), enabled: canEdit, retry: false })
@@ -46,7 +49,8 @@ export function NetworksPage() {
   const [networkFilter, setNetworkFilter] = useState('')
   // Čo chcem vidieť: Wi-Fi siete, IP tabuľku alebo MAC adresy (v adrese, aby sa dalo vrátiť).
   const [params, setParams] = useSearchParams()
-  const tab: Tab = TABS.find((item) => item.id === params.get('tab'))?.id ?? 'wifi'
+  const tabs = TABS.filter((item) => item.id === 'wifi' || canAddresses)
+  const tab: Tab = tabs.find((item) => item.id === params.get('tab'))?.id ?? 'wifi'
 
   const allNetworks = networks.data ?? []
   const items = equipment.data ?? []
@@ -94,7 +98,7 @@ export function NetworksPage() {
       />
 
       <div role="tablist" aria-label="Čo zobraziť" className="mb-4 flex flex-wrap gap-1.5">
-        {TABS.map((item) => {
+        {tabs.map((item) => {
           const count = item.id === 'wifi' ? allNetworks.length : item.id === 'ip' ? rows.filter((row) => row.ip || row.dhcp).length : rows.filter((row) => row.mac).length
           return (
             <button
@@ -143,6 +147,7 @@ export function NetworksPage() {
                   <WifiCard
                     network={network}
                     login={loginOf(network.id)}
+                    showAddresses={canAddresses}
                     equipment={items.find((item) => item.id === network.equipmentId)}
                     onEdit={canEdit ? () => setEditing(network.id) : undefined}
                   />

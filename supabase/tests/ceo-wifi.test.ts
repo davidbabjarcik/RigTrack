@@ -35,7 +35,9 @@ describe('wifi networks', () => {
   it('are visible to members, editable by equipment editors, linked to equipment', async () => {
     const mixer = (await t.as('technik', `insert into public.equipment (company_id, name) values ($1, 'DiGiCo SD9') returning id`, [company]))[0].id
     await t.as('technik', `insert into public.wifi_networks (company_id, ssid, password, subnet, router_ip, equipment_id) values ($1, 'SD9-Router', 'tajne123', '192.168.1.0/24', '192.168.1.1', $2)`, [company, mixer])
-    expect(await t.as('viewer', 'select ssid, password from public.wifi_networks')).toEqual([{ ssid: 'SD9-Router', password: 'tajne123' }])
+    // Heslo sa od 0103 číta len cez wifi_passwords() (oprávnenie networks.passwords – viewer ho má predvolene).
+    expect(await t.as('viewer', 'select ssid from public.wifi_networks')).toEqual([{ ssid: 'SD9-Router' }])
+    expect(await t.as('viewer', 'select password from public.wifi_passwords($1)', [company])).toEqual([{ password: 'tajne123' }])
     await expect(t.as('viewer', `insert into public.wifi_networks (company_id, ssid) values ($1, 'X')`, [company])).rejects.toThrow(/row-level security/)
     await expect(t.as('technik', `insert into public.wifi_networks (company_id, ssid, security) values ($1, 'X', 'WPA9')`, [company])).rejects.toThrow(/check constraint/)
     expect(await t.as('outsider', 'select 1 from public.wifi_networks')).toEqual([])

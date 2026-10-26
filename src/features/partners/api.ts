@@ -15,6 +15,8 @@ export type Partner = {
   legalName: string
   icDph: string
   ceo: string
+  /** Právna forma (0102): sro, as, zivnost, oz…; prázdne = nezadané. */
+  legalForm?: string
   contacts: PartnerContact[]
   /** Firma v RigTracku, ktorú sme im založili (0064). */
   linkedCompanyId?: string | null
@@ -28,7 +30,9 @@ let linkLevel = 0
 const linkedColumn = () => LINK_COLUMNS[linkLevel]
 // Obchodné meno, IČ DPH, CEO a narodeniny kontaktov (0088).
 let hasDetails = true
-const detailColumns = () => (hasDetails ? ', legal_name, ic_dph, ceo' : '')
+const detailColumns = () => (hasDetails ? ', legal_name, ic_dph, ceo' + (hasLegalForm ? ', legal_form' : '') : '')
+// Právna forma (0102).
+let hasLegalForm = true
 const contactColumns = () => (hasDetails ? 'id, partner_id, name, role, phone, email, birth_date' : 'id, partner_id, name, role, phone, email')
 export type EventPartner = { partnerId: string; kind: 'organizer' | 'partner' }
 
@@ -44,6 +48,10 @@ export async function fetchPartners(companyId: string): Promise<Partner[]> {
     db.from('partners').select('id, name, ico, dic, address, uses_app, note' + linkedColumn() + detailColumns()).eq('company_id', companyId).order('name'),
     db.from('partner_contacts').select(contactColumns()).eq('company_id', companyId).order('name'),
   ])
+  if (hasLegalForm && isMissingColumn(partners.error, 'legal_form')) {
+    hasLegalForm = false
+    return fetchPartners(companyId)
+  }
   if (hasDetails && (isMissingColumn(partners.error, 'legal_name') || isMissingColumn(contacts.error, 'birth_date'))) {
     hasDetails = false
     return fetchPartners(companyId)
@@ -55,7 +63,7 @@ export async function fetchPartners(companyId: string): Promise<Partner[]> {
   if (partners.error) throw partners.error
   if (contacts.error) throw contacts.error
   const people = contacts.data as unknown as (Omit<PartnerContact, 'birthDate'> & { partner_id: string; birth_date?: string | null })[]
-  type Row = { id: string; name: string; ico: string; dic: string; address: string; uses_app: boolean; note: string; linked_company_id?: string | null; shared?: boolean; legal_name?: string; ic_dph?: string; ceo?: string }
+  type Row = { id: string; name: string; ico: string; dic: string; address: string; uses_app: boolean; note: string; linked_company_id?: string | null; shared?: boolean; legal_name?: string; ic_dph?: string; ceo?: string; legal_form?: string }
   return (partners.data as unknown as Row[]).map((row) => ({
     id: row.id,
     name: row.name,
@@ -67,6 +75,7 @@ export async function fetchPartners(companyId: string): Promise<Partner[]> {
     legalName: row.legal_name ?? '',
     icDph: row.ic_dph ?? '',
     ceo: row.ceo ?? '',
+    legalForm: row.legal_form ?? '',
     contacts: people
       .filter((person) => person.partner_id === row.id)
       .map(({ id, name, role, phone, email, birth_date }) => ({ id, name, role, phone, email, birthDate: birth_date ?? '' })),
@@ -79,7 +88,7 @@ export function usePartners(companyId: string) {
   return useQuery({ queryKey: partnerKeys.list(companyId), queryFn: () => fetchPartners(companyId), retry: false })
 }
 
-export type PartnerFields = Pick<Partner, 'name' | 'ico' | 'dic' | 'address' | 'usesApp' | 'note'> & Partial<Pick<Partner, 'legalName' | 'icDph' | 'ceo'>>
+export type PartnerFields = Pick<Partner, 'name' | 'ico' | 'dic' | 'address' | 'usesApp' | 'note'> & Partial<Pick<Partner, 'legalName' | 'icDph' | 'ceo' | 'legalForm'>>
 
 export async function savePartner(companyId: string, id: string | null, fields: PartnerFields) {
   const details = { legal_name: (fields.legalName ?? '').trim(), ic_dph: (fields.icDph ?? '').trim(), ceo: (fields.ceo ?? '').trim() }
@@ -92,6 +101,7 @@ export async function savePartner(companyId: string, id: string | null, fields: 
     note: fields.note.trim(),
     // Bez migrácie 0088 sa tieto polia neposielajú.
     ...(hasDetails && details),
+    ...(hasDetails && hasLegalForm && fields.legalForm !== undefined ? { legal_form: fields.legalForm } : {}),
   }
   const table = getSupabase().from('partners')
   const { data, error } = id ? await table.update(row).eq('id', id).select('id').single() : await table.insert({ ...row, company_id: companyId }).select('id').single()

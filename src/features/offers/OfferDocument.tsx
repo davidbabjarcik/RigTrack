@@ -1,4 +1,5 @@
 import { formatDate, formatMoney } from '@/lib/format'
+import { statutoryLabel } from '@/features/partners/legalForms'
 import { splitContact, bulletLines, partCode, priceLabel, sumPrices, summaryRows, type Offer, type OfferPart } from './model'
 
 // Rozloženie ako bežná firemná ponuka: nadpis s číslom, vpravo dodávateľ, „Ponuka pre“, údaje o podujatí,
@@ -77,9 +78,15 @@ export function OfferDocument({ offer, logoUrl }: { offer: Offer; logoUrl?: stri
         <div>
           <p className="font-bold">Ponuka pre:</p>
           <p className="font-bold">{offer.client.name || '—'}</p>
+          {offer.client.legalForm === 'oz' && !/združenie|\bo\.?z\.?$/i.test(offer.client.name) && <p>občianske združenie</p>}
           {offer.client.address && <p className="whitespace-pre-line">{offer.client.address}</p>}
           {offer.client.ico && <p>IČO: {offer.client.ico}</p>}
           {offer.client.dic && <p>DIČ: {offer.client.dic}</p>}
+          {offer.client.statutory && (
+            <p>
+              {statutoryLabel(offer.client.legalForm)}: {offer.client.statutory}
+            </p>
+          )}
           {offer.client.contact && <p>{offer.client.contact}</p>}
         </div>
         <div className="text-right">

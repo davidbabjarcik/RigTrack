@@ -94,5 +94,6 @@ describe('mergeSame', () => {
     const merged = mergeSame([one('a'), one('b'), { ...one('c'), title: 'Iná' }])
     expect(merged).toHaveLength(2)
     expect(merged[0]).toMatchObject({ count: 2, to: '/equipment/group?ids=a,b' })
+    expect(mergeSame([{ ...one('a'), pieces: 2 }, { ...one('b'), pieces: 2 }])[0].pieces).toBe(4)
   })
 })

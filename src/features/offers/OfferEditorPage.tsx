@@ -13,6 +13,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { eventDates } from '@/features/events/plan'
 import { useEvents } from '@/features/events/useEvents'
 import { partnerKeys, savePartner, usePartners } from '@/features/partners/api'
+import { LEGAL_FORM_LABELS, LEGAL_FORMS, statutoryLabel } from '@/features/partners/legalForms'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
@@ -129,7 +130,7 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
   const knownClient = (partners.data ?? []).some((partner) => [partner.name, partner.legalName].some((name) => name && name.trim().toLowerCase() === draft.client.name.trim().toLowerCase()))
   const addPartner = useMutation({
     mutationFn: () =>
-      savePartner(companyId, null, { name: draft.client.name, legalName: '', ico: draft.client.ico, dic: draft.client.dic, icDph: '', ceo: '', address: draft.client.address, usesApp: false, note: draft.client.contact }),
+      savePartner(companyId, null, { name: draft.client.name, legalName: '', ico: draft.client.ico, dic: draft.client.dic, icDph: '', ceo: draft.client.statutory ?? '', legalForm: draft.client.legalForm ?? '', address: draft.client.address, usesApp: false, note: draft.client.contact }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: partnerKeys.list(companyId) }),
   })
   const keepTemplate = useMutation({ mutationFn: (part: OfferPart) => saveTemplate(companyId, part), onSettled: () => queryClient.invalidateQueries({ queryKey: offerKeys.templates(companyId) }) })
@@ -315,6 +316,8 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
                         ico: partner.ico,
                         dic: partner.dic,
                         contact: person ? [person.name, person.phone, person.email].filter(Boolean).join(', ') : '',
+                        legalForm: partner.legalForm ?? '',
+                        statutory: partner.ceo,
                       },
                     })
                   }}
@@ -333,6 +336,15 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
             <div className="grid gap-2 sm:grid-cols-2">
               <Field label="IČO" maxLength={20} value={draft.client.ico} onChange={(e) => set({ client: { ...draft.client, ico: e.target.value } })} />
               <Field label="DIČ" maxLength={20} value={draft.client.dic} onChange={(e) => set({ client: { ...draft.client, dic: e.target.value } })} />
+              <SelectField label="Právna forma" value={draft.client.legalForm ?? ''} onChange={(e) => set({ client: { ...draft.client, legalForm: e.target.value } })}>
+                <option value="">— nezadané —</option>
+                {LEGAL_FORMS.map((form) => (
+                  <option key={form} value={form}>
+                    {LEGAL_FORM_LABELS[form]}
+                  </option>
+                ))}
+              </SelectField>
+              <Field label={statutoryLabel(draft.client.legalForm)} maxLength={120} value={draft.client.statutory ?? ''} onChange={(e) => set({ client: { ...draft.client, statutory: e.target.value } })} />
             </div>
             <Field label="Kontaktná osoba" maxLength={200} value={draft.client.contact} onChange={(e) => set({ client: { ...draft.client, contact: e.target.value } })} />
             {draft.client.name.trim() && !knownClient && (

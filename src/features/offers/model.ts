@@ -24,7 +24,16 @@ export type OfferPart = {
   /** Podčasti (A1, A2…) – len jedna úroveň. */
   parts: OfferPart[]
 }
-export type OfferClient = { name: string; address: string; ico: string; dic: string; contact: string }
+export type OfferClient = {
+  name: string
+  address: string
+  ico: string
+  dic: string
+  contact: string
+  /** Právna forma (s.r.o., OZ…) a štatutár – nepovinné. */
+  legalForm?: string
+  statutory?: string
+}
 /** Za koho sa ponuka vystavuje (s.r.o., živnosť…). */
 export type OfferIssuer = { name: string; address: string; ico: string; dic: string; icDph: string; contact: string; vatPayer: boolean }
 export const EMPTY_ISSUER: OfferIssuer = { name: '', address: '', ico: '', dic: '', icDph: '', contact: '', vatPayer: true }

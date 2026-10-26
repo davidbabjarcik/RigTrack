@@ -11,7 +11,8 @@ export const networkKeys = {
 type Row = {
   id: string
   ssid: string
-  password: string
+  password?: string
+  scope?: 'equipment' | 'company'
   security: WifiSecurity
   hidden: boolean
   subnet: string
@@ -26,17 +27,38 @@ type Row = {
   note: string
 }
 
+// Od 0103 sa heslo číta zvlášť (wifi_passwords – len s oprávnením) a pribudol druh siete (scope).
+let securePasswords = true
+const BASE_COLUMNS = 'id, ssid, security, hidden, subnet, router_ip, management_ip, router_model, dhcp, dhcp_start, dhcp_end, equipment_id, place, note'
+
 export async function fetchNetworks(companyId: string): Promise<WifiNetwork[]> {
-  const { data, error } = await getSupabase()
-    .from('wifi_networks')
-    .select('id, ssid, password, security, hidden, subnet, router_ip, management_ip, router_model, dhcp, dhcp_start, dhcp_end, equipment_id, place, note')
-    .eq('company_id', companyId)
-    .order('ssid')
-  if (error) throw error
-  return (data as Row[]).map((row) => ({
+  const db = getSupabase()
+  let passwords = new Map<string, string>()
+  let rows: Row[]
+  if (securePasswords) {
+    const [networks, secrets] = await Promise.all([
+      db.from('wifi_networks').select(BASE_COLUMNS + ', scope').eq('company_id', companyId).order('ssid'),
+      db.rpc('wifi_passwords', { _company_id: companyId }),
+    ])
+    if (networks.error && /scope/.test(networks.error.message ?? '')) {
+      securePasswords = false
+      return fetchNetworks(companyId)
+    }
+    if (networks.error) throw networks.error
+    rows = networks.data as unknown as Row[]
+    passwords = new Map(((secrets.data ?? []) as { id: string; password: string }[]).map((item) => [item.id, item.password]))
+  } else {
+    const { data, error } = await db.from('wifi_networks').select(BASE_COLUMNS + ', password').eq('company_id', companyId).order('ssid')
+    if (error) throw error
+    rows = data as unknown as Row[]
+  }
+  return rows.map((row) => ({
     id: row.id,
     ssid: row.ssid,
-    password: row.password,
+    // Bez oprávnenia „Vidieť heslá Wi-Fi“ databáza heslo nevráti.
+    password: securePasswords ? (passwords.get(row.id) ?? '') : (row.password ?? ''),
+    passwordHidden: securePasswords && !passwords.has(row.id),
+    scope: row.scope ?? (row.equipment_id ? 'equipment' : 'company'),
     security: row.security,
     hidden: row.hidden,
     subnet: row.subnet,
@@ -68,7 +90,9 @@ export async function saveNetwork(companyId: string, id: string | null, values: 
   const db = getSupabase()
   const fields = {
     ssid: values.ssid,
-    password: values.security === 'nopass' ? '' : values.password,
+    // Heslo, ktoré používateľ nevidí, sa pri prázdnom políčku nemení.
+    ...(values.keepPassword && values.password === '' && values.security !== 'nopass' ? {} : { password: values.security === 'nopass' ? '' : values.password }),
+    ...(securePasswords ? { scope: values.scope ?? (values.equipmentId ? 'equipment' : 'company') } : {}),
     security: values.security,
     hidden: values.hidden,
     subnet: values.subnet,
@@ -78,7 +102,7 @@ export async function saveNetwork(companyId: string, id: string | null, values: 
     dhcp: values.dhcp,
     dhcp_start: values.dhcp ? values.dhcpStart : '',
     dhcp_end: values.dhcp ? values.dhcpEnd : '',
-    equipment_id: values.equipmentId || null,
+    equipment_id: values.scope === 'company' ? null : values.equipmentId || null,
     place: values.place,
     note: values.note,
   }
