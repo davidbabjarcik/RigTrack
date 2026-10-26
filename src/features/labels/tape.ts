@@ -1,6 +1,13 @@
 // Štítky na pásku (Brother P-touch, napr. PT-D460BT: pásky TZe 3,5–18 mm, 180 dpi).
 import { caseTitle, kindLabel, type Case } from '@/features/cases/model'
 import { unitIdsOf, type Equipment } from '@/features/equipment/model'
+import { dipSwitches } from '@/features/dmx/model'
+
+/** Čísla zapnutých DIP prepínačov pre adresu, napr. „1, 5“. */
+export const dipOn = (address: number, count: number) =>
+  dipSwitches(address, count)
+    .flatMap((on, index) => (on ? [index + 1] : []))
+    .join(', ') || '—'
 
 export const TAPES = [9, 12, 18] as const
 export type TapeMm = (typeof TAPES)[number]
@@ -33,6 +40,7 @@ export const TAPE_FIELDS = {
     'address.mode': 'Mód',
     'address.channels': 'Počet kanálov',
     'address.power': 'Odber (W / A)',
+    'address.dip': 'DIP prepínače (ktoré zapnúť)',
   },
   modes: {
     'modes.name': 'Názov s číslom kusu',
@@ -115,6 +123,7 @@ export function tapeLabels(item: Equipment, kinds: LabelKind[], options: Options
           [
             join([on('address.name') && fullName, on('address.mode') && info?.dmxMode, on('address.channels') && mode && `${mode.channels} ch`]),
             on('address.power') && item.attributes.powerW ? `${num(item.attributes.powerW)} W · ${num(ampsAt230(item.attributes.powerW))} A` : '',
+            on('address.dip') && item.attributes.dipSwitches && info?.dmxAddress ? `DIP ON: ${dipOn(info.dmxAddress, item.attributes.dipSwitches)}` : '',
           ],
         )
       }

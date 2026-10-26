@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Case } from '@/features/cases/model'
 import type { Equipment } from '@/features/equipment/model'
-import { ampsAt230, caseTapeLabel, tapeLabels } from './tape'
+import { ampsAt230, caseTapeLabel, dipOn, tapeLabels } from './tape'
 
 const beam = {
   id: 'b',
@@ -34,5 +34,10 @@ describe('tape labels', () => {
     const box = { id: 'c', name: 'Beam Case', labelNumber: '4', labelCategory: 'Light', kind: 'case' } as Case
     expect(caseTapeLabel(box)).toMatchObject({ title: 'Beam Case #4', lines: [] })
     expect(caseTapeLabel(box, { fields: { 'case.category': true } })).toMatchObject({ lines: ['Light'] })
+  })
+  it('shows which DIP switches to turn on', () => {
+    expect(dipOn(17, 9)).toBe('1, 5')
+    const dip = { ...beam, attributes: { ...beam.attributes, dipSwitches: 9 } } as Equipment
+    expect(tapeLabels(dip, ['address'])[0].lines).toEqual(['Beam #1 · Basic · 16 ch', 'DIP ON: 1, 5'])
   })
 })

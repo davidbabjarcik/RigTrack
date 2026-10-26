@@ -1,4 +1,7 @@
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Printer } from 'lucide-react'
+import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { dipOn } from '@/features/labels/tape'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
@@ -22,6 +25,12 @@ export function DmxPrintPage() {
   const companyId = company.companyId
   const events = useEvents(companyId)
   const patch = useDmxPatch(companyId, id)
+  // Svetlá s DIP prepínačmi: na papieri aj ktoré prepínače zapnúť.
+  const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
+  const dipOf = (equipmentId: string | null, address: number | null) => {
+    const count = equipment.data?.find((item) => item.id === equipmentId)?.attributes.dipSwitches
+    return count && address ? dipOn(address, count) : ''
+  }
 
   if (events.isPending || patch.isPending) return <LoadingBlock />
   const event = events.data?.find((item) => item.id === id)
@@ -64,6 +73,7 @@ export function DmxPrintPage() {
                   <th className="py-1 pr-2">Svetlo</th>
                   <th className="py-1 pr-2">Mód</th>
                   <th className="w-12 py-1 pr-2">Ch</th>
+                  <th className="py-1 pr-2">DIP ON</th>
                   <th className="py-1">Poznámka</th>
                 </tr>
               </thead>
@@ -78,6 +88,7 @@ export function DmxPrintPage() {
                     <td className="py-1 pr-2 font-medium">{line.name}</td>
                     <td className="py-1 pr-2">{line.mode}</td>
                     <td className="py-1 pr-2">{line.channels}</td>
+                    <td className="py-1 pr-2 font-mono">{dipOf(line.equipmentId, line.address)}</td>
                     <td className="py-1">{line.note}</td>
                   </tr>
                 ))}

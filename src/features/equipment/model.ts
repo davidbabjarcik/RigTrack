@@ -208,6 +208,9 @@ export type EquipmentAttributes = {
   stageSize?: string
   /** Technika, ktorá do case ani racku nepatrí (napr. stojany, kabeláž na cievke) – nehlási sa ako „mimo case“. */
   noCase?: boolean
+  /** Svetlo: adresa sa nastavuje DIP prepínačmi (inak displejom / menu) – počet prepínačov a poznámka. */
+  dipSwitches?: number
+  dipNote?: string
   /** Technika vo vlastnom obale (napr. reprobox v obale) – nie je v case, ale ani „mimo case“. */
   inCover?: boolean
   /** Aký obal (nepovinné), napr. „obal na top“. */
@@ -461,6 +464,8 @@ export const equipmentSchema = z.object({
   lightType: z.enum([...(LIGHT_TYPES as LightType[]), '']).optional(),
   trackHours: z.boolean().optional(),
   noCase: z.boolean().optional(),
+  dipSwitches: z.number().int().min(4).max(16).optional(),
+  dipNote: z.string().trim().max(80, 'Najviac 80 znakov').optional(),
   inCover: z.boolean().optional(),
   coverNote: z.string().trim().max(80, 'Najviac 80 znakov').optional(),
   hoursPriority: z.enum(['none', 'low', 'normal', 'high', '']).optional(),
@@ -656,6 +661,8 @@ export function attributesFor(
         | 'lightType'
         | 'trackHours'
         | 'noCase'
+        | 'dipSwitches'
+        | 'dipNote'
         | 'inCover'
         | 'coverNote'
         | 'caseId'
@@ -861,6 +868,10 @@ export function attributesFor(
     if (values.boxHeightCm !== undefined) attributes.boxHeightCm = values.boxHeightCm
     if (values.audioType === 'subwoofer' && values.subDelayMs !== undefined) attributes.subDelayMs = values.subDelayMs
   }
+  if (lighting && values.dipSwitches) {
+    attributes.dipSwitches = values.dipSwitches
+    if (values.dipNote?.trim()) attributes.dipNote = values.dipNote.trim()
+  }
   if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels }))
   if (values.kind === 'cable') {
     const makers = (values.makers ?? []).filter((maker) => maker.name.trim() && maker.count > 0).map((maker) => ({ name: maker.name.trim(), count: maker.count }))
@@ -974,6 +985,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.lightSource && LIGHT_SOURCE_LABELS[a.lightSource],
     a.boxWidthCm !== undefined && a.boxDepthCm !== undefined && `${formatNumber(a.boxWidthCm)}×${formatNumber(a.boxDepthCm)}${a.boxHeightCm !== undefined ? `×${formatNumber(a.boxHeightCm)}` : ''} cm`,
     a.dmxModes?.length && `DMX ${a.dmxModes.map((mode) => mode.channels).join('/')} ch`,
+    a.dipSwitches && `DIP ${a.dipSwitches}`,
     a.ledPanel && `LED${a.ledPanel.pitchMm ? ` P${formatNumber(a.ledPanel.pitchMm)}` : ''} ${a.ledPanel.widthMm}×${a.ledPanel.heightMm} mm, ${a.ledPanel.pxW}×${a.ledPanel.pxH} px`,
     a.display &&
       [DISPLAY_TYPE_LABELS[a.display.type], a.display.diagonalIn && `${formatNumber(a.display.diagonalIn)}″`, a.display.resW && `${a.display.resW}×${a.display.resH}`, a.display.lumens && `${a.display.lumens} lm`]

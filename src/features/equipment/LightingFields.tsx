@@ -19,6 +19,7 @@ export function LightingFields() {
   const lightType = useWatch({ control, name: 'lightType' })
   const lightSource = useWatch({ control, name: 'lightSource' })
   const powerW = useWatch({ control, name: 'powerW' })
+  const dipSwitches = useWatch({ control, name: 'dipSwitches' })
   const lightAccessory = Boolean(lightType && lightType.startsWith('acc_'))
   return (
     <>
@@ -40,6 +41,20 @@ export function LightingFields() {
             <Field label="Príkon (W)" type="number" inputMode="decimal" min={0} placeholder="max. príkon zo štítku / návodu" error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />
             {/* Stačí watty zo štítku svetla; prúd pri 230 V sa dopočíta (napr. na rozvádzač a štítok). */}
             <p className="mt-1 text-xs text-muted-foreground">{powerW ? `≈ ${String(ampsAt230(powerW)).replace('.', ',')} A pri 230 V` : 'Stačí watty – ampéry sa dopočítajú.'}</p>
+          </div>
+        )}
+        {!lightAccessory && (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {/* Adresa cez DIP prepínače (staršie a lacnejšie svetlá) – podľa nich appka ukáže, ktoré prepínače zapnúť. */}
+            <SelectField label="DMX adresa sa nastavuje" {...register('dipSwitches', { setValueAs: (value) => (value === '' || value === undefined ? undefined : Number(value)) })}>
+              <option value="">displejom / v menu</option>
+              {[8, 9, 10, 12].map((count) => (
+                <option key={count} value={count}>
+                  DIP prepínačmi ({count})
+                </option>
+              ))}
+            </SelectField>
+            {dipSwitches ? <Field label="DIP – poznámka" placeholder="napr. 10. prepínač = mód" maxLength={80} error={errors.dipNote?.message} {...register('dipNote')} /> : <span />}
           </div>
         )}
         {!lightAccessory && (

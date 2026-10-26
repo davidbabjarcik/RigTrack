@@ -202,6 +202,8 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     lightType: equipment.attributes.lightType ?? '',
     // Staršia technika s intervalom v mesiacoch prejde na sledovanie so strednou úrovňou.
     noCase: equipment.attributes.noCase ?? false,
+    dipSwitches: equipment.attributes.dipSwitches,
+    dipNote: equipment.attributes.dipNote ?? '',
     inCover: equipment.attributes.inCover ?? false,
     coverNote: equipment.attributes.coverNote ?? '',
     trackHours: equipment.attributes.trackHours ?? (equipment.hoursIntervalMonths !== null || equipment.operatingHours !== null),

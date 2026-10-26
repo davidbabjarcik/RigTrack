@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { equipmentKeys, saveUnitInfo } from './api'
 import { unitIdsOf, type Equipment, type UnitInfo } from './model'
+import { dipOn } from '@/features/labels/tape'
 
 type Row = { unit: number; part: Equipment }
 type Values = { line: string; address: string; mode: string }
@@ -115,6 +116,11 @@ export function GroupDmx({ companyId, parts, caseName, open, onOpen, onClose }: 
           <li key={unit} className="grid grid-cols-[4.5rem_1fr_1fr_1fr] items-center gap-2">
             <span className="text-sm">
               <span className="block font-medium">#{unit}</span>
+              {part.attributes.dipSwitches && Number(values[unit].address) > 0 && (
+                <span className="block text-xs text-accent" title="Zapnuté DIP prepínače pre túto adresu">
+                  DIP {dipOn(Number(values[unit].address), part.attributes.dipSwitches)}
+                </span>
+              )}
               <span className="block truncate text-xs text-muted-foreground">{part.caseId ? caseName(part.caseId) : 'mimo case'}</span>
             </span>
             <input aria-label={`Linka #${unit}`} placeholder="linka" className="h-10 min-w-0 rounded-lg border bg-background px-2" value={values[unit].line} onChange={(event) => set(unit, { line: event.target.value })} />

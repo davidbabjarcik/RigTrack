@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.10 – 26. 10. 2026
+
+- **DIP prepínače pri svetlách**: vo formulári svetla „DMX adresa sa nastavuje“ – displejom / v menu, alebo
+  DIP prepínačmi (8, 9, 10 alebo 12) s poznámkou (napr. „10. prepínač = mód“). Pri takom svetle appka ukáže,
+  **ktoré prepínače zapnúť**: pri „DMX všetkým“ pri každom kuse, na tlači DMX patch listu (stĺpec DIP ON)
+  a na štítku „Moja DMX adresa“ (DIP ON: 1, 5).
+
 ### 4.9.1 – 26. 10. 2026
 
 - **Aktualizácia databázy jedným súborom**: `supabase/update-all.sql` – všetky migrácie od 0086 po najnovšiu
