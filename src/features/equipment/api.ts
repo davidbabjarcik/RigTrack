@@ -137,7 +137,34 @@ function fromRow(row: Row): Equipment {
 // Supabase vracia najviac 1000 riadkov na dotaz, preto sa zoznam načíta po stranách.
 const PAGE = 1000
 
+// IP a MAC techniky sú od 0107 v equipment_addresses – databáza ich vráti len s oprávnením „Vidieť IP a MAC adresy“.
+let addressTable = true
+
+async function withAddresses(companyId: string, items: Equipment[]): Promise<Equipment[]> {
+  if (!addressTable || items.length === 0) return items
+  const { data, error } = await getSupabase().from('equipment_addresses').select('equipment_id, ip, mac').eq('company_id', companyId)
+  if (error) {
+    if (/equipment_addresses/.test(error.message ?? '')) addressTable = false
+    return items
+  }
+  const byId = new Map((data as { equipment_id: string; ip: string; mac: string }[]).map((row) => [row.equipment_id, row]))
+  return items.map((item) => {
+    const address = byId.get(item.id)
+    return address ? { ...item, ipAddress: address.ip, macAddress: address.mac } : item
+  })
+}
+
+/** Uloží IP a MAC techniky (len s oprávnením; bez migrácie 0107 sa uložia priamo pri technike). */
+async function saveAddresses(companyId: string, equipmentId: string, ip: string, mac: string) {
+  const { error } = await getSupabase().from('equipment_addresses').upsert({ equipment_id: equipmentId, company_id: companyId, ip, mac }, { onConflict: 'equipment_id' })
+  if (error) throw error
+}
+
 export async function fetchEquipmentList(companyId: string): Promise<Equipment[]> {
+  return withAddresses(companyId, await fetchEquipmentRows(companyId))
+}
+
+async function fetchEquipmentRows(companyId: string): Promise<Equipment[]> {
   const all: Equipment[] = []
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await getSupabase()
@@ -147,7 +174,7 @@ export async function fetchEquipmentList(companyId: string): Promise<Equipment[]
       .order('name')
       .order('id')
       .range(from, from + PAGE - 1)
-    if (fallBack(error)) return fetchEquipmentList(companyId)
+    if (fallBack(error)) return fetchEquipmentRows(companyId)
     if (error) throw error
     all.push(...(data as unknown as Row[]).map(fromRow))
     if (data.length < PAGE) return all
@@ -163,7 +190,7 @@ export async function fetchEquipment(companyId: string, id: string): Promise<Equ
     .maybeSingle()
   if (fallBack(error)) return fetchEquipment(companyId, id)
   if (error) throw error
-  return data ? fromRow(data as unknown as Row) : null
+  return data ? (await withAddresses(companyId, [fromRow(data as unknown as Row)]))[0] : null
 }
 
 export async function fetchLookup(companyId: string, table: LookupTable): Promise<Lookup[]> {
@@ -208,6 +235,8 @@ export async function setCategoryConsumable(id: string, consumable: boolean) {
 }
 
 type SaveArgs = {
+  /** Smie človek vidieť a meniť IP a MAC (networks.addresses)? Bez neho sa adresy neposielajú ani nemažú. */
+  addresses?: boolean
   companyId: string
   id: string | null
   values: EquipmentFormValues
@@ -245,7 +274,7 @@ export async function syncEquipmentGroup(companyId: string, sourceId: string, id
   if (updateError) throw updateError
 }
 
-export async function saveEquipment({ companyId, id, values, categories, locations }: SaveArgs): Promise<string> {
+export async function saveEquipment({ companyId, id, values, categories, locations, addresses = true }: SaveArgs): Promise<string> {
   // Polia, na ktoré sa formulár pri danom druhu nepýta, sa vyprázdnia, aby po zmene druhu neostali staré hodnoty.
   const simple = isSimpleKind(values.kind, values.category)
   const fields = {
@@ -258,8 +287,8 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     model: values.model,
     serial_number: simple ? '' : values.serialNumber,
     inventory_number: values.inventoryNumber,
-    mac_address: simple ? '' : normalizeMac(values.macAddress),
-    ip_address: simple ? '' : values.ipAddress,
+    // Bez tabuľky adries (pred 0107) sa adresy ukladajú pri technike; inak zvlášť nižšie.
+    ...(!addressTable && addresses !== false ? { mac_address: simple ? '' : normalizeMac(values.macAddress), ip_address: simple ? '' : values.ipAddress } : {}),
     service_interval_months: simple ? null : (values.serviceIntervalMonths ?? null),
     last_service_on: simple ? null : values.lastServiceOn || null,
     // Interval odčítania sa ráta z úrovne kontroly (attributes); starý interval v mesiacoch sa nahrádza.
@@ -295,7 +324,16 @@ export async function saveEquipment({ companyId, id, values, categories, locatio
     ;({ data, error } = await write(row))
   }
   if (error) throw error
-  return (data as { id: string }).id
+  const savedId = (data as { id: string }).id
+  // IP a MAC do chránenej tabuľky (aj prázdne – tak sa adresa zmaže), len keď ich človek smie vidieť.
+  if (addressTable && addresses) {
+    const simple = isSimpleKind(values.kind, values.category)
+    await saveAddresses(companyId, savedId, simple ? '' : values.ipAddress, simple ? '' : normalizeMac(values.macAddress)).catch((reason: { message?: string }) => {
+      if (/equipment_addresses/.test(reason.message ?? '')) addressTable = false
+      else throw reason
+    })
+  }
+  return savedId
 }
 
 /** Čísla kusov podľa formulára (vlastné čísla alebo 1..počet); bez evidencie po kusoch žiadne. */

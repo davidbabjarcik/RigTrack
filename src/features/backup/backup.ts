@@ -11,6 +11,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
     file: 'Technika.xlsx',
     tables: [
       { table: 'equipment', sheet: 'Technika' },
+      { table: 'equipment_addresses', sheet: 'IP a MAC techniky' },
       { table: 'equipment_categories', sheet: 'Kategórie' },
       { table: 'locations', sheet: 'Umiestnenia' },
       { table: 'cable_colors', sheet: 'Farby káblov' },
@@ -171,9 +172,16 @@ export function rowsToSheet(rows: Record<string, unknown>[]): Cell[][] {
 }
 
 const PAGE = 1000
-// Tabuľky so stĺpcami, ktoré sa bežne čítať nedajú (heslo Wi-Fi od 0103) – záloha ich vynechá.
-const SELECT_COLUMNS: Record<string, string> = {
-  wifi_networks: 'id, company_id, ssid, security, hidden, subnet, router_ip, management_ip, router_model, dhcp, dhcp_start, dhcp_end, equipment_id, place, note, created_at',
+// Tabuľky so stĺpcami, ktoré sa bežne čítať nedajú (heslo a adresy Wi-Fi od 0103 / 0107): záloha si zistí,
+// ktoré stĺpce smie čítať (readable_columns), a číta len tie.
+const SELECT_COLUMNS: Record<string, string> = {}
+
+async function readableColumns(table: string) {
+  if (SELECT_COLUMNS[table]) return SELECT_COLUMNS[table]
+  const { data, error } = await getSupabase().rpc('readable_columns', { _table: table })
+  if (error || !Array.isArray(data) || data.length === 0) return null
+  SELECT_COLUMNS[table] = (data as string[]).join(', ')
+  return SELECT_COLUMNS[table]
 }
 
 /** Všetky riadky tabuľky firmy, po stránkach (server vracia najviac 1000 naraz). */
@@ -185,6 +193,7 @@ async function fetchAll(table: string, companyId: string) {
       .select(SELECT_COLUMNS[table] ?? '*')
       .eq('company_id', companyId)
       .range(from, from + PAGE - 1)
+    if (error && error.code === '42501' && !SELECT_COLUMNS[table] && (await readableColumns(table))) return fetchAll(table, companyId)
     if (error) throw error
     rows.push(...(data as unknown as Record<string, unknown>[]))
     if (data.length < PAGE) return rows

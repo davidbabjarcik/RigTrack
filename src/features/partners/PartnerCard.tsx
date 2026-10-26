@@ -8,6 +8,7 @@ import { Field } from '@/components/ui/field'
 import { setPartnerShared } from '@/features/links/api'
 import { FoundCompanyButton } from './FoundCompanyButton'
 import { formatDate } from '@/lib/format'
+import { isLegalForm, LEGAL_FORM_LABELS, statutoryLabel } from './legalForms'
 import { addContact, deleteContact, partnerKeys, updateContact, type Partner, type PartnerContact } from './api'
 
 /** Firma / skupina (napr. organizátor) s ľuďmi a ich číslami; pri každom „Do kontaktov“. */
@@ -43,12 +44,16 @@ export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { 
         <div className="min-w-0 flex-1">
           <p className="font-medium break-words">{partner.name}</p>
           <p className="text-sm text-muted-foreground">
-            {[partner.legalName && partner.legalName !== partner.name && partner.legalName, partner.ico && `IČO ${partner.ico}`, partner.dic && `DIČ ${partner.dic}`, partner.icDph && `IČ DPH ${partner.icDph}`]
+            {[
+              isLegalForm(partner.legalForm) && LEGAL_FORM_LABELS[partner.legalForm],
+              partner.legalName && partner.legalName !== partner.name && partner.legalName,
+              partner.ceo && `${statutoryLabel(partner.legalForm)}: ${partner.ceo}`,
+              partner.ico && `IČO ${partner.ico}`, partner.dic && `DIČ ${partner.dic}`, partner.icDph && `IČ DPH ${partner.icDph}`]
               .filter(Boolean)
               .join(' · ')}
           </p>
           <p className="text-sm text-muted-foreground">
-            {[partner.ceo && `CEO ${partner.ceo}`, partner.address, partner.linkedCompanyId ? 'prepojené v RigTracku' : partner.usesApp && 'používa RigTrack'].filter(Boolean).join(' · ')}
+            {[partner.address, partner.linkedCompanyId ? 'prepojené v RigTracku' : partner.usesApp && 'používa RigTrack'].filter(Boolean).join(' · ')}
           </p>
         </div>
         {actions}

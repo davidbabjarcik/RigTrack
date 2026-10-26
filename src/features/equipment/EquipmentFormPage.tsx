@@ -52,7 +52,8 @@ import {
 } from './model'
 import { PurchaseLinksFields } from './PurchaseLinksFields'
 import { UnitDetailsFields } from './UnitDetailsFields'
-import { CableMakersField, makerModeOf, makersOver, makersToSave, type Maker, type MakerMode } from './CableMakersField'
+import { CableMakersField } from './CableMakersField'
+import { makerModeOf, makersOver, makersToSave, type Maker, type MakerMode } from './makers'
 import { CHECK_LEVEL_LABELS, CHECK_LEVELS, levelDays, useCheckLevels } from '@/features/checks/levels'
 import { useEquipmentLookups } from './useEquipmentLookups'
 import { Group } from './FormGroup'
@@ -331,6 +332,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const [searchParams] = useSearchParams()
   // ?group=id1,id2 – úprava všetkých častí rozdelenej techniky naraz (zo zoznamu techniky).
   const groupIds = (searchParams.get('group') ?? '').split(',').filter(Boolean)
+  const canAddresses = can(useCompany().active!, 'networks.addresses')
   // Hromadná úprava sa vracia na prehľad skupiny, nie na jednu časť.
   const cancelTo = equipment ? (groupIds.length > 1 ? `/equipment/group?ids=${groupIds.join(',')}` : `/equipment/${equipment.id}`) : '/equipment'
   const groupMode = Boolean(equipment) && groupIds.length > 1
@@ -418,6 +420,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           : values,
         categories,
         locations,
+        addresses: canAddresses,
       })
       // Duplikát dostane vlastnú kópiu fotky vzoru.
       if (!equipment && copyFrom?.photoPath) await copyEquipmentPhoto(companyId, id, copyFrom.photoPath).catch(() => {})
@@ -429,7 +432,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         const known = [...categories]
         for (const extra of extraLengths.filter((row) => row.lengthM > 0 && row.quantity > 0)) {
           const makers = makersToSave(makerMode, oneMaker, extra.quantity, extra.makers ?? [])
-          await saveEquipment({ companyId, id: null, values: { ...values, name: cableName(base, extra.lengthM), lengthM: extra.lengthM, quantity: extra.quantity, makers }, categories: known, locations })
+          await saveEquipment({ companyId, id: null, values: { ...values, name: cableName(base, extra.lengthM), lengthM: extra.lengthM, quantity: extra.quantity, makers }, categories: known, locations, addresses: canAddresses })
         }
       }
       return id
@@ -862,7 +865,8 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         </label>
       )}
 
-      {!simple && (
+      {/* IP a MAC len s oprávnením „Vidieť IP a MAC adresy“ (inak ich databáza ani nevráti). */}
+      {!simple && canAddresses && (
         <>
           <label className="flex items-center gap-2 text-sm font-medium">
             <input type="checkbox" className="size-5" checked={showNetwork}

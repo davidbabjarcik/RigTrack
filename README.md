@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-4.7-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-4.8-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -39,9 +39,9 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **4.8** | IP a MAC chránené databázou, štítky každý vo svojej dĺžke, QR kusov v pack liste, právna forma v zozname |
 | **4.7** | Vlastný obsah štítkov na pásku (čo na nich bude), biela / čierna páska |
 | **4.6.1** | Demo firma s novinkami od 4.0 (DMX, patch listy, OZ, Našli ste…) |
-| **4.6** | QR štítok bez účtu ukáže „Našli ste…“ s kontaktom firmy (zapína admin) |
 | **3.19** | @todo v políčkach, kanban a farebné priority úloh, vlastný stĺpec na Prehľade, racky v U, platiteľ DPH |
 | **3.16** | Pack list funguje aj bez signálu, záložka Vývojár v Nastaveniach |
 

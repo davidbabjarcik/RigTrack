@@ -650,6 +650,20 @@ begin
     exception when others then raise notice 'Kontrola equipment_unit_purchases_check: %', sqlerrm;
     end;
   end if;
+  if to_regclass('public.equipment_addresses') is not null then
+    begin
+      execute $sql$alter table public.equipment_addresses drop constraint if exists equipment_addresses_ip_check$sql$;
+      execute $sql$alter table public.equipment_addresses add constraint equipment_addresses_ip_check CHECK ((char_length(ip) <= 64)) not valid$sql$;
+    exception when others then raise notice 'Kontrola equipment_addresses_ip_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.equipment_addresses') is not null then
+    begin
+      execute $sql$alter table public.equipment_addresses drop constraint if exists equipment_addresses_mac_check$sql$;
+      execute $sql$alter table public.equipment_addresses add constraint equipment_addresses_mac_check CHECK ((char_length(mac) <= 32)) not valid$sql$;
+    exception when others then raise notice 'Kontrola equipment_addresses_mac_check: %', sqlerrm;
+    end;
+  end if;
   if to_regclass('public.equipment_aliases') is not null then
     begin
       execute $sql$alter table public.equipment_aliases drop constraint if exists equipment_aliases_alias_check$sql$;
@@ -1047,6 +1061,20 @@ begin
       execute $sql$alter table public.event_pack_checks drop constraint if exists event_pack_checks_phase_check$sql$;
       execute $sql$alter table public.event_pack_checks add constraint event_pack_checks_phase_check CHECK ((phase = ANY (ARRAY['out'::text, 'back'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola event_pack_checks_phase_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_pack_units') is not null then
+    begin
+      execute $sql$alter table public.event_pack_units drop constraint if exists event_pack_units_phase_check$sql$;
+      execute $sql$alter table public.event_pack_units add constraint event_pack_units_phase_check CHECK ((phase = ANY (ARRAY['out'::text, 'back'::text]))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_pack_units_phase_check: %', sqlerrm;
+    end;
+  end if;
+  if to_regclass('public.event_pack_units') is not null then
+    begin
+      execute $sql$alter table public.event_pack_units drop constraint if exists event_pack_units_unit_check$sql$;
+      execute $sql$alter table public.event_pack_units add constraint event_pack_units_unit_check CHECK (((unit >= 1) AND (unit <= 100000))) not valid$sql$;
+    exception when others then raise notice 'Kontrola event_pack_units_unit_check: %', sqlerrm;
     end;
   end if;
   if to_regclass('public.event_partners') is not null then
@@ -4167,6 +4195,28 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.equipment_move_addresses()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  insert into public.equipment_addresses (equipment_id, company_id, ip, mac)
+  values (new.id, new.company_id, coalesce(new.ip_address, ''), coalesce(new.mac_address, ''))
+  on conflict (equipment_id) do update
+    set ip = case when excluded.ip <> '' then excluded.ip else public.equipment_addresses.ip end,
+        mac = case when excluded.mac <> '' then excluded.mac else public.equipment_addresses.mac end;
+  update public.equipment set ip_address = '', mac_address = '' where id = new.id;
+  return null;
+end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia equipment_move_addresses: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.equipment_sync_copies()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -4950,6 +5000,26 @@ $repair$;
 
 do $repair$
 begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.network_addresses(_company_id uuid)
+ RETURNS jsonb
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select case when public.can(_company_id, 'networks.addresses') then jsonb_build_object(
+    'allowed', true,
+    'wifi', coalesce((
+      select jsonb_agg(jsonb_build_object('id', n.id, 'subnet', n.subnet, 'routerIp', n.router_ip, 'managementIp', n.management_ip, 'dhcpStart', n.dhcp_start, 'dhcpEnd', n.dhcp_end))
+      from public.wifi_networks n where n.company_id = _company_id
+    ), '[]'::jsonb)
+  ) else jsonb_build_object('allowed', false, 'wifi', '[]'::jsonb) end;
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia network_addresses: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
   execute $repairfn$CREATE OR REPLACE FUNCTION public.normalize_unit_ids()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5429,6 +5499,23 @@ begin
 end;
 $function$$repairfn$;
 exception when others then raise notice 'Funkcia push_setup_status: %', sqlerrm;
+end;
+$repair$;
+
+do $repair$
+begin
+  execute $repairfn$CREATE OR REPLACE FUNCTION public.readable_columns(_table text)
+ RETURNS text[]
+ LANGUAGE sql
+ STABLE
+ SET search_path TO ''
+AS $function$
+  select coalesce(array_agg(c.column_name::text order by c.ordinal_position), '{}')
+  from information_schema.columns c
+  where c.table_schema = 'public' and c.table_name = _table
+    and has_column_privilege('public.' || quote_ident(_table), c.column_name, 'select');
+$function$$repairfn$;
+exception when others then raise notice 'Funkcia readable_columns: %', sqlerrm;
 end;
 $repair$;
 

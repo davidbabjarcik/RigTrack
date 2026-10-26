@@ -38,6 +38,8 @@ export type WifiNetwork = {
   scope?: 'equipment' | 'company'
   /** Heslo existuje, ale používateľ ho nesmie vidieť (oprávnenie „Vidieť heslá Wi-Fi“). */
   passwordHidden?: boolean
+  /** IP rozsah a adresy siete používateľ nesmie vidieť (oprávnenie „Vidieť IP a MAC adresy“). */
+  addressesHidden?: boolean
   place: string
   note: string
 }
@@ -67,6 +69,8 @@ export const wifiSchema = z
     scope: z.enum(['equipment', 'company']).optional(),
     /** Heslo existuje, ale používateľ ho nevidí – prázdne políčko ho nechá tak. */
     keepPassword: z.boolean().optional(),
+    /** Adresy siete sa nemenia (používateľ ich nevidí). */
+    keepAddresses: z.boolean().optional(),
     place: text(120),
     note: text(1000),
   })

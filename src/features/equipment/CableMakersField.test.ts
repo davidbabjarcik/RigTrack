@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { makerModeOf, makersOver, makersToSave } from './CableMakersField'
+import { makerModeOf, makersOver, makersToSave } from './makers'
 
 describe('cable makers', () => {
   it('picks the mode from saved makers', () => {

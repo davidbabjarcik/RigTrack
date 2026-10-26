@@ -12,7 +12,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0051', label: 'zariadenia členov', table: 'member_devices', column: 'id' },
   { migration: '0052', label: 'vlastníci techniky', table: 'equipment', column: 'owner_staff_id' },
   { migration: '0069', label: 'oprava zariadení (Wi-Fi siete, ethernet MAC)', table: 'member_devices', column: 'networks' },
-  { migration: '0070', label: 'Wi-Fi siete (oprava 0055)', table: 'wifi_networks', column: 'dhcp_end' },
+  { migration: '0070', label: 'Wi-Fi siete (oprava 0055)', table: 'wifi_networks', column: 'dhcp' },
   { migration: '0057', label: 'narodeniny, novinky', table: 'company_news', column: 'id' },
   { migration: '0059', label: 'program eventu, firmy a kontakty', table: 'event_days', column: 'id' },
   { migration: '0060', label: 'kapsule, žiadosti o servis', table: 'service_requests', column: 'id' },
@@ -50,6 +50,8 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0103', label: 'oprávnenia sietí a kontrol, Wi-Fi firmy', table: 'wifi_networks', column: 'scope' },
   { migration: '0104', label: 'šablóny patch listov, DMX patch list pri evente', table: 'event_dmx_patch', column: 'universe' },
   { migration: '0105', label: 'QR štítok bez účtu („Našli ste…“)', table: 'company_profile', column: 'public_scan' },
+  { migration: '0107', label: 'IP a MAC adresy chránené databázou', table: 'equipment_addresses', column: 'ip' },
+  { migration: '0108', label: 'pack list – naskenované jednotlivé kusy', table: 'event_pack_units', column: 'unit' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

@@ -14,7 +14,8 @@ import { parseQr } from '@/features/scan/qr'
 import { formatDate } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { fetchPackChecks, packKeys, setPackCheck, usePackChecks, type PackPhase } from './api'
+import { addPackUnit, fetchPackChecks, packKeys, packUnitKeys, setPackCheck, usePackChecks, usePackUnits, type PackPhase } from './api'
+import { caseTitle } from '@/features/cases/model'
 import { enqueue, isNetworkError, mergeChecks, readQueue, readSnapshot, writeQueue, writeSnapshot, type PendingTick } from './offline'
 import { checkOf, packProgress, packRows, type PackRow } from './model'
 
@@ -31,6 +32,14 @@ export function PackPage() {
   const cases = useCases(companyId)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
   const checks = usePackChecks(companyId, id)
+  const units = usePackUnits(companyId, id)
+  // Kusy naskenované v tejto fáze (aj tie, čo sa ešte len odosielajú).
+  const [scannedNow, setScannedNow] = useState<string[]>([])
+  const unitsOf = (equipmentId: string, inPhase: PackPhase) =>
+    new Set([
+      ...(units.data ?? []).filter((item) => item.equipmentId === equipmentId && item.phase === inPhase).map((item) => item.unit),
+      ...scannedNow.filter((key) => key.startsWith(`${inPhase}:${equipmentId}:`)).map((key) => Number(key.split(':')[2])),
+    ])
   const [phase, setPhase] = useState<PackPhase>('out')
   const [scanning, setScanning] = useState(false)
   // Odškrtnutia idú najprv do fronty v telefóne a odošlú sa hneď, alebo keď sa chytí sieť.
@@ -139,6 +148,25 @@ export function PackPage() {
             const target = parseQr(text)
             if (!target) return 'Tento QR kód nie je z RigTracku.'
             const row = rows.find((candidate) => (target.kind === 'case' ? candidate.caseId : candidate.equipmentId) === target.id)
+            const piece = target.kind === 'equipment' ? equipment.data?.find((item) => item.id === target.id) : undefined
+            // Kus v case, ktorý je v pack liste ako celý case: stačí naskenovať case.
+            if (!row && piece?.caseId && rows.some((candidate) => candidate.caseId === piece.caseId)) {
+              const box = cases.data?.find((item) => item.id === piece.caseId)
+              return `ℹ ${piece.name}${target.unit ? ` #${target.unit}` : ''} je v case ${box ? caseTitle(box) : ''} – naskenujte QR case.`
+            }
+            // QR jedného kusu (#7): zapíše sa kus; keď sú všetky kusy položky, položka sa odškrtne.
+            if (row && target.unit && row.equipmentId) {
+              const done = unitsOf(row.equipmentId, phase)
+              if (done.has(target.unit)) return `✓ ${row.name} #${target.unit} už je naskenovaný (${done.size}/${row.quantity}).`
+              done.add(target.unit)
+              setScannedNow((current) => [...current, `${phase}:${row.equipmentId}:${target.unit}`])
+              void addPackUnit(companyId, id, row.equipmentId, target.unit, phase).then(() => queryClient.invalidateQueries({ queryKey: packUnitKeys.ofEvent(companyId, id) }))
+              if (done.size >= row.quantity && !checkOf(row, all, phase)) {
+                tick(row, true)
+                return `✓ ${row.name} #${target.unit} – všetkých ${row.quantity} ks, odškrtnuté`
+              }
+              return `✓ ${row.name} #${target.unit} (${done.size}/${row.quantity})`
+            }
             if (!row) {
               const name = target.kind === 'case' ? cases.data?.find((item) => item.id === target.id)?.name : equipment.data?.find((item) => item.id === target.id)?.name
               return `✗ ${name ?? 'Toto'} nie je v pack liste eventu.`
@@ -201,7 +229,11 @@ export function PackPage() {
                       {row.name}
                     </span>
                     <span className="block truncate text-sm text-muted-foreground">
-                      {[row.caseId && 'case', row.detail, check && `${check.checkedByName || 'neznámy'} ${new Date(check.checkedAt).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`]
+                      {[
+                        row.caseId && 'case',
+                        row.detail,
+                        row.equipmentId && !check && unitsOf(row.equipmentId, phase).size > 0 && `naskenované ${unitsOf(row.equipmentId, phase).size}/${row.quantity} ks`,
+                        check && `${check.checkedByName || 'neznámy'} ${new Date(check.checkedAt).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`]
                         .filter(Boolean)
                         .join(' · ')}
                     </span>

@@ -15,8 +15,8 @@ type Row = {
   scope?: 'equipment' | 'company'
   security: WifiSecurity
   hidden: boolean
-  subnet: string
-  router_ip: string
+  subnet?: string
+  router_ip?: string
   management_ip: string
   router_model: string
   dhcp: boolean
@@ -28,31 +28,46 @@ type Row = {
 }
 
 // Od 0103 sa heslo číta zvlášť (wifi_passwords – len s oprávnením) a pribudol druh siete (scope).
+// Od 0107 aj adresy (IP rozsah, gateway, DHCP) – cez network_addresses, len s oprávnením „Vidieť IP a MAC adresy“.
 let securePasswords = true
-const BASE_COLUMNS = 'id, ssid, security, hidden, subnet, router_ip, management_ip, router_model, dhcp, dhcp_start, dhcp_end, equipment_id, place, note'
+let secureAddresses = true
+const ADDRESS_COLUMNS = ', subnet, router_ip, management_ip, dhcp_start, dhcp_end'
+const BASE_COLUMNS = 'id, ssid, security, hidden, router_model, dhcp, equipment_id, place, note'
+type WifiAddress = { id: string; subnet: string; routerIp: string; managementIp: string; dhcpStart: string; dhcpEnd: string }
 
 export async function fetchNetworks(companyId: string): Promise<WifiNetwork[]> {
   const db = getSupabase()
   let passwords = new Map<string, string>()
+  let addresses: Map<string, WifiAddress> | null = null
   let rows: Row[]
   if (securePasswords) {
-    const [networks, secrets] = await Promise.all([
-      db.from('wifi_networks').select(BASE_COLUMNS + ', scope').eq('company_id', companyId).order('ssid'),
+    const [networks, secrets, secured] = await Promise.all([
+      db.from('wifi_networks').select(BASE_COLUMNS + ', scope' + (secureAddresses ? '' : ADDRESS_COLUMNS)).eq('company_id', companyId).order('ssid'),
       db.rpc('wifi_passwords', { _company_id: companyId }),
+      secureAddresses ? db.rpc('network_addresses', { _company_id: companyId }) : Promise.resolve({ data: null, error: null }),
     ])
     if (networks.error && /scope/.test(networks.error.message ?? '')) {
       securePasswords = false
+      secureAddresses = false
+      return fetchNetworks(companyId)
+    }
+    // Pred 0107 funkcia network_addresses nie je – adresy sa čítajú priamo z tabuľky.
+    if (secureAddresses && secured.error) {
+      secureAddresses = false
       return fetchNetworks(companyId)
     }
     if (networks.error) throw networks.error
     rows = networks.data as unknown as Row[]
     passwords = new Map(((secrets.data ?? []) as { id: string; password: string }[]).map((item) => [item.id, item.password]))
+    if (secureAddresses) addresses = new Map((((secured.data as { wifi?: WifiAddress[] } | null)?.wifi ?? []) as WifiAddress[]).map((item) => [item.id, item]))
   } else {
-    const { data, error } = await db.from('wifi_networks').select(BASE_COLUMNS + ', password').eq('company_id', companyId).order('ssid')
+    const { data, error } = await db.from('wifi_networks').select(BASE_COLUMNS + ADDRESS_COLUMNS + ', password').eq('company_id', companyId).order('ssid')
     if (error) throw error
     rows = data as unknown as Row[]
   }
-  return rows.map((row) => ({
+  return rows.map((row) => {
+    const address = addresses?.get(row.id)
+    return {
     id: row.id,
     ssid: row.ssid,
     // Bez oprávnenia „Vidieť heslá Wi-Fi“ databáza heslo nevráti.
@@ -61,17 +76,20 @@ export async function fetchNetworks(companyId: string): Promise<WifiNetwork[]> {
     scope: row.scope ?? (row.equipment_id ? 'equipment' : 'company'),
     security: row.security,
     hidden: row.hidden,
-    subnet: row.subnet,
-    routerIp: row.router_ip,
-    managementIp: row.management_ip,
+    subnet: address?.subnet ?? row.subnet ?? '',
+    routerIp: address?.routerIp ?? row.router_ip ?? '',
+    managementIp: address?.managementIp ?? row.management_ip ?? '',
     routerModel: row.router_model,
     dhcp: row.dhcp,
-    dhcpStart: row.dhcp_start,
-    dhcpEnd: row.dhcp_end,
+    dhcpStart: address?.dhcpStart ?? row.dhcp_start ?? '',
+    dhcpEnd: address?.dhcpEnd ?? row.dhcp_end ?? '',
+    // Adresy existujú, ale človek ich nesmie vidieť – pri úprave sa nemenia.
+    addressesHidden: addresses !== null && !address,
     equipmentId: row.equipment_id,
     place: row.place,
     note: row.note,
-  }))
+    }
+  })
 }
 
 /** Wi-Fi siete firmy. Bez migrácie 0055 vráti chybu; ostatné stránky to prežijú. */
@@ -95,13 +113,10 @@ export async function saveNetwork(companyId: string, id: string | null, values: 
     ...(securePasswords ? { scope: values.scope ?? (values.equipmentId ? 'equipment' : 'company') } : {}),
     security: values.security,
     hidden: values.hidden,
-    subnet: values.subnet,
-    router_ip: values.routerIp,
-    management_ip: values.managementIp,
     router_model: values.routerModel,
+    // Adresy, ktoré používateľ nevidí, sa pri úprave nemenia.
+    ...(values.keepAddresses ? {} : { subnet: values.subnet, router_ip: values.routerIp, management_ip: values.managementIp, dhcp_start: values.dhcp ? values.dhcpStart : '', dhcp_end: values.dhcp ? values.dhcpEnd : '' }),
     dhcp: values.dhcp,
-    dhcp_start: values.dhcp ? values.dhcpStart : '',
-    dhcp_end: values.dhcp ? values.dhcpEnd : '',
     equipment_id: values.scope === 'company' ? null : values.equipmentId || null,
     place: values.place,
     note: values.note,

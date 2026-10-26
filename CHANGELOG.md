@@ -5,6 +5,18 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.8 – 26. 10. 2026
+
+- **IP a MAC adresy stráži databáza** (oprávnenie „Vidieť IP a MAC adresy“): IP a MAC techniky sú v chránenej
+  tabuľke, adresy Wi-Fi sietí (IP rozsah, gateway, DHCP) sa čítajú len s oprávnením, zariadenia hostí tiež.
+  Kto oprávnenie nemá, adresy nevidí a pri úprave techniky či siete ich ani nezmaže.
+- **Štítky na pásku**: pri tlači z PC má každý štítok **svoju dĺžku** (bez prázdneho konca pásky).
+- **Firmy a kontakty**: v zozname právna forma (OZ, s.r.o. …) a štatutár / konateľ.
+- **Pack list – QR jednotlivých kusov**: naskenovaný kus (Beam 7R #7) sa zapíše („naskenované 7/16 ks“); keď sú
+  všetky kusy, položka sa odškrtne sama. Kus v case, ktorý je v pack liste celý, povie „naskenujte QR case“.
+- Upratanie kódu (lint bez upozornení).
+- Nové migrácie: `0107`, `0108` (opravné `0071` a `0072` sú aktualizované).
+
 ### 4.7.2 – 26. 10. 2026
 
 - Štítky na pásku sú dostupné cez **QR štítky → Na pásku Brother** (tlačidlá v detailoch techniky a cases odstránené).

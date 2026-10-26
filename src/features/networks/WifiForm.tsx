@@ -22,6 +22,9 @@ type Props = {
 
 /** Pridanie a úprava Wi-Fi siete; údaje siete sa dajú načítať aj z QR kódu. */
 export function WifiForm({ companyId, current, login, equipment, onDone }: Props) {
+  // Bez oprávnenia „Vidieť IP a MAC adresy“ sa adresy siete neukazujú ani nemenia.
+  const canAddresses = can(useCompany().active!, 'networks.addresses')
+
   const queryClient = useQueryClient()
   const [scanError, setScanError] = useState(false)
   const {
@@ -49,6 +52,7 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
       equipmentId: current?.equipmentId ?? '',
       scope: current?.scope ?? 'equipment',
       keepPassword: Boolean(current?.passwordHidden),
+      keepAddresses: Boolean(current?.addressesHidden) || !canAddresses,
       place: current?.place ?? '',
       note: current?.note ?? '',
     },
@@ -56,6 +60,7 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
   const dhcp = useWatch({ control, name: 'dhcp' })
   // Prihlásenie do routera len so „Správou sietí“ (inak by ho databáza aj tak neuložila).
   const canAdmin = can(useCompany().active!, 'networks.admin')
+  const hideAddresses = !canAddresses || current?.addressesHidden ? 'hidden' : undefined
   const scope = useWatch({ control, name: 'scope' })
   const refresh = () => queryClient.invalidateQueries({ queryKey: networkKeys.list(companyId) })
   const save = useMutation({ mutationFn: (values: WifiFormValues) => saveNetwork(companyId, current?.id ?? null, values), onSuccess: async () => (await refresh(), onDone()) })
@@ -120,9 +125,9 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
             </option>
           ))}
         </SelectField>
-        <Field label="IP rozsah" placeholder="192.168.1.0/24" autoComplete="off" error={errors.subnet?.message} {...register('subnet')} />
-        <Field label="Gateway (router)" placeholder="192.168.1.1" autoComplete="off" inputMode="decimal" error={errors.routerIp?.message} {...register('routerIp')} />
-        <Field label="IP správy routera" placeholder="ak je iná ako gateway" autoComplete="off" inputMode="decimal" error={errors.managementIp?.message} {...register('managementIp')} />
+        <Field className={hideAddresses} label="IP rozsah" placeholder="192.168.1.0/24" autoComplete="off" error={errors.subnet?.message} {...register('subnet')} />
+        <Field className={hideAddresses} label="Gateway (router)" placeholder="192.168.1.1" autoComplete="off" inputMode="decimal" error={errors.routerIp?.message} {...register('routerIp')} />
+        <Field className={hideAddresses} label="IP správy routera" placeholder="ak je iná ako gateway" autoComplete="off" inputMode="decimal" error={errors.managementIp?.message} {...register('managementIp')} />
         <Field label="Kde je" placeholder="napr. FOH rack, sklad, kancelária" error={errors.place?.message} {...register('place')} />
         <label className="flex items-center gap-2 text-sm sm:col-span-2">
           <input type="checkbox" className="size-4" {...register('dhcp')} />
@@ -130,8 +135,8 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
         </label>
         {dhcp && (
           <>
-            <Field label="DHCP od" placeholder="192.168.1.100" inputMode="decimal" autoComplete="off" error={errors.dhcpStart?.message} {...register('dhcpStart')} />
-            <Field label="DHCP do" placeholder="192.168.1.199" inputMode="decimal" autoComplete="off" error={errors.dhcpEnd?.message} {...register('dhcpEnd')} />
+            <Field className={hideAddresses} label="DHCP od" placeholder="192.168.1.100" inputMode="decimal" autoComplete="off" error={errors.dhcpStart?.message} {...register('dhcpStart')} />
+            <Field className={hideAddresses} label="DHCP do" placeholder="192.168.1.199" inputMode="decimal" autoComplete="off" error={errors.dhcpEnd?.message} {...register('dhcpEnd')} />
             <p className="text-xs text-muted-foreground sm:col-span-2">Pevné IP (mix, stagebox…) dávajte mimo tohto rozsahu, inak sa môžu biť.</p>
           </>
         )}

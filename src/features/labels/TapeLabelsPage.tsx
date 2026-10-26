@@ -82,13 +82,19 @@ export function TapeLabelsPage() {
   if (equipment.isError) return <ErrorBlock message="Techniku sa nepodarilo načítať." />
 
   const longest = Math.ceil(Math.max(20, ...images.map((image) => image.widthMm)))
-  // Každý štítok na vlastnú „stranu“ s veľkosťou pásky – ovládač P-touch ho vytlačí a odstrihne.
+  // Každý štítok na vlastnú „stranu“ presne svojej dĺžky (pomenované strany @page) – ovládač P-touch ho vytlačí
+  // a odstrihne, bez prázdneho konca pásky. Prehliadač bez pomenovaných strán použije dĺžku najdlhšieho.
+  const lengthOf = (image: { widthMm: number }) => Math.max(20, Math.ceil(image.widthMm))
+  const lengths = [...new Set(images.map(lengthOf))]
+  const noMargins = '@top-left { content: ""; } @top-center { content: ""; } @bottom-center { content: ""; }'
   const printCss = `
-@page { size: ${longest}mm ${settings.tape}mm; margin: 0; @top-left { content: ""; } @top-center { content: ""; } @bottom-center { content: ""; } }
+@page { size: ${longest}mm ${settings.tape}mm; margin: 0; ${noMargins} }
+${lengths.map((length) => `@page tape${length} { size: ${length}mm ${settings.tape}mm; margin: 0; ${noMargins} }`).join(' ')}
 @media print {
   html, body { background: #fff !important; margin: 0 !important; }
   .tape-sheet { display: block !important; }
   .tape-sheet img { display: block; height: ${settings.tape}mm; width: auto; break-after: page; }
+${lengths.map((length) => `  .tape-sheet img.tape${length} { page: tape${length}; }`).join(' ')}
 }`
   const toggle = (kind: LabelKind) => setSettings((current) => ({ ...current, kinds: current.kinds.includes(kind) ? current.kinds.filter((value) => value !== kind) : [...current.kinds, kind] }))
 
@@ -194,7 +200,7 @@ export function TapeLabelsPage() {
         )}
         <p className="text-sm text-neutral-600">
           {black && 'Čierna páska: tlačiareň tlačí bielou farbou kazety – obrázok aj tlač sú rovnaké, náhľad ukazuje, ako to bude vyzerať. '}
-          Pri každom štítku je jeho dĺžka – tú nastavte v tlačiarni / aplikácii (pri tlači z PC sa všetky vytlačia v dĺžke najdlhšieho, {longest} mm). Tlač z PC: vyberte tlačiareň Brother PT-D460BT, páska {settings.tape} mm, okraje žiadne, mierka 100 %. Z mobilu: stiahnite PNG a vytlačte ich
+          Pri každom štítku je jeho dĺžka – tú nastavte v tlačiarni / aplikácii. Pri tlači z PC dostane každý štítok svoju dĺžku. Tlač z PC: vyberte tlačiareň Brother PT-D460BT, páska {settings.tape} mm, okraje žiadne, mierka 100 %. Z mobilu: stiahnite PNG a vytlačte ich
           v aplikácii Brother iPrint&amp;Label. Prázdne druhy (napr. svetlo bez zapísanej DMX adresy alebo príkonu) sa vynechajú – adresy nastavíte cez
           „DMX všetkým“, príkon (W) a váhu v úprave techniky.
         </p>
@@ -215,7 +221,7 @@ export function TapeLabelsPage() {
       </div>
       <div className="tape-sheet hidden">
         {images.map((image) => (
-          <img key={image.key} src={image.url} alt="" />
+          <img key={image.key} src={image.url} alt="" className={`tape${lengthOf(image)}`} />
         ))}
       </div>
     </div>

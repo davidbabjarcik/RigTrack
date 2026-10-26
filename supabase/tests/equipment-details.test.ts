@@ -44,7 +44,9 @@ describe('equipment details', () => {
     await update(`mac_address = '00:1A:2B:3C:4D:5E', ip_address = '192.168.1.50'`)
     await update(`service_interval_months = 12, last_service_on = '2026-01-15'`)
     const [row] = await t.as('admin', `select attributes ->> 'lightSource' as source, ip_address from public.equipment where id = $1`, [item])
-    expect(row).toEqual({ source: 'led', ip_address: '192.168.1.50' })
+    // Od 0107 sú IP a MAC v equipment_addresses (čítať len s oprávnením networks.addresses).
+    expect(row).toEqual({ source: 'led', ip_address: '' })
+    expect(await t.as('admin', 'select ip, mac from public.equipment_addresses where equipment_id = $1', [item])).toEqual([{ ip: '192.168.1.50', mac: '00:1A:2B:3C:4D:5E' }])
   })
 
   it('rejects malformed values', async () => {
