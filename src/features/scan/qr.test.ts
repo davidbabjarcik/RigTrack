@@ -27,3 +27,11 @@ describe('unit QR', () => {
     expect(parseQr(`https://app.example.com/equipment/${id}`)).toEqual({ kind: 'equipment', id })
   })
 })
+
+describe('qrUrl base path', () => {
+  it('keeps the folder the app runs in', () => {
+    const id = '0b6f3c1e-2d4a-4b8c-9e1f-123456789abc'
+    expect(qrUrl({ kind: 'case', id }, 'https://x.github.io', '/RigTrack/')).toBe(`https://x.github.io/RigTrack/cases/${id}`)
+    expect(parseQr(`https://x.github.io/RigTrack/cases/${id}`)).toEqual({ kind: 'case', id })
+  })
+})

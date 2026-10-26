@@ -15,8 +15,9 @@ export function qrPath(target: QrTarget) {
 }
 
 /** Odkaz do appky pre štítok. */
-export function qrUrl(target: QrTarget, origin: string) {
-  return `${origin}${qrPath(target)}`
+export function qrUrl(target: QrTarget, origin: string, base: string = import.meta.env.BASE_URL ?? '/') {
+  // Appka beží v podpriečinku (napr. …/RigTrack/) – bez neho by QR viedol na cudziu 404.
+  return `${origin}${base.replace(/\/$/, '')}${qrPath(target)}`
 }
 
 /** Z textu QR kódu vyčíta techniku, case alebo miesto v sklade; cudzí QR (Wi-Fi, web…) vráti null. */

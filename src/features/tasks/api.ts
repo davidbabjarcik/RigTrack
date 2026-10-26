@@ -65,10 +65,10 @@ export async function fetchTasks(companyId: string): Promise<Task[]> {
  * Úloha z kľúčového slova @todo: „Doplniť: Váha – LED Par“, priradená tomu, kto ju napísal, s odkazom späť.
  * Bez migrácie 0098 sa odkaz zapíše do poznámky.
  */
-export async function addTodoFromField(companyId: string, userId: string, title: string, link: string) {
-  const base = { company_id: companyId, title: title.slice(0, 200), status: 'open', assignee_id: userId }
+export async function addTodoFromField(companyId: string, userId: string, title: string, link: string, options: { category?: string; priority?: string } = {}) {
+  const base = { company_id: companyId, title: title.slice(0, 200), status: 'open', assignee_id: userId, ...(options.priority ? { priority: options.priority } : {}) }
   const table = () => getSupabase().from('tasks')
-  const withLink = await table().insert({ ...base, assignee_ids: [userId], category: 'Doplniť', link })
+  const withLink = await table().insert({ ...base, assignee_ids: [userId], category: options.category ?? 'Doplniť', link })
   if (!withLink.error) return
   if (isMissingColumn(withLink.error, 'link') || isMissingColumn(withLink.error, 'assignee_ids') || isMissingColumn(withLink.error, 'category')) {
     const { error } = await table().insert({ ...base, note: `Odkaz: ${link}` })

@@ -13,12 +13,15 @@ import { useLoans } from '@/features/loans/useLoans'
 import { MyResponsibilities } from '@/features/responsibilities/MyResponsibilities'
 import { useUserPrefs } from '@/features/settings/userPrefs'
 import { MyTasks } from '@/features/tasks/MyTasks'
-import { isAssignedTo } from '@/features/tasks/model'
+import { isAssignedTo, isTaskOverdue } from '@/features/tasks/model'
 import { useTasks } from '@/features/tasks/useTasks'
 import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { DEFAULT_WIDGETS, WIDGETS, widgetOrder, type WidgetId } from './widgets'
+import { DEFAULT_STAT_TILES, DEFAULT_WIDGETS, STAT_TILES, WIDGETS, widgetOrder, type StatTileId, type WidgetId } from './widgets'
+import { useCases } from '@/features/cases/useCases'
+import { unpackedEquipment } from '@/features/equipment/model'
+import { isFillTask } from '@/features/tasks/board'
 
 const WEEKDAYS = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']
 
@@ -107,7 +110,7 @@ function MiniCalendar({ company }: { company: Membership }) {
 }
 
 /** Pár čísel na prvý pohľad. */
-function QuickStats({ company }: { company: Membership }) {
+function QuickStats({ company, tileIds }: { company: Membership; tileIds: StatTileId[] }) {
   const companyId = company.companyId
   const userId = useAuth().session?.user.id
   const today = todayIso()
@@ -115,14 +118,27 @@ function QuickStats({ company }: { company: Membership }) {
   const loans = useLoans(companyId)
   const events = useEvents(companyId)
   const tasks = useTasks(companyId)
+  const cases = useCases(companyId)
   const gear = (equipment.data ?? []).filter((item) => item.status !== 'retired' && item.kind !== 'consumable')
-  const tiles = [
-    can(company, 'equipment.view') && { label: 'Kusov techniky', value: gear.reduce((sum, item) => sum + item.quantity, 0), to: '/equipment' },
-    can(company, 'equipment.view') && { label: 'V servise', value: gear.filter((item) => item.status === 'in_service').length, to: '/equipment' },
-    can(company, 'events.view') && { label: 'Eventy do 30 dní', value: (events.data ?? []).filter((event) => event.status !== 'cancelled' && event.endsOn >= today && event.startsOn <= addDays(today, 30)).length, to: '/events' },
-    can(company, 'loans.view') && { label: 'Otvorené výpožičky', value: (loans.data ?? []).filter(isOpen).length, to: '/loans' },
-    { label: 'Moje otvorené úlohy', value: (tasks.data ?? []).filter((task) => isAssignedTo(task, userId) && task.status !== 'done').length, to: '/todos' },
-  ].filter((tile): tile is { label: string; value: number; to: string } => Boolean(tile))
+  const mine = (tasks.data ?? []).filter((task) => isAssignedTo(task, userId) && task.status !== 'done')
+  const sum = (items: { quantity: number }[]) => items.reduce((total, item) => total + item.quantity, 0)
+  const filled = new Set(gear.map((item) => item.caseId).filter(Boolean))
+  const seeGear = can(company, 'equipment.view')
+  const all: Record<StatTileId, { value: number; to: string } | false> = {
+    pieces: seeGear && { value: sum(gear), to: '/equipment' },
+    inService: seeGear && { value: gear.filter((item) => item.status === 'in_service').length, to: '/equipment' },
+    unpacked: seeGear && { value: sum(unpackedEquipment(gear)), to: '/equipment?case=none' },
+    emptyCases: seeGear && { value: (cases.data ?? []).filter((item) => !filled.has(item.id)).length, to: '/cases' },
+    events30: can(company, 'events.view') && { value: (events.data ?? []).filter((event) => event.status !== 'cancelled' && event.endsOn >= today && event.startsOn <= addDays(today, 30)).length, to: '/events' },
+    loans: can(company, 'loans.view') && { value: (loans.data ?? []).filter(isOpen).length, to: '/loans' },
+    myTasks: { value: mine.length, to: '/todos' },
+    overdue: { value: mine.filter((task) => isTaskOverdue(task, today)).length, to: '/todos' },
+    fill: { value: mine.filter(isFillTask).length, to: '/todos' },
+  }
+  const tiles = tileIds.flatMap((id) => {
+    const tile = all[id]
+    return tile ? [{ ...tile, label: STAT_TILES[id] }] : []
+  })
 
   return (
     <section aria-labelledby="quick-stats-heading" className="mb-6 rounded-xl border bg-surface p-4">
@@ -145,12 +161,16 @@ function QuickStats({ company }: { company: Membership }) {
 }
 
 /** Stĺpec na kraji Prehľadu: bloky si každý zapne, vypne a zoradí (uloží sa k účtu). */
-export function SideWidgets({ company }: { company: Membership }) {
+/** Bloky na Prehľade (PC) alebo na karte Môj panel (mobil) – každé rozloženie má vlastné nastavenie. */
+export function SideWidgets({ company, layout = 'desktop' }: { company: Membership; layout?: 'desktop' | 'mobile' }) {
   const { prefs, update } = useUserPrefs()
   const [editing, setEditing] = useState(false)
-  const shown = widgetOrder(prefs.dashboardWidgets ?? DEFAULT_WIDGETS).filter((id) => (prefs.dashboardWidgets ?? DEFAULT_WIDGETS).includes(id))
+  const saved = (layout === 'mobile' ? prefs.dashboardWidgetsMobile : undefined) ?? prefs.dashboardWidgets ?? DEFAULT_WIDGETS
+  const shown = widgetOrder(saved).filter((id) => saved.includes(id))
   const order = widgetOrder(shown)
-  const set = (next: WidgetId[]) => update({ dashboardWidgets: next })
+  const set = (next: WidgetId[]) => update(layout === 'mobile' ? { dashboardWidgetsMobile: next } : { dashboardWidgets: next })
+  const tileIds = (prefs.statsTiles ?? DEFAULT_STAT_TILES).filter((id): id is StatTileId => id in STAT_TILES)
+  const toggleTile = (id: StatTileId) => update({ statsTiles: tileIds.includes(id) ? tileIds.filter((value) => value !== id) : [...tileIds, id] })
   const move = (id: WidgetId, by: number) => {
     const list = shown.filter((value) => value !== id)
     const index = Math.min(Math.max(shown.indexOf(id) + by, 0), list.length)
@@ -166,7 +186,7 @@ export function SideWidgets({ company }: { company: Membership }) {
       case 'calendar':
         return <MiniCalendar key={id} company={company} />
       case 'stats':
-        return <QuickStats key={id} company={company} />
+        return <QuickStats key={id} company={company} tileIds={tileIds} />
     }
   }
 
@@ -174,7 +194,7 @@ export function SideWidgets({ company }: { company: Membership }) {
     <>
       {editing ? (
         <section className="mb-6 rounded-xl border border-accent/40 bg-surface p-4">
-          <h2 className="mb-2 font-medium">Čo chcem vidieť</h2>
+          <h2 className="mb-2 font-medium">Čo chcem vidieť {layout === 'mobile' ? 'na mobile' : 'na PC'}</h2>
           <ul className="flex flex-col gap-1">
             {order.map((id) => {
               const on = shown.includes(id)
@@ -198,6 +218,19 @@ export function SideWidgets({ company }: { company: Membership }) {
               )
             })}
           </ul>
+          {shown.includes('stats') && (
+            <fieldset className="mt-3 border-t pt-3">
+              <legend className="mb-1 text-sm font-medium">V bloku Čísla</legend>
+              <div className="grid gap-1 sm:grid-cols-2">
+                {(Object.keys(STAT_TILES) as StatTileId[]).map((id) => (
+                  <label key={id} className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" className="size-4" checked={tileIds.includes(id)} onChange={() => toggleTile(id)} />
+                    {STAT_TILES[id]}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
           <button type="button" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline" onClick={() => setEditing(false)}>
             <Check className="size-4" aria-hidden />
             Hotovo

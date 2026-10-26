@@ -13,6 +13,10 @@ export type Notification = {
   title: string
   detail: string
   to: string
+  /** Technika, ktorej sa upozornenie týka (rovnaké upozornenia sa zlúčia). */
+  equipmentId?: string
+  /** Koľko rovnakých upozornení je zlúčených do jedného (napr. Beam 7R v 8 cases). */
+  count?: number
 }
 
 export type NotificationSources = {
@@ -68,6 +72,7 @@ export function buildNotifications(sources: NotificationSources, today: string, 
         title: item.name,
         detail: service === 'overdue' ? 'servis po termíne' : 'servis do 30 dní',
         to: `/equipment/${item.id}`,
+        equipmentId: item.id,
       })
     }
     const hours = hoursState(item, today).state
@@ -78,6 +83,7 @@ export function buildNotifications(sources: NotificationSources, today: string, 
         title: item.name,
         detail: hours === 'unknown' ? 'prevádzkové hodiny ešte neboli odčítané' : hours === 'overdue' ? 'treba odčítať prevádzkové hodiny' : 'odčítanie prevádzkových hodín do 30 dní',
         to: `/equipment/${item.id}`,
+        equipmentId: item.id,
       })
     }
     if (needsRestock(item)) {
@@ -87,6 +93,7 @@ export function buildNotifications(sources: NotificationSources, today: string, 
         title: item.name,
         detail: item.quantity === 0 ? 'došlo, treba kúpiť' : `ostáva ${item.quantity} ks, treba kúpiť`,
         to: `/equipment/${item.id}`,
+        equipmentId: item.id,
       })
     }
   }
@@ -100,5 +107,21 @@ export function buildNotifications(sources: NotificationSources, today: string, 
     }
   }
 
-  return list.sort((a, b) => Number(b.severity === 'urgent') - Number(a.severity === 'urgent'))
+  return mergeSame(list).sort((a, b) => Number(b.severity === 'urgent') - Number(a.severity === 'urgent'))
+}
+
+/** Rovnaké upozornenia (napr. tá istá technika rozdelená do 8 cases) ako jedno „Beam 7R (8×)“. */
+export function mergeSame(list: Notification[]): Notification[] {
+  const merged = new Map<string, Notification & { ids: string[] }>()
+  for (const item of list) {
+    const key = `${item.title}|${item.detail}`
+    const found = merged.get(key)
+    if (!found) merged.set(key, { ...item, ids: item.equipmentId ? [item.equipmentId] : [] })
+    else {
+      found.count = (found.count ?? 1) + 1
+      if (item.equipmentId) found.ids.push(item.equipmentId)
+      if (item.severity === 'urgent') found.severity = 'urgent'
+    }
+  }
+  return [...merged.values()].map(({ ids, ...item }) => (ids.length > 1 ? { ...item, to: `/equipment/group?ids=${ids.join(',')}` } : item))
 }

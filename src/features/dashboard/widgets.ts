@@ -14,3 +14,18 @@ export function widgetOrder(shown: string[]): WidgetId[] {
   const known = shown.filter((id): id is WidgetId => id in WIDGETS)
   return [...known, ...(Object.keys(WIDGETS) as WidgetId[]).filter((id) => !known.includes(id))]
 }
+
+/** Čísla, ktoré si človek môže zapnúť v bloku Čísla. */
+export const STAT_TILES = {
+  pieces: 'Kusov techniky',
+  inService: 'V servise',
+  unpacked: 'Kusov mimo case',
+  emptyCases: 'Prázdne cases',
+  events30: 'Eventy do 30 dní',
+  loans: 'Otvorené výpožičky',
+  myTasks: 'Moje otvorené úlohy',
+  overdue: 'Moje úlohy po termíne',
+  fill: 'Na doplnenie (@todo)',
+} as const
+export type StatTileId = keyof typeof STAT_TILES
+export const DEFAULT_STAT_TILES: StatTileId[] = ['pieces', 'inService', 'events30', 'loans', 'myTasks']

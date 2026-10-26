@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.1 – 26. 10. 2026
+
+- **Oprava QR kódov**: QR viedol na adresu bez priečinka appky (…github.io/equipment/…), takže fotoaparát
+  v mobile otvoril cudziu 404. Nové štítky vedú správne – **QR štítky treba vytlačiť znova**.
+- **Upozornenia**: rovnaké sa zlúčia („Beam 7R (8×) – prevádzkové hodiny…“, klik otvorí prehľad všetkých častí);
+  pri každom **Do úloh** – vznikne moja úloha s vysokou (červenou) prioritou a odkazom.
+- **Môj panel na mobile**: na Prehľade v mobile už nie sú bloky pod sebou – je tam tlačidlo **Môj panel**
+  (samostatná karta). PC a mobil majú **vlastné rozloženie** blokov.
+- **Blok Čísla si nastavíte**: kusy techniky, v servise, kusy mimo case, prázdne cases, eventy do 30 dní,
+  výpožičky, moje úlohy, po termíne, na doplnenie.
+
 ### 4.0 – 26. 10. 2026
 
 Veľká verzia: technika a cases po kusoch, úlohy ako tabuľa, vlastný Prehľad. Spolu s 3.19–3.20:

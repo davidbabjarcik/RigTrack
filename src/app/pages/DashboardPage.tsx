@@ -1,3 +1,4 @@
+import { ChevronRight, LayoutDashboard } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { InstallHint } from '@/components/feedback/InstallGuide'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -22,6 +23,17 @@ export function DashboardPage() {
       {/* Na mobile chýba bočný panel s firmou – názov firmy je preto v popise. */}
       <PageHeader title="Prehľad" description={active ? active.companyName : 'Evidencia techniky a jej prevádzky'} />
       <InstallHint />
+      {/* Na mobile sú bloky (úlohy, kalendár, čísla) na samostatnej karte, aby Prehľad nebol preplnený. */}
+      {isSupabaseConfigured && active && (
+        <Link to="/panel" className="mb-4 flex items-center gap-3 rounded-xl border bg-surface p-4 hover:bg-muted lg:hidden">
+          <LayoutDashboard className="size-5 shrink-0 text-accent" aria-hidden />
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium">Môj panel</span>
+            <span className="block text-sm text-muted-foreground">Moje úlohy, kalendár, čísla</span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+        </Link>
+      )}
 
       {!isSupabaseConfigured && (
         <div role="status" className="mb-6 rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
@@ -36,7 +48,7 @@ export function DashboardPage() {
       {/* Na PC (od 1024 px) je stĺpec s blokmi vpravo; na mobile hore nad ostatným. */}
       <div className="flex flex-col lg:grid lg:grid-cols-[1fr_18rem] lg:items-start lg:gap-6 xl:grid-cols-[1fr_20rem]">
         {isSupabaseConfigured && active && (
-          <aside className="lg:sticky lg:top-4 lg:order-2">
+          <aside className="hidden lg:sticky lg:top-4 lg:order-2 lg:block">
             <SideWidgets company={active} />
           </aside>
         )}

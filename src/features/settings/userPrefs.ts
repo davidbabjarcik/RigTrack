@@ -9,6 +9,10 @@ export type UserPrefs = {
   priorityColors?: Partial<Record<string, string>>
   /** Bloky v stĺpci na Prehľade v poradí; chýbajúce = predvolené. */
   dashboardWidgets?: string[]
+  /** To isté pre mobil (karta Môj panel); chýbajúce = ako na PC. */
+  dashboardWidgetsMobile?: string[]
+  /** Ktoré čísla ukazuje blok Čísla; chýbajúce = predvolené. */
+  statsTiles?: string[]
   /** Zobrazenie úloh. */
   tasksView?: 'list' | 'kanban'
   /** Podľa čoho sú stĺpce kanbanu úloh. */

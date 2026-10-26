@@ -3,7 +3,7 @@ import type { Equipment } from '@/features/equipment/model'
 import type { Loan } from '@/features/loans/model'
 import type { Task } from '@/features/tasks/model'
 import type { Vehicle } from '@/features/vehicles/model'
-import { buildNotifications, concernsMe, type NotificationSources } from './model'
+import { buildNotifications, concernsMe, mergeSame, type NotificationSources } from './model'
 
 const today = '2026-10-13'
 const me = 'user-me'
@@ -85,5 +85,14 @@ describe('responsibilities', () => {
     expect(concernsMe({ kind: 'audio', caseId: null }, owned, 'other')).toBe(false)
     expect(concernsMe({ kind: 'light', caseId: null }, owned, 'other')).toBe(true)
     expect(concernsMe({ kind: 'light', caseId: 'c1' }, [{ kinds: [], caseIds: ['c1'], memberIds: ['me'] }], 'other')).toBe(false)
+  })
+})
+
+describe('mergeSame', () => {
+  it('merges the same warning for equipment split into cases', () => {
+    const one = (id: string) => ({ id: `hours-${id}`, severity: 'urgent' as const, title: 'Hlava', detail: 'treba odčítať prevádzkové hodiny', to: `/equipment/${id}`, equipmentId: id })
+    const merged = mergeSame([one('a'), one('b'), { ...one('c'), title: 'Iná' }])
+    expect(merged).toHaveLength(2)
+    expect(merged[0]).toMatchObject({ count: 2, to: '/equipment/group?ids=a,b' })
   })
 })

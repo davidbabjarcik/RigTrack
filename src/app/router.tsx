@@ -66,6 +66,7 @@ const shopping = lazyPage(() => import('@/features/shopping/ShoppingPage').then(
 const calendar = lazyPage(() => import('@/features/calendar/CalendarPage').then((m) => m.CalendarPage))
 const suggestions = lazyPage(() => import('@/features/suggestions/SuggestionsPage').then((m) => m.SuggestionsPage), 'suggestions.view')
 const notifications = lazyPage(() => import('@/features/notifications/NotificationsPage').then((m) => m.NotificationsPage))
+const panel = lazyPage(() => import('@/features/dashboard/PanelPage').then((m) => m.PanelPage))
 const stats = lazyPage(() => import('@/features/stats/StatsPage').then((m) => m.StatsPage))
 const eventsList = lazyPage(() => import('@/features/events/EventsListPage').then((m) => m.EventsListPage), 'events.view')
 const eventDetail = lazyPage(() => import('@/features/events/EventDetailPage').then((m) => m.EventDetailPage), 'events.view')
@@ -183,6 +184,7 @@ export const routes: RouteObject[] = [
               { path: 'calendar', lazy: calendar },
               { path: 'suggestions', lazy: suggestions },
               { path: 'notifications', lazy: notifications },
+              { path: 'panel', lazy: panel },
               { path: 'stats', lazy: stats },
               { path: 'attendance', lazy: attendance },
               { path: 'report', lazy: report },

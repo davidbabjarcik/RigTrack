@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import { BellRing, ChevronRight, CircleAlert } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { BellRing, Check, ChevronRight, CircleAlert, ListPlus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/features/auth/auth-context'
@@ -13,7 +13,8 @@ import { todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { useResponsibilities } from '@/features/responsibilities/api'
-import { buildNotifications } from './model'
+import { addTodoFromField, taskKeys } from '@/features/tasks/api'
+import { buildNotifications, type Notification } from './model'
 
 /** Upozornenia hore v appke (servis, výpožičky, autá, úlohy, pozvánky) – zbalené, klikom sa rozbalia. */
 export function NotificationsStrip() {
@@ -21,6 +22,19 @@ export function NotificationsStrip() {
   const companyId = company.companyId
   const user = useAuth().session!.user
   const [open, setOpen] = useState(false)
+  // Upozornenie → moja úloha s vysokou prioritou (s odkazom tam, kam vedie upozornenie).
+  const queryClient = useQueryClient()
+  const [added, setAdded] = useState<Set<string>>(() => new Set())
+  const toTask = useMutation({
+    mutationFn: (item: Notification) => {
+      const what = item.detail.charAt(0).toUpperCase() + item.detail.slice(1)
+      return addTodoFromField(companyId, user.id, `${what} – ${item.title}${item.count && item.count > 1 ? ` (${item.count}×)` : ''}`, item.to, { category: 'Upozornenie', priority: 'high' })
+    },
+    onSuccess: (_, item) => {
+      setAdded((current) => new Set(current).add(item.id))
+      void queryClient.invalidateQueries({ queryKey: taskKeys.list(companyId) })
+    },
+  })
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
   const loans = useLoans(companyId)
   const tasks = useTasks(companyId)
@@ -40,6 +54,7 @@ export function NotificationsStrip() {
     user.id,
   )
   if (all.length === 0) return null
+  const canAddTask = can(company, 'tasks.edit')
   const urgent = all.filter((item) => item.severity === 'urgent').length
   const Icon = urgent > 0 ? CircleAlert : BellRing
 
@@ -57,14 +72,29 @@ export function NotificationsStrip() {
         <ul className="mt-2 flex flex-col gap-1">
           {all.map((item) => (
             <li key={item.id}>
-              <Link to={item.to} className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted" onClick={() => setOpen(false)}>
-                <span className={cn('size-2 shrink-0 rounded-full', item.severity === 'urgent' ? 'bg-destructive' : 'bg-accent')} aria-hidden />
-                <span className="min-w-0 flex-1">
-                  <span className="font-medium">{item.title}</span>
-                  <span className="text-muted-foreground"> – {item.detail}</span>
-                </span>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-              </Link>
+              <div className="flex items-center gap-1 rounded-lg hover:bg-muted">
+                <Link to={item.to} className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5" onClick={() => setOpen(false)}>
+                  <span className={cn('size-2 shrink-0 rounded-full', item.severity === 'urgent' ? 'bg-destructive' : 'bg-accent')} aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="font-medium">{item.title}</span>
+                    {item.count && item.count > 1 && <span className="font-medium"> ({item.count}×)</span>}
+                    <span className="text-muted-foreground"> – {item.detail}</span>
+                  </span>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                </Link>
+                {canAddTask && !item.id.startsWith('task-') && !item.id.startsWith('invite-') && (
+                  <button
+                    type="button"
+                    title="Pridať do mojich úloh s vysokou prioritou"
+                    disabled={toTask.isPending || added.has(item.id)}
+                    onClick={() => toTask.mutate(item)}
+                    className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-accent hover:bg-accent/10 disabled:opacity-60"
+                  >
+                    {added.has(item.id) ? <Check className="size-3.5" aria-hidden /> : <ListPlus className="size-3.5" aria-hidden />}
+                    {added.has(item.id) ? 'V úlohách' : 'Do úloh'}
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>
