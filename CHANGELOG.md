@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.7 – 26. 10. 2026
+
+- **Obsah štítkov na pásku si nastavíte**: „Upraviť obsah štítkov“ – pri každom druhu zapnete / vypnete jednotlivé
+  údaje (QR kód, názov, číslo kusu, kategória, názov firmy; linka, adresa, mód, kanály; W, A, kg; pri case kategória,
+  rack v U, firma). Kategória a firma sú predvolene vypnuté. Uloží sa k účtu (PC aj mobil).
+- **Farba pásky**: biela (čierny text) alebo čierna (biely text) – náhľad ukazuje, ako bude štítok vyzerať.
+
 ### 4.6.1 – 26. 10. 2026
 
 - **Demo firma** ukazuje novinky od 4.0: DMX adresy pri každom kuse svetla, príkon a váhu (štítky na pásku),

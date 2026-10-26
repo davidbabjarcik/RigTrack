@@ -19,6 +19,10 @@ export type UserPrefs = {
   tasksBoardBy?: 'status' | 'priority' | 'category' | 'person' | 'due'
   /** Triedenie úloh. */
   tasksSort?: 'smart' | 'due' | 'priority' | 'title' | 'newest'
+  /** Čo je na štítkoch na pásku (pole → zapnuté / vypnuté). */
+  tapeFields?: Record<string, boolean>
+  /** Farba pásky: biela (čierny text) alebo čierna (biely text). */
+  tapeColor?: 'white' | 'black'
 }
 
 const LOCAL_KEY = 'rigtrack.prefs'

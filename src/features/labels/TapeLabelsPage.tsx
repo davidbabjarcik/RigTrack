@@ -8,7 +8,9 @@ import { downloadCanvas, fileSlug } from '@/features/cases/canvas'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { drawTapeLabel, mmToPx } from './drawTape'
-import { caseTapeLabel, LABEL_KIND_LABELS, LABEL_KINDS, TAPES, tapeLabels, type LabelKind, type TapeMm } from './tape'
+import { caseTapeLabel, fieldOn, LABEL_KIND_LABELS, LABEL_KINDS, TAPE_FIELDS, TAPES, tapeLabels, type LabelKind, type TapeField, type TapeFieldGroup, type TapeMm } from './tape'
+import { useUserPrefs } from '@/features/settings/userPrefs'
+import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { useCases } from '@/features/cases/useCases'
 
 const SETTINGS_KEY = 'rigtrack.tape'
@@ -37,11 +39,19 @@ export function TapeLabelsPage() {
   const back = params.get('back') ?? (ids.length === 1 ? `/equipment/${ids[0]}` : params.get('cases') ? '/cases' : '/equipment')
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const [settings, setSettings] = useState(savedSettings)
+  // Obsah štítkov a farba pásky sa ukladajú k účtu (rovnaké na PC aj v mobile).
+  const { prefs, update } = useUserPrefs()
+  const fields = prefs.tapeFields ?? {}
+  const black = prefs.tapeColor === 'black'
+  const [editingFields, setEditingFields] = useState(false)
+  const { categories } = useEquipmentLookups(companyId)
+  const options = { fields, company: company.companyName, category: (id: string | null) => categories.find((item) => item.id === id)?.name ?? '' }
+  const toggleField = (key: TapeField) => update({ tapeFields: { ...fields, [key]: !fieldOn(fields, key) } })
   const [images, setImages] = useState<{ key: string; name: string; url: string; widthMm: number; canvas: HTMLCanvasElement }[]>([])
   const items = (equipment.data ?? []).filter((item) => ids.includes(item.id))
   const labels = [
-    ...(cases.data ?? []).filter((item) => caseIds.includes(item.id)).map(caseTapeLabel),
-    ...items.flatMap((item) => tapeLabels(item, settings.kinds)),
+    ...(cases.data ?? []).filter((item) => caseIds.includes(item.id)).map((item) => caseTapeLabel(item, options)),
+    ...items.flatMap((item) => tapeLabels(item, settings.kinds, options)),
   ]
   const signature = JSON.stringify([settings, labels.map((label) => label.key + label.title + label.lines.join())])
 
@@ -119,6 +129,30 @@ export function TapeLabelsPage() {
               ))}
             </div>
           </fieldset>
+          <fieldset>
+            <legend className="mb-1 text-sm font-medium">Farba pásky</legend>
+            <div className="flex gap-1">
+              {(
+                [
+                  ['white', 'Biela (čierny text)'],
+                  ['black', 'Čierna (biely text)'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={(prefs.tapeColor ?? 'white') === value}
+                  onClick={() => update({ tapeColor: value })}
+                  className={(prefs.tapeColor ?? 'white') === value ? 'h-9 rounded-md bg-black px-3 text-sm font-medium text-white' : 'h-9 rounded-md border border-neutral-300 px-3 text-sm hover:bg-neutral-100'}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <button type="button" className="h-9 self-end text-sm font-medium text-neutral-700 underline" onClick={() => setEditingFields(!editingFields)}>
+            {editingFields ? 'Skryť obsah štítkov' : 'Upraviť obsah štítkov'}
+          </button>
           <div className="ml-auto flex flex-wrap gap-2">
             <Button
               variant="outline"
@@ -140,7 +174,26 @@ export function TapeLabelsPage() {
             </Button>
           </div>
         </div>
+        {editingFields && (
+          <div className="grid gap-4 rounded-lg border border-neutral-300 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            {(Object.keys(TAPE_FIELDS) as TapeFieldGroup[])
+              .filter((group) => (group === 'case' ? caseIds.length > 0 : ids.length > 0 && settings.kinds.includes(group as LabelKind)))
+              .map((group) => (
+                <fieldset key={group}>
+                  <legend className="mb-1 text-sm font-semibold">{group === 'case' ? 'Štítok case / racku' : LABEL_KIND_LABELS[group as LabelKind]}</legend>
+                  {(Object.entries(TAPE_FIELDS[group]) as [TapeField, string][]).map(([key, label]) => (
+                    <label key={key} className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" className="size-4" checked={fieldOn(fields, key)} onChange={() => toggleField(key)} />
+                      {label}
+                    </label>
+                  ))}
+                </fieldset>
+              ))}
+            <p className="text-xs text-neutral-600 sm:col-span-2 lg:col-span-3">Nastavenie sa uloží k vášmu účtu a platí pre všetky štítky – kedykoľvek ho zmeníte späť.</p>
+          </div>
+        )}
         <p className="text-sm text-neutral-600">
+          {black && 'Čierna páska: tlačiareň tlačí bielou farbou kazety – obrázok aj tlač sú rovnaké, náhľad ukazuje, ako to bude vyzerať. '}
           Tlač z PC: vyberte tlačiareň Brother PT-D460BT, páska {settings.tape} mm, okraje žiadne, mierka 100 %. Z mobilu: stiahnite PNG a vytlačte ich
           v aplikácii Brother iPrint&amp;Label. Prázdne druhy (napr. svetlo bez zapísanej DMX adresy alebo príkonu) sa vynechajú – adresy nastavíte cez
           „DMX všetkým“, príkon (W) a váhu v úprave techniky.
@@ -149,7 +202,7 @@ export function TapeLabelsPage() {
         <ul className="flex flex-col gap-3">
           {images.map((image) => (
             <li key={image.key} className="flex flex-wrap items-center gap-3">
-              <img src={image.url} alt={image.name} className="rounded border border-neutral-300" style={{ height: `${settings.tape * 4}px` }} />
+              <img src={image.url} alt={image.name} className={black ? 'rounded border border-neutral-300 invert' : 'rounded border border-neutral-300'} style={{ height: `${settings.tape * 4}px` }} />
               <button type="button" className="inline-flex items-center gap-1 text-xs text-neutral-600 hover:text-black" onClick={() => downloadCanvas(image.canvas, `stitok-${fileSlug(image.name)}.png`)}>
                 <Download className="size-3.5" aria-hidden />
                 PNG

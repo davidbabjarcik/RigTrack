@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
+import type { Case } from '@/features/cases/model'
 import type { Equipment } from '@/features/equipment/model'
-import { ampsAt230, tapeLabels } from './tape'
+import { ampsAt230, caseTapeLabel, tapeLabels } from './tape'
 
 const beam = {
   id: 'b',
   name: 'Beam',
+  categoryId: 'k',
   trackUnits: true,
   quantity: 2,
   unitIds: [1, 2],
@@ -20,5 +22,16 @@ describe('tape labels', () => {
     expect(labels.find((label) => label.kind === 'modes')?.lines).toEqual(['Basic 16 ch · Ext 24 ch'])
     expect(labels.find((label) => label.kind === 'power')?.lines).toEqual(['330 W · 1,4 A / 230 V · 18 kg'])
     expect(ampsAt230(1000)).toBe(4.3)
+  })
+
+  it('shows only the fields the user turned on', () => {
+    const fields = { 'qr.category': true, 'qr.company': true, 'power.amps': false, 'address.line': false }
+    const labels = tapeLabels(beam, ['qr', 'power', 'address'], { fields, company: 'Firma', category: () => 'Svetlá' })
+    expect(labels[0].lines).toEqual(['Svetlá · Firma'])
+    expect(labels.find((label) => label.kind === 'power')?.lines).toEqual(['330 W · 18 kg'])
+    expect(labels.find((label) => label.kind === 'address')?.title).toBe('A017')
+    const box = { id: 'c', name: 'Beam Case', labelNumber: '4', labelCategory: 'Light', kind: 'case' } as Case
+    expect(caseTapeLabel(box)).toMatchObject({ title: 'Beam Case #4', lines: [] })
+    expect(caseTapeLabel(box, { fields: { 'case.category': true } })).toMatchObject({ lines: ['Light'] })
   })
 })
