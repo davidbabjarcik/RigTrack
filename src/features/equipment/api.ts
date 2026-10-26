@@ -1,6 +1,7 @@
 import type { CategoryColor } from './categoryColors'
 import { getSupabase } from '@/lib/supabase/client'
 import { isMissingColumn } from '@/lib/supabase/errors'
+import { copyCompanyPhoto } from './photo'
 import {
   attributesFor,
   cableName,
@@ -212,6 +213,13 @@ type SaveArgs = {
   values: EquipmentFormValues
   categories: Lookup[]
   locations: Lookup[]
+}
+
+/** Kópia fotky inej techniky k novej (pri duplikovaní); keď sa nepodarí, technika ostane bez fotky. */
+export async function copyEquipmentPhoto(companyId: string, equipmentId: string, sourcePath: string) {
+  const path = await copyCompanyPhoto(companyId, sourcePath, `equipment-${equipmentId}`)
+  const { error } = await getSupabase().from('equipment').update({ photo_path: path }).eq('company_id', companyId).eq('id', equipmentId)
+  if (error) throw error
 }
 
 /** Čo sa pri „Upraviť všetky naraz“ prenesie na ostatné časti rozdelenej techniky (nie počet, čísla kusov, case, stav). */

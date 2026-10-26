@@ -500,3 +500,15 @@ describe('groupSplitEquipment order', () => {
     expect(byCase[0].items.map((item) => item.id)).toEqual(['b', 'a'])
   })
 })
+
+describe('groupSplitEquipment cables', () => {
+  it('puts all lengths of one cable type under one row, shortest first', () => {
+    const cable = { manufacturer: '', model: '', kind: 'cable' as const, categoryId: null, ownerStaffId: null, caseId: null, quantity: 10 }
+    const groups = groupSplitEquipment([
+      { ...cable, id: '10', name: 'XLR 10 m', attributes: { lengthM: 10 } },
+      { ...cable, id: '1', name: 'XLR 1 m', attributes: { lengthM: 1 } },
+      { ...cable, id: 'p', name: 'Powercon 5 m', attributes: { lengthM: 5 } },
+    ])
+    expect(groups.map((group) => group.items.map((item) => item.id))).toEqual([['1', '10'], ['p']])
+  })
+})

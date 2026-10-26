@@ -1289,14 +1289,16 @@ export function cableMakers(items: Pick<Equipment, 'kind' | 'attributes'>[], lim
  * Rovnaké = názov, výrobca, model, druh, kategória a vlastník. Poradie podľa prvého výskytu; hlavná položka
  * (bez case, inak s najviac kusmi) je prvá.
  */
-export function groupSplitEquipment<T extends Pick<Equipment, 'name' | 'manufacturer' | 'model' | 'kind' | 'categoryId' | 'ownerStaffId' | 'caseId' | 'quantity'> & { unitIds?: number[] }>(
+export function groupSplitEquipment<T extends Pick<Equipment, 'name' | 'manufacturer' | 'model' | 'kind' | 'categoryId' | 'ownerStaffId' | 'caseId' | 'quantity'> & { unitIds?: number[]; attributes?: EquipmentAttributes }>(
   items: T[],
   caseOrder: (caseId: string) => string = () => '',
 ) {
   const firstUnit = (item: T) => (item.unitIds && item.unitIds.length > 0 ? Math.min(...item.unitIds) : Infinity)
   const groups = new Map<string, T[]>()
   for (const item of items) {
-    const key = [item.name.trim().toLowerCase(), item.manufacturer, item.model, item.kind, item.categoryId, item.ownerStaffId ?? ''].join('|')
+    // Káble: jeden typ (napr. XLR) vo všetkých dĺžkach pod jedným riadkom.
+    const name = item.kind === 'cable' ? `cable:${cableBaseName(item.name)}` : item.name
+    const key = [name.trim().toLowerCase(), item.manufacturer, item.model, item.kind, item.categoryId, item.ownerStaffId ?? ''].join('|')
     groups.set(key, [...(groups.get(key) ?? []), item])
   }
   return [...groups.entries()].map(([key, members]) => ({
@@ -1304,6 +1306,7 @@ export function groupSplitEquipment<T extends Pick<Equipment, 'name' | 'manufact
     // Mimo case prvé, potom podľa čísel kusov (#1, #3…), inak podľa názvu case s číslom (prirodzene: #2 pred #10).
     items: [...members].sort(
       (a, b) =>
+        (a.kind === 'cable' ? (a.attributes?.lengthM ?? 0) - (b.attributes?.lengthM ?? 0) : 0) ||
         Number(a.caseId !== null) - Number(b.caseId !== null) ||
         firstUnit(a) - firstUnit(b) ||
         (a.caseId && b.caseId ? caseOrder(a.caseId).localeCompare(caseOrder(b.caseId), 'sk', { numeric: true }) : 0) ||

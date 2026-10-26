@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useId, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -13,7 +13,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { can } from '@/lib/permissions'
 import { errorDetail } from '@/lib/supabase/errors'
-import { equipmentKeys, fetchEquipment, saveEquipment, syncEquipmentGroup } from './api'
+import { copyEquipmentPhoto, equipmentKeys, fetchEquipment, saveEquipment, syncEquipmentGroup } from './api'
 import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import {
@@ -142,6 +142,22 @@ const EMPTY: EquipmentFormValues = {
   isLedProcessor: false,
   isDisplay: false,
   displayType: 'tv',
+}
+
+/** Duplikát: rovnaké údaje ako vzor, bez toho, čo patrí len jednému kusu (sériové a inventárne číslo, MAC, IP, case, čísla kusov). */
+function copyFormValues(source: Equipment, categories: Lookup[], locations: Lookup[]): EquipmentFormValues {
+  return {
+    ...toFormValues(source, categories, locations),
+    serialNumber: '',
+    inventoryNumber: '',
+    macAddress: '',
+    ipAddress: '',
+    caseId: '',
+    unitIds: '',
+    unitInfo: [],
+    lastServiceOn: '',
+    status: 'available',
+  }
 }
 
 function toFormValues(equipment: Equipment, categories: Lookup[], locations: Lookup[]): EquipmentFormValues {
@@ -282,6 +298,8 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
 type FormProps = {
   companyId: string
   equipment: Equipment | null
+  /** Vzor pri duplikovaní: nová technika s jeho údajmi. */
+  copyFrom?: Equipment | null
   categories: Lookup[]
   locations: Lookup[]
   cases: Lookup[]
@@ -289,7 +307,7 @@ type FormProps = {
   canEditColors: boolean
 }
 
-function EquipmentForm({ companyId, equipment, categories, locations, cases, colors, canEditColors }: FormProps) {
+function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, cases, colors, canEditColors }: FormProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const categoryListId = useId()
@@ -304,7 +322,11 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   const methods = useForm<EquipmentFormValues>({
     resolver: zodResolver(equipmentSchema),
     // Z karty zamestnanca sa dá pridať jeho vlastná technika (?owner=…).
-    defaultValues: equipment ? toFormValues(equipment, categories, locations) : { ...EMPTY, owner: ownerPreset },
+    defaultValues: equipment
+      ? toFormValues(equipment, categories, locations)
+      : copyFrom
+        ? copyFormValues(copyFrom, categories, locations)
+        : { ...EMPTY, owner: ownerPreset },
   })
   const {
     register,
@@ -375,6 +397,8 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
         categories,
         locations,
       })
+      // Duplikát dostane vlastnú kópiu fotky vzoru.
+      if (!equipment && copyFrom?.photoPath) await copyEquipmentPhoto(companyId, id, copyFrom.photoPath).catch(() => {})
       // „Upraviť všetky naraz“: spoločné údaje aj do ostatných častí rozdelenej techniky.
       if (equipment && groupIds.length > 1) await syncEquipmentGroup(companyId, id, groupIds)
       // Nový kábel: každá ďalšia dĺžka je samostatná položka s rovnakým konektorom a kategóriou (a svojimi výrobcami).
@@ -403,6 +427,12 @@ function EquipmentForm({ companyId, equipment, categories, locations, cases, col
   return (
     <FormProvider {...methods}>
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
+      {!equipment && copyFrom && (
+        <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
+          <strong>Kópia „{copyFrom.name}“.</strong> Upravte, čo treba, a uložte – vznikne nová technika (aj s fotkou). Sériové a
+          inventárne číslo, MAC, IP, case a čísla kusov sa nekopírujú.
+        </p>
+      )}
       {equipment && groupIds.length > 1 && (
         <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
           <strong>Úprava všetkých {groupIds.length} častí naraz.</strong> Názov, výrobca, model, kategória, parametre, poznámka, fotka a
@@ -925,12 +955,20 @@ export function EquipmentFormPage() {
     queryFn: () => fetchEquipment(company.companyId, id!),
     enabled: Boolean(id),
   })
+  // /equipment/new?copy=<id> – duplikovanie: formulár novej techniky s údajmi vzoru.
+  const search = useLocation().search
+  const copyId = id ? null : new URLSearchParams(search).get('copy')
+  const copy = useQuery({
+    queryKey: equipmentKeys.detail(company.companyId, copyId ?? ''),
+    queryFn: () => fetchEquipment(company.companyId, copyId!),
+    enabled: Boolean(copyId),
+  })
 
-  const title = id ? 'Úprava techniky' : 'Nová technika'
+  const title = id ? 'Úprava techniky' : copyId ? 'Duplikovať techniku' : 'Nová technika'
   let body
   if (!can(company, 'equipment.edit')) {
     body = <ErrorBlock message="Na úpravu techniky nemáte oprávnenie." />
-  } else if (lookups.isPending || cases.isPending || (id && item.isPending)) {
+  } else if (lookups.isPending || cases.isPending || (id && item.isPending) || (copyId && copy.isPending)) {
     body = <LoadingBlock />
   } else if (lookups.isError || cases.isError || item.isError) {
     const failed = item.error ?? cases.error ?? lookups.error
@@ -945,9 +983,10 @@ export function EquipmentFormPage() {
   } else {
     body = (
       <EquipmentForm
-        key={id ?? 'new'}
+        key={id ?? `new-${copyId ?? ''}`}
         companyId={company.companyId}
         equipment={item.data ?? null}
+        copyFrom={copy.data ?? null}
         categories={lookups.categories}
         locations={lookups.locations}
         cases={cases.data}

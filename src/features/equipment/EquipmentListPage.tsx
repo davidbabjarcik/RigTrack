@@ -18,6 +18,7 @@ import { equipmentKeys, fetchEquipmentList } from './api'
 import {
   describeAttributes,
   EQUIPMENT_STATUSES,
+  cableBaseName,
   filterEquipment,
   groupSplitEquipment,
   hoursState,
@@ -108,7 +109,7 @@ export function EquipmentListPage() {
       return next
     })
 
-  const row = (item: Equipment, sub: boolean) => {
+  const row = (item: Equipment, sub: boolean, byLength = false) => {
     const color = colorOf(item, categories)
     const details = [
       !sub && [item.manufacturer, item.model].filter(Boolean).join(' '),
@@ -119,7 +120,7 @@ export function EquipmentListPage() {
       item.quantity !== 1 && `${item.quantity} ks`,
       // Rozdelená technika: ktoré kusy a v ktorom case sú.
       item.trackUnits && item.unitIds.length > 0 && item.unitIds.length <= 12 && item.unitIds.map((unit) => `#${unit}`).join(', '),
-      !sub && item.caseId && caseLabel(item.caseId) && `v ${caseLabel(item.caseId)}`,
+      (!sub || byLength) && item.caseId && caseLabel(item.caseId) && `v ${caseLabel(item.caseId)}`,
     ].filter(Boolean)
     const service = serviceState(item, today).state
     const servicing = inService.get(item.id) ?? 0
@@ -129,7 +130,7 @@ export function EquipmentListPage() {
           {color && <span className={`absolute inset-y-0 left-0 w-1.5 ${COLOR_CLASSES[color]}`} aria-hidden />}
           {!sub && <PhotoThumb url={thumbs[item.photoPath]} />}
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-medium">{sub ? (item.caseId ? caseLabel(item.caseId) || 'V case' : 'Mimo case') : item.name}</span>
+            <span className="block truncate font-medium">{sub && !byLength ? (item.caseId ? caseLabel(item.caseId) || 'V case' : 'Mimo case') : item.name}</span>
             {details.length > 0 && <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>}
             {servicing > 0 && item.status !== 'in_service' && (
               <span className="block text-sm text-sky-700 dark:text-sky-400">
@@ -248,10 +249,12 @@ export function EquipmentListPage() {
             const free = group.items.filter((item) => !item.caseId).reduce((sum, item) => sum + item.quantity, 0)
             const inCases = group.items.filter((item) => item.caseId)
             const expanded = openGroups.has(group.key)
+            const cables = main.kind === 'cable'
             const color = colorOf(main, categories)
+            const lengths = [...new Set(group.items.map((item) => item.attributes.lengthM).filter((value): value is number => value !== undefined))]
             const details = [
               [main.manufacturer, main.model].filter(Boolean).join(' '),
-              ...describeAttributes(main),
+              ...(cables ? [main.attributes.connector, lengths.length > 0 && `${lengths.map((value) => String(value).replace('.', ',')).join(', ')} m`] : describeAttributes(main)),
               categoryName(main.categoryId),
               `${total} ks`,
               free > 0 && `${free} mimo case`,
@@ -264,7 +267,7 @@ export function EquipmentListPage() {
                   {color && <span className={`absolute inset-y-0 left-0 w-1.5 ${COLOR_CLASSES[color]}`} aria-hidden />}
                   <PhotoThumb url={thumbs[main.photoPath]} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{main.name}</span>
+                    <span className="block truncate font-medium">{cables ? cableBaseName(main.name) : main.name}</span>
                     <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
                     {late && <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>}
                   </span>
@@ -273,7 +276,7 @@ export function EquipmentListPage() {
                 </button>
                 {expanded && (
                   <ul className="divide-y border-t bg-muted/30">
-                    {canWrite && (
+                    {canWrite && !cables && (
                       <li className="flex flex-wrap items-center gap-3 py-2 pr-4 pl-10">
                         <Link to={`/equipment/${main.id}/edit?group=${group.items.map((item) => item.id).join(',')}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline">
                           <Pencil className="size-4" aria-hidden />
@@ -282,7 +285,7 @@ export function EquipmentListPage() {
                       </li>
                     )}
                     {group.items.map((item) => (
-                      <li key={item.id}>{row(item, true)}</li>
+                      <li key={item.id}>{row(item, true, cables)}</li>
                     ))}
                   </ul>
                 )}

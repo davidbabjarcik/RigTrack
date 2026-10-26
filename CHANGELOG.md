@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 3.19.7 – 26. 10. 2026
+
+- **Duplikovať techniku**: tlačidlo v detaile techniky otvorí formulár novej techniky predvyplnený údajmi
+  (aj s kópiou fotky) – upravíte, čo treba, a uložíte. Sériové a inventárne číslo, MAC, IP, case a čísla kusov sa
+  nekopírujú.
+- **Káble v jednom riadku**: všetky dĺžky jedného typu (napr. XLR 1 m … 25 m) sú v zozname techniky pod jedným
+  riadkom „XLR · 1, 2, 3 … 25 m · 151 ks“; po rozbalení jednotlivé dĺžky od najkratšej.
+
 ### 3.19.6 – 26. 10. 2026
 
 - **Upraviť všetky naraz** – technika: po rozbalení rozdelenej techniky (napr. Beam 7R v 8 cases) jeden formulár

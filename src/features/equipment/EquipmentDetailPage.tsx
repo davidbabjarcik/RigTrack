@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, QrCode, Trash2, Wrench } from 'lucide-react'
+import { ArrowLeft, Copy, Pencil, QrCode, Trash2, Wrench } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -191,6 +191,12 @@ export function EquipmentDetailPage() {
             <LinkButton to={`/equipment/${equipment.id}/edit`} variant="outline" size="sm">
               <Pencil className="size-4" aria-hidden />
               Upraviť
+            </LinkButton>
+          )}
+          {can(company, 'equipment.edit') && (
+            <LinkButton to={`/equipment/new?copy=${equipment.id}`} variant="outline" size="sm">
+              <Copy className="size-4" aria-hidden />
+              Duplikovať
             </LinkButton>
           )}
           {can(company, 'equipment.delete') && (
