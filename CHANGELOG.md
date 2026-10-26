@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.5 – 26. 10. 2026
+
+- **Štítky na pásku (Brother P-touch, napr. PT-D460BT)**: páska 9 / 12 / 18 mm, pre každý kus zvlášť –
+  **QR + názov** (Beam 7R #3), **moja DMX adresa** (L1 · A017 · mód), **DMX módy** svetla a **odber a váha**
+  (W, A pri 230 V, kg). Tlač z PC cez ovládač (každý štítok na vlastnú „stranu“ veľkosti pásky), alebo **PNG**
+  do aplikácie Brother iPrint&Label v mobile. Aj pre **cases a racky** (QR + názov s číslom + kategória).
+  Tlačidlo „Štítky na pásku“ je v detaile techniky, na prehľade skupiny, pri case, pri sade cases a pri QR štítkoch.
+- **Príkon svetla**: pri zadaní wattov sa ukáže prúd pri 230 V (stačí zapísať watty zo štítku svetla).
+
 ### 4.4 – 26. 10. 2026
 
 - **DMX patch list pri evente** (nová sekcia v detaile eventu): linka, adresa od–do, počet kanálov, mód a svetlo

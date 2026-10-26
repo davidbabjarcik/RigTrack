@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-4.4-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-4.5-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -39,9 +39,9 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **4.5** | Štítky na pásku Brother P-touch: QR, DMX adresa, DMX módy, odber a váha – aj pre cases |
 | **4.4** | DMX patch list pri evente (zo svetiel eventu, tlač), šablóny patch listov, karta Patch listy |
 | **4.3** | Prehľad sady cases, DMX všetkým naraz, oprávnenia sietí, právna forma (OZ…), Wi-Fi firmy |
-| **4.2.1** | Svetlá: predvolená DMX linka, adresa a mód pri každom kuse |
 | **3.19** | @todo v políčkach, kanban a farebné priority úloh, vlastný stĺpec na Prehľade, racky v U, platiteľ DPH |
 | **3.16** | Pack list funguje aj bez signálu, záložka Vývojár v Nastaveniach |
 

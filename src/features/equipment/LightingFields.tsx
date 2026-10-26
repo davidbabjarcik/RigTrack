@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react'
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form'
+import { ampsAt230 } from '@/features/labels/tape'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { asOptionalNumber, CAPTURE_MATCH_LABELS, CAPTURE_MATCHES, LIGHT_SOURCE_LABELS, LIGHT_SOURCES, LIGHT_TYPE_GROUPS, LIGHT_TYPE_LABELS, type EquipmentFormValues } from './model'
@@ -17,6 +18,7 @@ export function LightingFields() {
   const captureMatch = useWatch({ control, name: 'captureMatch' })
   const lightType = useWatch({ control, name: 'lightType' })
   const lightSource = useWatch({ control, name: 'lightSource' })
+  const powerW = useWatch({ control, name: 'powerW' })
   const lightAccessory = Boolean(lightType && lightType.startsWith('acc_'))
   return (
     <>
@@ -33,7 +35,13 @@ export function LightingFields() {
             </optgroup>
           ))}
         </SelectField>
-        {!lightAccessory && <Field label="Príkon (W)" type="number" inputMode="decimal" min={0} error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />}
+        {!lightAccessory && (
+          <div>
+            <Field label="Príkon (W)" type="number" inputMode="decimal" min={0} placeholder="max. príkon zo štítku / návodu" error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />
+            {/* Stačí watty zo štítku svetla; prúd pri 230 V sa dopočíta (napr. na rozvádzač a štítok). */}
+            <p className="mt-1 text-xs text-muted-foreground">{powerW ? `≈ ${String(ampsAt230(powerW)).replace('.', ',')} A pri 230 V` : 'Stačí watty – ampéry sa dopočítajú.'}</p>
+          </div>
+        )}
         {!lightAccessory && (
           <SelectField label="Zdroj svetla" error={errors.lightSource?.message} {...register('lightSource')}>
             <option value="">— neuvedené —</option>

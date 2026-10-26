@@ -84,6 +84,14 @@ export function QrLabelsPage() {
               {items.length === 1 ? 'Stiahnuť QR (PNG)' : `Stiahnuť všetky QR (${items.length} PNG)`}
             </Button>
           )}
+          {(isCases || type === 'equipment') && items.length > 0 && (
+            <Link
+              to={`/labels/tape?${isCases ? 'cases' : 'ids'}=${[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))].join(',')}`}
+              className="inline-flex h-10 items-center gap-1 rounded-lg border border-neutral-300 px-3 text-sm font-medium hover:bg-neutral-100"
+            >
+              Na pásku Brother
+            </Link>
+          )}
           <Button onClick={() => window.print()}>
             <Printer className="size-4" aria-hidden />
             Tlačiť

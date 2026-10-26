@@ -84,6 +84,7 @@ const qrLabels = lazyPage(() => import('@/features/scan/QrLabelsPage').then((m) 
 const crewSheet = lazyPage(() => import('@/features/events/CrewSheetPage').then((m) => m.CrewSheetPage), 'events.view')
 const dmxPrint = lazyPage(() => import('@/features/patch/DmxPrintPage').then((m) => m.DmxPrintPage), 'events.view')
 const patchTemplates = lazyPage(() => import('@/features/patch/PatchTemplatesPage').then((m) => m.PatchTemplatesPage), 'events.view')
+const tapeLabels = lazyPage(() => import('@/features/labels/TapeLabelsPage').then((m) => m.TapeLabelsPage), 'equipment.view')
 const patchPrint = lazyPage(() => import('@/features/patch/PatchPrintPage').then((m) => m.PatchPrintPage), 'events.view')
 const eventPrint = lazyPage(() => import('@/features/events/EventPrintPage').then((m) => m.EventPrintPage), 'events.view')
 const eventForm = lazyPage(() => import('@/features/events/EventFormPage').then((m) => m.EventFormPage), 'events.view')
@@ -143,6 +144,7 @@ export const routes: RouteObject[] = [
           { path: 'events/:id/quote', lazy: quote },
           { path: 'offers/:id/print', lazy: offerPrint },
           { path: 'qr/:type', lazy: qrLabels },
+          { path: 'labels/tape', lazy: tapeLabels },
           {
             path: '/',
             element: <AppLayout />,
