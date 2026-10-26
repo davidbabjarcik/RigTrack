@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.12.2 – 26. 10. 2026
+
+- **Štítky na pásku – nový vzhľad** v štýle appky (aj tmavý režim): voľby v jednej karte, „Ako tlačiť“ zbalené,
+  náhľady pások s menom, komu štítok patrí, dĺžkou a PNG.
+- **Štítky cases** bez volieb pre techniku (DMX adresa, módy, odber, váha) a zoradené #1, #2 … #8.
+- **Len QR kód** bez prázdneho miesta za ním – štítok je presne taký dlhý ako QR.
+
 ### 4.12.1 – 26. 10. 2026
 
 - **Art-Net / sACN node**: každý port má universe pre Art-Net aj pre sACN zvlášť (napr. port 1 = Art-Net 0,

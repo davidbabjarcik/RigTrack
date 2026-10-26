@@ -23,8 +23,10 @@ export async function drawTapeLabel(label: TapeLabel, tape: TapeMm) {
     return measure.measureText(line).width
   })
   const qrSize = label.qr ? inner : 0
-  const textWidth = Math.max(titleWidth, ...lineWidths, mmToPx(10))
-  const width = Math.round(edge * 2 + (qrSize ? qrSize + gap : 0) + textWidth)
+  // Len QR (bez textu): štítok je presne taký dlhý ako QR s okrajmi, bez prázdneho miesta.
+  const hasText = Boolean(label.title) || label.lines.length > 0
+  const textWidth = hasText ? Math.max(titleWidth, ...lineWidths, mmToPx(10)) : 0
+  const width = Math.round(edge * 2 + (qrSize ? qrSize + (hasText ? gap : 0) : 0) + textWidth)
 
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -41,6 +43,7 @@ export async function drawTapeLabel(label: TapeLabel, tape: TapeMm) {
     ctx.drawImage(qr, x, edge, qrSize, qrSize)
     x += qrSize + gap
   }
+  if (!hasText) return canvas
   const space = width - x - edge
   let y = edge
   const title = fitSize(ctx, label.title, space, titleMax, 10)

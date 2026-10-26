@@ -75,7 +75,7 @@ export const ampsAt230 = (watts: number) => Math.round((watts / 230) * 10) / 10
 const num = (value: number) => String(value).replace('.', ',')
 const join = (parts: (string | false | undefined | null | 0)[]) => parts.filter(Boolean).join(' · ')
 
-export type TapeLabel = { key: string; kind: LabelKind; title: string; lines: string[]; qr?: { kind: 'equipment' | 'case'; id: string; unit?: number } }
+export type TapeLabel = { key: string; kind: LabelKind; title: string; lines: string[]; /** Komu štítok patrí (v náhľade, aj keď je na štítku len QR). */ caption?: string; qr?: { kind: 'equipment' | 'case'; id: string; unit?: number } }
 type Options = { fields?: Partial<Record<string, boolean>>; company?: string; category?: (categoryId: string | null) => string }
 
 /** Štítok case / racku podľa zapnutých polí: QR, názov s číslom, kategória, rack v U, firma. */
@@ -86,6 +86,7 @@ export function caseTapeLabel(item: Case, options: Options = {}): TapeLabel {
   return {
     key: `case-${item.id}`,
     kind: 'qr',
+    caption: caseTitle(item),
     title: title || line,
     lines: title && line ? [line] : [],
     ...(on('case.code') ? { qr: { kind: 'case' as const, id: item.id } } : {}),
@@ -100,13 +101,16 @@ export function tapeLabels(item: Equipment, kinds: LabelKind[], options: Options
   const labels: TapeLabel[] = []
   // Prvý riadok má byť nadpis; keď je nadpis vypnutý, stane sa ním prvý riadok.
   const push = (label: Omit<TapeLabel, 'title' | 'lines'>, title: string, lines: string[]) => {
+    label = { ...label, caption: label.caption ?? currentName }
     const rest = lines.filter(Boolean)
     if (!title && rest.length === 0 && !label.qr) return
-    labels.push({ ...label, title: title || rest.shift() || '', lines: rest })
+    labels.push({ caption: label.caption, ...label, title: title || rest.shift() || '', lines: rest })
   }
+  let currentName = item.name
   for (const unit of units) {
     const fullName = unit !== null ? `${item.name} #${unit}` : item.name
     const info = unit !== null ? item.unitInfo?.[String(unit)] : undefined
+    currentName = fullName
     for (const kind of kinds) {
       const key = `${item.id}-${unit ?? 0}-${kind}`
       if (kind === 'qr') {

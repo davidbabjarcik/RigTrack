@@ -18,7 +18,7 @@ describe('tape labels', () => {
   it('makes labels for each piece and skips empty ones', () => {
     const labels = tapeLabels(beam, ['qr', 'address', 'modes', 'power'])
     expect(labels.filter((label) => label.kind === 'qr').map((label) => label.title)).toEqual(['Beam #1', 'Beam #2'])
-    expect(labels.filter((label) => label.kind === 'address')).toEqual([{ key: 'b-1-address', kind: 'address', title: 'L1 · A017', lines: ['Beam #1 · Basic · 16 ch'] }])
+    expect(labels.filter((label) => label.kind === 'address')).toEqual([{ key: 'b-1-address', kind: 'address', caption: 'Beam #1', title: 'L1 · A017', lines: ['Beam #1 · Basic · 16 ch'] }])
     expect(labels.find((label) => label.kind === 'modes')?.lines).toEqual(['Basic 16 ch · Ext 24 ch'])
     expect(labels.find((label) => label.kind === 'power')?.lines).toEqual(['330 W · 1,4 A / 230 V · 18 kg'])
     expect(ampsAt230(1000)).toBe(4.3)
