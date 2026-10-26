@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight, Pencil, Plus, Search } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -287,14 +287,6 @@ export function EquipmentListPage() {
                 </div>
                 {expanded && (
                   <ul className="divide-y border-t bg-muted/30">
-                    {canWrite && !cables && (
-                      <li className="flex flex-wrap items-center gap-3 py-2 pr-4 pl-10">
-                        <Link to={`/equipment/${main.id}/edit?group=${group.items.map((item) => item.id).join(',')}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline">
-                          <Pencil className="size-4" aria-hidden />
-                          Upraviť všetky naraz ({group.items.length})
-                        </Link>
-                      </li>
-                    )}
                     {group.items.map((item) => (
                       <li key={item.id}>{row(item, true, cables)}</li>
                     ))}

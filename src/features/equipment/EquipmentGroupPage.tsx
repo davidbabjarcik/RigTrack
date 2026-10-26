@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, ChevronRight, Package, Pencil, QrCode } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { GroupHours } from './GroupHours'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { LinkButton } from '@/components/ui/button'
 import { caseTitle } from '@/features/cases/model'
@@ -24,6 +26,7 @@ export function EquipmentGroupPage() {
   const list = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const cases = useCases(companyId)
   const parts = groupSplitEquipment((list.data ?? []).filter((item) => ids.includes(item.id)))[0]?.items ?? []
+  const [hoursOpen, setHoursOpen] = useState(false)
   const thumbs = usePhotoThumbs(companyId, parts.slice(0, 1).map((item) => item.photoPath))
 
   const back = (
@@ -44,6 +47,7 @@ export function EquipmentGroupPage() {
   }
 
   const main = parts[0]
+  const tracksHours = parts.some((item) => Boolean(item.attributes.trackHours) || item.hoursIntervalMonths !== null || item.operatingHours !== null)
   const cables = main.kind === 'cable'
   const caseName = (caseId: string | null) => {
     const box = cases.data?.find((item) => item.id === caseId)
@@ -91,8 +95,10 @@ export function EquipmentGroupPage() {
             <QrCode className="size-4" aria-hidden />
             QR štítky všetkých{units.length > 0 && ` (${units.length})`}
           </LinkButton>
+          {tracksHours && !hoursOpen && can(company, 'equipment.edit') && <GroupHours companyId={companyId} parts={parts} caseName={caseName} onOpen={() => setHoursOpen(true)} />}
         </div>
       </header>
+      {hoursOpen && <GroupHours companyId={companyId} parts={parts} caseName={caseName} open onClose={() => setHoursOpen(false)} />}
 
       {units.length > 0 && (
         <section aria-labelledby="units-heading" className="mb-6">

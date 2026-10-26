@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.1.1 – 26. 10. 2026
+
+- **Odčítať hodiny všetkým**: na prehľade skupiny techniky (napr. Beam 7R v 8 cases) jeden dátum a pri každom
+  kuse stav počítadla – uloží sa naraz, prázdne sa preskočia.
+- V zozname techniky pod šípkou už nie je „Upraviť všetky naraz“ (je na prehľade skupiny).
+
 ### 4.1 – 26. 10. 2026
 
 - **Oprava QR kódov**: QR viedol na adresu bez priečinka appky (…github.io/equipment/…), takže fotoaparát
