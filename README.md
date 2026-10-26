@@ -39,9 +39,9 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **4.1.2** | Zariadenia z profilu jedným klikom aj do ďalšej firmy, bez zbytočnej výzvy na údaje |
 | **4.1.1** | Odčítanie hodín všetkým kusom naraz na prehľade skupiny |
 | **4.1** | Oprava QR (fotoaparát bez appky), zlúčené upozornenia „Do úloh“, Môj panel na mobile, vlastné Čísla |
-| **4.0** | Prehľad skupiny techniky, QR pre každý kus, ID zosilňovača, tlač bez hlavičky, demo s novinkami |
 | **3.19** | @todo v políčkach, kanban a farebné priority úloh, vlastný stĺpec na Prehľade, racky v U, platiteľ DPH |
 | **3.16** | Pack list funguje aj bez signálu, záložka Vývojár v Nastaveniach |
 

@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.1.2 – 26. 10. 2026
+
+- **Zariadenia z profilu v ďalšej firme**: keď ich máte zapísané v inej firme, už sa neukazuje červené „Chýbajú
+  vaše zariadenia“, ale „Vaše zariadenia z profilu v tejto firme ešte nie sú“ s tlačidlom **Pridať aj sem**.
+- **„Doplňte svoje údaje“** sa už neukazuje, keď máte vyplnený profil (údaje sa do karty zapíšu z profilu).
+
 ### 4.1.1 – 26. 10. 2026
 
 - **Odčítať hodiny všetkým**: na prehľade skupiny techniky (napr. Beam 7R v 8 cases) jeden dátum a pri každom

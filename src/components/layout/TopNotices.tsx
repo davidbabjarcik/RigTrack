@@ -8,6 +8,7 @@ import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { exemptionKeys, fetchExemptions, missingDeviceKinds, useDevices } from '@/features/devices/api'
 import { DEVICE_KIND_LABELS } from '@/features/devices/model'
+import { addDeviceToCompanies, myDeviceKeys, useMyDevices } from '@/features/profile/devices'
 import { markNewsRead, newsKeys, useNews } from '@/features/news/api'
 import { NotificationsStrip } from '@/features/notifications/NotificationsStrip'
 import { describeCelebration, upcomingCelebrations } from '@/features/staff/celebrations'
@@ -164,7 +165,19 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
 
   const today = todayIso()
   const me = staff.people.find((person) => person.memberId === userId)
-  const missing = devices.isSuccess && exemptions.isSuccess ? missingDeviceKinds(devices.data, exemptions.data, userId) : []
+  const allMissing = devices.isSuccess && exemptions.isSuccess ? missingDeviceKinds(devices.data, exemptions.data, userId) : []
+  // Zariadenia z profilu (zapísané v inej firme) sa dajú jedným klikom pridať aj sem – tie nie sú „chýbajúce“.
+  const mine = useMyDevices(userId)
+  const fromProfile = (mine.data ?? []).filter((device) => allMissing.includes(device.kind as (typeof allMissing)[number]) && !device.companyIds.includes(companyId))
+  const missing = allMissing.filter((kind) => !fromProfile.some((device) => device.kind === kind))
+  const queryClient = useQueryClient()
+  const copyDevices = useMutation({
+    mutationFn: () => addDeviceToCompanies([companyId], fromProfile[0]).then(async (failed) => {
+      for (const device of fromProfile.slice(1)) failed.push(...(await addDeviceToCompanies([companyId], device)))
+      return failed
+    }),
+    onSettled: () => Promise.all([queryClient.invalidateQueries({ queryKey: ['company', companyId] }), queryClient.invalidateQueries({ queryKey: myDeviceKeys.all(userId) })]),
+  })
   const celebrations = upcomingCelebrations(staff.people, today, 2)
   const onWelcome = location.pathname === '/welcome'
   const profile = usePersonalProfile(userId)
@@ -182,13 +195,25 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
           </span>
         </Link>
       )}
-      {me && !me.onboarded && !onWelcome && !profileIncomplete && (
+      {/* Kartu zamestnanca vyplní profil; výzva len keď profil (migrácia) nie je k dispozícii. */}
+      {me && !me.onboarded && !onWelcome && profile.isError && (
         <Link to="/welcome" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
           <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />
           <span className="flex-1">
             <span className="font-medium">Doplňte svoje údaje</span> – telefón, e-mail, fotka a pozícia. Zapíšu sa do vašej karty zamestnanca.
           </span>
         </Link>
+      )}
+      {fromProfile.length > 0 && !onWelcome && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+          <Smartphone className="size-5 shrink-0 text-accent" aria-hidden />
+          <span className="min-w-0 flex-1">
+            <span className="font-medium">Vaše zariadenia z profilu</span> ({fromProfile.map((device) => device.name || DEVICE_KIND_LABELS[device.kind]).join(', ')}) v tejto firme ešte nie sú.
+          </span>
+          <Button size="sm" disabled={copyDevices.isPending} onClick={() => copyDevices.mutate()}>
+            {copyDevices.isPending ? 'Pridávam…' : 'Pridať aj sem'}
+          </Button>
+        </div>
       )}
       {missing.length > 0 && !onWelcome && (
         <Link
