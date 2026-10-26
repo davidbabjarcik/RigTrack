@@ -90,7 +90,7 @@ export function buildStats(sources: StatsSources, today: string, yearAgo: string
         value: gear.filter((item) => item.status === status).length,
       })).filter((row) => row.value > 0),
       packed: pieces(active.filter((item) => item.caseId !== null)),
-      unpacked: pieces(active.filter((item) => item.caseId === null && !item.attributes.noCase)),
+      unpacked: pieces(active.filter((item) => item.caseId === null && !item.attributes.noCase && !item.attributes.inCover)),
     },
     loans: {
       total: loans.length,

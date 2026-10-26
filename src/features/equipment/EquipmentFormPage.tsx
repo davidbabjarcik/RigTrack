@@ -84,6 +84,8 @@ const EMPTY: EquipmentFormValues = {
   lightType: '',
   trackHours: false,
   noCase: false,
+  inCover: false,
+  coverNote: '',
   hoursPriority: 'normal',
   lampChangedOn: '',
   trussType: '',
@@ -200,6 +202,8 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     lightType: equipment.attributes.lightType ?? '',
     // Staršia technika s intervalom v mesiacoch prejde na sledovanie so strednou úrovňou.
     noCase: equipment.attributes.noCase ?? false,
+    inCover: equipment.attributes.inCover ?? false,
+    coverNote: equipment.attributes.coverNote ?? '',
     trackHours: equipment.attributes.trackHours ?? (equipment.hoursIntervalMonths !== null || equipment.operatingHours !== null),
     hoursPriority: equipment.attributes.hoursPriority ?? 'normal',
     lampChangedOn: equipment.attributes.lampChangedOn ?? '',
@@ -375,6 +379,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const cableType = useWatch({ control, name: 'cableType' })
   const trackHours = useWatch({ control, name: 'trackHours' })
   const caseValue = useWatch({ control, name: 'caseId' })
+  const inCover = useWatch({ control, name: 'inCover' })
   const checkDays = useCheckLevels(companyId).days
   const trussType = useWatch({ control, name: 'trussType' })
   const stageType = useWatch({ control, name: 'stageType' })
@@ -859,10 +864,17 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           ))}
       </SelectField>
       {!caseValue && !groupMode && (
-        <label className="-mt-2 flex items-center gap-2 text-sm">
-          <input type="checkbox" className="size-4" {...register('noCase')} />
-          Nepatrí do case ani racku (nehlásiť ako „mimo case“)
-        </label>
+        <div className="-mt-2 flex flex-col gap-2">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" className="size-4" {...register('inCover')} />
+            Má vlastný obal (nie case) – napr. reprobox v obale
+          </label>
+          {inCover && <Field label="Aký obal (nepovinné)" placeholder="napr. obal na top, poťah na sub" maxLength={80} error={errors.coverNote?.message} {...register('coverNote')} />}
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" className="size-4" {...register('noCase')} />
+            Nepatrí do case ani racku (nehlásiť ako „mimo case“)
+          </label>
+        </div>
       )}
 
       {/* IP a MAC len s oprávnením „Vidieť IP a MAC adresy“ (inak ich databáza ani nevráti). */}

@@ -122,6 +122,7 @@ export function EquipmentDetailPage() {
         </Link>
       ),
     ],
+    ['Obal', !equipment.caseId && equipment.attributes.inCover ? equipment.attributes.coverNote || 'vlastný obal' : undefined],
     focusUnit !== null ? [
       'Kus',
       <span key="unit">

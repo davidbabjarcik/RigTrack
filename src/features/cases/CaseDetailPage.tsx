@@ -233,7 +233,7 @@ export function CaseDetailPage() {
         ) : content.length === 0 ? (
           <div role="status" className="flex flex-col items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 px-6 py-8 text-center text-sm">
             <p>
-              <strong>{current.kind === 'rack' ? 'Rack je prázdny' : 'Case je prázdny'}</strong> – zatiaľ v ňom nie je žiadna technika.
+              <strong>{current.kind === 'rack' ? 'Rack je prázdny' : current.kind === 'bag' ? 'Taška je prázdna' : 'Case je prázdny'}</strong> – zatiaľ v ňom nie je žiadna technika.
             </p>
             {canEdit && !adding && (
               <Button size="sm" onClick={() => setAdding(true)}>

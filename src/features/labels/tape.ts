@@ -48,7 +48,7 @@ export const TAPE_FIELDS = {
     'case.code': 'QR kód',
     'case.name': 'Názov s číslom',
     'case.category': 'Kategória na štítku',
-    'case.rack': 'Rack a výška v U',
+    'case.rack': 'Druh (rack v U, taška)',
     'case.company': 'Názov firmy',
   },
 } as const
@@ -74,7 +74,7 @@ type Options = { fields?: Partial<Record<string, boolean>>; company?: string; ca
 export function caseTapeLabel(item: Case, options: Options = {}): TapeLabel {
   const on = (key: TapeField) => fieldOn(options.fields, key)
   const title = on('case.name') ? caseTitle(item) : ''
-  const line = join([on('case.category') && item.labelCategory, on('case.rack') && item.kind === 'rack' && kindLabel(item), on('case.company') && options.company])
+  const line = join([on('case.category') && item.labelCategory, on('case.rack') && item.kind && item.kind !== 'case' && kindLabel(item), on('case.company') && options.company])
   return {
     key: `case-${item.id}`,
     kind: 'qr',

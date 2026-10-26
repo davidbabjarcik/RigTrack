@@ -191,7 +191,7 @@ begin
   if to_regclass('public.cases') is not null then
     begin
       execute $sql$alter table public.cases drop constraint if exists cases_kind_check$sql$;
-      execute $sql$alter table public.cases add constraint cases_kind_check CHECK ((kind = ANY (ARRAY['case'::text, 'rack'::text]))) not valid$sql$;
+      execute $sql$alter table public.cases add constraint cases_kind_check CHECK ((kind = ANY (ARRAY['case'::text, 'rack'::text, 'bag'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola cases_kind_check: %', sqlerrm;
     end;
   end if;

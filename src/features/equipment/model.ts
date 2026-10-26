@@ -208,6 +208,10 @@ export type EquipmentAttributes = {
   stageSize?: string
   /** Technika, ktorá do case ani racku nepatrí (napr. stojany, kabeláž na cievke) – nehlási sa ako „mimo case“. */
   noCase?: boolean
+  /** Technika vo vlastnom obale (napr. reprobox v obale) – nie je v case, ale ani „mimo case“. */
+  inCover?: boolean
+  /** Aký obal (nepovinné), napr. „obal na top“. */
+  coverNote?: string
   /** Sledovať prevádzkové hodiny (zosilňovače, svetlá) a s akou úrovňou kontroly odčítavať počítadlo. */
   trackHours?: boolean
   hoursPriority?: CheckLevel
@@ -457,6 +461,8 @@ export const equipmentSchema = z.object({
   lightType: z.enum([...(LIGHT_TYPES as LightType[]), '']).optional(),
   trackHours: z.boolean().optional(),
   noCase: z.boolean().optional(),
+  inCover: z.boolean().optional(),
+  coverNote: z.string().trim().max(80, 'Najviac 80 znakov').optional(),
   hoursPriority: z.enum(['none', 'low', 'normal', 'high', '']).optional(),
   lampChangedOn: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Zadajte dátum').optional(),
   lampChangedHours: z.number('Zadajte číslo').min(0).max(1_000_000).optional(),
@@ -650,6 +656,8 @@ export function attributesFor(
         | 'lightType'
         | 'trackHours'
         | 'noCase'
+        | 'inCover'
+        | 'coverNote'
         | 'caseId'
         | 'hoursPriority'
         | 'lampChangedOn'
@@ -750,6 +758,10 @@ export function attributesFor(
 ) {
   const attributes: EquipmentAttributes = {}
   if (values.noCase && !values.caseId) attributes.noCase = true
+  if (values.inCover && !values.caseId) {
+    attributes.inCover = true
+    if (values.coverNote?.trim()) attributes.coverNote = values.coverNote.trim()
+  }
   const lighting = isLighting(values.kind, values.category ?? '')
   const audio = isAudio(values.kind, values.category ?? '')
   if (values.kind === 'cable') {
@@ -1195,7 +1207,7 @@ export function filterEquipment(items: Equipment[], filter: EquipmentFilter, tod
     if (filter.categoryId && item.categoryId !== filter.categoryId) return false
     if (filter.locationId && item.locationId !== filter.locationId) return false
     // „Mimo cases“ = čo by v case byť malo (technika s „Nepatrí do case“ sa neukáže).
-    if (filter.caseId === NO_CASE ? item.caseId !== null || Boolean(item.attributes.noCase) : filter.caseId && item.caseId !== filter.caseId) return false
+    if (filter.caseId === NO_CASE ? item.caseId !== null || Boolean(item.attributes.noCase) || Boolean(item.attributes.inCover) : filter.caseId && item.caseId !== filter.caseId) return false
     if (words.length === 0) return true
     const haystack = normalize(
       [
@@ -1230,7 +1242,7 @@ export function sortEquipment(items: Equipment[], sort: EquipmentSort) {
 
 /** Technika, ktorá by mala byť v nejakom case, ale nie je. Vyradená a spotrebný materiál sa nerátajú. */
 export function unpackedEquipment(items: Equipment[]) {
-  return items.filter((item) => item.caseId === null && item.status !== 'retired' && item.kind !== 'consumable' && !item.attributes.noCase)
+  return items.filter((item) => item.caseId === null && item.status !== 'retired' && item.kind !== 'consumable' && !item.attributes.noCase && !item.attributes.inCover)
 }
 
 // ---------------------------------------------------------------------------

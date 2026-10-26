@@ -30,3 +30,10 @@ describe('racks, task priorities and user prefs', () => {
     expect(await t.as('other', 'select prefs from public.user_prefs')).toEqual([])
   })
 })
+
+describe('bags', () => {
+  it('stores a bag next to cases and racks', async () => {
+    await t.as('boss', `insert into public.cases (company_id, name, kind) values ($1, 'Taška na stojany', 'bag')`, [a])
+    expect(await t.as('boss', `select kind from public.cases where name = 'Taška na stojany'`)).toEqual([{ kind: 'bag' }])
+  })
+})

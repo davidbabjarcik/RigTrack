@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.9 – 26. 10. 2026
+
+- **Technika vo vlastnom obale** (napr. reprobox v obale): vo formulári „Má vlastný obal (nie case)“ a aký obal.
+  Taký kus nie je v cases, ale ani sa nehlási ako „mimo case“; v zozname „v obale“, v detaile riadok Obal.
+- **Taška** pri cases (vedľa case a racku) – napr. taška na stojany; filter „Len tašky“, „Taška je prázdna“.
+- Nová migrácia: `0109`.
+
 ### 4.8 – 26. 10. 2026
 
 - **IP a MAC adresy stráži databáza** (oprávnenie „Vidieť IP a MAC adresy“): IP a MAC techniky sú v chránenej

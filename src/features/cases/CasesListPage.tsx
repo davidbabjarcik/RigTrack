@@ -18,7 +18,7 @@ import { can } from '@/lib/permissions'
 import { useCheckLevels } from '@/features/checks/levels'
 import { useStaff } from '@/features/staff/useStaff'
 import { cn } from '@/lib/utils'
-import { CASE_KIND_LABELS, CASE_KINDS, caseNumber, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, filterCases, groupCases, kindLabel, needsCheck, NO_CASE_FILTER, type Case, type CaseFilter } from './model'
+import { CASE_KIND_LABELS, CASE_KINDS, kindWord, caseNumber, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, filterCases, groupCases, kindLabel, needsCheck, NO_CASE_FILTER, type Case, type CaseFilter } from './model'
 import { useCases } from './useCases'
 
 const FILTER_KEY = 'rigtrack.cases.filter'
@@ -113,7 +113,7 @@ export function CasesListPage() {
   const row = (item: Case, title: string, inGroup: boolean) => {
     const details = inGroup
       ? [(contents.get(item.id) ?? []).join(', ') || (equipment.data && 'prázdny'), item.inventoryNumber]
-      : [item.kind === 'rack' && kindLabel(item), item.inventoryNumber, locations.find((l) => l.id === item.locationId)?.name, equipment.data && pieces(counts.get(item.id) ?? 0)]
+      : [item.kind && item.kind !== 'case' && kindLabel(item), item.inventoryNumber, locations.find((l) => l.id === item.locationId)?.name, equipment.data && pieces(counts.get(item.id) ?? 0)]
     const check = item.lastCheck ? `Kontrola ${formatDateTime(item.lastCheck.checkedAt)} · ${item.lastCheck.checkedByName || 'neznámy'}` : 'Zatiaľ nekontrolované'
     const priority = item.checkPriority ?? 'normal'
     const late = needsCheck(item, now, checkDays)
@@ -279,7 +279,7 @@ export function CasesListPage() {
               <option value="">Oboje</option>
               {CASE_KINDS.map((kind) => (
                 <option key={kind} value={kind}>
-                  {kind === 'case' ? 'Len cases' : 'Len racky'}
+                  {kind === 'case' ? 'Len cases' : kind === 'rack' ? 'Len racky' : 'Len tašky'}
                 </option>
               ))}
             </SelectField>
@@ -323,11 +323,11 @@ export function CasesListPage() {
                     <span className="flex items-center gap-2">
                       <span className="truncate font-medium">{group.name}</span>
                       <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                        {group.items.length}× {first.kind === 'rack' ? 'rack' : 'case'}
+                        {group.items.length}× {kindWord(first.kind)}
                       </span>
                     </span>
                     <span className="block truncate text-sm text-muted-foreground">
-                      {[first.kind === 'rack' && kindLabel(first), equipment.data && pieces(total), group.items.map((item) => `#${caseNumber(item) || '?'}`).join(' ')].filter(Boolean).join(' · ')}
+                      {[first.kind && first.kind !== 'case' && kindLabel(first), equipment.data && pieces(total), group.items.map((item) => `#${caseNumber(item) || '?'}`).join(' ')].filter(Boolean).join(' · ')}
                     </span>
                     {late > 0 && <span className="block text-sm text-accent">Na kontrolu: {late}</span>}
                   </span>

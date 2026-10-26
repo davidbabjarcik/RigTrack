@@ -121,6 +121,7 @@ export function EquipmentListPage() {
       // Rozdelená technika: ktoré kusy a v ktorom case sú.
       item.trackUnits && item.unitIds.length > 0 && item.unitIds.length <= 12 && item.unitIds.map((unit) => `#${unit}`).join(', '),
       (!sub || byLength) && item.caseId && caseLabel(item.caseId) && `v ${caseLabel(item.caseId)}`,
+      !item.caseId && item.attributes.inCover && (item.attributes.coverNote ? `obal: ${item.attributes.coverNote}` : 'v obale'),
     ].filter(Boolean)
     const service = serviceState(item, today).state
     const servicing = inService.get(item.id) ?? 0

@@ -140,7 +140,7 @@ export async function saveCase({ companyId, id, values, locations }: SaveArgs): 
     ...(values.owner !== undefined && (values.owner !== '' || hasOwnerColumn()) ? { owner_staff_id: await resolveOwner(companyId, values.owner) } : {}),
     ...(values.checkPriority && (values.checkPriority !== 'normal' || hasPriorityColumn()) ? { check_priority: values.checkPriority } : {}),
     ...(hasOldNumbers() || values.oldNumbers?.trim() ? { old_numbers: (values.oldNumbers ?? '').trim() } : {}),
-    ...(rackColumns || values.kind === 'rack' ? { kind: values.kind ?? 'case', rack_units: values.kind === 'rack' ? (values.rackUnits ?? null) : null } : {}),
+    ...(rackColumns || (values.kind && values.kind !== 'case') ? { kind: values.kind ?? 'case', rack_units: values.kind === 'rack' ? (values.rackUnits ?? null) : null } : {}),
   }
   const write = (row: Record<string, unknown>) => {
     const table = getSupabase().from('cases')

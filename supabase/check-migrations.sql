@@ -91,7 +91,8 @@ with checks (migration, ok) as (
     ('0105 QR bez účtu (Našli ste…)', to_regprocedure('public.public_scan_info(text, uuid)') is not null),
     ('0106 demo firma 4.6', to_regprocedure('public.seed_demo_v46(uuid)') is not null),
     ('0107 IP a MAC chránené databázou', to_regclass('public.equipment_addresses') is not null),
-    ('0108 pack list – naskenované kusy', to_regclass('public.event_pack_units') is not null)
+    ('0108 pack list – naskenované kusy', to_regclass('public.event_pack_units') is not null),
+    ('0109 taška pri cases', exists (select 1 from pg_constraint where conname = 'cases_kind_check' and pg_get_constraintdef(oid) like '%bag%'))
 )
 select migration, case when ok then 'OK' else 'chýba' end as stav
 from checks

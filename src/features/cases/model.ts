@@ -38,13 +38,15 @@ export type Case = {
   rackUnits?: number | null
 }
 
-export const CASE_KINDS = ['case', 'rack'] as const
+export const CASE_KINDS = ['case', 'rack', 'bag'] as const
 export type CaseKind = (typeof CASE_KINDS)[number]
-export const CASE_KIND_LABELS: Record<CaseKind, string> = { case: 'Case', rack: 'Rack' }
+export const CASE_KIND_LABELS: Record<CaseKind, string> = { case: 'Case', rack: 'Rack', bag: 'Taška' }
+/** Malými písmenami do textu: „8× case“, „2× taška“. */
+export const kindWord = (kind: CaseKind | undefined) => (kind === 'rack' ? 'rack' : kind === 'bag' ? 'taška' : 'case')
 
 /** „Rack 12U“, „Rack“ alebo „Case“. */
 export const kindLabel = (item: Pick<Case, 'kind' | 'rackUnits'>) =>
-  item.kind === 'rack' ? `Rack${item.rackUnits ? ` ${item.rackUnits}U` : ''}` : 'Case'
+  item.kind === 'rack' ? `Rack${item.rackUnits ? ` ${item.rackUnits}U` : ''}` : item.kind === 'bag' ? 'Taška' : 'Case'
 
 const NUMBER_SUFFIX = /^(.*?)\s*(?:#|č\.\s*)?(\d+)$/
 

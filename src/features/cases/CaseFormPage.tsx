@@ -15,7 +15,7 @@ import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { saveCase, syncCaseGroup } from './api'
 import { equipmentKeys, fetchEquipmentList, splitEquipmentIntoCase } from '@/features/equipment/api'
 import { useCheckLevels, levelDays } from '@/features/checks/levels'
-import { CASE_KIND_LABELS, CASE_KINDS, caseSchema, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
+import { CASE_KIND_LABELS, CASE_KINDS, kindWord, caseSchema, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
 import { addCaseTemplate, caseTemplateKeys, describeTemplate, fetchCaseTemplates, numberedCaseNames, type CaseTemplate } from './templates'
 import { useCases } from './useCases'
 
@@ -75,7 +75,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
       owner: current?.ownerStaffId ?? ownerPreset,
       checkPriority: current?.checkPriority ?? 'normal',
       oldNumbers: current?.oldNumbers ?? '',
-      kind: current?.kind ?? (searchParams.get('kind') === 'rack' ? 'rack' : 'case'),
+      kind: current?.kind ?? (searchParams.get('kind') === 'rack' ? 'rack' : searchParams.get('kind') === 'bag' ? 'bag' : 'case'),
       rackUnits: current?.rackUnits ?? undefined,
     },
   })
@@ -411,7 +411,7 @@ export function CaseFormPage() {
 
   return (
     <>
-      <PageHeader title={id ? `Úprava – ${current?.kind === 'rack' ? 'rack' : 'case'}` : 'Nový case / rack'} />
+      <PageHeader title={id ? `Úprava – ${kindWord(current?.kind)}` : 'Nový case / rack / taška'} />
       {body}
     </>
   )

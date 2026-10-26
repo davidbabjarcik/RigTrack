@@ -523,3 +523,11 @@ describe('unit DMX', () => {
     expect(unitInfoToForm(info)[0]).toMatchObject({ unit: 1, dmxAddress: '17' })
   })
 })
+
+describe('equipment in its own cover', () => {
+  it('is not reported as outside a case', () => {
+    const attributes = attributesFor({ kind: 'audio', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', inCover: true, coverNote: 'obal na top', caseId: '' } as never)
+    expect(attributes).toMatchObject({ inCover: true, coverNote: 'obal na top' })
+    expect(unpackedEquipment([{ caseId: null, status: 'available', kind: 'audio', attributes } as never])).toHaveLength(0)
+  })
+})

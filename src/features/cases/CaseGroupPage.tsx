@@ -13,7 +13,7 @@ import { formatDate } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { addCaseCheck, caseKeys, duplicateCase } from './api'
-import { caseNumber, formatDimensions, groupCases, kindLabel, needsCheck, type Case } from './model'
+import { caseNumber, formatDimensions, groupCases, kindLabel, kindWord, needsCheck, type Case } from './model'
 import { useCases } from './useCases'
 
 /**
@@ -83,7 +83,7 @@ export function CaseGroupPage() {
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight break-words">{group.name}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {[`${members.length}× ${first.kind === 'rack' ? 'rack' : 'case'}`, first.kind === 'rack' && kindLabel(first), formatDimensions(first), `${total} ks techniky`, due > 0 && `na kontrolu ${due}`]
+              {[`${members.length}× ${kindWord(first.kind)}`, first.kind === 'rack' && kindLabel(first), formatDimensions(first), `${total} ks techniky`, due > 0 && `na kontrolu ${due}`]
                 .filter(Boolean)
                 .join(' · ')}
             </p>
