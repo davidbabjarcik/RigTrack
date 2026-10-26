@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.2 – 26. 10. 2026
+
+- **Kontroly** (nová karta): na jednom mieste cases a racky na kontrolu, technika na odčítanie prevádzkových hodín
+  a servis. Predvolene len to, za čo zodpovedáte (Nastavenia → zodpovednosti); po vypnutí „Len to, za čo zodpovedám“
+  aj veci ostatných. Rozdelená technika (napr. 8× Beam v cases) je jeden riadok – odkaz na prehľad, kde odčítate
+  hodiny všetkým naraz.
+- **Hromadná úprava techniky**: Zrušiť aj Uložiť vráti na prehľad skupiny (nie na jednu časť).
+- **Celý názov case s číslom** (Beam 7R Case #4) v detaile techniky, vo výbere case vo formulári a v sklade.
+
 ### 4.1.2 – 26. 10. 2026
 
 - **Zariadenia z profilu v ďalšej firme**: keď ich máte zapísané v inej firme, už sa neukazuje červené „Chýbajú

@@ -8,6 +8,7 @@ import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
+import { caseTitle, type Case } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { OwnerSelect } from '@/features/staff/OwnerSelect'
@@ -315,7 +316,7 @@ type FormProps = {
   copyFrom?: Equipment | null
   categories: Lookup[]
   locations: Lookup[]
-  cases: Lookup[]
+  cases: Pick<Case, 'id' | 'name' | 'labelNumber'>[]
   colors: CableColor[]
   canEditColors: boolean
 }
@@ -326,10 +327,11 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const categoryListId = useId()
   const locationListId = useId()
   const connectorListId = useId()
-  const cancelTo = equipment ? `/equipment/${equipment.id}` : '/equipment'
   const [searchParams] = useSearchParams()
   // ?group=id1,id2 – úprava všetkých častí rozdelenej techniky naraz (zo zoznamu techniky).
   const groupIds = (searchParams.get('group') ?? '').split(',').filter(Boolean)
+  // Hromadná úprava sa vracia na prehľad skupiny, nie na jednu časť.
+  const cancelTo = equipment ? (groupIds.length > 1 ? `/equipment/group?ids=${groupIds.join(',')}` : `/equipment/${equipment.id}`) : '/equipment'
   const groupMode = Boolean(equipment) && groupIds.length > 1
   const groupList = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: groupMode })
   const groupParts = (groupList.data ?? []).filter((item) => groupIds.includes(item.id))
@@ -433,7 +435,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
     onSuccess: async (id) => {
       // Uloženie mohlo založiť novú kategóriu či umiestnenie, preto celý strom firmy.
       await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
-      navigate(`/equipment/${id}`, { replace: true })
+      navigate(equipment && groupIds.length > 1 ? `/equipment/group?ids=${groupIds.join(',')}` : `/equipment/${id}`, { replace: true })
     },
     onError: (error: { code?: string; message?: string }) => {
       if (error.code === '23505' && error.message?.includes('inventory_number')) {
@@ -836,11 +838,13 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
 
       <SelectField label="Case" className={groupMode ? 'hidden' : undefined} error={errors.caseId?.message} {...register('caseId')}>
         <option value="">— nie je v žiadnom case —</option>
-        {cases.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.name}
-          </option>
-        ))}
+        {[...cases]
+          .sort((a, b) => caseTitle(a).localeCompare(caseTitle(b), 'sk', { numeric: true }))
+          .map((item) => (
+            <option key={item.id} value={item.id}>
+              {caseTitle(item)}
+            </option>
+          ))}
       </SelectField>
       {!caseValue && !groupMode && (
         <label className="-mt-2 flex items-center gap-2 text-sm">

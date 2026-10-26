@@ -14,6 +14,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { LiveScanner } from '@/features/scan/LiveScanner'
 import { parseQr } from '@/features/scan/qr'
+import { caseTitle } from '@/features/cases/model'
 import { can } from '@/lib/permissions'
 import { addSpot, deleteSpot, fetchWarehouse, placeCase, saveWarehouse, updateSpot, warehouseKeys } from './api'
 import {
@@ -157,7 +158,7 @@ export function WarehousePage() {
     const inCase = cases.data.find((candidate) => candidate.id === piece.caseId)
     if (inCase) {
       if (inCase.spotId) select(inCase.spotId)
-      return void setFound({ text: `${piece.name} je v case ${inCase.name}: ${where(inCase)}`, to: `/equipment/${piece.id}` })
+      return void setFound({ text: `${piece.name} je v case ${caseTitle(inCase)}: ${where(inCase)}`, to: `/equipment/${piece.id}` })
     }
     const location = locations.find((candidate) => candidate.id === piece.locationId)?.name
     setFound({ text: `${piece.name} nie je v žiadnom case${location ? ` – umiestnenie: ${location}` : ''}.`, to: `/equipment/${piece.id}` })

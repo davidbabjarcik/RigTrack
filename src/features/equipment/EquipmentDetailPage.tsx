@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Pencil, QrCode, Trash2, Wrench } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { caseTitle } from '@/features/cases/model'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -116,7 +117,7 @@ export function EquipmentDetailPage() {
       'Case',
       inCase && (
         <Link to={`/cases/${inCase.id}`} className="text-accent hover:underline">
-          {inCase.name}
+          {caseTitle(inCase)}
         </Link>
       ),
     ],
