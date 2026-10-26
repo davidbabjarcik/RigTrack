@@ -32,6 +32,7 @@ export const TAPE_FIELDS = {
     'address.name': 'Názov s číslom kusu',
     'address.mode': 'Mód',
     'address.channels': 'Počet kanálov',
+    'address.power': 'Odber (W / A)',
   },
   modes: {
     'modes.name': 'Názov s číslom kusu',
@@ -55,7 +56,7 @@ export type TapeFieldGroup = keyof typeof TAPE_FIELDS
 export type TapeField = { [G in TapeFieldGroup]: keyof (typeof TAPE_FIELDS)[G] }[TapeFieldGroup]
 
 /** Predvolene vypnuté (kategória a firma); všetko ostatné zapnuté. */
-const DEFAULT_OFF: TapeField[] = ['qr.category', 'qr.company', 'case.category', 'case.company']
+const DEFAULT_OFF: TapeField[] = ['qr.category', 'qr.company', 'case.category', 'case.company', 'address.power']
 
 /** Je pole na štítku zapnuté? Neuložené pole má predvolenú hodnotu. */
 export const fieldOn = (fields: Partial<Record<string, boolean>> | undefined, key: TapeField) => fields?.[key] ?? !DEFAULT_OFF.includes(key)
@@ -111,7 +112,10 @@ export function tapeLabels(item: Equipment, kinds: LabelKind[], options: Options
         push(
           { key, kind },
           join([on('address.line') && info?.dmxLine && `L${info.dmxLine}`, on('address.address') && info?.dmxAddress && `A${String(info.dmxAddress).padStart(3, '0')}`]),
-          [join([on('address.name') && fullName, on('address.mode') && info?.dmxMode, on('address.channels') && mode && `${mode.channels} ch`])],
+          [
+            join([on('address.name') && fullName, on('address.mode') && info?.dmxMode, on('address.channels') && mode && `${mode.channels} ch`]),
+            on('address.power') && item.attributes.powerW ? `${num(item.attributes.powerW)} W · ${num(ampsAt230(item.attributes.powerW))} A` : '',
+          ],
         )
       }
       if (kind === 'modes' && modes.length > 0) {

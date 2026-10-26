@@ -30,6 +30,7 @@ describe('tape labels', () => {
     expect(labels[0].lines).toEqual(['Svetlá · Firma'])
     expect(labels.find((label) => label.kind === 'power')?.lines).toEqual(['330 W · 18 kg'])
     expect(labels.find((label) => label.kind === 'address')?.title).toBe('A017')
+    expect(tapeLabels(beam, ['address'], { fields: { 'address.power': true } })[0].lines).toEqual(['Beam #1 · Basic · 16 ch', '330 W · 1,4 A'])
     const box = { id: 'c', name: 'Beam Case', labelNumber: '4', labelCategory: 'Light', kind: 'case' } as Case
     expect(caseTapeLabel(box)).toMatchObject({ title: 'Beam Case #4', lines: [] })
     expect(caseTapeLabel(box, { fields: { 'case.category': true } })).toMatchObject({ lines: ['Light'] })

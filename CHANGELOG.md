@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.7.1 – 26. 10. 2026
+
+- **Štítky na pásku**: pri každom štítku jeho **dĺžka v mm** (na nastavenie v tlačiarni / aplikácii);
+  na štítok „Moja DMX adresa“ sa dá zapnúť aj **odber (W / A)** – predvolene vypnutý.
+
 ### 4.7 – 26. 10. 2026
 
 - **Obsah štítkov na pásku si nastavíte**: „Upraviť obsah štítkov“ – pri každom druhu zapnete / vypnete jednotlivé

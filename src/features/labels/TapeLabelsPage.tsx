@@ -194,7 +194,7 @@ export function TapeLabelsPage() {
         )}
         <p className="text-sm text-neutral-600">
           {black && 'Čierna páska: tlačiareň tlačí bielou farbou kazety – obrázok aj tlač sú rovnaké, náhľad ukazuje, ako to bude vyzerať. '}
-          Tlač z PC: vyberte tlačiareň Brother PT-D460BT, páska {settings.tape} mm, okraje žiadne, mierka 100 %. Z mobilu: stiahnite PNG a vytlačte ich
+          Pri každom štítku je jeho dĺžka – tú nastavte v tlačiarni / aplikácii (pri tlači z PC sa všetky vytlačia v dĺžke najdlhšieho, {longest} mm). Tlač z PC: vyberte tlačiareň Brother PT-D460BT, páska {settings.tape} mm, okraje žiadne, mierka 100 %. Z mobilu: stiahnite PNG a vytlačte ich
           v aplikácii Brother iPrint&amp;Label. Prázdne druhy (napr. svetlo bez zapísanej DMX adresy alebo príkonu) sa vynechajú – adresy nastavíte cez
           „DMX všetkým“, príkon (W) a váhu v úprave techniky.
         </p>
@@ -203,6 +203,8 @@ export function TapeLabelsPage() {
           {images.map((image) => (
             <li key={image.key} className="flex flex-wrap items-center gap-3">
               <img src={image.url} alt={image.name} className={black ? 'rounded border border-neutral-300 invert' : 'rounded border border-neutral-300'} style={{ height: `${settings.tape * 4}px` }} />
+              {/* Dĺžka štítku na nastavenie v tlačiarni (pri tlači priamo z tlačiarne / aplikácie). */}
+              <span className="text-sm font-medium">{Math.ceil(image.widthMm)} mm</span>
               <button type="button" className="inline-flex items-center gap-1 text-xs text-neutral-600 hover:text-black" onClick={() => downloadCanvas(image.canvas, `stitok-${fileSlug(image.name)}.png`)}>
                 <Download className="size-3.5" aria-hidden />
                 PNG
