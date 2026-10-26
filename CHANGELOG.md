@@ -5,6 +5,10 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.7.2 – 26. 10. 2026
+
+- Štítky na pásku sú dostupné cez **QR štítky → Na pásku Brother** (tlačidlá v detailoch techniky a cases odstránené).
+
 ### 4.7.1 – 26. 10. 2026
 
 - **Štítky na pásku**: pri každom štítku jeho **dĺžka v mm** (na nastavenie v tlačiarni / aplikácii);

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, ChevronRight, Package, Pencil, QrCode, Tag } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Package, Pencil, QrCode } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { GroupDmx } from './GroupDmx'
@@ -94,10 +94,6 @@ export function EquipmentGroupPage() {
               Upraviť všetky naraz
             </LinkButton>
           )}
-          <LinkButton to={`/labels/tape?ids=${allIds}&back=${encodeURIComponent(`/equipment/group?ids=${allIds}`)}`} variant="outline" size="sm">
-            <Tag className="size-4" aria-hidden />
-            Štítky na pásku
-          </LinkButton>
           <LinkButton to={`/qr/equipment?ids=${allIds}`} variant="outline" size="sm">
             <QrCode className="size-4" aria-hidden />
             QR štítky všetkých{units.length > 0 && ` (${units.length})`}

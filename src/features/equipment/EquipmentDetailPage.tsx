@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Copy, Pencil, QrCode, Tag, Trash2, Wrench } from 'lucide-react'
+import { ArrowLeft, Copy, Pencil, QrCode, Trash2, Wrench } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { caseTitle } from '@/features/cases/model'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -224,10 +224,6 @@ export function EquipmentDetailPage() {
               Upraviť
             </LinkButton>
           )}
-          <LinkButton to={`/labels/tape?ids=${equipment.id}`} variant="outline" size="sm">
-            <Tag className="size-4" aria-hidden />
-            Štítky na pásku
-          </LinkButton>
           {can(company, 'equipment.edit') && (
             <LinkButton to={`/equipment/new?copy=${equipment.id}`} variant="outline" size="sm">
               <Copy className="size-4" aria-hidden />

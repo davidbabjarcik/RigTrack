@@ -157,10 +157,6 @@ export function CaseDetailPage() {
             <Tag className="size-4" aria-hidden />
             Štítok
           </LinkButton>
-          <LinkButton to={`/labels/tape?cases=${id}&back=${encodeURIComponent(`/cases/${id}`)}`} variant="outline" size="sm">
-            <Tag className="size-4" aria-hidden />
-            Na pásku
-          </LinkButton>
           <LinkButton to={`/qr/cases?ids=${id}`} variant="outline" size="sm">
             <QrCode className="size-4" aria-hidden />
             QR štítok
