@@ -7,6 +7,7 @@ import { useCompany } from '@/features/companies/company-context'
 import type { PermissionKey } from '@/features/permissions/catalog'
 import { can } from '@/lib/permissions'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
+import { FoundPage } from '@/features/scan/FoundPage'
 
 // Guardy sú iba UX. Dáta chráni RLS v databáze.
 
@@ -17,7 +18,15 @@ export function RequireAuth() {
   // Bez backendu nie je čo chrániť; shell ostáva prístupný na vývoj UI.
   if (!isSupabaseConfigured) return <Outlet />
   if (loading) return <LoadingScreen />
-  if (!session) return <Navigate to="/auth" replace state={{ from: location.pathname }} />
+  if (!session) {
+    // QR štítok naskenovaný fotoaparátom bez účtu: „Našli ste…“ (ak to firma povolila), inak výzva prihlásiť sa.
+    const scanned = /^\/(equipment|cases)\/([0-9a-f-]{36})\/?$/i.exec(location.pathname)
+    if (scanned) {
+      const unit = Number(new URLSearchParams(location.search).get('unit')) || null
+      return <FoundPage kind={scanned[1].toLowerCase() === 'cases' ? 'case' : 'equipment'} id={scanned[2].toLowerCase()} unit={unit} />
+    }
+    return <Navigate to="/auth" replace state={{ from: location.pathname + location.search }} />
+  }
   return <Outlet />
 }
 

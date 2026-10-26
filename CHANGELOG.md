@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.6 – 26. 10. 2026
+
+- **QR bez účtu – „Našli ste…“**: kto naskenuje QR štítok fotoaparátom a nemá účet, uvidí názov veci (aj číslo kusu),
+  názov firmy a kontakt (telefón na klik, e-mail, web) – ak to admin zapne v Nastaveniach → Firma → Údaje o firme
+  („QR štítok bez prihlásenia ukáže Našli ste…“). Predvolene vypnuté; ostatné údaje ostávajú skryté.
+  Ľudia z firmy majú na tej istej stránke „Som z firmy – prihlásiť sa“ a po prihlásení sa otvorí daná vec.
+- Nová migrácia: `0105` (opravné `0071` a `0072` sú aktualizované).
+
 ### 4.5 – 26. 10. 2026
 
 - **Štítky na pásku (Brother P-touch, napr. PT-D460BT)**: páska 9 / 12 / 18 mm, pre každý kus zvlášť –

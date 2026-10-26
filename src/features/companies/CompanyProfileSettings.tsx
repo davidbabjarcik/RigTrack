@@ -21,7 +21,7 @@ export function CompanyProfileSettings({ companyId, canEdit }: { companyId: stri
   if (profile.isError) return <p className="text-sm text-destructive">Údaje o firme sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
   const values = draft ?? profile.data
   const set = (patch: Partial<CompanyProfile>) => setDraft({ ...values, ...patch })
-  const field = (label: string, key: keyof CompanyProfile, extra: { placeholder?: string; type?: string; className?: string } = {}) => (
+  const field = (label: string, key: Exclude<keyof CompanyProfile, 'publicScan'>, extra: { placeholder?: string; type?: string; className?: string } = {}) => (
     <Field label={label} disabled={!canEdit} value={values[key]} onChange={(event) => set({ [key]: event.target.value })} {...extra} />
   )
   function submit(event: FormEvent) {
@@ -42,6 +42,15 @@ export function CompanyProfileSettings({ companyId, canEdit }: { companyId: stri
         {field('Web', 'web', { placeholder: 'https://', className: 'sm:col-span-2' })}
         {field('Adresa skladu', 'warehouseAddress', { placeholder: 'napr. Skladová 1, Mesto', className: 'sm:col-span-2' })}
       </div>
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" className="mt-0.5 size-4" disabled={!canEdit} checked={Boolean(values.publicScan)} onChange={(event) => set({ publicScan: event.target.checked })} />
+        <span>
+          QR štítok bez prihlásenia ukáže „Našli ste…“
+          <span className="block text-xs text-muted-foreground">
+            Kto naskenuje QR na technike alebo case fotoaparátom a nemá účet, uvidí len názov veci, názov firmy a tu zadaný telefón, e-mail a web. Ostatné údaje ostávajú skryté.
+          </span>
+        </span>
+      </label>
       <p className="text-xs text-muted-foreground">Z adresy skladu sa pri evente vypočítajú kilometre na akciu. Údaje môže meniť admin firmy.</p>
       {save.isError && <p className="text-sm text-destructive">Uloženie zlyhalo.</p>}
       {canEdit && (

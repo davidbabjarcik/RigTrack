@@ -13,20 +13,29 @@ export type CompanyProfile = {
   web: string
   /** Odkiaľ sa rátajú kilometre na akcie. */
   warehouseAddress: string
+  /** Kto naskenuje QR bez účtu, uvidí názov veci a kontakt firmy (0105). */
+  publicScan?: boolean
 }
 
 export const EMPTY_PROFILE: CompanyProfile = { legalName: '', ico: '', dic: '', icDph: '', address: '', ceoName: '', phone: '', email: '', web: '', warehouseAddress: '' }
 
 export const profileKey = (companyId: string) => ['company', companyId, 'profile'] as const
 
+// „Našli ste…“ pri QR (0105); bez migrácie sa profil načíta bez neho.
+let hasPublicScan = true
+
 export async function fetchProfile(companyId: string): Promise<CompanyProfile> {
   const { data, error } = await getSupabase()
     .from('company_profile')
-    .select('legal_name, ico, dic, ic_dph, address, ceo_name, phone, email, web, warehouse_address')
+    .select('legal_name, ico, dic, ic_dph, address, ceo_name, phone, email, web, warehouse_address' + (hasPublicScan ? ', public_scan' : ''))
     .eq('company_id', companyId)
     .maybeSingle()
+  if (hasPublicScan && error && /public_scan/.test(error.message ?? '')) {
+    hasPublicScan = false
+    return fetchProfile(companyId)
+  }
   if (error) throw error
-  const row = data as Record<string, string> | null
+  const row = data as unknown as (Record<string, string> & { public_scan?: boolean }) | null
   if (!row) return EMPTY_PROFILE
   return {
     legalName: row.legal_name,
@@ -39,6 +48,7 @@ export async function fetchProfile(companyId: string): Promise<CompanyProfile> {
     email: row.email,
     web: row.web,
     warehouseAddress: row.warehouse_address,
+    publicScan: Boolean(row.public_scan),
   }
 }
 
@@ -59,6 +69,7 @@ export async function saveProfile(companyId: string, profile: CompanyProfile) {
     email: profile.email.trim(),
     web: profile.web.trim(),
     warehouse_address: profile.warehouseAddress.trim(),
+    ...(hasPublicScan ? { public_scan: Boolean(profile.publicScan) } : {}),
     updated_at: new Date().toISOString(),
   }
   const db = getSupabase()
