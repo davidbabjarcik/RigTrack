@@ -31,6 +31,14 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
     <td><img src="docs/screenshots/stats.png" alt="Moje štatistiky" /><br /><sub><b>Moje štatistiky</b> – akcie, hodiny, odmeny, jazdy</sub></td>
     <td><img src="docs/screenshots/stage.png" alt="Pódium Nivtec" /><br /><sub><b>Pódium Nivtec</b> – dosky, nohy a poradie stavania</sub></td>
   </tr>
+  <tr>
+    <td><img src="docs/screenshots/group.png" alt="Prehľad skupiny techniky" /><br /><sub><b>Technika po kusoch</b> – kde je ktorý kus, úprava, DMX a hodiny všetkým naraz</sub></td>
+    <td><img src="docs/screenshots/kanban.png" alt="Kanban úloh" /><br /><sub><b>Úlohy</b> – kanban podľa priority, stavu, kategórie či človeka</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/dmx.png" alt="DMX patch list" /><br /><sub><b>DMX patch list</b> – zo svetiel eventu, kontrola adries, tlač</sub></td>
+    <td><img src="docs/screenshots/tape.png" alt="Štítky na pásku" /><br /><sub><b>Štítky na pásku</b> – Brother P-touch: QR, DMX adresa, módy, odber</sub></td>
+  </tr>
 </table>
 
 <sub>Snímky sú z ukážkových (vymyslených) údajov.</sub>
@@ -39,9 +47,9 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **4.9.1** | Aktualizácia databázy jedným súborom (update-all.sql), offline skenovanie kusov, nové snímky |
 | **4.9** | Technika vo vlastnom obale, taška pri cases |
 | **4.8** | IP a MAC chránené databázou, štítky každý vo svojej dĺžke, QR kusov v pack liste, právna forma v zozname |
-| **4.7** | Vlastný obsah štítkov na pásku (čo na nich bude), biela / čierna páska |
 | **3.19** | @todo v políčkach, kanban a farebné priority úloh, vlastný stĺpec na Prehľade, racky v U, platiteľ DPH |
 | **3.16** | Pack list funguje aj bez signálu, záložka Vývojár v Nastaveniach |
 
@@ -216,6 +224,9 @@ Aplikácia beží na `http://localhost:5173`. Bez databázy sa zobrazí iba kost
    Doplň ich podľa čísla od najnižšej: `0020`–`0048` sú v `supabase/upgrade/`, `0049` a vyššie v
    `supabase/migrations/` (`0053` samostatne pred `0054`). Pri ďalších aktualizáciách spúšťaj len nové –
    ktoré to sú, je v [CHANGELOG.md](CHANGELOG.md).
+   **Najjednoduchšie:** `supabase/update-all.sql` obsahuje všetky migrácie od `0086` po najnovšiu a opravné
+   `0071` a `0072` v jednom súbore – vlož ho celý do SQL Editora a spusti (dá sa spustiť aj opakovane).
+   Vývojár ho po pridaní migrácie pregeneruje príkazom `npm run db:update`.
 3. V Authentication → URL Configuration nastav Site URL (`http://localhost:5173`, neskôr produkčnú doménu)
    a medzi Redirect URLs pridaj `<adresa>/auth/update-password`.
 4. Potvrdzovanie e-mailu (Authentication → Sign In / Providers → Email → Confirm email) nechaj **zapnuté** –

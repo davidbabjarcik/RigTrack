@@ -1,7 +1,7 @@
 {
   "name": "rigtrack",
   "private": true,
-  "version": "4.9.0",
+  "version": "4.9.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,8 @@
     "package": "npm run build && node deploy/package.mjs",
     "lint": "eslint .",
     "typecheck": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:update": "node scripts/build-db-update.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

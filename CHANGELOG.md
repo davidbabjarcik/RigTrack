@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.9.1 – 26. 10. 2026
+
+- **Aktualizácia databázy jedným súborom**: `supabase/update-all.sql` – všetky migrácie od 0086 po najnovšiu
+  a opravné 0071 a 0072; vložiť celý do Supabase → SQL Editor a spustiť (aj opakovane bez chýb).
+- **Oprava 0070** už pri opätovnom spustení nesprístupní heslá ani adresy Wi-Fi.
+- **Pack list**: naskenované jednotlivé kusy (QR kusu) sa ukladajú aj **bez signálu** a odošlú sa, keď sa chytí sieť.
+- **README**: nové snímky – technika po kusoch, kanban úloh, DMX patch list, štítky na pásku.
+
 ### 4.9 – 26. 10. 2026
 
 - **Technika vo vlastnom obale** (napr. reprobox v obale): vo formulári „Má vlastný obal (nie case)“ a aký obal.

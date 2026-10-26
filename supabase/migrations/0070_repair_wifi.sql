@@ -51,7 +51,18 @@ create policy wifi_networks_delete on public.wifi_networks for delete to authent
   using (public.can(company_id, 'equipment.edit'));
 
 revoke all on public.wifi_networks from anon, authenticated;
-grant select, insert, delete on public.wifi_networks to authenticated;
+-- Čítanie po stĺpcoch: heslo a adresy siete sa čítajú len cez wifi_passwords() / network_addresses() (0103, 0107),
+-- aby opätovné spustenie tejto opravy nesprístupnilo heslá a adresy všetkým.
+grant insert, delete on public.wifi_networks to authenticated;
+grant select (id, company_id, ssid, security, hidden, router_model, dhcp, equipment_id, place, note, created_at) on public.wifi_networks to authenticated;
+do $$
+begin
+  -- Druh siete (0103), ak už existuje.
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'wifi_networks' and column_name = 'scope') then
+    grant select (scope) on public.wifi_networks to authenticated;
+  end if;
+end;
+$$;
 grant update (ssid, password, security, hidden, subnet, router_ip, management_ip, router_model, dhcp, dhcp_start, dhcp_end, equipment_id, place, note) on public.wifi_networks to authenticated;
 
 drop trigger if exists wifi_networks_audit on public.wifi_networks;

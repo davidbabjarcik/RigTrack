@@ -27,6 +27,15 @@ function write(key: string, value: unknown) {
 
 export const readQueue = (eventId: string) => read<PendingTick[]>(queueKey(eventId), [])
 export const writeQueue = (eventId: string, queue: PendingTick[]) => write(queueKey(eventId), queue)
+/** Naskenované kusy (QR kusu #7) čakajúce na odoslanie – aj bez signálu. */
+export type PendingUnit = { equipmentId: string; unit: number; phase: PackPhase }
+const unitQueueKey = (eventId: string) => `rigtrack.pack.units.${eventId}`
+export const readUnitQueue = (eventId: string) => read<PendingUnit[]>(unitQueueKey(eventId), [])
+export const writeUnitQueue = (eventId: string, queue: PendingUnit[]) => write(unitQueueKey(eventId), queue)
+/** Pridá kus do fronty (ten istý kus v tej istej fáze len raz). */
+export const enqueueUnit = (queue: PendingUnit[], unit: PendingUnit) =>
+  queue.some((item) => item.equipmentId === unit.equipmentId && item.unit === unit.unit && item.phase === unit.phase) ? queue : [...queue, unit]
+
 export const readSnapshot = (eventId: string) => read<PackSnapshot | null>(snapshotKey(eventId), null)
 export const writeSnapshot = (eventId: string, snapshot: PackSnapshot) => write(snapshotKey(eventId), snapshot)
 

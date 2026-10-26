@@ -16,7 +16,7 @@ import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { addPackUnit, fetchPackChecks, packKeys, packUnitKeys, setPackCheck, usePackChecks, usePackUnits, type PackPhase } from './api'
 import { caseTitle } from '@/features/cases/model'
-import { enqueue, isNetworkError, mergeChecks, readQueue, readSnapshot, writeQueue, writeSnapshot, type PendingTick } from './offline'
+import { enqueue, enqueueUnit, isNetworkError, mergeChecks, readQueue, readSnapshot, readUnitQueue, writeQueue, writeSnapshot, writeUnitQueue, type PendingTick, type PendingUnit } from './offline'
 import { checkOf, packProgress, packRows, type PackRow } from './model'
 
 const PHASE_LABELS: Record<PackPhase, string> = { out: 'Nakladanie', back: 'Návrat' }
@@ -33,12 +33,19 @@ export function PackPage() {
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
   const checks = usePackChecks(companyId, id)
   const units = usePackUnits(companyId, id)
-  // Kusy naskenované v tejto fáze (aj tie, čo sa ešte len odosielajú).
-  const [scannedNow, setScannedNow] = useState<string[]>([])
+  // Naskenované kusy čakajúce na odoslanie (fronta v telefóne – funguje aj bez signálu).
+  const [unitQueue, setUnitQueueState] = useState<PendingUnit[]>(() => readUnitQueue(id))
+  const setUnitQueue = useCallback(
+    (next: PendingUnit[]) => {
+      writeUnitQueue(id, next)
+      setUnitQueueState(next)
+    },
+    [id],
+  )
   const unitsOf = (equipmentId: string, inPhase: PackPhase) =>
     new Set([
       ...(units.data ?? []).filter((item) => item.equipmentId === equipmentId && item.phase === inPhase).map((item) => item.unit),
-      ...scannedNow.filter((key) => key.startsWith(`${inPhase}:${equipmentId}:`)).map((key) => Number(key.split(':')[2])),
+      ...unitQueue.filter((item) => item.equipmentId === equipmentId && item.phase === inPhase).map((item) => item.unit),
     ])
   const [phase, setPhase] = useState<PackPhase>('out')
   const [scanning, setScanning] = useState(false)
@@ -56,9 +63,21 @@ export function PackPage() {
   const flush = useCallback(async () => {
     if (flushing.current || !navigator.onLine) return
     let pending = readQueue(id)
-    if (pending.length === 0) return
+    let pendingUnits = readUnitQueue(id)
+    if (pending.length === 0 && pendingUnits.length === 0) return
     flushing.current = true
     try {
+      for (const scanned of [...pendingUnits]) {
+        try {
+          await addPackUnit(companyId, id, scanned.equipmentId, scanned.unit, scanned.phase)
+        } catch (error) {
+          if (isNetworkError(error)) break
+          setFailed(true)
+        }
+        pendingUnits = pendingUnits.filter((item) => item !== scanned)
+        setUnitQueue(pendingUnits)
+      }
+      void queryClient.invalidateQueries({ queryKey: packUnitKeys.ofEvent(companyId, id) })
       const server = await fetchPackChecks(companyId, id)
       for (const tick of [...pending]) {
         const existing = server.find((check) => check.phase === tick.phase && (tick.caseId ? check.caseId === tick.caseId : check.equipmentId === tick.equipmentId))
@@ -77,7 +96,7 @@ export function PackPage() {
       flushing.current = false
       void queryClient.invalidateQueries({ queryKey: packKeys.ofEvent(companyId, id) })
     }
-  }, [companyId, id, queryClient, setQueue])
+  }, [companyId, id, queryClient, setQueue, setUnitQueue])
   useEffect(() => {
     // Pri otvorení odoslať, čo ostalo vo fronte; potom vždy, keď sa chytí signál.
     const timer = window.setTimeout(() => void flush(), 0)
@@ -159,8 +178,8 @@ export function PackPage() {
               const done = unitsOf(row.equipmentId, phase)
               if (done.has(target.unit)) return `✓ ${row.name} #${target.unit} už je naskenovaný (${done.size}/${row.quantity}).`
               done.add(target.unit)
-              setScannedNow((current) => [...current, `${phase}:${row.equipmentId}:${target.unit}`])
-              void addPackUnit(companyId, id, row.equipmentId, target.unit, phase).then(() => queryClient.invalidateQueries({ queryKey: packUnitKeys.ofEvent(companyId, id) }))
+              setUnitQueue(enqueueUnit(readUnitQueue(id), { equipmentId: row.equipmentId, unit: target.unit, phase }))
+              void flush()
               if (done.size >= row.quantity && !checkOf(row, all, phase)) {
                 tick(row, true)
                 return `✓ ${row.name} #${target.unit} – všetkých ${row.quantity} ks, odškrtnuté`

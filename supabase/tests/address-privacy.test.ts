@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { readFileSync } from 'node:fs'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { createTestDb } from './helpers'
 
@@ -27,5 +28,11 @@ describe('IP and MAC addresses', () => {
     expect(await t.as('viewer', 'select ssid from public.wifi_networks')).toEqual([{ ssid: 'FOH' }])
     expect((await t.as('viewer', 'select public.network_addresses($1) as a', [a]))[0].a).toEqual({ allowed: false, wifi: [] })
     expect((await t.as('boss', 'select public.network_addresses($1) as a', [a]))[0].a.wifi[0]).toMatchObject({ subnet: '192.168.1.0/24', routerIp: '192.168.1.1' })
+  })
+  it('stays hidden even when the old repair 0070 runs again', async () => {
+    await t.exec(readFileSync('supabase/migrations/0070_repair_wifi.sql', 'utf8'))
+    await expect(t.as('viewer', 'select password from public.wifi_networks')).rejects.toThrow()
+    await expect(t.as('viewer', 'select subnet from public.wifi_networks')).rejects.toThrow()
+    expect(await t.as('viewer', 'select ssid, scope from public.wifi_networks')).toEqual([{ ssid: 'FOH', scope: 'equipment' }])
   })
 })
