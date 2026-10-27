@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-4.12-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-4.13-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -47,6 +47,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **4.13** | Pozvánka len do dema, štítky s case, filter „Mimo cases“ aj pre zvyšné kusy, push sa skontroluje sám |
 | **4.12** | Art-Net / sACN node: protokoly a universe na každom porte, výstup na tlači DMX patch listu |
 | **4.11** | Vybrať z case spojí kusy späť, Spojiť časti mimo case, sivá technika bez označenia v case |
 | **4.10** | DIP prepínače pri svetlách – ktoré zapnúť pre adresu (DMX všetkým, tlač, štítok) |

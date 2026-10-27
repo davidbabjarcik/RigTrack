@@ -116,15 +116,20 @@ export function LightingFields() {
             </Button>
           </fieldset>
         )}
-        <Field label="Kópia čoho" placeholder="napr. Robe Spiider, Clay Paky Sharpy" maxLength={120} error={errors.cloneOf?.message} {...register('cloneOf')} />
-        <SelectField label="Sedí s fixtúrou v Capture?" error={errors.captureMatch?.message} {...register('captureMatch')}>
-          <option value="">— nezistené —</option>
-          {CAPTURE_MATCHES.map((match) => (
-            <option key={match} value={match}>
-              {CAPTURE_MATCH_LABELS[match]}
-            </option>
-          ))}
-        </SelectField>
+        {/* Háky, klemy a iné príslušenstvo nie sú fixtúry – Capture ani „kópia čoho“ pri nich netreba. */}
+        {!lightAccessory && (
+          <>
+            <Field label="Kópia čoho" placeholder="napr. Robe Spiider, Clay Paky Sharpy" maxLength={120} error={errors.cloneOf?.message} {...register('cloneOf')} />
+            <SelectField label="Sedí s fixtúrou v Capture?" error={errors.captureMatch?.message} {...register('captureMatch')}>
+              <option value="">— nezistené —</option>
+              {CAPTURE_MATCHES.map((match) => (
+                <option key={match} value={match}>
+                  {CAPTURE_MATCH_LABELS[match]}
+                </option>
+              ))}
+            </SelectField>
+          </>
+        )}
         {(lightSource === 'discharge' || lightSource === 'halogen') && !lightAccessory && (
           <>
             <Field label={lightSource === 'discharge' ? 'Výbojka naposledy menená' : 'Žiarovka naposledy menená'} type="date" error={errors.lampChangedOn?.message} {...register('lampChangedOn')} />
@@ -139,7 +144,7 @@ export function LightingFields() {
             />
           </>
         )}
-        {captureMatch && captureMatch !== 'yes' && (
+        {!lightAccessory && captureMatch && captureMatch !== 'yes' && (
           <Field
             label="Prečo nesedí / čo nesedí"
             className="sm:col-span-2"

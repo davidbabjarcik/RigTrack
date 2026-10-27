@@ -40,7 +40,12 @@ export function QrLabelsPage() {
   if (source.isError) return <ErrorBlock message="Štítky sa nepodarilo načítať." />
 
   const ids = new Set((params.get('ids') ?? '').split(',').filter(Boolean))
-  type LabelRecord = { id: string; key: string; name: string; number: string; kind: 'spot' | 'case' | 'equipment'; unit?: number }
+  type LabelRecord = { id: string; key: string; name: string; number: string; kind: 'spot' | 'case' | 'equipment'; unit?: number; place?: string }
+  // Pri technike v case aj v ktorom (napr. #3 a #4 v „Beam case #2“).
+  const placeOf = (caseId: string | null) => {
+    const found = caseId ? (cases.data ?? []).find((item) => item.id === caseId) : undefined
+    return found ? caseTitle(found) : undefined
+  }
   const records: LabelRecord[] = isSpots
     ? (plan.data?.spots ?? []).map((spot) => ({ id: spot.id, key: spot.id, name: spot.name, number: spot.levels > 1 ? `${spot.levels} poschodia` : '', kind: 'spot' as const }))
     : isCases
@@ -48,12 +53,12 @@ export function QrLabelsPage() {
       : // Technika po kusoch: každý kus (#1, #2…) má vlastný štítok s QR.
         (equipment.data ?? []).flatMap((item) =>
           item.trackUnits && item.quantity > 1
-            ? unitIdsOf(item).map((unit) => ({ id: item.id, key: `${item.id}-${unit}`, name: `${item.name} #${unit}`, number: item.unitInfo?.[unit]?.inv ?? '', kind: 'equipment' as const, unit }))
-            : [{ id: item.id, key: item.id, name: item.name, number: item.inventoryNumber, kind: 'equipment' as const }],
+            ? unitIdsOf(item).map((unit) => ({ id: item.id, key: `${item.id}-${unit}`, name: `${item.name} #${unit}`, number: item.unitInfo?.[unit]?.inv ?? '', kind: 'equipment' as const, unit, place: placeOf(item.caseId) }))
+            : [{ id: item.id, key: item.id, name: item.name, number: item.inventoryNumber, kind: 'equipment' as const, place: placeOf(item.caseId) }],
         )
   const items = records
     .filter((item) => ids.size === 0 || ids.has(item.id))
-    .map((item) => ({ id: item.key, name: item.name, number: item.number, url: qrUrl({ kind: item.kind, id: item.id, unit: item.unit }, window.location.origin) }))
+    .map((item) => ({ id: item.key, name: item.name, number: item.number, place: item.place, url: qrUrl({ kind: item.kind, id: item.id, unit: item.unit }, window.location.origin) }))
     .sort((a, b) => a.name.localeCompare(b.name, 'sk', { numeric: true }))
   const base = isSpots ? '/warehouse' : `/${isCases ? 'cases' : 'equipment'}`
   const back = ids.size === 1 && !isSpots ? `${base}/${[...ids][0]}` : base
@@ -106,6 +111,7 @@ export function QrLabelsPage() {
             <li key={item.id} className="flex break-inside-avoid flex-col items-center rounded-lg border border-neutral-400 p-2 text-center">
               <QrCode text={item.url} label={`QR kód: ${item.name}`} className="w-full max-w-44" />
               <p className="mt-1 line-clamp-2 text-sm font-semibold">{item.name}</p>
+              {item.place && <p className="text-xs font-medium">v {item.place}</p>}
               <p className="text-xs text-neutral-600">{[item.number, company.companyName].filter(Boolean).join(' · ')}</p>
               <button type="button" className="mt-1 inline-flex items-center gap-1 text-xs text-neutral-600 hover:text-black print:hidden" onClick={() => void downloadQr(item)}>
                 <Download className="size-3.5" aria-hidden />

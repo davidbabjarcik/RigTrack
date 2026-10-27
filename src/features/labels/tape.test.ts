@@ -15,6 +15,14 @@ const beam = {
 } as unknown as Equipment
 
 describe('tape labels', () => {
+  it('shows which case the piece is in', () => {
+    const labels = tapeLabels({ ...beam, caseId: 'c2' } as Equipment, ['qr'], { caseName: (id) => (id === 'c2' ? 'Beam case #2' : '') })
+    expect(labels.map((label) => [label.title, label.lines])).toEqual([
+      ['Beam #1', ['Beam case #2']],
+      ['Beam #2', ['Beam case #2']],
+    ])
+  })
+
   it('makes labels for each piece and skips empty ones', () => {
     const labels = tapeLabels(beam, ['qr', 'address', 'modes', 'power'])
     expect(labels.filter((label) => label.kind === 'qr').map((label) => label.title)).toEqual(['Beam #1', 'Beam #2'])

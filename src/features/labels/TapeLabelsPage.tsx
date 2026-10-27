@@ -12,6 +12,7 @@ import { caseTapeLabel, fieldOn, LABEL_KIND_LABELS, LABEL_KINDS, TAPE_FIELDS, TA
 import { useUserPrefs } from '@/features/settings/userPrefs'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { useCases } from '@/features/cases/useCases'
+import { caseTitle } from '@/features/cases/model'
 import { cn } from '@/lib/utils'
 
 const SETTINGS_KEY = 'rigtrack.tape'
@@ -46,7 +47,12 @@ export function TapeLabelsPage() {
   const black = prefs.tapeColor === 'black'
   const [editingFields, setEditingFields] = useState(false)
   const { categories } = useEquipmentLookups(companyId)
-  const options = { fields, company: company.companyName, category: (id: string | null) => categories.find((item) => item.id === id)?.name ?? '' }
+  const options = { fields, company: company.companyName, category: (id: string | null) => categories.find((item) => item.id === id)?.name ?? '',
+    caseName: (id: string) => {
+      const found = (cases.data ?? []).find((item) => item.id === id)
+      return found ? caseTitle(found) : ''
+    },
+  }
   const toggleField = (key: TapeField) => update({ tapeFields: { ...fields, [key]: !fieldOn(fields, key) } })
   const [images, setImages] = useState<{ key: string; caption: string; name: string; url: string; widthMm: number; canvas: HTMLCanvasElement }[]>([])
   const items = (equipment.data ?? []).filter((item) => ids.includes(item.id))

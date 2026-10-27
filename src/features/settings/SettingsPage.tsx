@@ -41,6 +41,7 @@ import { PushSettings } from '@/features/push/PushSettings'
 import { CheckUpdateButton } from '@/components/feedback/CheckUpdateButton'
 import { CompanyIssuersSettings } from '@/features/offers/CompanyIssuersSettings'
 import { PushSetupGuide } from '@/features/push/PushSetupGuide'
+import { DemoInvitesAdmin } from '@/features/companies/DemoInvitesAdmin'
 import { ResponsibilitiesSettings } from '@/features/responsibilities/ResponsibilitiesSettings'
 import { DutySettings } from '@/features/duties/DutySettings'
 import { EmailPrefs } from '@/features/news/EmailPrefs'
@@ -469,6 +470,9 @@ export function SettingsPage() {
           </Section>
           <Section title="Push upozornenia – nastavenie (raz pre appku)">
             <PushSetupGuide email={user.email ?? ''} />
+          </Section>
+          <Section title="Pozvať len do dema">
+            <DemoInvitesAdmin />
           </Section>
           <Section title="Žiadosti o novú firmu">
             <CompanyRequestsAdmin />

@@ -1235,6 +1235,8 @@ function normalize(value: string) {
 
 export function filterEquipment(items: Equipment[], filter: EquipmentFilter, today = new Date().toISOString().slice(0, 10)) {
   const words = normalize(filter.search).split(/\s+/).filter(Boolean)
+  // Časť kusov v case a zvyšok mimo: zvyšok sa pri „Mimo cases“ ukáže, aj keď zdedil „Nepatrí do case“.
+  const partlyPacked = filter.caseId === NO_CASE ? new Set(items.filter((item) => item.caseId !== null).map(splitGroupKey)) : new Set<string>()
   const found = items.filter((item) => {
     if (filter.status && item.status !== filter.status) return false
     if (filter.kind && item.kind !== filter.kind) return false
@@ -1244,14 +1246,14 @@ export function filterEquipment(items: Equipment[], filter: EquipmentFilter, tod
     if (filter.attention === 'service' && !['overdue', 'soon'].includes(serviceState(item, today).state)) return false
     if (filter.attention === 'restock' && !needsRestock(item)) return false
     if (filter.attention === 'hours' && !['overdue', 'unknown'].includes(hoursState(item, today).state)) return false
-    if (filter.capture === 'unset' ? item.kind !== 'light' || Boolean(item.captureMatch) : filter.capture && item.captureMatch !== filter.capture) return false
+    if (filter.capture === 'unset' ? item.kind !== 'light' || Boolean(item.attributes.lightType?.startsWith('acc_')) || Boolean(item.captureMatch) : filter.capture && item.captureMatch !== filter.capture) return false
     if (filter.purchasedYear && !purchaseDates(item).some((date) => date.startsWith(filter.purchasedYear!))) return false
     if (filter.withNetwork && !item.ipAddress && !item.macAddress && !item.attributes.ipDhcp) return false
     if (filter.withLinks && !item.links?.length) return false
     if (filter.categoryId && item.categoryId !== filter.categoryId) return false
     if (filter.locationId && item.locationId !== filter.locationId) return false
     // „Mimo cases“ = čo by v case byť malo (technika s „Nepatrí do case“ sa neukáže).
-    if (filter.caseId === NO_CASE ? item.caseId !== null || Boolean(item.attributes.noCase) || Boolean(item.attributes.inCover) : filter.caseId && item.caseId !== filter.caseId) return false
+    if (filter.caseId === NO_CASE ? item.caseId !== null || (!partlyPacked.has(splitGroupKey(item)) && (Boolean(item.attributes.noCase) || Boolean(item.attributes.inCover))) : filter.caseId && item.caseId !== filter.caseId) return false
     if (words.length === 0) return true
     const haystack = normalize(
       [
@@ -1399,6 +1401,12 @@ export function cableMakers(items: Pick<Equipment, 'kind' | 'attributes'>[], lim
     .slice(0, limit)
 }
 
+/** Kľúč rovnakej techniky rozdelenej do cases; káble: jeden typ (napr. XLR) vo všetkých dĺžkach spolu. */
+export function splitGroupKey(item: Pick<Equipment, 'name' | 'manufacturer' | 'model' | 'kind' | 'categoryId' | 'ownerStaffId'>) {
+  const name = item.kind === 'cable' ? `cable:${cableBaseName(item.name)}` : item.name
+  return [name.trim().toLowerCase(), item.manufacturer, item.model, item.kind, item.categoryId, item.ownerStaffId ?? ''].join('|')
+}
+
 /**
  * Rovnaká technika rozdelená do cases (napr. Beam 7R: 14 ks v sklade a 2 ks v case) pod jedným riadkom.
  * Rovnaké = názov, výrobca, model, druh, kategória a vlastník. Poradie podľa prvého výskytu; hlavná položka
@@ -1411,9 +1419,7 @@ export function groupSplitEquipment<T extends Pick<Equipment, 'name' | 'manufact
   const firstUnit = (item: T) => (item.unitIds && item.unitIds.length > 0 ? Math.min(...item.unitIds) : Infinity)
   const groups = new Map<string, T[]>()
   for (const item of items) {
-    // Káble: jeden typ (napr. XLR) vo všetkých dĺžkach pod jedným riadkom.
-    const name = item.kind === 'cable' ? `cable:${cableBaseName(item.name)}` : item.name
-    const key = [name.trim().toLowerCase(), item.manufacturer, item.model, item.kind, item.categoryId, item.ownerStaffId ?? ''].join('|')
+    const key = splitGroupKey(item)
     groups.set(key, [...(groups.get(key) ?? []), item])
   }
   return [...groups.entries()].map(([key, members]) => ({

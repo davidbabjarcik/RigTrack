@@ -30,6 +30,7 @@ export const TAPE_FIELDS = {
     'qr.code': 'QR kód',
     'qr.name': 'Názov',
     'qr.unit': 'Číslo kusu (#3)',
+    'qr.case': 'V ktorom case je (napr. Beam case #2)',
     'qr.category': 'Kategória',
     'qr.company': 'Názov firmy',
   },
@@ -76,7 +77,7 @@ const num = (value: number) => String(value).replace('.', ',')
 const join = (parts: (string | false | undefined | null | 0)[]) => parts.filter(Boolean).join(' · ')
 
 export type TapeLabel = { key: string; kind: LabelKind; title: string; lines: string[]; /** Komu štítok patrí (v náhľade, aj keď je na štítku len QR). */ caption?: string; qr?: { kind: 'equipment' | 'case'; id: string; unit?: number } }
-type Options = { fields?: Partial<Record<string, boolean>>; company?: string; category?: (categoryId: string | null) => string }
+type Options = { fields?: Partial<Record<string, boolean>>; company?: string; category?: (categoryId: string | null) => string; /** Názov case s číslom podľa id. */ caseName?: (caseId: string) => string }
 
 /** Štítok case / racku podľa zapnutých polí: QR, názov s číslom, kategória, rack v U, firma. */
 export function caseTapeLabel(item: Case, options: Options = {}): TapeLabel {
@@ -116,6 +117,7 @@ export function tapeLabels(item: Equipment, kinds: LabelKind[], options: Options
       if (kind === 'qr') {
         const name = join([on('qr.name') && item.name, on('qr.unit') && unit !== null && `#${unit}`]).replace(' · #', ' #')
         push({ key, kind, ...(on('qr.code') ? { qr: { kind: 'equipment', id: item.id, ...(unit !== null ? { unit } : {}) } } : {}) }, name, [
+          on('qr.case') && item.caseId ? (options.caseName?.(item.caseId) ?? '') : '',
           join([on('qr.category') && options.category?.(item.categoryId), on('qr.company') && options.company]),
         ])
       }

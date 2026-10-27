@@ -1,5 +1,5 @@
 import { Check, Copy, ExternalLink, KeyRound, RefreshCw, X } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -95,7 +95,34 @@ export function PushSetupGuide({ email }: { email: string }) {
     }
   }
 
+  // Stav sa skontroluje sám pri otvorení; keď je všetko nastavené, kroky sa skryjú.
+  const [redo, setRedo] = useState(false)
+  useEffect(() => {
+    if (!ref) return
+    const timer = window.setTimeout(() => void check(), 0)
+    return () => window.clearTimeout(timer)
+  }, [ref])
+  const ready = Boolean(status && status.functionOk && status.hasPgNet && status.hasUrl && status.hasSecret)
+
   if (!ref) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Sprievodca funguje len s projektom na supabase.co.</p>
+
+  if (!status && checking) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Kontrolujem nastavenie push upozornení…</p>
+  if (ready && !redo)
+    return (
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-surface p-4">
+        <Check className="size-5 text-emerald-600 dark:text-emerald-400" aria-hidden />
+        <p className="flex-1 text-sm">
+          <span className="font-medium">Push upozornenia sú nastavené.</span> <span className="text-muted-foreground">Funkcia send-push beží a databáza je s ňou prepojená.</span>
+        </p>
+        <Button size="sm" variant="outline" disabled={checking} onClick={() => void check()}>
+          <RefreshCw className={cn('size-4', checking && 'animate-spin')} aria-hidden />
+          Skontrolovať znova
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setRedo(true)}>
+          Nastaviť znova (nové kľúče)
+        </Button>
+      </div>
+    )
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border bg-surface p-4">

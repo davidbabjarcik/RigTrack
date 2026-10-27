@@ -102,6 +102,15 @@ describe('case filter', () => {
     expect(ids({ caseId: NO_CASE })).toEqual(['1', '3'])
   })
 
+  it('shows the rest outside cases even when it inherited "not in a case"', () => {
+    const split = [
+      { ...base, id: 'in', name: 'Hlava', caseId: 'case-1', quantity: 4, attributes: { noCase: true } },
+      { ...base, id: 'out', name: 'Hlava', quantity: 4, attributes: { noCase: true } },
+      { ...base, id: 'stand', name: 'Stojan', attributes: { noCase: true } },
+    ]
+    expect(filterEquipment(split, { ...none, caseId: NO_CASE }).map((i) => i.id)).toEqual(['out'])
+  })
+
   it('does not count retired equipment as unpacked', () => {
     const withRetired = [...items, { ...base, id: '4', status: 'retired' as const }]
     expect(unpackedEquipment(withRetired).map((i) => i.id)).toEqual(['1', '3'])

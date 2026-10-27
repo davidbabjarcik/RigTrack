@@ -353,7 +353,8 @@ function extrasFilled(values: EquipmentFormValues) {
 
 /** Dátum nákupu, odkazy a Capture z formulára; Capture a kópia len pri svetlách. */
 export function extraFields(values: EquipmentFormValues) {
-  const lighting = isLighting(values.kind, values.category)
+  // Príslušenstvo (háky, klemy…) nie je fixtúra – bez Capture a „kópia čoho“.
+  const lighting = isLighting(values.kind, values.category) && !values.lightType?.startsWith('acc_')
   const units = values.trackUnits ? new Set(values.unitIds ? parseUnitIds(values.unitIds) : unitRange(values.quantity)) : new Set<number>()
   return {
     purchased_on: values.purchasedOn || null,

@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.13 – 27. 10. 2026
+
+- **Pozvať len do dema** (Nastavenia → Vývojár): pozvaný e-mail sa smie zaregistrovať, ale nevidí žiadnu firmu –
+  po prihlásení si otvorí vlastnú demo firmu.
+- **Push upozornenia – nastavenie** sa skontroluje samo; keď je všetko nastavené, kroky s kľúčmi sa skryjú.
+- **Štítky techniky v case**: na štítku je aj case, v ktorom kus je (napr. #3 a #4 → „Beam case #2“) – na páske
+  aj na QR štítkoch. Na páske sa dá vypnúť v „Upraviť obsah štítkov“.
+- **Filter „Mimo cases“** ukáže aj zvyšné kusy techniky, ktorej časť je v case (napr. 4 z 8 mimo case).
+- **Háky, klemy a iné príslušenstvo svetiel** už nemajú „Sedí s Capture“ ani „Kópia čoho“.
+- Nová migrácia: `0111` (opravná `0072` je aktualizovaná; všetko je aj v `supabase/update-all.sql`).
+
 ### 4.12.2 – 26. 10. 2026
 
 - **Štítky na pásku – nový vzhľad** v štýle appky (aj tmavý režim): voľby v jednej karte, „Ako tlačiť“ zbalené,

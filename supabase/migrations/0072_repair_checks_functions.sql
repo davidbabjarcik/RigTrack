@@ -4563,7 +4563,10 @@ AS $function$
 declare
   _email text := lower(trim(coalesce(event -> 'user' ->> 'email', '')));
 begin
-  if _email <> '' and exists (select 1 from public.company_invitations i where i.email = _email) then
+  if _email <> '' and (
+    exists (select 1 from public.company_invitations i where i.email = _email)
+    or exists (select 1 from public.demo_invitations d where d.email = _email)
+  ) then
     return '{}'::jsonb;
   end if;
   return jsonb_build_object('error', jsonb_build_object('http_code', 403, 'message', 'Registrácia je len na pozvánku.'));
