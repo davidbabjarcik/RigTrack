@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Building2, CalendarDays, ChartColumn, Check, ChevronRight, Pin, Smartphone, Speaker, UserRound, UserRoundPen, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, Building2, CalendarDays, ChartColumn, Check, ChevronRight, Pin, Smartphone, Speaker, UserRound, UserRoundPen, Wrench, type LucideIcon } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -11,6 +11,8 @@ import { useCompany } from './company-context'
 import { CompanyLogo } from './CompanyLogo'
 import { demoKeys, fetchMyDemo } from './demo'
 import { DemoSettings } from './DemoSettings'
+import { DeveloperPanel } from './DeveloperPanel'
+import { bugKeys, fetchIsDeveloper } from '@/features/bugs/api'
 import { NewCompanyButton } from './NewCompanyButton'
 import { useCompanyPins } from './pins'
 import { profileComplete, usePersonalProfile } from '@/features/profile/api'
@@ -21,13 +23,14 @@ import { MyEquipmentEverywhere } from '@/features/profile/MyEquipmentEverywhere'
 import { ProfileForm } from '@/features/profile/ProfileForm'
 import { ProfilePhoto } from '@/features/profile/ProfilePhoto'
 
-const VIEWS: { id: 'companies' | 'profile' | 'calendar' | 'equipment' | 'devices' | 'stats'; label: string; hint: string; icon: LucideIcon }[] = [
+const VIEWS: { id: 'companies' | 'profile' | 'calendar' | 'equipment' | 'devices' | 'stats' | 'developer'; label: string; hint: string; icon: LucideIcon }[] = [
   { id: 'companies', label: 'Firmy', hint: '', icon: Building2 },
   { id: 'profile', label: 'Môj profil', hint: 'Meno, fotka, kontakty', icon: UserRound },
   { id: 'calendar', label: 'Môj kalendár', hint: 'Akcie zo všetkých firiem', icon: CalendarDays },
   { id: 'equipment', label: 'Moja technika', hint: 'Vo všetkých firmách', icon: Speaker },
   { id: 'devices', label: 'Moje zariadenia', hint: 'Mobil, notebook, MAC', icon: Smartphone },
   { id: 'stats', label: 'Moje štatistiky', hint: 'Akcie, hodiny, odmeny', icon: ChartColumn },
+  { id: 'developer', label: 'Vývojár', hint: 'Demo, žiadosti, databáza, push', icon: Wrench },
 ]
 type View = (typeof VIEWS)[number]['id']
 
@@ -67,7 +70,9 @@ export function CompanySelectPage() {
   const incomplete = profile.isSuccess && !profileComplete(profile.data)
   // Zvolená časť je v adrese (?view=profile), aby na ňu viedli odkazy z upozornení.
   const [params, setParams] = useSearchParams()
-  const shown = VIEWS.filter((item) => memberships.length > 0 || item.id === 'companies' || item.id === 'profile')
+  // Vývojár: len pre vývojára appky, aj keď nie je v žiadnej firme.
+  const isDeveloper = useQuery({ queryKey: bugKeys.developer, queryFn: fetchIsDeveloper, retry: false, staleTime: 10 * 60_000 }).data === true
+  const shown = VIEWS.filter((item) => (item.id === 'developer' ? isDeveloper : memberships.length > 0 || item.id === 'companies' || item.id === 'profile'))
   const view: View = shown.find((item) => item.id === params.get('view'))?.id ?? 'companies'
   const chooseView = (next: View) => setParams(next === 'companies' ? {} : { view: next }, { replace: true })
   const demo = useQuery({ queryKey: demoKeys.mine(user.id), queryFn: fetchMyDemo })
@@ -144,6 +149,17 @@ export function CompanySelectPage() {
           </button>
           <h1 id="stats-heading" className="mb-3 text-2xl font-semibold">Moje štatistiky</h1>
           <MyStatsCard userId={user.id} memberships={memberships} />
+        </section>
+      )}
+
+      {view === 'developer' && (
+        <section aria-labelledby="developer-heading">
+          <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
+            <ArrowLeft className="size-4" aria-hidden />
+            Späť na firmy
+          </button>
+          <h1 id="developer-heading" className="mb-3 text-2xl font-semibold">Vývojár</h1>
+          <DeveloperPanel email={user.email ?? ''} />
         </section>
       )}
 

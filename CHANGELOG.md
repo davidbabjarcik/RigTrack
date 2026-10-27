@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.14 – 27. 10. 2026
+
+- **Vývojár je pri výbere firmy** (dlaždica „Vývojár“ pod firmami) – už nie v Nastaveniach firmy, takže je dostupný
+  aj bez otvorenej firmy.
+- **Pozvánky do dema so stavom**: pri každom e-maile vidno, či sa už zaregistroval, kedy sa naposledy prihlásil a či
+  si založil demo firmu.
+- Nová migrácia: `0112` (je aj v `supabase/update-all.sql`).
+
 ### 4.13.1 – 27. 10. 2026
 
 - **Blesk pri skenovaní QR kódov**: tlačidlo „Blesk“ hore vedľa „Zavrieť“ zapne baterku telefónu – v tme sa štítky

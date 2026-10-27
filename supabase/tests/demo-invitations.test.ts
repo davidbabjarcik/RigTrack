@@ -20,6 +20,7 @@ describe('demo-only invitations', () => {
     expect(await check('Skusobny@Example.com')).toEqual({})
     expect(await t.as('boss', 'select email from public.demo_invitations')).toEqual([])
     expect(await t.as('dev', 'select email from public.demo_invitations')).toEqual([{ email: 'skusobny@example.com' }])
+    expect(await t.as('dev', 'select registered, demo_created_at from public.demo_invitation_status()')).toEqual([{ registered: false, demo_created_at: null }])
   })
 
   it('the invited person has no company but can open a demo', async () => {
@@ -27,5 +28,8 @@ describe('demo-only invitations', () => {
     expect(await t.as('guest', 'select company_id from public.company_members')).toEqual([])
     const demo = (await t.as('guest', 'select public.create_demo_company() as id'))[0].id
     expect(await t.as('guest', 'select company_id from public.company_members')).toEqual([{ company_id: demo }])
+    const [row] = await t.as('dev', 'select email, registered, demo_created_at is not null as demo from public.demo_invitation_status()')
+    expect(row).toEqual({ email: 'skusobny@example.com', registered: true, demo: true })
+    expect(await t.as('boss', 'select * from public.demo_invitation_status()')).toEqual([])
   })
 })

@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { CheckLevelsSettings } from '@/features/checks/CheckLevelsSettings'
-import { bugKeys, fetchIsDeveloper } from '@/features/bugs/api'
 import { LinksSettings } from '@/features/links/LinksSettings'
-import { MigrationStatus } from '@/features/companies/MigrationStatus'
 import { Trash2 } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -31,7 +29,6 @@ import { RulesSettings } from '@/features/events/RulesSettings'
 import { PackagesSettings } from '@/features/packages/PackagesSettings'
 import { useCompany, type Membership } from '@/features/companies/company-context'
 import { BrandingSettings } from '@/features/companies/BrandingSettings'
-import { CompanyRequestsAdmin } from '@/features/companies/CompanyRequestsAdmin'
 import { CompanyProfileSettings } from '@/features/companies/CompanyProfileSettings'
 import { DeleteCompanySettings } from '@/features/companies/DeleteCompanySettings'
 import { DemoSettings } from '@/features/companies/DemoSettings'
@@ -40,8 +37,6 @@ import { AttendanceSettings } from '@/features/attendance/MyAttendance'
 import { PushSettings } from '@/features/push/PushSettings'
 import { CheckUpdateButton } from '@/components/feedback/CheckUpdateButton'
 import { CompanyIssuersSettings } from '@/features/offers/CompanyIssuersSettings'
-import { PushSetupGuide } from '@/features/push/PushSetupGuide'
-import { DemoInvitesAdmin } from '@/features/companies/DemoInvitesAdmin'
 import { ResponsibilitiesSettings } from '@/features/responsibilities/ResponsibilitiesSettings'
 import { DutySettings } from '@/features/duties/DutySettings'
 import { EmailPrefs } from '@/features/news/EmailPrefs'
@@ -294,7 +289,6 @@ export function SettingsPage() {
   const company = active!
 
   const isAdmin = isAdminRole(company.role)
-  const isDeveloper = useQuery({ queryKey: bugKeys.developer, queryFn: fetchIsDeveloper, retry: false, staleTime: 10 * 60_000 }).data === true
   const tabs = [
     { id: 'company', label: 'Firma', shown: true },
     { id: 'members', label: 'Členovia', shown: true },
@@ -304,7 +298,6 @@ export function SettingsPage() {
     { id: 'packages', label: 'Balíky', shown: can(company, 'lookups.manage') },
     { id: 'reminders', label: 'Pripomienky', shown: can(company, 'lookups.manage') },
     { id: 'account', label: 'Účet', shown: true },
-    { id: 'developer', label: 'Vývojár', shown: isDeveloper },
   ].filter((tab) => tab.shown)
   // Záložka je v adrese, aby sa na ňu dalo odkázať a aby ju prežilo obnovenie stránky.
   const [params, setParams] = useSearchParams()
@@ -461,23 +454,6 @@ export function SettingsPage() {
         <Section title="Pódium Nivtec">
           <StageSettings companyId={company.companyId} />
         </Section>
-      )}
-
-      {tab === 'developer' && isDeveloper && (
-        <>
-          <Section title="Stav databázy">
-            <MigrationStatus />
-          </Section>
-          <Section title="Push upozornenia – nastavenie (raz pre appku)">
-            <PushSetupGuide email={user.email ?? ''} />
-          </Section>
-          <Section title="Pozvať len do dema">
-            <DemoInvitesAdmin />
-          </Section>
-          <Section title="Žiadosti o novú firmu">
-            <CompanyRequestsAdmin />
-          </Section>
-        </>
       )}
 
       {tab === 'account' && (

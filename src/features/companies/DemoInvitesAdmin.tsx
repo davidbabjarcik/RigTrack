@@ -5,14 +5,27 @@ import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/format'
 import { getSupabase } from '@/lib/supabase/client'
 import { errorDetail } from '@/lib/supabase/errors'
+import { cn } from '@/lib/utils'
 
-type DemoInvite = { email: string; note: string; created_at: string }
+type DemoInvite = { email: string; note: string; invited_at: string; registered?: boolean; last_sign_in_at?: string | null; demo_created_at?: string | null }
 const key = ['demo-invitations'] as const
 
+/** Pozvánky so stavom (zaregistroval sa, založil demo); bez migrácie 0112 len samotné pozvánky. */
 async function fetchDemoInvites(): Promise<DemoInvite[]> {
-  const { data, error } = await getSupabase().from('demo_invitations').select('email, note, created_at').order('created_at', { ascending: false })
+  const db = getSupabase()
+  const status = await db.rpc('demo_invitation_status')
+  if (!status.error) return status.data as DemoInvite[]
+  const { data, error } = await db.from('demo_invitations').select('email, note, invited_at:created_at').order('created_at', { ascending: false })
   if (error) throw error
   return data as DemoInvite[]
+}
+
+/** „Založil demo 27. 10.“, „Zaregistrovaný, demo ešte nie“ alebo „Ešte sa nezaregistroval“. */
+function inviteState(invite: DemoInvite): { text: string; tone: 'ok' | 'wait' | 'none' } | null {
+  if (invite.registered === undefined) return null
+  if (invite.demo_created_at) return { text: `Založil demo ${formatDate(invite.demo_created_at.slice(0, 10))}`, tone: 'ok' }
+  if (invite.registered) return { text: 'Zaregistrovaný, demo ešte nezaložil', tone: 'wait' }
+  return { text: 'Ešte sa nezaregistroval', tone: 'none' }
 }
 
 /** Vývojár: pozvať človeka len do dema – smie sa zaregistrovať, ale nedostane prístup do žiadnej firmy. */
@@ -71,17 +84,25 @@ export function DemoInvitesAdmin() {
       {add.isError && <p className="text-sm text-destructive">Nepodarilo sa. {errorDetail(add.error)}</p>}
       {(invites.data ?? []).length > 0 && (
         <ul className="divide-y rounded-xl border bg-surface">
-          {invites.data!.map((invite) => (
-            <li key={invite.email} className="flex items-center gap-3 p-3 text-sm">
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">{invite.email}</span>
-                <span className="block text-muted-foreground">{[invite.note, formatDate(invite.created_at.slice(0, 10))].filter(Boolean).join(' · ')}</span>
-              </span>
-              <Button size="sm" variant="ghost" aria-label={`Zrušiť pozvánku ${invite.email}`} disabled={remove.isPending} onClick={() => remove.mutate(invite.email)}>
-                <Trash2 className="size-4" aria-hidden />
-              </Button>
-            </li>
-          ))}
+          {invites.data!.map((invite) => {
+            const state = inviteState(invite)
+            return (
+              <li key={invite.email} className="flex items-center gap-3 p-3 text-sm">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{invite.email}</span>
+                  <span className="block text-muted-foreground">
+                    {[invite.note, `pozvaný ${formatDate(invite.invited_at.slice(0, 10))}`, invite.last_sign_in_at && `naposledy prihlásený ${formatDate(invite.last_sign_in_at.slice(0, 10))}`].filter(Boolean).join(' · ')}
+                  </span>
+                  {state && (
+                    <span className={cn('mt-0.5 block font-medium', state.tone === 'ok' ? 'text-emerald-600 dark:text-emerald-400' : state.tone === 'wait' ? 'text-accent' : 'text-muted-foreground')}>{state.text}</span>
+                  )}
+                </span>
+                <Button size="sm" variant="ghost" aria-label={`Zrušiť pozvánku ${invite.email}`} disabled={remove.isPending} onClick={() => remove.mutate(invite.email)}>
+                  <Trash2 className="size-4" aria-hidden />
+                </Button>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>
