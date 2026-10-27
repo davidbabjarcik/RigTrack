@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { Flashlight, FlashlightOff, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { QrScanButton } from '@/features/networks/QrScanButton'
@@ -40,6 +40,19 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
   const [message, setMessage] = useState('')
   const [failed, setFailed] = useState(false)
   const handler = useRef(onResult)
+  // Blesk (baterka) zadnej kamery – len kde to prehliadač dovolí (hlavne Android Chrome).
+  const track = useRef<MediaStreamTrack | null>(null)
+  const [torchAvailable, setTorchAvailable] = useState(false)
+  const [torch, setTorch] = useState(false)
+  const toggleTorch = async () => {
+    const next = !torch
+    try {
+      await track.current?.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] })
+      setTorch(next)
+    } catch {
+      setTorchAvailable(false)
+    }
+  }
   useEffect(() => {
     handler.current = onResult
   }, [onResult])
@@ -54,6 +67,9 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
         if (stopped || !video.current) return
         video.current.srcObject = stream
+        track.current = stream.getVideoTracks()[0] ?? null
+        const capabilities = (track.current?.getCapabilities?.() ?? {}) as MediaTrackCapabilities & { torch?: boolean }
+        if (capabilities.torch) setTorchAvailable(true)
         await video.current.play()
         const read = await createReader()
         const tick = async () => {
@@ -81,7 +97,7 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
     return () => {
       stopped = true
       window.clearTimeout(timer)
-      stream?.getTracks().forEach((track) => track.stop())
+      stream?.getTracks().forEach((item) => item.stop())
     }
   }, [])
 
@@ -89,10 +105,18 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex flex-col bg-black text-white" role="dialog" aria-modal="true" aria-label={title}>
       <div className="flex items-center justify-between gap-3 p-3">
         <p className="font-medium">{title}</p>
-        <Button variant="outline" size="sm" className="bg-black text-white" onClick={onClose}>
-          <X className="size-4" aria-hidden />
-          Zavrieť
-        </Button>
+        <div className="flex gap-2">
+          {torchAvailable && !failed && (
+            <Button variant="outline" size="sm" aria-pressed={torch} className={torch ? 'bg-white text-black hover:bg-white/90' : 'bg-black text-white'} onClick={() => void toggleTorch()}>
+              {torch ? <FlashlightOff className="size-4" aria-hidden /> : <Flashlight className="size-4" aria-hidden />}
+              {torch ? 'Vypnúť blesk' : 'Blesk'}
+            </Button>
+          )}
+          <Button variant="outline" size="sm" className="bg-black text-white" onClick={onClose}>
+            <X className="size-4" aria-hidden />
+            Zavrieť
+          </Button>
+        </div>
       </div>
       {failed ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">

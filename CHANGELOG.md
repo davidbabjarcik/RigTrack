@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.13.1 – 27. 10. 2026
+
+- **Blesk pri skenovaní QR kódov**: tlačidlo „Blesk“ hore vedľa „Zavrieť“ zapne baterku telefónu – v tme sa štítky
+  čítajú ľahšie. Ukáže sa tam, kde to telefón a prehliadač dovolia (Android Chrome; na iPhone zatiaľ väčšinou nie).
+
 ### 4.13 – 27. 10. 2026
 
 - **Pozvať len do dema** (Nastavenia → Vývojár): pozvaný e-mail sa smie zaregistrovať, ale nevidí žiadnu firmu –
