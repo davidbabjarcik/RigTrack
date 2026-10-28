@@ -105,10 +105,10 @@ export function EquipmentGroupPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {!cables && can(company, 'equipment.edit') && (
+          {can(company, 'equipment.edit') && (
             <LinkButton to={`/equipment/${main.id}/edit?group=${allIds}`} variant="outline" size="sm">
               <Pencil className="size-4" aria-hidden />
-              Upraviť všetky naraz
+              {cables ? 'Upraviť všetky dĺžky naraz' : 'Upraviť všetky naraz'}
             </LinkButton>
           )}
           <LinkButton to={`/qr/equipment?ids=${allIds}`} variant="outline" size="sm">

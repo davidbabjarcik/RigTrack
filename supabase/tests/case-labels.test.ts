@@ -136,7 +136,7 @@ describe('stock and cable colours', () => {
       t.as(
         'skladnik',
         `insert into public.cable_colors (company_id, length_m, color) values ($1, 1, '#0000ff')
-         on conflict (company_id, length_m) do update set company_id = excluded.company_id, length_m = excluded.length_m, color = excluded.color`,
+         on conflict (company_id, cable_type, length_m) do update set company_id = excluded.company_id, length_m = excluded.length_m, color = excluded.color`,
         [companyA],
       ),
     ).rejects.toThrow(/permission denied/)

@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { Button } from '@/components/ui/button'
-import type { CableColor } from './cableColors'
+import { CABLE_COLOR_TYPE_LABELS, cableColorType, cableTypesSupported, findCableColor, type CableColor } from './cableColors'
 import { HexColorInput } from './HexColorInput'
 import { formatNumber } from './model'
 
@@ -8,6 +8,8 @@ export type ColorEdit = { name: string; color: string }
 
 type Props = {
   lengthM: number | undefined
+  /** Konektor kábla – XLR, powerCON a 230 V majú vlastné farby dĺžok. */
+  connector?: string
   /** Farby dĺžok uložené vo firme. */
   existing: CableColor[]
   /** Neuložená zmena pre túto dĺžku; uloží sa spolu s formulárom. */
@@ -20,14 +22,15 @@ type Props = {
 const DEFAULT_COLOR = '#00a651'
 
 /** Farebný kód dĺžky kábla priamo pri zadávaní kábla. Farba patrí dĺžke, nie jednému káblu. */
-export function LengthColorField({ lengthM, existing, edit, onEdit, canEdit }: Props) {
+export function LengthColorField({ lengthM, connector, existing, edit, onEdit, canEdit }: Props) {
   const colorId = useId()
   const nameId = useId()
   if (lengthM === undefined || !Number.isFinite(lengthM) || lengthM <= 0) return null
 
-  const saved = existing.find((color) => color.lengthM === lengthM)
+  const saved = findCableColor(existing, connector, lengthM)
   const shown = edit ?? saved
-  const length = `${formatNumber(lengthM)} m`
+  const type = cableTypesSupported() ? cableColorType(connector) : ''
+  const length = `${formatNumber(lengthM)} m${type ? ` (${CABLE_COLOR_TYPE_LABELS[type]})` : ''}`
 
   if (!shown) {
     return canEdit ? (

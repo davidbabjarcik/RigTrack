@@ -4,6 +4,7 @@ import { isMissingColumn } from '@/lib/supabase/errors'
 import { copyCompanyPhoto } from './photo'
 import {
   attributesFor,
+  cableBaseName,
   cableName,
   isLighting,
   isSimpleKind,
@@ -270,8 +271,34 @@ export async function syncEquipmentGroup(companyId: string, sourceId: string, id
   const source = data as Record<string, unknown>
   // Len stĺpce, ktoré databáza má (staršie databázy nemusia mať všetky).
   const shared = Object.fromEntries(GROUP_COLUMNS.filter((column) => column in source).map((column) => [column, source[column]]))
+  if (source.kind === 'cable') return syncCableLengths(companyId, source, shared, others)
   const { error: updateError } = await db.from('equipment').update(shared).eq('company_id', companyId).in('id', others)
   if (updateError) throw updateError
+}
+
+/**
+ * Káble rôznych dĺžok (XLR 5 m, 10 m…): fotka, výrobca, konektor, kategória a poznámka sa prenesú, ale názov s dĺžkou,
+ * dĺžka, kto ich vyrobil, cena a minimum ostanú pri každej dĺžke vlastné.
+ */
+async function syncCableLengths(companyId: string, source: Record<string, unknown>, shared: Record<string, unknown>, others: string[]) {
+  const db = getSupabase()
+  const { data, error } = await db.from('equipment').select('id, name, attributes').eq('company_id', companyId).in('id', others)
+  if (error) throw error
+  const base = cableBaseName(String(source.name ?? ''))
+  const sourceAttributes = (source.attributes ?? {}) as EquipmentAttributes
+  for (const row of data as { id: string; name: string; attributes: EquipmentAttributes | null }[]) {
+    const own = row.attributes ?? {}
+    const attributes: EquipmentAttributes = { ...sourceAttributes, lengthM: own.lengthM, makers: own.makers }
+    if (attributes.lengthM === undefined) delete attributes.lengthM
+    if (attributes.makers === undefined) delete attributes.makers
+    const rest = Object.fromEntries(Object.entries(shared).filter(([column]) => column !== 'rental_price' && column !== 'min_quantity'))
+    const { error: updateError } = await db
+      .from('equipment')
+      .update({ ...rest, attributes, name: own.lengthM !== undefined ? cableName(base, own.lengthM) : row.name })
+      .eq('company_id', companyId)
+      .eq('id', row.id)
+    if (updateError) throw updateError
+  }
 }
 
 export async function saveEquipment({ companyId, id, values, categories, locations, addresses = true }: SaveArgs): Promise<string> {

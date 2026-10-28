@@ -46,6 +46,7 @@ import { PermissionsSettings } from '@/features/permissions/PermissionsSettings'
 import { can } from '@/lib/permissions'
 import { isAdminRole, ROLE_LABELS, ROLES, type Role } from '@/lib/roles'
 import { PriorityColorsSettings } from '@/features/tasks/PriorityColorsSettings'
+import { CableColorsSettings } from '@/features/equipment/CableColorsSettings'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -277,6 +278,9 @@ function InventoryLookups({ companyId }: { companyId: string }) {
       </Section>
       <Section title="Šablóny cases">
         <CaseTemplateSettings companyId={companyId} />
+      </Section>
+      <Section title="Farby dĺžok káblov">
+        <CableColorsSettings companyId={companyId} />
       </Section>
     </>
   )

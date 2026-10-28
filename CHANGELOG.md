@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.15 – 28. 10. 2026
+
+- **Farby dĺžok káblov** (Nastavenia → Zoznamy → Farby dĺžok káblov): prepínač **Rovnaké pre všetky káble** alebo
+  **Rozdielne pre XLR / DMX, powerCON a 230 V**. Pri rozdielnych má každý typ vlastné dĺžky s farbou a názvom farby; typ
+  sa určí podľa konektora a dĺžky, ktoré typ nemá, dostanú spoločnú farbu. Pri zadávaní kábla aj na hárku s obsahom
+  case sa použije farba podľa typu.
+- **Káble – upraviť všetky dĺžky naraz** (napr. pridať fotku všetkým XLR): fotka, výrobca, konektor, kategória
+  a poznámka sa prenesú, názov s dĺžkou, dĺžka, cena a kto kábel vyrobil ostanú pri každej dĺžke vlastné.
+- **Nový case** už neponúka „Rovno do nich dať techniku“ – techniku pridáte v detaile case.
+- Nová migrácia: `0113` (je aj v `supabase/update-all.sql`).
+
 ### 4.14 – 27. 10. 2026
 
 - **Vývojár je pri výbere firmy** (dlaždica „Vývojár“ pod firmami) – už nie v Nastaveniach firmy, takže je dostupný

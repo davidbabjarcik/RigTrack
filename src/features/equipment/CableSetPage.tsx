@@ -11,7 +11,7 @@ import { Field } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
 import { createCableSet } from './api'
-import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
+import { cableColorKeys, cableColorType, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import { cableName, cableSetSchema, COMMON_CONNECTORS, type CableSetValues, type Lookup } from './model'
 import { useEquipmentLookups } from './useEquipmentLookups'
@@ -46,6 +46,7 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
   const { fields, append, remove } = useFieldArray({ control, name: 'rows' })
   const namePrefix = useWatch({ control, name: 'namePrefix' })
   const rows = useWatch({ control, name: 'rows' })
+  const connector = useWatch({ control, name: 'connector' })
 
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblami.
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
@@ -54,7 +55,7 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
     mutationFn: async (values: CableSetValues) => {
       for (const row of values.rows) {
         const edit = colorEdits[row.lengthM]
-        if (edit) await saveCableColor(companyId, { lengthM: row.lengthM, ...edit })
+        if (edit) await saveCableColor(companyId, { lengthM: row.lengthM, cableType: cableColorType(values.connector), ...edit })
       }
       await createCableSet({ companyId, values, categories, locations })
     },
@@ -161,6 +162,7 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
               <div className="mt-3">
                 <LengthColorField
                   lengthM={length}
+                  connector={connector}
                   existing={colors}
                   edit={colorEdits[length]}
                   onEdit={(edit) => setColorEdits((current) => ({ ...current, [length]: edit }))}

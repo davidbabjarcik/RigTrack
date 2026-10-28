@@ -1,7 +1,7 @@
 // Hárok FLIGHTCASE CONTENT: A4 na výšku pri 300 dpi (2480 × 3508 px), biele pozadie.
 // Káble v case sú tabuľka dĺžka × typ s farebným kódom dĺžky; ostatný obsah je zoznam pod ňou.
 
-import type { CableColor } from '@/features/equipment/cableColors'
+import { findCableColor, type CableColor } from '@/features/equipment/cableColors'
 import { formatNumber, type EquipmentAttributes, type EquipmentKind } from '@/features/equipment/model'
 import { contrastInk, ellipsize, fitSize, font, INK, sourceSize, type Ctx } from './canvas'
 
@@ -152,7 +152,9 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
 
     rows.forEach((row, rowIndex) => {
       const rowY = y + HEAD_ROW + rowIndex * rowHeight
-      const color = data.colors.find((candidate) => candidate.lengthM === row.lengthM)
+      // Farba podľa typu kábla v prvom stĺpci, kde táto dĺžka je (XLR, powerCON, 230 V majú vlastné farby).
+      const column = columns[row.counts.findIndex((count) => count > 0)]
+      const color = findCableColor(data.colors, column, row.lengthM)
       const lengthText = `${formatNumber(row.lengthM)} m`
       if (color) {
         // Úzky farebný pruh na okraji a vedľa neho názov farby s dĺžkou napísané tou istou farbou.

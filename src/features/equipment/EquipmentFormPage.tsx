@@ -15,7 +15,7 @@ import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { can } from '@/lib/permissions'
 import { errorDetail } from '@/lib/supabase/errors'
 import { copyEquipmentPhoto, equipmentKeys, fetchEquipment, fetchEquipmentList, saveEquipment, syncEquipmentGroup } from './api'
-import { cableColorKeys, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
+import { cableColorKeys, cableColorType, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import {
   asOptionalNumber,
@@ -391,6 +391,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const simple = isSimpleKind(kind, categoryText ?? '')
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
+  const connectorValue = useWatch({ control, name: 'connector' })
   // Ďalšie dĺžky nového kábla (namiesto samostatnej „Sady káblov“).
   const [extraLengths, setExtraLengths] = useState<{ lengthM: number; quantity: number; makers?: Maker[] }[]>([])
   // Kto káble vyrobil: nič, jeden človek na všetky kusy, alebo pri každej dĺžke kto koľko.
@@ -414,7 +415,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const save = useMutation({
     mutationFn: async (values: EquipmentFormValues) => {
       const colorEdit = values.kind === 'cable' && values.lengthM !== undefined ? colorEdits[values.lengthM] : undefined
-      if (colorEdit) await saveCableColor(companyId, { lengthM: values.lengthM!, ...colorEdit })
+      if (colorEdit) await saveCableColor(companyId, { lengthM: values.lengthM!, cableType: cableColorType(values.connector), ...colorEdit })
       const isCable = values.kind === 'cable'
       const id = await saveEquipment({
         companyId,
@@ -467,7 +468,14 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           inventárne číslo, MAC, IP, case a čísla kusov sa nekopírujú.
         </p>
       )}
-      {equipment && groupIds.length > 1 && (
+      {equipment && groupIds.length > 1 && equipment.kind === 'cable' && (
+        <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
+          <strong>Úprava všetkých {groupIds.length} dĺžok naraz.</strong> Fotka, výrobca, konektor, kategória, poznámka a ďalšie
+          spoločné údaje sa po uložení prenesú do všetkých dĺžok. Názov s dĺžkou, dĺžka, kto kábel vyrobil, cena, počet kusov,
+          case a stav ostanú pri každej dĺžke vlastné. Ak tu zmeníte názov, ostatné dĺžky dostanú nový názov so svojou dĺžkou.
+        </p>
+      )}
+      {equipment && groupIds.length > 1 && equipment.kind !== 'cable' && (
         <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
           <strong>Úprava všetkých {groupIds.length} častí naraz.</strong> Názov, výrobca, model, kategória, parametre, poznámka, fotka a
           ďalšie spoločné údaje sa po uložení prenesú do všetkých. Počet kusov, čísla kusov, case, sériové a inventárne čísla a stav
@@ -590,6 +598,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           <div className="sm:col-span-2">
             <LengthColorField
               lengthM={lengthM}
+              connector={connectorValue}
               existing={colors}
               edit={lengthM === undefined ? undefined : colorEdits[lengthM]}
               onEdit={(edit) => lengthM !== undefined && setColorEdits((current) => ({ ...current, [lengthM]: edit }))}
