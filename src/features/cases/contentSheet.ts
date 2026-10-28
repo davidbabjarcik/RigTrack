@@ -4,7 +4,7 @@
 
 import { findCableColor, type CableColor } from '@/features/equipment/cableColors'
 import { formatNumber, type EquipmentAttributes, type EquipmentKind } from '@/features/equipment/model'
-import { contrastInk, ellipsize, fitSize, font, INK, sourceSize, type Ctx } from './canvas'
+import { ellipsize, fitSize, font, INK, sourceSize, type Ctx } from './canvas'
 
 export const SHEET_WIDTH = 2480
 export const SHEET_HEIGHT = 3508
@@ -73,6 +73,17 @@ export const SHEET_LAYOUTS = ['together', 'stacked', 'pages'] as const
 export type SheetLayout = (typeof SHEET_LAYOUTS)[number]
 export const SHEET_LAYOUT_LABELS: Record<SheetLayout, string> = { together: 'V jednej tabuľke', stacked: 'Každý typ zvlášť pod sebou', pages: 'Každý typ na vlastnom hárku' }
 
+/** Poradie typov káblov (stĺpcov / tabuliek) podľa voľby; typy mimo zoznamu ostanú za nimi v pôvodnom poradí. */
+export function orderColumns(matrix: CableMatrix, order: string[]): CableMatrix {
+  const rank = (column: string) => {
+    const index = order.indexOf(column)
+    return index === -1 ? order.length + matrix.columns.indexOf(column) : index
+  }
+  const sorted = [...matrix.columns].sort((a, b) => rank(a) - rank(b))
+  const from = sorted.map((column) => matrix.columns.indexOf(column))
+  return { ...matrix, columns: sorted, rows: matrix.rows.map((row) => ({ ...row, counts: from.map((index) => row.counts[index]) })) }
+}
+
 /** Pre „každý typ na vlastnom hárku“: tabuľka iba s jedným typom; ostatný obsah je len na prvom hárku. */
 export function matrixPages(matrix: CableMatrix): CableMatrix[] {
   if (matrix.columns.length <= 1) return [matrix]
@@ -126,22 +137,29 @@ function centered(ctx: Ctx, text: string, x: number, y: number, maxWidth: number
   ctx.textAlign = 'left'
 }
 
-/** Vycentrovaný text vo farbe dĺžky; `outline` pridá tmavý obrys pre svetlé farby. */
-function coloured(ctx: Ctx, text: string, x: number, y: number, maxWidth: number, max: number, color: string, outline: boolean) {
+/**
+ * Farba textu pre farbu dĺžky: svetlé farby (žltá, béžová) by na bielom papieri zanikli, preto dostanú tmavší
+ * odtieň tej istej farby (bez obrysu). Tmavé farby ostanú.
+ */
+export function textShade(hex: string) {
+  let [r, g, b] = [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16))
+  const luminance = () => (r * 299 + g * 587 + b * 114) / 1000
+  while (luminance() > 135) {
+    r = Math.round(r * 0.9)
+    g = Math.round(g * 0.9)
+    b = Math.round(b * 0.9)
+  }
+  return `#${[r, g, b].map((value) => value.toString(16).padStart(2, '0')).join('')}`
+}
+
+/** Vycentrovaný text vo farbe dĺžky (svetlé farby v tmavšom odtieni). */
+function coloured(ctx: Ctx, text: string, x: number, y: number, maxWidth: number, max: number, color: string) {
   const size = fitSize(ctx, text, maxWidth, Math.floor(max), 22)
   font(ctx, size)
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  const shown = ellipsize(ctx, text, maxWidth)
-  if (outline) {
-    ctx.lineJoin = 'round'
-    ctx.lineWidth = Math.max(4, size * 0.09)
-    ctx.strokeStyle = INK
-    ctx.strokeText(shown, x, y)
-    ctx.lineWidth = LINE
-  }
-  ctx.fillStyle = color
-  ctx.fillText(shown, x, y)
+  ctx.fillStyle = textShade(color)
+  ctx.fillText(ellipsize(ctx, text, maxWidth), x, y)
   ctx.textAlign = 'left'
 }
 
@@ -322,13 +340,11 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
       if (color) {
         ctx.fillStyle = color.color
         ctx.fillRect(left, rowY, STRIP, rowHeight)
-        // Svetlé farby (žltá, béžová) by na bielom papieri zanikli, preto dostanú tenký tmavý obrys.
-        const outline = contrastInk(color.color) === INK
         if (color.name) {
-          coloured(ctx, color.name.toUpperCase(), labelX, rowY + rowHeight * 0.3, textWidth, Math.min(64, rowHeight * 0.26), color.color, outline)
-          coloured(ctx, lengthText, labelX, rowY + rowHeight * 0.66, textWidth, Math.min(130, rowHeight * 0.46), color.color, outline)
+          coloured(ctx, color.name.toUpperCase(), labelX, rowY + rowHeight * 0.3, textWidth, Math.min(64, rowHeight * 0.26), color.color)
+          coloured(ctx, lengthText, labelX, rowY + rowHeight * 0.66, textWidth, Math.min(130, rowHeight * 0.46), color.color)
         } else {
-          coloured(ctx, lengthText, labelX, rowY + rowHeight / 2, textWidth, Math.min(140, rowHeight * 0.5), color.color, outline)
+          coloured(ctx, lengthText, labelX, rowY + rowHeight / 2, textWidth, Math.min(140, rowHeight * 0.5), color.color)
         }
       } else {
         centered(ctx, lengthText, labelX, rowY + rowHeight / 2, textWidth, Math.min(130, rowHeight * 0.5), 40)

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Download } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronUp, Download } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -13,9 +13,10 @@ import { downloadCanvas, fileSlug, qrCanvas } from './canvas'
 import { caseBaseName, caseNumber } from './model'
 import { qrUrl } from '@/features/scan/qr'
 import { fetchPhotoBlob } from '@/features/equipment/photo'
-import { buildCableMatrix, drawContentSheet, matrixPages, SHEET_HEIGHT, SHEET_LAYOUT_LABELS, SHEET_LAYOUTS, SHEET_WIDTH, type SheetLayout } from './contentSheet'
+import { buildCableMatrix, drawContentSheet, matrixPages, orderColumns, SHEET_HEIGHT, SHEET_LAYOUT_LABELS, SHEET_LAYOUTS, SHEET_WIDTH, type SheetLayout } from './contentSheet'
 
 const LAYOUT_KEY = 'rigtrack.sheetLayout'
+const ORDER_KEY = 'rigtrack.sheetOrder'
 import { useCases } from './useCases'
 import { cn } from '@/lib/utils'
 
@@ -64,7 +65,32 @@ export function CaseContentSheetPage() {
   const logoSettled = !logoPath || logo.isSuccess || logo.isError
   const ready = Boolean(current && equipment.data && colors.data && branding.data && logoSettled)
 
-  const pages = useMemo(() => (layout === 'pages' ? matrixPages(matrix) : [matrix]), [layout, matrix])
+  // Poradie typov (čo hore, čo dole / na ktorom hárku) – pamätá sa v prehliadači.
+  const [order, setOrderState] = useState<string[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(ORDER_KEY) ?? '[]') as unknown
+      return Array.isArray(saved) ? saved.filter((value): value is string => typeof value === 'string') : []
+    } catch {
+      return []
+    }
+  })
+  const ordered = useMemo(() => orderColumns(matrix, order), [matrix, order])
+  const move = (column: string, step: -1 | 1) => {
+    const columns = [...ordered.columns]
+    const index = columns.indexOf(column)
+    const target = index + step
+    if (target < 0 || target >= columns.length) return
+    ;[columns[index], columns[target]] = [columns[target], columns[index]]
+    // Ostatné typy (z iných cases) ostanú v uloženom poradí za týmito.
+    const next = [...columns, ...order.filter((value) => !columns.includes(value))]
+    setOrderState(next)
+    try {
+      localStorage.setItem(ORDER_KEY, JSON.stringify(next))
+    } catch {
+      // Bez úložiska sa poradie len nezapamätá.
+    }
+  }
+  const pages = useMemo(() => (layout === 'pages' ? matrixPages(ordered) : [ordered]), [layout, ordered])
 
   useEffect(() => {
     if (!ready || !current) return
@@ -180,6 +206,24 @@ export function CaseContentSheetPage() {
             >
               {SHEET_LAYOUT_LABELS[value]}
             </button>
+          ))}
+        </div>
+      )}
+      {matrix.columns.length > 1 && layout !== 'together' && (
+        <div className="mx-auto mb-3 flex w-full max-w-2xl flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted-foreground">{layout === 'stacked' ? 'Poradie zhora:' : 'Poradie hárkov:'}</span>
+          {ordered.columns.map((column, index) => (
+            <span key={column} className="inline-flex items-center gap-1 rounded-lg border bg-surface py-1 pr-1 pl-3">
+              <span className="font-medium">
+                {index + 1}. {column}
+              </span>
+              <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={`${column} vyššie`} disabled={index === 0} onClick={() => move(column, -1)}>
+                <ChevronUp className="size-4" aria-hidden />
+              </Button>
+              <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={`${column} nižšie`} disabled={index === ordered.columns.length - 1} onClick={() => move(column, 1)}>
+                <ChevronDown className="size-4" aria-hidden />
+              </Button>
+            </span>
           ))}
         </div>
       )}

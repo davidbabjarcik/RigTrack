@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildCableMatrix } from './contentSheet'
+import { orderColumns, textShade, buildCableMatrix } from './contentSheet'
 
 const cable = (connector: string, lengthM: number, quantity: number) => ({
   name: `${connector} ${lengthM} m`,
@@ -56,5 +56,18 @@ describe('buildCableMatrix', () => {
 
   it('returns an empty table for an empty case', () => {
     expect(buildCableMatrix([])).toEqual({ columns: [], rows: [], others: [] })
+  })
+
+  it('orders cable types by choice', () => {
+    const matrix = { columns: ['Jack', 'XLR'], rows: [{ lengthM: 1, counts: [2, 5] }], others: [] }
+    expect(orderColumns(matrix, ['XLR'])).toEqual({ columns: ['XLR', 'Jack'], rows: [{ lengthM: 1, counts: [5, 2] }], others: [] })
+    expect(orderColumns(matrix, [])).toEqual(matrix)
+  })
+
+  it('darkens light colours for text and keeps dark ones', () => {
+    expect(textShade('#1400ff')).toBe('#1400ff')
+    const yellow = textShade('#ffff00')
+    expect(yellow).not.toBe('#ffff00')
+    expect(yellow.slice(1, 3)).toBe(yellow.slice(3, 5))
   })
 })

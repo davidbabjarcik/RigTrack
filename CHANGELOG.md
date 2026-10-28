@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.18.1 – 28. 10. 2026
+
+- **Hárok s obsahom case**: svetlé farby (žltá, béžová, svetlozelená) už nemajú obrys – názov a dĺžka sú v tmavšom
+  odtieni tej istej farby, farebný pruh ostáva v presnej farbe.
+- **Poradie typov káblov** pri „Každý typ zvlášť pod sebou“ a „Každý typ na vlastnom hárku“: šípkami určíte, čo je
+  hore a čo dole (alebo ktorý hárok je prvý). Poradie sa zapamätá.
+
 ### 4.18 – 28. 10. 2026
 
 - **Nový vzhľad hárku s obsahom case (Flightcase content)**: hlavička s logom, názvom case a boxom s číslom case
