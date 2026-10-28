@@ -41,10 +41,21 @@ export function suggestedColor(name: string): CategoryColor | null {
   return null
 }
 
-const KIND_COLORS: Partial<Record<EquipmentKind, CategoryColor>> = { light: 'green', audio: 'pink', stage: 'yellow', truss: 'red' }
+/** Predvolené farby druhov (dajú sa zmeniť v Nastavenia → Zoznamy → Farby druhov techniky). */
+export const DEFAULT_KIND_COLORS: Partial<Record<EquipmentKind, CategoryColor>> = { light: 'green', audio: 'pink', stage: 'yellow', truss: 'red' }
 
-/** Farba techniky: nastavená farba kategórie, inak odhad podľa názvu kategórie, inak podľa druhu. */
-export function colorOf(item: { kind: EquipmentKind; categoryId: string | null }, categories: Lookup[]): CategoryColor | null {
+/**
+ * Farba techniky: nastavená farba kategórie, inak odhad podľa názvu kategórie, inak farba druhu
+ * (nastavená vo firme, inak predvolená; „none“ = bez pruhu).
+ */
+export function colorOf(
+  item: { kind: EquipmentKind; categoryId: string | null },
+  categories: Lookup[],
+  kindColors: Partial<Record<EquipmentKind, CategoryColor | 'none'>> = {},
+): CategoryColor | null {
   const category = categories.find((candidate) => candidate.id === item.categoryId)
-  return category?.color ?? (category ? suggestedColor(category.name) : null) ?? KIND_COLORS[item.kind] ?? null
+  const byCategory = category?.color ?? (category ? suggestedColor(category.name) : null)
+  if (byCategory) return byCategory
+  const byKind = kindColors[item.kind] ?? DEFAULT_KIND_COLORS[item.kind]
+  return byKind && byKind !== 'none' ? byKind : null
 }

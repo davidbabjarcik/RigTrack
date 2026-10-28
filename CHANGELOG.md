@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.1 – 28. 10. 2026
+
+- **Farby druhov techniky** (Nastavenia → Zoznamy → Farby druhov techniky): farebný pruh v zozname pre Svetlo, Zvuk,
+  Pódium, Truss… si nastavíte sami (alebo „Bez farby“). Platí pre techniku bez kategórie; farba kategórie má prednosť.
+- **Fotky na hárku s obsahom case bez bieleho pozadia**: produktové fotky na bielom sa „vystrihnú“ a výrobok sedí
+  priamo na karte. Dá sa vypnúť políčkom „Fotky bez bieleho pozadia“.
+- Oprava: na hárku sa ukazujú fotky aj pri príslušenstve.
+- Nová migrácia: `0115` (je aj v `supabase/update-all.sql`).
+
 ### 5.0 – 28. 10. 2026
 
 - **Príslušenstvo pri akejkoľvek technike v case**: tlačidlo **Príslušenstvo** (zástrčka) majú v obsahu case všetky

@@ -13,6 +13,7 @@ import { downloadCanvas, fileSlug, qrCanvas } from './canvas'
 import { caseBaseName, caseNumber } from './model'
 import { qrUrl } from '@/features/scan/qr'
 import { fetchPhotoBlob } from '@/features/equipment/photo'
+import { withoutWhiteBackground } from './removeBackground'
 import { buildCableMatrix, DEFAULT_SHOW, drawContentSheet, matrixPages, orderColumns, SHEET_PART_LABELS, SHEET_PARTS, type SheetShow, SHEET_HEIGHT, SHEET_LAYOUT_LABELS, SHEET_LAYOUTS, SHEET_WIDTH, type SheetLayout } from './contentSheet'
 
 const LAYOUT_KEY = 'rigtrack.sheetLayout'
@@ -133,13 +134,19 @@ export function CaseContentSheetPage() {
     void (async () => {
       const bitmap = logo.data ? await createImageBitmap(logo.data).catch(() => null) : null
       // Fotky príslušenstva na karty (bez fotky ostane karta len s názvom a počtom).
-      const photos = new Map<string, ImageBitmap>()
+      const photos = new Map<string, ImageBitmap | HTMLCanvasElement>()
+      const withPhotos = pages.flatMap((page) => [...page.others, ...(page.accessories ?? [])])
       await Promise.all(
-        [...new Set(pages.flatMap((page) => page.others).map((item) => item.photoPath).filter((path): path is string => Boolean(path)))].map(async (path) => {
+        [...new Set(withPhotos.map((item) => item.photoPath).filter((path): path is string => Boolean(path)))].map(async (path) => {
           const image = await fetchPhotoBlob(path)
             .then((blob) => createImageBitmap(blob))
             .catch(() => null)
-          if (image) photos.set(path, image)
+          if (!image) return
+          // Produktové fotky na bielom: biele pozadie preč, aby výrobok sedel priamo na karte.
+          if (show.cutout) {
+            photos.set(path, withoutWhiteBackground(image))
+            image.close()
+          } else photos.set(path, image)
         }),
       )
       const qr = await qrCanvas(qrUrl({ kind: 'case', id: current.id }, window.location.origin), 520, 0).catch(() => null)
@@ -167,7 +174,9 @@ export function CaseContentSheetPage() {
         })
       })
       bitmap?.close()
-      photos.forEach((image) => image.close())
+      photos.forEach((image) => {
+        if (image instanceof ImageBitmap) image.close()
+      })
       setDrawn(true)
     })()
     return () => {

@@ -47,6 +47,7 @@ import { can } from '@/lib/permissions'
 import { isAdminRole, ROLE_LABELS, ROLES, type Role } from '@/lib/roles'
 import { PriorityColorsSettings } from '@/features/tasks/PriorityColorsSettings'
 import { CableColorsSettings } from '@/features/equipment/CableColorsSettings'
+import { KindColorsSettings } from '@/features/equipment/KindColorsSettings'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -269,12 +270,16 @@ function InventoryLookups({ companyId }: { companyId: string }) {
       <Section title="Kategórie techniky a ich farby">
         <p className="mb-2 text-sm text-muted-foreground">
           Farba kategórie je farebný pruh pri technike v zozname. Vyberte ju pri kategórii vpravo (Automaticky = podľa názvu).
+          Technika bez kategórie má farbu podľa druhu – nižšie v „Farby druhov techniky“.
         </p>
         <LookupSettings companyId={companyId} table="equipment_categories" items={categories} noun="kategóriu" />
         <p className="mt-2 text-sm text-muted-foreground">
           Tovar v kategórii označenej ako spotrebný materiál (viazačky, konektory…) sa pri objednávke nepridáva do techniky,
           eviduje sa len jeho nákup a cena.
         </p>
+      </Section>
+      <Section title="Farby druhov techniky">
+        <KindColorsSettings companyId={companyId} canEdit />
       </Section>
       <Section title="Umiestnenia">
         <LookupSettings companyId={companyId} table="locations" items={locations} noun="umiestnenie" />

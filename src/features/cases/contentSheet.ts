@@ -94,7 +94,7 @@ export type SheetData = {
 }
 
 /** Voliteľné časti hárku: číslo case a QR v hlavičke, v súhrne kusy, hmotnosť, podpis a dátum kontroly. */
-export const SHEET_PARTS = ['number', 'qr', 'pieces', 'weight', 'checked', 'date'] as const
+export const SHEET_PARTS = ['number', 'qr', 'pieces', 'weight', 'checked', 'date', 'cutout'] as const
 export type SheetShow = Record<(typeof SHEET_PARTS)[number], boolean>
 export const SHEET_PART_LABELS: Record<(typeof SHEET_PARTS)[number], string> = {
   number: 'Číslo case',
@@ -103,8 +103,9 @@ export const SHEET_PART_LABELS: Record<(typeof SHEET_PARTS)[number], string> = {
   weight: 'Hmotnosť',
   checked: 'Kontroloval',
   date: 'Dátum',
+  cutout: 'Fotky bez bieleho pozadia',
 }
-export const DEFAULT_SHOW: SheetShow = { number: true, qr: true, pieces: true, weight: true, checked: true, date: true }
+export const DEFAULT_SHOW: SheetShow = { number: true, qr: true, pieces: true, weight: true, checked: true, date: true, cutout: true }
 
 /** Ako dať na hárok viac typov káblov: spolu, pod sebou, alebo každý typ na vlastný hárok. */
 export const SHEET_LAYOUTS = ['together', 'stacked', 'pages'] as const

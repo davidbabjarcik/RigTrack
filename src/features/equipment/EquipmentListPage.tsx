@@ -41,6 +41,7 @@ import { StatusBadge } from './StatusBadge'
 import { useStaff } from '@/features/staff/useStaff'
 import { useEquipmentLookups } from './useEquipmentLookups'
 import { usePhotoThumbs } from './usePhotoThumbs'
+import { useKindColors } from './kindColors'
 
 const NO_FILTER: EquipmentFilter = { search: '', status: '', categoryId: '', locationId: '', caseId: '' }
 const FILTER_KEY = 'rigtrack.equipment.filter'
@@ -89,6 +90,7 @@ export function EquipmentListPage() {
   const inService = piecesInService(serviceRecords)
   const unitsOut = unitsInService(serviceRecords)
   const all = list.data ?? []
+  const kindColors = useKindColors(company.companyId).data ?? {}
   const linked = useLinkedEquipment(company.companyId).data ?? []
   const linkedCompanies = [...new Map(linked.map((item) => [item.companyId, { id: item.companyId, name: item.companyName }])).values()]
   const linkedVisible = filterLinkedEquipment(linked, filter)
@@ -111,7 +113,7 @@ export function EquipmentListPage() {
     })
 
   const row = (item: Equipment, sub: boolean, byLength = false) => {
-    const color = colorOf(item, categories)
+    const color = colorOf(item, categories, kindColors)
     const details = [
       !sub && [item.manufacturer, item.model].filter(Boolean).join(' '),
       ...(sub ? [] : describeAttributes(item, { makers: false })),
@@ -254,7 +256,7 @@ export function EquipmentListPage() {
             const inCases = group.items.filter((item) => item.caseId)
             const expanded = openGroups.has(group.key)
             const cables = main.kind === 'cable'
-            const color = colorOf(main, categories)
+            const color = colorOf(main, categories, kindColors)
             const lengths = [...new Set(group.items.map((item) => item.attributes.lengthM).filter((value): value is number => value !== undefined))]
             const details = [
               [main.manufacturer, main.model].filter(Boolean).join(' '),
