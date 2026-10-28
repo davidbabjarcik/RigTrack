@@ -43,6 +43,21 @@ export async function uploadEquipmentPhoto(companyId: string, equipmentId: strin
 }
 
 /**
+ * Jedna fotka pre všetky časti rozdelenej techniky (napr. B-EYE K10 v 5 cases). Staré fotky sa nemažú,
+ * lebo ich môže zdieľať viac častí.
+ */
+export async function uploadGroupPhoto(companyId: string, equipmentIds: string[], file: File) {
+  const storage = getSupabase().storage.from(BUCKET)
+  const path = `${companyId}/${equipmentIds[0]}-${Date.now()}.jpg`
+  const [photo, thumb] = await Promise.all([shrinkImage(file, MAX_SIDE, 0.85), shrinkImage(file, THUMB_SIDE, 0.8)])
+  const upload = await storage.upload(path, photo, { contentType: 'image/jpeg' })
+  if (upload.error) throw upload.error
+  await storage.upload(thumbPath(path), thumb, { contentType: 'image/jpeg' })
+  const { error } = await getSupabase().from('equipment').update({ photo_path: path }).eq('company_id', companyId).in('id', equipmentIds)
+  if (error) throw error
+}
+
+/**
  * Uloží zmenšenú fotku do priečinka firmy pod daným názvom a vráti jej cestu.
  * Pre fotky, ktoré nepatria kusu techniky (vlastná fotka na štítku case, fotka vozidla).
  */

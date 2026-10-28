@@ -77,7 +77,8 @@ describe('buildCableMatrix', () => {
       { name: 'Jack 3 m', kind: 'cable', quantity: 2, attributes: { lengthM: 3, connector: 'Jack', sheetAccessory: true } },
     ])
     expect(matrix.columns).toEqual(['XLR'])
-    expect(matrix.others).toEqual([{ name: 'Jack 3 m', quantity: 2 }])
+    expect(matrix.others).toEqual([])
+    expect(matrix.accessories).toEqual([{ name: 'Jack 3 m', quantity: 2 }])
   })
 
   it('counts variants with their type and lists them', () => {

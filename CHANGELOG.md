@@ -5,6 +5,22 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.0 – 28. 10. 2026
+
+- **Príslušenstvo pri akejkoľvek technike v case**: tlačidlo **Príslušenstvo** (zástrčka) majú v obsahu case všetky
+  veci, nielen káble – napr. poistné lanká pri svetlách. Na hárku s obsahom je potom časť **Obsah** (napr. Beam 7R)
+  a pod ňou **Príslušenstvo**. Nastavuje sa len v case (vo formulári techniky už políčko nie je).
+- **Fotka pre všetky časti naraz**: na stránke rozdelenej techniky (napr. B-EYE K10 v 5 cases, XLR vo všetkých
+  dĺžkach) stačí kliknúť na fotku alebo vložiť obrázok cez Ctrl+V.
+- **Farby kategórií** sú v Nastavenia → Zoznamy → **Kategórie techniky a ich farby** (sekcia premenovaná, s popisom).
+- **Karty na hárku**: pri málo položkách sú väčšie a vycentrované (2 vedľa seba, 1 cez celú šírku s fotkou vľavo
+  a počtom vpravo); bez tabuľky káblov majú karty veľké fotky.
+- **Hárok aj na A5**: voľba A4 / A5 nad náhľadom, PNG sa stiahne v zvolenej veľkosti (A5 pri 300 dpi).
+- **Čo bude na hárku**: zaškrtávacie políčka nad náhľadom – Číslo case, QR kód, Celkom kusov, Hmotnosť, Kontroloval,
+  Dátum. Napr. len QR bez čísla, alebo bez súhrnu dole. Voľba sa zapamätá.
+- **Zoznam techniky** už nepíše „vyrobil …“ – je to pri jednotlivých dĺžkach kábla (rozbalený riadok aj stránka kábla)
+  a v detaile. Rozbalené časti ukazujú počet vždy, aj „1 ks“.
+
 ### 4.20 – 28. 10. 2026
 
 - **Variant kábla** (napr. stereo, silent jack): v úprave kábla nové pole **Variant** (prázdne = obyčajný). Na hárku

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ChevronRight, Combine, Package, Pencil, QrCode } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Camera, ChevronRight, Combine, Package, Pencil, QrCode } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { GroupDmx } from './GroupDmx'
 import { GroupHours } from './GroupHours'
@@ -12,8 +12,9 @@ import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
 import { equipmentKeys, fetchEquipmentList, mergeEquipment } from './api'
 import { PhotoThumb } from './PhotoThumb'
+import { uploadGroupPhoto } from './photo'
 import { usePhotoThumbs } from './usePhotoThumbs'
-import { cableBaseName, describeAttributes, groupSplitEquipment, STATUS_LABELS, unitIdsOf } from './model'
+import { cableBaseName, describeAttributes, makersText, groupSplitEquipment, STATUS_LABELS, unitIdsOf } from './model'
 
 /**
  * Prehľad rozdelenej techniky (napr. Beam 7R v 8 cases, alebo XLR vo všetkých dĺžkach):
@@ -43,6 +44,28 @@ export function EquipmentGroupPage() {
   })
   const [dmxOpen, setDmxOpen] = useState(false)
   const thumbs = usePhotoThumbs(companyId, parts.slice(0, 1).map((item) => item.photoPath))
+  // Jedna fotka pre všetky časti (klik na fotku alebo Ctrl+V so skopírovaným obrázkom).
+  const fileInput = useRef<HTMLInputElement>(null)
+  const photo = useMutation({
+    mutationFn: (file: File) => uploadGroupPhoto(companyId, parts.map((item) => item.id), file),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['company', companyId] }),
+  })
+  const upload = useRef(photo.mutate)
+  useEffect(() => {
+    upload.current = photo.mutate
+  }, [photo.mutate])
+  const canPhoto = can(company, 'equipment.edit') && parts.length > 0
+  useEffect(() => {
+    if (!canPhoto) return
+    function handlePaste(event: ClipboardEvent) {
+      const image = [...(event.clipboardData?.files ?? [])].find((file) => file.type.startsWith('image/'))
+      if (!image) return
+      event.preventDefault()
+      upload.current(image)
+    }
+    document.addEventListener('paste', handlePaste)
+    return () => document.removeEventListener('paste', handlePaste)
+  }, [canPhoto])
 
   const back = (
     <Link to="/equipment" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -88,7 +111,36 @@ export function EquipmentGroupPage() {
       {back}
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
-          <PhotoThumb url={thumbs[main.photoPath]} />
+          {/* Fotka pre všetky časti naraz: klik na fotku alebo Ctrl+V. */}
+          {can(company, 'equipment.edit') ? (
+            <button
+              type="button"
+              className="group relative shrink-0 rounded-lg"
+              title="Zmeniť fotku všetkým častiam (alebo vložte obrázok cez Ctrl+V)"
+              aria-label="Zmeniť fotku všetkým častiam"
+              disabled={photo.isPending}
+              onClick={() => fileInput.current?.click()}
+            >
+              <PhotoThumb url={thumbs[main.photoPath]} />
+              <span className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full border bg-surface text-muted-foreground group-hover:text-foreground">
+                <Camera className="size-3.5" aria-hidden />
+              </span>
+            </button>
+          ) : (
+            <PhotoThumb url={thumbs[main.photoPath]} />
+          )}
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            tabIndex={-1}
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) photo.mutate(file)
+            }}
+          />
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight break-words">{cables ? cableBaseName(main.name) : main.name}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -171,6 +223,7 @@ export function EquipmentGroupPage() {
                       `${part.quantity} ks`,
                       part.trackUnits && part.unitIds.length > 0 && part.unitIds.map((value) => `#${value}`).join(', '),
                       cables && part.caseId && `v ${caseName(part.caseId)}`,
+                      cables && makersText(part.attributes),
                     ]
                       .filter(Boolean)
                       .join(' · ')}

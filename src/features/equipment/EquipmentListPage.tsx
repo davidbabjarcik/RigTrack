@@ -17,6 +17,7 @@ import { can } from '@/lib/permissions'
 import { equipmentKeys, fetchEquipmentList } from './api'
 import {
   describeAttributes,
+  makersText,
   EQUIPMENT_STATUSES,
   cableBaseName,
   filterEquipment,
@@ -113,14 +114,16 @@ export function EquipmentListPage() {
     const color = colorOf(item, categories)
     const details = [
       !sub && [item.manufacturer, item.model].filter(Boolean).join(' '),
-      ...(sub ? [] : describeAttributes(item)),
+      ...(sub ? [] : describeAttributes(item, { makers: false })),
       !sub && categoryName(item.categoryId),
       ownerName(item.ownerStaffId) && `patrí: ${ownerName(item.ownerStaffId)}`,
       item.inventoryNumber && `inv. č. ${item.inventoryNumber}`,
-      item.quantity !== 1 && `${item.quantity} ks`,
+      // Pri rozbalených častiach vždy aj 1 ks (napr. XLR 25 m · 1 ks).
+      (sub || item.quantity !== 1) && `${item.quantity} ks`,
       // Rozdelená technika: ktoré kusy a v ktorom case sú.
       item.trackUnits && item.unitIds.length > 0 && item.unitIds.length <= 12 && item.unitIds.map((unit) => `#${unit}`).join(', '),
       (!sub || byLength) && item.caseId && caseLabel(item.caseId) && `v ${caseLabel(item.caseId)}`,
+      byLength && makersText(item.attributes),
       !item.caseId && item.attributes.inCover && (item.attributes.coverNote ? `obal: ${item.attributes.coverNote}` : 'v obale'),
     ].filter(Boolean)
     const service = serviceState(item, today).state
@@ -255,7 +258,7 @@ export function EquipmentListPage() {
             const lengths = [...new Set(group.items.map((item) => item.attributes.lengthM).filter((value): value is number => value !== undefined))]
             const details = [
               [main.manufacturer, main.model].filter(Boolean).join(' '),
-              ...(cables ? [main.attributes.connector, lengths.length > 0 && `${lengths.map((value) => String(value).replace('.', ',')).join(', ')} m`] : describeAttributes(main)),
+              ...(cables ? [main.attributes.connector, lengths.length > 0 && `${lengths.map((value) => String(value).replace('.', ',')).join(', ')} m`] : describeAttributes(main, { makers: false })),
               categoryName(main.categoryId),
               `${total} ks`,
               free > 0 && `${free} mimo case`,

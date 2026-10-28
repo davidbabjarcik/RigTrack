@@ -266,7 +266,10 @@ function InventoryLookups({ companyId }: { companyId: string }) {
   const { categories, locations } = useEquipmentLookups(companyId)
   return (
     <>
-      <Section title="Kategórie techniky">
+      <Section title="Kategórie techniky a ich farby">
+        <p className="mb-2 text-sm text-muted-foreground">
+          Farba kategórie je farebný pruh pri technike v zozname. Vyberte ju pri kategórii vpravo (Automaticky = podľa názvu).
+        </p>
         <LookupSettings companyId={companyId} table="equipment_categories" items={categories} noun="kategóriu" />
         <p className="mt-2 text-sm text-muted-foreground">
           Tovar v kategórii označenej ako spotrebný materiál (viazačky, konektory…) sa pri objednávke nepridáva do techniky,

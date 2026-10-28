@@ -303,13 +303,13 @@ export function CaseDetailPage() {
                   ) : (
                     item.labelRole && <span className="text-xs text-muted-foreground">{item.labelRole === 'main' ? 'hlavný' : 'vedľajší'}</span>
                   )}
-                  {item.kind === 'cable' && item.attributes.lengthM !== undefined && can(company, 'equipment.edit') && (
+                  {can(company, 'equipment.edit') && (
                     <Button
                       variant="ghost"
                       size="sm"
                       aria-pressed={Boolean(item.attributes.sheetAccessory)}
                       aria-label={`Na hárku ako príslušenstvo: ${item.name}`}
-                      title={item.attributes.sheetAccessory ? 'Na hárku s obsahom je ako príslušenstvo — kliknutím vrátiť do tabuľky káblov' : 'Na hárku s obsahom dať ako príslušenstvo (nie do tabuľky káblov)'}
+                      title={item.attributes.sheetAccessory ? 'Na hárku s obsahom je ako príslušenstvo — kliknutím vrátiť medzi obsah' : 'Na hárku s obsahom dať ako príslušenstvo'}
                       disabled={accessory.isPending}
                       onClick={() => accessory.mutate({ item, on: !item.attributes.sheetAccessory })}
                     >

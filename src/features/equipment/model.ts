@@ -212,7 +212,7 @@ export type EquipmentAttributes = {
   stageSize?: string
   /** Technika, ktorá do case ani racku nepatrí (napr. stojany, kabeláž na cievke) – nehlási sa ako „mimo case“. */
   noCase?: boolean
-  /** Kábel: na hárku s obsahom case ako príslušenstvo (karta), nie v tabuľke dĺžok – napr. jack v XLR case. */
+  /** Na hárku s obsahom case ako príslušenstvo (samostatná časť pod obsahom; kábel nie je v tabuľke dĺžok). */
   sheetAccessory?: boolean
   /** Kábel: variant toho istého typu (napr. stereo, silent jack); prázdne = obyčajný. */
   cableVariant?: string
@@ -796,6 +796,8 @@ export function attributesFor(
 ) {
   const attributes: EquipmentAttributes = {}
   if (values.noCase && !values.caseId) attributes.noCase = true
+  // Na hárku s obsahom case ako príslušenstvo (akákoľvek technika, aj kábel).
+  if (values.sheetAccessory) attributes.sheetAccessory = true
   if (values.inCover && !values.caseId) {
     attributes.inCover = true
     if (values.coverNote?.trim()) attributes.coverNote = values.coverNote.trim()
@@ -807,7 +809,6 @@ export function attributesFor(
     if (values.cableType === 'di' && values.powered) attributes.powered = values.powered
     if (values.connector) attributes.connector = values.connector
     if (values.lengthM !== undefined) attributes.lengthM = values.lengthM
-    if (values.sheetAccessory) attributes.sheetAccessory = true
     if (values.cableVariant?.trim()) attributes.cableVariant = values.cableVariant.trim()
   }
   // Truss sa delí podľa dĺžky dielu (0,5 / 1 / 2 / 3 m).
@@ -983,7 +984,10 @@ export function describeProcessor(spec: LedProcessorSpec) {
 }
 
 /** Krátky popis údajov druhu do zoznamu a detailu, napr. „XLR · 5 m“ alebo „200 W · LED“. */
-export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
+/** `makers: false` – bez „vyrobil …“ (napr. v zozname techniky; vidno to v detaile a pri dĺžkach kábla). */
+export const makersText = (a: EquipmentAttributes) => (a.makers?.length ? `vyrobil ${a.makers.map((maker) => `${maker.name} ${maker.count}×`).join(', ')}` : '')
+
+export function describeAttributes(item: Pick<Equipment, 'attributes'>, options: { makers?: boolean } = {}) {
   const a = item.attributes
   return [
     a.audioType && AUDIO_TYPE_LABELS[a.audioType],
@@ -1005,7 +1009,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     ampPower(a),
     a.ampKind && (a.ampKind === 'digital' ? `digitálny${a.ampPresetSlots ? ` · presety ${(a.ampPresets ?? []).length}/${a.ampPresetSlots}` : ''}` : 'analógový'),
     a.ampKind === 'digital' && a.ampDeviceId && `ID ${a.ampDeviceId}`,
-    a.makers?.length && `vyrobil ${a.makers.map((maker) => `${maker.name} ${maker.count}×`).join(', ')}`,
+    options.makers !== false && makersText(a),
     a.condition && CONDITION_LABELS[a.condition].toLowerCase(),
     a.cableType === 'di' && 'DI box',
     a.cableType === 'adapter' && 'Redukcia',

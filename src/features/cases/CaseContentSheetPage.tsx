@@ -13,10 +13,27 @@ import { downloadCanvas, fileSlug, qrCanvas } from './canvas'
 import { caseBaseName, caseNumber } from './model'
 import { qrUrl } from '@/features/scan/qr'
 import { fetchPhotoBlob } from '@/features/equipment/photo'
-import { buildCableMatrix, drawContentSheet, matrixPages, orderColumns, SHEET_HEIGHT, SHEET_LAYOUT_LABELS, SHEET_LAYOUTS, SHEET_WIDTH, type SheetLayout } from './contentSheet'
+import { buildCableMatrix, DEFAULT_SHOW, drawContentSheet, matrixPages, orderColumns, SHEET_PART_LABELS, SHEET_PARTS, type SheetShow, SHEET_HEIGHT, SHEET_LAYOUT_LABELS, SHEET_LAYOUTS, SHEET_WIDTH, type SheetLayout } from './contentSheet'
 
 const LAYOUT_KEY = 'rigtrack.sheetLayout'
+const PAPERS = ['A4', 'A5'] as const
+type Paper = (typeof PAPERS)[number]
+/** A5 pri 300 dpi. */
+const A5_WIDTH = 1748
+const A5_HEIGHT = 2480
+
+/** Zmenšená kópia hárku (napr. na A5). */
+function scaled(source: HTMLCanvasElement, width: number, height: number) {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')!
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(source, 0, 0, width, height)
+  return canvas
+}
 const ORDER_KEY = 'rigtrack.sheetOrder'
+const SHOW_KEY = 'rigtrack.sheetShow'
 import { useCases } from './useCases'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +42,24 @@ export function CaseContentSheetPage() {
   const company = useCompany().active!
   const companyId = company.companyId
   const canvases = useRef<(HTMLCanvasElement | null)[]>([])
+  const [paper, setPaper] = useState<Paper>('A4')
+  // Čo ukázať na hárku (číslo case, QR, súhrn dole) – pamätá sa v prehliadači.
+  const [show, setShowState] = useState<SheetShow>(() => {
+    try {
+      return { ...DEFAULT_SHOW, ...(JSON.parse(localStorage.getItem(SHOW_KEY) ?? '{}') as Partial<SheetShow>) }
+    } catch {
+      return DEFAULT_SHOW
+    }
+  })
+  const toggleShow = (part: keyof SheetShow) => {
+    const next = { ...show, [part]: !show[part] }
+    setShowState(next)
+    try {
+      localStorage.setItem(SHOW_KEY, JSON.stringify(next))
+    } catch {
+      // Bez úložiska sa voľba len nezapamätá.
+    }
+  }
   const [drawn, setDrawn] = useState(false)
   // Viac typov káblov (napr. XLR a Jack): spolu, pod sebou, alebo každý na vlastný hárok. Pamätá sa v prehliadači.
   const [layout, setLayoutState] = useState<SheetLayout>(() => {
@@ -123,6 +158,7 @@ export function CaseContentSheetPage() {
         weightKg: (current.weightKg ?? 0) + gearKg || null,
         matrix: page,
         layout: layout === 'stacked' ? 'stacked' : 'together',
+        show,
         colors: colors.data ?? [],
         footer: branding.data?.labelFooter ?? '',
         logo: bitmap,
@@ -137,7 +173,7 @@ export function CaseContentSheetPage() {
     return () => {
       cancelled = true
     }
-  }, [ready, current, matrix, pages, layout, colors.data, branding.data, logo.data, company.companyName, equipment.data])
+  }, [ready, current, matrix, pages, layout, show, colors.data, branding.data, logo.data, company.companyName, equipment.data])
 
   const back = (
     <Link to={`/cases/${id}`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -164,7 +200,10 @@ export function CaseContentSheetPage() {
   const download = async () => {
     for (const [index, target] of canvases.current.slice(0, pages.length).entries()) {
       if (!target) continue
-      downloadCanvas(target, pages.length > 1 ? `${baseName}-${index + 1}-${fileSlug(pages[index].columns[0] ?? '')}.png` : `${baseName}.png`)
+      // A5 má rovnaký pomer strán ako A4 – hárok sa len zmenší (148 × 210 mm pri 300 dpi).
+      const output = paper === 'A5' ? scaled(target, A5_WIDTH, A5_HEIGHT) : target
+      const suffix = paper === 'A5' ? '-a5' : ''
+      downloadCanvas(output, pages.length > 1 ? `${baseName}-${index + 1}-${fileSlug(pages[index].columns[0] ?? '')}${suffix}.png` : `${baseName}${suffix}.png`)
       await new Promise((resolve) => setTimeout(resolve, 300))
     }
   }
@@ -174,11 +213,11 @@ export function CaseContentSheetPage() {
       {back}
       <PageHeader
         title="Flightcase content"
-        description={`${current.name} · A4 na výšku (${SHEET_WIDTH} × ${SHEET_HEIGHT} px)`}
+        description={`${current.name} · ${paper} na výšku (${paper === 'A5' ? `${A5_WIDTH} × ${A5_HEIGHT}` : `${SHEET_WIDTH} × ${SHEET_HEIGHT}`} px)`}
         action={
           <Button disabled={!drawn} onClick={() => void download()}>
             <Download className="size-4" aria-hidden />
-            {pages.length > 1 ? `Stiahnuť PNG (${pages.length})` : 'Stiahnuť PNG'}
+            {pages.length > 1 ? `Stiahnuť PNG ${paper} (${pages.length})` : `Stiahnuť PNG ${paper}`}
           </Button>
         }
       />
@@ -193,6 +232,29 @@ export function CaseContentSheetPage() {
           nastavíte v úprave ľubovoľného kábla s touto dĺžkou.
         </p>
       )}
+      <div role="radiogroup" aria-label="Veľkosť hárku" className="mx-auto mb-3 flex w-full max-w-2xl gap-1 rounded-lg bg-muted p-1">
+        {PAPERS.map((value) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={paper === value}
+            onClick={() => setPaper(value)}
+            className={cn('h-9 flex-1 rounded-md px-3 text-sm', paper === value ? 'bg-surface font-medium shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+          >
+            {value === 'A4' ? 'A4 (210 × 297 mm)' : 'A5 (148 × 210 mm)'}
+          </button>
+        ))}
+      </div>
+      <fieldset className="mx-auto mb-3 flex w-full max-w-2xl flex-wrap gap-x-5 gap-y-2 rounded-lg border bg-surface px-3 py-2 text-sm">
+        <legend className="px-1 text-xs text-muted-foreground">Na hárku ukázať</legend>
+        {SHEET_PARTS.map((part) => (
+          <label key={part} className="flex items-center gap-2">
+            <input type="checkbox" className="size-4" checked={show[part]} onChange={() => toggleShow(part)} />
+            {SHEET_PART_LABELS[part]}
+          </label>
+        ))}
+      </fieldset>
       {matrix.columns.length > 1 && (
         <div role="radiogroup" aria-label="Viac typov káblov na hárku" className="mx-auto mb-3 flex w-full max-w-2xl flex-wrap gap-1 rounded-lg bg-muted p-1">
           {SHEET_LAYOUTS.map((value) => (

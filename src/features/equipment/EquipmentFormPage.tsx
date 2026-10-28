@@ -625,10 +625,6 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
               canEdit={canEditColors}
             />
           </div>
-          <label className="flex items-center gap-2 text-sm sm:col-span-2">
-            <input type="checkbox" className="size-4" {...register('sheetAccessory')} />
-            Na hárku s obsahom case ako príslušenstvo (nie v tabuľke dĺžok) – napr. jack v XLR case
-          </label>
           <CableMakersField
             companyId={companyId}
             mode={makerMode}
