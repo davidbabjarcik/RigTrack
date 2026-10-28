@@ -257,7 +257,7 @@ export function EquipmentDetailPage() {
             </LinkButton>
           )}
           {/* DMX adresy kusov (linka, adresa, mód) – len tu a pri „DMX všetkým“, nie vo formulári. */}
-          {can(company, 'equipment.edit') && equipment.trackUnits && (equipment.kind === 'light' || Boolean(equipment.attributes.dmxModes?.length)) && !equipment.attributes.lightType?.startsWith('acc_') && (
+          {can(company, 'equipment.edit') && (equipment.kind === 'light' || Boolean(equipment.attributes.dmxModes?.length)) && !equipment.attributes.lightType?.startsWith('acc_') && (
             <Button variant="outline" size="sm" onClick={() => setDmxOpen(!dmxOpen)}>
               <SlidersHorizontal className="size-4" aria-hidden />
               DMX adresy

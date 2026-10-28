@@ -70,7 +70,9 @@ export function dmxFromEquipment(onEvent: EventEquipment[], equipment: Equipment
     if (!item || !(isLighting(item.kind, '') || item.attributes.dmxModes?.length)) continue
     const firstMode = item.attributes.dmxModes?.[0]
     const defaultMode = firstMode ? firstMode.name || `${firstMode.channels} ch` : ''
-    const units = item.trackUnits ? unitIdsOf(item).slice(0, entry.quantity) : Array.from({ length: entry.quantity }, () => null)
+    // Bez evidencie po kusoch: kusy 1…počet, ak majú pri technike zapísanú adresu; inak bez čísla.
+    const numbered = item.trackUnits || Object.values(item.unitInfo ?? {}).some((info) => info?.dmxAddress)
+    const units = numbered ? unitIdsOf(item).slice(0, entry.quantity) : Array.from({ length: entry.quantity }, () => null)
     for (const unit of units) {
       const info = unit !== null ? item.unitInfo?.[String(unit)] : undefined
       const mode = info?.dmxMode ?? defaultMode

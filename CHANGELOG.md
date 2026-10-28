@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.7.2 – 29. 10. 2026
+
+- Tlačidlo **DMX adresy** hore v detaile je pri každom svetle – aj bez „Evidovať každý kus zvlášť“ (kusy 1…počet).
+  Takéto adresy prevezme aj DMX patch list eventu.
+
 ### 5.7.1 – 29. 10. 2026
 
 - **DMX adresy kusov už nie sú vo formulári techniky** (ani pri úprave). Zadávajú sa v detaile svetla tlačidlom

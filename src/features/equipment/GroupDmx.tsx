@@ -16,8 +16,10 @@ type Values = { line: string; address: string; mode: string }
  */
 export function GroupDmx({ companyId, parts, caseName, open, onOpen, onClose }: { companyId: string; parts: Equipment[]; caseName: (caseId: string | null) => string; open: boolean; onOpen: () => void; onClose: () => void }) {
   const queryClient = useQueryClient()
+  // Kusy po číslach; technika bez evidencie po kusoch (jedna položka) má kusy 1…počet.
+  const withUnits = (part: Equipment) => part.trackUnits || parts.length === 1
   const rows: Row[] = parts
-    .filter((part) => part.trackUnits)
+    .filter(withUnits)
     .flatMap((part) => unitIdsOf(part).map((unit) => ({ unit, part })))
     .sort((a, b) => a.unit - b.unit)
   const modes = parts[0]?.attributes.dmxModes ?? []
@@ -50,7 +52,7 @@ export function GroupDmx({ companyId, parts, caseName, open, onOpen, onClose }: 
 
   const save = useMutation({
     mutationFn: async () => {
-      for (const part of parts.filter((item) => item.trackUnits)) {
+      for (const part of parts.filter(withUnits)) {
         const info: Record<string, UnitInfo> = { ...(part.unitInfo ?? {}) }
         for (const unit of unitIdsOf(part)) {
           const value = values[unit]
