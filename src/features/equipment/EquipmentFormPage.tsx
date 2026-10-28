@@ -870,7 +870,8 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
             errors={errors}
             unitIdsText={unitIdsText ?? ''}
             quantity={quantity}
-            dmxModes={lighting ? (dmxModesValue ?? []).map((mode) => mode.name || `${mode.channels} ch`).filter(Boolean) : null}
+            // DMX adresy kusov až pri úprave pridanej techniky (pri novej to len zavadzia).
+            dmxModes={lighting && equipment ? (dmxModesValue ?? []).map((mode) => mode.name || `${mode.channels} ch`).filter(Boolean) : null}
           />
         )}
         <SelectField label="Stav" className={groupMode ? 'hidden' : undefined} error={errors.status?.message} {...register('status')}>

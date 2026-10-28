@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.2.1 – 28. 10. 2026
+
+- **Nová technika bez DMX adries kusov**: linka, adresa a mód pri jednotlivých kusoch sú až v úprave pridanej
+  techniky (alebo hromadne cez „DMX všetkým“), nie pri pridávaní.
+
 ### 5.2 – 28. 10. 2026
 
 - **Verzia softvéru** pri mixpulte na svetlá (napr. Titan v17.1, grandMA3 2.0) a verzia firmvéru pri prevodníku –
