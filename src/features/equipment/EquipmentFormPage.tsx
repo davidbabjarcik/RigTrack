@@ -211,6 +211,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     nodeProtocols: equipment.attributes.nodeProtocols ?? [],
     nodePorts: equipment.attributes.nodePorts ?? [],
     dipNote: equipment.attributes.dipNote ?? '',
+    softwareVersion: equipment.attributes.softwareVersion ?? '',
     inCover: equipment.attributes.inCover ?? false,
     coverNote: equipment.attributes.coverNote ?? '',
     trackHours: equipment.attributes.trackHours ?? (equipment.hoursIntervalMonths !== null || equipment.operatingHours !== null),
@@ -753,7 +754,8 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
 
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Pódium má vlastný typ (dosky, nohy…), všeobecná kategória by ho len zdvojovala. */}
-        {kind !== 'stage' && (
+        {/* Kategória len keď ju firma používa (alebo ju technika už má); nové sa zakladajú v Nastaveniach → Zoznamy. */}
+        {kind !== 'stage' && (categories.length > 0 || Boolean(categoryText)) && (
           <Field
             label="Kategória"
             list={categoryListId}

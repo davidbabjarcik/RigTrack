@@ -219,6 +219,8 @@ export type EquipmentAttributes = {
   /** Svetlo: adresa sa nastavuje DIP prepínačmi (inak displejom / menu) – počet prepínačov a poznámka. */
   dipSwitches?: number
   dipNote?: string
+  /** Mixpult na svetlá, prevodník: na akej verzii softvéru / firmvéru funguje (napr. Titan v17). */
+  softwareVersion?: string
   /** Art-Net / sACN node: aktuálne zapnuté protokoly a výstupy s universe. */
   nodeProtocols?: ('artnet' | 'sacn')[]
   nodePorts?: { port: number; artnet?: number | null; sacn?: number | null; universe?: number | null; protocol?: 'artnet' | 'sacn'; note?: string }[]
@@ -479,6 +481,7 @@ export const equipmentSchema = z.object({
   cableVariant: text(40).optional(),
   dipSwitches: z.number().int().min(4).max(16).optional(),
   dipNote: z.string().trim().max(80, 'Najviac 80 znakov').optional(),
+  softwareVersion: z.string().trim().max(60, 'Najviac 60 znakov').optional(),
   nodeProtocols: z.array(z.enum(['artnet', 'sacn'])).optional(),
   nodePorts: z
     .array(
@@ -692,6 +695,7 @@ export function attributesFor(
         | 'cableVariant'
         | 'dipSwitches'
         | 'dipNote'
+        | 'softwareVersion'
         | 'nodeProtocols'
         | 'nodePorts'
         | 'inCover'
@@ -825,6 +829,8 @@ export function attributesFor(
   }
   const accessory = Boolean(values.lightType?.startsWith('acc_'))
   if (lighting && values.lightType) attributes.lightType = values.lightType
+  // Mixpult a prevodník: verzia softvéru / firmvéru.
+  if (lighting && (values.lightType === 'acc_console' || values.lightType === 'acc_converter') && values.softwareVersion?.trim()) attributes.softwareVersion = values.softwareVersion.trim()
   if (lighting && values.lightSource && !accessory) attributes.lightSource = values.lightSource
   if (lighting && (values.lightSource === 'discharge' || values.lightSource === 'halogen') && !accessory) {
     if (values.lampChangedOn) attributes.lampChangedOn = values.lampChangedOn
@@ -992,6 +998,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>, options:
   return [
     a.audioType && AUDIO_TYPE_LABELS[a.audioType],
     a.lightType && LIGHT_TYPE_LABELS[a.lightType],
+    a.softwareVersion && `verzia ${a.softwareVersion}`,
     a.trussType && TRUSS_TYPE_LABELS[a.trussType],
     a.trussShape && TRUSS_SHAPE_LABELS[a.trussShape],
     a.stageType && STAGE_TYPE_LABELS[a.stageType],

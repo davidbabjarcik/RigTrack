@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.2 – 28. 10. 2026
+
+- **Verzia softvéru** pri mixpulte na svetlá (napr. Titan v17.1, grandMA3 2.0) a verzia firmvéru pri prevodníku –
+  vidno ju aj v zozname a v detaile techniky.
+- **Kategória pri technike** sa vo formulári ukáže, len keď firma kategórie používa (alebo ich technika už má).
+  Kategórie sa zakladajú v Nastavenia → Zoznamy.
+- **Štítky na čiernu pásku**: pri štítkoch je vysvetlené, prečo je stiahnuté PNG čierne na bielom (tlačiareň ho
+  vytlačí bielou na čiernu pásku).
+
 ### 5.1 – 28. 10. 2026
 
 - **Farby druhov techniky** (Nastavenia → Zoznamy → Farby druhov techniky): farebný pruh v zozname pre Svetlo, Zvuk,

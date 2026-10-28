@@ -218,6 +218,12 @@ ${lengths.map((length) => `  .tape-sheet img.tape${length} { page: tape${length}
           </ul>
         </details>
 
+        {black && labels.length > 0 && (
+          <p role="note" className="rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+            <strong>Čierna páska:</strong> stiahnuté PNG je naschvál čierne na bielom – tlačiareň tlačí bielou farbou kazety, takže
+            z čierneho textu bude biely text na čiernej páske (ako v náhľade). Obrázok neprevracajte, inak sa vytlačí biela plocha.
+          </p>
+        )}
         {labels.length === 0 && <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">Nie je čo tlačiť – vyberte druh štítku alebo doplňte údaje pri technike.</p>}
         <ul className="flex flex-col gap-2">
           {images.map((image) => (

@@ -44,6 +44,16 @@ export function LightingFields() {
             <p className="mt-1 text-xs text-muted-foreground">{powerW ? `≈ ${String(ampsAt230(powerW)).replace('.', ',')} A pri 230 V` : 'Stačí watty – ampéry sa dopočítajú.'}</p>
           </div>
         )}
+        {(lightType === 'acc_console' || lightType === 'acc_converter') && (
+          <Field
+            label={lightType === 'acc_console' ? 'Verzia softvéru' : 'Verzia firmvéru'}
+            placeholder={lightType === 'acc_console' ? 'napr. Titan v17.1, grandMA3 2.0' : 'napr. v2.4'}
+            maxLength={60}
+            autoComplete="off"
+            error={errors.softwareVersion?.message}
+            {...register('softwareVersion')}
+          />
+        )}
         {lightType === 'acc_converter' && <DmxNodeFields />}
         {!lightAccessory && (
           <div className="grid gap-2 sm:grid-cols-2">
