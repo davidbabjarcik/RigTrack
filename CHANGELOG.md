@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.4 – 29. 10. 2026
+
+- **Fotka pre celú sadu cases**: na stránke sady (napr. 8× Wash 19×15W Case) kliknete na fotku hore alebo vložíte
+  obrázok cez Ctrl+V – každý case sady dostane rovnakú fotku.
+- **Jednoduchšie vkladanie kusov do case** na stránke techniky: pri každom kuse mimo case je výber „dať do…“ (presunie
+  hneď) a tlačidlo **Rozložiť do sady** rozdelí voľné kusy do ďalších cases tej istej sady po rovnakom počte
+  (napr. Wash Case #4 – #8 po 2 ks). Kusy v tom istom case sa spoja do jedného riadku.
+
 ### 5.3 – 28. 10. 2026
 
 - **Triedenie techniky „Podľa kategórie / druhu“**: technika v skupinách (Svetlo, Zvuk, Hliník…) s nadpisom, v skupine podľa

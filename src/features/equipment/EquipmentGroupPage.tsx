@@ -6,7 +6,7 @@ import { GroupDmx } from './GroupDmx'
 import { GroupHours } from './GroupHours'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
-import { caseTitle } from '@/features/cases/model'
+import { caseNumber, caseTitle, groupCases } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
@@ -43,31 +43,28 @@ export function EquipmentGroupPage() {
     },
   })
   const [dmxOpen, setDmxOpen] = useState(false)
-  // Kusy mimo case označené na presun do case.
-  const [picked, setPicked] = useState<string[]>([])
-  const [targetCase, setTargetCase] = useState('')
+  // Presun kusov mimo case do cases: [{ caseId, keys: ['časť:kus'] }].
   const toCase = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (plan: { caseId: string; keys: string[] }[]) => {
       const added: string[] = []
-      const byPart = new Map<string, number[]>()
-      for (const key of picked) {
-        const [partId, unit] = key.split(':')
-        byPart.set(partId, [...(byPart.get(partId) ?? []), Number(unit)])
-      }
-      for (const [partId, unitIds] of byPart) {
-        let moved = await splitEquipmentUnits(partId, targetCase, unitIds)
-        // Ak už v tom case časť tej istej techniky je, kusy sa k nej pridajú (jeden riadok na case).
-        const existing = parts.find((item) => item.caseId === targetCase && item.id !== moved && item.id !== partId)
-        if (existing) {
-          await mergeEquipment(moved, existing.id)
-          moved = existing.id
+      for (const { caseId, keys } of plan) {
+        const byPart = new Map<string, number[]>()
+        for (const key of keys) {
+          const [partId, unit] = key.split(':')
+          byPart.set(partId, [...(byPart.get(partId) ?? []), Number(unit)])
         }
-        added.push(moved)
+        let target = parts.find((item) => item.caseId === caseId)?.id ?? ''
+        for (const [partId, unitIds] of byPart) {
+          const moved = await splitEquipmentUnits(partId, caseId, unitIds)
+          // V jednom case jeden riadok tej istej techniky: ďalšie kusy sa k nemu pridajú.
+          if (target && target !== moved) await mergeEquipment(moved, target)
+          else target = moved
+        }
+        if (target) added.push(target)
       }
       return added
     },
     onSuccess: async (added) => {
-      setPicked([])
       await queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) })
       await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
       navigate(`/equipment/group?ids=${[...new Set([...ids, ...added])].join(',')}`, { replace: true })
@@ -144,6 +141,24 @@ export function EquipmentGroupPage() {
     .flatMap((item) => unitIdsOf(item).map((unit) => ({ unit, part: item })))
     .sort((a, b) => a.unit - b.unit)
   const freeUnits = units.filter(({ part }) => !part.caseId).map(({ part, unit }) => `${part.id}:${unit}`)
+  // „Rozložiť do sady“: cases tej istej sady (napr. Wash Case #1–#8), kde už táto technika v niektorých je.
+  const countIn = (caseId: string) => parts.filter((item) => item.caseId === caseId).reduce((sum, item) => sum + item.quantity, 0)
+  const set = groupCases(cases.data ?? []).find((group) => group.items.some((box) => countIn(box.id) > 0))
+  const fillPer = set ? Math.max(0, ...set.items.map((box) => countIn(box.id))) : 0
+  const fillPlan: { caseId: string; keys: string[] }[] = []
+  {
+    const queue = [...freeUnits]
+    for (const box of set?.items ?? []) {
+      const need = fillPer - countIn(box.id)
+      if (need <= 0 || queue.length === 0) continue
+      fillPlan.push({ caseId: box.id, keys: queue.splice(0, need) })
+    }
+  }
+  const fillLabel = (() => {
+    const boxes = fillPlan.map((step) => set?.items.find((box) => box.id === step.caseId)).filter((box): box is NonNullable<typeof box> => Boolean(box))
+    if (boxes.length === 0) return ''
+    return boxes.length === 1 ? caseTitle(boxes[0]) : `${caseTitle(boxes[0])} – #${caseNumber(boxes[boxes.length - 1])}`
+  })()
 
   return (
     <>
@@ -227,18 +242,6 @@ export function EquipmentGroupPage() {
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {units.map(({ unit, part }) => (
               <li key={`${part.id}-${unit}`} className="flex min-h-12 items-center gap-3 px-4 py-2">
-                {canMove &&
-                  (part.caseId ? (
-                    <span className="size-4 shrink-0" aria-hidden />
-                  ) : (
-                    <input
-                      type="checkbox"
-                      className="size-4 shrink-0"
-                      aria-label={`Vybrať kus #${unit} do case`}
-                      checked={picked.includes(`${part.id}:${unit}`)}
-                      onChange={(event) => setPicked(event.target.checked ? [...picked, `${part.id}:${unit}`] : picked.filter((key) => key !== `${part.id}:${unit}`))}
-                    />
-                  ))}
                 <Link to={`/equipment/${part.id}?unit=${unit}`} className="w-12 font-semibold hover:underline">
                   #{unit}
                 </Link>
@@ -248,6 +251,21 @@ export function EquipmentGroupPage() {
                       <Package className="size-4" aria-hidden />
                       {caseName(part.caseId) || 'case'}
                     </Link>
+                  ) : canMove ? (
+                    <select
+                      aria-label={`Dať kus #${unit} do case`}
+                      className="h-8 max-w-64 rounded-md border bg-background px-2 text-sm text-muted-foreground"
+                      value=""
+                      disabled={toCase.isPending}
+                      onChange={(event) => event.target.value && toCase.mutate([{ caseId: event.target.value, keys: [`${part.id}:${unit}`] }])}
+                    >
+                      <option value="">mimo case – dať do…</option>
+                      {caseOptions.map((box) => (
+                        <option key={box.id} value={box.id}>
+                          {caseTitle(box)}
+                        </option>
+                      ))}
+                    </select>
                   ) : (
                     <span className="text-muted-foreground">mimo case</span>
                   )}
@@ -256,30 +274,18 @@ export function EquipmentGroupPage() {
               </li>
             ))}
           </ul>
-          {canMove && freeUnits.length > 0 && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl border bg-surface p-3 text-sm">
-              <button
-                type="button"
-                className="text-accent hover:underline"
-                onClick={() => setPicked(picked.length === freeUnits.length ? [] : freeUnits)}
-              >
-                {picked.length === freeUnits.length ? 'Zrušiť výber' : `Vybrať všetky mimo case (${freeUnits.length})`}
-              </button>
-              <select aria-label="Do ktorého case" className="h-9 min-w-48 flex-1 rounded-lg border bg-background px-2" value={targetCase} onChange={(event) => setTargetCase(event.target.value)}>
-                <option value="">Vyberte case…</option>
-                {caseOptions.map((box) => (
-                  <option key={box.id} value={box.id}>
-                    {caseTitle(box)}
-                  </option>
-                ))}
-              </select>
-              <Button size="sm" disabled={picked.length === 0 || !targetCase || toCase.isPending} onClick={() => toCase.mutate()}>
+          {canMove && fillPlan.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+              <span className="min-w-0 flex-1">
+                Voľné kusy sa dajú rozložiť do sady <strong>{fillLabel}</strong> po {fillPer} ks ({fillPlan.reduce((sum, step) => sum + step.keys.length, 0)} ks).
+              </span>
+              <Button size="sm" disabled={toCase.isPending} onClick={() => toCase.mutate(fillPlan)}>
                 <Package className="size-4" aria-hidden />
-                {toCase.isPending ? 'Presúvam…' : `Dať do case${picked.length > 0 ? ` (${picked.length})` : ''}`}
+                {toCase.isPending ? 'Presúvam…' : 'Rozložiť do sady'}
               </Button>
-              {toCase.isError && <span className="text-destructive">Nepodarilo sa.</span>}
             </div>
           )}
+          {toCase.isError && <p className="mt-2 text-sm text-destructive">Presun do case sa nepodaril.</p>}
         </section>
       )}
 

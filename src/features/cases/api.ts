@@ -186,6 +186,20 @@ export async function saveCaseLabelCustom(companyId: string, id: string, fields:
   if (data.length === 0) throw new Error('Not updated')
 }
 
+/** Rovnaká fotka pre celú sadu cases; každý case dostane vlastnú kópiu (zmazanie pri jednom nepokazí ostatné). */
+export async function setCaseGroupPhoto(companyId: string, caseIds: string[], file: File) {
+  const [first, ...rest] = caseIds
+  const path = await storeCompanyPhoto(companyId, `case-${first}`, file, { thumb: true })
+  const db = getSupabase()
+  const { error } = await db.from('cases').update({ photo_path: path }).eq('company_id', companyId).eq('id', first)
+  if (error) throw error
+  for (const id of rest) {
+    const copy = await copyCompanyPhoto(companyId, path, `case-${id}`)
+    const result = await db.from('cases').update({ photo_path: copy }).eq('company_id', companyId).eq('id', id)
+    if (result.error) throw result.error
+  }
+}
+
 /** Fotka case (nie štítku): uloží súbor aj s náhľadom a zapíše ho k case. */
 export async function setCasePhoto(companyId: string, caseId: string, file: File) {
   const path = await storeCompanyPhoto(companyId, `case-${caseId}`, file, { thumb: true })
