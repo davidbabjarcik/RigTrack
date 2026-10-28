@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-4.17-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-4.18-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -47,6 +47,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **4.18** | Nový vzhľad hárku s obsahom case: QR, súhrn s hmotnosťou a podpisom, typy káblov spolu / pod sebou / na vlastnom hárku |
 | **4.17** | Vlastné typy káblov s farbami dĺžok (napr. Káblovka) |
 | **4.16** | Spoločné farby káblov s vlastnými pre vybraný typ, predloha farieb, príslušenstvo ako karty na hárku case |
 | **4.15** | Farby dĺžok káblov pre XLR, powerCON a 230 V zvlášť, hromadná úprava všetkých dĺžok kábla |

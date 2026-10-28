@@ -59,6 +59,28 @@ export type SheetData = {
   companyName: string
   /** Fotky príslušenstva podľa cesty k fotke (karty pod tabuľkou káblov). */
   photos?: Map<string, CanvasImageSource>
+  /** QR kód case (otvorí obsah v appke). */
+  qr?: CanvasImageSource | null
+  /** Súhrn dole: kusov spolu a hmotnosť (case a známe hmotnosti techniky). */
+  totalPieces?: number
+  weightKg?: number | null
+  /** Viac typov káblov: v jednej tabuľke (predvolené), alebo každý typ vo vlastnej tabuľke pod sebou. */
+  layout?: SheetLayout
+}
+
+/** Ako dať na hárok viac typov káblov: spolu, pod sebou, alebo každý typ na vlastný hárok. */
+export const SHEET_LAYOUTS = ['together', 'stacked', 'pages'] as const
+export type SheetLayout = (typeof SHEET_LAYOUTS)[number]
+export const SHEET_LAYOUT_LABELS: Record<SheetLayout, string> = { together: 'V jednej tabuľke', stacked: 'Každý typ zvlášť pod sebou', pages: 'Každý typ na vlastnom hárku' }
+
+/** Pre „každý typ na vlastnom hárku“: tabuľka iba s jedným typom; ostatný obsah je len na prvom hárku. */
+export function matrixPages(matrix: CableMatrix): CableMatrix[] {
+  if (matrix.columns.length <= 1) return [matrix]
+  return matrix.columns.map((column, index) => ({
+    columns: [column],
+    rows: matrix.rows.filter((row) => row.counts[index] > 0).map((row) => ({ lengthM: row.lengthM, counts: [row.counts[index]] })),
+    others: index === 0 ? matrix.others : [],
+  }))
 }
 
 /** Karty príslušenstva: najviac 6 v rade; pri viac ako 18 položkách sa namiesto nich vypíše zoznam. */
@@ -123,6 +145,51 @@ function coloured(ctx: Ctx, text: string, x: number, y: number, maxWidth: number
   ctx.textAlign = 'left'
 }
 
+/** Svetlé pozadie riadkov a rámčekov; tenké čiary mriežky. */
+const SOFT = '#f1f3f6'
+const GRID = '#9aa1ab'
+const MUTED = '#5b626d'
+
+/** Zaoblený obdĺžnik (cesta). */
+function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.arcTo(x + w, y, x + w, y + h, r)
+  ctx.arcTo(x + w, y + h, x, y + h, r)
+  ctx.arcTo(x, y + h, x, y, r)
+  ctx.arcTo(x, y, x + w, y, r)
+  ctx.closePath()
+}
+
+/** Nadpis sekcie v strede s krátkou čiarou pod ním. */
+function sectionTitle(ctx: Ctx, text: string, y: number) {
+  centered(ctx, text, SHEET_WIDTH / 2, y + 40, SHEET_WIDTH - 2 * MARGIN, 66, 36)
+  font(ctx, 66)
+  const w = Math.min(ctx.measureText(text).width, SHEET_WIDTH - 2 * MARGIN)
+  ctx.fillRect(SHEET_WIDTH / 2 - w / 2, y + 92, w, 8)
+  return y + 140
+}
+
+/** Počet kusov: veľké číslo a menšie „KS“ vedľa, vycentrované. */
+function countText(ctx: Ctx, count: number, cx: number, cy: number, size: number) {
+  const value = String(count)
+  const unit = ' KS'
+  const unitSize = Math.floor(size * 0.42)
+  font(ctx, size)
+  const valueWidth = ctx.measureText(value).width
+  font(ctx, unitSize, 700)
+  const unitWidth = ctx.measureText(unit).width
+  const x = cx - (valueWidth + unitWidth) / 2
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillStyle = INK
+  font(ctx, size)
+  ctx.fillText(value, x, cy + size * 0.36)
+  ctx.fillStyle = MUTED
+  font(ctx, unitSize, 700)
+  ctx.fillText(unit, x + valueWidth, cy + size * 0.36)
+  ctx.fillStyle = INK
+}
+
 export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
   canvas.width = SHEET_WIDTH
   canvas.height = SHEET_HEIGHT
@@ -137,13 +204,13 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
   const width = SHEET_WIDTH - 2 * MARGIN
   const bottom = SHEET_HEIGHT - MARGIN
 
-  // Hlavička: veľké logo vľavo, názov hárku a case presne v strede strany.
+  // Hlavička: logo vľavo, názov hárku v strede, box s číslom case a QR vpravo.
   const HEADER = 430
-  const LOGO_MAX_WIDTH = 640
+  const LOGO_MAX_WIDTH = 600
   let logoWidth = 0
   if (data.logo) {
     const { width: sourceWidth, height: sourceHeight } = sourceSize(data.logo)
-    const scale = Math.min(LOGO_MAX_WIDTH / sourceWidth, HEADER / sourceHeight)
+    const scale = Math.min(LOGO_MAX_WIDTH / sourceWidth, (HEADER - 40) / sourceHeight)
     logoWidth = sourceWidth * scale
     ctx.drawImage(data.logo, left, MARGIN + (HEADER - sourceHeight * scale) / 2, logoWidth, sourceHeight * scale)
   } else if (data.companyName) {
@@ -154,111 +221,171 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
     logoWidth = ctx.measureText(name).width
     ctx.fillText(name, left, MARGIN + HEADER / 2)
   }
-  // Text je v strede strany; aby nezasahoval do loga, smie byť najviac taký široký,
-  // koľko miesta ostane symetricky po oboch stranách.
-  const centerX = SHEET_WIDTH / 2
-  const titleWidth = width - 2 * (logoWidth + 70)
-  centered(ctx, 'FLIGHTCASE CONTENT', centerX, MARGIN + HEADER * 0.36, titleWidth, 150, 50)
-  const subtitle = [data.caseName, data.caseNumber && `č. ${data.caseNumber}`].filter(Boolean).join(' · ')
-  centered(ctx, subtitle, centerX, MARGIN + HEADER * 0.7, titleWidth, 92, 36)
+  // Box vpravo: „CASE Č.“ a číslo vľavo, veľký QR vpravo.
+  const QR = data.qr ? HEADER - 80 : 0
+  const BOX = data.qr || data.caseNumber ? Math.max(360, 300 + QR) : 0
+  if (BOX) {
+    const boxX = left + width - BOX
+    ctx.lineWidth = 5
+    roundRect(ctx, boxX, MARGIN, BOX, HEADER, 28)
+    ctx.stroke()
+    ctx.lineWidth = LINE
+    const textWidth = BOX - QR - 80
+    font(ctx, 44, 700)
+    ctx.textBaseline = 'top'
+    ctx.fillStyle = MUTED
+    ctx.fillText('CASE Č.', boxX + 40, MARGIN + 50)
+    ctx.fillStyle = INK
+    const number = data.caseNumber || '—'
+    const numberSize = fitSize(ctx, number, textWidth, 170, 50)
+    font(ctx, numberSize)
+    ctx.fillText(ellipsize(ctx, number, textWidth), boxX + 40, MARGIN + 110)
+    if (data.qr) {
+      ctx.imageSmoothingEnabled = false
+      ctx.drawImage(data.qr, boxX + BOX - 40 - QR, MARGIN + 40, QR, QR)
+      ctx.imageSmoothingEnabled = true
+      font(ctx, 30, 700)
+      ctx.fillStyle = MUTED
+      ctx.fillText('NASKENUJ', boxX + 40, MARGIN + HEADER - 110)
+      ctx.fillText('PRE OBSAH', boxX + 40, MARGIN + HEADER - 70)
+      ctx.fillStyle = INK
+    }
+  }
+  // Text je v strede medzi logom a boxom.
+  const titleLeft = left + logoWidth + (logoWidth ? 60 : 0)
+  const titleRight = left + width - BOX - (BOX ? 60 : 0)
+  const centerX = (titleLeft + titleRight) / 2
+  const titleWidth = titleRight - titleLeft
+  centered(ctx, 'FLIGHTCASE CONTENT', centerX, MARGIN + HEADER * 0.3, titleWidth, 140, 50)
+  ctx.fillRect(centerX - titleWidth * 0.35, MARGIN + HEADER * 0.5 - 4, titleWidth * 0.7, 8)
+  centered(ctx, data.caseName || 'OBSAH CASE', centerX, MARGIN + HEADER * 0.72, titleWidth, 96, 36)
 
-  let y = MARGIN + HEADER + 60
-  const footerSpace = data.footer ? 110 : 0
+  let y = MARGIN + HEADER + 70
+  const contactSpace = data.footer ? 110 : 0
+  const SUMMARY = 210
+  const footerSpace = contactSpace + SUMMARY + 50
   const { columns, rows, others } = data.matrix
-  // Ostatný obsah: pár položiek pod sebou, dlhší zoznam v dvoch stĺpcoch.
-  // Miesto preň sa odloží vopred, aby tabuľka nezabrala celú stranu.
+  // Ostatný obsah: karty, alebo pri veľa položkách zoznam. Miesto preň sa odloží vopred.
   const OTHER_LINE = 78
   const otherColumns = others.length > 8 ? 2 : 1
   const asCards = others.length > 0 && others.length <= CARD_LIMIT
   const cardRows = Math.ceil(others.length / cardColumns(others.length))
-  const othersHeight = others.length === 0 ? 0 : asCards ? 130 + cardRows * 520 : 130 + Math.ceil(others.length / otherColumns) * OTHER_LINE
+  const othersHeight = others.length === 0 ? 0 : asCards ? 160 + cardRows * 500 : 160 + Math.ceil(others.length / otherColumns) * OTHER_LINE
 
-  if (rows.length > 0) {
-    const FIRST = 520
-    const HEAD_ROW = 210
-    const columnWidth = (width - FIRST) / columns.length
-    const available = bottom - footerSpace - othersHeight - y - HEAD_ROW - 60
-    const rowHeight = Math.max(110, Math.min(330, available / rows.length))
-    const tableHeight = HEAD_ROW + rows.length * rowHeight
+  // Káble: jedna tabuľka (dĺžka × typ), alebo pri „každý typ zvlášť“ tabuľka za každý typ pod sebou.
+  const tables =
+    data.layout === 'stacked' && columns.length > 1
+      ? columns.map((column, index) => ({
+          title: column.toUpperCase(),
+          columns: [column],
+          rows: rows.filter((row) => row.counts[index] > 0).map((row) => ({ lengthM: row.lengthM, counts: [row.counts[index]] })),
+        }))
+      : rows.length > 0
+        ? [{ title: columns.length === 1 ? columns[0].toUpperCase() : 'KÁBLE PODĽA DĹŽKY', columns, rows }]
+        : []
+  const FIRST = 560
+  const HEAD_ROW = 130
+  const STRIP = 54
+  const TABLE_EXTRA = 140 + HEAD_ROW + 70
+  const totalRows = tables.reduce((sum, table) => sum + table.rows.length, 0)
+  const rowHeight = Math.max(100, Math.min(360, (bottom - footerSpace - othersHeight - y - tables.length * TABLE_EXTRA) / Math.max(1, totalRows)))
 
-    // Hlavička tabuľky.
-    centered(ctx, 'FARBA / DĹŽKA', left + FIRST / 2, y + HEAD_ROW / 2, FIRST - 60, 70, 34)
-    columns.forEach((column, index) => {
+  for (const table of tables) {
+    y = sectionTitle(ctx, table.title, y)
+    const columnWidth = (width - FIRST) / table.columns.length
+    const tableHeight = HEAD_ROW + table.rows.length * rowHeight
+
+    // Hlavička tabuľky (sivý pás).
+    ctx.fillStyle = SOFT
+    ctx.fillRect(left, y, width, HEAD_ROW)
+    ctx.fillStyle = MUTED
+    centered(ctx, 'FARBA / DĹŽKA', left + FIRST / 2, y + HEAD_ROW / 2, FIRST - 60, 50, 30)
+    table.columns.forEach((column, index) => {
       const x = left + FIRST + index * columnWidth
-      centered(ctx, column.toUpperCase(), x + columnWidth / 2, y + HEAD_ROW / 2, columnWidth - 60, 76, 30)
+      centered(ctx, table.columns.length === 1 ? 'POČET' : column.toUpperCase(), x + columnWidth / 2, y + HEAD_ROW / 2, columnWidth - 60, 56, 28)
     })
+    ctx.fillStyle = INK
 
-    rows.forEach((row, rowIndex) => {
+    table.rows.forEach((row, rowIndex) => {
       const rowY = y + HEAD_ROW + rowIndex * rowHeight
-      // Farba podľa typu kábla v prvom stĺpci, kde táto dĺžka je (XLR, powerCON, 230 V majú vlastné farby).
-      const column = columns[row.counts.findIndex((count) => count > 0)]
+      if (rowIndex % 2 === 1) {
+        ctx.fillStyle = '#f8f9fb'
+        ctx.fillRect(left, rowY, width, rowHeight)
+        ctx.fillStyle = INK
+      }
+      // Farba podľa typu kábla v prvom stĺpci, kde táto dĺžka je (typy môžu mať vlastné farby).
+      const column = table.columns[row.counts.findIndex((count) => count > 0)]
       const color = findCableColor(data.colors, column, row.lengthM)
       const lengthText = `${formatNumber(row.lengthM)} m`
+      const textWidth = FIRST - STRIP - 70
+      const labelX = left + STRIP + (FIRST - STRIP) / 2
       if (color) {
-        // Úzky farebný pruh na okraji a vedľa neho názov farby s dĺžkou napísané tou istou farbou.
-        const STRIP = 46
         ctx.fillStyle = color.color
         ctx.fillRect(left, rowY, STRIP, rowHeight)
-        // Svetlé farby (žltá, azúrová) by na bielom papieri zanikli, preto dostanú tenký tmavý obrys.
+        // Svetlé farby (žltá, béžová) by na bielom papieri zanikli, preto dostanú tenký tmavý obrys.
         const outline = contrastInk(color.color) === INK
-        const labelX = left + STRIP + (FIRST - STRIP) / 2
-        const labelWidth = FIRST - STRIP - 50
         if (color.name) {
-          coloured(ctx, color.name.toUpperCase(), labelX, rowY + rowHeight * 0.3, labelWidth, Math.min(64, rowHeight * 0.27), color.color, outline)
-          coloured(ctx, lengthText, labelX, rowY + rowHeight * 0.66, labelWidth, Math.min(104, rowHeight * 0.42), color.color, outline)
+          coloured(ctx, color.name.toUpperCase(), labelX, rowY + rowHeight * 0.3, textWidth, Math.min(64, rowHeight * 0.26), color.color, outline)
+          coloured(ctx, lengthText, labelX, rowY + rowHeight * 0.66, textWidth, Math.min(130, rowHeight * 0.46), color.color, outline)
         } else {
-          coloured(ctx, lengthText, labelX, rowY + rowHeight / 2, labelWidth, Math.min(120, rowHeight * 0.5), color.color, outline)
+          coloured(ctx, lengthText, labelX, rowY + rowHeight / 2, textWidth, Math.min(140, rowHeight * 0.5), color.color, outline)
         }
-        ctx.fillStyle = INK
       } else {
-        centered(ctx, lengthText, left + FIRST / 2, rowY + rowHeight / 2, FIRST - 60, Math.min(120, rowHeight * 0.5), 40)
+        centered(ctx, lengthText, labelX, rowY + rowHeight / 2, textWidth, Math.min(130, rowHeight * 0.5), 40)
       }
       row.counts.forEach((count, index) => {
         if (count === 0) return
         const x = left + FIRST + index * columnWidth
-        centered(ctx, `${count} ks`, x + columnWidth / 2, rowY + rowHeight / 2, columnWidth - 60, Math.min(150, rowHeight * 0.6), 40)
+        countText(ctx, count, x + columnWidth / 2, rowY + rowHeight / 2, Math.min(150, rowHeight * 0.55))
       })
     })
 
     // Mriežka až nakoniec, aby prekryla okraje farebných polí.
-    ctx.strokeStyle = INK
-    ctx.strokeRect(left, y, width, tableHeight)
+    ctx.strokeStyle = GRID
+    ctx.lineWidth = 3
     ctx.beginPath()
     ctx.moveTo(left + FIRST, y)
     ctx.lineTo(left + FIRST, y + tableHeight)
-    for (let index = 1; index < columns.length; index++) {
+    for (let index = 1; index < table.columns.length; index++) {
       const x = left + FIRST + index * columnWidth
       ctx.moveTo(x, y)
       ctx.lineTo(x, y + tableHeight)
     }
-    for (let index = 0; index < rows.length; index++) {
+    for (let index = 0; index < table.rows.length; index++) {
       const rowY = y + HEAD_ROW + index * rowHeight
-      ctx.moveTo(left, rowY)
+      ctx.moveTo(left + (index === 0 ? 0 : STRIP), rowY)
       ctx.lineTo(left + width, rowY)
     }
     ctx.stroke()
-    y += tableHeight + 80
+    ctx.strokeStyle = INK
+    ctx.lineWidth = LINE
+    ctx.strokeRect(left, y, width, tableHeight)
+    y += tableHeight + 70
   }
 
   if (asCards) {
-    centered(ctx, rows.length > 0 ? 'PRÍSLUŠENSTVO / REDUKCIE' : 'OBSAH', SHEET_WIDTH / 2, y + 40, width, 64, 36)
-    y += 110
+    y = sectionTitle(ctx, rows.length > 0 ? 'PRÍSLUŠENSTVO / REDUKCIE' : 'OBSAH', y)
     const perRow = cardColumns(others.length)
     const cardWidth = (width - CARD_GAP * (perRow - 1)) / perRow
-    const cardHeight = Math.max(300, Math.min(rows.length > 0 ? 520 : 640, (bottom - footerSpace - y - CARD_GAP * (cardRows - 1)) / cardRows))
+    const cardHeight = Math.max(300, Math.min(rows.length > 0 ? 480 : 640, (bottom - footerSpace - y - CARD_GAP * (cardRows - 1)) / cardRows))
     const pad = 30
     others.forEach((item, index) => {
       const x = left + (index % perRow) * (cardWidth + CARD_GAP)
       const top = y + Math.floor(index / perRow) * (cardHeight + CARD_GAP)
-      ctx.lineWidth = 4
-      ctx.strokeRect(x, top, cardWidth, cardHeight)
+      ctx.fillStyle = SOFT
+      roundRect(ctx, x, top, cardWidth, cardHeight, 22)
+      ctx.fill()
+      ctx.lineWidth = 3
+      ctx.strokeStyle = GRID
+      ctx.stroke()
+      ctx.strokeStyle = INK
       ctx.lineWidth = LINE
       ctx.fillStyle = INK
       const nameSize = Math.max(34, Math.min(60, Math.floor(cardWidth / 6.5)))
       const nameBottom = wrapped(ctx, item.name, x + cardWidth / 2, top + pad, cardWidth - 2 * pad, nameSize)
       const countSize = Math.floor(nameSize * 1.7)
       const imageTop = nameBottom + 16
-      const imageBottom = top + cardHeight - pad - countSize * 1.3
+      const imageBottom = top + cardHeight - pad - countSize * 1.2
       const photo = item.photoPath ? data.photos?.get(item.photoPath) : undefined
       if (photo && imageBottom - imageTop > 40) {
         const { width: sourceWidth, height: sourceHeight } = sourceSize(photo)
@@ -267,37 +394,56 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
         const h = sourceHeight * scale
         ctx.drawImage(photo, x + (cardWidth - w) / 2, imageTop + (imageBottom - imageTop - h) / 2, w, h)
       }
-      // Počet kusov dole: veľké číslo a menšie „KS“.
-      const count = String(item.quantity)
-      font(ctx, countSize)
-      const countWidth = ctx.measureText(count).width
-      font(ctx, Math.floor(countSize * 0.55), 700)
-      const unitWidth = ctx.measureText(' KS').width
-      const startX = x + (cardWidth - countWidth - unitWidth) / 2
-      const baseline = top + cardHeight - pad
-      ctx.textBaseline = 'alphabetic'
-      font(ctx, countSize)
-      ctx.fillText(count, startX, baseline)
-      font(ctx, Math.floor(countSize * 0.55), 700)
-      ctx.fillText(' KS', startX + countWidth, baseline)
+      countText(ctx, item.quantity, x + cardWidth / 2, top + cardHeight - pad - countSize * 0.45, countSize)
     })
   } else if (others.length > 0) {
-    font(ctx, 64)
-    ctx.textBaseline = 'top'
-    ctx.fillText(rows.length > 0 ? 'OSTATNÝ OBSAH' : 'OBSAH', left, y)
-    y += 110
+    y = sectionTitle(ctx, rows.length > 0 ? 'OSTATNÝ OBSAH' : 'OBSAH', y)
     const gap = 80
     const columnWidth = (width - gap * (otherColumns - 1)) / otherColumns
     const perColumn = Math.ceil(others.length / otherColumns)
     // Bez tabuľky káblov má zoznam celú stranu, preto môže byť písmo väčšie.
     const lineHeight = Math.max(52, Math.min(110, (bottom - footerSpace - y) / perColumn))
     font(ctx, Math.floor(lineHeight * 0.66), 700)
+    ctx.textBaseline = 'top'
     others.forEach((item, index) => {
       const column = Math.floor(index / perColumn)
       const text = item.quantity > 1 ? `${item.quantity}× ${item.name}` : item.name
       ctx.fillText(ellipsize(ctx, text, columnWidth), left + column * (columnWidth + gap), y + (index % perColumn) * lineHeight)
     })
   }
+
+  // Súhrn dole: počet kusov, hmotnosť, kto kontroloval a kedy.
+  const summaryY = bottom - contactSpace - SUMMARY
+  ctx.lineWidth = 5
+  roundRect(ctx, left, summaryY, width, SUMMARY, 24)
+  ctx.stroke()
+  ctx.lineWidth = LINE
+  const cells: [string, string | null][] = [
+    ['CELKOM KUSOV', String(data.totalPieces ?? 0)],
+    ['HMOTNOSŤ', data.weightKg ? `${formatNumber(Math.round(data.weightKg * 10) / 10)} kg` : '—'],
+    ['KONTROLOVAL', null],
+    ['DÁTUM', null],
+  ]
+  const cellWidth = width / cells.length
+  cells.forEach(([label, value], index) => {
+    const x = left + index * cellWidth
+    if (index > 0) {
+      ctx.fillStyle = GRID
+      ctx.fillRect(x, summaryY + 40, 3, SUMMARY - 80)
+    }
+    font(ctx, 36, 700)
+    ctx.textBaseline = 'top'
+    ctx.fillStyle = MUTED
+    ctx.fillText(label, x + 50, summaryY + 40)
+    ctx.fillStyle = INK
+    if (value) {
+      font(ctx, fitSize(ctx, value, cellWidth - 100, 84, 40))
+      ctx.fillText(value, x + 50, summaryY + 92)
+    } else {
+      // Prázdna linka na ručné vyplnenie (podpis, dátum).
+      ctx.fillRect(x + 50, summaryY + SUMMARY - 50, cellWidth - 100, 4)
+    }
+  })
 
   if (data.footer) centered(ctx, data.footer, SHEET_WIDTH / 2, bottom - 30, width, 52, 26)
 }

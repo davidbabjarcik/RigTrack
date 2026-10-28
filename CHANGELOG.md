@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.18 – 28. 10. 2026
+
+- **Nový vzhľad hárku s obsahom case (Flightcase content)**: hlavička s logom, názvom case a boxom s číslom case
+  a QR kódom; nadpis „Káble podľa dĺžky“, farebný pruh a názov farby pri každej dĺžke, striedavé riadky a počty
+  „20 KS“; príslušenstvo ako karty; dole súhrn – kusov spolu, hmotnosť a prázdne políčka Kontroloval a Dátum.
+- **Viac typov káblov v jednom case** (napr. XLR a Jack): na hárku si vyberiete **V jednej tabuľke**, **Každý typ
+  zvlášť pod sebou** (každý typ vlastná tabuľka s vlastnými farbami) alebo **Každý typ na vlastnom hárku** (stiahne
+  sa viac PNG). Voľba sa zapamätá.
+- Vlastný typ kábla, ktorý databáza ešte nepozná, ukáže zrozumiteľnú hlášku (treba spustiť `supabase/update-all.sql`).
+
 ### 4.17.1 – 28. 10. 2026
 
 - **Vlastný obsah štítku case – fotka cez Ctrl+V**: skopírovaný obrázok (z webu, snímka obrazovky) stačí vložiť

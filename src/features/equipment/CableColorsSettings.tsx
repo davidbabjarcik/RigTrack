@@ -138,7 +138,13 @@ export function CableColorsSettings({ companyId }: { companyId: string }) {
       ) : (
         <p className="text-sm text-muted-foreground">Rôzne farby pre XLR, powerCON, 230 V a vlastné typy pôjdu po aktualizácii databázy (supabase/update-all.sql).</p>
       )}
-      {(save.isError || remove.isError || many.isError) && <p className="text-sm text-destructive">Nepodarilo sa uložiť. {errorDetail(save.error ?? remove.error ?? many.error)}</p>}
+      {(save.isError || remove.isError || many.isError) && (
+        <p className="text-sm text-destructive">
+          {/cable_type_check/.test(String((save.error ?? many.error)?.message ?? ''))
+            ? 'Vlastné typy káblov ešte databáza nepozná – spustite v Supabase supabase/update-all.sql (migrácia 0114).'
+            : `Nepodarilo sa uložiť. ${errorDetail(save.error ?? remove.error ?? many.error)}`}
+        </p>
+      )}
     </div>
   )
 }
