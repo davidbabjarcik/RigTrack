@@ -374,7 +374,6 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
     formState: { errors },
   } = methods
   const kind = useWatch({ control, name: 'kind' })
-  const dmxModesValue = useWatch({ control, name: 'dmxModes' })
   const categoryText = useWatch({ control, name: 'category' })
   // Časť Svetlo sa ukáže pri druhu Svetlo aj pri kategórii, ktorá je o svetlách.
   const lighting = isLighting(kind, categoryText ?? '')
@@ -870,8 +869,8 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
             errors={errors}
             unitIdsText={unitIdsText ?? ''}
             quantity={quantity}
-            // DMX adresy kusov až pri úprave pridanej techniky (pri novej to len zavadzia).
-            dmxModes={lighting && equipment ? (dmxModesValue ?? []).map((mode) => mode.name || `${mode.channels} ch`).filter(Boolean) : null}
+            // DMX adresy kusov sa vo formulári nezadávajú – sú v detaile techniky („DMX adresy“ / „DMX všetkým“).
+            dmxModes={null}
           />
         )}
         <SelectField label="Stav" className={groupMode ? 'hidden' : undefined} error={errors.status?.message} {...register('status')}>

@@ -3,7 +3,7 @@ import { SlidersHorizontal, Wand2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
-import { equipmentKeys, saveUnitInfo } from './api'
+import { saveUnitInfo } from './api'
 import { unitIdsOf, type Equipment, type UnitInfo } from './model'
 import { dipOn } from '@/features/labels/tape'
 
@@ -71,7 +71,8 @@ export function GroupDmx({ companyId, parts, caseName, open, onOpen, onClose }: 
       }
     },
     onSuccess: onClose,
-    onSettled: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) }),
+    // Zoznam aj detail techniky (DMX adresy sa dajú meniť aj v detaile).
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['company', companyId] }),
   })
 
   if (rows.length === 0) return null

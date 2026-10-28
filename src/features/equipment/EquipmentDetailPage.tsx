@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Copy, Pencil, QrCode, Trash2, Wrench } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ArrowLeft, Copy, Pencil, QrCode, SlidersHorizontal, Trash2, Wrench } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import { caseTitle } from '@/features/cases/model'
+import { GroupDmx } from './GroupDmx'
 import { describePorts } from './dmxNode'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -44,6 +45,7 @@ export function EquipmentDetailPage() {
   })
   // QR kusu (?unit=7): ak kus medzitým presunuli do inej časti (iný case), otvorí sa tá.
   const [params] = useSearchParams()
+  const [dmxOpen, setDmxOpen] = useState(false)
   const unit = Number(params.get('unit')) || null
   const list = useQuery({ queryKey: equipmentKeys.list(company.companyId), queryFn: () => fetchEquipmentList(company.companyId), enabled: unit !== null })
 
@@ -254,6 +256,13 @@ export function EquipmentDetailPage() {
               Upraviť
             </LinkButton>
           )}
+          {/* DMX adresy kusov (linka, adresa, mód) – len tu a pri „DMX všetkým“, nie vo formulári. */}
+          {can(company, 'equipment.edit') && equipment.trackUnits && (equipment.kind === 'light' || Boolean(equipment.attributes.dmxModes?.length)) && !equipment.attributes.lightType?.startsWith('acc_') && (
+            <Button variant="outline" size="sm" onClick={() => setDmxOpen(!dmxOpen)}>
+              <SlidersHorizontal className="size-4" aria-hidden />
+              DMX adresy
+            </Button>
+          )}
           {can(company, 'equipment.edit') && (
             <LinkButton to={`/equipment/new?copy=${equipment.id}`} variant="outline" size="sm">
               <Copy className="size-4" aria-hidden />
@@ -275,6 +284,11 @@ export function EquipmentDetailPage() {
           )}
         </div>
       </header>
+      {dmxOpen && (
+        <div className="mb-6">
+          <GroupDmx companyId={company.companyId} parts={[equipment]} caseName={(caseId) => { const box = cases.data?.find((c) => c.id === caseId); return box ? caseTitle(box) : '' }} open onOpen={() => {}} onClose={() => setDmxOpen(false)} />
+        </div>
+      )}
 
       {remove.isError && (
         <p role="alert" className="mb-4 text-sm text-destructive">

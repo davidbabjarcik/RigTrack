@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.7.1 – 29. 10. 2026
+
+- **DMX adresy kusov už nie sú vo formulári techniky** (ani pri úprave). Zadávajú sa v detaile svetla tlačidlom
+  **DMX adresy**, alebo pri rozdelenej technike cez „DMX všetkým“.
+
 ### 5.7 – 29. 10. 2026
 
 - **Rozpis kanálov pri DMX módoch** (nepovinné): pri svetle pod každým módom „+ Rozpis kanálov“ – riadok = kanál
