@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.16 – 28. 10. 2026
+
+- **Farby dĺžok káblov – spoločné ako predvolené**: platia pre všetky káble. Ak chcete pre niektorý typ iné, pridáte mu
+  vlastné tlačidlom „Iné farby pre: XLR / DMX, powerCON, 230 V“ – stačí nastaviť len dĺžky, ktoré majú byť iné
+  („Skopírovať spoločné farby“ ich pripraví na úpravu). „Zrušiť“ vráti typ na spoločné farby.
+- **Predloha farieb**: „Doplniť predlohu“ nastaví 1 m zelená, 2 m žltá, 3 m červená, 5 m fialová, 8 m béžová,
+  10 m modrá, 15 m oranžová. Rovnaká farba sa ponúkne aj pri zadávaní kábla s touto dĺžkou.
+- **Hárok s obsahom case – príslušenstvo ako karty**: redukcie, adaptéry a ostatný obsah sú pod tabuľkou káblov
+  ako karty s názvom, fotkou a počtom kusov (pri viac ako 18 položkách zoznam).
+
 ### 4.15 – 28. 10. 2026
 
 - **Farby dĺžok káblov** (Nastavenia → Zoznamy → Farby dĺžok káblov): prepínač **Rovnaké pre všetky káble** alebo

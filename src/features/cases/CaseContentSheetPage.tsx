@@ -10,6 +10,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { cableColorKeys, fetchCableColors } from '@/features/equipment/cableColors'
 import { downloadCanvas, fileSlug } from './canvas'
+import { fetchPhotoBlob } from '@/features/equipment/photo'
 import { buildCableMatrix, drawContentSheet, SHEET_HEIGHT, SHEET_WIDTH } from './contentSheet'
 import { useCases } from './useCases'
 
@@ -47,6 +48,16 @@ export function CaseContentSheetPage() {
     const target = canvas.current
     void (async () => {
       const bitmap = logo.data ? await createImageBitmap(logo.data).catch(() => null) : null
+      // Fotky príslušenstva na karty (bez fotky ostane karta len s názvom a počtom).
+      const photos = new Map<string, ImageBitmap>()
+      await Promise.all(
+        [...new Set(matrix.others.map((item) => item.photoPath).filter((path): path is string => Boolean(path)))].map(async (path) => {
+          const image = await fetchPhotoBlob(path)
+            .then((blob) => createImageBitmap(blob))
+            .catch(() => null)
+          if (image) photos.set(path, image)
+        }),
+      )
       if (cancelled) return
       drawContentSheet(target, {
         caseName: current.name,
@@ -56,8 +67,10 @@ export function CaseContentSheetPage() {
         footer: branding.data?.labelFooter ?? '',
         logo: bitmap,
         companyName: company.companyName,
+        photos,
       })
       bitmap?.close()
+      photos.forEach((image) => image.close())
       setDrawn(true)
     })()
     return () => {

@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { Button } from '@/components/ui/button'
-import { CABLE_COLOR_TYPE_LABELS, cableColorType, cableTypesSupported, findCableColor, type CableColor } from './cableColors'
+import { CABLE_COLOR_TYPE_LABELS, cableColorType, PRESET_COLORS, cableTypesSupported, findCableColor, type CableColor } from './cableColors'
 import { HexColorInput } from './HexColorInput'
 import { formatNumber } from './model'
 
@@ -34,7 +34,7 @@ export function LengthColorField({ lengthM, connector, existing, edit, onEdit, c
 
   if (!shown) {
     return canEdit ? (
-      <Button variant="outline" size="sm" className="self-start" onClick={() => onEdit({ name: '', color: DEFAULT_COLOR })}>
+      <Button variant="outline" size="sm" className="self-start" onClick={() => onEdit(PRESET_COLORS.find((color) => color.lengthM === lengthM) ?? { name: '', color: DEFAULT_COLOR })}>
         Nastaviť farbu pre {length}
       </Button>
     ) : null

@@ -46,6 +46,14 @@ describe('buildCableMatrix', () => {
     expect(plain.rows).toEqual([{ lengthM: 3, counts: [2] }])
   })
 
+  it('keeps a photo for accessory cards', () => {
+    const matrix = buildCableMatrix([
+      { name: 'Redukcia', kind: 'general', quantity: 2, attributes: {} },
+      { name: 'Redukcia', kind: 'general', quantity: 1, attributes: {}, photoPath: 'p.jpg' },
+    ])
+    expect(matrix.others).toEqual([{ name: 'Redukcia', quantity: 3, photoPath: 'p.jpg' }])
+  })
+
   it('returns an empty table for an empty case', () => {
     expect(buildCableMatrix([])).toEqual({ columns: [], rows: [], others: [] })
   })

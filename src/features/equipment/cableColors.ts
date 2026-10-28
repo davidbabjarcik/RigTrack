@@ -10,6 +10,17 @@ export const CABLE_COLOR_TYPE_LABELS: Record<CableColorType, string> = { xlr: 'X
 
 export type CableColor = { lengthM: number; name: string; color: string; cableType?: CableColorType }
 
+/** Predloha farieb dĺžok (bežný farebný kód káblov); doplní len dĺžky, ktoré ešte farbu nemajú. */
+export const PRESET_COLORS: CableColor[] = [
+  { lengthM: 1, name: 'zelená', color: '#00a651' },
+  { lengthM: 2, name: 'žltá', color: '#ffd400' },
+  { lengthM: 3, name: 'červená', color: '#e30613' },
+  { lengthM: 5, name: 'fialová', color: '#7b2cbf' },
+  { lengthM: 8, name: 'béžová', color: '#f2e2a0' },
+  { lengthM: 10, name: 'modrá', color: '#0072ce' },
+  { lengthM: 15, name: 'oranžová', color: '#ff8c00' },
+]
+
 /** Typ kábla podľa konektora: XLR a DMX, powerCON, 230 V (Schuko, CEE, predlžovačky); inak ostatné. */
 export function cableColorType(connector: string | undefined): CableColorType {
   const value = (connector ?? '').toLowerCase()

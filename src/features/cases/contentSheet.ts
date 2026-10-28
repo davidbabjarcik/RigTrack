@@ -1,5 +1,6 @@
 // Hárok FLIGHTCASE CONTENT: A4 na výšku pri 300 dpi (2480 × 3508 px), biele pozadie.
-// Káble v case sú tabuľka dĺžka × typ s farebným kódom dĺžky; ostatný obsah je zoznam pod ňou.
+// Káble v case sú tabuľka dĺžka × typ s farebným kódom dĺžky; príslušenstvo (redukcie, adaptéry…) sú karty
+// s fotkou a počtom pod ňou, pri veľa položkách zoznam.
 
 import { findCableColor, type CableColor } from '@/features/equipment/cableColors'
 import { formatNumber, type EquipmentAttributes, type EquipmentKind } from '@/features/equipment/model'
@@ -8,14 +9,14 @@ import { contrastInk, ellipsize, fitSize, font, INK, sourceSize, type Ctx } from
 export const SHEET_WIDTH = 2480
 export const SHEET_HEIGHT = 3508
 
-type SheetItem = { name: string; kind: EquipmentKind; quantity: number; attributes: EquipmentAttributes }
+type SheetItem = { name: string; kind: EquipmentKind; quantity: number; attributes: EquipmentAttributes; photoPath?: string }
 
 export type CableMatrix = {
   /** Typy káblov (konektor), jeden stĺpec za každý. */
   columns: string[]
   rows: { lengthM: number; counts: number[] }[]
-  /** Všetko, čo nie je kábel s dĺžkou: názov a počet kusov. */
-  others: { name: string; quantity: number }[]
+  /** Všetko, čo nie je kábel s dĺžkou: názov, počet kusov a fotka (na kartu). */
+  others: { name: string; quantity: number; photoPath?: string }[]
 }
 
 const NO_TYPE = 'Kábel'
@@ -35,13 +36,15 @@ export function buildCableMatrix(items: SheetItem[]): CableMatrix {
     ),
   }))
 
-  const totals = new Map<string, number>()
+  const totals = new Map<string, { quantity: number; photoPath?: string }>()
   for (const item of items) {
-    if (!cables.includes(item)) totals.set(item.name, (totals.get(item.name) ?? 0) + item.quantity)
+    if (cables.includes(item)) continue
+    const found = totals.get(item.name)
+    totals.set(item.name, { quantity: (found?.quantity ?? 0) + item.quantity, photoPath: found?.photoPath || item.photoPath || undefined })
   }
   const others = [...totals.entries()]
     .sort(([a], [b]) => a.localeCompare(b, 'sk', { numeric: true }))
-    .map(([name, quantity]) => ({ name, quantity }))
+    .map(([name, value]) => ({ name, quantity: value.quantity, ...(value.photoPath ? { photoPath: value.photoPath } : {}) }))
 
   return { columns, rows, others }
 }
@@ -54,6 +57,39 @@ export type SheetData = {
   footer: string
   logo: CanvasImageSource | null
   companyName: string
+  /** Fotky príslušenstva podľa cesty k fotke (karty pod tabuľkou káblov). */
+  photos?: Map<string, CanvasImageSource>
+}
+
+/** Karty príslušenstva: najviac 6 v rade; pri viac ako 18 položkách sa namiesto nich vypíše zoznam. */
+const CARD_LIMIT = 18
+const CARD_GAP = 40
+export const cardColumns = (count: number) => Math.min(6, Math.max(3, count))
+
+/** Text na kartu do najviac troch riadkov, vycentrovaný. */
+function wrapped(ctx: Ctx, text: string, x: number, y: number, maxWidth: number, max: number) {
+  const words = text.split(/\s+/)
+  // Najdlhšie slovo (napr. „PowerCON“) sa musí zmestiť celé – písmo sa podľa neho zmenší.
+  const longest = words.reduce((a, b) => (b.length > a.length ? b : a), '')
+  const size = fitSize(ctx, longest, maxWidth, max, 22)
+  font(ctx, size)
+  const lines: string[] = []
+  let line = ''
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word
+    if (ctx.measureText(next).width <= maxWidth || !line) line = next
+    else {
+      lines.push(line)
+      line = word
+    }
+  }
+  if (line) lines.push(line)
+  const shown = lines.length > 3 ? [lines[0], lines[1], ellipsize(ctx, lines.slice(2).join(' '), maxWidth)] : lines
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'top'
+  shown.forEach((value, index) => ctx.fillText(ellipsize(ctx, value, maxWidth), x, y + index * size * 1.15))
+  ctx.textAlign = 'left'
+  return y + shown.length * size * 1.15
 }
 
 const MARGIN = 130
@@ -133,7 +169,9 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
   // Miesto preň sa odloží vopred, aby tabuľka nezabrala celú stranu.
   const OTHER_LINE = 78
   const otherColumns = others.length > 8 ? 2 : 1
-  const othersHeight = others.length > 0 ? 130 + Math.ceil(others.length / otherColumns) * OTHER_LINE : 0
+  const asCards = others.length > 0 && others.length <= CARD_LIMIT
+  const cardRows = Math.ceil(others.length / cardColumns(others.length))
+  const othersHeight = others.length === 0 ? 0 : asCards ? 130 + cardRows * 520 : 130 + Math.ceil(others.length / otherColumns) * OTHER_LINE
 
   if (rows.length > 0) {
     const FIRST = 520
@@ -202,7 +240,48 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
     y += tableHeight + 80
   }
 
-  if (others.length > 0) {
+  if (asCards) {
+    centered(ctx, rows.length > 0 ? 'PRÍSLUŠENSTVO / REDUKCIE' : 'OBSAH', SHEET_WIDTH / 2, y + 40, width, 64, 36)
+    y += 110
+    const perRow = cardColumns(others.length)
+    const cardWidth = (width - CARD_GAP * (perRow - 1)) / perRow
+    const cardHeight = Math.max(300, Math.min(rows.length > 0 ? 520 : 640, (bottom - footerSpace - y - CARD_GAP * (cardRows - 1)) / cardRows))
+    const pad = 30
+    others.forEach((item, index) => {
+      const x = left + (index % perRow) * (cardWidth + CARD_GAP)
+      const top = y + Math.floor(index / perRow) * (cardHeight + CARD_GAP)
+      ctx.lineWidth = 4
+      ctx.strokeRect(x, top, cardWidth, cardHeight)
+      ctx.lineWidth = LINE
+      ctx.fillStyle = INK
+      const nameSize = Math.max(34, Math.min(60, Math.floor(cardWidth / 6.5)))
+      const nameBottom = wrapped(ctx, item.name, x + cardWidth / 2, top + pad, cardWidth - 2 * pad, nameSize)
+      const countSize = Math.floor(nameSize * 1.7)
+      const imageTop = nameBottom + 16
+      const imageBottom = top + cardHeight - pad - countSize * 1.3
+      const photo = item.photoPath ? data.photos?.get(item.photoPath) : undefined
+      if (photo && imageBottom - imageTop > 40) {
+        const { width: sourceWidth, height: sourceHeight } = sourceSize(photo)
+        const scale = Math.min((cardWidth - 2 * pad) / sourceWidth, (imageBottom - imageTop) / sourceHeight)
+        const w = sourceWidth * scale
+        const h = sourceHeight * scale
+        ctx.drawImage(photo, x + (cardWidth - w) / 2, imageTop + (imageBottom - imageTop - h) / 2, w, h)
+      }
+      // Počet kusov dole: veľké číslo a menšie „KS“.
+      const count = String(item.quantity)
+      font(ctx, countSize)
+      const countWidth = ctx.measureText(count).width
+      font(ctx, Math.floor(countSize * 0.55), 700)
+      const unitWidth = ctx.measureText(' KS').width
+      const startX = x + (cardWidth - countWidth - unitWidth) / 2
+      const baseline = top + cardHeight - pad
+      ctx.textBaseline = 'alphabetic'
+      font(ctx, countSize)
+      ctx.fillText(count, startX, baseline)
+      font(ctx, Math.floor(countSize * 0.55), 700)
+      ctx.fillText(' KS', startX + countWidth, baseline)
+    })
+  } else if (others.length > 0) {
     font(ctx, 64)
     ctx.textBaseline = 'top'
     ctx.fillText(rows.length > 0 ? 'OSTATNÝ OBSAH' : 'OBSAH', left, y)
