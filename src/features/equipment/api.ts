@@ -261,6 +261,14 @@ export async function saveUnitInfo(companyId: string, equipmentId: string, unitI
 /** Čo sa pri „Upraviť všetky naraz“ prenesie na ostatné časti rozdelenej techniky (nie počet, čísla kusov, case, stav). */
 const GROUP_COLUMNS = ['name', 'kind', 'attributes', 'category_id', 'manufacturer', 'model', 'service_interval_months', 'hours_interval_months', 'rental_price', 'min_quantity', 'note', 'photo_path', 'owner_staff_id']
 
+/** Kábel na hárku s obsahom case ako príslušenstvo (karta) namiesto tabuľky dĺžok. */
+export async function setSheetAccessory(companyId: string, equipmentId: string, attributes: EquipmentAttributes, on: boolean) {
+  const next: EquipmentAttributes = { ...attributes, sheetAccessory: on }
+  if (!on) delete next.sheetAccessory
+  const { error } = await getSupabase().from('equipment').update({ attributes: next }).eq('company_id', companyId).eq('id', equipmentId)
+  if (error) throw error
+}
+
 /** Prenesie spoločné údaje z jednej časti rozdelenej techniky na ostatné (napr. Beam 7R v 8 cases). */
 export async function syncEquipmentGroup(companyId: string, sourceId: string, ids: string[]) {
   const others = ids.filter((id) => id !== sourceId)
@@ -288,9 +296,10 @@ async function syncCableLengths(companyId: string, source: Record<string, unknow
   const sourceAttributes = (source.attributes ?? {}) as EquipmentAttributes
   for (const row of data as { id: string; name: string; attributes: EquipmentAttributes | null }[]) {
     const own = row.attributes ?? {}
-    const attributes: EquipmentAttributes = { ...sourceAttributes, lengthM: own.lengthM, makers: own.makers }
+    const attributes: EquipmentAttributes = { ...sourceAttributes, lengthM: own.lengthM, makers: own.makers, sheetAccessory: own.sheetAccessory }
     if (attributes.lengthM === undefined) delete attributes.lengthM
     if (attributes.makers === undefined) delete attributes.makers
+    if (!attributes.sheetAccessory) delete attributes.sheetAccessory
     const rest = Object.fromEntries(Object.entries(shared).filter(([column]) => column !== 'rental_price' && column !== 'min_quantity'))
     const { error: updateError } = await db
       .from('equipment')

@@ -23,7 +23,8 @@ const NO_TYPE = 'Kábel'
 
 /** Z obsahu case zostaví tabuľku káblov (dĺžka × typ) a zoznam ostatných vecí. */
 export function buildCableMatrix(items: SheetItem[]): CableMatrix {
-  const cables = items.filter((item) => item.kind === 'cable' && item.attributes.lengthM !== undefined)
+  // Káble označené ako príslušenstvo idú medzi karty, nie do tabuľky dĺžok.
+  const cables = items.filter((item) => item.kind === 'cable' && item.attributes.lengthM !== undefined && !item.attributes.sheetAccessory)
   const typeOf = (item: SheetItem) => item.attributes.connector?.trim() || NO_TYPE
   const columns = [...new Set(cables.map(typeOf))].sort((a, b) => a.localeCompare(b, 'sk'))
   const lengths = [...new Set(cables.map((item) => item.attributes.lengthM!))].sort((a, b) => a - b)

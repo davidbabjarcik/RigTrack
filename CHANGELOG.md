@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.19 – 28. 10. 2026
+
+- **Kábel ako príslušenstvo na hárku**: v obsahu case má každý kábel tlačidlo **Príslušenstvo** (zástrčka). Označený
+  kábel (napr. jack v XLR case) nie je v tabuľke dĺžok, ale dole medzi príslušenstvom ako karta s fotkou a počtom.
+  To isté sa dá zaškrtnúť v úprave kábla.
+
 ### 4.18.1 – 28. 10. 2026
 
 - **Hárok s obsahom case**: svetlé farby (žltá, béžová, svetlozelená) už nemajú obrys – názov a dĺžka sú v tmavšom

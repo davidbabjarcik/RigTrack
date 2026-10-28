@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CirclePlus, ClipboardList, Copy, MapPin, Pencil, Plus, QrCode, Star, Tag, Trash2, X } from 'lucide-react'
+import { ArrowLeft, CirclePlus, ClipboardList, Copy, MapPin, Pencil, Plug, Plus, QrCode, Star, Tag, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
-import { equipmentKeys, fetchEquipmentList, setEquipmentCase, setEquipmentLabelRole, splitEquipmentIntoCase, splitEquipmentUnits, takeOutOfCase } from '@/features/equipment/api'
+import { equipmentKeys, fetchEquipmentList, setEquipmentCase, setEquipmentLabelRole, setSheetAccessory, splitEquipmentIntoCase, splitEquipmentUnits, takeOutOfCase } from '@/features/equipment/api'
 import { unitIdsOf } from '@/features/equipment/model'
 import { filterEquipment, type LabelRole } from '@/features/equipment/model'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
@@ -86,6 +86,12 @@ export function CaseDetailPage() {
 
   const mark = useMutation({
     mutationFn: ({ equipmentId, role }: { equipmentId: string; role: LabelRole | null }) => setEquipmentLabelRole(companyId, equipmentId, role),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) }),
+  })
+
+  // Kábel na hárku s obsahom ako príslušenstvo (karta) namiesto tabuľky dĺžok.
+  const accessory = useMutation({
+    mutationFn: ({ item, on }: { item: { id: string; attributes: Parameters<typeof setSheetAccessory>[2] }; on: boolean }) => setSheetAccessory(companyId, item.id, item.attributes, on),
     onSettled: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) }),
   })
 
@@ -296,6 +302,20 @@ export function CaseDetailPage() {
                     </>
                   ) : (
                     item.labelRole && <span className="text-xs text-muted-foreground">{item.labelRole === 'main' ? 'hlavný' : 'vedľajší'}</span>
+                  )}
+                  {item.kind === 'cable' && item.attributes.lengthM !== undefined && can(company, 'equipment.edit') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-pressed={Boolean(item.attributes.sheetAccessory)}
+                      aria-label={`Na hárku ako príslušenstvo: ${item.name}`}
+                      title={item.attributes.sheetAccessory ? 'Na hárku s obsahom je ako príslušenstvo — kliknutím vrátiť do tabuľky káblov' : 'Na hárku s obsahom dať ako príslušenstvo (nie do tabuľky káblov)'}
+                      disabled={accessory.isPending}
+                      onClick={() => accessory.mutate({ item, on: !item.attributes.sheetAccessory })}
+                    >
+                      <Plug className={cn('size-4', item.attributes.sheetAccessory ? 'text-accent' : 'text-muted-foreground')} aria-hidden />
+                      <span className={cn('hidden text-xs sm:inline', !item.attributes.sheetAccessory && 'text-muted-foreground')}>Príslušenstvo</span>
+                    </Button>
                   )}
                   {canEdit && (
                     <Button variant="ghost" size="sm" aria-label={`Vybrať z case: ${item.name}`} disabled={move.isPending} onClick={() => move.mutate({ equipmentId: item.id, caseId: null })}>

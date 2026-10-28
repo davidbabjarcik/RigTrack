@@ -70,4 +70,13 @@ describe('buildCableMatrix', () => {
     expect(yellow).not.toBe('#ffff00')
     expect(yellow.slice(1, 3)).toBe(yellow.slice(3, 5))
   })
+
+  it('puts cables marked as accessory among the cards', () => {
+    const matrix = buildCableMatrix([
+      { name: 'XLR 5 m', kind: 'cable', quantity: 4, attributes: { lengthM: 5, connector: 'XLR' } },
+      { name: 'Jack 3 m', kind: 'cable', quantity: 2, attributes: { lengthM: 3, connector: 'Jack', sheetAccessory: true } },
+    ])
+    expect(matrix.columns).toEqual(['XLR'])
+    expect(matrix.others).toEqual([{ name: 'Jack 3 m', quantity: 2 }])
+  })
 })

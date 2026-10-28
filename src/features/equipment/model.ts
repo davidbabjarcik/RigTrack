@@ -209,6 +209,8 @@ export type EquipmentAttributes = {
   stageSize?: string
   /** Technika, ktorá do case ani racku nepatrí (napr. stojany, kabeláž na cievke) – nehlási sa ako „mimo case“. */
   noCase?: boolean
+  /** Kábel: na hárku s obsahom case ako príslušenstvo (karta), nie v tabuľke dĺžok – napr. jack v XLR case. */
+  sheetAccessory?: boolean
   /** Svetlo: adresa sa nastavuje DIP prepínačmi (inak displejom / menu) – počet prepínačov a poznámka. */
   dipSwitches?: number
   dipNote?: string
@@ -468,6 +470,7 @@ export const equipmentSchema = z.object({
   lightType: z.enum([...(LIGHT_TYPES as LightType[]), '']).optional(),
   trackHours: z.boolean().optional(),
   noCase: z.boolean().optional(),
+  sheetAccessory: z.boolean().optional(),
   dipSwitches: z.number().int().min(4).max(16).optional(),
   dipNote: z.string().trim().max(80, 'Najviac 80 znakov').optional(),
   nodeProtocols: z.array(z.enum(['artnet', 'sacn'])).optional(),
@@ -679,6 +682,7 @@ export function attributesFor(
         | 'lightType'
         | 'trackHours'
         | 'noCase'
+        | 'sheetAccessory'
         | 'dipSwitches'
         | 'dipNote'
         | 'nodeProtocols'
@@ -796,6 +800,7 @@ export function attributesFor(
     if (values.cableType === 'di' && values.powered) attributes.powered = values.powered
     if (values.connector) attributes.connector = values.connector
     if (values.lengthM !== undefined) attributes.lengthM = values.lengthM
+    if (values.sheetAccessory) attributes.sheetAccessory = true
   }
   // Truss sa delí podľa dĺžky dielu (0,5 / 1 / 2 / 3 m).
   if (values.kind === 'truss' && values.trussType) attributes.trussType = values.trussType

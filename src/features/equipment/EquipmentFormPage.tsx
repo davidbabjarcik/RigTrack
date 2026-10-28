@@ -84,6 +84,7 @@ const EMPTY: EquipmentFormValues = {
   lightType: '',
   trackHours: false,
   noCase: false,
+  sheetAccessory: false,
   inCover: false,
   coverNote: '',
   hoursPriority: 'normal',
@@ -202,6 +203,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     lightType: equipment.attributes.lightType ?? '',
     // Staršia technika s intervalom v mesiacoch prejde na sledovanie so strednou úrovňou.
     noCase: equipment.attributes.noCase ?? false,
+    sheetAccessory: equipment.attributes.sheetAccessory ?? false,
     dipSwitches: equipment.attributes.dipSwitches,
     nodeProtocols: equipment.attributes.nodeProtocols ?? [],
     nodePorts: equipment.attributes.nodePorts ?? [],
@@ -605,6 +607,10 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
               canEdit={canEditColors}
             />
           </div>
+          <label className="flex items-center gap-2 text-sm sm:col-span-2">
+            <input type="checkbox" className="size-4" {...register('sheetAccessory')} />
+            Na hárku s obsahom case ako príslušenstvo (nie v tabuľke dĺžok) – napr. jack v XLR case
+          </label>
           <CableMakersField
             companyId={companyId}
             mode={makerMode}
