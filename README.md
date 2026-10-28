@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-5.4-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-5.5-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -47,10 +47,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **5.5** | DMX adresy z techniky do patch listu, štatistiky s káblami v ks a metroch |
 | **5.4** | Fotka pre celú sadu cases, kusy do case jedným výberom a „Rozložiť do sady“ |
 | **5.3** | Triedenie techniky podľa druhu s vlastným poradím, dať kusy do case zo stránky techniky |
 | **5.2** | Verzia softvéru pri mixpulte, kategória len keď sa používa, vysvetlenie čiernej pásky |
-| **5.1** | Farby druhov techniky, fotky na hárku case bez bieleho pozadia |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.5 – 29. 10. 2026
+
+- **DMX patch list – Prevziať adresy z techniky**: linky, adresy a módy zapísané pri kusoch svetiel (aj neskôr, po
+  vytvorení patch listu) sa prenesú do patch listu jedným tlačidlom. „Doplniť chýbajúce adresy“ najprv berie adresy
+  z techniky a až potom čísluje za sebou.
+- **Štatistiky** (namiesto „Čísla“): „Kusov techniky“ je bez káblov, pribudli dlaždice **Káble (ks)** a **Metrov káblov**.
+
 ### 5.4 – 29. 10. 2026
 
 - **Fotka pre celú sadu cases**: na stránke sady (napr. 8× Wash 19×15W Case) kliknete na fotku hore alebo vložíte

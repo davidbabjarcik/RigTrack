@@ -3,7 +3,7 @@ export const WIDGETS = {
   responsibilities: 'Moje zodpovednosti',
   tasks: 'Moje úlohy',
   calendar: 'Kalendár',
-  stats: 'Čísla (štatistiky)',
+  stats: 'Štatistiky',
 } as const
 export type WidgetId = keyof typeof WIDGETS
 
@@ -15,9 +15,11 @@ export function widgetOrder(shown: string[]): WidgetId[] {
   return [...known, ...(Object.keys(WIDGETS) as WidgetId[]).filter((id) => !known.includes(id))]
 }
 
-/** Čísla, ktoré si človek môže zapnúť v bloku Čísla. */
+/** Čísla, ktoré si človek môže zapnúť v bloku Štatistiky. */
 export const STAT_TILES = {
-  pieces: 'Kusov techniky',
+  pieces: 'Kusov techniky (bez káblov)',
+  cables: 'Káble (ks)',
+  cableMeters: 'Metrov káblov',
   inService: 'V servise',
   unpacked: 'Kusov mimo case',
   emptyCases: 'Prázdne cases',
@@ -28,4 +30,4 @@ export const STAT_TILES = {
   fill: 'Na doplnenie (@todo)',
 } as const
 export type StatTileId = keyof typeof STAT_TILES
-export const DEFAULT_STAT_TILES: StatTileId[] = ['pieces', 'inService', 'events30', 'loans', 'myTasks']
+export const DEFAULT_STAT_TILES: StatTileId[] = ['pieces', 'cables', 'inService', 'events30', 'loans', 'myTasks']

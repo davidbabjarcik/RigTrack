@@ -8,7 +8,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { isLighting, type Equipment } from '@/features/equipment/model'
 import type { CompanyEvent } from '@/features/events/model'
 import { cn } from '@/lib/utils'
-import { dmxConflicts, dmxFromEquipment, EMPTY_DMX, fillAddresses, lastAddress, nextDmxAddress, type DmxFields, type DmxLine } from './dmx'
+import { addressesFromEquipment, dmxConflicts, dmxFromEquipment, EMPTY_DMX, fillAddresses, lastAddress, nextDmxAddress, type DmxFields, type DmxLine } from './dmx'
 import { deleteDmxLine, dmxKeys, saveDmxLine, savePatchTemplate, useDmxPatch, usePatchTemplates, writeDmxPatch } from './dmxApi'
 
 function DmxForm({ initial, lights, onSave, onCancel, onDelete, saving }: {
@@ -118,6 +118,9 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
   const lights = items.filter((item) => item.status !== 'retired' && (isLighting(item.kind, '') || item.attributes.dmxModes?.length)).sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   const conflicts = dmxConflicts(lines)
   const fromEvent = dmxFromEquipment(event.equipment, items)
+  // Adresy zapísané pri technike (napr. až po vytvorení patch listu).
+  const plain = lines.map(({ id: _omit, ...fields }) => (void _omit, fields))
+  const fromGear = addressesFromEquipment(plain, items)
   const dmxTemplates = (templates.data ?? []).filter((template) => template.kind === 'dmx')
   const form = (line: DmxLine | null) => (
     <DmxForm
@@ -182,8 +185,14 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
               Zo svetiel eventu ({fromEvent.length})
             </Button>
           )}
+          {fromGear.changed > 0 && (
+            <Button variant="outline" size="sm" disabled={load.isPending} onClick={() => load.mutate({ lines: fromGear.lines, replace: true })}>
+              <Lightbulb className="size-4" aria-hidden />
+              Prevziať adresy z techniky ({fromGear.changed})
+            </Button>
+          )}
           {lines.some((line) => !line.address) && (
-            <Button variant="outline" size="sm" disabled={load.isPending} onClick={() => load.mutate({ lines: fillAddresses(lines.map(({ id: _omit, ...fields }) => (void _omit, fields))), replace: true })}>
+            <Button variant="outline" size="sm" disabled={load.isPending} onClick={() => load.mutate({ lines: fillAddresses(fromGear.lines), replace: true })}>
               <Wand2 className="size-4" aria-hidden />
               Doplniť chýbajúce adresy
             </Button>

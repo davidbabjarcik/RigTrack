@@ -89,6 +89,26 @@ export function dmxFromEquipment(onEvent: EventEquipment[], equipment: Equipment
   return lines
 }
 
+/**
+ * Linka, adresa a mód z techniky (zapísané pri kuse svetla) do riadkov patch listu – napr. keď sa adresy zapísali
+ * až po vytvorení patch listu. Vráti nové riadky a počet zmenených.
+ */
+export function addressesFromEquipment<T extends DmxFields>(lines: T[], equipment: Pick<Equipment, 'id' | 'unitInfo' | 'attributes'>[]): { lines: T[]; changed: number } {
+  let changed = 0
+  const next = lines.map((line) => {
+    if (!line.equipmentId || line.unit === null) return line
+    const item = equipment.find((candidate) => candidate.id === line.equipmentId)
+    const info = item?.unitInfo?.[String(line.unit)]
+    if (!item || !info?.dmxAddress) return line
+    const mode = info.dmxMode || line.mode
+    const updated = { ...line, address: info.dmxAddress, universe: info.dmxLine || line.universe, mode, channels: mode ? channelsOf(item, mode) : line.channels }
+    if (updated.address === line.address && updated.universe === line.universe && updated.mode === line.mode && updated.channels === line.channels) return line
+    changed++
+    return updated
+  })
+  return { lines: next, changed }
+}
+
 /** Riadkom bez adresy priradí adresy za sebou na ich linke (za už obsadené). */
 export function fillAddresses(lines: DmxFields[]): DmxFields[] {
   const placed: DmxFields[] = lines.filter((line) => line.address)

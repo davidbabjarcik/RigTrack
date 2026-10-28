@@ -125,7 +125,10 @@ function QuickStats({ company, tileIds }: { company: Membership; tileIds: StatTi
   const filled = new Set(gear.map((item) => item.caseId).filter(Boolean))
   const seeGear = can(company, 'equipment.view')
   const all: Record<StatTileId, { value: number; to: string } | false> = {
-    pieces: seeGear && { value: sum(gear), to: '/equipment' },
+    // Technika bez káblov; káble zvlášť v kusoch a v metroch (dĺžka × počet).
+    pieces: seeGear && { value: sum(gear.filter((item) => item.kind !== 'cable')), to: '/equipment' },
+    cables: seeGear && { value: sum(gear.filter((item) => item.kind === 'cable')), to: '/equipment' },
+    cableMeters: seeGear && { value: Math.round(gear.filter((item) => item.kind === 'cable').reduce((total, item) => total + (item.attributes.lengthM ?? 0) * item.quantity, 0)), to: '/equipment' },
     inService: seeGear && { value: gear.filter((item) => item.status === 'in_service').length, to: '/equipment' },
     unpacked: seeGear && { value: sum(unpackedEquipment(gear)), to: '/equipment?case=none' },
     emptyCases: seeGear && { value: (cases.data ?? []).filter((item) => !filled.has(item.id)).length, to: '/cases' },
@@ -145,7 +148,7 @@ function QuickStats({ company, tileIds }: { company: Membership; tileIds: StatTi
       <h2 id="quick-stats-heading" className="mb-2 flex items-center gap-2 font-medium">
         <BarChart3 className="size-5 text-accent" aria-hidden />
         <Link to="/stats" className="hover:underline">
-          Čísla
+          Štatistiky
         </Link>
       </h2>
       <div className="grid grid-cols-2 gap-2">
@@ -220,7 +223,7 @@ export function SideWidgets({ company, layout = 'desktop' }: { company: Membersh
           </ul>
           {shown.includes('stats') && (
             <fieldset className="mt-3 border-t pt-3">
-              <legend className="mb-1 text-sm font-medium">V bloku Čísla</legend>
+              <legend className="mb-1 text-sm font-medium">V bloku Štatistiky</legend>
               <div className="grid gap-1 sm:grid-cols-2">
                 {(Object.keys(STAT_TILES) as StatTileId[]).map((id) => (
                   <label key={id} className="flex items-center gap-2 text-sm">
