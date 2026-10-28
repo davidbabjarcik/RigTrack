@@ -19,6 +19,7 @@ import {
   isValidIp,
   needsRestock,
   NO_CASE,
+  channelMap,
   normalizeMac,
   parseUnitIds,
   serviceState,
@@ -538,5 +539,16 @@ describe('equipment in its own cover', () => {
     const attributes = attributesFor({ kind: 'audio', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', inCover: true, coverNote: 'obal na top', caseId: '' } as never)
     expect(attributes).toMatchObject({ inCover: true, coverNote: 'obal na top' })
     expect(unpackedEquipment([{ caseId: null, status: 'available', kind: 'audio', attributes } as never])).toHaveLength(0)
+  })
+})
+
+describe('DMX channel map', () => {
+  it('numbers lines as channels and skips empty ones', () => {
+    expect(channelMap({ name: 'Basic', channels: 4, map: 'Pan\n\nTilt\n  Dimmer ' })).toEqual([
+      [1, 'Pan'],
+      [3, 'Tilt'],
+      [4, 'Dimmer'],
+    ])
+    expect(channelMap({ name: 'Basic', channels: 4 })).toEqual([])
   })
 })

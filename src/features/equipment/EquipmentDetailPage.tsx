@@ -23,7 +23,7 @@ import { OwnerLink } from '@/features/staff/OwnerLink'
 import { AmpPresetsInfo } from './AmpPresetsInfo'
 import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { EquipmentLinks } from './PurchaseLinksFields'
-import { CAPTURE_MATCH_LABELS, hoursSinceLamp, describeAttributes, describeUnitIds, groupSplitEquipment, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
+import { CAPTURE_MATCH_LABELS, channelMap, hoursSinceLamp, describeAttributes, describeUnitIds, groupSplitEquipment, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
 import { OperatingHours } from './OperatingHours'
 import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
@@ -103,7 +103,34 @@ export function EquipmentDetailPage() {
     ['Vlastník', equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
     ['Kategória', categories.find((c) => c.id === equipment.categoryId)?.name],
     ['Príkon', equipment.attributes.powerW !== undefined && `${equipment.attributes.powerW} W`],
-    ['DMX módy', equipment.attributes.dmxModes?.map((mode) => `${mode.name} ${mode.channels} ch`).join(' · ')],
+    [
+      'DMX módy',
+      equipment.attributes.dmxModes?.length ? (
+        <span key="dmx-modes" className="flex flex-col gap-1">
+          {equipment.attributes.dmxModes.map((mode, index) =>
+            channelMap(mode).length > 0 ? (
+              <details key={index}>
+                <summary className="cursor-pointer">
+                  {mode.name} {mode.channels} ch <span className="text-sm font-normal text-accent">– rozpis kanálov</span>
+                </summary>
+                <ol className="mt-1 grid gap-x-6 text-sm font-normal sm:grid-cols-2">
+                  {channelMap(mode).map(([channel, text]) => (
+                    <li key={channel} className="flex gap-2">
+                      <span className="w-8 shrink-0 text-right font-mono text-muted-foreground tabular-nums">{channel}</span>
+                      {text}
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            ) : (
+              <span key={index}>
+                {mode.name} {mode.channels} ch
+              </span>
+            ),
+          )}
+        </span>
+      ) : undefined,
+    ],
     ['Kópia čoho', equipment.cloneOf],
     [
       'Sedí s Capture',

@@ -350,7 +350,15 @@ export type LedProcessorSpec = {
 
 export type LedPanelSpec = { widthMm: number; heightMm: number; pxW: number; pxH: number; weightKg: number; maxW: number; avgW: number; pitchMm?: number }
 
-export type DmxMode = { name: string; channels: number }
+/** DMX mód: názov, počet kanálov a nepovinný rozpis – čo robí ktorý kanál (riadok = kanál, napr. „Pan“). */
+export type DmxMode = { name: string; channels: number; map?: string }
+
+/** Rozpis kanálov módu: [[1, 'Pan'], [2, 'Tilt']…]; prázdne riadky sa preskočia. */
+export const channelMap = (mode: DmxMode) =>
+  (mode.map ?? '')
+    .split('\n')
+    .map((text, index) => [index + 1, text.trim()] as const)
+    .filter(([, text]) => text)
 
 /** Odkaz pri technike: návod, fixtúra (GDTF / Capture), firmvér… */
 export const LINK_TAGS = ['manual', 'fixture', 'firmware', 'datasheet', 'video', 'other'] as const
@@ -583,6 +591,7 @@ export const equipmentSchema = z.object({
       z.object({
         name: text(40).min(1, 'Zadajte názov módu'),
         channels: z.number('Zadajte počet kanálov').int('Celé číslo').min(1, 'Aspoň 1 kanál').max(512, 'Najviac 512 kanálov'),
+        map: z.string().max(6000, 'Rozpis je príliš dlhý').optional(),
       }),
     )
     .max(20, 'Najviac 20 módov'),
@@ -922,7 +931,7 @@ export function attributesFor(
     attributes.dipSwitches = values.dipSwitches
     if (values.dipNote?.trim()) attributes.dipNote = values.dipNote.trim()
   }
-  if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels }))
+  if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels, ...(mode.map?.trim() ? { map: mode.map.replace(/\s+$/, '') } : {}) }))
   if (values.kind === 'cable') {
     const makers = (values.makers ?? []).filter((maker) => maker.name.trim() && maker.count > 0).map((maker) => ({ name: maker.name.trim(), count: maker.count }))
     if (makers.length > 0) attributes.makers = makers

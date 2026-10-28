@@ -13,6 +13,7 @@ import { downloadCanvas, fileSlug, qrCanvas } from './canvas'
 import { caseBaseName, caseNumber } from './model'
 import { qrUrl } from '@/features/scan/qr'
 import { fetchPhotoBlob } from '@/features/equipment/photo'
+import type { DmxMode } from '@/features/equipment/model'
 import { withoutWhiteBackground } from './removeBackground'
 import { buildCableMatrix, DEFAULT_SHOW, drawContentSheet, matrixPages, orderColumns, SHEET_PART_LABELS, SHEET_PARTS, type SheetShow, SHEET_HEIGHT, SHEET_LAYOUT_LABELS, SHEET_LAYOUTS, SHEET_WIDTH, type SheetLayout } from './contentSheet'
 
@@ -36,6 +37,7 @@ function scaled(source: HTMLCanvasElement, width: number, height: number) {
 const ORDER_KEY = 'rigtrack.sheetOrder'
 const SHOW_KEY = 'rigtrack.sheetShow'
 const ORIENTATION_KEY = 'rigtrack.sheetOrientation'
+const DMX_KEY = 'rigtrack.sheetDmx'
 import { useCases } from './useCases'
 import { cn } from '@/lib/utils'
 
@@ -57,6 +59,23 @@ export function CaseContentSheetPage() {
     setLandscapeState(next)
     try {
       localStorage.setItem(ORIENTATION_KEY, next ? 'landscape' : 'portrait')
+    } catch {
+      // Bez úložiska sa voľba len nezapamätá.
+    }
+  }
+  // DMX na hárku: nie / módy / módy s rozpisom kanálov – len keď je v case svetlo.
+  const [dmxInfo, setDmxInfoState] = useState<'off' | 'modes' | 'channels'>(() => {
+    try {
+      const saved = localStorage.getItem(DMX_KEY)
+      return saved === 'modes' || saved === 'channels' ? saved : 'off'
+    } catch {
+      return 'off'
+    }
+  })
+  const setDmxInfo = (next: 'off' | 'modes' | 'channels') => {
+    setDmxInfoState(next)
+    try {
+      localStorage.setItem(DMX_KEY, next)
     } catch {
       // Bez úložiska sa voľba len nezapamätá.
     }
@@ -119,6 +138,15 @@ export function CaseContentSheetPage() {
     () => buildCableMatrix((equipment.data ?? []).filter((item) => item.caseId === id)),
     [equipment.data, id],
   )
+  const caseLights = useMemo(() => {
+    const seen = new Map<string, { name: string; modes: DmxMode[] }>()
+    for (const item of (equipment.data ?? []).filter((part) => part.caseId === id)) {
+      // Svetlá (nie príslušenstvo ako háky, mixpult) s DMX módmi.
+      if (item.kind !== 'light' || item.attributes.lightType?.startsWith('acc_') || !item.attributes.dmxModes?.length) continue
+      if (!seen.has(item.name)) seen.set(item.name, { name: item.name, modes: item.attributes.dmxModes })
+    }
+    return [...seen.values()]
+  }, [equipment.data, id])
   const logoSettled = !logoPath || logo.isSuccess || logo.isError
   const ready = Boolean(current && equipment.data && colors.data && branding.data && logoSettled)
 
@@ -187,6 +215,8 @@ export function CaseContentSheetPage() {
         matrix: page,
         layout: layout === 'stacked' ? 'stacked' : 'together',
         landscape,
+        dmx: dmxInfo === 'off' ? [] : caseLights,
+        dmxChannels: dmxInfo === 'channels',
         show,
         colors: colors.data ?? [],
         footer: branding.data?.labelFooter ?? '',
@@ -204,7 +234,7 @@ export function CaseContentSheetPage() {
     return () => {
       cancelled = true
     }
-  }, [ready, current, matrix, pages, layout, show, landscape, colors.data, branding.data, logo.data, company.companyName, equipment.data])
+  }, [ready, current, matrix, pages, layout, show, landscape, dmxInfo, caseLights, colors.data, branding.data, logo.data, company.companyName, equipment.data])
 
   const back = (
     <Link to={`/cases/${id}`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -300,6 +330,29 @@ export function CaseContentSheetPage() {
           </label>
         ))}
       </fieldset>
+      {caseLights.length > 0 && (
+        <div role="radiogroup" aria-label="DMX na hárku" className="mx-auto mb-3 flex w-full max-w-2xl flex-wrap items-center gap-1 rounded-lg bg-muted p-1">
+          <span className="px-2 text-sm text-muted-foreground">DMX:</span>
+          {(
+            [
+              ['off', 'Nie'],
+              ['modes', 'Módy (napr. Standard 16 ch)'],
+              ['channels', 'Módy s rozpisom kanálov'],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={dmxInfo === value}
+              onClick={() => setDmxInfo(value)}
+              className={cn('h-9 flex-1 rounded-md px-3 text-sm', dmxInfo === value ? 'bg-surface font-medium shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {matrix.columns.length > 1 && (
         <div role="radiogroup" aria-label="Viac typov káblov na hárku" className="mx-auto mb-3 flex w-full max-w-2xl flex-wrap gap-1 rounded-lg bg-muted p-1">
           {SHEET_LAYOUTS.map((value) => (

@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.7 – 29. 10. 2026
+
+- **Rozpis kanálov pri DMX módoch** (nepovinné): pri svetle pod každým módom „+ Rozpis kanálov“ – riadok = kanál
+  (Dimmer, Red, Green…). V detaile techniky sa rozpis rozbalí pri móde.
+- **DMX na hárku s obsahom case**: keď je v case svetlo (nie príslušenstvo), dá sa zapnúť časť DMX – len módy
+  (napr. A – 6 ch, D – 8 ch), alebo módy s rozpisom kanálov. Voľba sa zapamätá.
+- Tlačidlo **Obsah** pri case (namiesto „Obsah A4“ – hárok je aj na A5 a na šírku).
+
 ### 5.6 – 29. 10. 2026
 
 - **Hárok s obsahom case na šírku**: voľba Na výšku / Na šírku nad náhľadom (aj pri A5). Voľba sa zapamätá.

@@ -172,7 +172,7 @@ export function CaseDetailPage() {
           </LinkButton>
           <LinkButton to={`/cases/${id}/content`} variant="outline" size="sm">
             <ClipboardList className="size-4" aria-hidden />
-            Obsah A4
+            Obsah
           </LinkButton>
           {canEdit && (
             <LinkButton to={`/cases/${id}/edit`} variant="outline" size="sm">

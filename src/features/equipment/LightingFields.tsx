@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form'
 import { ampsAt230 } from '@/features/labels/tape'
@@ -16,6 +17,8 @@ export function LightingFields() {
   } = useFormContext<EquipmentFormValues>()
   // Časť Svetlo sa ukáže pri druhu Svetlo aj pri kategórii, ktorá je o svetlách.
   const dmxModes = useFieldArray({ control, name: 'dmxModes' })
+  const modesValue = useWatch({ control, name: 'dmxModes' })
+  const [openMaps, setOpenMaps] = useState<string[]>([])
   const captureMatch = useWatch({ control, name: 'captureMatch' })
   const lightType = useWatch({ control, name: 'lightType' })
   const lightSource = useWatch({ control, name: 'lightSource' })
@@ -85,7 +88,7 @@ export function LightingFields() {
             {dmxModes.fields.length === 0 && <p className="mb-2 text-sm text-muted-foreground">Napríklad Basic 8 ch, Standard 16 ch, Extended 24 ch.</p>}
             <ul className="flex flex-col gap-2">
               {dmxModes.fields.map((field, index) => (
-                <li key={field.id} className="flex items-end gap-2">
+                <li key={field.id} className="flex flex-wrap items-end gap-2">
                   <Field
                     label="Názov módu"
                     hideLabel={index > 0}
@@ -112,6 +115,22 @@ export function LightingFields() {
                   <Button variant="ghost" aria-label={`Odobrať mód ${index + 1}`} onClick={() => dmxModes.remove(index)}>
                     <Trash2 className="size-4" aria-hidden />
                   </Button>
+                  {/* Nepovinný rozpis: čo robí ktorý kanál v tomto móde. */}
+                  {openMaps.includes(field.id) || (modesValue?.[index]?.map ?? '').trim() ? (
+                    <label className="flex basis-full flex-col gap-1 text-sm">
+                      <span className="font-medium">Kanály módu {modesValue?.[index]?.name || index + 1} – riadok = kanál</span>
+                      <textarea
+                        rows={Math.min(12, Math.max(4, Number(modesValue?.[index]?.channels) || 4))}
+                        placeholder={'Pan\nPan fine\nTilt\nTilt fine\nDimmer\nShutter / strobe\n…'}
+                        className="rounded-lg border bg-surface px-3 py-2 font-mono text-sm"
+                        {...register(`dmxModes.${index}.map`)}
+                      />
+                    </label>
+                  ) : (
+                    <button type="button" className="basis-full text-left text-sm text-accent hover:underline" onClick={() => setOpenMaps([...openMaps, field.id])}>
+                      + Rozpis kanálov (nepovinné) – čo robí ktorý kanál
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

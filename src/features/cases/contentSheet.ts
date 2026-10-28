@@ -3,7 +3,7 @@
 // s fotkou a počtom pod ňou, pri veľa položkách zoznam.
 
 import { findCableColor, type CableColor } from '@/features/equipment/cableColors'
-import { formatNumber, type EquipmentAttributes, type EquipmentKind } from '@/features/equipment/model'
+import { channelMap, formatNumber, type DmxMode, type EquipmentAttributes, type EquipmentKind } from '@/features/equipment/model'
 import { ellipsize, fitSize, font, INK, sourceSize, type Ctx } from './canvas'
 
 export const SHEET_WIDTH = 2480
@@ -90,6 +90,10 @@ export type SheetData = {
   /** Súhrn dole: kusov spolu a hmotnosť (case a známe hmotnosti techniky). */
   totalPieces?: number
   weightKg?: number | null
+  /** Svetlá v case a ich DMX módy (napr. Beam: Standard 16 ch); prázdne = bez časti DMX. */
+  dmx?: { name: string; modes: DmxMode[] }[]
+  /** Pri DMX aj rozpis kanálov (1 Dimmer, 2 Red…), inak len módy s počtom kanálov. */
+  dmxChannels?: boolean
   /** Na šírku (inak na výšku). */
   landscape?: boolean
   /** Čo ukázať v hlavičke a v súhrne dole (predvolene všetko). */
@@ -347,6 +351,69 @@ function drawItems(ctx: Ctx, title: string, items: SheetEntry[], y: number, heig
   return y + cardRows * cardHeight + (cardRows - 1) * CARD_GAP + 60
 }
 
+const DMX_TITLE = 64
+const DMX_MODE = 54
+const DMX_LINE = 54
+const DMX_PER_ROW = 4
+
+/** Výška jedného svetla v časti DMX: názov, módy vedľa seba (najviac 4 v rade) a pod nimi kanály. */
+function dmxLightHeight(light: { modes: DmxMode[] }, withChannels: boolean) {
+  const rows = Math.ceil(light.modes.length / DMX_PER_ROW)
+  const tallest = withChannels ? Math.max(0, ...light.modes.map((mode) => channelMap(mode).length)) : 0
+  return DMX_TITLE + 30 + rows * (DMX_MODE + 20 + tallest * DMX_LINE) + 40
+}
+
+/** Odhad výšky časti DMX (nadpis + svetlá). */
+function dmxHeight(lights: { name: string; modes: DmxMode[] }[], withChannels: boolean) {
+  if (lights.length === 0) return 0
+  return 160 + lights.reduce((sum, light) => sum + dmxLightHeight(light, withChannels), 0)
+}
+
+/** Časť DMX: pri každom svetle jeho módy vedľa seba (napr. „A – 6 ch“) a voliteľne kanály pod nimi. */
+function drawDmx(ctx: Ctx, lights: { name: string; modes: DmxMode[] }[], withChannels: boolean, y: number, height: number) {
+  const left = MARGIN
+  const width = pageWidth - 2 * MARGIN
+  const end = y + height
+  // Keď je miesta málo, všetko sa zmenší rovnakým pomerom.
+  const scale = Math.min(1, Math.max(0.5, height / Math.max(1, dmxHeight(lights, withChannels))))
+  y = sectionTitle(ctx, withChannels ? 'DMX MÓDY A KANÁLY' : 'DMX MÓDY', y)
+  const columnWidth = width / DMX_PER_ROW
+  ctx.textBaseline = 'top'
+  for (const light of lights) {
+    if (y > end) break
+    font(ctx, Math.floor(DMX_TITLE * scale))
+    ctx.fillStyle = INK
+    ctx.fillText(ellipsize(ctx, light.name, width), left, y)
+    y += (DMX_TITLE + 30) * scale
+    for (let start = 0; start < light.modes.length; start += DMX_PER_ROW) {
+      const row = light.modes.slice(start, start + DMX_PER_ROW)
+      let rowHeight = DMX_MODE + 20
+      row.forEach((mode, index) => {
+        const x = left + index * columnWidth
+        font(ctx, Math.floor(DMX_MODE * 0.85 * scale), 800)
+        ctx.fillStyle = INK
+        ctx.fillText(ellipsize(ctx, `${mode.name} – ${mode.channels} ch`, columnWidth - 40), x, y)
+        if (!withChannels) return
+        const channels = channelMap(mode)
+        channels.forEach(([channel, text], line) => {
+          const top = y + (DMX_MODE + 20 + line * DMX_LINE) * scale
+          font(ctx, Math.floor(DMX_LINE * 0.62 * scale), 700)
+          ctx.fillStyle = MUTED
+          ctx.fillText(String(channel).padStart(2, ' '), x, top)
+          ctx.fillStyle = INK
+          font(ctx, Math.floor(DMX_LINE * 0.62 * scale), 500)
+          ctx.fillText(ellipsize(ctx, text, columnWidth - 120), x + 70 * scale, top)
+        })
+        rowHeight = Math.max(rowHeight, DMX_MODE + 20 + channels.length * DMX_LINE)
+      })
+      y += rowHeight * scale
+    }
+    y += 40 * scale
+  }
+  ctx.fillStyle = INK
+  return y + 20
+}
+
 export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
   pageWidth = data.landscape ? SHEET_HEIGHT : SHEET_WIDTH
   pageHeight = data.landscape ? SHEET_WIDTH : SHEET_HEIGHT
@@ -446,7 +513,9 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
   ].filter((section) => section.items.length > 0)
   // Pod tabuľkou káblov bez príslušenstva: ostatné veci sú redukcie a podobne.
   if (rows.length > 0 && accessories.length === 0 && sections.length === 1) sections[0].title = 'PRÍSLUŠENSTVO / REDUKCIE'
-  const othersHeight = sections.reduce((sum, section) => sum + sectionHeight(section.items, rows.length > 0), 0)
+  const lights = data.dmx ?? []
+  const dmxSpace = dmxHeight(lights, Boolean(data.dmxChannels))
+  const othersHeight = sections.reduce((sum, section) => sum + sectionHeight(section.items, rows.length > 0), 0) + dmxSpace
 
   // Káble: jedna tabuľka (dĺžka × typ), alebo pri „každý typ zvlášť“ tabuľka za každý typ pod sebou.
   const tables =
@@ -551,8 +620,10 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
   const wanted = Math.max(1, othersHeight)
   for (const section of sections) {
     const share = Math.max(300, (sectionHeight(section.items, rows.length > 0) / wanted) * leftSpace)
-    y = drawItems(ctx, section.title, section.items, y, Math.min(share, bottom - footerSpace - y), rows.length > 0, data.photos)
+    // Miesto pre časť DMX ostane dole.
+    y = drawItems(ctx, section.title, section.items, y, Math.min(share, bottom - footerSpace - dmxSpace - y), rows.length > 0, data.photos)
   }
+  if (lights.length > 0) y = drawDmx(ctx, lights, Boolean(data.dmxChannels), y, Math.max(dmxSpace, bottom - footerSpace - y))
 
   // Súhrn dole: počet kusov, hmotnosť, kto kontroloval a kedy.
   const summaryY = bottom - contactSpace - SUMMARY
