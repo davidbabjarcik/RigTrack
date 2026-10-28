@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, ChevronRight, Plus, Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -17,6 +17,7 @@ import { can } from '@/lib/permissions'
 import { equipmentKeys, fetchEquipmentList } from './api'
 import {
   describeAttributes,
+  equipmentGroupLabel,
   makersText,
   EQUIPMENT_STATUSES,
   cableBaseName,
@@ -42,6 +43,7 @@ import { useStaff } from '@/features/staff/useStaff'
 import { useEquipmentLookups } from './useEquipmentLookups'
 import { usePhotoThumbs } from './usePhotoThumbs'
 import { useKindColors } from './kindColors'
+import { useUserPrefs } from '@/features/settings/userPrefs'
 
 const NO_FILTER: EquipmentFilter = { search: '', status: '', categoryId: '', locationId: '', caseId: '' }
 const FILTER_KEY = 'rigtrack.equipment.filter'
@@ -96,7 +98,10 @@ export function EquipmentListPage() {
   const linkedVisible = filterLinkedEquipment(linked, filter)
   // Pri výbere jednej prepojenej firmy sa naša technika neukazuje.
   const ownHidden = Boolean(filter.company && filter.company !== 'all')
-  const visible = ownHidden ? [] : filterEquipment(all, filter, today)
+  const { prefs } = useUserPrefs()
+  const sortContext = { kindOrder: prefs.kindOrder, categoryName: (id: string | null) => categories.find((c) => c.id === id)?.name ?? '' }
+  const byGroup = filter.sort === 'category'
+  const visible = ownHidden ? [] : filterEquipment(all, filter, today, sortContext)
   const thumbs = usePhotoThumbs(
     company.companyId,
     all.map((item) => item.photoPath),
@@ -153,6 +158,61 @@ export function EquipmentListPage() {
           <StatusBadge status={item.status} />
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
       </Link>
+    )
+  }
+
+  const groups = groupSplitEquipment(visible, caseLabel)
+  const renderGroup = (group: (typeof groups)[number]) => {
+    if (group.items.length === 1) return <li key={group.key}>{row(group.items[0], false)}</li>
+    const main = group.items[0]
+    const total = group.items.reduce((sum, item) => sum + item.quantity, 0)
+    const free = group.items.filter((item) => !item.caseId).reduce((sum, item) => sum + item.quantity, 0)
+    const inCases = group.items.filter((item) => item.caseId)
+    const expanded = openGroups.has(group.key)
+    const cables = main.kind === 'cable'
+    const color = colorOf(main, categories, kindColors)
+    const lengths = [...new Set(group.items.map((item) => item.attributes.lengthM).filter((value): value is number => value !== undefined))]
+    const details = [
+      [main.manufacturer, main.model].filter(Boolean).join(' '),
+      ...(cables ? [main.attributes.connector, lengths.length > 0 && `${lengths.map((value) => String(value).replace('.', ',')).join(', ')} m`] : describeAttributes(main, { makers: false })),
+      categoryName(main.categoryId),
+      `${total} ks`,
+      free > 0 && `${free} mimo case`,
+      inCases.length > 0 && `${inCases.reduce((sum, item) => sum + item.quantity, 0)} v ${inCases.length === 1 ? caseLabel(inCases[0].caseId!) || 'case' : `${inCases.length} cases`}`,
+    ].filter(Boolean)
+    const late = group.items.some((item) => ['overdue', 'unknown'].includes(hoursState(item, today, checkDays).state))
+    return (
+      <li key={group.key}>
+        {/* Klik na riadok otvorí prehľad všetkých častí; šípka vpravo rozbalí časti priamo v zozname. */}
+        <div className="relative flex min-h-16 items-center hover:bg-muted">
+          {color && <span className={`absolute inset-y-0 left-0 w-1.5 ${COLOR_CLASSES[color]}`} aria-hidden />}
+          <Link to={`/equipment/group?ids=${group.items.map((item) => item.id).join(',')}`} className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-5">
+            <PhotoThumb url={thumbs[main.photoPath]} />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium">{cables ? cableBaseName(main.name) : main.name}</span>
+              <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
+              {late && <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>}
+            </span>
+            <StatusBadge status={main.status} />
+          </Link>
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Zbaliť časti' : 'Rozbaliť časti'}
+            onClick={() => toggleGroup(group.key)}
+            className="flex h-16 w-12 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
+          >
+            <ChevronDown className={`size-5 transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden />
+          </button>
+        </div>
+        {expanded && (
+          <ul className="divide-y border-t bg-muted/30">
+            {group.items.map((item) => (
+              <li key={item.id}>{row(item, true, cables)}</li>
+            ))}
+          </ul>
+        )}
+      </li>
     )
   }
 
@@ -248,59 +308,15 @@ export function EquipmentListPage() {
         </div>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
-          {groupSplitEquipment(visible, caseLabel).map((group) => {
-            if (group.items.length === 1) return <li key={group.key}>{row(group.items[0], false)}</li>
-            const main = group.items[0]
-            const total = group.items.reduce((sum, item) => sum + item.quantity, 0)
-            const free = group.items.filter((item) => !item.caseId).reduce((sum, item) => sum + item.quantity, 0)
-            const inCases = group.items.filter((item) => item.caseId)
-            const expanded = openGroups.has(group.key)
-            const cables = main.kind === 'cable'
-            const color = colorOf(main, categories, kindColors)
-            const lengths = [...new Set(group.items.map((item) => item.attributes.lengthM).filter((value): value is number => value !== undefined))]
-            const details = [
-              [main.manufacturer, main.model].filter(Boolean).join(' '),
-              ...(cables ? [main.attributes.connector, lengths.length > 0 && `${lengths.map((value) => String(value).replace('.', ',')).join(', ')} m`] : describeAttributes(main, { makers: false })),
-              categoryName(main.categoryId),
-              `${total} ks`,
-              free > 0 && `${free} mimo case`,
-              inCases.length > 0 && `${inCases.reduce((sum, item) => sum + item.quantity, 0)} v ${inCases.length === 1 ? caseLabel(inCases[0].caseId!) || 'case' : `${inCases.length} cases`}`,
-            ].filter(Boolean)
-            const late = group.items.some((item) => ['overdue', 'unknown'].includes(hoursState(item, today, checkDays).state))
-            return (
-              <li key={group.key}>
-                {/* Klik na riadok otvorí prehľad všetkých častí; šípka vpravo rozbalí časti priamo v zozname. */}
-                <div className="relative flex min-h-16 items-center hover:bg-muted">
-                  {color && <span className={`absolute inset-y-0 left-0 w-1.5 ${COLOR_CLASSES[color]}`} aria-hidden />}
-                  <Link to={`/equipment/group?ids=${group.items.map((item) => item.id).join(',')}`} className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-5">
-                    <PhotoThumb url={thumbs[main.photoPath]} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">{cables ? cableBaseName(main.name) : main.name}</span>
-                      <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
-                      {late && <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>}
-                    </span>
-                    <StatusBadge status={main.status} />
-                  </Link>
-                  <button
-                    type="button"
-                    aria-expanded={expanded}
-                    aria-label={expanded ? 'Zbaliť časti' : 'Rozbaliť časti'}
-                    onClick={() => toggleGroup(group.key)}
-                    className="flex h-16 w-12 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
-                  >
-                    <ChevronDown className={`size-5 transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden />
-                  </button>
-                </div>
-                {expanded && (
-                  <ul className="divide-y border-t bg-muted/30">
-                    {group.items.map((item) => (
-                      <li key={item.id}>{row(item, true, cables)}</li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            )
-          })}
+          {groups.map((group, index) => (
+            <Fragment key={group.key}>
+              {/* Triedenie podľa kategórie / druhu: nadpis pri každej novej skupine. */}
+              {byGroup && (index === 0 || equipmentGroupLabel(groups[index - 1].items[0], sortContext) !== equipmentGroupLabel(group.items[0], sortContext)) && (
+                <li className="bg-muted/60 px-4 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{equipmentGroupLabel(group.items[0], sortContext)}</li>
+              )}
+              {renderGroup(group)}
+            </Fragment>
+          ))}
         </ul>
       )}
       <LinkedEquipmentList items={linkedVisible} />

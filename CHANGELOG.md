@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.3 – 28. 10. 2026
+
+- **Triedenie techniky „Podľa kategórie / druhu“**: technika v skupinách (Svetlo, Zvuk, Hliník…) s nadpisom, v skupine podľa
+  abecedy. Poradie skupín si každý nastaví v Nastavenia → Účet → **Poradie techniky (moje zameranie)**.
+- **Do case priamo zo stránky techniky**: pri kusoch mimo case zaškrtnete kusy (alebo „Vybrať všetky mimo case“),
+  vyberiete case a „Dať do case“. Časť „Mimo case“ je v zozname častí dole.
+
 ### 5.2.1 – 28. 10. 2026
 
 - **Nová technika bez DMX adries kusov**: linka, adresa a mód pri jednotlivých kusoch sú až v úprave pridanej

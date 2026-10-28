@@ -48,6 +48,7 @@ import { isAdminRole, ROLE_LABELS, ROLES, type Role } from '@/lib/roles'
 import { PriorityColorsSettings } from '@/features/tasks/PriorityColorsSettings'
 import { CableColorsSettings } from '@/features/equipment/CableColorsSettings'
 import { KindColorsSettings } from '@/features/equipment/KindColorsSettings'
+import { KindOrderSettings } from '@/features/equipment/KindOrderSettings'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -480,6 +481,9 @@ export function SettingsPage() {
           </Section>
           <Section title="Farby priorít úloh">
             <PriorityColorsSettings />
+          </Section>
+          <Section title="Poradie techniky (moje zameranie)">
+            <KindOrderSettings />
           </Section>
           <Section title="Upozornenia na mobil">
             <PushSettings userId={user.id} />

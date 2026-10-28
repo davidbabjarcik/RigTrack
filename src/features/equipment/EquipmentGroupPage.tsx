@@ -10,7 +10,7 @@ import { caseTitle } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
-import { equipmentKeys, fetchEquipmentList, mergeEquipment } from './api'
+import { equipmentKeys, fetchEquipmentList, mergeEquipment, splitEquipmentUnits } from './api'
 import { PhotoThumb } from './PhotoThumb'
 import { uploadGroupPhoto } from './photo'
 import { usePhotoThumbs } from './usePhotoThumbs'
@@ -43,6 +43,36 @@ export function EquipmentGroupPage() {
     },
   })
   const [dmxOpen, setDmxOpen] = useState(false)
+  // Kusy mimo case označené na presun do case.
+  const [picked, setPicked] = useState<string[]>([])
+  const [targetCase, setTargetCase] = useState('')
+  const toCase = useMutation({
+    mutationFn: async () => {
+      const added: string[] = []
+      const byPart = new Map<string, number[]>()
+      for (const key of picked) {
+        const [partId, unit] = key.split(':')
+        byPart.set(partId, [...(byPart.get(partId) ?? []), Number(unit)])
+      }
+      for (const [partId, unitIds] of byPart) {
+        let moved = await splitEquipmentUnits(partId, targetCase, unitIds)
+        // Ak už v tom case časť tej istej techniky je, kusy sa k nej pridajú (jeden riadok na case).
+        const existing = parts.find((item) => item.caseId === targetCase && item.id !== moved && item.id !== partId)
+        if (existing) {
+          await mergeEquipment(moved, existing.id)
+          moved = existing.id
+        }
+        added.push(moved)
+      }
+      return added
+    },
+    onSuccess: async (added) => {
+      setPicked([])
+      await queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) })
+      await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
+      navigate(`/equipment/group?ids=${[...new Set([...ids, ...added])].join(',')}`, { replace: true })
+    },
+  })
   const thumbs = usePhotoThumbs(companyId, parts.slice(0, 1).map((item) => item.photoPath))
   // Jedna fotka pre všetky časti (klik na fotku alebo Ctrl+V so skopírovaným obrázkom).
   const fileInput = useRef<HTMLInputElement>(null)
@@ -100,11 +130,20 @@ export function EquipmentGroupPage() {
   const free = parts.filter((item) => !item.caseId).reduce((sum, item) => sum + item.quantity, 0)
   const caseCount = new Set(parts.map((item) => item.caseId).filter(Boolean)).size
   const allIds = parts.map((item) => item.id).join(',')
+  const canMove = can(company, 'equipment.edit') && !cables
+  const caseOptions = [...(cases.data ?? [])].sort(
+    (a, b) =>
+      Number(!parts.some((item) => item.caseId === a.id)) - Number(!parts.some((item) => item.caseId === b.id)) ||
+      caseTitle(a).localeCompare(caseTitle(b), 'sk', { numeric: true }),
+  )
+  // Časti: v cases hore, mimo case dole.
+  const shownParts = cables ? parts : [...parts].sort((a, b) => Number(a.caseId === null) - Number(b.caseId === null))
   // Po kusoch: každý kus (#1…) s tým, kde je.
   const units = parts
     .filter((item) => item.trackUnits)
     .flatMap((item) => unitIdsOf(item).map((unit) => ({ unit, part: item })))
     .sort((a, b) => a.unit - b.unit)
+  const freeUnits = units.filter(({ part }) => !part.caseId).map(({ part, unit }) => `${part.id}:${unit}`)
 
   return (
     <>
@@ -188,6 +227,18 @@ export function EquipmentGroupPage() {
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {units.map(({ unit, part }) => (
               <li key={`${part.id}-${unit}`} className="flex min-h-12 items-center gap-3 px-4 py-2">
+                {canMove &&
+                  (part.caseId ? (
+                    <span className="size-4 shrink-0" aria-hidden />
+                  ) : (
+                    <input
+                      type="checkbox"
+                      className="size-4 shrink-0"
+                      aria-label={`Vybrať kus #${unit} do case`}
+                      checked={picked.includes(`${part.id}:${unit}`)}
+                      onChange={(event) => setPicked(event.target.checked ? [...picked, `${part.id}:${unit}`] : picked.filter((key) => key !== `${part.id}:${unit}`))}
+                    />
+                  ))}
                 <Link to={`/equipment/${part.id}?unit=${unit}`} className="w-12 font-semibold hover:underline">
                   #{unit}
                 </Link>
@@ -205,6 +256,30 @@ export function EquipmentGroupPage() {
               </li>
             ))}
           </ul>
+          {canMove && freeUnits.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl border bg-surface p-3 text-sm">
+              <button
+                type="button"
+                className="text-accent hover:underline"
+                onClick={() => setPicked(picked.length === freeUnits.length ? [] : freeUnits)}
+              >
+                {picked.length === freeUnits.length ? 'Zrušiť výber' : `Vybrať všetky mimo case (${freeUnits.length})`}
+              </button>
+              <select aria-label="Do ktorého case" className="h-9 min-w-48 flex-1 rounded-lg border bg-background px-2" value={targetCase} onChange={(event) => setTargetCase(event.target.value)}>
+                <option value="">Vyberte case…</option>
+                {caseOptions.map((box) => (
+                  <option key={box.id} value={box.id}>
+                    {caseTitle(box)}
+                  </option>
+                ))}
+              </select>
+              <Button size="sm" disabled={picked.length === 0 || !targetCase || toCase.isPending} onClick={() => toCase.mutate()}>
+                <Package className="size-4" aria-hidden />
+                {toCase.isPending ? 'Presúvam…' : `Dať do case${picked.length > 0 ? ` (${picked.length})` : ''}`}
+              </Button>
+              {toCase.isError && <span className="text-destructive">Nepodarilo sa.</span>}
+            </div>
+          )}
         </section>
       )}
 
@@ -213,7 +288,7 @@ export function EquipmentGroupPage() {
           {cables ? 'Dĺžky' : 'Časti'} ({parts.length})
         </h2>
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
-          {parts.map((part) => (
+          {shownParts.map((part) => (
             <li key={part.id}>
               <Link to={`/equipment/${part.id}`} className="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-muted">
                 <span className="min-w-0 flex-1">

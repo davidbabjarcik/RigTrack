@@ -1139,10 +1139,11 @@ export type EquipmentFilter = {
 
 export const COMPANY_OWNER = 'company'
 
-export const EQUIPMENT_SORTS = ['name', 'newest', 'oldest', 'purchased', 'quantity'] as const
+export const EQUIPMENT_SORTS = ['name', 'category', 'newest', 'oldest', 'purchased', 'quantity'] as const
 export type EquipmentSort = (typeof EQUIPMENT_SORTS)[number]
 export const SORT_LABELS: Record<EquipmentSort, string> = {
   name: 'Podľa názvu',
+  category: 'Podľa kategórie / druhu',
   newest: 'Naposledy upravené',
   oldest: 'Najdlhšie neupravené',
   purchased: 'Podľa dátumu nákupu',
@@ -1258,7 +1259,13 @@ function normalize(value: string) {
     .toLowerCase()
 }
 
-export function filterEquipment(items: Equipment[], filter: EquipmentFilter, today = new Date().toISOString().slice(0, 10)) {
+/** Pre triedenie podľa kategórie / druhu: poradie druhov (moje zameranie hore) a názvy kategórií. */
+export type SortContext = { kindOrder?: string[]; categoryName?: (categoryId: string | null) => string }
+
+/** Skupina techniky pri triedení podľa kategórie: názov kategórie, inak druh (Svetlo, Zvuk…). */
+export const equipmentGroupLabel = (item: Pick<Equipment, 'kind' | 'categoryId'>, context: SortContext = {}) => context.categoryName?.(item.categoryId) || KIND_LABELS[item.kind]
+
+export function filterEquipment(items: Equipment[], filter: EquipmentFilter, today = new Date().toISOString().slice(0, 10), context: SortContext = {}) {
   const words = normalize(filter.search).split(/\s+/).filter(Boolean)
   // Časť kusov v case a zvyšok mimo: zvyšok sa pri „Mimo cases“ ukáže, aj keď zdedil „Nepatrí do case“.
   const partlyPacked = filter.caseId === NO_CASE ? new Set(items.filter((item) => item.caseId !== null).map(splitGroupKey)) : new Set<string>()
@@ -1297,12 +1304,26 @@ export function filterEquipment(items: Equipment[], filter: EquipmentFilter, tod
     )
     return words.every((word) => haystack.includes(word))
   })
-  return sortEquipment(found, filter.sort ?? 'name')
+  return sortEquipment(found, filter.sort ?? 'name', context)
 }
 
-export function sortEquipment(items: Equipment[], sort: EquipmentSort) {
+export function sortEquipment(items: Equipment[], sort: EquipmentSort, context: SortContext = {}) {
   if (sort === 'name') return items
   const sorted = [...items]
+  if (sort === 'category') {
+    // Najprv druhy v mojom poradí (napr. svetlá hore), potom kategória / druh podľa abecedy, v nej názov.
+    const order = context.kindOrder ?? []
+    const rank = (item: Equipment) => {
+      const index = order.indexOf(item.kind)
+      return index === -1 ? order.length + EQUIPMENT_KINDS.indexOf(item.kind) : index
+    }
+    sorted.sort(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        equipmentGroupLabel(a, context).localeCompare(equipmentGroupLabel(b, context), 'sk') ||
+        a.name.localeCompare(b.name, 'sk', { numeric: true }),
+    )
+  }
   const firstPurchase = (item: Equipment) => purchaseDates(item).sort()[0] ?? '9999'
   if (sort === 'newest') sorted.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   if (sort === 'oldest') sorted.sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))

@@ -23,6 +23,8 @@ export type UserPrefs = {
   tapeFields?: Record<string, boolean>
   /** Farba pásky: biela (čierny text) alebo čierna (biely text). */
   tapeColor?: 'white' | 'black'
+  /** Poradie druhov techniky pri triedení „Podľa kategórie / druhu“ (moje zameranie hore). */
+  kindOrder?: string[]
 }
 
 const LOCAL_KEY = 'rigtrack.prefs'
