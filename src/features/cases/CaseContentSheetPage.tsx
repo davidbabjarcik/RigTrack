@@ -35,6 +35,7 @@ function scaled(source: HTMLCanvasElement, width: number, height: number) {
 }
 const ORDER_KEY = 'rigtrack.sheetOrder'
 const SHOW_KEY = 'rigtrack.sheetShow'
+const ORIENTATION_KEY = 'rigtrack.sheetOrientation'
 import { useCases } from './useCases'
 import { cn } from '@/lib/utils'
 
@@ -44,6 +45,26 @@ export function CaseContentSheetPage() {
   const companyId = company.companyId
   const canvases = useRef<(HTMLCanvasElement | null)[]>([])
   const [paper, setPaper] = useState<Paper>('A4')
+  // Na výšku / na šírku – pamätá sa v prehliadači.
+  const [landscape, setLandscapeState] = useState(() => {
+    try {
+      return localStorage.getItem(ORIENTATION_KEY) === 'landscape'
+    } catch {
+      return false
+    }
+  })
+  const setLandscape = (next: boolean) => {
+    setLandscapeState(next)
+    try {
+      localStorage.setItem(ORIENTATION_KEY, next ? 'landscape' : 'portrait')
+    } catch {
+      // Bez úložiska sa voľba len nezapamätá.
+    }
+  }
+  const sheetW = landscape ? SHEET_HEIGHT : SHEET_WIDTH
+  const sheetH = landscape ? SHEET_WIDTH : SHEET_HEIGHT
+  const a5W = landscape ? A5_HEIGHT : A5_WIDTH
+  const a5H = landscape ? A5_WIDTH : A5_HEIGHT
   // Čo ukázať na hárku (číslo case, QR, súhrn dole) – pamätá sa v prehliadači.
   const [show, setShowState] = useState<SheetShow>(() => {
     try {
@@ -165,6 +186,7 @@ export function CaseContentSheetPage() {
         weightKg: (current.weightKg ?? 0) + gearKg || null,
         matrix: page,
         layout: layout === 'stacked' ? 'stacked' : 'together',
+        landscape,
         show,
         colors: colors.data ?? [],
         footer: branding.data?.labelFooter ?? '',
@@ -182,7 +204,7 @@ export function CaseContentSheetPage() {
     return () => {
       cancelled = true
     }
-  }, [ready, current, matrix, pages, layout, show, colors.data, branding.data, logo.data, company.companyName, equipment.data])
+  }, [ready, current, matrix, pages, layout, show, landscape, colors.data, branding.data, logo.data, company.companyName, equipment.data])
 
   const back = (
     <Link to={`/cases/${id}`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -210,7 +232,7 @@ export function CaseContentSheetPage() {
     for (const [index, target] of canvases.current.slice(0, pages.length).entries()) {
       if (!target) continue
       // A5 má rovnaký pomer strán ako A4 – hárok sa len zmenší (148 × 210 mm pri 300 dpi).
-      const output = paper === 'A5' ? scaled(target, A5_WIDTH, A5_HEIGHT) : target
+      const output = paper === 'A5' ? scaled(target, a5W, a5H) : target
       const suffix = paper === 'A5' ? '-a5' : ''
       downloadCanvas(output, pages.length > 1 ? `${baseName}-${index + 1}-${fileSlug(pages[index].columns[0] ?? '')}${suffix}.png` : `${baseName}${suffix}.png`)
       await new Promise((resolve) => setTimeout(resolve, 300))
@@ -222,7 +244,7 @@ export function CaseContentSheetPage() {
       {back}
       <PageHeader
         title="Flightcase content"
-        description={`${current.name} · ${paper} na výšku (${paper === 'A5' ? `${A5_WIDTH} × ${A5_HEIGHT}` : `${SHEET_WIDTH} × ${SHEET_HEIGHT}`} px)`}
+        description={`${current.name} · ${paper} ${landscape ? 'na šírku' : 'na výšku'} (${paper === 'A5' ? `${a5W} × ${a5H}` : `${sheetW} × ${sheetH}`} px)`}
         action={
           <Button disabled={!drawn} onClick={() => void download()}>
             <Download className="size-4" aria-hidden />
@@ -241,6 +263,20 @@ export function CaseContentSheetPage() {
           nastavíte v úprave ľubovoľného kábla s touto dĺžkou.
         </p>
       )}
+      <div role="radiogroup" aria-label="Orientácia hárku" className="mx-auto mb-3 flex w-full max-w-2xl gap-1 rounded-lg bg-muted p-1">
+        {[false, true].map((value) => (
+          <button
+            key={String(value)}
+            type="button"
+            role="radio"
+            aria-checked={landscape === value}
+            onClick={() => setLandscape(value)}
+            className={cn('h-9 flex-1 rounded-md px-3 text-sm', landscape === value ? 'bg-surface font-medium shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+          >
+            {value ? 'Na šírku' : 'Na výšku'}
+          </button>
+        ))}
+      </div>
       <div role="radiogroup" aria-label="Veľkosť hárku" className="mx-auto mb-3 flex w-full max-w-2xl gap-1 rounded-lg bg-muted p-1">
         {PAPERS.map((value) => (
           <button
@@ -305,10 +341,10 @@ export function CaseContentSheetPage() {
             ref={(element) => {
               canvases.current[index] = element
             }}
-            width={SHEET_WIDTH}
-            height={SHEET_HEIGHT}
+            width={sheetW}
+            height={sheetH}
             aria-label={`Náhľad hárku s obsahom pre ${current.name}${pages.length > 1 ? ` – ${page.columns[0] ?? ''}` : ''}`}
-            className="mx-auto h-auto w-full max-w-2xl rounded-lg border bg-white"
+            className={cn('mx-auto h-auto w-full rounded-lg border bg-white', landscape ? 'max-w-4xl' : 'max-w-2xl')}
           />
         ))}
       </div>

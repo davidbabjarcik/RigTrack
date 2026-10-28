@@ -89,6 +89,29 @@ export function dmxFromEquipment(onEvent: EventEquipment[], equipment: Equipment
   return lines
 }
 
+/** Všetky kusy techniky so zapísanou DMX adresou (prehľad „DMX adresy z techniky“), zoradené podľa linky a adresy. */
+export function dmxFromAllEquipment(equipment: Pick<Equipment, 'id' | 'name' | 'status' | 'unitInfo' | 'attributes'>[]): DmxFields[] {
+  const lines: DmxFields[] = []
+  for (const item of equipment) {
+    if (item.status === 'retired') continue
+    for (const [unit, info] of Object.entries(item.unitInfo ?? {})) {
+      if (!info?.dmxAddress) continue
+      const mode = info.dmxMode ?? ''
+      lines.push({
+        universe: info.dmxLine || '1',
+        address: info.dmxAddress,
+        channels: channelsOf(item, mode),
+        name: `${item.name} #${unit}`,
+        equipmentId: item.id,
+        unit: Number(unit),
+        mode,
+        note: '',
+      })
+    }
+  }
+  return sortDmx(lines)
+}
+
 /**
  * Linka, adresa a mód z techniky (zapísané pri kuse svetla) do riadkov patch listu – napr. keď sa adresy zapísali
  * až po vytvorení patch listu. Vráti nové riadky a počet zmenených.

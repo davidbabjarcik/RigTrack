@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.6 – 29. 10. 2026
+
+- **Hárok s obsahom case na šírku**: voľba Na výšku / Na šírku nad náhľadom (aj pri A5). Voľba sa zapamätá.
+- **Upraviť všetky cases sady naraz – aj názov**: nový názov dostanú všetky cases sady a každý si nechá svoje číslo
+  (napr. „Blinder 2×100 W #3“ → „Blinder 2×100 W Case #3“).
+- **Patch listy – DMX adresy z techniky**: prehľad všetkých kusov svetiel so zapísanou adresou (podľa linky a adresy,
+  prekrývanie červenou) a „Uložiť ako šablónu“.
+
 ### 5.5 – 29. 10. 2026
 
 - **DMX patch list – Prevziať adresy z techniky**: linky, adresy a módy zapísané pri kusoch svetiel (aj neskôr, po

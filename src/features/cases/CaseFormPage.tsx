@@ -138,8 +138,8 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
       {current && groupIds.length > 1 && (
         <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
           <strong>Úprava všetkých {groupIds.length} cases v sade.</strong> Rozmery, hmotnosť, kategória na štítku, case / rack (U),
-          priorita kontroly, vlastník a poznámka sa po uložení prenesú do všetkých. Názov, číslo, umiestnenie a fotky ostanú pri
-          každom vlastné.
+          priorita kontroly, vlastník a poznámka sa po uložení prenesú do všetkých. Názov sa zmení všetkým, ale každý case si nechá
+          svoje číslo (napr. „… #3“). Umiestnenie a fotky ostanú pri každom vlastné.
         </p>
       )}
       {!current && (

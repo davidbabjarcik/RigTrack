@@ -8,6 +8,9 @@ import { ellipsize, fitSize, font, INK, sourceSize, type Ctx } from './canvas'
 
 export const SHEET_WIDTH = 2480
 export const SHEET_HEIGHT = 3508
+/** Rozmery práve kresleného hárku (na výšku 2480 × 3508, na šírku naopak). */
+let pageWidth = SHEET_WIDTH
+let pageHeight = SHEET_HEIGHT
 
 type SheetItem = { name: string; kind: EquipmentKind; quantity: number; attributes: EquipmentAttributes; photoPath?: string }
 
@@ -87,6 +90,8 @@ export type SheetData = {
   /** Súhrn dole: kusov spolu a hmotnosť (case a známe hmotnosti techniky). */
   totalPieces?: number
   weightKg?: number | null
+  /** Na šírku (inak na výšku). */
+  landscape?: boolean
   /** Čo ukázať v hlavičke a v súhrne dole (predvolene všetko). */
   show?: Partial<SheetShow>
   /** Viac typov káblov: v jednej tabuľke (predvolené), alebo každý typ vo vlastnej tabuľke pod sebou. */
@@ -222,10 +227,10 @@ function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, r: numb
 
 /** Nadpis sekcie v strede s krátkou čiarou pod ním. */
 function sectionTitle(ctx: Ctx, text: string, y: number) {
-  centered(ctx, text, SHEET_WIDTH / 2, y + 40, SHEET_WIDTH - 2 * MARGIN, 66, 36)
+  centered(ctx, text, pageWidth / 2, y + 40, pageWidth - 2 * MARGIN, 66, 36)
   font(ctx, 66)
-  const w = Math.min(ctx.measureText(text).width, SHEET_WIDTH - 2 * MARGIN)
-  ctx.fillRect(SHEET_WIDTH / 2 - w / 2, y + 92, w, 8)
+  const w = Math.min(ctx.measureText(text).width, pageWidth - 2 * MARGIN)
+  ctx.fillRect(pageWidth / 2 - w / 2, y + 92, w, 8)
   return y + 140
 }
 
@@ -254,14 +259,15 @@ const OTHER_LINE = 78
 /** Odhad výšky časti s kartami / zoznamom (na odloženie miesta pod tabuľkou káblov). */
 function sectionHeight(items: SheetEntry[], withCables: boolean) {
   if (items.length === 0) return 0
-  if (items.length <= CARD_LIMIT) return 160 + Math.ceil(items.length / cardColumns(items.length)) * (withCables ? 500 : 1300)
+  // Pod tabuľkou káblov stačí pri 1–2 položkách nízky široký riadok kariet.
+  if (items.length <= CARD_LIMIT) return 160 + Math.ceil(items.length / cardColumns(items.length)) * (withCables ? (items.length <= 2 ? 320 : 500) : 1300)
   return 160 + Math.ceil(items.length / 2) * OTHER_LINE
 }
 
 /** Jedna časť pod tabuľkou: nadpis a karty s fotkou (alebo pri veľa položkách zoznam). Vráti nové y. */
 function drawItems(ctx: Ctx, title: string, items: SheetEntry[], y: number, height: number, withCables: boolean, photos?: Map<string, CanvasImageSource>) {
   const left = MARGIN
-  const width = SHEET_WIDTH - 2 * MARGIN
+  const width = pageWidth - 2 * MARGIN
   const end = y + height
   y = sectionTitle(ctx, title, y)
   if (items.length > CARD_LIMIT) {
@@ -342,18 +348,20 @@ function drawItems(ctx: Ctx, title: string, items: SheetEntry[], y: number, heig
 }
 
 export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
-  canvas.width = SHEET_WIDTH
-  canvas.height = SHEET_HEIGHT
+  pageWidth = data.landscape ? SHEET_HEIGHT : SHEET_WIDTH
+  pageHeight = data.landscape ? SHEET_WIDTH : SHEET_HEIGHT
+  canvas.width = pageWidth
+  canvas.height = pageHeight
   const ctx = canvas.getContext('2d')!
   ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, SHEET_WIDTH, SHEET_HEIGHT)
+  ctx.fillRect(0, 0, pageWidth, pageHeight)
   ctx.fillStyle = INK
   ctx.strokeStyle = INK
   ctx.lineWidth = LINE
 
   const left = MARGIN
-  const width = SHEET_WIDTH - 2 * MARGIN
-  const bottom = SHEET_HEIGHT - MARGIN
+  const width = pageWidth - 2 * MARGIN
+  const bottom = pageHeight - MARGIN
 
   // Hlavička: logo vľavo, názov hárku v strede, box s číslom case a QR vpravo.
   const HEADER = 430
@@ -575,5 +583,5 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
     }
   })
 
-  if (data.footer) centered(ctx, data.footer, SHEET_WIDTH / 2, bottom - 30, width, 52, 26)
+  if (data.footer) centered(ctx, data.footer, pageWidth / 2, bottom - 30, width, 52, 26)
 }

@@ -3,7 +3,7 @@ import { copyCompanyPhoto, storeCompanyPhoto } from '@/features/equipment/photo'
 import type { Lookup } from '@/features/equipment/model'
 import { getSupabase } from '@/lib/supabase/client'
 import { isMissingColumn } from '@/lib/supabase/errors'
-import { duplicateName, type Case, type CaseCheck, type CaseFormValues, type CheckPriority } from './model'
+import { caseBaseName, duplicateName, type Case, type CaseCheck, type CaseFormValues, type CheckPriority } from './model'
 
 export const caseKeys = {
   list: (companyId: string) => ['company', companyId, 'cases'] as const,
@@ -243,7 +243,7 @@ export async function duplicateCase(companyId: string, source: Case, all: Case[]
   return id
 }
 
-/** Čo sa pri „Upraviť všetky naraz“ prenesie na ostatné cases v sade (nie názov, číslo, umiestnenie, fotky). */
+/** Čo sa pri „Upraviť všetky naraz“ prenesie na ostatné cases v sade (názov bez čísla zvlášť; nie číslo, umiestnenie, fotky). */
 const GROUP_COLUMNS = ['label_category', 'weight_kg', 'width_cm', 'length_cm', 'depth_cm', 'note', 'owner_staff_id', 'check_priority', 'kind', 'rack_units']
 
 /** Prenesie spoločné údaje z jedného case na ostatné v sade (napr. 8× Beam case). */
@@ -257,4 +257,16 @@ export async function syncCaseGroup(companyId: string, sourceId: string, ids: st
   const shared = Object.fromEntries(GROUP_COLUMNS.filter((column) => column in source).map((column) => [column, source[column]]))
   const { error: updateError } = await db.from('cases').update(shared).eq('company_id', companyId).in('id', others)
   if (updateError) throw updateError
+  // Názov sady (bez čísla) sa prenesie tiež; každý case si nechá svoje číslo („Blinder #3“ → „Blinder Case #3“).
+  const newBase = caseBaseName({ name: String(source.name ?? ''), labelNumber: String(source.label_number ?? '') })
+  const rows = await db.from('cases').select('id, name, label_number').eq('company_id', companyId).in('id', others)
+  if (rows.error) throw rows.error
+  for (const row of rows.data as { id: string; name: string; label_number: string | null }[]) {
+    const item = { name: row.name, labelNumber: row.label_number ?? '' }
+    const base = caseBaseName(item)
+    if (!newBase || base === newBase) continue
+    const name = row.name.trim().startsWith(base) ? `${newBase}${row.name.trim().slice(base.length)}` : newBase
+    const renamed = await db.from('cases').update({ name }).eq('company_id', companyId).eq('id', row.id)
+    if (renamed.error) throw renamed.error
+  }
 }

@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Cable, ChevronRight, Lightbulb, Plus, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -8,7 +8,8 @@ import { Field } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { dmxConflicts, EMPTY_DMX, lastAddress, nextDmxAddress, type DmxFields } from './dmx'
+import { dmxConflicts, dmxFromAllEquipment, EMPTY_DMX, lastAddress, nextDmxAddress, type DmxFields } from './dmx'
+import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { deletePatchTemplate, dmxKeys, savePatchTemplate, usePatchTemplates, type PatchTemplate } from './dmxApi'
 import { EMPTY_LINE, PATCH_SOURCE_LABELS, PATCH_SOURCES, type PatchFields, type PatchSource } from './model'
 
@@ -156,6 +157,10 @@ export function PatchTemplatesPage() {
   const canEdit = can(company, 'events.edit')
   const queryClient = useQueryClient()
   const templates = usePatchTemplates(companyId)
+  // Adresy zapísané pri kusoch svetiel v technike (DMX všetkým / úprava techniky).
+  const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
+  const gearLines = dmxFromAllEquipment(equipment.data ?? [])
+  const gearConflicts = dmxConflicts(gearLines.map((line, index) => ({ ...line, id: String(index) })))
   const [draft, setDraft] = useState<Draft | null>(null)
   const refresh = () => queryClient.invalidateQueries({ queryKey: dmxKeys.templates(companyId) })
   const save = useMutation({
@@ -266,6 +271,38 @@ export function PatchTemplatesPage() {
           )}
         </section>
       ))}
+      <section className="mb-6">
+        <h2 className="mb-1 flex items-center gap-2 font-medium">
+          <Lightbulb className="size-5 text-accent" aria-hidden />
+          DMX adresy z techniky ({gearLines.length})
+        </h2>
+        <p className="mb-2 text-sm text-muted-foreground">Adresy zapísané pri kusoch svetiel (v technike cez „DMX všetkým“). Pri evente ich prevezmete tlačidlom „Zo svetiel eventu“.</p>
+        {gearLines.length === 0 ? (
+          <p className="rounded-xl border border-dashed bg-surface px-4 py-6 text-center text-sm text-muted-foreground">Zatiaľ žiadne – adresy sa zapisujú v technike pri svetle („DMX všetkým“).</p>
+        ) : (
+          <>
+            {gearConflicts.size > 0 && <p className="mb-2 text-sm text-destructive">Niektoré adresy sa na tej istej linke prekrývajú (označené červenou).</p>}
+            <ul className="divide-y overflow-hidden rounded-xl border bg-surface text-sm">
+              {gearLines.map((line, index) => (
+                <li key={`${line.equipmentId}-${line.unit}`} className="flex items-center gap-3 px-3 py-2">
+                  <span className={cn('w-24 shrink-0 font-mono font-semibold', gearConflicts.has(String(index)) && 'text-destructive')}>
+                    {line.universe}.{String(line.address).padStart(3, '0')}
+                    {line.channels > 1 && <span className="font-normal text-muted-foreground">–{String(lastAddress(line)).padStart(3, '0')}</span>}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-medium">{line.name}</span>
+                  <span className="shrink-0 text-muted-foreground">{[line.mode && `mód ${line.mode}`, `${line.channels} ch`].filter(Boolean).join(' · ')}</span>
+                </li>
+              ))}
+            </ul>
+            {canEdit && !draft && (
+              <Button variant="outline" size="sm" className="mt-2" onClick={() => setDraft({ id: null, kind: 'dmx', name: 'Adresy z techniky', note: '', sound: [], dmx: gearLines })}>
+                <Plus className="size-4" aria-hidden />
+                Uložiť ako šablónu
+              </Button>
+            )}
+          </>
+        )}
+      </section>
       <p className="text-sm text-muted-foreground">Patch list konkrétneho eventu (zvuk aj DMX) je v detaile eventu; odtiaľ sa aj tlačí.</p>
     </>
   )
