@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { Button } from '@/components/ui/button'
-import { CABLE_COLOR_TYPE_LABELS, cableColorType, PRESET_COLORS, cableTypesSupported, findCableColor, type CableColor } from './cableColors'
+import { cableTypeLabel, resolveCableType, PRESET_COLORS, cableTypesSupported, findCableColor, type CableColor } from './cableColors'
 import { HexColorInput } from './HexColorInput'
 import { formatNumber } from './model'
 
@@ -29,8 +29,18 @@ export function LengthColorField({ lengthM, connector, existing, edit, onEdit, c
 
   const saved = findCableColor(existing, connector, lengthM)
   const shown = edit ?? saved
-  const type = cableTypesSupported() ? cableColorType(connector) : ''
-  const length = `${formatNumber(lengthM)} m${type ? ` (${CABLE_COLOR_TYPE_LABELS[type]})` : ''}`
+  const type = cableTypesSupported() ? resolveCableType(existing, connector) : ''
+  const length = `${formatNumber(lengthM)} m${type ? ` (${cableTypeLabel(type)})` : ''}`
+
+  // Pre ktoré káble farba platí: farba patrí dĺžke (a typu kábla), nie jednému káblu.
+  const meters = `${formatNumber(lengthM)} m`
+  const scope = !cableTypesSupported()
+    ? `Farba platí pre všetky káble dlhé ${meters}. Rôzne farby pre XLR, powerCON a 230 V pôjdu po aktualizácii databázy (supabase/update-all.sql).`
+    : type && saved && !saved.cableType
+      ? `Teraz je spoločná farba všetkých káblov ${meters}. Zmena sa uloží len pre ${cableTypeLabel(type)} – ostatné káble ostanú so spoločnou.`
+      : type
+        ? `Platí pre všetky káble ${cableTypeLabel(type)} dlhé ${meters}. Spoločné farby: Nastavenia → Zoznamy → Farby dĺžok káblov.`
+        : `Platí pre všetky káble dlhé ${meters} (Nastavenia → Zoznamy → Farby dĺžok káblov).`
 
   if (!shown) {
     return canEdit ? (
@@ -70,9 +80,7 @@ export function LengthColorField({ lengthM, connector, existing, edit, onEdit, c
           onChange={(e) => onEdit({ name: e.target.value, color: shown.color })}
         />
       </div>
-      {edit && saved && (edit.color !== saved.color || edit.name !== saved.name) && (
-        <p className="basis-full text-sm text-muted-foreground">Zmena sa po uložení prejaví na všetkých kábloch s dĺžkou {length}.</p>
-      )}
+      <p className="basis-full text-sm text-muted-foreground">{scope}</p>
     </div>
   )
 }

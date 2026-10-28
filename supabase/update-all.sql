@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0113 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0114 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -2099,6 +2099,17 @@ end;
 $$;
 
 grant select, insert, delete, update (name, color) on public.cable_colors to authenticated;
+
+-- ===== 0114_cable_custom_types.sql =====
+-- RigTrack 4.17: vlastné typy káblov s farbami dĺžok (napr. „Káblovka“) okrem XLR, powerCON a 230 V.
+-- Typ je text do 40 znakov; platí pre káble, ktorých konektor / typ ho obsahuje.
+
+do $$
+begin
+  alter table public.cable_colors drop constraint if exists cable_colors_cable_type_check;
+  alter table public.cable_colors add constraint cable_colors_cable_type_check check (cable_type = trim(cable_type) and char_length(cable_type) <= 40);
+end;
+$$;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

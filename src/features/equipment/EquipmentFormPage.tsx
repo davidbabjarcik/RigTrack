@@ -15,7 +15,7 @@ import { OwnerSelect } from '@/features/staff/OwnerSelect'
 import { can } from '@/lib/permissions'
 import { errorDetail } from '@/lib/supabase/errors'
 import { copyEquipmentPhoto, equipmentKeys, fetchEquipment, fetchEquipmentList, saveEquipment, syncEquipmentGroup } from './api'
-import { cableColorKeys, cableColorType, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
+import { cableColorKeys, fetchCableColors, resolveCableType, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import {
   asOptionalNumber,
@@ -415,7 +415,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const save = useMutation({
     mutationFn: async (values: EquipmentFormValues) => {
       const colorEdit = values.kind === 'cable' && values.lengthM !== undefined ? colorEdits[values.lengthM] : undefined
-      if (colorEdit) await saveCableColor(companyId, { lengthM: values.lengthM!, cableType: cableColorType(values.connector), ...colorEdit })
+      if (colorEdit) await saveCableColor(companyId, { lengthM: values.lengthM!, cableType: resolveCableType(colors, values.connector), ...colorEdit })
       const isCable = values.kind === 'cable'
       const id = await saveEquipment({
         companyId,

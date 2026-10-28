@@ -11,7 +11,7 @@ import { Field } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
 import { createCableSet } from './api'
-import { cableColorKeys, cableColorType, fetchCableColors, saveCableColor, type CableColor } from './cableColors'
+import { cableColorKeys, fetchCableColors, resolveCableType, saveCableColor, type CableColor } from './cableColors'
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import { cableName, cableSetSchema, COMMON_CONNECTORS, type CableSetValues, type Lookup } from './model'
 import { useEquipmentLookups } from './useEquipmentLookups'
@@ -55,7 +55,7 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
     mutationFn: async (values: CableSetValues) => {
       for (const row of values.rows) {
         const edit = colorEdits[row.lengthM]
-        if (edit) await saveCableColor(companyId, { lengthM: row.lengthM, cableType: cableColorType(values.connector), ...edit })
+        if (edit) await saveCableColor(companyId, { lengthM: row.lengthM, cableType: resolveCableType(colors, values.connector), ...edit })
       }
       await createCableSet({ companyId, values, categories, locations })
     },

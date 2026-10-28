@@ -3,10 +3,17 @@ import { getSupabase } from '@/lib/supabase/client'
 // Farebný kód dĺžok káblov: každá dĺžka má vo firme svoju farbu (páska na konektore)
 // a jej názov, ktorý sa tlačí na hárok FLIGHTCASE CONTENT.
 
-/** Typ kábla s vlastnými farbami dĺžok; '' = ostatné káble (a záloha, kým typ nemá vlastnú farbu). */
-export const CABLE_COLOR_TYPES = ['xlr', 'powercon', '230', ''] as const
-export type CableColorType = (typeof CABLE_COLOR_TYPES)[number]
-export const CABLE_COLOR_TYPE_LABELS: Record<CableColorType, string> = { xlr: 'XLR / DMX', powercon: 'powerCON', '230': '230 V (Schuko, CEE)', '': 'Spoločné – všetky káble' }
+/**
+ * Typ kábla s vlastnými farbami dĺžok: zabudované XLR / DMX, powerCON, 230 V, alebo vlastný typ (text, napr. „Káblovka“,
+ * platí pre káble, ktorých konektor / typ ho obsahuje). '' = spoločné farby (a záloha, kým typ nemá vlastnú farbu).
+ */
+export const BUILTIN_CABLE_TYPES = ['xlr', 'powercon', '230'] as const
+export const CABLE_COLOR_TYPES = [...BUILTIN_CABLE_TYPES, ''] as const
+export type CableColorType = string
+const BUILTIN_LABELS: Record<string, string> = { xlr: 'XLR / DMX', powercon: 'powerCON', '230': '230 V (Schuko, CEE)', '': 'Spoločné – všetky káble' }
+export const isBuiltinCableType = (type: string) => type in BUILTIN_LABELS
+/** Názov typu na obrazovke: zabudovaný má popis, vlastný je svoj text. */
+export const cableTypeLabel = (type: string) => BUILTIN_LABELS[type] ?? type
 
 export type CableColor = { lengthM: number; name: string; color: string; cableType?: CableColorType }
 
@@ -21,7 +28,7 @@ export const PRESET_COLORS: CableColor[] = [
   { lengthM: 15, name: 'oranžová', color: '#ff8c00' },
 ]
 
-/** Typ kábla podľa konektora: XLR a DMX, powerCON, 230 V (Schuko, CEE, predlžovačky); inak ostatné. */
+/** Zabudovaný typ kábla podľa konektora: XLR a DMX, powerCON, 230 V (Schuko, CEE, predlžovačky); inak ''. */
 export function cableColorType(connector: string | undefined): CableColorType {
   const value = (connector ?? '').toLowerCase()
   if (/xlr|dmx/.test(value)) return 'xlr'
@@ -30,10 +37,33 @@ export function cableColorType(connector: string | undefined): CableColorType {
   return ''
 }
 
-/** Farba dĺžky pre konektor: najprv farba typu kábla, inak spoločná (ostatné). */
+/**
+ * Typ kábla s vlastnými farbami pre konektor: najprv vlastný typ, ktorého text konektor obsahuje (napr. „Káblovka“),
+ * potom zabudovaný (XLR, powerCON, 230 V).
+ */
+export function resolveCableType(colors: CableColor[], connector: string | undefined, extra: string[] = []): CableColorType {
+  const value = (connector ?? '').toLowerCase()
+  const custom = [...new Set([...colors.map((color) => color.cableType ?? ''), ...extra])]
+    .filter((type) => type && !isBuiltinCableType(type))
+    .sort((a, b) => b.length - a.length)
+    .find((type) => value.includes(type.toLowerCase()))
+  return custom ?? cableColorType(connector)
+}
+
+/** Farba dĺžky pre konektor: najprv farba typu kábla (vlastného alebo zabudovaného), inak spoločná. */
 export function findCableColor(colors: CableColor[], connector: string | undefined, lengthM: number) {
-  const type = cableColorType(connector)
-  return colors.find((color) => (color.cableType ?? '') === type && color.lengthM === lengthM) ?? colors.find((color) => !color.cableType && color.lengthM === lengthM)
+  const value = (connector ?? '').toLowerCase()
+  const types = [
+    ...[...new Set(colors.map((color) => color.cableType ?? ''))]
+      .filter((type) => type && !isBuiltinCableType(type) && value.includes(type.toLowerCase()))
+      .sort((a, b) => b.length - a.length),
+    cableColorType(connector),
+  ]
+  for (const type of types) {
+    const found = colors.find((color) => (color.cableType ?? '') === type && color.lengthM === lengthM)
+    if (found) return found
+  }
+  return colors.find((color) => !color.cableType && color.lengthM === lengthM)
 }
 
 const HEX = /^#[0-9a-f]{6}$/

@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { errorDetail } from '@/lib/supabase/errors'
 import {
-  CABLE_COLOR_TYPE_LABELS,
-  CABLE_COLOR_TYPES,
+  cableTypeLabel,
+  BUILTIN_CABLE_TYPES,
+  isBuiltinCableType,
   cableColorKeys,
   cableTypesSupported,
   deleteCableColor,
@@ -38,14 +39,20 @@ export function CableColorsSettings({ companyId }: { companyId: string }) {
   })
   // Typy, ktorým používateľ práve pridal vlastné farby (ešte bez uloženej dĺžky).
   const [added, setAdded] = useState<CableColorType[]>([])
+  const [customName, setCustomName] = useState('')
 
   if (colors.isPending) return <p className="text-sm text-muted-foreground">Načítavam…</p>
   if (colors.isError) return <p className="text-sm text-destructive">Farby sa nepodarilo načítať.</p>
   // Bez migrácie 0113 sú všetky farby spoločné.
   const supported = cableTypesSupported()
   const ofType = (type: CableColorType) => colors.data.filter((color) => (color.cableType ?? '') === type)
-  const own = CABLE_COLOR_TYPES.filter((type) => type !== '' && (added.includes(type) || ofType(type).length > 0))
-  const free = CABLE_COLOR_TYPES.filter((type) => type !== '' && !own.includes(type))
+  // Typy s vlastnými farbami: zabudované (XLR, powerCON, 230 V) aj vlastné (napr. „Káblovka“).
+  const own = [...new Set([...BUILTIN_CABLE_TYPES, ...colors.data.map((color) => color.cableType ?? ''), ...added])].filter(
+    (type) => type !== '' && (added.includes(type) || ofType(type).length > 0),
+  )
+  const free = BUILTIN_CABLE_TYPES.filter((type) => !own.includes(type))
+  const custom = customName.trim()
+  const customValid = custom.length > 0 && custom.length <= 40 && !own.some((type) => type.toLowerCase() === custom.toLowerCase() || cableTypeLabel(type).toLowerCase() === custom.toLowerCase())
   const busy = save.isPending || remove.isPending || many.isPending
   const fillPreset = (type: CableColorType) => {
     const existing = ofType(type)
@@ -55,7 +62,7 @@ export function CableColorsSettings({ companyId }: { companyId: string }) {
   }
   const dropType = (type: CableColorType) => {
     const list = ofType(type)
-    if (list.length > 0 && !window.confirm(`Zmazať vlastné farby pre ${CABLE_COLOR_TYPE_LABELS[type]}? Tieto káble potom budú mať spoločné farby.`)) return
+    if (list.length > 0 && !window.confirm(`Zmazať vlastné farby pre ${cableTypeLabel(type)}? Tieto káble potom budú mať spoločné farby.`)) return
     setAdded(added.filter((value) => value !== type))
     if (list.length > 0) many.mutate({ drop: list })
   }
@@ -79,8 +86,12 @@ export function CableColorsSettings({ companyId }: { companyId: string }) {
         {own.map((type) => (
           <TypeCard
             key={type}
-            title={`Vlastné pre ${CABLE_COLOR_TYPE_LABELS[type]}`}
-            hint="Dĺžky, ktoré tu nie sú, majú spoločnú farbu."
+            title={`Vlastné pre ${cableTypeLabel(type)}`}
+            hint={
+              isBuiltinCableType(type)
+                ? 'Dĺžky, ktoré tu nie sú, majú spoločnú farbu.'
+                : `Káble, ktorých „Konektor / typ“ obsahuje „${type}“. Dĺžky, ktoré tu nie sú, majú spoločnú farbu.`
+            }
             colors={ofType(type)}
             onSave={(color) => save.mutate({ ...color, cableType: type })}
             onRemove={(color) => remove.mutate({ ...color, cableType: type })}
@@ -91,16 +102,41 @@ export function CableColorsSettings({ companyId }: { companyId: string }) {
           />
         ))}
       </div>
-      {supported && free.length > 0 && (
+      {supported ? (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Iné farby pre:</span>
           {free.map((type) => (
             <Button key={type} size="sm" variant="outline" onClick={() => setAdded([...added, type])}>
               <Plus className="size-4" aria-hidden />
-              {CABLE_COLOR_TYPE_LABELS[type]}
+              {cableTypeLabel(type)}
             </Button>
           ))}
+          {/* Vlastný typ: platí pre káble, ktorých „Konektor / typ“ obsahuje tento text. */}
+          <form
+            className="flex items-center gap-2"
+            onSubmit={(event) => {
+              event.preventDefault()
+              if (!customValid) return
+              setAdded([...added, custom])
+              setCustomName('')
+            }}
+          >
+            <input
+              aria-label="Vlastný typ kábla"
+              placeholder="Iný typ, napr. Káblovka"
+              maxLength={40}
+              className="h-9 w-48 rounded-md border bg-background px-2 text-sm"
+              value={customName}
+              onChange={(event) => setCustomName(event.target.value)}
+            />
+            <Button type="submit" size="sm" variant="outline" disabled={!customValid}>
+              <Plus className="size-4" aria-hidden />
+              Pridať typ
+            </Button>
+          </form>
         </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Rôzne farby pre XLR, powerCON, 230 V a vlastné typy pôjdu po aktualizácii databázy (supabase/update-all.sql).</p>
       )}
       {(save.isError || remove.isError || many.isError) && <p className="text-sm text-destructive">Nepodarilo sa uložiť. {errorDetail(save.error ?? remove.error ?? many.error)}</p>}
     </div>

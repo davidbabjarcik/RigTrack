@@ -21,6 +21,7 @@ describe('cable colours per cable type', () => {
       { cable_type: 'xlr', color: '#0000ff' },
     ])
     await expect(t.as('boss', `insert into public.cable_colors (company_id, cable_type, length_m, color) values ($1, 'xlr', 10, '#123456')`, [a])).rejects.toThrow(/duplicate|unique/)
-    await expect(t.as('boss', `insert into public.cable_colors (company_id, cable_type, length_m, color) values ($1, 'hdmi', 5, '#123456')`, [a])).rejects.toThrow(/check/)
+    await t.as('boss', `insert into public.cable_colors (company_id, cable_type, length_m, color) values ($1, 'Káblovka', 5, '#123456')`, [a])
+    await expect(t.as('boss', `insert into public.cable_colors (company_id, cable_type, length_m, color) values ($1, $2, 5, '#123456')`, [a, 'x'.repeat(41)])).rejects.toThrow(/check/)
   })
 })
