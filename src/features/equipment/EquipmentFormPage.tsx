@@ -19,6 +19,7 @@ import { cableColorKeys, fetchCableColors, resolveCableType, saveCableColor, typ
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import {
   asOptionalNumber,
+  CABLE_VARIANTS,
   COMMON_CONNECTORS,
   DJ_TYPE_LABELS,
   DJ_TYPES,
@@ -85,6 +86,7 @@ const EMPTY: EquipmentFormValues = {
   trackHours: false,
   noCase: false,
   sheetAccessory: false,
+  cableVariant: '',
   inCover: false,
   coverNote: '',
   hoursPriority: 'normal',
@@ -204,6 +206,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     // Staršia technika s intervalom v mesiacoch prejde na sledovanie so strednou úrovňou.
     noCase: equipment.attributes.noCase ?? false,
     sheetAccessory: equipment.attributes.sheetAccessory ?? false,
+    cableVariant: equipment.attributes.cableVariant ?? '',
     dipSwitches: equipment.attributes.dipSwitches,
     nodeProtocols: equipment.attributes.nodeProtocols ?? [],
     nodePorts: equipment.attributes.nodePorts ?? [],
@@ -534,6 +537,21 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           <datalist id={connectorListId}>
             {COMMON_CONNECTORS.map((connector) => (
               <option key={connector} value={connector} />
+            ))}
+          </datalist>
+          {/* Variant toho istého typu (stereo, silent jack…): na hárku ostane v stĺpci typu, ale označený. */}
+          <Field
+            label="Variant (nepovinné)"
+            list={`${connectorListId}-variant`}
+            placeholder="napr. stereo, silent – prázdne = obyčajný"
+            autoComplete="off"
+            maxLength={40}
+            error={errors.cableVariant?.message}
+            {...register('cableVariant')}
+          />
+          <datalist id={`${connectorListId}-variant`}>
+            {CABLE_VARIANTS.map((variant) => (
+              <option key={variant} value={variant} />
             ))}
           </datalist>
           {multiLength ? (

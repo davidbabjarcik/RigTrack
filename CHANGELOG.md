@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.20 – 28. 10. 2026
+
+- **Variant kábla** (napr. stereo, silent jack): v úprave kábla nové pole **Variant** (prázdne = obyčajný). Na hárku
+  s obsahom case ostane kábel v stĺpci svojho typu (Jack) a pod počtom je rozpis, napr. „7 KS – z toho 2× STEREO,
+  1× SILENT“. Variant je aj v detaile kábla.
+
 ### 4.19 – 28. 10. 2026
 
 - **Kábel ako príslušenstvo na hárku**: v obsahu case má každý kábel tlačidlo **Príslušenstvo** (zástrčka). Označený

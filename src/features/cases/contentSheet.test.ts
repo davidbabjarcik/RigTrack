@@ -79,4 +79,15 @@ describe('buildCableMatrix', () => {
     expect(matrix.columns).toEqual(['XLR'])
     expect(matrix.others).toEqual([{ name: 'Jack 3 m', quantity: 2 }])
   })
+
+  it('counts variants with their type and lists them', () => {
+    const matrix = buildCableMatrix([
+      { name: 'Jack 3 m', kind: 'cable', quantity: 4, attributes: { lengthM: 3, connector: 'Jack' } },
+      { name: 'Jack stereo 3 m', kind: 'cable', quantity: 2, attributes: { lengthM: 3, connector: 'Jack', cableVariant: 'stereo' } },
+      { name: 'Jack silent 3 m', kind: 'cable', quantity: 1, attributes: { lengthM: 3, connector: 'Jack', cableVariant: 'Silent' } },
+      { name: 'XLR 3 m', kind: 'cable', quantity: 5, attributes: { lengthM: 3, connector: 'XLR' } },
+    ])
+    expect(matrix.rows).toEqual([{ lengthM: 3, counts: [7, 5], variants: ['z toho 2× STEREO, 1× SILENT', ''] }])
+    expect(orderColumns(matrix, ['XLR']).rows[0].variants).toEqual(['', 'z toho 2× STEREO, 1× SILENT'])
+  })
 })

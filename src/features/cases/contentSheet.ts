@@ -14,7 +14,8 @@ type SheetItem = { name: string; kind: EquipmentKind; quantity: number; attribut
 export type CableMatrix = {
   /** Typy káblov (konektor), jeden stĺpec za každý. */
   columns: string[]
-  rows: { lengthM: number; counts: number[] }[]
+  /** Riadok = dĺžka; počty po stĺpcoch a pri variantoch (stereo, silent…) ich rozpis, napr. „2× STEREO“. */
+  rows: { lengthM: number; counts: number[]; variants?: string[] }[]
   /** Všetko, čo nie je kábel s dĺžkou: názov, počet kusov a fotka (na kartu). */
   others: { name: string; quantity: number; photoPath?: string }[]
 }
@@ -28,14 +29,26 @@ export function buildCableMatrix(items: SheetItem[]): CableMatrix {
   const typeOf = (item: SheetItem) => item.attributes.connector?.trim() || NO_TYPE
   const columns = [...new Set(cables.map(typeOf))].sort((a, b) => a.localeCompare(b, 'sk'))
   const lengths = [...new Set(cables.map((item) => item.attributes.lengthM!))].sort((a, b) => a - b)
-  const rows = lengths.map((lengthM) => ({
-    lengthM,
-    counts: columns.map((column) =>
-      cables
-        .filter((item) => item.attributes.lengthM === lengthM && typeOf(item) === column)
-        .reduce((sum, item) => sum + item.quantity, 0),
-    ),
-  }))
+  const rows = lengths.map((lengthM) => {
+    const inCell = (column: string) => cables.filter((item) => item.attributes.lengthM === lengthM && typeOf(item) === column)
+    // Varianty (stereo, silent…) sa rátajú do počtu typu a vypíšu sa pod ním.
+    const variants = columns.map((column) => {
+      const byVariant = new Map<string, number>()
+      for (const item of inCell(column)) {
+        const variant = item.attributes.cableVariant?.trim()
+        if (variant) byVariant.set(variant.toUpperCase(), (byVariant.get(variant.toUpperCase()) ?? 0) + item.quantity)
+      }
+      const list = [...byVariant.entries()].map(([name, count]) => `${count}× ${name}`).join(', ')
+      // Keď sú v políčku aj obyčajné káble: „z toho 2× STEREO“; keď len varianty: „3× STEREO“.
+      const plain = inCell(column).some((item) => !item.attributes.cableVariant?.trim())
+      return list && plain ? `z toho ${list}` : list
+    })
+    return {
+      lengthM,
+      counts: columns.map((column) => inCell(column).reduce((sum, item) => sum + item.quantity, 0)),
+      ...(variants.some(Boolean) ? { variants } : {}),
+    }
+  })
 
   const totals = new Map<string, { quantity: number; photoPath?: string }>()
   for (const item of items) {
@@ -82,7 +95,7 @@ export function orderColumns(matrix: CableMatrix, order: string[]): CableMatrix 
   }
   const sorted = [...matrix.columns].sort((a, b) => rank(a) - rank(b))
   const from = sorted.map((column) => matrix.columns.indexOf(column))
-  return { ...matrix, columns: sorted, rows: matrix.rows.map((row) => ({ ...row, counts: from.map((index) => row.counts[index]) })) }
+  return { ...matrix, columns: sorted, rows: matrix.rows.map((row) => ({ ...row, counts: from.map((index) => row.counts[index]), ...(row.variants ? { variants: from.map((index) => row.variants![index]) } : {}) })) }
 }
 
 /** Pre „každý typ na vlastnom hárku“: tabuľka iba s jedným typom; ostatný obsah je len na prvom hárku. */
@@ -90,7 +103,7 @@ export function matrixPages(matrix: CableMatrix): CableMatrix[] {
   if (matrix.columns.length <= 1) return [matrix]
   return matrix.columns.map((column, index) => ({
     columns: [column],
-    rows: matrix.rows.filter((row) => row.counts[index] > 0).map((row) => ({ lengthM: row.lengthM, counts: [row.counts[index]] })),
+    rows: matrix.rows.filter((row) => row.counts[index] > 0).map((row) => ({ lengthM: row.lengthM, counts: [row.counts[index]], ...(row.variants?.[index] ? { variants: [row.variants[index]] } : {}) })),
     others: index === 0 ? matrix.others : [],
   }))
 }
@@ -297,7 +310,7 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
       ? columns.map((column, index) => ({
           title: column.toUpperCase(),
           columns: [column],
-          rows: rows.filter((row) => row.counts[index] > 0).map((row) => ({ lengthM: row.lengthM, counts: [row.counts[index]] })),
+          rows: rows.filter((row) => row.counts[index] > 0).map((row) => ({ lengthM: row.lengthM, counts: [row.counts[index]], ...(row.variants?.[index] ? { variants: [row.variants[index]] } : {}) })),
         }))
       : rows.length > 0
         ? [{ title: columns.length === 1 ? columns[0].toUpperCase() : 'KÁBLE PODĽA DĹŽKY', columns, rows }]
@@ -353,7 +366,16 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
       row.counts.forEach((count, index) => {
         if (count === 0) return
         const x = left + FIRST + index * columnWidth
-        countText(ctx, count, x + columnWidth / 2, rowY + rowHeight / 2, Math.min(150, rowHeight * 0.55))
+        const variant = row.variants?.[index]
+        if (!variant) {
+          countText(ctx, count, x + columnWidth / 2, rowY + rowHeight / 2, Math.min(150, rowHeight * 0.55))
+          return
+        }
+        // Varianty (stereo, silent…) pod počtom menším písmom: „z toho 2× STEREO, 1× SILENT“.
+        countText(ctx, count, x + columnWidth / 2, rowY + rowHeight * 0.4, Math.min(130, rowHeight * 0.45))
+        ctx.fillStyle = MUTED
+        centered(ctx, variant, x + columnWidth / 2, rowY + rowHeight * 0.78, columnWidth - 50, Math.min(46, rowHeight * 0.17), 22)
+        ctx.fillStyle = INK
       })
     })
 

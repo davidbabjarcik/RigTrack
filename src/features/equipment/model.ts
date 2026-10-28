@@ -175,6 +175,9 @@ export const AUDIO_TYPE_LABELS: Record<AudioType, string> = {
   other: 'Iné',
 }
 
+/** Bežné varianty kábla toho istého typu (napr. jack). */
+export const CABLE_VARIANTS = ['Stereo', 'Silent', 'Mono', 'Insert', 'Y'] as const
+
 export const COMMON_CONNECTORS = [
   'XLR',
   'DMX 3-pin',
@@ -211,6 +214,8 @@ export type EquipmentAttributes = {
   noCase?: boolean
   /** Kábel: na hárku s obsahom case ako príslušenstvo (karta), nie v tabuľke dĺžok – napr. jack v XLR case. */
   sheetAccessory?: boolean
+  /** Kábel: variant toho istého typu (napr. stereo, silent jack); prázdne = obyčajný. */
+  cableVariant?: string
   /** Svetlo: adresa sa nastavuje DIP prepínačmi (inak displejom / menu) – počet prepínačov a poznámka. */
   dipSwitches?: number
   dipNote?: string
@@ -471,6 +476,7 @@ export const equipmentSchema = z.object({
   trackHours: z.boolean().optional(),
   noCase: z.boolean().optional(),
   sheetAccessory: z.boolean().optional(),
+  cableVariant: text(40).optional(),
   dipSwitches: z.number().int().min(4).max(16).optional(),
   dipNote: z.string().trim().max(80, 'Najviac 80 znakov').optional(),
   nodeProtocols: z.array(z.enum(['artnet', 'sacn'])).optional(),
@@ -683,6 +689,7 @@ export function attributesFor(
         | 'trackHours'
         | 'noCase'
         | 'sheetAccessory'
+        | 'cableVariant'
         | 'dipSwitches'
         | 'dipNote'
         | 'nodeProtocols'
@@ -801,6 +808,7 @@ export function attributesFor(
     if (values.connector) attributes.connector = values.connector
     if (values.lengthM !== undefined) attributes.lengthM = values.lengthM
     if (values.sheetAccessory) attributes.sheetAccessory = true
+    if (values.cableVariant?.trim()) attributes.cableVariant = values.cableVariant.trim()
   }
   // Truss sa delí podľa dĺžky dielu (0,5 / 1 / 2 / 3 m).
   if (values.kind === 'truss' && values.trussType) attributes.trussType = values.trussType
@@ -1016,6 +1024,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>) {
     a.impedanceOhm !== undefined && `${formatNumber(a.impedanceOhm)} Ω`,
     a.weightKg !== undefined && `${formatNumber(a.weightKg)} kg`,
     a.connector,
+    a.cableVariant,
     a.lengthM !== undefined && `${formatNumber(a.lengthM)} m`,
     a.lightSource && LIGHT_SOURCE_LABELS[a.lightSource],
     a.boxWidthCm !== undefined && a.boxDepthCm !== undefined && `${formatNumber(a.boxWidthCm)}×${formatNumber(a.boxDepthCm)}${a.boxHeightCm !== undefined ? `×${formatNumber(a.boxHeightCm)}` : ''} cm`,
