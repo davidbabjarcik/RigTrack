@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Camera, Trash2 } from 'lucide-react'
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { discardPhotoFile, storeCompanyPhoto, trashPhoto } from '@/features/equipment/photo'
@@ -38,6 +38,23 @@ export function CustomLabelContent({ companyId, current, canEdit }: Props) {
     onSettled: refresh,
   })
   const busy = uploadPhoto.isPending || removePhoto.isPending
+
+  // Ctrl+V: skopírovaný obrázok (z webu, snímka obrazovky) sa nahrá ako fotka štítku.
+  const upload = useRef(uploadPhoto.mutate)
+  useEffect(() => {
+    upload.current = uploadPhoto.mutate
+  }, [uploadPhoto.mutate])
+  useEffect(() => {
+    if (!canEdit) return
+    function handlePaste(event: ClipboardEvent) {
+      const image = [...(event.clipboardData?.files ?? [])].find((file) => file.type.startsWith('image/'))
+      if (!image || busy) return
+      event.preventDefault()
+      upload.current(image)
+    }
+    document.addEventListener('paste', handlePaste)
+    return () => document.removeEventListener('paste', handlePaste)
+  }, [canEdit, busy])
 
   if (!canEdit) return null
 
@@ -89,6 +106,7 @@ export function CustomLabelContent({ companyId, current, canEdit }: Props) {
           <Camera className="size-4" aria-hidden />
           {uploadPhoto.isPending ? 'Nahrávam…' : current.labelPhotoPath ? 'Zmeniť fotku' : 'Pridať fotku'}
         </Button>
+        <span className="self-center text-xs text-muted-foreground">alebo skopírovaný obrázok vložte cez Ctrl+V</span>
         {current.labelPhotoPath && (
           <Button variant="ghost" size="sm" disabled={busy} onClick={() => removePhoto.mutate()}>
             <Trash2 className="size-4" aria-hidden />

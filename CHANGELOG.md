@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 4.17.1 – 28. 10. 2026
+
+- **Vlastný obsah štítku case – fotka cez Ctrl+V**: skopírovaný obrázok (z webu, snímka obrazovky) stačí vložiť
+  na stránke štítku, nahrá sa ako fotka štítku.
+
 ### 4.17 – 28. 10. 2026
 
 - **Vlastné typy káblov s farbami** (Nastavenia → Zoznamy → Farby dĺžok káblov): okrem XLR / DMX, powerCON a 230 V si
