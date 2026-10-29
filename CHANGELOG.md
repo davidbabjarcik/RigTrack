@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.12.1 – 29. 10. 2026
+
+- **Logo firmy cez Ctrl+V** (Nastavenia → Firma → Logo a štítky na cases): skopírované logo stačí vložiť, nahrá sa
+  rovnako ako cez tlačidlo (aj s odstránením jednofarebného pozadia).
+
 ### 5.12 – 29. 10. 2026
 
 - **Presety zosilňovača – tlač a Excel**: pri digitálnom zosilňovači (napr. Crown) v detaile „Tlačiť / stiahnuť“ –

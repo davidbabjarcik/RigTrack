@@ -4,6 +4,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
+import { usePastedImage } from '@/lib/usePastedImage'
 import { brandingKeys, fetchBranding, fetchLogoBlob, LOGO_STYLES, removeLogo, saveLabelFooter, saveLogoStyle, uploadLogo, type LogoStyle } from './branding'
 import type { LogoTone } from './logoImage'
 import { useCompanyLogo } from './useCompanyLogo'
@@ -86,6 +87,9 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
     onSettled: refresh,
   })
 
+  // Ctrl+V: skopírované logo (z webu, súbor) sa nahrá rovnako ako cez tlačidlo.
+  usePastedImage(branding.isSuccess && !upload.isPending && !remove.isPending, (file) => upload.mutate(file))
+
   if (branding.isPending) return <p className="text-sm text-muted-foreground">Načítavam…</p>
   if (branding.isError) {
     return (
@@ -148,7 +152,7 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
             <input type="checkbox" className="size-4" checked={removeBackground} onChange={(event) => setRemoveBackground(event.target.checked)} />
             Pri nahratí odstrániť jednofarebné pozadie
           </label>
-          <p className="text-sm text-muted-foreground">PNG, JPG alebo WebP. Prázdne okraje sa orežú. Svetlé logo sa na bielom papieri vytlačí čierne.</p>
+          <p className="text-sm text-muted-foreground">PNG, JPG alebo WebP – aj skopírované cez Ctrl+V. Prázdne okraje sa orežú. Svetlé logo sa na bielom papieri vytlačí čierne.</p>
         </div>
       </div>
       {logoPath && (
