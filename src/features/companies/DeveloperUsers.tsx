@@ -50,35 +50,44 @@ export function DeveloperUsers() {
           onChange={(event) => setSearch(event.target.value)}
         />
       </div>
-      <ul className="divide-y overflow-hidden rounded-xl border bg-surface text-sm">
-        {shown.map((user) => (
-          <li key={user.user_id} className="flex flex-wrap items-start gap-x-4 gap-y-1 p-3">
-            <span className="min-w-0 flex-1 basis-56">
-              <span className="block truncate font-medium">{user.full_name || user.email}</span>
-              {user.full_name && <span className="block truncate text-muted-foreground">{user.email}</span>}
-              <span className="block text-xs text-muted-foreground">
-                účet od {user.created_at ? formatDate(user.created_at.slice(0, 10)) : '—'}
-                {!user.confirmed && ' · e-mail nepotvrdený'}
+      {/* Tabuľka s pevnými stĺpcami: účet | naposledy v appke | firmy a role. */}
+      <div className="overflow-hidden rounded-xl border bg-surface text-sm">
+        <div className="hidden grid-cols-[minmax(0,14rem)_8rem_minmax(0,1fr)] gap-4 border-b bg-muted/50 px-3 py-2 text-xs font-medium text-muted-foreground md:grid">
+          <span>Účet</span>
+          <span>Naposledy v appke</span>
+          <span>Firmy a role</span>
+        </div>
+        <ul className="divide-y">
+          {shown.map((user) => (
+            <li key={user.user_id} className="grid gap-x-4 gap-y-1.5 px-3 py-2.5 md:grid-cols-[minmax(0,14rem)_8rem_minmax(0,1fr)] md:items-start">
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{user.full_name || user.email}</span>
+                {user.full_name && <span className="block truncate text-xs text-muted-foreground">{user.email}</span>}
+                <span className="block text-xs text-muted-foreground">
+                  účet od {user.created_at ? formatDate(user.created_at.slice(0, 10)) : '—'}
+                  {!user.confirmed && ' · e-mail nepotvrdený'}
+                </span>
               </span>
-            </span>
-            <span className="w-40 shrink-0">
-              <span className={cn('block font-medium', !user.last_sign_in_at && 'text-muted-foreground')}>{ago(user.last_sign_in_at)}</span>
-              {user.last_sign_in_at && <span className="block text-xs text-muted-foreground">{formatDate(user.last_sign_in_at.slice(0, 10))}</span>}
-            </span>
-            <span className="flex min-w-0 basis-full flex-wrap gap-1 sm:basis-auto sm:flex-1">
+              <span>
+                <span className={cn('block font-medium', !user.last_sign_in_at && 'text-muted-foreground')}>{ago(user.last_sign_in_at)}</span>
+                {user.last_sign_in_at && <span className="block text-xs text-muted-foreground">{formatDate(user.last_sign_in_at.slice(0, 10))}</span>}
+              </span>
               {user.companies.length === 0 ? (
                 <span className="text-muted-foreground">bez firmy</span>
               ) : (
-                user.companies.map((company) => (
-                  <span key={company.name} className={cn('rounded-full border px-2 py-0.5 text-xs', company.demo && 'border-dashed text-muted-foreground')}>
-                    {company.demo ? 'Demo' : company.name} · {ROLE_LABELS[company.role as keyof typeof ROLE_LABELS] ?? company.role}
-                  </span>
-                ))
+                <ul className="flex flex-col gap-0.5">
+                  {user.companies.map((company) => (
+                    <li key={company.name} className={cn('flex justify-between gap-3 border-b border-dashed pb-0.5 last:border-0', company.demo && 'text-muted-foreground')}>
+                      <span className="truncate">{company.demo ? 'Demo firma' : company.name}</span>
+                      <span className="shrink-0 text-muted-foreground">{ROLE_LABELS[company.role as keyof typeof ROLE_LABELS] ?? company.role}</span>
+                    </li>
+                  ))}
+                </ul>
               )}
-            </span>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 }

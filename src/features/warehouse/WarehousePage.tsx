@@ -16,12 +16,15 @@ import { LiveScanner } from '@/features/scan/LiveScanner'
 import { parseQr } from '@/features/scan/qr'
 import { caseTitle } from '@/features/cases/model'
 import { can } from '@/lib/permissions'
+import { cn } from '@/lib/utils'
 import { addSpot, deleteSpot, fetchWarehouse, placeCase, saveWarehouse, updateSpot, warehouseKeys } from './api'
 import {
   byLevel,
   casesBySpot,
   describeSpot,
   findCases,
+  isStructure,
+  levelUsage,
   metres,
   nextSpotName,
   SPOT_KIND_FILLS,
@@ -293,6 +296,32 @@ export function WarehousePage() {
                   </option>
                 ))}
               </SelectField>
+              {selected.kind === 'rack' && (
+                <Field
+                  label="Výška poschodia (cm)"
+                  type="number"
+                  inputMode="numeric"
+                  min={5}
+                  max={1000}
+                  placeholder="napr. 120"
+                  defaultValue={selected.levelHeightCm ?? ''}
+                  onBlur={(event) => {
+                    const value = event.target.value.trim() === '' ? null : Math.round(Number(event.target.value))
+                    if (value !== (selected.levelHeightCm ?? null) && (value === null || (value >= 5 && value <= 1000))) change.mutate({ id: selected.id, fields: { levelHeightCm: value } })
+                  }}
+                />
+              )}
+              <Field
+                label="Poznámka"
+                className="sm:col-span-2"
+                maxLength={300}
+                placeholder={isStructure(selected.kind) ? 'napr. nosný stĺp, brána 3 m' : 'napr. ťažké dole, káble hore'}
+                defaultValue={selected.note ?? ''}
+                onBlur={(event) => {
+                  const note = event.target.value.trim()
+                  if (note !== (selected.note ?? '')) change.mutate({ id: selected.id, fields: { note } })
+                }}
+              />
               <Button
                 variant="destructive"
                 disabled={remove.isPending}
@@ -390,15 +419,19 @@ export function WarehousePage() {
                   <p className="text-sm text-muted-foreground">
                     {SPOT_KIND_LABELS[selected.kind]} · {metres(selected.length)} × {metres(selected.width)}
                     {selected.levels > 1 && ` · poschodí: ${selected.levels}`}
+                    {selected.levelHeightCm && ` · poschodie ${selected.levelHeightCm} cm na výšku`}
                   </p>
+                  {selected.note && <p className="mt-1 text-sm">{selected.note}</p>}
                 </div>
                 <Button variant="ghost" size="sm" aria-label="Zavrieť" onClick={() => select(null)}>
                   <X className="size-4" aria-hidden />
                 </Button>
               </div>
 
-              {(bySpot.get(selected.id)?.length ?? 0) === 0 ? (
-                <p className="text-sm text-muted-foreground">Na tomto mieste zatiaľ nič neleží.</p>
+              {isStructure(selected.kind) ? (
+                <p className="text-sm text-muted-foreground">Stavebný prvok – na pláne len na orientáciu, cases sa naň neukladajú.</p>
+              ) : (bySpot.get(selected.id)?.length ?? 0) === 0 ? (
+                <p className="text-sm text-muted-foreground">Na tomto mieste zatiaľ nič neleží{selected.kind !== 'zone' && ` – voľných ${metres(Math.sqrt(selected.length * selected.width)).replace(' m', '')} m strany, ${String(Math.round((selected.length * selected.width) / 1000) / 10).replace('.', ',')} m² na poschodie`}.</p>
               ) : (
                 <div className="flex flex-col gap-3">
                   {byLevel(selected, bySpot.get(selected.id) ?? []).map((group) => (
@@ -408,6 +441,22 @@ export function WarehousePage() {
                           {group.level ? `${group.level}. poschodie` : selected.levels > 1 ? 'Bez poschodia' : ''}
                         </h3>
                       )}
+                      {/* Koľko plochy poschodia zaberajú cases (z ich rozmerov) a čo sa nezmestí na výšku. */}
+                      {group.level !== null && group.cases.length > 0 && (() => {
+                        const usage = levelUsage(selected, group.cases)
+                        return (
+                          <div className="mb-1.5">
+                            <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
+                              <div className={cn('h-full rounded-full', usage.percent > 100 ? 'bg-destructive' : usage.percent > 85 ? 'bg-accent' : 'bg-emerald-500')} style={{ width: `${Math.min(100, usage.percent)}%` }} />
+                            </div>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              obsadené {usage.percent} % plochy · voľné asi {String(Math.round(usage.freeM2 * 10) / 10).replace('.', ',')} m²
+                              {usage.unknown > 0 && ` · ${usage.unknown} bez rozmerov`}
+                            </p>
+                            {usage.tooTall.length > 0 && <p className="text-xs text-destructive">Na výšku sa nezmestí: {usage.tooTall.map((item) => item.name).join(', ')}</p>}
+                          </div>
+                        )
+                      })()}
                       {group.cases.length === 0 ? (
                         <p className="text-sm text-muted-foreground">prázdne</p>
                       ) : (

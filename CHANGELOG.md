@@ -5,6 +5,19 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.12 – 29. 10. 2026
+
+- **Presety zosilňovača – tlač a Excel**: pri digitálnom zosilňovači (napr. Crown) v detaile „Tlačiť / stiahnuť“ –
+  tabuľka všetkých presetov (aj voľných), reprobox a poznámka; tlač na A4 alebo stiahnutie do Excelu (CSV).
+- **Poznámky** (nová položka v menu): zdieľané firemné poznámky – nadpis, text, pripnutie hore, hľadanie a označenie
+  ľudí z firmy; označený dostane upozornenie a nájde ich cez „Kde som označený“. Upraviť môže každý člen, zmazať
+  autor alebo admin.
+- **Sklad**: na plán sa dajú zakresliť stĺpy, steny / priečky, dvere / brány a okná; pri regáli výška poschodia
+  a pri každom mieste poznámka. Pri poschodí appka z rozmerov cases ukáže obsadenosť plochy, koľko m² je ešte
+  voľných a ktoré cases sa nezmestia na výšku.
+- **Vývojár → Používatelia** ako prehľadná tabuľka (účet · naposledy v appke · firmy a role).
+- Nové migrácie: `0118`, `0119` (opravná `0072` je aktualizovaná; všetko je aj v `supabase/update-all.sql`).
+
 ### 5.11 – 29. 10. 2026
 
 - **Vývojár → Používatelia**: všetky účty – meno, e-mail, od kedy majú účet, kedy boli naposledy v appke (dnes, včera,

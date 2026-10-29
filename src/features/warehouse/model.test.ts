@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { byLevel, casesBySpot, describeSpot, findCases, metres, nextSpotName, type PlacedCase } from './model'
+import { byLevel, casesBySpot, describeSpot, findCases, levelUsage, metres, nextSpotName, type PlacedCase } from './model'
 
 const item = (id: string, spotId: string | null, spotLevel: number | null = null, name = id): PlacedCase => ({ id, name, spotId, spotLevel })
 
@@ -54,5 +54,21 @@ describe('warehouse plan', () => {
     expect(metres(800)).toBe('8 m')
     expect(nextSpotName([])).toBe('Miesto 1')
     expect(nextSpotName([{ name: 'Regál' }, { name: 'Miesto 3' }])).toBe('Miesto 4')
+  })
+})
+
+describe('level usage', () => {
+  it('counts footprint of cases against the shelf and flags too tall ones', () => {
+    const spot = { length: 200, width: 100, levelHeightCm: 80 }
+    const cases = [
+      { id: 'a', name: 'Beam case', spotId: 's', spotLevel: 1, widthCm: 60, lengthCm: 100, depthCm: 70 },
+      { id: 'b', name: 'Rack', spotId: 's', spotLevel: 1, widthCm: 60, lengthCm: 50, depthCm: 90 },
+      { id: 'c', name: 'Taška', spotId: 's', spotLevel: 1 },
+    ]
+    const usage = levelUsage(spot, cases)
+    expect(usage.percent).toBe(45)
+    expect(usage.freeM2).toBeCloseTo(1.1)
+    expect(usage.unknown).toBe(1)
+    expect(usage.tooTall.map((item) => item.name)).toEqual(['Rack'])
   })
 })

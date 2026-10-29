@@ -33,6 +33,8 @@ const companySelect = lazyPage(() => import('@/features/companies/CompanySelectP
 const companyCreate = lazyPage(() => import('@/features/companies/CompanyCreatePage').then((m) => m.CompanyCreatePage))
 const equipmentList = lazyPage(() => import('@/features/equipment/EquipmentListPage').then((m) => m.EquipmentListPage), 'equipment.view')
 const equipmentDetail = lazyPage(() => import('@/features/equipment/EquipmentDetailPage').then((m) => m.EquipmentDetailPage), 'equipment.view')
+const notes = lazyPage(() => import('@/features/notes/NotesPage').then((m) => m.NotesPage))
+const ampPresets = lazyPage(() => import('@/features/equipment/AmpPresetsPrintPage').then((m) => m.AmpPresetsPrintPage), 'equipment.view')
 const equipmentGroup = lazyPage(() => import('@/features/equipment/EquipmentGroupPage').then((m) => m.EquipmentGroupPage), 'equipment.view')
 const equipmentForm = lazyPage(() => import('@/features/equipment/EquipmentFormPage').then((m) => m.EquipmentFormPage), 'equipment.view')
 const equipmentExcel = lazyPage(() => import('@/features/equipment/EquipmentExcelPage').then((m) => m.EquipmentExcelPage), 'equipment.view')
@@ -164,7 +166,9 @@ export const routes: RouteObject[] = [
               { path: 'equipment/excel', lazy: equipmentExcel },
               { path: 'equipment/capsules', lazy: capsules },
               { path: 'equipment/group', lazy: equipmentGroup },
+              { path: 'notes', lazy: notes },
               { path: 'equipment/:id', lazy: equipmentDetail },
+              { path: 'equipment/:id/presets', lazy: ampPresets },
               { path: 'equipment/:id/edit', lazy: equipmentForm },
               { path: 'cases', lazy: casesList },
               { path: 'cases/new', lazy: caseForm },

@@ -2991,7 +2991,7 @@ begin
   if to_regclass('public.warehouse_spots') is not null then
     begin
       execute $sql$alter table public.warehouse_spots drop constraint if exists warehouse_spots_kind_check$sql$;
-      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_kind_check CHECK ((kind = ANY (ARRAY['rack'::text, 'pallet'::text, 'zone'::text]))) not valid$sql$;
+      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_kind_check CHECK ((kind = ANY (ARRAY['rack'::text, 'pallet'::text, 'zone'::text, 'column'::text, 'wall'::text, 'door'::text, 'window'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouse_spots_kind_check: %', sqlerrm;
     end;
   end if;

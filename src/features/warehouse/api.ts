@@ -5,19 +5,24 @@ export const warehouseKeys = {
   plan: (companyId: string) => ['company', companyId, 'warehouse'] as const,
 }
 
-type SpotRow = { id: string; name: string; kind: SpotKind; x: number; y: number; length: number; width: number; levels: number }
+type SpotRow = { id: string; name: string; kind: SpotKind; x: number; y: number; length: number; width: number; levels: number; level_height_cm?: number | null; note?: string }
 
 /** Rozmery skladu (null, kým ich nikto nezadal) a všetky miesta na pláne. */
 export async function fetchWarehouse(companyId: string): Promise<{ warehouse: Warehouse | null; spots: Spot[] }> {
   const db = getSupabase()
   const [warehouse, spots] = await Promise.all([
     db.from('warehouses').select('length_cm, width_cm').eq('company_id', companyId).maybeSingle(),
-    db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels').eq('company_id', companyId).order('created_at'),
+    db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels, level_height_cm, note').eq('company_id', companyId).order('created_at'),
   ])
-  const error = warehouse.error ?? spots.error
+  // Bez migrácie 0119 nie je výška poschodia ani poznámka.
+  const rows = spots.error && /level_height_cm|note/.test(spots.error.message) ? await db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels').eq('company_id', companyId).order('created_at') : spots
+  const error = warehouse.error ?? rows.error
   if (error) throw error
   const size = warehouse.data as { length_cm: number; width_cm: number } | null
-  return { warehouse: size && { lengthCm: size.length_cm, widthCm: size.width_cm }, spots: spots.data as SpotRow[] }
+  return {
+    warehouse: size && { lengthCm: size.length_cm, widthCm: size.width_cm },
+    spots: (rows.data as SpotRow[]).map(({ level_height_cm, note, ...spot }) => ({ ...spot, levelHeightCm: level_height_cm ?? null, note: note ?? '' })),
+  }
 }
 
 /** Uloží rozmery skladu. Najprv úprava, až potom vloženie: upsert by menil stĺpec kľúča, na ktorý nie je UPDATE. */
@@ -37,7 +42,9 @@ export async function addSpot(companyId: string, spot: Omit<Spot, 'id'>) {
 }
 
 export async function updateSpot(companyId: string, id: string, fields: Partial<Omit<Spot, 'id'>>) {
-  const { data, error } = await getSupabase().from('warehouse_spots').update(fields).eq('company_id', companyId).eq('id', id).select('id')
+  const { levelHeightCm, ...rest } = fields
+  const row = { ...rest, ...(levelHeightCm !== undefined ? { level_height_cm: levelHeightCm } : {}) }
+  const { data, error } = await getSupabase().from('warehouse_spots').update(row).eq('company_id', companyId).eq('id', id).select('id')
   if (error) throw error
   if (data.length === 0) throw new Error('Not updated')
 }

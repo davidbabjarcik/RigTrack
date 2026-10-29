@@ -1,11 +1,30 @@
 // Plán skladu: pôdorys s miestami (regál, paleta, zóna) a cases, ktoré na nich ležia.
 // Zodpovedá 0032_warehouse.sql. Súradnice v cm, x zľava doprava, y zhora nadol.
 
-export const SPOT_KINDS = ['rack', 'pallet', 'zone'] as const
+export const SPOT_KINDS = ['rack', 'pallet', 'zone', 'column', 'wall', 'door', 'window'] as const
 export type SpotKind = (typeof SPOT_KINDS)[number]
 
-export const SPOT_KIND_LABELS: Record<SpotKind, string> = { rack: 'Regál', pallet: 'Paleta', zone: 'Zóna' }
-export const SPOT_KIND_FILLS: Record<SpotKind, string> = { rack: '#1d4ed8', pallet: '#a16207', zone: '#4d7c0f' }
+export const SPOT_KIND_LABELS: Record<SpotKind, string> = {
+  rack: 'Regál',
+  pallet: 'Paleta',
+  zone: 'Zóna',
+  column: 'Stĺp',
+  wall: 'Stena / priečka',
+  door: 'Dvere / brána',
+  window: 'Okno',
+}
+export const SPOT_KIND_FILLS: Record<SpotKind, string> = {
+  rack: '#1d4ed8',
+  pallet: '#a16207',
+  zone: '#4d7c0f',
+  column: '#52525b',
+  wall: '#27272a',
+  door: '#ea580c',
+  window: '#0ea5e9',
+}
+
+/** Stavebné prvky (stĺp, stena, dvere, okno) – nie sú miestom na cases. */
+export const isStructure = (kind: SpotKind) => kind === 'column' || kind === 'wall' || kind === 'door' || kind === 'window'
 
 export type Warehouse = { lengthCm: number; widthCm: number }
 
@@ -19,10 +38,41 @@ export type Spot = {
   width: number
   /** Počet poschodí; viac než jedno má zmysel len pri regáli. */
   levels: number
+  /** Výška jedného poschodia regála (cm) – na kontrolu, či sa case zmestí na výšku. */
+  levelHeightCm?: number | null
+  note?: string
 }
 
-/** Case tak, ako ho potrebuje plán. */
-export type PlacedCase = { id: string; name: string; spotId: string | null; spotLevel: number | null; inventoryNumber?: string; labelNumber?: string; oldNumbers?: string }
+/** Case tak, ako ho potrebuje plán (rozmery v cm na výpočet, koľko sa kam zmestí). */
+export type PlacedCase = {
+  id: string
+  name: string
+  spotId: string | null
+  spotLevel: number | null
+  inventoryNumber?: string
+  labelNumber?: string
+  oldNumbers?: string
+  widthCm?: number | null
+  lengthCm?: number | null
+  depthCm?: number | null
+}
+
+/**
+ * Obsadenosť poschodia: plocha, ktorú zaberajú cases (šírka × dĺžka), oproti ploche miesta, a ktoré cases sú
+ * vyššie (hĺbka case) ako poschodie. Cases bez rozmerov sa len spočítajú.
+ */
+export function levelUsage(spot: Pick<Spot, 'length' | 'width' | 'levelHeightCm'>, cases: PlacedCase[]) {
+  const area = spot.length * spot.width
+  const sized = cases.filter((item) => item.widthCm && item.lengthCm)
+  const used = sized.reduce((sum, item) => sum + item.widthCm! * item.lengthCm!, 0)
+  const tooTall = spot.levelHeightCm ? cases.filter((item) => item.depthCm && item.depthCm > spot.levelHeightCm!) : []
+  return {
+    percent: area > 0 ? Math.round((used / area) * 100) : 0,
+    freeM2: Math.max(0, (area - used) / 10_000),
+    unknown: cases.length - sized.length,
+    tooTall,
+  }
+}
 
 /** Cases podľa miesta; kľúč je id miesta. Cases bez miesta tu nie sú. */
 export function casesBySpot<T extends PlacedCase>(cases: T[]) {

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Lock, SlidersHorizontal } from 'lucide-react'
+import { Lock, Printer, SlidersHorizontal } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { equipmentKeys, fetchEquipmentList } from './api'
 import { presetsForSpeaker, type Equipment } from './model'
@@ -21,6 +21,12 @@ export function AmpPresetsInfo({ companyId, equipment }: { companyId: string; eq
       <h2 className="mb-2 flex items-center gap-2 font-medium">
         <SlidersHorizontal className="size-5 text-accent" aria-hidden />
         {own.length > 0 ? `Presety (${own.length}${equipment.attributes.ampPresetSlots ? ` z ${equipment.attributes.ampPresetSlots}` : ''})` : 'Presety v zosilňovačoch'}
+        {own.length > 0 && (
+          <Link to={`/equipment/${equipment.id}/presets`} className="ml-auto inline-flex items-center gap-1 text-sm font-normal text-accent hover:underline">
+            <Printer className="size-4" aria-hidden />
+            Tlačiť / stiahnuť
+          </Link>
+        )}
       </h2>
       <ul className="divide-y text-sm">
         {own.map((preset) => (

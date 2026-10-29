@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0117 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0119 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -2206,6 +2206,90 @@ $$;
 
 revoke execute on function public.developer_users() from public, anon;
 grant execute on function public.developer_users() to authenticated;
+
+-- ===== 0118_company_notes.sql =====
+-- RigTrack 5.12: firemné poznámky – zdieľané pre celú firmu, s pripnutím a označenými ľuďmi (dostanú upozornenie).
+
+create table if not exists public.company_notes (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references public.companies (id) on delete cascade,
+  title text not null default '' check (char_length(title) <= 120),
+  body text not null default '' check (char_length(body) <= 10000),
+  pinned boolean not null default false,
+  people uuid[] not null default '{}',
+  created_by uuid default auth.uid() references public.profiles (id) on delete set null,
+  author_name text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists company_notes_company_idx on public.company_notes (company_id, updated_at desc);
+
+alter table public.company_notes enable row level security;
+revoke all on public.company_notes from anon, authenticated;
+grant select, delete on public.company_notes to authenticated;
+grant insert (company_id, title, body, pinned, people) on public.company_notes to authenticated;
+grant update (title, body, pinned, people) on public.company_notes to authenticated;
+
+-- Čítať a upravovať môže každý člen firmy (zdieľané poznámky); zmazať autor alebo admin.
+drop policy if exists company_notes_select on public.company_notes;
+create policy company_notes_select on public.company_notes for select to authenticated using (public.is_company_member(company_id));
+drop policy if exists company_notes_insert on public.company_notes;
+create policy company_notes_insert on public.company_notes for insert to authenticated
+  with check (public.is_company_member(company_id) and public.all_members_of(company_id, people));
+drop policy if exists company_notes_update on public.company_notes;
+create policy company_notes_update on public.company_notes for update to authenticated
+  using (public.is_company_member(company_id)) with check (public.is_company_member(company_id) and public.all_members_of(company_id, people));
+drop policy if exists company_notes_delete on public.company_notes;
+create policy company_notes_delete on public.company_notes for delete to authenticated
+  using (created_by = auth.uid() or public.has_role(company_id, 'admin'));
+
+-- Autor a čas úpravy určuje server; novo označení ľudia dostanú upozornenie.
+create or replace function public.company_notes_stamp()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare
+  _person uuid;
+  _name text;
+begin
+  if tg_op = 'INSERT' then
+    new.created_by := auth.uid();
+    select coalesce(nullif(p.full_name, ''), p.email, '') into new.author_name from public.profiles p where p.id = auth.uid();
+    new.author_name := coalesce(new.author_name, '');
+  else
+    new.created_by := old.created_by;
+    new.author_name := old.author_name;
+  end if;
+  new.updated_at := now();
+  select coalesce(nullif(p.full_name, ''), p.email, 'Niekto') into _name from public.profiles p where p.id = auth.uid();
+  foreach _person in array new.people loop
+    if _person <> coalesce(auth.uid(), '00000000-0000-0000-0000-000000000000'::uuid)
+      and (tg_op = 'INSERT' or not (_person = any (old.people))) then
+      insert into public.notifications (user_id, company_id, title, body, url)
+      values (_person, new.company_id, left(coalesce(_name, 'Niekto') || ' vás označil v poznámke', 120), left(coalesce(nullif(new.title, ''), left(new.body, 120)), 300), '/notes');
+    end if;
+  end loop;
+  return new;
+end;
+$$;
+
+drop trigger if exists company_notes_stamp on public.company_notes;
+create trigger company_notes_stamp before insert or update on public.company_notes
+  for each row execute function public.company_notes_stamp();
+
+-- ===== 0119_warehouse_layout.sql =====
+-- RigTrack 5.12: lepší plán skladu – stĺpy, steny, dvere a okná na pláne; pri regáli výška poschodia a poznámka
+-- (appka z rozmerov cases vypočíta, koľko sa kde ešte zmestí).
+
+do $$
+begin
+  alter table public.warehouse_spots drop constraint if exists warehouse_spots_kind_check;
+  alter table public.warehouse_spots add constraint warehouse_spots_kind_check check (kind in ('rack', 'pallet', 'zone', 'column', 'wall', 'door', 'window'));
+end;
+$$;
+
+alter table public.warehouse_spots add column if not exists level_height_cm integer check (level_height_cm between 5 and 1000);
+alter table public.warehouse_spots add column if not exists note text not null default '' check (char_length(note) <= 300);
+
+grant update (level_height_cm, note) on public.warehouse_spots to authenticated;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).
@@ -6607,7 +6691,7 @@ begin
   if to_regclass('public.warehouse_spots') is not null then
     begin
       execute $sql$alter table public.warehouse_spots drop constraint if exists warehouse_spots_kind_check$sql$;
-      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_kind_check CHECK ((kind = ANY (ARRAY['rack'::text, 'pallet'::text, 'zone'::text]))) not valid$sql$;
+      execute $sql$alter table public.warehouse_spots add constraint warehouse_spots_kind_check CHECK ((kind = ANY (ARRAY['rack'::text, 'pallet'::text, 'zone'::text, 'column'::text, 'wall'::text, 'door'::text, 'window'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola warehouse_spots_kind_check: %', sqlerrm;
     end;
   end if;
