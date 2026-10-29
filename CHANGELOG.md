@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.8 – 29. 10. 2026
+
+- **Viac počítadiel hodín** (napr. prevádzka a výbojka): štandardne jedno počítadlo, pri zápise odčítania tlačidlom
+  **Pridať počítadlo** pridáte ďalšie s názvom (napr. Výbojka) a vyberiete, ktoré odčítavate. Posledný stav každého
+  počítadla je v sekcii Prevádzkové hodiny, v histórii pri odčítaní názov počítadla. Prevádzkové hodiny (a pripomienky
+  odčítania) sa riadia len hlavným počítadlom.
+- Nová migrácia: `0116` (opravná `0072` je aktualizovaná; všetko je aj v `supabase/update-all.sql`).
+
 ### 5.7.2 – 29. 10. 2026
 
 - Tlačidlo **DMX adresy** hore v detaile je pri každom svetle – aj bez „Evidovať každý kus zvlášť“ (kusy 1…počet).

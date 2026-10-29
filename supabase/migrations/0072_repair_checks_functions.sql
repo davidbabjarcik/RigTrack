@@ -3390,6 +3390,9 @@ begin
  SET search_path TO ''
 AS $function$
 begin
+  if coalesce(to_jsonb(new) ->> 'counter', '') <> '' then
+    return new;
+  end if;
   if new.unit is null then
     update public.equipment
     set operating_hours = new.hours, hours_read_on = new.read_on
@@ -3399,7 +3402,7 @@ begin
     with latest as (
       select distinct on (r.unit) r.hours, r.read_on
       from public.equipment_hour_readings r
-      where r.equipment_id = new.equipment_id and r.unit is not null
+      where r.equipment_id = new.equipment_id and r.unit is not null and coalesce(to_jsonb(r) ->> 'counter', '') = ''
       order by r.unit, r.read_on desc, r.created_at desc
     )
     update public.equipment

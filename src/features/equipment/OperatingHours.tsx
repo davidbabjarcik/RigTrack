@@ -27,6 +27,10 @@ export function OperatingHours({ companyId, equipment, canEdit, only = null }: P
   const units = equipment.trackUnits && equipment.quantity > 1 ? (only !== null ? [only] : unitIdsOf(equipment)) : []
   const [unit, setUnit] = useState(only !== null ? String(only) : '')
   const [chartUnit, setChartUnit] = useState(only !== null ? String(only) : '')
+  // Ďalšie počítadlá (napr. Výbojka): názvy z odčítaní + práve pridané; '' = hlavné (prevádzkové hodiny).
+  const [counter, setCounter] = useState('')
+  const [addedCounters, setAddedCounters] = useState<string[]>([])
+  const [newCounter, setNewCounter] = useState('')
   const checkDays = useCheckLevels(companyId).days
   const tracked = Boolean(equipment.attributes.trackHours) || equipment.hoursIntervalMonths !== null || equipment.operatingHours !== null
 
@@ -39,7 +43,7 @@ export function OperatingHours({ companyId, equipment, canEdit, only = null }: P
   const valid = hours.trim() !== '' && Number.isFinite(value) && value >= 0 && readOn !== '' && (units.length === 0 || unit !== '')
 
   const add = useMutation({
-    mutationFn: () => addHourReading(companyId, equipment.id, { readOn, hours: value, note, unit: units.length > 0 ? Number(unit) : null }),
+    mutationFn: () => addHourReading(companyId, equipment.id, { readOn, hours: value, note, unit: units.length > 0 ? Number(unit) : null, counter }),
     onSuccess: () => {
       setOpen(false)
       setHours('')
@@ -52,10 +56,20 @@ export function OperatingHours({ companyId, equipment, canEdit, only = null }: P
   if (!tracked) return null
 
   const state = hoursState(equipment, today, checkDays)
-  const all = readings.data ?? []
+  const everything = readings.data ?? []
+  // Hlavné počítadlo (prevádzkové hodiny); ďalšie počítadlá sú zvlášť nižšie.
+  const all = everything.filter((reading) => !reading.counter)
+  const counters = [...new Set([...everything.map((reading) => reading.counter).filter(Boolean), ...addedCounters])]
+  const latestCounter = (name: string, unitId: number | null) => everything.find((reading) => reading.counter === name && (unitId === null || reading.unit === unitId))
   // Posledné odčítanie každého kusu (odčítania sú od najnovších).
   const latestOf = (unitId: number) => all.find((reading) => reading.unit === unitId)
-  const previous = units.length > 0 ? (unit ? latestOf(Number(unit))?.hours : undefined) : (equipment.operatingHours ?? undefined)
+  const previous = counter
+    ? latestCounter(counter, units.length > 0 && unit ? Number(unit) : null)?.hours
+    : units.length > 0
+      ? unit
+        ? latestOf(Number(unit))?.hours
+        : undefined
+      : (equipment.operatingHours ?? undefined)
   const lower = previous !== undefined && valid && value < previous
   const shownUnit = chartUnit || String(units.find((unitId) => all.filter((reading) => reading.unit === unitId).length > 1) ?? '')
   const chartReadings = units.length > 0 ? all.filter((reading) => String(reading.unit) === shownUnit) : all.filter((reading) => reading.unit === null)
@@ -109,8 +123,51 @@ export function OperatingHours({ companyId, equipment, canEdit, only = null }: P
         </ul>
       )}
 
+      {counters.length > 0 && (
+        <ul className="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">
+          {counters.map((name) => {
+            const latest = latestCounter(name, null)
+            return (
+              <li key={name} className="flex justify-between gap-2 rounded-lg border px-3 py-1.5">
+                <span className="font-medium">{name}</span>
+                <span className="tabular-nums">
+                  {latest ? `${latest.unit !== null ? `#${latest.unit} · ` : ''}${formatNumber(latest.hours)} h · ${formatDate(latest.readOn)}` : <span className="text-muted-foreground">neodčítané</span>}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
       {open && (
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 border-t pt-4">
+          {/* Počítadlo: hlavné (prevádzkové hodiny) alebo ďalšie, napr. Výbojka. */}
+          <div className="flex flex-wrap items-end gap-2">
+            {counters.length > 0 && (
+              <SelectField label="Počítadlo" className="sm:w-56" value={counter} onChange={(e) => setCounter(e.target.value)}>
+                <option value="">Prevádzkové hodiny</option>
+                {counters.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </SelectField>
+            )}
+            <Field label="Ďalšie počítadlo" hideLabel placeholder="+ nové počítadlo, napr. Výbojka" maxLength={40} className="sm:w-64" value={newCounter} onChange={(e) => setNewCounter(e.target.value)} />
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!newCounter.trim() || counters.includes(newCounter.trim())}
+              onClick={() => {
+                const name = newCounter.trim()
+                setAddedCounters([...addedCounters, name])
+                setCounter(name)
+                setNewCounter('')
+              }}
+            >
+              Pridať počítadlo
+            </Button>
+          </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {units.length > 0 && (
               <SelectField label="Kus" required value={unit} onChange={(e) => setUnit(e.target.value)}>
@@ -124,7 +181,7 @@ export function OperatingHours({ companyId, equipment, canEdit, only = null }: P
               </SelectField>
             )}
             <Field
-              label="Stav počítadla (h)"
+              label={counter ? `Stav počítadla ${counter} (h)` : 'Stav počítadla (h)'}
               inputMode="decimal"
               required
               autoFocus
@@ -174,6 +231,7 @@ export function OperatingHours({ companyId, equipment, canEdit, only = null }: P
           <ul className="mt-2 flex flex-col gap-2">
             {readings.data.map((reading) => (
               <li key={reading.id}>
+                {reading.counter && <span className="font-medium">{reading.counter} · </span>}
                 {reading.unit !== null && <span className="font-medium">#{reading.unit} · </span>}
                 <span className="font-medium tabular-nums">{formatNumber(reading.hours)} h</span> · {formatDate(reading.readOn)} ·{' '}
                 {reading.authorName || 'neznámy'}

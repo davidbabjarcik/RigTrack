@@ -471,7 +471,8 @@ export async function setEquipmentQuantity(companyId: string, equipmentId: strin
   if (data.length === 0) throw new Error('Not updated')
 }
 
-export type HourReading = { id: string; readOn: string; hours: number; note: string; authorName: string; unit: number | null }
+/** Odčítanie počítadla; `counter` = názov ďalšieho počítadla (napr. Výbojka), prázdny = hlavné (prevádzkové hodiny). */
+export type HourReading = { id: string; readOn: string; hours: number; note: string; authorName: string; unit: number | null; counter: string }
 
 export const hourReadingKeys = {
   list: (companyId: string, equipmentId: string) => ['company', companyId, 'equipment', equipmentId, 'hours'] as const,
@@ -488,16 +489,17 @@ export async function fetchHourReadings(companyId: string, equipmentId: string):
       .order('read_on', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(100)
-  let { data, error } = await query('id, read_on, hours, note, author_name, unit')
-  // Bez migrácie 0078 odčítania po kusoch nie sú.
+  let { data, error } = await query('id, read_on, hours, note, author_name, unit, counter')
+  // Bez migrácie 0116 nie sú ďalšie počítadlá, bez 0078 odčítania po kusoch.
+  if (isMissingColumn(error, 'counter')) ({ data, error } = await query('id, read_on, hours, note, author_name, unit'))
   if (isMissingColumn(error, 'unit')) ({ data, error } = await query('id, read_on, hours, note, author_name'))
   if (error) throw error
-  const rows = data as unknown as { id: string; read_on: string; hours: number | string; note: string; author_name: string; unit?: number | null }[]
-  return rows.map((row) => ({ id: row.id, readOn: row.read_on, hours: Number(row.hours), note: row.note, authorName: row.author_name, unit: row.unit ?? null }))
+  const rows = data as unknown as { id: string; read_on: string; hours: number | string; note: string; author_name: string; unit?: number | null; counter?: string }[]
+  return rows.map((row) => ({ id: row.id, readOn: row.read_on, hours: Number(row.hours), note: row.note, authorName: row.author_name, unit: row.unit ?? null, counter: row.counter ?? '' }))
 }
 
 /** Kto odčítal, doplní databáza; stav na technike prepíše trigger. */
-export async function addHourReading(companyId: string, equipmentId: string, reading: { readOn: string; hours: number; note: string; unit?: number | null }) {
+export async function addHourReading(companyId: string, equipmentId: string, reading: { readOn: string; hours: number; note: string; unit?: number | null; counter?: string }) {
   const { error } = await getSupabase()
     .from('equipment_hour_readings')
     .insert({
@@ -507,6 +509,7 @@ export async function addHourReading(companyId: string, equipmentId: string, rea
       hours: reading.hours,
       note: reading.note.trim(),
       ...(reading.unit ? { unit: reading.unit } : {}),
+      ...(reading.counter?.trim() ? { counter: reading.counter.trim() } : {}),
     })
   if (error) throw error
 }
