@@ -498,6 +498,14 @@ export async function fetchHourReadings(companyId: string, equipmentId: string):
   return rows.map((row) => ({ id: row.id, readOn: row.read_on, hours: Number(row.hours), note: row.note, authorName: row.author_name, unit: row.unit ?? null, counter: row.counter ?? '' }))
 }
 
+/** Názvy ďalších počítadiel (napr. Výbojka) pri danej technike – z doterajších odčítaní; bez migrácie 0116 žiadne. */
+export async function fetchHourCounters(companyId: string, equipmentIds: string[]): Promise<string[]> {
+  if (equipmentIds.length === 0) return []
+  const { data, error } = await getSupabase().from('equipment_hour_readings').select('counter').eq('company_id', companyId).in('equipment_id', equipmentIds).neq('counter', '')
+  if (error) return []
+  return [...new Set((data as { counter: string }[]).map((row) => row.counter))].sort((a, b) => a.localeCompare(b, 'sk'))
+}
+
 /** Kto odčítal, doplní databáza; stav na technike prepíše trigger. */
 export async function addHourReading(companyId: string, equipmentId: string, reading: { readOn: string; hours: number; note: string; unit?: number | null; counter?: string }) {
   const { error } = await getSupabase()

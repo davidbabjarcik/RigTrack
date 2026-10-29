@@ -25,6 +25,18 @@ export type UserPrefs = {
   tapeColor?: 'white' | 'black'
   /** Poradie druhov techniky pri triedení „Podľa kategórie / druhu“ (moje zameranie hore). */
   kindOrder?: string[]
+  /** Voľby hárku s obsahom case. */
+  sheet?: SheetPrefs
+}
+
+/** Hárok s obsahom case: veľkosť, orientácia, rozloženie typov káblov, poradie, časti a DMX. */
+export type SheetPrefs = {
+  paper?: 'A4' | 'A5'
+  landscape?: boolean
+  layout?: string
+  order?: string[]
+  show?: Record<string, boolean>
+  dmx?: 'off' | 'modes' | 'channels'
 }
 
 const LOCAL_KEY = 'rigtrack.prefs'

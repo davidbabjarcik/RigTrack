@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, ChevronDown, ChevronUp, Download } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronUp, Download, FileDown, Printer } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -17,7 +17,6 @@ import type { DmxMode } from '@/features/equipment/model'
 import { withoutWhiteBackground } from './removeBackground'
 import { buildCableMatrix, DEFAULT_SHOW, drawContentSheet, matrixPages, orderColumns, SHEET_PART_LABELS, SHEET_PARTS, type SheetShow, SHEET_HEIGHT, SHEET_LAYOUT_LABELS, SHEET_LAYOUTS, SHEET_WIDTH, type SheetLayout } from './contentSheet'
 
-const LAYOUT_KEY = 'rigtrack.sheetLayout'
 const PAPERS = ['A4', 'A5'] as const
 type Paper = (typeof PAPERS)[number]
 /** A5 pri 300 dpi. */
@@ -34,11 +33,9 @@ function scaled(source: HTMLCanvasElement, width: number, height: number) {
   ctx.drawImage(source, 0, 0, width, height)
   return canvas
 }
-const ORDER_KEY = 'rigtrack.sheetOrder'
-const SHOW_KEY = 'rigtrack.sheetShow'
-const ORIENTATION_KEY = 'rigtrack.sheetOrientation'
-const DMX_KEY = 'rigtrack.sheetDmx'
 import { useCases } from './useCases'
+import { buildPdf, canvasJpeg, pageSizePt } from './sheetPdf'
+import { useUserPrefs, type SheetPrefs } from '@/features/settings/userPrefs'
 import { cn } from '@/lib/utils'
 
 export function CaseContentSheetPage() {
@@ -46,79 +43,30 @@ export function CaseContentSheetPage() {
   const company = useCompany().active!
   const companyId = company.companyId
   const canvases = useRef<(HTMLCanvasElement | null)[]>([])
-  const [paper, setPaper] = useState<Paper>('A4')
-  // Na výšku / na šírku – pamätá sa v prehliadači.
-  const [landscape, setLandscapeState] = useState(() => {
-    try {
-      return localStorage.getItem(ORIENTATION_KEY) === 'landscape'
-    } catch {
-      return false
-    }
-  })
-  const setLandscape = (next: boolean) => {
-    setLandscapeState(next)
-    try {
-      localStorage.setItem(ORIENTATION_KEY, next ? 'landscape' : 'portrait')
-    } catch {
-      // Bez úložiska sa voľba len nezapamätá.
-    }
-  }
+  // Voľby hárku sa ukladajú k účtu (rovnaké na PC aj v mobile).
+  const { prefs, update } = useUserPrefs()
+  const sheet = prefs.sheet ?? {}
+  const setSheet = (patch: Partial<SheetPrefs>) => update({ sheet: { ...sheet, ...patch } })
+  const paper: Paper = sheet.paper === 'A5' ? 'A5' : 'A4'
+  const setPaper = (next: Paper) => setSheet({ paper: next })
+  const landscape = Boolean(sheet.landscape)
+  const setLandscape = (next: boolean) => setSheet({ landscape: next })
   // DMX na hárku: nie / módy / módy s rozpisom kanálov – len keď je v case svetlo.
-  const [dmxInfo, setDmxInfoState] = useState<'off' | 'modes' | 'channels'>(() => {
-    try {
-      const saved = localStorage.getItem(DMX_KEY)
-      return saved === 'modes' || saved === 'channels' ? saved : 'off'
-    } catch {
-      return 'off'
-    }
-  })
-  const setDmxInfo = (next: 'off' | 'modes' | 'channels') => {
-    setDmxInfoState(next)
-    try {
-      localStorage.setItem(DMX_KEY, next)
-    } catch {
-      // Bez úložiska sa voľba len nezapamätá.
-    }
-  }
+  const dmxInfo: 'off' | 'modes' | 'channels' = sheet.dmx === 'modes' || sheet.dmx === 'channels' ? sheet.dmx : 'off'
+  const setDmxInfo = (next: 'off' | 'modes' | 'channels') => setSheet({ dmx: next })
   const sheetW = landscape ? SHEET_HEIGHT : SHEET_WIDTH
   const sheetH = landscape ? SHEET_WIDTH : SHEET_HEIGHT
   const a5W = landscape ? A5_HEIGHT : A5_WIDTH
   const a5H = landscape ? A5_WIDTH : A5_HEIGHT
-  // Čo ukázať na hárku (číslo case, QR, súhrn dole) – pamätá sa v prehliadači.
-  const [show, setShowState] = useState<SheetShow>(() => {
-    try {
-      return { ...DEFAULT_SHOW, ...(JSON.parse(localStorage.getItem(SHOW_KEY) ?? '{}') as Partial<SheetShow>) }
-    } catch {
-      return DEFAULT_SHOW
-    }
-  })
-  const toggleShow = (part: keyof SheetShow) => {
-    const next = { ...show, [part]: !show[part] }
-    setShowState(next)
-    try {
-      localStorage.setItem(SHOW_KEY, JSON.stringify(next))
-    } catch {
-      // Bez úložiska sa voľba len nezapamätá.
-    }
-  }
+  // Čo ukázať na hárku (číslo case, QR, súhrn dole, fotky bez pozadia).
+  const show = useMemo<SheetShow>(() => ({ ...DEFAULT_SHOW, ...(sheet.show ?? {}) }), [sheet.show])
+  const toggleShow = (part: keyof SheetShow) => setSheet({ show: { ...show, [part]: !show[part] } })
   const [drawn, setDrawn] = useState(false)
-  // Viac typov káblov (napr. XLR a Jack): spolu, pod sebou, alebo každý na vlastný hárok. Pamätá sa v prehliadači.
-  const [layout, setLayoutState] = useState<SheetLayout>(() => {
-    try {
-      const saved = localStorage.getItem(LAYOUT_KEY)
-      return SHEET_LAYOUTS.includes(saved as SheetLayout) ? (saved as SheetLayout) : 'together'
-    } catch {
-      return 'together'
-    }
-  })
-  const setLayout = (next: SheetLayout) => {
-    setLayoutState(next)
-    try {
-      localStorage.setItem(LAYOUT_KEY, next)
-    } catch {
-      // Bez úložiska sa voľba len nezapamätá.
-    }
-  }
+  // Obrázky hárkov na tlač (len počas tlače).
+  const [printUrls, setPrintUrls] = useState<string[]>([])
+  // Viac typov káblov (napr. XLR a Jack): spolu, pod sebou, alebo každý na vlastný hárok.
+  const layout: SheetLayout = SHEET_LAYOUTS.includes(sheet.layout as SheetLayout) ? (sheet.layout as SheetLayout) : 'together'
+  const setLayout = (next: SheetLayout) => setSheet({ layout: next })
 
   const cases = useCases(companyId)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
@@ -150,15 +98,8 @@ export function CaseContentSheetPage() {
   const logoSettled = !logoPath || logo.isSuccess || logo.isError
   const ready = Boolean(current && equipment.data && colors.data && branding.data && logoSettled)
 
-  // Poradie typov (čo hore, čo dole / na ktorom hárku) – pamätá sa v prehliadači.
-  const [order, setOrderState] = useState<string[]>(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(ORDER_KEY) ?? '[]') as unknown
-      return Array.isArray(saved) ? saved.filter((value): value is string => typeof value === 'string') : []
-    } catch {
-      return []
-    }
-  })
+  // Poradie typov (čo hore, čo dole / na ktorom hárku).
+  const order = useMemo(() => sheet.order ?? [], [sheet.order])
   const ordered = useMemo(() => orderColumns(matrix, order), [matrix, order])
   const move = (column: string, step: -1 | 1) => {
     const columns = [...ordered.columns]
@@ -167,13 +108,7 @@ export function CaseContentSheetPage() {
     if (target < 0 || target >= columns.length) return
     ;[columns[index], columns[target]] = [columns[target], columns[index]]
     // Ostatné typy (z iných cases) ostanú v uloženom poradí za týmito.
-    const next = [...columns, ...order.filter((value) => !columns.includes(value))]
-    setOrderState(next)
-    try {
-      localStorage.setItem(ORDER_KEY, JSON.stringify(next))
-    } catch {
-      // Bez úložiska sa poradie len nezapamätá.
-    }
+    setSheet({ order: [...columns, ...order.filter((value) => !columns.includes(value))] })
   }
   const pages = useMemo(() => (layout === 'pages' ? matrixPages(ordered) : [ordered]), [layout, ordered])
 
@@ -268,18 +203,57 @@ export function CaseContentSheetPage() {
       await new Promise((resolve) => setTimeout(resolve, 300))
     }
   }
+  const sheets = () => canvases.current.slice(0, pages.length).filter((target): target is HTMLCanvasElement => Boolean(target))
+  // PDF: všetky hárky ako strany (A4 / A5, na výšku / na šírku).
+  const downloadPdf = async () => {
+    const images = await Promise.all(sheets().map((target) => canvasJpeg(paper === 'A5' ? scaled(target, a5W, a5H) : target)))
+    const url = URL.createObjectURL(buildPdf(images, pageSizePt(paper, landscape)))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${baseName}${paper === 'A5' ? '-a5' : ''}.pdf`
+    link.click()
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }
+  // Tlač: obrázky hárkov na celú stranu, bez okrajov prehliadača.
+  const print = () => {
+    setPrintUrls(sheets().map((target) => target.toDataURL('image/jpeg', 0.92)))
+    window.setTimeout(() => {
+      window.print()
+      setPrintUrls([])
+    }, 200)
+  }
 
   return (
     <>
+      {printUrls.length > 0 && (
+        <>
+          <style>{`@page { size: ${paper} ${landscape ? 'landscape' : 'portrait'}; margin: 0 } @media print { body * { visibility: hidden !important } .sheet-print, .sheet-print * { visibility: visible !important } .sheet-print { position: absolute; inset: 0 } .sheet-print img { display: block; width: 100%; height: auto; break-after: page } }`}</style>
+          <div className="sheet-print hidden print:block">
+            {printUrls.map((url, index) => (
+              <img key={index} src={url} alt="" />
+            ))}
+          </div>
+        </>
+      )}
       {back}
       <PageHeader
         title="Flightcase content"
         description={`${current.name} · ${paper} ${landscape ? 'na šírku' : 'na výšku'} (${paper === 'A5' ? `${a5W} × ${a5H}` : `${sheetW} × ${sheetH}`} px)`}
         action={
-          <Button disabled={!drawn} onClick={() => void download()}>
-            <Download className="size-4" aria-hidden />
-            {pages.length > 1 ? `Stiahnuť PNG ${paper} (${pages.length})` : `Stiahnuť PNG ${paper}`}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button disabled={!drawn} onClick={print}>
+              <Printer className="size-4" aria-hidden />
+              Tlačiť
+            </Button>
+            <Button variant="outline" disabled={!drawn} onClick={() => void downloadPdf()}>
+              <FileDown className="size-4" aria-hidden />
+              PDF
+            </Button>
+            <Button variant="outline" disabled={!drawn} onClick={() => void download()}>
+              <Download className="size-4" aria-hidden />
+              {pages.length > 1 ? `PNG (${pages.length})` : 'PNG'}
+            </Button>
+          </div>
         }
       />
       {matrix.rows.length === 0 && matrix.others.length === 0 && (

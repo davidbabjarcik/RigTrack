@@ -256,6 +256,19 @@ export function PackPage() {
                         .filter(Boolean)
                         .join(' · ')}
                     </span>
+                    {/* Obsah case ako na hárku: čo v ňom má byť a zvlášť príslušenstvo. */}
+                    {row.contents && (
+                      <span className="mt-0.5 block text-sm">
+                        {row.contents.some((item) => !item.accessory) && (
+                          <span className="block">{row.contents.filter((item) => !item.accessory).map((item) => `${item.name} ${item.quantity} ks`).join(' · ')}</span>
+                        )}
+                        {row.contents.some((item) => item.accessory) && (
+                          <span className="block text-muted-foreground">
+                            príslušenstvo: {row.contents.filter((item) => item.accessory).map((item) => `${item.name} ${item.quantity} ks`).join(' · ')}
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </span>
                 </button>
               </li>

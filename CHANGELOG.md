@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.9 – 29. 10. 2026
+
+- **Hárok s obsahom case: Tlačiť, PDF aj PNG** – tlač priamo z appky (strana podľa A4 / A5 a orientácie, bez okrajov),
+  PDF so všetkými hárkami a PNG ako doteraz.
+- **Voľby hárku sa ukladajú k účtu** (veľkosť, orientácia, rozloženie typov káblov, poradie, čo ukázať, DMX) –
+  rovnaké na PC aj v mobile.
+- **Odčítať hodiny všetkým aj pre ďalšie počítadlá** (napr. Výbojka): výber počítadla a „Pridať počítadlo“.
+- **Pack list ako hárok obsahu**: case s číslom (Beam 7R Case #3) a pod ním čo v ňom má byť, príslušenstvo zvlášť.
+
 ### 5.8 – 29. 10. 2026
 
 - **Viac počítadiel hodín** (napr. prevádzka a výbojka): štandardne jedno počítadlo, pri zápise odčítania tlačidlom

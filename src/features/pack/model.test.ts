@@ -5,11 +5,12 @@ import type { PackCheck } from './api'
 import { checkOf, packProgress, packRows } from './model'
 
 const equipment = [
-  { id: 'sm58', name: 'Shure SM58', manufacturer: 'Shure', inventoryNumber: '' },
+  { id: 'sm58', name: 'Shure SM58', manufacturer: 'Shure', inventoryNumber: '', caseId: 'mics', quantity: 4, attributes: {} },
+  { id: 'clip', name: 'Klip', manufacturer: '', inventoryNumber: '', caseId: 'mics', quantity: 4, attributes: { sheetAccessory: true } },
   { id: 'cable', name: 'XLR kábel 10 m', manufacturer: '', inventoryNumber: '' },
   { id: 'spiider', name: 'Robe Spiider', manufacturer: 'Robe', inventoryNumber: 'L-12' },
 ] as Equipment[]
-const cases = [{ id: 'mics', name: 'Mikrofóny', inventoryNumber: 'C-1' }] as Case[]
+const cases = [{ id: 'mics', name: 'Mikrofóny', labelNumber: '', inventoryNumber: 'C-1' }] as Case[]
 
 describe('pack list', () => {
   it('lists cases first and loose equipment after', () => {
@@ -26,6 +27,10 @@ describe('pack list', () => {
       ['Mikrofóny', 1, '4 ks techniky · C-1'],
       ['Robe Spiider', 1, 'Robe · inv. L-12'],
       ['XLR kábel 10 m', 10, ''],
+    ])
+    expect(rows[0].contents).toEqual([
+      { name: 'Shure SM58', quantity: 4, accessory: false },
+      { name: 'Klip', quantity: 4, accessory: true },
     ])
     const checks = [{ id: 'x', equipmentId: null, caseId: 'mics', phase: 'out', checkedByName: 'Jano', checkedAt: '' }] as PackCheck[]
     expect(checkOf(rows[0], checks, 'out')?.checkedByName).toBe('Jano')

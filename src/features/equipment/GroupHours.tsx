@@ -1,10 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Gauge } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Field } from '@/components/ui/field'
+import { Field, SelectField } from '@/components/ui/field'
 import { todayIso } from '@/lib/format'
-import { addHourReading, equipmentKeys } from './api'
+import { addHourReading, fetchHourCounters } from './api'
 import { unitIdsOf, type Equipment } from './model'
 
 type Row = { key: string; label: string; part: Equipment; unit: number | null }
@@ -16,6 +16,16 @@ export function GroupHours({ companyId, parts, caseName, open = false, onOpen, o
   const queryClient = useQueryClient()
   const [readOn, setReadOn] = useState(todayIso())
   const [values, setValues] = useState<Record<string, string>>({})
+  // Počítadlo: '' = prevádzkové hodiny, inak ďalšie (napr. Výbojka) – známe z odčítaní alebo nové.
+  const [counter, setCounter] = useState('')
+  const [newCounter, setNewCounter] = useState('')
+  const [added, setAdded] = useState<string[]>([])
+  const known = useQuery({
+    queryKey: ['company', companyId, 'hour-counters', parts.map((part) => part.id).join(',')],
+    queryFn: () => fetchHourCounters(companyId, parts.map((part) => part.id)),
+    enabled: open,
+  })
+  const counters = [...new Set([...(known.data ?? []), ...added])]
   // Pri evidencii po kusoch (viac kusov v časti) má každý kus svoje počítadlo, inak celá časť.
   const rows: Row[] = parts
     .flatMap((part): Row[] =>
@@ -32,14 +42,14 @@ export function GroupHours({ companyId, parts, caseName, open = false, onOpen, o
   const save = useMutation({
     mutationFn: async () => {
       for (const row of filled) {
-        await addHourReading(companyId, row.part.id, { readOn, hours: Number(values[row.key].replace(',', '.')), note: '', unit: row.unit })
+        await addHourReading(companyId, row.part.id, { readOn, hours: Number(values[row.key].replace(',', '.')), note: '', unit: row.unit, counter })
       }
     },
     onSuccess: () => {
       setValues({})
       onClose?.()
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['company', companyId] }),
   })
 
   if (!open) {
@@ -54,9 +64,32 @@ export function GroupHours({ companyId, parts, caseName, open = false, onOpen, o
     <section aria-labelledby="group-hours-heading" className="mb-6 w-full rounded-xl border border-accent/40 bg-surface p-4">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <h2 id="group-hours-heading" className="font-medium">
-          Odčítať prevádzkové hodiny
+          {counter ? `Odčítať počítadlo ${counter}` : 'Odčítať prevádzkové hodiny'}
         </h2>
         <Field label="Dátum odčítania" type="date" className="w-44" value={readOn} onChange={(event) => setReadOn(event.target.value)} />
+      </div>
+      <div className="mb-3 flex flex-wrap items-end gap-2">
+        <SelectField label="Počítadlo" className="sm:w-56" value={counter} onChange={(event) => setCounter(event.target.value)}>
+          <option value="">Prevádzkové hodiny</option>
+          {counters.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </SelectField>
+        <Field label="Nové počítadlo" hideLabel placeholder="+ nové počítadlo, napr. Výbojka" maxLength={40} className="sm:w-64" value={newCounter} onChange={(event) => setNewCounter(event.target.value)} />
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!newCounter.trim() || counters.includes(newCounter.trim())}
+          onClick={() => {
+            setAdded([...added, newCounter.trim()])
+            setCounter(newCounter.trim())
+            setNewCounter('')
+          }}
+        >
+          Pridať počítadlo
+        </Button>
       </div>
       <p className="mb-3 text-sm text-muted-foreground">Vyplňte stav počítadla pri kusoch, ktoré ste odčítali; prázdne sa preskočia.</p>
       <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
