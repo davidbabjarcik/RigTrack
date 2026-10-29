@@ -3,6 +3,7 @@ import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { PushSetupGuide } from '@/features/push/PushSetupGuide'
 import { CompanyRequestsAdmin } from './CompanyRequestsAdmin'
 import { DemoInvitesAdmin } from './DemoInvitesAdmin'
+import { DeveloperUsers } from './DeveloperUsers'
 import { MigrationStatus } from './MigrationStatus'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -17,6 +18,9 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function DeveloperPanel({ email }: { email: string }) {
   return (
     <>
+      <Section title="Používatelia – účty, posledné prihlásenie, firmy a role">
+        <DeveloperUsers />
+      </Section>
       <Section title="Pozvať len do dema">
         <DemoInvitesAdmin />
       </Section>

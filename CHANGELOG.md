@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.11 – 29. 10. 2026
+
+- **Vývojár → Používatelia**: všetky účty – meno, e-mail, od kedy majú účet, kedy boli naposledy v appke (dnes, včera,
+  pred X dňami), či potvrdili e-mail a v ktorých firmách sú s akou rolou (demo firmy označené). Vyhľadávanie podľa
+  e-mailu, mena aj firmy. Vidí to len vývojár.
+- Nová migrácia: `0117` (je aj v `supabase/update-all.sql`).
+
 ### 5.10 – 29. 10. 2026
 
 - **Rýchlejšie načítanie appky**: hlavný súbor je 4× menší (Nastavenia a výber firmy sa sťahujú až pri otvorení,
