@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Camera, ChevronRight, Combine, Package, Pencil, QrCode } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
+import { usePastedImage } from '@/lib/usePastedImage'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { GroupDmx } from './GroupDmx'
 import { GroupHours } from './GroupHours'
@@ -77,22 +78,7 @@ export function EquipmentGroupPage() {
     mutationFn: (file: File) => uploadGroupPhoto(companyId, parts.map((item) => item.id), file),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['company', companyId] }),
   })
-  const upload = useRef(photo.mutate)
-  useEffect(() => {
-    upload.current = photo.mutate
-  }, [photo.mutate])
-  const canPhoto = can(company, 'equipment.edit') && parts.length > 0
-  useEffect(() => {
-    if (!canPhoto) return
-    function handlePaste(event: ClipboardEvent) {
-      const image = [...(event.clipboardData?.files ?? [])].find((file) => file.type.startsWith('image/'))
-      if (!image) return
-      event.preventDefault()
-      upload.current(image)
-    }
-    document.addEventListener('paste', handlePaste)
-    return () => document.removeEventListener('paste', handlePaste)
-  }, [canPhoto])
+  usePastedImage(can(company, 'equipment.edit') && parts.length > 0 && !photo.isPending, (file) => photo.mutate(file))
 
   const back = (
     <Link to="/equipment" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">

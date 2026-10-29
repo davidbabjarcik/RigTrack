@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Camera, Trash2 } from 'lucide-react'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
+import { usePastedImage } from '@/lib/usePastedImage'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { discardPhotoFile, storeCompanyPhoto, trashPhoto } from '@/features/equipment/photo'
@@ -40,21 +41,7 @@ export function CustomLabelContent({ companyId, current, canEdit }: Props) {
   const busy = uploadPhoto.isPending || removePhoto.isPending
 
   // Ctrl+V: skopírovaný obrázok (z webu, snímka obrazovky) sa nahrá ako fotka štítku.
-  const upload = useRef(uploadPhoto.mutate)
-  useEffect(() => {
-    upload.current = uploadPhoto.mutate
-  }, [uploadPhoto.mutate])
-  useEffect(() => {
-    if (!canEdit) return
-    function handlePaste(event: ClipboardEvent) {
-      const image = [...(event.clipboardData?.files ?? [])].find((file) => file.type.startsWith('image/'))
-      if (!image || busy) return
-      event.preventDefault()
-      upload.current(image)
-    }
-    document.addEventListener('paste', handlePaste)
-    return () => document.removeEventListener('paste', handlePaste)
-  }, [canEdit, busy])
+  usePastedImage(canEdit && !busy, (file) => uploadPhoto.mutate(file))
 
   if (!canEdit) return null
 

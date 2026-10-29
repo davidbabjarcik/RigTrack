@@ -5,9 +5,6 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { CenteredLayout } from '@/components/layout/CenteredLayout'
 import { AuthPage } from '@/features/auth/AuthPage'
 import { UpdatePasswordPage } from '@/features/auth/UpdatePasswordPage'
-import { CompanyCreatePage } from '@/features/companies/CompanyCreatePage'
-import { CompanySelectPage } from '@/features/companies/CompanySelectPage'
-import { SettingsPage } from '@/features/settings/SettingsPage'
 import { CustomizeMenuPage } from './pages/CustomizeMenuPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { MorePage } from './pages/MorePage'
@@ -30,6 +27,10 @@ const lazyPage = (load: () => Promise<ComponentType>, permission?: PermissionKey
   }
 }
 
+// Aj veľké stránky mimo modulov (Nastavenia, výber firmy) sa sťahujú až pri otvorení.
+const settings = lazyPage(() => import('@/features/settings/SettingsPage').then((m) => m.SettingsPage))
+const companySelect = lazyPage(() => import('@/features/companies/CompanySelectPage').then((m) => m.CompanySelectPage))
+const companyCreate = lazyPage(() => import('@/features/companies/CompanyCreatePage').then((m) => m.CompanyCreatePage))
 const equipmentList = lazyPage(() => import('@/features/equipment/EquipmentListPage').then((m) => m.EquipmentListPage), 'equipment.view')
 const equipmentDetail = lazyPage(() => import('@/features/equipment/EquipmentDetailPage').then((m) => m.EquipmentDetailPage), 'equipment.view')
 const equipmentGroup = lazyPage(() => import('@/features/equipment/EquipmentGroupPage').then((m) => m.EquipmentGroupPage), 'equipment.view')
@@ -129,8 +130,8 @@ export const routes: RouteObject[] = [
       {
         element: <CenteredLayout />,
         children: [
-          { path: 'company/select', element: <BackendRequired><CompanySelectPage /></BackendRequired> },
-          { path: 'company/create', element: <BackendRequired><CompanyCreatePage /></BackendRequired> },
+          { path: 'company/select', lazy: companySelect },
+          { path: 'company/create', lazy: companyCreate },
         ],
       },
       {
@@ -150,7 +151,7 @@ export const routes: RouteObject[] = [
             element: <AppLayout />,
             children: [
               { index: true, element: <DashboardPage /> },
-              { path: 'settings', element: <BackendRequired><SettingsPage /></BackendRequired> },
+              { path: 'settings', lazy: settings },
               { path: 'equipment', lazy: equipmentList },
               { path: 'equipment/new', lazy: equipmentForm },
               { path: 'equipment/new-cables', lazy: cableSet },

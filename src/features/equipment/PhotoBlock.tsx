@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Camera, Trash2 } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
+import { usePastedImage } from '@/lib/usePastedImage'
 import { Button } from '@/components/ui/button'
 import { fetchPhotoUrl, PHOTO_URL_STALE_MS } from './photo'
 
@@ -31,18 +32,7 @@ export function PhotoBlock({ queryKey, name, photoPath, canEdit, onUpload, onRem
   const busy = upload.isPending || remove.isPending
 
   // Obrázok skopírovaný inde (napr. zo stránky dodávateľa) sa dá vložiť cez Ctrl+V.
-  const uploadFile = upload.mutate
-  useEffect(() => {
-    if (!canEdit) return
-    function handlePaste(event: ClipboardEvent) {
-      const image = [...(event.clipboardData?.files ?? [])].find((file) => file.type.startsWith('image/'))
-      if (!image || busy) return
-      event.preventDefault()
-      uploadFile(image)
-    }
-    document.addEventListener('paste', handlePaste)
-    return () => document.removeEventListener('paste', handlePaste)
-  }, [canEdit, busy, uploadFile])
+  usePastedImage(canEdit && !busy, (file) => upload.mutate(file))
 
   if (!photoPath && !canEdit) return null
 

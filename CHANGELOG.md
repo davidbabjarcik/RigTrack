@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.10 – 29. 10. 2026
+
+- **Rýchlejšie načítanie appky**: hlavný súbor je 4× menší (Nastavenia a výber firmy sa sťahujú až pri otvorení,
+  knižnice zvlášť – pri novej verzii ich prehliadač nesťahuje znova).
+- **Ctrl+V s obrázkom funguje všade rovnako** (fotka techniky, case, sady, štítku).
+- README: nové snímky hárku s obsahom case.
+
 ### 5.9 – 29. 10. 2026
 
 - **Hárok s obsahom case: Tlačiť, PDF aj PNG** – tlač priamo z appky (strana podľa A4 / A5 a orientácie, bez okrajov),

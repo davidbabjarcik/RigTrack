@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Camera, ChevronRight, ClipboardCheck, Copy, Pencil, QrCode } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
+import { usePastedImage } from '@/lib/usePastedImage'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -46,22 +47,7 @@ export function CaseGroupPage() {
     mutationFn: (file: File) => setCaseGroupPhoto(companyId, members.map((item) => item.id), file),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['company', companyId] }),
   })
-  const upload = useRef(photo.mutate)
-  useEffect(() => {
-    upload.current = photo.mutate
-  }, [photo.mutate])
-  const canPhoto = canEdit && members.length > 0
-  useEffect(() => {
-    if (!canPhoto) return
-    function handlePaste(event: ClipboardEvent) {
-      const image = [...(event.clipboardData?.files ?? [])].find((file) => file.type.startsWith('image/'))
-      if (!image) return
-      event.preventDefault()
-      upload.current(image)
-    }
-    document.addEventListener('paste', handlePaste)
-    return () => document.removeEventListener('paste', handlePaste)
-  }, [canPhoto])
+  usePastedImage(canEdit && members.length > 0 && !photo.isPending, (file) => photo.mutate(file))
 
   const checkAll = useMutation({
     mutationFn: async () => {

@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-5.9-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-5.10-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -39,6 +39,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
     <td><img src="docs/screenshots/dmx.png" alt="DMX patch list" /><br /><sub><b>DMX patch list</b> – zo svetiel eventu, kontrola adries, tlač</sub></td>
     <td><img src="docs/screenshots/tape.png" alt="Štítky na pásku" /><br /><sub><b>Štítky na pásku</b> – Brother P-touch: QR, DMX adresa, módy, odber</sub></td>
   </tr>
+  <tr>
+    <td><img src="docs/screenshots/sheet-cables.png" alt="Hárok s obsahom káblového case" /><br /><sub><b>Obsah case</b> – káble podľa dĺžky a farby, varianty, príslušenstvo, QR</sub></td>
+    <td><img src="docs/screenshots/sheet-dmx.png" alt="Hárok s obsahom svetelného case" /><br /><sub><b>Obsah case so svetlami</b> – fotky bez pozadia, DMX módy a kanály</sub></td>
+  </tr>
 </table>
 
 <sub>Snímky sú z ukážkových (vymyslených) údajov.</sub>
@@ -47,10 +51,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **5.10** | Rýchlejšie načítanie appky, Ctrl+V všade rovnako, nové snímky v README |
 | **5.9** | Hárok case: tlač a PDF, voľby k účtu; hodiny všetkým pre ďalšie počítadlá; pack list s obsahom case |
 | **5.8** | Viac počítadiel hodín pri technike (napr. prevádzka a výbojka) |
 | **5.7** | Rozpis DMX kanálov pri móde, DMX módy a kanály na hárku case |
-| **5.6** | Hárok case na šírku, názov pre celú sadu cases, prehľad DMX adries z techniky |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 
