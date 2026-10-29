@@ -389,18 +389,25 @@ export function WarehousePage() {
             warehouse={warehouse}
             spots={spots}
             counts={new Map([...bySpot].map(([id, list]) => [id, list.length]))}
+            usage={
+              new Map(
+                spots
+                  .filter((spot) => spot.kind === 'rack' && (bySpot.get(spot.id)?.length ?? 0) > 0)
+                  .map((spot) => [spot.id, Math.round(levelUsage(spot, bySpot.get(spot.id) ?? []).percent / Math.max(1, spot.levels))]),
+              )
+            }
             selectedId={selectedId}
             highlighted={new Set(hits.map((item) => item.spotId).filter((id): id is string => id !== null))}
             onSelect={select}
           />
           <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Legenda">
-            {SPOT_KINDS.map((kind) => (
+            {SPOT_KINDS.filter((kind) => kind === 'rack' || kind === 'pallet' || kind === 'zone' || spots.some((spot) => spot.kind === kind)).map((kind) => (
               <li key={kind} className="flex items-center gap-1.5">
-                <span className="size-3 rounded-sm" style={{ backgroundColor: SPOT_KIND_FILLS[kind] }} />
+                <span className={cn('size-3 rounded-sm', kind === 'zone' && 'border border-dashed')} style={{ backgroundColor: kind === 'zone' ? 'transparent' : SPOT_KIND_FILLS[kind], borderColor: SPOT_KIND_FILLS[kind] }} />
                 {SPOT_KIND_LABELS[kind]}
               </li>
             ))}
-            <li className="text-muted-foreground">štvorec mriežky = 1 m</li>
+            <li className="text-muted-foreground">pásik pri regáli = obsadenosť · štvorec mriežky = 1 m</li>
           </ul>
 
           {spots.length === 0 && (

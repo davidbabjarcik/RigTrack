@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.13 – 29. 10. 2026
+
+- **Nový pohľad na sklad zhora**: betónová podlaha s mriežkou po 1 m, hrubé obvodové steny, rozmery skladu a mierka;
+  regál ako police so stĺpikmi, počtom poschodí a pásikom obsadenosti, paleta s doskami, zóna prerušovanou čiarou,
+  stĺp šrafovaný, dvere s oblúkom otvárania dovnútra a okno dvojitou čiarou. Vybrané miesto je zvýraznené.
+
 ### 5.12.1 – 29. 10. 2026
 
 - **Logo firmy cez Ctrl+V** (Nastavenia → Firma → Logo a štítky na cases): skopírované logo stačí vložiť, nahrá sa
