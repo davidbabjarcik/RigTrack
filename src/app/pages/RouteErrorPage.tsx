@@ -1,7 +1,13 @@
+import { useEffect } from 'react'
+import { useRouteError } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { reportError } from '@/lib/errorReporting'
 
 /** Záchranná obrazovka, keď niektorá stránka spadne alebo sa nepodarí stiahnuť jej kód. */
 export function RouteErrorPage() {
+  const error = useRouteError()
+  // Chyba sa uloží pre vývojára (Nastavenia → Vývojár → Chyby v appke).
+  useEffect(() => reportError(error, 'render'), [error])
   return (
     <div role="alert" className="flex min-h-dvh flex-col items-center justify-center gap-4 px-4 text-center">
       <p className="text-xl font-semibold">Niečo sa pokazilo</p>

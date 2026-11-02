@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-6.1-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-6.2-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,10 +51,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **6.2** | Chyby v appke sa ukladajú samy a vývojár ich vidí zoskupené |
 | **6.1** | Typy regálov, pridanie a otočenie regála v pláne, palety natesno, pohľad spredu vedľa panelu |
 | **6.0** | Nastavenia skladu (regály, polia, police, palety) s vlastným oprávnením |
 | **5.19** | Regál spredu: polia s vlastnými policami, palety, voľné miesto v cm, case na konkrétnu policu |
-| **5.18** | Tlač všetkých štítkov a obsahov cases naraz (jedno PDF), prehľad techniky bez QR štítku |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

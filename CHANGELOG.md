@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.2 – 2. 11. 2026
+
+- **Chyby v appke** pre vývojára: keď niekomu spadne stránka alebo nastane neošetrená chyba, appka ju sama uloží – kto,
+  na ktorej stránke, v akej verzii a koľkokrát. Vývojár ich vidí pri výbere firmy v časti Vývojár → Chyby v appke,
+  zoskupené, a môže ich označiť ako vyriešené.
+- Nová migrácia: `0127` (je aj v `supabase/update-all.sql`).
+
 ### 6.1 – 2. 11. 2026
 
 - **Typy regálov** v Nastaveniach → Sklad: regály, ktoré používate – názov, hĺbka, polia so šírkou, police s výškou a

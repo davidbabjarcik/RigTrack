@@ -5,8 +5,11 @@ import { RouterProvider } from 'react-router-dom'
 import { router } from './app/router'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { CompanyProvider } from './features/companies/CompanyProvider'
+import { installErrorReporting } from './lib/errorReporting'
 import './lib/theme'
 import './styles/index.css'
+
+installErrorReporting()
 
 const queryClient = new QueryClient()
 

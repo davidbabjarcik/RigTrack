@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
+import { AppErrorsPanel } from '@/features/bugs/AppErrorsPanel'
 import { PushSetupGuide } from '@/features/push/PushSetupGuide'
 import { CompanyRequestsAdmin } from './CompanyRequestsAdmin'
 import { DemoInvitesAdmin } from './DemoInvitesAdmin'
@@ -14,10 +15,13 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-/** Vývojár (pri výbere firmy, nezávisle od firmy): stav databázy, push, pozvánky do dema a žiadosti o firmu. */
+/** Vývojár (pri výbere firmy, nezávisle od firmy): chyby v appke, stav databázy, push, pozvánky do dema a žiadosti o firmu. */
 export function DeveloperPanel({ email }: { email: string }) {
   return (
     <>
+      <Section title="Chyby v appke">
+        <AppErrorsPanel />
+      </Section>
       <Section title="Používatelia – účty, posledné prihlásenie, firmy a role">
         <DeveloperUsers />
       </Section>
