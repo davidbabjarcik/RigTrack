@@ -5347,6 +5347,7 @@ AS $function$
     ('lookups.manage', array['skladnik']::public.app_role[]),
     ('maintenance.manage', array['skladnik']::public.app_role[]),
     ('maintenance.record', array['skladnik', 'technik']::public.app_role[]),
+    ('warehouse.manage', array['skladnik']::public.app_role[]),
     ('cases.view', array['skladnik', 'technik', 'viewer', 'helper']::public.app_role[]),
     ('cases.edit', array['skladnik', 'technik']::public.app_role[]),
     ('cases.delete', array['skladnik']::public.app_role[]),

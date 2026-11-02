@@ -63,4 +63,12 @@ describe('warehouse plan', () => {
     await t.as('technik', 'update public.cases set spot_id = $2, spot_bay = 2, spot_level = 1 where id = $1', [box, id])
     expect(await t.as('viewer', 'select spot_bay, spot_level from public.cases where id = $1', [box])).toEqual([{ spot_bay: 2, spot_level: 1 }])
   })
+
+  it('follows the warehouse permission, not the lists one', async () => {
+    // Technik so skladom (výnimka člena) smie regály; skladník bez neho nie.
+    await t.rows(`insert into public.member_permissions (company_id, user_id, permission, allowed) values ($1, $2, 'warehouse.manage', true), ($1, $3, 'warehouse.manage', false)`, [companyA, t.users.technik, t.users.skladnik])
+    await addSpot('technik', 'Regál T')
+    await expect(addSpot('skladnik', 'Regál S')).rejects.toThrow(/row-level security/)
+    expect(await t.as('technik', `select public.can($1, 'lookups.manage') as lists`, [companyA])).toEqual([{ lists: false }])
+  })
 })

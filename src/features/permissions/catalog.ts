@@ -34,6 +34,7 @@ export const PERMISSION_GROUPS = [
     { key: 'lookups.manage', label: 'Spravovať kategórie, umiestnenia a farby káblov', roles: KEEPER },
     { key: 'maintenance.manage', label: 'Nastavovať limity hodín a revízie', roles: KEEPER },
     { key: 'maintenance.record', label: 'Zapisovať výmeny, servis a revízie', roles: STAFF },
+    { key: 'warehouse.manage', label: 'Spravovať sklad (rozmery, regály, police, palety)', roles: KEEPER },
   ]),
   group('cases', 'Cases', [...crud('cases', ALL_AND_HELPER), { key: 'cases.check', label: 'Kontrolovať obsah cases', roles: STAFF }]),
   group('orders', 'Objednávky a nákupné ceny', [

@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.0 – 2. 11. 2026
+
+- **Nastavenia → Sklad**: rozmery skladu a všetky regály na jednom mieste – pri každom regáli polia (šírka), police
+  (výška každej zvlášť), palety a hĺbka. Dĺžka regála na pláne sa podľa polí nastaví sama. Na stránke Sklad je tlačidlo
+  „Nastavenia skladu“.
+- **Nové oprávnenie „Spravovať sklad“** (rozmery, regály, police, palety) – dá sa dať role, skupine aj jednému človeku.
+  Doteraz to patrilo pod „Spravovať kategórie“; kto mal tam výnimku, má ju aj pri sklade.
+- Nová migrácia: `0125` (je aj v `supabase/update-all.sql`).
+
 ### 5.19 – 2. 11. 2026
 
 - **Regál spredu**: klik na regál na pôdoryse prepne na pohľad spredu – stojky, nosníky, police, palety a cases ako škatule

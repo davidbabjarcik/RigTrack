@@ -51,6 +51,7 @@ import { KindColorsSettings } from '@/features/equipment/KindColorsSettings'
 import { KindOrderSettings } from '@/features/equipment/KindOrderSettings'
 import { PrintSettings } from '@/features/print/PrintSettings'
 import { MaintenanceSettings } from '@/features/maintenance/MaintenanceSettings'
+import { WarehouseSettings } from '@/features/warehouse/WarehouseSettings'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -316,6 +317,7 @@ export function SettingsPage() {
     { id: 'packages', label: 'Balíky', shown: can(company, 'lookups.manage') },
     { id: 'reminders', label: 'Pripomienky', shown: can(company, 'lookups.manage') },
     { id: 'maintenance', label: 'Limity a revízie', shown: can(company, 'maintenance.manage') },
+    { id: 'warehouse', label: 'Sklad', shown: can(company, 'warehouse.manage') },
     { id: 'account', label: 'Účet', shown: true },
   ].filter((tab) => tab.shown)
   // Záložka je v adrese, aby sa na ňu dalo odkázať a aby ju prežilo obnovenie stránky.
@@ -472,6 +474,12 @@ export function SettingsPage() {
       {tab === 'maintenance' && (
         <Section title="Limity hodín a revízie">
           <MaintenanceSettings companyId={company.companyId} />
+        </Section>
+      )}
+
+      {tab === 'warehouse' && (
+        <Section title="Sklad – rozmery, regály, police a palety">
+          <WarehouseSettings companyId={company.companyId} />
         </Section>
       )}
 

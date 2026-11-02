@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, LayoutGrid, Pencil, QrCode, ScanLine, Search, Trash2, X } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { ArrowLeft, Check, LayoutGrid, Pencil, QrCode, ScanLine, Search, Settings2, Trash2, X } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -17,7 +17,7 @@ import { parseQr } from '@/features/scan/qr'
 import { caseTitle } from '@/features/cases/model'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { addSpot, deleteSpot, fetchCaseBays, fetchWarehouse, placeCase, saveWarehouse, updateSpot, warehouseKeys } from './api'
+import { addSpot, deleteSpot, fetchCaseBays, fetchWarehouse, placeCase, updateSpot, warehouseKeys } from './api'
 import { BaysEditor } from './BaysEditor'
 import { RackFront } from './RackFront'
 import {
@@ -38,53 +38,15 @@ import {
   type RackBay,
   type Spot,
   type SpotKind,
-  type Warehouse,
 } from './model'
 import { WarehousePlan } from './WarehousePlan'
 import { DevNotice } from '@/components/feedback/DevNotice'
-
-function SizeForm({ companyId, current, onDone }: { companyId: string; current: Warehouse | null; onDone: () => void }) {
-  const queryClient = useQueryClient()
-  const [length, setLength] = useState(current ? String(current.lengthCm / 100) : '')
-  const [width, setWidth] = useState(current ? String(current.widthCm / 100) : '')
-  const save = useMutation({
-    mutationFn: (size: Warehouse) => saveWarehouse(companyId, size),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: warehouseKeys.plan(companyId) })
-      onDone()
-    },
-  })
-  const toCm = (value: string) => Math.round(Number(value.replace(',', '.')) * 100)
-  const valid = [length, width].every((value) => toCm(value) >= 100 && toCm(value) <= 100000)
-
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    if (valid) save.mutate({ lengthCm: toCm(length), widthCm: toCm(width) })
-  }
-
-  return (
-    <form onSubmit={submit} className="mb-6 flex flex-wrap items-end gap-3 rounded-xl border bg-surface p-4">
-      <Field label="Dĺžka skladu (m)" inputMode="decimal" className="w-40" value={length} onChange={(e) => setLength(e.target.value)} />
-      <Field label="Šírka skladu (m)" inputMode="decimal" className="w-40" value={width} onChange={(e) => setWidth(e.target.value)} />
-      <Button type="submit" disabled={!valid || save.isPending}>
-        {save.isPending ? 'Ukladám…' : 'Uložiť rozmery'}
-      </Button>
-      <p className="basis-full text-sm text-muted-foreground">
-        Stačí približne – plán je pomôcka na orientáciu. Dĺžka je na pláne vodorovne, šírka zvislo; najmenej 1 m.
-      </p>
-      {save.isError && (
-        <p role="alert" className="basis-full text-sm text-destructive">
-          Rozmery sa nepodarilo uložiť.
-        </p>
-      )}
-    </form>
-  )
-}
+import { SizeForm } from './SizeForm'
 
 export function WarehousePage() {
   const company = useCompany().active!
   const companyId = company.companyId
-  const canPlan = can(company, 'lookups.manage')
+  const canPlan = can(company, 'warehouse.manage')
   const canPlace = can(company, 'cases.edit')
   const queryClient = useQueryClient()
   const [params, setParams] = useSearchParams()
@@ -209,6 +171,12 @@ export function WarehousePage() {
                   <ScanLine className="size-4" aria-hidden />
                   Skenovať
                 </Button>
+              )}
+              {canPlan && (
+                <LinkButton to="/settings?tab=warehouse" variant="outline">
+                  <Settings2 className="size-4" aria-hidden />
+                  Nastavenia skladu
+                </LinkButton>
               )}
               {canPlan && spots.length > 0 && (
                 <LinkButton to="/qr/spots" variant="outline">
