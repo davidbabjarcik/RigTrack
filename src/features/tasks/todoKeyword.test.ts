@@ -28,6 +28,10 @@ describe('@todo keyword', () => {
     expect(buffer).toBe('')
   })
 
+  it('skips keydown events without a key (browser autofill)', () => {
+    expect(pushKey('@to', undefined)).toEqual({ buffer: '@to', hit: null })
+  })
+
   it('cleans the field and builds the task title', () => {
     expect(stripKeyword('LED Par @todo')).toBe('LED Par')
     expect(stripKeyword('@addtodo')).toBe('')

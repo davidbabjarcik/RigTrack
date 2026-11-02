@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.6.2 – 2. 11. 2026
+
+- Oprava: pri výbere z automatického dopĺňania prehliadača (napr. uložený text v políčku) appka hlásila chybu – zachytilo
+  ju hlásenie chýb vo Vývojárovi.
+
 ### 6.6.1 – 2. 11. 2026
 
 - Plagát inventára je vždy na bielom pozadí (na tlač na biely papier); svetlé logo sa na ňom prefarbí na čierno.

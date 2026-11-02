@@ -21,7 +21,9 @@ const MAX_BUFFER = 12
 export type KeywordKind = 'todo' | 'print'
 
 /** Pridá stlačený znak do pamäte políčka; vráti novú pamäť a ktoré kľúčové slovo sa práve dopísalo (alebo null). */
-export function pushKey(buffer: string, key: string): { buffer: string; hit: KeywordKind | null } {
+export function pushKey(buffer: string, key: string | undefined): { buffer: string; hit: KeywordKind | null } {
+  // Chrome pri výbere z automatického dopĺňania pošle keydown bez klávesy.
+  if (typeof key !== 'string') return { buffer, hit: null }
   let next: string
   if (key === 'Backspace') next = buffer.slice(0, -1)
   else if (key.length === 1) next = (buffer + key).slice(-MAX_BUFFER)
