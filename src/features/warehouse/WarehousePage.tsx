@@ -32,11 +32,10 @@ import {
   isStructure,
   levelUsage,
   metres,
-  nextSpotName,
   PALLET_COLORS,
   palletName,
   palletTypesOf,
-  snapToPerimeter,
+  wallItemRect,
   rackLengthCm,
   rotated,
   rackBays,
@@ -45,11 +44,11 @@ import {
   SPOT_KINDS,
   type RackBay,
   type Spot,
-  type SpotKind,
 } from './model'
 import { WarehousePlan } from './WarehousePlan'
 import { DevNotice } from '@/components/feedback/DevNotice'
 import { PlanAddBar } from './PlanAddBar'
+import { buildSpot, DEFAULT_ADD, type AddSelection } from './planAdd'
 import { SizeForm } from './SizeForm'
 
 export function WarehousePage() {
@@ -63,6 +62,7 @@ export function WarehousePage() {
   // ?edit=1 (z Nastavení → Sklad) otvorí rovno úpravu plánu.
   const [editing, setEditing] = useState(() => params.get('edit') === '1')
   const [search, setSearch] = useState('')
+  const [addSelection, setAddSelection] = useState<AddSelection>(DEFAULT_ADD)
   const [addCaseId, setAddCaseId] = useState('')
   const [addLevel, setAddLevel] = useState(1)
   // Skenovanie: „find“ ukáže, kde case / technika leží; „place“ ukladá naskenované cases na vybrané miesto.
@@ -251,7 +251,7 @@ export function WarehousePage() {
 
       {warehouse && editing && (
         <>
-          <PlanAddBar warehouse={warehouse} spots={spots} busy={add.isPending} onAdd={(spot) => add.mutate(spot)} />
+          <PlanAddBar warehouse={warehouse} spots={spots} busy={add.isPending} selection={addSelection} onSelection={setAddSelection} onAdd={(spot) => add.mutate(spot)} />
           <RectEditor
             length={warehouse.lengthCm}
             width={warehouse.widthCm}
@@ -263,9 +263,13 @@ export function WarehousePage() {
             onChange={(index, rect) => {
               const spot = editorSpots[index]
               // Dvere a okno sa prichytia k stene skladu.
-              change.mutate({ id: spot.id, fields: spot.kind === 'door' || spot.kind === 'window' ? snapToPerimeter(rect, warehouse) : rect })
+              change.mutate({ id: spot.id, fields: spot.kind === 'door' || spot.kind === 'window' ? wallItemRect(rect, spot, warehouse) : rect })
             }}
-            onAdd={(rect) => add.mutate({ name: nextSpotName(spots), kind: 'rack', levels: 1, ...rect })}
+            onAdd={(rect) => {
+              // Nakreslí sa to, čo je hore vybrané (regál typu, paleta, miesto, okno…).
+              const spot = buildSpot(addSelection, warehouse, spots, rect)
+              if (spot) add.mutate(spot)
+            }}
             fillOf={(index) => (editorSpots[index].kind === 'pallet' ? PALLET_COLORS[editorSpots[index].material ?? 'wood'].fill : SPOT_KIND_FILLS[editorSpots[index].kind])}
             labelOf={(index) => editorSpots[index].name}
             describe={(rect) => `${metres(rect.length)} × ${metres(rect.width)} · ${metres(rect.x)} zľava, ${metres(rect.y)} zhora`}
@@ -347,33 +351,7 @@ export function WarehousePage() {
                   else event.target.value = selected.name
                 }}
               />
-              <SelectField
-                label="Druh"
-                value={selected.kind}
-                onChange={(event) => {
-                  const kind = event.target.value as SpotKind
-                  change.mutate({ id: selected.id, fields: { kind, ...(kind !== 'rack' && { levels: 1 }) } })
-                }}
-              >
-                {SPOT_KINDS.map((kind) => (
-                  <option key={kind} value={kind}>
-                    {SPOT_KIND_LABELS[kind]}
-                  </option>
-                ))}
-              </SelectField>
-              <SelectField
-                label="Poschodia"
-                value={selected.levels}
-                disabled={selected.kind !== 'rack'}
-                onChange={(event) => change.mutate({ id: selected.id, fields: { levels: Number(event.target.value) } })}
-              >
-                {Array.from({ length: 10 }, (_, index) => index + 1).map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
-              </SelectField>
-              {selected.kind === 'rack' && (
+              {selected.kind === 'rack' && (selected.bays?.length ?? 0) === 0 && (
                 <Field
                   label="Výška poschodia (cm)"
                   type="number"

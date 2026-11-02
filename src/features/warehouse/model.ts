@@ -47,6 +47,16 @@ export const PALLET_COLORS: Record<PalletMaterial, { fill: string; line: string 
   plastic: { fill: '#27272a', line: '#52525b' },
 }
 
+/**
+ * Dvere a okno po úprave v editore: hrúbka ostane (natiahnuť sa dajú len pozdĺž steny) a prichytia sa k stene skladu.
+ */
+export function wallItemRect(rect: { x: number; y: number; length: number; width: number }, spot: Pick<Spot, 'length' | 'width'>, warehouse: Pick<Warehouse, 'lengthCm' | 'widthCm'>) {
+  const horizontal = spot.length >= spot.width
+  const thickness = Math.min(spot.length, spot.width)
+  const fixed = horizontal ? { ...rect, width: thickness } : { ...rect, length: thickness }
+  return snapToPerimeter(fixed, warehouse)
+}
+
 /** Prvky na obvode skladu (dvere, okno) sa prichytia k najbližšej stene, ak sú do 60 cm od nej; pozdĺž steny ostanú. */
 export function snapToPerimeter(rect: { x: number; y: number; length: number; width: number }, warehouse: Pick<Warehouse, 'lengthCm' | 'widthCm'>) {
   const horizontal = rect.length >= rect.width

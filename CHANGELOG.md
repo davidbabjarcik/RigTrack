@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.12 – 3. 11. 2026
+
+- **Upraviť plán → Pridať**: hore Regál, Miesto, Paleta a zvlášť Stavba (miestnosť, dvere, okno, stĺp, stena). Pri
+  mieste vyberiete, na čo je – cases a iné veci, alebo hliník.
+- Čo je vybrané, sa dá **nakresliť ťahaním** v pláne (regál zvoleného typu, paleta, miesto, okno…), alebo tlačidlom
+  pridať doprostred.
+- **Dvere a okná** majú pevnú hrúbku – natiahnuť sa dajú len pozdĺž steny.
+- Pri vybranom mieste už nie je Druh ani Poschodia (pridáva sa hore; police regála sú v poliach).
+
 ### 6.11 – 3. 11. 2026
 
 - **Činnosti pred, počas a po evente**: každá činnosť má, kedy sa robí – pred eventom (nakladanie), na evente alebo
