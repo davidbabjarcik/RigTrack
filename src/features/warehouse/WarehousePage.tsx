@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Boxes, Check, LayoutGrid, Pencil, QrCode, RotateCw, ScanLine, Search, Settings2, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Check, LayoutGrid, Pencil, QrCode, RotateCw, ScanLine, Search, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { RectEditor } from '@/components/plan/RectEditor'
@@ -33,22 +33,23 @@ import {
   levelUsage,
   metres,
   nextSpotName,
-  PALLET_MATERIAL_LABELS,
-  PALLET_SIZES,
-  palletSizeName,
+  PALLET_COLORS,
+  palletName,
+  palletTypesOf,
+  snapToPerimeter,
   rackLengthCm,
   rotated,
   rackBays,
   SPOT_KIND_FILLS,
   SPOT_KIND_LABELS,
   SPOT_KINDS,
-  type PalletMaterial,
   type RackBay,
   type Spot,
   type SpotKind,
 } from './model'
 import { WarehousePlan } from './WarehousePlan'
 import { DevNotice } from '@/components/feedback/DevNotice'
+import { PlanAddBar } from './PlanAddBar'
 import { SizeForm } from './SizeForm'
 
 export function WarehousePage() {
@@ -58,13 +59,9 @@ export function WarehousePage() {
   const canPlace = can(company, 'cases.edit')
   const queryClient = useQueryClient()
   const [params, setParams] = useSearchParams()
+  const navigate = useNavigate()
   // ?edit=1 (z Nastavení → Sklad) otvorí rovno úpravu plánu.
   const [editing, setEditing] = useState(() => params.get('edit') === '1')
-  const [newType, setNewType] = useState('')
-  // Nová paleta na zem: rozmer (preset alebo vlastný) a materiál.
-  const [palletSize, setPalletSize] = useState<string>('eur')
-  const [palletCustom, setPalletCustom] = useState({ length: 120, width: 80 })
-  const [palletMaterial, setPalletMaterial] = useState<PalletMaterial>('wood')
   const [search, setSearch] = useState('')
   const [addCaseId, setAddCaseId] = useState('')
   const [addLevel, setAddLevel] = useState(1)
@@ -114,9 +111,13 @@ export function WarehousePage() {
   const { warehouse, spots } = plan.data
   const selectedId = spots.some((spot) => spot.id === params.get('spot')) ? params.get('spot') : null
   const selected = spots.find((spot) => spot.id === selectedId)
+  // V editore sú miestnosti vespod, aby sa dalo chytiť, čo je v nich.
+  const editorSpots = [...spots.filter((spot) => spot.kind === 'room'), ...spots.filter((spot) => spot.kind !== 'room')]
   // Klik na regál prepne na pohľad spredu; ostatné miesta sa len vyberú.
   const select = (id: string | null) => {
     const spot = spots.find((item) => item.id === id)
+    // Hliník: klik otvorí stohy trussov.
+    if (spot?.kind === 'truss' && !editing) return void navigate('/warehouse/truss')
     setCell(null)
     setEditingBays(false)
     setParams(id ? { spot: id, ...(spot?.kind === 'rack' && !editing ? { view: 'front' } : {}) } : {}, { replace: true })
@@ -196,16 +197,6 @@ export function WarehousePage() {
                   Skenovať
                 </Button>
               )}
-              <LinkButton to="/warehouse/truss" variant="outline">
-                <Boxes className="size-4" aria-hidden />
-                Hliník
-              </LinkButton>
-              {canPlan && (
-                <LinkButton to="/settings?tab=warehouse" variant="outline">
-                  <Settings2 className="size-4" aria-hidden />
-                  Nastavenia skladu
-                </LinkButton>
-              )}
               {canPlan && spots.length > 0 && (
                 <LinkButton to="/qr/spots" variant="outline">
                   <QrCode className="size-4" aria-hidden />
@@ -260,125 +251,30 @@ export function WarehousePage() {
 
       {warehouse && editing && (
         <>
-          {/* Pridať regál podľa typu z Nastavení → Sklad; potom sa posunie ťahaním a otočí. */}
-          <div className="mb-3 flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-3">
-            {(warehouse.rackTypes ?? []).length > 0 ? (
-              <>
-                <SelectField label="Pridať regál typu" className="min-w-56 flex-1 sm:flex-none" value={newType} onChange={(e) => setNewType(e.target.value)}>
-                  <option value="">— vyberte typ —</option>
-                  {(warehouse.rackTypes ?? []).map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name} ({metres(rackLengthCm(type.bays))} × {type.depthCm} cm)
-                    </option>
-                  ))}
-                </SelectField>
-                <Button
-                  disabled={!newType || add.isPending}
-                  onClick={() => {
-                    const type = warehouse.rackTypes!.find((item) => item.id === newType)!
-                    const length = Math.min(rackLengthCm(type.bays), warehouse.lengthCm)
-                    add.mutate({
-                      name: nextSpotName(spots).replace('Miesto', 'Regál'),
-                      kind: 'rack',
-                      x: Math.max(0, Math.round((warehouse.lengthCm - length) / 2)),
-                      y: Math.max(0, Math.round((warehouse.widthCm - type.depthCm) / 2)),
-                      length,
-                      width: Math.min(type.depthCm, warehouse.widthCm),
-                      levels: Math.min(20, Math.max(...type.bays.map((bay) => bay.levels.length))),
-                      bays: type.bays,
-                    })
-                  }}
-                >
-                  Pridať doprostred
-                </Button>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">Typy regálov (šírka, police, palety) si nastavíte v Nastaveniach → Sklad, potom ich tu pridáte jedným klikom.</p>
-            )}
-            <LinkButton to="/settings?tab=warehouse" variant="outline" className="ml-auto">
-              <Settings2 className="size-4" aria-hidden />
-              Typy regálov a rozmery
-            </LinkButton>
-          </div>
-          {/* Paleta na zemi: rozmer a materiál, pridá sa doprostred a posunie ťahaním. */}
-          <div className="mb-3 flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-3">
-            <SelectField label="Pridať paletu na zem" className="min-w-48 flex-1 sm:flex-none" value={palletSize} onChange={(e) => setPalletSize(e.target.value)}>
-              {PALLET_SIZES.map((size) => (
-                <option key={size.id} value={size.id}>
-                  {size.name} {size.length} × {size.width} cm
-                </option>
-              ))}
-              <option value="custom">Vlastný rozmer…</option>
-            </SelectField>
-            {palletSize === 'custom' && (
-              <>
-                <Field
-                  label="Dĺžka (cm)"
-                  type="number"
-                  min={20}
-                  max={1000}
-                  className="w-28"
-                  value={palletCustom.length}
-                  onChange={(e) => setPalletCustom({ ...palletCustom, length: Number(e.target.value) })}
-                />
-                <Field
-                  label="Šírka (cm)"
-                  type="number"
-                  min={20}
-                  max={1000}
-                  className="w-28"
-                  value={palletCustom.width}
-                  onChange={(e) => setPalletCustom({ ...palletCustom, width: Number(e.target.value) })}
-                />
-              </>
-            )}
-            <SelectField label="Materiál" className="w-36" value={palletMaterial} onChange={(e) => setPalletMaterial(e.target.value as PalletMaterial)}>
-              {(Object.keys(PALLET_MATERIAL_LABELS) as PalletMaterial[]).map((material) => (
-                <option key={material} value={material}>
-                  {PALLET_MATERIAL_LABELS[material]}
-                </option>
-              ))}
-            </SelectField>
-            <Button
-              disabled={add.isPending || (palletSize === 'custom' && !(palletCustom.length >= 20 && palletCustom.width >= 20))}
-              onClick={() => {
-                const preset = PALLET_SIZES.find((size) => size.id === palletSize)
-                const length = Math.min(Math.round(preset?.length ?? palletCustom.length), warehouse.lengthCm)
-                const width = Math.min(Math.round(preset?.width ?? palletCustom.width), warehouse.widthCm)
-                add.mutate({
-                  name: nextSpotName(spots).replace('Miesto', 'Paleta'),
-                  kind: 'pallet',
-                  x: Math.max(0, Math.round((warehouse.lengthCm - length) / 2)),
-                  y: Math.max(0, Math.round((warehouse.widthCm - width) / 2)),
-                  length,
-                  width,
-                  levels: 1,
-                  material: palletMaterial,
-                })
-              }}
-            >
-              Pridať paletu
-            </Button>
-          </div>
+          <PlanAddBar warehouse={warehouse} spots={spots} busy={add.isPending} onAdd={(spot) => add.mutate(spot)} />
           <RectEditor
             length={warehouse.lengthCm}
             width={warehouse.widthCm}
-            rects={spots}
+            rects={editorSpots}
             snap={10}
             grid={100}
-            selected={selected ? spots.indexOf(selected) : null}
-            onSelect={(index) => select(index === null ? null : (spots[index]?.id ?? null))}
-            onChange={(index, rect) => change.mutate({ id: spots[index].id, fields: rect })}
+            selected={selected ? editorSpots.indexOf(selected) : null}
+            onSelect={(index) => select(index === null ? null : (editorSpots[index]?.id ?? null))}
+            onChange={(index, rect) => {
+              const spot = editorSpots[index]
+              // Dvere a okno sa prichytia k stene skladu.
+              change.mutate({ id: spot.id, fields: spot.kind === 'door' || spot.kind === 'window' ? snapToPerimeter(rect, warehouse) : rect })
+            }}
             onAdd={(rect) => add.mutate({ name: nextSpotName(spots), kind: 'rack', levels: 1, ...rect })}
-            fillOf={(index) => SPOT_KIND_FILLS[spots[index].kind]}
-            labelOf={(index) => spots[index].name}
+            fillOf={(index) => (editorSpots[index].kind === 'pallet' ? PALLET_COLORS[editorSpots[index].material ?? 'wood'].fill : SPOT_KIND_FILLS[editorSpots[index].kind])}
+            labelOf={(index) => editorSpots[index].name}
             describe={(rect) => `${metres(rect.length)} × ${metres(rect.width)} · ${metres(rect.x)} zľava, ${metres(rect.y)} zhora`}
             ariaLabel="Editor plánu skladu"
             className="max-h-[70dvh]"
             footer={
               <span className="text-muted-foreground">
-                Ťahaním po prázdnom mieste nakreslíte regál, paletu alebo zónu. Kliknutím miesto vyberiete, ťahaním posuniete, za roh zmeníte
-                veľkosť. Mriežka má štvorce po 1 m.
+                Hore vyberte, čo pridať, alebo ťahaním po prázdnom mieste nakreslite regál. Kliknutím miesto vyberiete, ťahaním posuniete, za
+                roh zmeníte veľkosť. Mriežka má štvorce po 1 m.
               </span>
             }
           />
@@ -390,40 +286,26 @@ export function WarehousePage() {
                   Otočiť o 90°
                 </Button>
                 {selected.kind === 'pallet' && (
-                  <>
-                    <select
-                      aria-label="Rozmer palety"
-                      className="h-9 rounded-lg border bg-surface px-2 text-sm"
-                      value=""
-                      onChange={(event) => {
-                        const size = PALLET_SIZES.find((item) => item.id === event.target.value)
-                        if (!size) return
-                        // Dlhšia strana ostane v smere, v akom paleta leží.
-                        const horizontal = selected.length >= selected.width
-                        change.mutate({ id: selected.id, fields: horizontal ? { length: size.length, width: size.width } : { length: size.width, width: size.length } })
-                      }}
-                    >
-                      <option value="">Rozmer: {palletSizeName(selected)}</option>
-                      {PALLET_SIZES.map((size) => (
-                        <option key={size.id} value={size.id}>
-                          {size.name} {size.length} × {size.width} cm
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      aria-label="Materiál palety"
-                      className="h-9 rounded-lg border bg-surface px-2 text-sm"
-                      value={selected.material ?? ''}
-                      onChange={(event) => change.mutate({ id: selected.id, fields: { material: (event.target.value || null) as PalletMaterial | null } })}
-                    >
-                      <option value="">materiál neuvedený</option>
-                      {(Object.keys(PALLET_MATERIAL_LABELS) as PalletMaterial[]).map((material) => (
-                        <option key={material} value={material}>
-                          {PALLET_MATERIAL_LABELS[material]}
-                        </option>
-                      ))}
-                    </select>
-                  </>
+                  <select
+                    aria-label="Typ palety"
+                    className="h-9 rounded-lg border bg-surface px-2 text-sm"
+                    value=""
+                    onChange={(event) => {
+                      const type = palletTypesOf(warehouse).find((item) => item.id === event.target.value)
+                      if (!type) return
+                      // Dlhšia strana ostane v smere, v akom paleta leží.
+                      const horizontal = selected.length >= selected.width
+                      const [long, short] = [Math.max(type.length, type.width), Math.min(type.length, type.width)]
+                      change.mutate({ id: selected.id, fields: { material: type.material, ...(horizontal ? { length: long, width: short } : { length: short, width: long }) } })
+                    }}
+                  >
+                    <option value="">{palletName(selected, palletTypesOf(warehouse))} – zmeniť typ…</option>
+                    {palletTypesOf(warehouse).map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name} ({type.length} × {type.width} cm)
+                      </option>
+                    ))}
+                  </select>
                 )}
                 {selected.kind === 'rack' && (warehouse.rackTypes ?? []).length > 0 && (
                   <select
@@ -666,7 +548,7 @@ export function WarehousePage() {
                   </h2>
                   <p className="text-sm text-muted-foreground">
                     {selected.kind === 'pallet'
-                      ? `Paleta${selected.material ? ` ${PALLET_MATERIAL_LABELS[selected.material]}` : ''} · ${palletSizeName(selected)}`
+                      ? `Paleta · ${palletName(selected, palletTypesOf(warehouse))}`
                       : `${SPOT_KIND_LABELS[selected.kind]} · ${metres(selected.length)} × ${metres(selected.width)}`}
                     {selected.levels > 1 && ` · poschodí: ${selected.levels}`}
                     {selected.levelHeightCm && ` · poschodie ${selected.levelHeightCm} cm na výšku`}

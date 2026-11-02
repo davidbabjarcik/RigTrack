@@ -1,4 +1,4 @@
-import { isStructure, metres, SPOT_KIND_FILLS, type Spot, type Warehouse } from './model'
+import { isStructure, metres, PALLET_COLORS, SPOT_KIND_FILLS, type Spot, type Warehouse } from './model'
 
 type Props = {
   warehouse: Warehouse
@@ -26,7 +26,8 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
   const font = Math.min(lengthCm, widthCm) * 0.04
 
   // Najprv plochy (zóny, palety, regály), navrch stavebné prvky, aby ich nič neprekrylo.
-  const ordered = [...spots].sort((a, b) => Number(isStructure(a.kind)) - Number(isStructure(b.kind)) || Number(b.kind === 'zone') - Number(a.kind === 'zone'))
+  // Miestnosti úplne vespod, potom zóny, miesta a navrchu stavebné prvky.
+  const ordered = [...spots].sort((a, b) => Number(b.kind === 'room') - Number(a.kind === 'room') || Number(isStructure(a.kind)) - Number(isStructure(b.kind)) || Number(b.kind === 'zone') - Number(a.kind === 'zone'))
 
   return (
     <svg
@@ -121,14 +122,26 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
           )
         } else if (spot.kind === 'zone') {
           shape = <rect x={x} y={y} width={w} height={h} rx={unit} fill={`${color}1f`} stroke={outline ?? color} strokeWidth={outline ? unit * 0.6 : unit * 0.35} strokeDasharray={`${unit * 1.4} ${unit * 0.9}`} />
-        } else if (spot.kind === 'pallet') {
-          // Paleta: drevené dosky naprieč.
-          const boards = Math.max(3, Math.round(w / 25))
+        } else if (spot.kind === 'room') {
+          // Miestnosť: hrubé steny, priehľadná, názov v rohu.
+          shape = <rect x={x} y={y} width={w} height={h} fill="none" stroke={INK} strokeWidth={unit * 0.9} />
+        } else if (spot.kind === 'truss') {
+          // Hliník: sivá plocha s mriežkou ako truss.
           shape = (
             <g filter="url(#wh-shadow)">
-              <rect x={x} y={y} width={w} height={h} rx={unit * 0.3} fill="#d6b88a" stroke={outline ?? '#8a6a3b'} strokeWidth={outline ? unit * 0.6 : unit * 0.25} />
+              <rect x={x} y={y} width={w} height={h} rx={unit * 0.3} fill="#e2e8f0" stroke={outline ?? color} strokeWidth={outline ? unit * 0.6 : unit * 0.3} />
+              <rect x={x} y={y} width={w} height={h} fill="url(#wh-hatch)" opacity={0.35} />
+            </g>
+          )
+        } else if (spot.kind === 'pallet') {
+          // Paleta: dosky naprieč; drevená hnedá, plastová čierna.
+          const boards = Math.max(3, Math.round(w / 25))
+          const tone = PALLET_COLORS[spot.material ?? 'wood']
+          shape = (
+            <g filter="url(#wh-shadow)">
+              <rect x={x} y={y} width={w} height={h} rx={unit * 0.3} fill={tone.fill} stroke={outline ?? tone.line} strokeWidth={outline ? unit * 0.6 : unit * 0.25} />
               {Array.from({ length: boards - 1 }, (_, index) => (
-                <line key={index} x1={x + ((index + 1) * w) / boards} y1={y} x2={x + ((index + 1) * w) / boards} y2={y + h} stroke="#8a6a3b" strokeWidth={unit * 0.15} />
+                <line key={index} x1={x + ((index + 1) * w) / boards} y1={y} x2={x + ((index + 1) * w) / boards} y2={y + h} stroke={tone.line} strokeWidth={unit * 0.15} />
               ))}
             </g>
           )
@@ -173,6 +186,17 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
 
         const structure = isStructure(spot.kind)
         const textFill = spot.kind === 'wall' || spot.kind === 'column' ? '#ffffff' : INK
+        // Miestnosť: len názov v ľavom hornom rohu.
+        if (spot.kind === 'room') {
+          return (
+            <g key={spot.id} aria-label={spot.name} pointerEvents="none">
+              {shape}
+              <text x={x + unit * 1.5} y={y + unit * 1.5 + font * 0.8} fontSize={font * 0.85} fontWeight={700} fill={INK}>
+                {spot.name}
+              </text>
+            </g>
+          )
+        }
         return (
           // Stavebné prvky (stĺp, stena, dvere, okno) sú len na orientáciu – kliknúť sa na ne nedá (upravujú sa v Upraviť plán).
           <g
@@ -204,7 +228,7 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
                 </text>
                 {!structure && (
                   <text x={x + w / 2} y={y + h / 2 + size * 0.75} fontSize={size * 0.75} fill="#4b5563" dominantBaseline="central">
-                    {[count === 0 ? 'prázdne' : `${count} ${count === 1 ? 'case' : count < 5 ? 'cases' : 'cases'}`, spot.levels > 1 && `${spot.levels} posch.`].filter(Boolean).join(' · ')}
+                    {spot.kind === 'truss' ? 'trussy – otvoriť' : [count === 0 ? 'prázdne' : `${count} ${count === 1 ? 'case' : count < 5 ? 'cases' : 'cases'}`, spot.levels > 1 && `${spot.levels} posch.`].filter(Boolean).join(' · ')}
                   </text>
                 )}
               </g>

@@ -1,13 +1,15 @@
 // Plán skladu: pôdorys s miestami (regál, paleta, zóna) a cases, ktoré na nich ležia.
 // Zodpovedá 0032_warehouse.sql. Súradnice v cm, x zľava doprava, y zhora nadol.
 
-export const SPOT_KINDS = ['rack', 'pallet', 'zone', 'column', 'wall', 'door', 'window'] as const
+export const SPOT_KINDS = ['rack', 'pallet', 'zone', 'truss', 'room', 'column', 'wall', 'door', 'window'] as const
 export type SpotKind = (typeof SPOT_KINDS)[number]
 
 export const SPOT_KIND_LABELS: Record<SpotKind, string> = {
   rack: 'Regál',
   pallet: 'Paleta',
   zone: 'Zóna',
+  truss: 'Hliník (trussy)',
+  room: 'Miestnosť',
   column: 'Stĺp',
   wall: 'Stena / priečka',
   door: 'Dvere / brána',
@@ -17,16 +19,47 @@ export const SPOT_KIND_FILLS: Record<SpotKind, string> = {
   rack: '#1d4ed8',
   pallet: '#a16207',
   zone: '#4d7c0f',
+  truss: '#64748b',
+  room: '#3f3f46',
   column: '#52525b',
   wall: '#27272a',
   door: '#ea580c',
   window: '#0ea5e9',
 }
 
-/** Stavebné prvky (stĺp, stena, dvere, okno) – nie sú miestom na cases. */
-export const isStructure = (kind: SpotKind) => kind === 'column' || kind === 'wall' || kind === 'door' || kind === 'window'
+/** Stavebné prvky (stĺp, stena, dvere, okno, miestnosť) – nie sú miestom na cases a v pôdoryse sa nedajú kliknúť. */
+export const isStructure = (kind: SpotKind) => kind === 'column' || kind === 'wall' || kind === 'door' || kind === 'window' || kind === 'room'
 
-export type Warehouse = { lengthCm: number; widthCm: number; rackTypes?: RackType[] }
+export type Warehouse = { lengthCm: number; widthCm: number; rackTypes?: RackType[]; palletTypes?: PalletType[] | null }
+
+/** Typ palety firmy (Nastavenia → Sklad): rozmer a materiál. */
+export type PalletType = { id: string; name: string; length: number; width: number; material: PalletMaterial }
+export const DEFAULT_PALLET_TYPES: PalletType[] = [
+  { id: 'eur-wood', name: 'EUR drevená', length: 120, width: 80, material: 'wood' },
+  { id: 'eur-plastic', name: 'EUR plastová', length: 120, width: 80, material: 'plastic' },
+]
+/** Typy paliet firmy; kým ich nikto nenastavil, predvolené EUR drevená a plastová. */
+export const palletTypesOf = (warehouse: Pick<Warehouse, 'palletTypes'> | null | undefined) => warehouse?.palletTypes ?? DEFAULT_PALLET_TYPES
+
+/** Farba palety: drevená hnedá, plastová čierna. */
+export const PALLET_COLORS: Record<PalletMaterial, { fill: string; line: string }> = {
+  wood: { fill: '#d6b88a', line: '#8a6a3b' },
+  plastic: { fill: '#27272a', line: '#52525b' },
+}
+
+/** Prvky na obvode skladu (dvere, okno) sa prichytia k najbližšej stene, ak sú do 60 cm od nej; pozdĺž steny ostanú. */
+export function snapToPerimeter(rect: { x: number; y: number; length: number; width: number }, warehouse: Pick<Warehouse, 'lengthCm' | 'widthCm'>) {
+  const horizontal = rect.length >= rect.width
+  const near = 60
+  if (horizontal) {
+    if (rect.y <= near) return { ...rect, y: 0 }
+    if (warehouse.widthCm - (rect.y + rect.width) <= near) return { ...rect, y: warehouse.widthCm - rect.width }
+  } else {
+    if (rect.x <= near) return { ...rect, x: 0 }
+    if (warehouse.lengthCm - (rect.x + rect.length) <= near) return { ...rect, x: warehouse.lengthCm - rect.length }
+  }
+  return rect
+}
 
 /** Typ regálu, ktorý firma používa (Nastavenia → Sklad): hĺbka a polia s policami. */
 export type RackType = { id: string; name: string; depthCm: number; bays: RackBay[] }
@@ -95,19 +128,11 @@ export type Spot = {
 export type PalletMaterial = 'wood' | 'plastic'
 export const PALLET_MATERIAL_LABELS: Record<PalletMaterial, string> = { wood: 'drevená', plastic: 'plastová' }
 
-/** Bežné rozmery paliet (cm, dĺžka × šírka). */
-export const PALLET_SIZES = [
-  { id: 'eur', name: 'EUR', length: 120, width: 80 },
-  { id: 'industrial', name: 'Priemyselná', length: 120, width: 100 },
-  { id: 'half', name: 'Polovičná', length: 80, width: 60 },
-  { id: 'quarter', name: 'Štvrťová', length: 60, width: 40 },
-] as const
-
-/** „EUR 120 × 80 cm“, inak len rozmer. Na otočenie nezáleží. */
-export function palletSizeName(spot: Pick<Spot, 'length' | 'width'>) {
+/** Názov palety podľa typu (rovnaký rozmer a materiál, na otočenie nezáleží), inak len rozmer. */
+export function palletName(spot: Pick<Spot, 'length' | 'width' | 'material'>, types: PalletType[]) {
   const [long, short] = [Math.max(spot.length, spot.width), Math.min(spot.length, spot.width)]
-  const known = PALLET_SIZES.find((size) => size.length === long && size.width === short)
-  return `${known ? `${known.name} ` : ''}${long} × ${short} cm`
+  const known = types.find((type) => Math.max(type.length, type.width) === long && Math.min(type.length, type.width) === short && (!spot.material || type.material === spot.material))
+  return known ? `${known.name} · ${long} × ${short} cm` : `${spot.material ? `${PALLET_MATERIAL_LABELS[spot.material]} ` : ''}${long} × ${short} cm`
 }
 
 /** Case tak, ako ho potrebuje plán (rozmery v cm na výpočet, koľko sa kam zmestí). */

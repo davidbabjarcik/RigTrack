@@ -143,11 +143,14 @@ describe('layoutCell', () => {
   })
 })
 
-describe('palletSizeName', () => {
-  it('names common pallet sizes in any orientation', async () => {
-    const { palletSizeName } = await import('./model')
-    expect(palletSizeName({ length: 80, width: 120 })).toBe('EUR 120 × 80 cm')
-    expect(palletSizeName({ length: 120, width: 100 })).toBe('Priemyselná 120 × 100 cm')
-    expect(palletSizeName({ length: 110, width: 110 })).toBe('110 × 110 cm')
+describe('pallets and perimeter', () => {
+  it('names pallets by company type and snaps doors to the nearest wall', async () => {
+    const { palletName, DEFAULT_PALLET_TYPES, snapToPerimeter } = await import('./model')
+    expect(palletName({ length: 80, width: 120, material: 'plastic' }, DEFAULT_PALLET_TYPES)).toBe('EUR plastová · 120 × 80 cm')
+    expect(palletName({ length: 110, width: 110, material: 'wood' }, DEFAULT_PALLET_TYPES)).toBe('drevená 110 × 110 cm')
+    const house = { lengthCm: 1000, widthCm: 800 }
+    expect(snapToPerimeter({ x: 300, y: 40, length: 120, width: 15 }, house)).toEqual({ x: 300, y: 0, length: 120, width: 15 })
+    expect(snapToPerimeter({ x: 960, y: 300, length: 15, width: 150 }, house)).toEqual({ x: 985, y: 300, length: 15, width: 150 })
+    expect(snapToPerimeter({ x: 300, y: 300, length: 120, width: 15 }, house)).toEqual({ x: 300, y: 300, length: 120, width: 15 })
   })
 })

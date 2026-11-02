@@ -5,6 +5,20 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.8 – 2. 11. 2026
+
+- **Upraviť plán → Pridať**: jedno miesto, kde vyberiete, čo pridať – regál (podľa typu), paletu (podľa typu), miesto /
+  zónu, hliník, miestnosť, dvere, okno, stĺp alebo stenu. Pridá sa doprostred a posuniete ho ťahaním.
+- **Dvere a okná na obvode skladu**: pridajú sa na stenu a pri posunutí k inej stene skladu sa k nej prichytia.
+- **Miestnosť** (kancelária, dielňa…): v pláne obrys s názvom, nedá sa na ňu kliknúť – rovnako ako stĺp, stena, dvere
+  a okno.
+- **Hliník ako miesto v pláne**: klik naň otvorí stohy trussov (tlačidlo Hliník hore už nie je).
+- **Typy paliet** v Nastaveniach → Sklad (predvolené EUR 120 × 80 drevená a plastová): paleta sa pridáva podľa typu;
+  drevená je v pláne hnedá, plastová čierna.
+- „Nastavenia skladu“ sú až v Upraviť plán (s oprávnením spravovať sklad).
+- Pripomienky zodpovedným osobám (odčítať hodiny, skontrolovať case) idú podľa Úrovní kontroly.
+- Nová migrácia: `0132` (je aj v `supabase/update-all.sql`).
+
 ### 6.7 – 2. 11. 2026
 
 - **Plagát inventára** po novom: A4 **na výšku** alebo na šírku, čierno-sivý na bielom papieri (bez modrej). Nakreslí sa

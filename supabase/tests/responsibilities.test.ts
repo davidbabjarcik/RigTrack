@@ -12,9 +12,11 @@ beforeAll(async () => {
   a = (await t.as('boss', `select public.create_company('A') as id`))[0].id
   await t.rows(`insert into public.company_members (company_id, user_id, role) values ($1, $2, 'technik'), ($1, $3, 'viewer')`, [a, t.users.jano, t.users.fero])
   led = (await t.as('boss', `insert into public.cases (company_id, name) values ($1, 'Case LED') returning id`, [a]))[0].id
-  const par = (await t.as('boss', `insert into public.equipment (company_id, name, kind, quantity, attributes, case_id) values ($1, 'LED Par', 'light', 16, '{"trackHours": true}', $2) returning id`, [a, led]))[0].id
-  await t.as('boss', `insert into public.equipment (company_id, name, kind, quantity, attributes) values ($1, 'Beam', 'light', 2, '{"trackHours": true}')`, [a])
+  const par = (await t.as('boss', `insert into public.equipment (company_id, name, kind, quantity, attributes, case_id) values ($1, 'LED Par', 'light', 16, '{"trackHours": true, "hoursPriority": "normal"}', $2) returning id`, [a, led]))[0].id
+  await t.as('boss', `insert into public.equipment (company_id, name, kind, quantity, attributes) values ($1, 'Beam', 'light', 2, '{"trackHours": true, "hoursPriority": "normal"}')`, [a])
   await t.as('boss', `insert into public.equipment (company_id, name, kind, quantity) values ($1, 'Mix', 'audio', 1)`, [a])
+  // Úroveň „žiadna“ = hodiny sa nepripomínajú.
+  await t.as('boss', `insert into public.equipment (company_id, name, kind, quantity, attributes) values ($1, 'Hazer', 'light', 1, '{"trackHours": true, "hoursPriority": "none"}')`, [a])
   await t.as('boss', `insert into public.equipment_hour_readings (company_id, equipment_id, read_on, hours) values ($1, $2, current_date - 3, 120)`, [a, par])
 })
 

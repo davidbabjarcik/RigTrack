@@ -5,7 +5,8 @@ import { Button, LinkButton } from '@/components/ui/button'
 import { errorDetail } from '@/lib/supabase/errors'
 import { fetchWarehouse, saveRackTypes, warehouseKeys } from './api'
 import { BaysEditor } from './BaysEditor'
-import { metres, PALLET_CM, rackHeightCm, rackLengthCm, type RackType } from './model'
+import { metres, PALLET_CM, palletTypesOf, rackHeightCm, rackLengthCm, type RackType } from './model'
+import { PalletTypesSettings } from './PalletTypesSettings'
 import { SizeForm } from './SizeForm'
 
 const newType = (count: number): RackType => ({
@@ -129,6 +130,8 @@ export function WarehouseSettings({ companyId }: { companyId: string }) {
         </div>
         {!warehouse && <p className="mt-1 text-sm text-muted-foreground">Najprv zadajte rozmery skladu.</p>}
       </div>
+
+      <PalletTypesSettings companyId={companyId} types={palletTypesOf(warehouse)} disabled={!warehouse} />
 
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
