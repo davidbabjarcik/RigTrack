@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0123 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0124 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -2711,6 +2711,24 @@ create policy printed_labels_insert on public.printed_labels for insert to authe
   with check (public.is_company_member(company_id) and (public.can(company_id, 'equipment.view') or public.can(company_id, 'cases.view')));
 drop policy if exists printed_labels_delete on public.printed_labels;
 create policy printed_labels_delete on public.printed_labels for delete to authenticated using (public.is_company_member(company_id));
+
+-- ===== 0124_rack_bays.sql =====
+-- RigTrack 5.19: regál po poliach (pohľad spredu). Každé pole má vlastnú šírku a vlastné police – každá polica inú výšku
+-- a voliteľne počet paliet, napr. [{"widthCm": 267, "levels": [{"heightCm": 160, "pallets": 3}, {"heightCm": 120}]}].
+-- Police sú zdola nahor. Case si pamätá pole (spot_bay) a policu v ňom (spot_level).
+
+alter table public.warehouse_spots add column if not exists bays jsonb not null default '[]'::jsonb;
+do $$
+begin
+  alter table public.warehouse_spots drop constraint if exists warehouse_spots_bays_check;
+  alter table public.warehouse_spots add constraint warehouse_spots_bays_check
+    check (jsonb_typeof(bays) = 'array' and jsonb_array_length(bays) <= 30 and pg_column_size(bays) <= 20000);
+end;
+$$;
+grant update (bays) on public.warehouse_spots to authenticated;
+
+alter table public.cases add column if not exists spot_bay integer check (spot_bay between 1 and 30);
+grant update (spot_bay) on public.cases to authenticated;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

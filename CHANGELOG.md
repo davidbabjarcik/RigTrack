@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.19 – 2. 11. 2026
+
+- **Regál spredu**: klik na regál na pôdoryse prepne na pohľad spredu – stojky, nosníky, police, palety a cases ako škatule
+  podľa ich rozmerov. Pri každej polici je jej výška a koľko cm ostáva voľných; čo sa na výšku nezmestí, je červené.
+- **Polia regála**: regál sa skladá z polí (napr. 267 cm) a každé pole má vlastné police – každá inak vysoká, niekde 3,
+  niekde 4. Pri polici sa dá zadať počet paliet; appka ukáže, koľko europaliet sa zmestí (267 cm = 3 palety + 27 cm).
+  Nastaví sa tlačidlom „Upraviť polia a police“ (kopírovanie poľa jedným klikom).
+- Case sa ukladá na konkrétnu policu konkrétneho poľa (klikom na policu, výberom alebo skenovaním); na pôdoryse
+  sú polia regála vidieť ako deliace stojky.
+- Nová migrácia: `0124` (je aj v `supabase/update-all.sql`).
+
 ### 5.18 – 2. 11. 2026
 
 - **Tlačiť všetko naraz**: v tlačovej fronte jedno tlačidlo pre všetky štítky a obsahy cases – štítky po dvoch na A4,

@@ -28,6 +28,16 @@ export const isStructure = (kind: SpotKind) => kind === 'column' || kind === 'wa
 
 export type Warehouse = { lengthCm: number; widthCm: number }
 
+/** Polica v poli regála (zdola nahor): svetlá výška a voliteľne koľko paliet na nej stojí. */
+export type RackLevel = { heightCm: number; pallets?: number }
+/** Pole regála medzi dvoma stojkami (napr. 267 cm) s vlastnými policami. */
+export type RackBay = { widthCm: number; levels: RackLevel[] }
+
+/** Šírka europalety spredu (dlhšou stranou dozadu). */
+export const PALLET_CM = 80
+export const MAX_BAYS = 30
+export const MAX_BAY_LEVELS = 10
+
 export type Spot = {
   id: string
   name: string
@@ -41,6 +51,8 @@ export type Spot = {
   /** Výška jedného poschodia regála (cm) – na kontrolu, či sa case zmestí na výšku. */
   levelHeightCm?: number | null
   note?: string
+  /** Polia regála (pohľad spredu); prázdne = jedno pole cez celú dĺžku s rovnakými policami. */
+  bays?: RackBay[]
 }
 
 /** Case tak, ako ho potrebuje plán (rozmery v cm na výpočet, koľko sa kam zmestí). */
@@ -49,6 +61,8 @@ export type PlacedCase = {
   name: string
   spotId: string | null
   spotLevel: number | null
+  /** Pole regála (1, 2…); prázdne = prvé pole. */
+  spotBay?: number | null
   inventoryNumber?: string
   labelNumber?: string
   oldNumbers?: string
@@ -95,9 +109,55 @@ export function byLevel<T extends PlacedCase>(spot: Pick<Spot, 'levels'>, cases:
   return groups
 }
 
-/** „Regál A, 2. poschodie“ */
-export function describeSpot(spot: Pick<Spot, 'name' | 'levels'>, level: number | null) {
+/** „Regál A, 2. poschodie“, pri regáli s viacerými poliami „Regál A, pole 2, 3. polica“. */
+export function describeSpot(spot: Pick<Spot, 'name' | 'levels' | 'bays'>, level: number | null, bay?: number | null) {
+  if ((spot.bays?.length ?? 0) > 1) return [spot.name, `pole ${bay ?? 1}`, level && `${level}. polica`].filter(Boolean).join(', ')
   return spot.levels > 1 && level ? `${spot.name}, ${level}. poschodie` : spot.name
+}
+
+/** Polia regála; starý regál bez polí = jedno pole cez celú dĺžku s rovnakými policami. */
+export function rackBays(spot: Pick<Spot, 'length' | 'levels' | 'levelHeightCm' | 'bays'>): RackBay[] {
+  if (spot.bays && spot.bays.length > 0) return spot.bays
+  return [{ widthCm: spot.length, levels: Array.from({ length: Math.max(1, spot.levels) }, () => ({ heightCm: spot.levelHeightCm ?? 100 })) }]
+}
+
+/** Upratané polia na uloženie (rozumné rozmery, aspoň jedna polica). */
+export function cleanBays(bays: RackBay[]): RackBay[] {
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, Math.round(Number(value) || min)))
+  return bays.slice(0, MAX_BAYS).map((bay) => ({
+    widthCm: clamp(bay.widthCm, 20, 2000),
+    levels: (bay.levels.length > 0 ? bay.levels : [{ heightCm: 100 }]).slice(0, MAX_BAY_LEVELS).map((level) => ({
+      heightCm: clamp(level.heightCm, 5, 1000),
+      ...(level.pallets ? { pallets: clamp(level.pallets, 0, 20) } : {}),
+    })),
+  }))
+}
+
+/** Cases na jednej polici jedného poľa. */
+export function casesInCell<T extends PlacedCase>(cases: T[], bay: number, level: number) {
+  return cases.filter((item) => (item.spotBay ?? 1) === bay && item.spotLevel === level)
+}
+
+/** Šírka case spredu (dĺžka pozdĺž police); bez rozmerov null. */
+export const caseFrontCm = (item: Pick<PlacedCase, 'lengthCm' | 'widthCm'>) => item.lengthCm ?? item.widthCm ?? null
+
+/**
+ * Koľko miesta na polici zaberajú palety a cases spredu a koľko ostáva; koľko europaliet sa zmestí
+ * (napr. 267 cm → 3 palety a 27 cm navyše) a čo je vyššie ako polica.
+ */
+export function cellUsage(bay: RackBay, level: RackLevel, cases: PlacedCase[]) {
+  const casesCm = cases.reduce((sum, item) => sum + (caseFrontCm(item) ?? 0), 0)
+  const palletsCm = (level.pallets ?? 0) * PALLET_CM
+  // Cases na paletách sú na nich, inak vedľa seba na polici.
+  const usedCm = Math.max(casesCm, palletsCm)
+  return {
+    usedCm,
+    freeCm: bay.widthCm - usedCm,
+    palletFit: Math.floor(bay.widthCm / PALLET_CM),
+    palletRest: bay.widthCm - Math.floor(bay.widthCm / PALLET_CM) * PALLET_CM,
+    unknown: cases.filter((item) => caseFrontCm(item) === null).length,
+    tooTall: cases.filter((item) => item.depthCm && item.depthCm > level.heightCm),
+  }
 }
 
 /** Cases, ktorých názov obsahuje hľadaný text (bez ohľadu na veľkosť písmen a diakritiku). */

@@ -146,6 +146,21 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
               ].map(([px, py], index) => (
                 <rect key={index} x={px} y={py} width={post} height={post} fill={color} />
               ))}
+              {/* Polia regála: deliace stojky pozdĺž dlhšej strany v pomere šírok polí. */}
+              {(spot.bays?.length ?? 0) > 1 &&
+                (() => {
+                  const total = spot.bays!.reduce((sum, bay) => sum + bay.widthCm, 0)
+                  let run = 0
+                  return spot.bays!.slice(0, -1).map((bay, index) => {
+                    run += bay.widthCm
+                    const at = run / total
+                    return w >= h ? (
+                      <rect key={`b${index}`} x={x + w * at - post / 2} y={y} width={post} height={h} fill={color} opacity={0.85} />
+                    ) : (
+                      <rect key={`b${index}`} x={x} y={y + h * at - post / 2} width={w} height={post} fill={color} opacity={0.85} />
+                    )
+                  })
+                })()}
               {percent !== undefined && (
                 <g>
                   <rect x={x + post} y={y + h - post * 0.8} width={w - post * 2} height={post * 0.5} fill="#c7d2fe" />

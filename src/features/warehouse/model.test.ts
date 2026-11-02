@@ -72,3 +72,24 @@ describe('level usage', () => {
     expect(usage.tooTall.map((item) => item.name)).toEqual(['Rack'])
   })
 })
+
+describe('rack bays', () => {
+  it('falls back to one bay and computes what fits on a shelf', async () => {
+    const { rackBays, cellUsage, casesInCell, describeSpot, cleanBays } = await import('./model')
+    const old = { length: 300, levels: 2, levelHeightCm: 120 }
+    expect(rackBays(old)).toEqual([{ widthCm: 300, levels: [{ heightCm: 120 }, { heightCm: 120 }] }])
+    const bay = { widthCm: 267, levels: [{ heightCm: 160, pallets: 2 }] }
+    const cases = [
+      { id: 'a', name: 'Amp', spotId: 's', spotLevel: 1, spotBay: 2, lengthCm: 60, depthCm: 50 },
+      { id: 'b', name: 'Svetlá', spotId: 's', spotLevel: 1, spotBay: 2, lengthCm: 120, depthCm: 170 },
+      { id: 'c', name: 'Káble', spotId: 's', spotLevel: 1, spotBay: null },
+    ]
+    const cell = casesInCell(cases, 2, 1)
+    expect(cell.map((item) => item.id)).toEqual(['a', 'b'])
+    expect(cellUsage(bay, bay.levels[0], cell)).toMatchObject({ usedCm: 180, freeCm: 87, palletFit: 3, palletRest: 27, unknown: 0 })
+    expect(cellUsage(bay, bay.levels[0], cell).tooTall.map((item) => item.id)).toEqual(['b'])
+    expect(casesInCell(cases, 1, 1).map((item) => item.id)).toEqual(['c'])
+    expect(describeSpot({ name: 'Regál A', levels: 3, bays: [bay, bay] }, 2, 1)).toBe('Regál A, pole 1, 2. polica')
+    expect(cleanBays([{ widthCm: 5, levels: [] }])).toEqual([{ widthCm: 20, levels: [{ heightCm: 100 }] }])
+  })
+})
