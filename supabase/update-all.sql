@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0128 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0129 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -2950,6 +2950,12 @@ $$;
 
 alter table public.cases add column if not exists spot_pallet integer check (spot_pallet between 1 and 20);
 grant update (spot_pallet) on public.cases to authenticated;
+
+-- ===== 0129_pallet_material.sql =====
+-- RigTrack 6.4: palety na zemi v pláne skladu – materiál (drevo / plast). Rozmer je dĺžka × šírka miesta.
+
+alter table public.warehouse_spots add column if not exists material text check (material in ('wood', 'plastic'));
+grant update (material) on public.warehouse_spots to authenticated;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

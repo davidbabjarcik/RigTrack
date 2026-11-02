@@ -1,22 +1,23 @@
 import { getSupabase } from '@/lib/supabase/client'
-import type { RackBay, RackType, Spot, SpotKind, Warehouse } from './model'
+import type { PalletMaterial, RackBay, RackType, Spot, SpotKind, Warehouse } from './model'
 
 export const warehouseKeys = {
   plan: (companyId: string) => ['company', companyId, 'warehouse'] as const,
   bays: (companyId: string) => ['company', companyId, 'warehouse', 'case-bays'] as const,
 }
 
-type SpotRow = { id: string; name: string; kind: SpotKind; x: number; y: number; length: number; width: number; levels: number; level_height_cm?: number | null; note?: string; bays?: RackBay[] | null }
+type SpotRow = { id: string; name: string; kind: SpotKind; x: number; y: number; length: number; width: number; levels: number; level_height_cm?: number | null; note?: string; bays?: RackBay[] | null; material?: PalletMaterial | null }
 
 /** Rozmery skladu (null, kým ich nikto nezadal) a všetky miesta na pláne. */
 export async function fetchWarehouse(companyId: string): Promise<{ warehouse: Warehouse | null; spots: Spot[] }> {
   const db = getSupabase()
   const [warehouse, spots] = await Promise.all([
     db.from('warehouses').select('length_cm, width_cm, rack_types').eq('company_id', companyId).maybeSingle(),
-    db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels, level_height_cm, note, bays').eq('company_id', companyId).order('created_at'),
+    db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels, level_height_cm, note, bays, material').eq('company_id', companyId).order('created_at'),
   ])
-  // Bez migrácie 0124 nie sú polia regála, bez 0119 ani výška poschodia a poznámka.
+  // Bez migrácie 0129 nie je materiál palety, bez 0124 polia regála, bez 0119 ani výška poschodia a poznámka.
   let rows: { data: unknown[] | null; error: { message: string } | null } = spots
+  if (rows.error && /material/.test(rows.error.message)) rows = await db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels, level_height_cm, note, bays').eq('company_id', companyId).order('created_at')
   if (rows.error && /bays/.test(rows.error.message)) rows = await db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels, level_height_cm, note').eq('company_id', companyId).order('created_at')
   if (rows.error && /level_height_cm|note/.test(rows.error.message)) rows = await db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels').eq('company_id', companyId).order('created_at')
   // Bez migrácie 0126 nie sú typy regálov.
@@ -27,7 +28,13 @@ export async function fetchWarehouse(companyId: string): Promise<{ warehouse: Wa
   const size = house.data as { length_cm: number; width_cm: number; rack_types?: RackType[] } | null
   return {
     warehouse: size && { lengthCm: size.length_cm, widthCm: size.width_cm, rackTypes: Array.isArray(size.rack_types) ? size.rack_types : [] },
-    spots: (rows.data as SpotRow[]).map(({ level_height_cm, note, bays, ...spot }) => ({ ...spot, levelHeightCm: level_height_cm ?? null, note: note ?? '', bays: Array.isArray(bays) ? bays : [] })),
+    spots: (rows.data as SpotRow[]).map(({ level_height_cm, note, bays, material, ...spot }) => ({
+      ...spot,
+      levelHeightCm: level_height_cm ?? null,
+      note: note ?? '',
+      bays: Array.isArray(bays) ? bays : [],
+      material: material ?? null,
+    })),
   }
 }
 
@@ -43,7 +50,11 @@ export async function saveWarehouse(companyId: string, size: Warehouse) {
 }
 
 export async function addSpot(companyId: string, spot: Omit<Spot, 'id'>) {
-  const { error } = await getSupabase().from('warehouse_spots').insert({ ...spot, company_id: companyId })
+  const { material, ...rest } = spot
+  const insert = (row: Record<string, unknown>) => getSupabase().from('warehouse_spots').insert({ ...row, company_id: companyId })
+  let { error } = await insert(material ? { ...rest, material } : rest)
+  // Bez migrácie 0129 sa materiál neuloží.
+  if (error && /material/.test(error.message)) ({ error } = await insert(rest))
   if (error) throw error
 }
 

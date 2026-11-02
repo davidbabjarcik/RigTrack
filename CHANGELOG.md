@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.4 – 2. 11. 2026
+
+- **Palety na zemi** v Sklade → Upraviť plán: „Pridať paletu“ s rozmerom (EUR 120 × 80, priemyselná 120 × 100,
+  polovičná 80 × 60, štvrťová 60 × 40 alebo vlastný) a materiálom (drevená / plastová). Pridá sa doprostred, potom ju
+  posuniete ťahaním a otočíte o 90°. Pri vybranej palete sa dá zmeniť rozmer aj materiál.
+- Nová migrácia: `0129` (je aj v `supabase/update-all.sql`).
+
 ### 6.3 – 2. 11. 2026
 
 - **Cases na paletách**: v pohľade spredu stoja cases na paletách, nie vedľa nich. Bez voľby sa poskladajú samy – na

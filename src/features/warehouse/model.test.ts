@@ -142,3 +142,12 @@ describe('layoutCell', () => {
     expect(plain.map((b) => [b.x, b.bottom, b.known])).toEqual([[0, 0, false], [60, 0, true]])
   })
 })
+
+describe('palletSizeName', () => {
+  it('names common pallet sizes in any orientation', async () => {
+    const { palletSizeName } = await import('./model')
+    expect(palletSizeName({ length: 80, width: 120 })).toBe('EUR 120 × 80 cm')
+    expect(palletSizeName({ length: 120, width: 100 })).toBe('Priemyselná 120 × 100 cm')
+    expect(palletSizeName({ length: 110, width: 110 })).toBe('110 × 110 cm')
+  })
+})

@@ -65,6 +65,10 @@ describe('warehouse plan', () => {
     await t.as('technik', 'update public.cases set spot_pallet = 3 where id = $1', [box])
     expect(await t.as('viewer', 'select spot_pallet from public.cases where id = $1', [box])).toEqual([{ spot_pallet: 3 }])
     await expect(t.as('technik', 'update public.cases set spot_pallet = 0 where id = $1', [box])).rejects.toThrow(/check/)
+    const pallet = (await addSpot('skladnik', 'Paleta 1'))[0].id
+    await t.as('skladnik', `update public.warehouse_spots set kind = 'pallet', material = 'plastic' where id = $1`, [pallet])
+    expect(await t.as('viewer', 'select material from public.warehouse_spots where id = $1', [pallet])).toEqual([{ material: 'plastic' }])
+    await expect(t.as('skladnik', `update public.warehouse_spots set material = 'kov' where id = $1`, [pallet])).rejects.toThrow(/check/)
   })
 
   it('follows the warehouse permission, not the lists one', async () => {

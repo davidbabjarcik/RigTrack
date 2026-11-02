@@ -88,6 +88,26 @@ export type Spot = {
   note?: string
   /** Polia regála (pohľad spredu); prázdne = jedno pole cez celú dĺžku s rovnakými policami. */
   bays?: RackBay[]
+  /** Materiál palety na zemi. */
+  material?: PalletMaterial | null
+}
+
+export type PalletMaterial = 'wood' | 'plastic'
+export const PALLET_MATERIAL_LABELS: Record<PalletMaterial, string> = { wood: 'drevená', plastic: 'plastová' }
+
+/** Bežné rozmery paliet (cm, dĺžka × šírka). */
+export const PALLET_SIZES = [
+  { id: 'eur', name: 'EUR', length: 120, width: 80 },
+  { id: 'industrial', name: 'Priemyselná', length: 120, width: 100 },
+  { id: 'half', name: 'Polovičná', length: 80, width: 60 },
+  { id: 'quarter', name: 'Štvrťová', length: 60, width: 40 },
+] as const
+
+/** „EUR 120 × 80 cm“, inak len rozmer. Na otočenie nezáleží. */
+export function palletSizeName(spot: Pick<Spot, 'length' | 'width'>) {
+  const [long, short] = [Math.max(spot.length, spot.width), Math.min(spot.length, spot.width)]
+  const known = PALLET_SIZES.find((size) => size.length === long && size.width === short)
+  return `${known ? `${known.name} ` : ''}${long} × ${short} cm`
 }
 
 /** Case tak, ako ho potrebuje plán (rozmery v cm na výpočet, koľko sa kam zmestí). */
