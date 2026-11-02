@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.2.1 – 2. 11. 2026
+
+- Aktualizované knižnice (React, React Router, Supabase, Vite, ikony, čítanie PDF a Excelu) – opravy chýb, bez zmien vo
+  funkciách.
+
 ### 6.2 – 2. 11. 2026
 
 - **Chyby v appke** pre vývojára: keď niekomu spadne stránka alebo nastane neošetrená chyba, appka ju sama uloží – kto,
