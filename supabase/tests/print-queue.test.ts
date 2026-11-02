@@ -32,4 +32,13 @@ describe('print queue and company prefs', () => {
     await expect(t.as('viewer', `update public.company_prefs set prefs = '{}' where company_id = $1 returning 1`, [a])).resolves.toEqual([])
     expect(await t.as('outsider', 'select * from public.company_prefs')).toEqual([])
   })
+
+  it('remembers printed labels per company', async () => {
+    const box = (await t.as('boss', `insert into public.cases (company_id, name) values ($1, 'Case 2') returning id`, [a]))[0].id
+    await t.as('viewer', `insert into public.printed_labels (company_id, kind, target_id) values ($1, 'case', $2)`, [a, box])
+    await expect(t.as('viewer', `insert into public.printed_labels (company_id, kind, target_id) values ($1, 'case', $2)`, [a, box])).rejects.toThrow(/duplicate|unique/)
+    expect(await t.as('boss', 'select kind, label from public.printed_labels')).toEqual([{ kind: 'case', label: 'qr' }])
+    expect(await t.as('outsider', 'select * from public.printed_labels')).toEqual([])
+    await expect(t.as('outsider', `insert into public.printed_labels (company_id, kind, target_id) values ($1, 'case', $2)`, [a, box])).rejects.toThrow(/row-level/)
+  })
 })

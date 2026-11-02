@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-5.17-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-5.18-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,10 +51,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **5.18** | Tlač všetkých štítkov a obsahov cases naraz (jedno PDF), prehľad techniky bez QR štítku |
 | **5.17** | Vrátený case z eventu treba spočítať, „Ešte vonku“ v Kontrolách a na Prehľade |
 | **5.16** | Limity hodín (výbojka, servis) a revízie s vlastným intervalom, upozornením a oprávneniami |
 | **5.15** | Do tlače z QR, pásky, štítku aj obsahu case; čísla kľúčových slov v nastaveniach |
-| **5.14** | Tlačová fronta, QR na A4 vo väčších veľkostiach, @toprint a komu ukázať @todo / @toprint |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

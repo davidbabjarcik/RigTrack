@@ -16,8 +16,10 @@ export async function canvasJpeg(canvas: HTMLCanvasElement, quality = 0.9): Prom
   return { bytes: new Uint8Array(await blob.arrayBuffer()), width: canvas.width, height: canvas.height }
 }
 
-/** PDF so stranami z JPEG obrázkov (každý roztiahnutý na celú stranu). */
-export function buildPdf(images: { bytes: Uint8Array; width: number; height: number }[], page: { width: number; height: number }): Blob {
+type PageSize = { width: number; height: number }
+
+/** PDF so stranami z JPEG obrázkov (každý roztiahnutý na celú stranu). Obrázok môže mať vlastnú veľkosť strany. */
+export function buildPdf(images: { bytes: Uint8Array; width: number; height: number; page?: PageSize }[], page: PageSize): Blob {
   const encoder = new TextEncoder()
   const parts: Uint8Array[] = []
   const offsets: number[] = []
@@ -39,9 +41,9 @@ export function buildPdf(images: { bytes: Uint8Array; width: number; height: num
   const pageIds = images.map((_, index) => 3 + index * 3)
   object(1, ['<< /Type /Catalog /Pages 2 0 R >>'])
   object(2, [`<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${images.length} >>`])
-  const w = page.width.toFixed(2)
-  const h = page.height.toFixed(2)
   images.forEach((image, index) => {
+    const w = (image.page ?? page).width.toFixed(2)
+    const h = (image.page ?? page).height.toFixed(2)
     const pageId = pageIds[index]
     const imageId = pageId + 1
     const contentId = pageId + 2

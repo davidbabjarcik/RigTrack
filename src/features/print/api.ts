@@ -78,6 +78,28 @@ export async function addToPrintQueue(companyId: string, items: { kind: PrintIte
   if (error) throw error
 }
 
+/** Čo už má vytlačený štítok (0123); bez migrácie null. */
+export type PrintedLabel = { kind: PrintItem['kind']; targetId: string; label: PrintLabel }
+
+export async function fetchPrintedLabels(companyId: string): Promise<PrintedLabel[] | null> {
+  const { data, error } = await getSupabase().from('printed_labels').select('kind, target_id, label').eq('company_id', companyId)
+  if (error) return null
+  return (data as { kind: PrintItem['kind']; target_id: string; label: PrintLabel }[]).map((row) => ({ kind: row.kind, targetId: row.target_id, label: row.label }))
+}
+
+export function usePrintedLabels(companyId: string) {
+  return useQuery({ queryKey: [...printKeys.queue(companyId), 'printed'], queryFn: () => fetchPrintedLabels(companyId), retry: false })
+}
+
+/** Zapamätá, že štítky sú vytlačené (alebo už nalepené); duplicity sa preskočia. */
+export async function markPrinted(companyId: string, items: PrintedLabel[]) {
+  const rows = items.map((item) => ({ company_id: companyId, kind: item.kind, target_id: item.targetId, label: item.label }))
+  for (let index = 0; index < rows.length; index += 500) {
+    const { error } = await getSupabase().from('printed_labels').upsert(rows.slice(index, index + 500), { onConflict: 'company_id,kind,target_id,label', ignoreDuplicates: true })
+    if (error) throw error
+  }
+}
+
 export async function removeFromPrintQueue(companyId: string, ids: string[]) {
   if (ids.length === 0) return
   const { error } = await getSupabase().from('print_queue').delete().eq('company_id', companyId).in('id', ids)

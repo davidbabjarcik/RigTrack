@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.18 – 2. 11. 2026
+
+- **Tlačiť všetko naraz**: v tlačovej fronte jedno tlačidlo pre všetky štítky a obsahy cases – štítky po dvoch na A4,
+  hárky s obsahom podľa vašich volieb hárku (A4/A5, na výšku/na šírku). Vytlačiť alebo stiahnuť ako jedno PDF.
+- **Bez QR štítku**: tlačová fronta ukáže techniku a cases, ktoré ešte nemajú vytlačený QR – jedným klikom ich pridáte do
+  tlače, alebo označíte, že už sú olepené. Vytlačené sa zapamätá pri „Vytlačené – vyprázdniť“.
+- Nová migrácia: `0123` (je aj v `supabase/update-all.sql`).
+
 ### 5.17 – 2. 11. 2026
 
 - **Vrátený case treba spočítať**: keď sa case vráti z eventu (naskenuje alebo odškrtne v pack liste – Návrat), appka

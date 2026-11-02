@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0122 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0123 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -2685,6 +2685,32 @@ exception when others then
   raise notice 'pg_cron nie je k dispozícii – limity a revízie sa neoznamujú';
 end;
 $$;
+
+-- ===== 0123_printed_labels.sql =====
+-- RigTrack 5.18: čo už má vytlačený štítok (QR, páska, štítok case, obsah). Zapíše sa pri „Vytlačené – vyprázdniť“
+-- v tlačovej fronte alebo ručne („už je olepené“); tlačová fronta podľa toho ukáže, čo štítok ešte nemá.
+
+create table if not exists public.printed_labels (
+  company_id uuid not null references public.companies (id) on delete cascade,
+  kind text not null check (kind in ('equipment', 'case')),
+  target_id uuid not null,
+  label text not null default 'qr' check (label in ('qr', 'tape', 'case_label', 'content')),
+  printed_by uuid default auth.uid() references public.profiles (id) on delete set null,
+  printed_at timestamptz not null default now(),
+  primary key (company_id, kind, target_id, label)
+);
+alter table public.printed_labels enable row level security;
+revoke all on public.printed_labels from anon, authenticated;
+grant select, delete on public.printed_labels to authenticated;
+grant insert (company_id, kind, target_id, label) on public.printed_labels to authenticated;
+
+drop policy if exists printed_labels_select on public.printed_labels;
+create policy printed_labels_select on public.printed_labels for select to authenticated using (public.is_company_member(company_id));
+drop policy if exists printed_labels_insert on public.printed_labels;
+create policy printed_labels_insert on public.printed_labels for insert to authenticated
+  with check (public.is_company_member(company_id) and (public.can(company_id, 'equipment.view') or public.can(company_id, 'cases.view')));
+drop policy if exists printed_labels_delete on public.printed_labels;
+create policy printed_labels_delete on public.printed_labels for delete to authenticated using (public.is_company_member(company_id));
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

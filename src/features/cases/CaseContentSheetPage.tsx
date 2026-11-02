@@ -10,34 +10,16 @@ import { brandingKeys, fetchBranding, fetchLogoBlob, logoForLightBackground } fr
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { cableColorKeys, fetchCableColors } from '@/features/equipment/cableColors'
-import { downloadCanvas, fileSlug, qrCanvas } from './canvas'
-import { caseBaseName, caseNumber } from './model'
-import { qrUrl } from '@/features/scan/qr'
-import { fetchPhotoBlob } from '@/features/equipment/photo'
-import type { DmxMode } from '@/features/equipment/model'
-import { withoutWhiteBackground } from './removeBackground'
-import { buildCableMatrix, DEFAULT_SHOW, drawContentSheet, matrixPages, orderColumns, SHEET_PART_LABELS, SHEET_PARTS, type SheetShow, SHEET_HEIGHT, SHEET_LAYOUT_LABELS, SHEET_LAYOUTS, SHEET_WIDTH, type SheetLayout } from './contentSheet'
-
-const PAPERS = ['A4', 'A5'] as const
-type Paper = (typeof PAPERS)[number]
-/** A5 pri 300 dpi. */
-const A5_WIDTH = 1748
-const A5_HEIGHT = 2480
-
-/** Zmenšená kópia hárku (napr. na A5). */
-function scaled(source: HTMLCanvasElement, width: number, height: number) {
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  const ctx = canvas.getContext('2d')!
-  ctx.imageSmoothingQuality = 'high'
-  ctx.drawImage(source, 0, 0, width, height)
-  return canvas
-}
+import { downloadCanvas, fileSlug } from './canvas'
+import { DEFAULT_SHOW, SHEET_PART_LABELS, SHEET_PARTS, type SheetShow, SHEET_HEIGHT, SHEET_LAYOUT_LABELS, SHEET_LAYOUTS, SHEET_WIDTH, type SheetLayout } from './contentSheet'
+import { A5_HEIGHT, A5_WIDTH, caseLightsOf, renderContentSheets, scaledCanvas as scaled, sheetPagesOf } from './renderSheets'
 import { useCases } from './useCases'
 import { buildPdf, canvasJpeg, pageSizePt } from './sheetPdf'
 import { useUserPrefs, type SheetPrefs } from '@/features/settings/userPrefs'
 import { cn } from '@/lib/utils'
+
+const PAPERS = ['A4', 'A5'] as const
+type Paper = (typeof PAPERS)[number]
 
 export function CaseContentSheetPage() {
   const { id = '' } = useParams()
@@ -83,25 +65,15 @@ export function CaseContentSheetPage() {
   })
 
   const current = cases.data?.find((c) => c.id === id)
-  const matrix = useMemo(
-    () => buildCableMatrix((equipment.data ?? []).filter((item) => item.caseId === id)),
-    [equipment.data, id],
-  )
-  const caseLights = useMemo(() => {
-    const seen = new Map<string, { name: string; modes: DmxMode[] }>()
-    for (const item of (equipment.data ?? []).filter((part) => part.caseId === id)) {
-      // Svetlá (nie príslušenstvo ako háky, mixpult) s DMX módmi.
-      if (item.kind !== 'light' || item.attributes.lightType?.startsWith('acc_') || !item.attributes.dmxModes?.length) continue
-      if (!seen.has(item.name)) seen.set(item.name, { name: item.name, modes: item.attributes.dmxModes })
-    }
-    return [...seen.values()]
-  }, [equipment.data, id])
+  const inside = useMemo(() => (equipment.data ?? []).filter((item) => item.caseId === id), [equipment.data, id])
+  // Svetlá (nie príslušenstvo ako háky, mixpult) s DMX módmi.
+  const caseLights = useMemo(() => caseLightsOf(inside), [inside])
   const logoSettled = !logoPath || logo.isSuccess || logo.isError
   const ready = Boolean(current && equipment.data && colors.data && branding.data && logoSettled)
 
   // Poradie typov (čo hore, čo dole / na ktorom hárku).
   const order = useMemo(() => sheet.order ?? [], [sheet.order])
-  const ordered = useMemo(() => orderColumns(matrix, order), [matrix, order])
+  const { matrix, ordered, pages } = useMemo(() => sheetPagesOf(inside, { order, layout }), [inside, order, layout])
   const move = (column: string, step: -1 | 1) => {
     const columns = [...ordered.columns]
     const index = columns.indexOf(column)
@@ -111,66 +83,34 @@ export function CaseContentSheetPage() {
     // Ostatné typy (z iných cases) ostanú v uloženom poradí za týmito.
     setSheet({ order: [...columns, ...order.filter((value) => !columns.includes(value))] })
   }
-  const pages = useMemo(() => (layout === 'pages' ? matrixPages(ordered) : [ordered]), [layout, ordered])
 
   useEffect(() => {
     if (!ready || !current) return
     let cancelled = false
     void (async () => {
-      const bitmap = logo.data ? await createImageBitmap(logo.data).catch(() => null) : null
-      // Fotky príslušenstva na karty (bez fotky ostane karta len s názvom a počtom).
-      const photos = new Map<string, ImageBitmap | HTMLCanvasElement>()
-      const withPhotos = pages.flatMap((page) => [...page.others, ...(page.accessories ?? [])])
-      await Promise.all(
-        [...new Set(withPhotos.map((item) => item.photoPath).filter((path): path is string => Boolean(path)))].map(async (path) => {
-          const image = await fetchPhotoBlob(path)
-            .then((blob) => createImageBitmap(blob))
-            .catch(() => null)
-          if (!image) return
-          // Produktové fotky na bielom: biele pozadie preč, aby výrobok sedel priamo na karte.
-          if (show.cutout) {
-            photos.set(path, withoutWhiteBackground(image))
-            image.close()
-          } else photos.set(path, image)
-        }),
-      )
-      const qr = await qrCanvas(qrUrl({ kind: 'case', id: current.id }, window.location.origin), 520, 0).catch(() => null)
-      if (cancelled) return
-      // Súhrn: kusov v case a hmotnosť (prázdny case + technika so zadanou váhou).
-      const inside = (equipment.data ?? []).filter((item) => item.caseId === current.id)
-      const gearKg = inside.reduce((sum, item) => sum + (item.attributes.weightKg ?? 0) * item.quantity, 0)
-      pages.forEach((page, index) => {
-        const target = canvases.current[index]
-        if (!target) return
-        drawContentSheet(target, {
-        caseName: caseBaseName(current),
-        caseNumber: caseNumber(current),
-        qr,
-        totalPieces: inside.reduce((sum, item) => sum + item.quantity, 0),
-        weightKg: (current.weightKg ?? 0) + gearKg || null,
-        matrix: page,
-        layout: layout === 'stacked' ? 'stacked' : 'together',
-        landscape,
-        dmx: dmxInfo === 'off' ? [] : caseLights,
-        dmxChannels: dmxInfo === 'channels',
-        show,
+      const rendered = await renderContentSheets(current, {
+        equipment: equipment.data ?? [],
         colors: colors.data ?? [],
         footer: branding.data?.labelFooter ?? '',
-        logo: bitmap,
+        logo: logo.data ?? null,
         companyName: company.companyName,
-        photos,
-        })
+        sheet: { order, layout, landscape, dmx: dmxInfo, show },
+        origin: window.location.origin,
       })
-      bitmap?.close()
-      photos.forEach((image) => {
-        if (image instanceof ImageBitmap) image.close()
+      if (cancelled) return
+      rendered.forEach((source, index) => {
+        const target = canvases.current[index]
+        if (!target) return
+        target.width = source.width
+        target.height = source.height
+        target.getContext('2d')!.drawImage(source, 0, 0)
       })
       setDrawn(true)
     })()
     return () => {
       cancelled = true
     }
-  }, [ready, current, matrix, pages, layout, show, landscape, dmxInfo, caseLights, colors.data, branding.data, logo.data, company.companyName, equipment.data])
+  }, [ready, current, order, layout, show, landscape, dmxInfo, colors.data, branding.data, logo.data, company.companyName, equipment.data])
 
   const back = (
     <Link to={`/cases/${id}`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">

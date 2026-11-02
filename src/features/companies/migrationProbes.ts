@@ -53,6 +53,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0107', label: 'IP a MAC adresy chránené databázou', table: 'equipment_addresses', column: 'ip' },
   { migration: '0108', label: 'pack list – naskenované jednotlivé kusy', table: 'event_pack_units', column: 'unit' },
   { migration: '0122', label: 'limity hodín a revízie', table: 'maintenance_rules', column: 'id' },
+  { migration: '0123', label: 'vytlačené štítky (Bez QR štítku)', table: 'printed_labels', column: 'target_id' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 
