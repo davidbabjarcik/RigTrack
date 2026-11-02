@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Briefcase, Printer, QrCode, Speaker, Tag, Trash2, X } from 'lucide-react'
+import { Briefcase, Presentation, Printer, QrCode, Speaker, Tag, Trash2, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -8,6 +8,7 @@ import { caseTitle } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { KIND_LABELS, type EquipmentKind } from '@/features/equipment/model'
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { addToPrintQueue, markPrinted, printKeys, removeFromPrintQueue, useCompanyPrefs, usePrintedLabels, usePrintQueue, type PrintItem } from './api'
 
@@ -29,7 +30,9 @@ export function PrintQueuePage() {
   // Vytlačené: zapamätať (kvôli „Bez QR štítku“) a vyprázdniť frontu.
   const done = useMutation({
     mutationFn: async (list: PrintItem[]) => {
-      await markPrinted(companyId, list.map((item) => ({ kind: item.kind, targetId: item.targetId, label: item.label }))).catch(() => undefined)
+      // Plagáty sa nepamätajú (nie sú to štítky).
+      const labels = list.filter((item) => item.kind !== 'poster')
+      await markPrinted(companyId, labels.map((item) => ({ kind: item.kind as 'equipment' | 'case' | 'spot', targetId: item.targetId, label: item.label }))).catch(() => undefined)
       await removeFromPrintQueue(companyId, list.map((item) => item.id))
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }),
@@ -48,6 +51,7 @@ export function PrintQueuePage() {
 
   const items = queue.data
   const nameOf = (item: PrintItem) => {
+    if (item.kind === 'poster') return `Plagát inventára – ${KIND_LABELS[item.label.slice(7) as EquipmentKind] ?? item.label.slice(7)}`
     if (item.kind === 'spot') return spots.data?.spots.find((candidate) => candidate.id === item.targetId)?.name ?? 'Miesto (zmazané)'
     if (item.kind === 'case') {
       const box = cases.data?.find((candidate) => candidate.id === item.targetId)
@@ -61,6 +65,7 @@ export function PrintQueuePage() {
   const tape = items.filter((item) => item.label === 'tape')
   const caseLabels = items.filter((item) => item.label === 'case_label')
   const contents = items.filter((item) => item.label === 'content')
+  const posters = items.filter((item) => item.kind === 'poster')
   const ids = (list: PrintItem[]) => [...new Set(list.map((item) => item.targetId))].join(',')
   const a4 = (prefs.qrTarget ?? 'a4') === 'a4'
   // Bez QR štítku: technika (okrem spotrebného materiálu) a cases, ktoré ešte nemajú vytlačený ani zaradený QR.
@@ -83,11 +88,17 @@ export function PrintQueuePage() {
         <ul className="divide-y text-sm">
           {list.map((item) => (
             <li key={item.id} className="flex items-center gap-3 py-1.5">
-              <Link to={item.kind === 'spot' ? `/warehouse?spot=${item.targetId}` : item.kind === 'case' ? `/cases/${item.targetId}` : `/equipment/${item.targetId}`} className="min-w-0 flex-1 truncate hover:underline">
+              <Link to={item.kind === 'poster' ? `/equipment/poster?kind=${item.label.slice(7)}` : item.kind === 'spot' ? `/warehouse?spot=${item.targetId}` : item.kind === 'case' ? `/cases/${item.targetId}` : `/equipment/${item.targetId}`} className="min-w-0 flex-1 truncate hover:underline">
                 {nameOf(item)}
               </Link>
               {item.note && <span className="truncate text-muted-foreground">{item.note}</span>}
               {/* Štítok a obsah case sa tlačia každý zvlášť (vlastná stránka s tlačou / PDF). */}
+              {item.kind === 'poster' && (
+                <Link to={`/equipment/poster?kind=${item.label.slice(7)}`} className="inline-flex items-center gap-1 text-accent hover:underline">
+                  <Printer className="size-4" aria-hidden />
+                  Otvoriť a tlačiť
+                </Link>
+              )}
               {(item.label === 'case_label' || item.label === 'content') && (
                 <Link to={`/cases/${item.targetId}/${item.label === 'content' ? 'content' : 'label'}`} className="inline-flex items-center gap-1 text-accent hover:underline">
                   <Printer className="size-4" aria-hidden />
@@ -150,6 +161,7 @@ export function PrintQueuePage() {
           )}
           {group('Štítky cases', <Tag className="size-5 text-accent" aria-hidden />, caseLabels, caseLabels.length > 1 ? printLink(batchLink(caseLabels, []), 'Všetky štítky') : null)}
           {group('Obsah cases (hárky)', <Briefcase className="size-5 text-accent" aria-hidden />, contents, contents.length > 1 ? printLink(batchLink([], contents), 'Všetky obsahy') : null)}
+          {group('Plagáty inventára', <Presentation className="size-5 text-accent" aria-hidden />, posters, null)}
           {group('Štítky na pásku Brother (adresy, módy, odber)', <Tag className="size-5 text-accent" aria-hidden />, tape, printLink(`/labels/tape?ids=${ids(tape.filter((item) => item.kind === 'equipment'))}&back=/print`, 'Na Brother'))}
         </>
       )}

@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.7 – 2. 11. 2026
+
+- **Plagát inventára** po novom: A4 **na výšku** alebo na šírku, čierno-sivý na bielom papieri (bez modrej). Nakreslí sa
+  ako obrázok, takže náhľad sa vždy zmestí na obrazovku a tlač, **PDF** aj **PNG** vyzerajú rovnako. Veľa techniky
+  pokračuje na ďalšej strane.
+- Plagát sa dá pridať do **tlačovej fronty** (Tlač → Plagáty inventára).
+- Svetlá na plagáte sa rozdelia na pohyblivé, statické, efektové, výrobníky a príslušenstvo; zvuk, video, DJ, IT a
+  spotrebiče podľa typu, ostatné podľa kategórie.
+- Nová migrácia: `0131` (je aj v `supabase/update-all.sql`).
+
 ### 6.6.2 – 2. 11. 2026
 
 - Oprava: pri výbere z automatického dopĺňania prehliadača (napr. uložený text v políčku) appka hlásila chybu – zachytilo

@@ -48,4 +48,10 @@ describe('print queue and company prefs', () => {
     await t.as('viewer', `insert into public.printed_labels (company_id, kind, target_id) values ($1, 'spot', $2)`, [a, spot])
     expect(await t.as('boss', `select kind from public.print_queue where kind = 'spot'`)).toEqual([{ kind: 'spot' }])
   })
+
+  it('takes an inventory poster', async () => {
+    await t.as('viewer', `insert into public.print_queue (company_id, kind, target_id, label) values ($1, 'poster', $1, 'poster:truss')`, [a])
+    expect(await t.as('boss', `select label from public.print_queue where kind = 'poster'`)).toEqual([{ label: 'poster:truss' }])
+    await expect(t.as('viewer', `insert into public.print_queue (company_id, kind, target_id, label) values ($1, 'case', $1, 'poster:truss')`, [a])).rejects.toThrow(/check/)
+  })
 })

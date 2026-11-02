@@ -45,4 +45,17 @@ describe('posterSections', () => {
     expect(sections.map((s) => s.title)).toEqual(['Pódiové platne', 'Nohy, zábradlia, schody a spojky'])
     expect(sections[0].tiles.map((t) => t.count)).toEqual([15, 4])
   })
+
+  it('splits lights into moving, static and effect groups', () => {
+    const sections = posterSections(
+      [
+        item({ name: 'Beam 7R', kind: 'light', attributes: { lightType: 'moving_beam' }, quantity: 16 }),
+        item({ name: 'Blinder 2×100 W', kind: 'light', attributes: { lightType: 'blinder' }, quantity: 8 }),
+        item({ name: 'Poistné lanko', kind: 'light', attributes: { lightType: 'acc_other' }, quantity: 10 }),
+        item({ name: 'Bez typu', kind: 'light', attributes: {}, quantity: 1 }),
+      ],
+      'light',
+    )
+    expect(sections.map((s) => s.title)).toEqual(['Pohyblivé svetlá', 'Efektové svetlá', 'Príslušenstvo', 'Ostatné'])
+  })
 })

@@ -1,36 +1,28 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Box, Printer } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Download, FileDown, Printer } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
+import { downloadCanvas, fileSlug } from '@/features/cases/canvas'
+import { buildPdf, canvasJpeg, pageSizePt } from '@/features/cases/sheetPdf'
+import { brandingKeys, fetchBranding, fetchLogoBlob, logoForLightBackground } from '@/features/companies/branding'
 import { useCompany } from '@/features/companies/company-context'
-import { brandingKeys, fetchBranding, fetchLogoForDisplay } from '@/features/companies/branding'
+import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { equipmentKeys, fetchEquipmentList } from './api'
 import { KIND_LABELS, type EquipmentKind } from './model'
+import { fetchPhotoBlob, PHOTO_URL_STALE_MS } from './photo'
 import { POSTER_KINDS, POSTER_TITLES, posterSections } from './poster'
+import { renderPoster } from './posterCanvas'
 import { useEquipmentLookups } from './useEquipmentLookups'
-import { usePhotoThumbs } from './usePhotoThumbs'
 
-const ACCENTS = ['#3b82f6', '#84cc16', '#f97316', '#a855f7', '#06b6d4', '#ef4444']
-
-type Settings = { title: string; subtitle: string; notes: string; hidden: string[] }
-
-const PRINT_CSS = `
-@page { size: A4 landscape; margin: 0; @top-left { content: ""; } @top-center { content: ""; } @top-right { content: ""; } @bottom-left { content: ""; } @bottom-center { content: ""; } @bottom-right { content: ""; } }
-@media print {
-  body * { visibility: hidden !important }
-  .poster, .poster * { visibility: visible !important }
-  .poster { position: absolute; inset: 0 auto auto 0; width: 297mm !important; min-height: 210mm; border-radius: 0 !important; box-shadow: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact }
-  .poster section { break-inside: avoid }
-}
-`
+type Settings = { title: string; subtitle: string; notes: string; hidden: string[]; portrait: boolean }
 
 const storageKey = (companyId: string, kind: string) => `rigtrack:poster:${companyId}:${kind}`
 
 function loadSettings(companyId: string, kind: EquipmentKind): Settings {
-  const fallback: Settings = { title: POSTER_TITLES[kind] ?? `${KIND_LABELS[kind]} – inventár`, subtitle: '', notes: '', hidden: [] }
+  const fallback: Settings = { title: POSTER_TITLES[kind] ?? `${KIND_LABELS[kind]} – inventár`, subtitle: '', notes: '', hidden: [], portrait: true }
   try {
     return { ...fallback, ...JSON.parse(localStorage.getItem(storageKey(companyId, kind)) ?? '{}') }
   } catch {
@@ -38,9 +30,25 @@ function loadSettings(companyId: string, kind: EquipmentKind): Settings {
   }
 }
 
+type Bitmap = ImageBitmap
+
+/** Fotky dlaždíc ako obrázky na kreslenie (čo sa nenačíta, ostane bez fotky). */
+async function loadPhotos(paths: string[]) {
+  const entries = await Promise.all(
+    paths.map(async (path) => {
+      try {
+        return [path, await createImageBitmap(await fetchPhotoBlob(path))] as const
+      } catch {
+        return null
+      }
+    }),
+  )
+  return new Map(entries.filter((entry): entry is readonly [string, Bitmap] => entry !== null))
+}
+
 /**
- * Plagát inventára (A4 na šírku): technika jedného druhu po častiach – veľký počet kusov, fotka, názov a rozmer.
- * Napr. pódium (platne, nohy, zábradlia) alebo hliník (rovné diely podľa série, rohy, základne). /equipment/poster?kind=truss
+ * Plagát inventára (A4 na výšku alebo na šírku, biely papier): technika jedného druhu po častiach – veľký počet kusov,
+ * rozmer, názov a fotka. Nakreslí sa do obrázka – náhľad, tlač, PDF aj PNG sú rovnaké. /equipment/poster?kind=truss
  */
 export function InventoryPosterPage() {
   const company = useCompany().active!
@@ -60,47 +68,108 @@ export function InventoryPosterPage() {
       // bez úložiska platí nastavenie len do zatvorenia
     }
   }
+  const [printUrls, setPrintUrls] = useState<string[]>([])
 
   const list = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const { categories } = useEquipmentLookups(companyId)
   const branding = useQuery({ queryKey: brandingKeys.branding(companyId), queryFn: () => fetchBranding(companyId) })
+  // Logo pre biely papier (svetlé sa prefarbí na čierno).
   const logo = useQuery({
-    queryKey: ['company', companyId, 'logo-display', branding.data?.logoPath],
-    queryFn: () => fetchLogoForDisplay(branding.data!.logoPath),
+    queryKey: ['company', companyId, 'logo-light', branding.data?.logoPath],
+    queryFn: async () => createImageBitmap(await logoForLightBackground(await fetchLogoBlob(branding.data!.logoPath))),
     enabled: Boolean(branding.data?.logoPath),
     staleTime: Infinity,
+    retry: false,
   })
-  const thumbs = usePhotoThumbs(companyId, (list.data ?? []).filter((item) => item.kind === kind).map((item) => item.photoPath))
 
-  if (list.isPending) return <LoadingBlock />
-  if (list.isError) return <ErrorBlock message="Techniku sa nepodarilo načítať." onRetry={() => void list.refetch()} />
-
-  const sections = posterSections(list.data, kind, (id) => categories.find((category) => category.id === id)?.name ?? '')
+  const sections = useMemo(
+    () => (list.data ? posterSections(list.data, kind, (id) => categories.find((category) => category.id === id)?.name ?? '') : []),
+    [list.data, kind, categories],
+  )
   const shown = sections.filter((section) => !settings.hidden.includes(section.key))
-  // Veľké časti (viac ako 4 dlaždice) cez celú šírku, malé po dvoch vedľa seba; posledná osamotená malá tiež cez celú šírku.
-  const narrow = shown.filter((section) => section.tiles.length <= 4)
-  const isWide = (section: (typeof shown)[number]) =>
-    shown.length === 1 || section.tiles.length > 4 || (narrow.length % 2 === 1 && narrow.at(-1) === section)
+  const paths = [...new Set(shown.flatMap((section) => section.tiles.map((tile) => tile.photoPath)).filter(Boolean))].sort()
+  const photos = useQuery({ queryKey: ['company', companyId, 'poster-photos', paths], queryFn: () => loadPhotos(paths), staleTime: PHOTO_URL_STALE_MS, placeholderData: (previous) => previous })
+  const logoReady = !branding.data?.logoPath || !logo.isPending
   const notes = settings.notes
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
     .slice(0, 4)
-  // Plagát je na biely papier: svetlé logo by zaniklo, prefarbí sa na čierno.
-  const logoFilter = logo.data?.tone === 'light' ? 'brightness(0)' : undefined
+
+  const pages = useMemo(() => {
+    if (shown.length === 0 || !photos.data || !logoReady) return []
+    return renderPoster({
+      title: settings.title,
+      subtitle: settings.subtitle,
+      notes,
+      portrait: settings.portrait,
+      sections: shown,
+      photos: photos.data,
+      logo: logo.data ?? null,
+      companyName: company.companyName,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- notes a shown sú odvodené z nastavení a zoznamu
+  }, [settings, sections, photos.data, logo.data, logoReady, company.companyName])
+  const previews = useMemo(() => pages.map((canvas) => canvas.toDataURL('image/png')), [pages])
+
+  if (list.isPending) return <LoadingBlock />
+  if (list.isError) return <ErrorBlock message="Techniku sa nepodarilo načítať." onRetry={() => void list.refetch()} />
+
+  const baseName = `inventar-${fileSlug(settings.title || KIND_LABELS[kind])}`
+  const downloadPdf = async () => {
+    const images = await Promise.all(pages.map((canvas) => canvasJpeg(canvas, 0.92)))
+    const url = URL.createObjectURL(buildPdf(images, pageSizePt('A4', !settings.portrait)))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${baseName}.pdf`
+    link.click()
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }
+  const downloadPng = async () => {
+    for (const [index, canvas] of pages.entries()) {
+      downloadCanvas(canvas, pages.length > 1 ? `${baseName}-${index + 1}.png` : `${baseName}.png`)
+      await new Promise((resolve) => setTimeout(resolve, 300))
+    }
+  }
+  const print = () => {
+    setPrintUrls(pages.map((canvas) => canvas.toDataURL('image/jpeg', 0.92)))
+    window.setTimeout(() => {
+      window.print()
+      setPrintUrls([])
+    }, 200)
+  }
+  const ready = pages.length > 0
 
   return (
     <>
-      <style>{PRINT_CSS}</style>
+      {printUrls.length > 0 && (
+        <>
+          <style>{`@page { size: A4 ${settings.portrait ? 'portrait' : 'landscape'}; margin: 0 } @media print { body * { visibility: hidden !important } .sheet-print, .sheet-print * { visibility: visible !important } .sheet-print { position: absolute; inset: 0 } .sheet-print img { display: block; width: 100%; height: auto; break-after: page } }`}</style>
+          <div className="sheet-print hidden print:block">
+            {printUrls.map((url, index) => (
+              <img key={index} src={url} alt="" />
+            ))}
+          </div>
+        </>
+      )}
       <div className="mb-4 flex flex-wrap items-center gap-2 print:hidden">
         <Link to="/equipment" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" aria-hidden />
           Technika
         </Link>
         <span className="flex-1" />
-        <Button onClick={() => window.print()}>
+        <AddToPrintButton companyId={companyId} kind="poster" targetIds={[companyId]} label={`poster:${kind}`} />
+        <Button disabled={!ready} onClick={print}>
           <Printer className="size-4" aria-hidden />
-          Tlačiť / PDF
+          Tlačiť
+        </Button>
+        <Button variant="outline" disabled={!ready} onClick={() => void downloadPdf()}>
+          <FileDown className="size-4" aria-hidden />
+          PDF
+        </Button>
+        <Button variant="outline" disabled={!ready} onClick={() => void downloadPng()}>
+          <Download className="size-4" aria-hidden />
+          {pages.length > 1 ? `PNG (${pages.length})` : 'PNG'}
         </Button>
       </div>
 
@@ -111,6 +180,10 @@ export function InventoryPosterPage() {
               {KIND_LABELS[value]}
             </option>
           ))}
+        </SelectField>
+        <SelectField label="Papier" value={settings.portrait ? 'portrait' : 'landscape'} onChange={(e) => update({ portrait: e.target.value === 'portrait' })}>
+          <option value="portrait">A4 na výšku</option>
+          <option value="landscape">A4 na šírku</option>
         </SelectField>
         <Field label="Nadpis" maxLength={60} value={settings.title} onChange={(e) => update({ title: e.target.value })} />
         <Field label="Podnadpis" maxLength={80} placeholder="napr. Modulárny pódiový systém" value={settings.subtitle} onChange={(e) => update({ subtitle: e.target.value })} />
@@ -146,79 +219,19 @@ export function InventoryPosterPage() {
           V technike zatiaľ nie je nič druhu „{KIND_LABELS[kind]}“. {kind === 'truss' && 'Pri hliníku vyplňte typ (1–4-point), tvar a dĺžku – podľa nich sa rozdelí na rovné diely, rohy a základne.'}
           {kind === 'stage' && 'Pri pódiu vyplňte Dosky / Príslušenstvo a rozmer platne.'}
         </p>
+      ) : !ready ? (
+        <p className="text-sm text-muted-foreground">{shown.length === 0 ? 'Vyberte aspoň jednu časť.' : 'Kreslím plagát…'}</p>
       ) : (
-        <div className="overflow-x-auto pb-2">
-          <article
-            className="poster mx-auto flex w-[297mm] min-w-[297mm] flex-col gap-[5mm] overflow-hidden rounded-xl border p-[9mm] shadow-lg"
-            style={{ minHeight: '210mm', background: '#ffffff', color: '#0f172a' }}
-          >
-            <header className="flex items-center gap-[6mm]">
-              {logo.data && <img src={logo.data.url} alt="" className="h-[16mm] max-w-[60mm] object-contain" style={{ filter: logoFilter }} />}
-              <div className="min-w-0 flex-1">
-                <h1 className="text-[13mm] leading-none font-black tracking-tight uppercase">
-                  {settings.title.split('–')[0].trim()}
-                  {settings.title.includes('–') && <span style={{ color: ACCENTS[0] }}> – {settings.title.split('–').slice(1).join('–').trim()}</span>}
-                </h1>
-                {settings.subtitle && <p className="mt-[2mm] text-[4mm] tracking-[0.2em] uppercase opacity-70">{settings.subtitle}</p>}
-              </div>
-              {!logo.data && <p className="text-[4.5mm] font-semibold tracking-[0.25em] uppercase opacity-70">{company.companyName}</p>}
-            </header>
-            <div className="h-[0.6mm] rounded-full" style={{ background: `linear-gradient(90deg, ${ACCENTS[0]}, transparent)` }} />
-
-            <div className="grid flex-1 content-start gap-[5mm]" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
-              {shown.map((section, index) => {
-                const accent = ACCENTS[index % ACCENTS.length]
-                const wide = isWide(section)
-                return (
-                  <section
-                    key={section.key}
-                    className="flex flex-col rounded-[3mm] border p-[4mm]"
-                    style={{ gridColumn: wide ? '1 / -1' : undefined, borderColor: `${accent}88`, background: '#ffffff' }}
-                  >
-                    <h2 className="mb-[3mm] flex items-center gap-[2.5mm] text-[5mm] font-bold tracking-wide uppercase">
-                      <span className="grid size-[7mm] place-items-center rounded-[1.5mm] text-[4mm] text-white" style={{ background: accent }}>
-                        {index + 1}
-                      </span>
-                      {section.title}
-                      <span className="ml-auto text-[3.5mm] font-medium tracking-normal normal-case opacity-60">spolu {section.total} ks</span>
-                    </h2>
-                    <div className="grid gap-[3mm]" style={{ gridTemplateColumns: wide ? 'repeat(auto-fill, minmax(62mm, 1fr))' : 'repeat(2, minmax(0, 1fr))' }}>
-                      {section.tiles.map((tile) => (
-                        <div key={tile.key} className="flex min-h-[26mm] items-center gap-[3mm] rounded-[2mm] p-[3mm]" style={{ background: '#ffffff', border: '0.3mm solid #e2e8f0' }}>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[11mm] leading-none font-black tabular-nums" style={{ color: accent }}>
-                              {tile.count}
-                              <span className="text-[6mm]">×</span>
-                            </p>
-                            {tile.detail && <p className="mt-[1mm] text-[5mm] leading-tight font-bold">{tile.detail}</p>}
-                            <p className="mt-[1mm] border-t pt-[1mm] text-[3.2mm] leading-tight font-medium tracking-wide uppercase opacity-80" style={{ borderColor: `${accent}66` }}>
-                              {tile.name}
-                            </p>
-                          </div>
-                          {thumbs[tile.photoPath] ? (
-                            <img src={thumbs[tile.photoPath]} alt="" className="size-[22mm] shrink-0 rounded-[1.5mm] object-cover" />
-                          ) : (
-                            <Box className="size-[12mm] shrink-0 opacity-20" aria-hidden />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )
-              })}
-            </div>
-
-            {notes.length > 0 && (
-              <footer className="flex flex-wrap items-center gap-x-[8mm] gap-y-[2mm] rounded-[3mm] border px-[5mm] py-[3mm] text-[3.5mm] font-medium tracking-wide uppercase" style={{ borderColor: '#e2e8f0' }}>
-                {notes.map((note, index) => (
-                  <span key={index} className="flex items-center gap-[2mm]">
-                    <span className="size-[2mm] rounded-full" style={{ background: ACCENTS[index % ACCENTS.length] }} />
-                    {note}
-                  </span>
-                ))}
-              </footer>
-            )}
-          </article>
+        <div className="flex flex-col items-center gap-4 print:hidden">
+          {previews.map((url, index) => (
+            <img
+              key={index}
+              src={url}
+              alt={`Plagát, strana ${index + 1}`}
+              className="w-full rounded-lg border bg-white shadow-lg"
+              style={{ maxWidth: settings.portrait ? 720 : 1100 }}
+            />
+          ))}
         </div>
       )}
     </>

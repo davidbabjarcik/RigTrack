@@ -1,4 +1,16 @@
-import { formatNumber, TRUSS_SHAPE_LABELS, type Equipment, type EquipmentKind } from './model'
+import {
+  APPLIANCE_TYPE_LABELS,
+  AUDIO_TYPE_LABELS,
+  AUDIO_TYPES,
+  DJ_TYPE_LABELS,
+  formatNumber,
+  IT_TYPE_LABELS,
+  LIGHT_TYPE_GROUPS,
+  TRUSS_SHAPE_LABELS,
+  VIDEO_TYPE_LABELS,
+  type Equipment,
+  type EquipmentKind,
+} from './model'
 
 /** Jedna dlaždica plagátu: rovnaká technika zrátaná dokopy (aj rozdelená do viacerých cases). */
 export type PosterTile = { key: string; name: string; detail: string; count: number; photoPath: string; ids: string[]; sort: number }
@@ -40,8 +52,21 @@ function sectionOf(item: Item, categoryName: (id: string | null) => string): { k
     if (a.stageType === 'accessory') return { key: 'acc', title: 'Nohy, zábradlia, schody a spojky', order: 2 }
     return { key: 'other', title: 'Ostatné', order: 9 }
   }
+  // Svetlá podľa skupín (pohyblivé, statické, efektové…), ostatné podľa typu, inak kategórie.
+  if (item.kind === 'light' && a.lightType) {
+    const index = LIGHT_TYPE_GROUPS.findIndex((group) => (group.types as readonly string[]).includes(a.lightType!))
+    if (index >= 0) return { key: `light:${index}`, title: LIGHT_TYPE_GROUPS[index].label, order: index }
+  }
+  if (item.kind === 'audio' && a.audioType) return { key: `audio:${a.audioType}`, title: AUDIO_TYPE_LABELS[a.audioType], order: AUDIO_TYPES.indexOf(a.audioType) }
+  const typed =
+    (item.kind === 'video' && a.videoType && VIDEO_TYPE_LABELS[a.videoType]) ||
+    (item.kind === 'dj' && a.djType && DJ_TYPE_LABELS[a.djType]) ||
+    (item.kind === 'it' && a.itType && IT_TYPE_LABELS[a.itType]) ||
+    (item.kind === 'appliance' && a.applianceType && APPLIANCE_TYPE_LABELS[a.applianceType]) ||
+    (item.kind === 'cable' && a.connector)
+  if (typed) return { key: `type:${typed}`, title: typed, order: 1 }
   const category = categoryName(item.categoryId)
-  return { key: `cat:${category}`, title: category || 'Ostatné', order: category ? 1 : 9 }
+  return { key: `cat:${category}`, title: category || 'Ostatné', order: category ? 50 : 99 }
 }
 
 /** Krátky údaj pod názvom: rozmer platne, dĺžka dielu, tvar. */
