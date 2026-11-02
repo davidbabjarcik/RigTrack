@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.17 – 2. 11. 2026
+
+- **Vrátený case treba spočítať**: keď sa case vráti z eventu (naskenuje alebo odškrtne v pack liste – Návrat), appka
+  pripomenie spočítať a skontrolovať obsah (napr. káblovku). Na stránke case svieti upozornenie a v **Kontrolách** je
+  sekcia „Vrátené z eventu – spočítať obsah“, kým niekto neklikne Skontrolované.
+- **Ešte vonku**: v Kontrolách aj na Prehľade (nový blok „Ešte vonku a vrátené“) je, čo sa z eventov, ktoré už skončili,
+  naložilo, ale nevrátilo – s odkazom rovno do pack listu.
+
 ### 5.16 – 2. 11. 2026
 
 - **Limity hodín**: napr. Výbojka 1 500 h alebo servis každých 500 h prevádzky. Upozorní pri nastavenom % (predvolene 90 %).

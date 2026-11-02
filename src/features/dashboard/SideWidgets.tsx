@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp, BarChart3, CalendarDays, Check, Settings2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, BarChart3, CalendarDays, Check, Settings2, Truck } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/features/auth/auth-context'
@@ -22,6 +22,8 @@ import { DEFAULT_STAT_TILES, DEFAULT_WIDGETS, STAT_TILES, WIDGETS, widgetOrder, 
 import { useCases } from '@/features/cases/useCases'
 import { unpackedEquipment } from '@/features/equipment/model'
 import { isFillTask } from '@/features/tasks/board'
+import { caseTitle } from '@/features/cases/model'
+import { lastReturns, returnedUnchecked, stillOut, useRecentPackMarks } from '@/features/pack/returns'
 
 const WEEKDAYS = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']
 
@@ -109,6 +111,57 @@ function MiniCalendar({ company }: { company: Membership }) {
   )
 }
 
+/** Čo je ešte vonku z eventov, ktoré skončili, a vrátené cases, ktorých obsah treba spočítať. */
+function OutsideWidget({ company }: { company: Membership }) {
+  const companyId = company.companyId
+  const today = todayIso()
+  const marks = useRecentPackMarks(companyId, can(company, 'events.view')).data ?? []
+  const events = useEvents(companyId)
+  const cases = useCases(companyId)
+  const returns = lastReturns(marks)
+  const toCheck = (cases.data ?? []).filter((item) => returnedUnchecked(returns.get(item.id), item.lastCheck?.checkedAt))
+  const outside = stillOut(marks, events.data ?? [], today)
+  return (
+    <section className="mb-6 rounded-xl border bg-surface p-4">
+      <h2 className="mb-2 flex items-center gap-2 font-medium">
+        <Truck className="size-5 text-accent" aria-hidden />
+        <Link to="/checks" className="hover:underline">
+          Ešte vonku a vrátené
+        </Link>
+      </h2>
+      {outside.length === 0 && toCheck.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Všetko je doma a skontrolované.</p>
+      ) : (
+        <ul className="flex flex-col gap-1 text-sm">
+          {outside.map(({ event, items }) => (
+            <li key={event.id}>
+              <Link to={`/events/${event.id}/pack`} className="flex gap-2 rounded-md px-1 py-0.5 text-destructive hover:bg-muted">
+                <span className="min-w-0 flex-1 truncate">{event.name}</span>
+                <span className="shrink-0">{items.length} nevrátené</span>
+              </Link>
+            </li>
+          ))}
+          {toCheck.slice(0, 5).map((item) => (
+            <li key={item.id}>
+              <Link to={`/cases/${item.id}`} className="flex gap-2 rounded-md px-1 py-0.5 hover:bg-muted">
+                <span className="min-w-0 flex-1 truncate">{caseTitle(item)}</span>
+                <span className="shrink-0 text-accent">spočítať obsah</span>
+              </Link>
+            </li>
+          ))}
+          {toCheck.length > 5 && (
+            <li>
+              <Link to="/checks" className="px-1 text-muted-foreground hover:underline">
+                a ďalšie ({toCheck.length - 5})
+              </Link>
+            </li>
+          )}
+        </ul>
+      )}
+    </section>
+  )
+}
+
 /** Pár čísel na prvý pohľad. */
 function QuickStats({ company, tileIds }: { company: Membership; tileIds: StatTileId[] }) {
   const companyId = company.companyId
@@ -190,6 +243,8 @@ export function SideWidgets({ company, layout = 'desktop' }: { company: Membersh
         return <MiniCalendar key={id} company={company} />
       case 'stats':
         return <QuickStats key={id} company={company} tileIds={tileIds} />
+      case 'outside':
+        return <OutsideWidget key={id} company={company} />
     }
   }
 

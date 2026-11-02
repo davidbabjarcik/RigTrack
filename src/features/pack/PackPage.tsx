@@ -192,6 +192,8 @@ export function PackPage() {
             }
             if (checkOf(row, all, phase)) return `✓ ${row.name} už je odškrtnuté.`
             tick(row, true)
+            // Vrátený case: obsah (napr. káblovku) treba ešte spočítať – svieti v Kontrolách, kým sa neskontroluje.
+            if (phase === 'back' && row.caseId) return `✓ ${row.name} vrátený – spočítajte a skontrolujte obsah`
             return `✓ ${row.name}`
           }}
         />

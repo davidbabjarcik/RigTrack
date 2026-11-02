@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronRight, ClipboardCheck, Gauge, ShieldCheck, Wrench } from 'lucide-react'
+import { ChevronRight, ClipboardCheck, Gauge, PackageCheck, ShieldCheck, Truck, Wrench } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -15,6 +15,8 @@ import { concernsMe } from '@/features/notifications/model'
 import { useResponsibilities, type Responsibility } from '@/features/responsibilities/api'
 import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
+import { useEvents } from '@/features/events/useEvents'
+import { lastReturns, returnedUnchecked, stillOut, useRecentPackMarks } from '@/features/pack/returns'
 import { useCheckLevels } from './levels'
 
 /** Case je moja starosť, keď zaň (alebo za techniku v ňom) zodpovedám; ak nezodpovedá nikto, je to starosť všetkých. */
@@ -65,6 +67,8 @@ export function ChecksPage() {
   const checkDays = useCheckLevels(companyId).days
   const rules = useMaintenanceRules(companyId).data ?? []
   const maintenance = useMaintenanceDue(companyId, rules.length > 0)
+  const marks = useRecentPackMarks(companyId).data ?? []
+  const events = useEvents(companyId)
   const today = todayIso()
   const [now] = useState(() => Date.now())
 
@@ -73,8 +77,14 @@ export function ChecksPage() {
 
   const gear = (equipment.data ?? []).filter((item) => item.status !== 'retired')
   const mine = (item: Equipment) => !onlyMine || concernsMe(item, responsibilities, userId)
+  const returns = lastReturns(marks)
+  // Vrátené z eventu a nespočítané majú prednosť pred bežnou kontrolou podľa úrovne.
+  const isReturned = (item: Case) => returnedUnchecked(returns.get(item.id), item.lastCheck?.checkedAt)
+  const caseIsMine = (item: Case) => !onlyMine || caseConcernsMe(item, gear.filter((part) => part.caseId === item.id), responsibilities, userId)
+  const returnedCases = cases.data.filter(isReturned).filter(caseIsMine)
+  const outside = stillOut(marks, events.data ?? [], today)
   const dueCases = cases.data
-    .filter((item) => needsCheck(item, now, checkDays))
+    .filter((item) => !isReturned(item) && needsCheck(item, now, checkDays))
     .filter((item) => !onlyMine || caseConcernsMe(item, gear.filter((part) => part.caseId === item.id), responsibilities, userId))
   // Rozdelená technika (napr. 8× Beam v cases) je jeden riadok s odkazom na prehľad – tam sa dajú odčítať hodiny všetkým naraz.
   const groups = groupSplitEquipment(gear.filter(mine))
@@ -106,6 +116,32 @@ export function ChecksPage() {
         Len to, za čo zodpovedám
         {!someoneResponsible && <span className="text-muted-foreground">(zodpovednosti nie sú nastavené – vidíte všetko)</span>}
       </label>
+
+      {returnedCases.length > 0 && (
+        <Section icon={<PackageCheck className="size-5 text-accent" aria-hidden />} title="Vrátené z eventu – spočítať obsah" count={returnedCases.length}>
+          {returnedCases.map((item) => {
+            const back = returns.get(item.id)!
+            const event = events.data?.find((candidate) => candidate.id === back.eventId)
+            return <Row key={item.id} to={`/cases/${item.id}`} title={caseTitle(item)} detail={`Vrátený ${formatDate(back.checkedAt.slice(0, 10))}${event ? ` z ${event.name}` : ''} – obsah ešte nikto neskontroloval`} late />
+          })}
+        </Section>
+      )}
+
+      {outside.length > 0 && (
+        <Section icon={<Truck className="size-5 text-accent" aria-hidden />} title="Ešte vonku – event skončil, nevrátené" count={outside.reduce((total, group) => total + group.items.length, 0)}>
+          {outside.map(({ event, items }) => (
+            <Row
+              key={event.id}
+              to={`/events/${event.id}/pack`}
+              title={`${event.name} (skončil ${formatDate(event.endsOn)})`}
+              detail={items
+                .map((mark) => (mark.caseId ? (cases.data.find((item) => item.id === mark.caseId) ? caseTitle(cases.data.find((item) => item.id === mark.caseId)!) : 'case') : (gear.find((item) => item.id === mark.equipmentId)?.name ?? 'technika')))
+                .join(', ')}
+              late
+            />
+          ))}
+        </Section>
+      )}
 
       <Section icon={<ClipboardCheck className="size-5 text-accent" aria-hidden />} title="Cases a racky na kontrolu" count={dueCases.length}>
         {dueCases.map((item) => (

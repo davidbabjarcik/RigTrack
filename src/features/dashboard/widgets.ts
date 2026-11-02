@@ -4,10 +4,11 @@ export const WIDGETS = {
   tasks: 'Moje úlohy',
   calendar: 'Kalendár',
   stats: 'Štatistiky',
+  outside: 'Ešte vonku a vrátené',
 } as const
 export type WidgetId = keyof typeof WIDGETS
 
-export const DEFAULT_WIDGETS: WidgetId[] = ['responsibilities', 'tasks', 'calendar']
+export const DEFAULT_WIDGETS: WidgetId[] = ['responsibilities', 'tasks', 'outside', 'calendar']
 
 /** Poradie na úpravu: zapnuté v ich poradí, za nimi vypnuté. Neznáme (staré) id sa vynechajú. */
 export function widgetOrder(shown: string[]): WidgetId[] {

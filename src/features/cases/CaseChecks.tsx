@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ClipboardCheck } from 'lucide-react'
+import { ClipboardCheck, PackageCheck } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
+import { useEvents } from '@/features/events/useEvents'
+import { lastReturns, returnedUnchecked, returnKeys, useRecentPackMarks } from '@/features/pack/returns'
 import { formatDateTime } from '@/lib/format'
 import { addCaseCheck, caseKeys, fetchCaseChecks } from './api'
 
@@ -25,6 +27,7 @@ export function CaseChecks({ companyId, caseId, canCheck }: Props) {
       setNote('')
       // Prefix zoznamu pokrýva aj históriu kontrol tohto case.
       await queryClient.invalidateQueries({ queryKey: caseKeys.list(companyId) })
+      void queryClient.invalidateQueries({ queryKey: returnKeys.recent(companyId) })
     },
   })
 
@@ -34,9 +37,23 @@ export function CaseChecks({ companyId, caseId, canCheck }: Props) {
   }
 
   const [last, ...older] = checks.data ?? []
+  // Vrátený z eventu a odvtedy nekontrolovaný: obsah (napr. káblovku) treba spočítať.
+  const returned = lastReturns(useRecentPackMarks(companyId).data ?? []).get(caseId)
+  const events = useEvents(companyId)
+  const mustCheck = !checks.isPending && returnedUnchecked(returned, last?.checkedAt)
+  const fromEvent = returned ? events.data?.find((event) => event.id === returned.eventId)?.name : undefined
 
   return (
-    <section aria-labelledby="checks-heading" className="mb-6 rounded-xl border bg-surface p-4">
+    <section aria-labelledby="checks-heading" className={mustCheck ? 'mb-6 rounded-xl border border-accent bg-surface p-4' : 'mb-6 rounded-xl border bg-surface p-4'}>
+      {mustCheck && returned && (
+        <p role="status" className="mb-3 flex items-start gap-2 rounded-lg bg-accent/10 p-3 text-sm">
+          <PackageCheck className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+          <span>
+            Vrátený z eventu{fromEvent ? ` ${fromEvent}` : ''} {formatDateTime(returned.checkedAt)}
+            {returned.checkedByName && ` (${returned.checkedByName})`} – <strong>spočítajte a skontrolujte obsah</strong>, potom kliknite na Skontrolované.
+          </span>
+        </p>
+      )}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 id="checks-heading" className="text-sm font-medium text-muted-foreground">
