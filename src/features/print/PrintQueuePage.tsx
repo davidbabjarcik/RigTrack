@@ -70,7 +70,7 @@ export function PrintQueuePage() {
   const a4 = (prefs.qrTarget ?? 'a4') === 'a4'
   // Bez QR štítku: technika (okrem spotrebného materiálu) a cases, ktoré ešte nemajú vytlačený ani zaradený QR.
   const hasQr = new Set([...(printed.data ?? []), ...items].filter((item) => item.label === 'qr').map((item) => `${item.kind}|${item.targetId}`))
-  const missingEquipment = (equipment.data ?? []).filter((item) => item.status !== 'retired' && item.kind !== 'consumable' && !hasQr.has(`equipment|${item.id}`))
+  const missingEquipment = (equipment.data ?? []).filter((item) => item.status !== 'retired' && item.kind !== 'consumable' && item.kind !== 'cable' && !hasQr.has(`equipment|${item.id}`))
   const missingCases = (cases.data ?? []).filter((item) => !hasQr.has(`case|${item.id}`))
   const missing = [...missingEquipment.map((item) => ({ kind: 'equipment' as const, targetId: item.id })), ...missingCases.map((item) => ({ kind: 'case' as const, targetId: item.id }))]
   const batchLink = (labels: PrintItem[], sheets: PrintItem[]) => `/print/batch?labels=${ids(labels)}&contents=${ids(sheets)}`
@@ -144,15 +144,15 @@ export function PrintQueuePage() {
             'QR štítky techniky',
             <Speaker className="size-5 text-accent" aria-hidden />,
             qrEquipment,
-            a4 ? printLink(`/qr/equipment?ids=${ids(qrEquipment)}`, 'Tlačiť na A4') : printLink(`/labels/tape?ids=${ids(qrEquipment)}&back=/print`, 'Na Brother'),
+            a4 ? printLink(`/qr/equipment?ids=${ids(qrEquipment)}&back=/print`, 'Tlačiť na A4') : printLink(`/labels/tape?ids=${ids(qrEquipment)}&back=/print`, 'Na Brother'),
           )}
           {group(
             'QR štítky cases',
             <Briefcase className="size-5 text-accent" aria-hidden />,
             qrCases,
-            a4 ? printLink(`/qr/cases?ids=${ids(qrCases)}`, 'Tlačiť na A4') : printLink(`/labels/tape?cases=${ids(qrCases)}&back=/print`, 'Na Brother'),
+            a4 ? printLink(`/qr/cases?ids=${ids(qrCases)}&back=/print`, 'Tlačiť na A4') : printLink(`/labels/tape?cases=${ids(qrCases)}&back=/print`, 'Na Brother'),
           )}
-          {group('QR štítky miest v sklade', <Tag className="size-5 text-accent" aria-hidden />, qrSpots, printLink(`/qr/spots?ids=${ids(qrSpots)}`, 'Tlačiť na A4'))}
+          {group('QR štítky miest v sklade', <Tag className="size-5 text-accent" aria-hidden />, qrSpots, printLink(`/qr/spots?ids=${ids(qrSpots)}&back=/print`, 'Tlačiť na A4'))}
           {caseLabels.length + contents.length > 1 && (
             <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
               <span className="flex-1">Štítky a obsahy cases môžete vytlačiť všetky naraz (alebo stiahnuť jedno PDF).</span>
@@ -172,19 +172,37 @@ export function PrintQueuePage() {
             Bez QR štítku ({missing.length})
           </h2>
           <p className="mb-3 text-sm text-muted-foreground">
-            Technika a cases, ktoré ešte nemajú vytlačený QR štítok
+            Technika (okrem káblov a spotrebného materiálu) a cases, ktoré ešte nemajú vytlačený QR štítok
             {missingEquipment.length > 0 && missingCases.length > 0 && ` (${missingEquipment.length} techniky, ${missingCases.length} cases)`}. Štítok sa
             zapamätá po „Vytlačené – vyprázdniť“. Ak už nalepené sú, označte ich.
           </p>
-          <ul className="mb-3 flex max-h-48 flex-col gap-0.5 overflow-y-auto text-sm">
-            {[...missingCases.map((item) => ({ id: item.id, to: `/cases/${item.id}`, name: caseTitle(item) })), ...missingEquipment.map((item) => ({ id: item.id, to: `/equipment/${item.id}`, name: item.name }))].map((entry) => (
-              <li key={entry.id}>
-                <Link to={entry.to} className="hover:underline">
-                  {entry.name}
-                </Link>
-              </li>
+          <div className="mb-3 grid gap-4 sm:grid-cols-2">
+            {(
+              [
+                ['Cases', missingCases.map((item) => ({ id: item.id, to: `/cases/${item.id}`, name: caseTitle(item) }))],
+                ['Technika', missingEquipment.map((item) => ({ id: item.id, to: `/equipment/${item.id}`, name: item.name }))],
+              ] as const
+            ).map(([title, entries]) => (
+              <div key={title} className="min-w-0">
+                <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                  {title} ({entries.length})
+                </h3>
+                {entries.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">všetko má štítok</p>
+                ) : (
+                  <ul className="flex max-h-48 flex-col gap-0.5 overflow-y-auto text-sm">
+                    {entries.map((entry) => (
+                      <li key={entry.id} className="truncate">
+                        <Link to={entry.to} className="hover:underline">
+                          {entry.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             ))}
-          </ul>
+          </div>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" disabled={addMissing.isPending} onClick={() => addMissing.mutate(missing)}>
               <Printer className="size-4" aria-hidden />

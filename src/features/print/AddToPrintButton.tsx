@@ -34,14 +34,14 @@ export function AddToPrintButton({ companyId, kind, targetIds, label = 'qr', lig
   const inQueue = targetIds.length > 0 && targetIds.every((id) => (queue.data ?? []).some((item) => item.kind === kind && item.targetId === id && item.label === label))
   if (inQueue || justAdded) {
     return (
-      <Link to="/print" className={`${light ? 'border-neutral-300 bg-white ' : ''}inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm text-emerald-600 hover:bg-muted dark:text-emerald-400`}>
+      <Link to="/print" className={`${light ? 'border-neutral-300 bg-white ' : ''}inline-flex h-11 items-center gap-1.5 rounded-lg border px-4 text-sm text-emerald-600 hover:bg-muted dark:text-emerald-400`}>
         <Check className="size-4" aria-hidden />
         {IN_QUEUE[textKey(label)]}
       </Link>
     )
   }
   return (
-    <Button variant="outline" size="sm" className={light ? 'border-neutral-300 bg-white text-black hover:bg-neutral-100' : undefined} disabled={add.isPending || targetIds.length === 0} onClick={() => add.mutate()} title="Pridať štítky do tlačovej fronty – vytlačíte ich naraz v menu Tlač">
+    <Button variant="outline" className={light ? 'border-neutral-300 bg-white text-black hover:bg-neutral-100' : undefined} disabled={add.isPending || targetIds.length === 0} onClick={() => add.mutate()} title="Pridať štítky do tlačovej fronty – vytlačíte ich naraz v menu Tlač">
       <Printer className="size-4" aria-hidden />
       {ADD[textKey(label)]}
       {targetIds.length > 1 ? ` (${targetIds.length})` : ''}

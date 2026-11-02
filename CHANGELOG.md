@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.12.1 – 3. 11. 2026
+
+- **QR štítky** vo farbách appky; štítky sú na bielom „papieri“ v šírke A4, takže veľkosť na obrazovke sedí s tlačou.
+- QR štítky miest v sklade bez stien, okien, dverí, stĺpov a miestností.
+- Z Tlače → „Tlačiť na A4“ sa tlačidlom Späť vrátite do Tlače, nie na techniku.
+- **Bez QR štítku**: bez káblov a spotrebného materiálu; cases a technika vedľa seba.
+- Tlačidlá „QR do tlače“ / „V tlači“ rovnako vysoké ako ostatné.
+
 ### 6.12 – 3. 11. 2026
 
 - **Upraviť plán → Pridať**: hore Regál, Miesto, Paleta a zvlášť Stavba (miestnosť, dvere, okno, stĺp, stena). Pri

@@ -3,7 +3,7 @@ import { ArrowLeft, Download, Printer } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { Button } from '@/components/ui/button'
+import { Button, LinkButton } from '@/components/ui/button'
 import { downloadCanvas, fileSlug, qrCanvas } from '@/features/cases/canvas'
 import { caseTitle } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
@@ -12,6 +12,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { unitIdsOf } from '@/features/equipment/model'
 import { QrCode } from '@/features/networks/QrCode'
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
+import { isStructure } from '@/features/warehouse/model'
 import { qrUrl } from './qr'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { clampQrMm, QR_MM_MAX, QR_MM_MIN, QR_SIZE_LABELS, QR_SIZES, useCompanyPrefs, type QrSize } from '@/features/print/api'
@@ -74,7 +75,7 @@ export function QrLabelsPage() {
     return found ? caseTitle(found) : undefined
   }
   const records: LabelRecord[] = isSpots
-    ? (plan.data?.spots ?? []).map((spot) => ({ id: spot.id, key: spot.id, name: spot.name, number: spot.levels > 1 ? `${spot.levels} poschodia` : '', kind: 'spot' as const }))
+    ? (plan.data?.spots ?? []).filter((spot) => !isStructure(spot.kind)).map((spot) => ({ id: spot.id, key: spot.id, name: spot.name, number: spot.levels > 1 ? `${spot.levels} poschodia` : '', kind: 'spot' as const }))
     : isCases
       ? (cases.data ?? []).map((item) => ({ id: item.id, key: item.id, name: caseTitle(item), number: item.inventoryNumber, kind: 'case' as const }))
       : // Technika po kusoch: každý kus (#1, #2…) má vlastný štítok s QR.
@@ -88,25 +89,24 @@ export function QrLabelsPage() {
     .map((item) => ({ id: item.key, name: item.name, number: item.number, place: item.place, url: qrUrl({ kind: item.kind, id: item.id, unit: item.unit }, window.location.origin) }))
     .sort((a, b) => a.name.localeCompare(b.name, 'sk', { numeric: true }))
   const base = isSpots ? '/warehouse' : `/${isCases ? 'cases' : 'equipment'}`
-  const back = ids.size === 1 && !isSpots ? `${base}/${[...ids][0]}` : base
+  const back = params.get('back') ?? (ids.size === 1 && !isSpots ? `${base}/${[...ids][0]}` : base)
 
   return (
-    <div className="min-h-dvh bg-white p-6 text-black">
+    <div className="min-h-dvh bg-background p-6 text-foreground print:bg-white print:p-0 print:text-black">
       <style>{PRINT_CSS}</style>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <Link to={back} className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-black">
+        <Link to={back} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" aria-hidden />
           Späť
         </Link>
-        <p className="text-sm text-neutral-600">{items.length} štítkov · QR otvorí detail v appke</p>
+        <p className="text-sm text-muted-foreground">{items.length} štítkov · QR otvorí detail v appke</p>
         <div className="flex flex-wrap gap-2">
           {items.length > 0 && (
-            <AddToPrintButton light companyId={company.companyId} kind={isSpots ? 'spot' : isCases ? 'case' : 'equipment'} targetIds={[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))]} />
+            <AddToPrintButton companyId={company.companyId} kind={isSpots ? 'spot' : isCases ? 'case' : 'equipment'} targetIds={[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))]} />
           )}
           {items.length > 0 && (
             <Button
               variant="outline"
-              className="border-neutral-300 bg-white text-black hover:bg-neutral-100"
               title="Stiahne každý QR kód ako samostatný PNG obrázok (prehliadač sa môže spýtať, či povoliť viac súborov)"
               onClick={async () => {
                 for (const item of items) {
@@ -120,15 +120,15 @@ export function QrLabelsPage() {
             </Button>
           )}
           {(isCases || type === 'equipment') && items.length > 0 && (
-            <Link
+            <LinkButton
+              variant="outline"
               to={`/labels/tape?${isCases ? 'cases' : 'ids'}=${[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))].join(',')}&back=${encodeURIComponent(here.pathname + here.search)}`}
-              className="inline-flex h-10 items-center gap-1 rounded-lg border border-neutral-300 px-3 text-sm font-medium hover:bg-neutral-100"
             >
               Na pásku Brother
-            </Link>
+            </LinkButton>
           )}
           {/* Veľkosť QR na A4 – predvolená z nastavení firmy; väčšie sa ľahšie skenujú (aj iPhonom). */}
-          <select aria-label="Veľkosť štítkov" className="h-10 rounded-lg border border-neutral-300 bg-white px-2 text-sm" value={size} onChange={(event) => setSize(event.target.value as QrSize)}>
+          <select aria-label="Veľkosť štítkov" className="h-11 rounded-lg border bg-surface px-2 text-sm" value={size} onChange={(event) => setSize(event.target.value as QrSize)}>
             {QR_SIZES.map((value) => (
               <option key={value} value={value}>
                 {QR_SIZE_LABELS[value]}
@@ -142,7 +142,7 @@ export function QrLabelsPage() {
                 min={QR_MM_MIN}
                 max={QR_MM_MAX}
                 aria-label="Veľkosť QR v mm"
-                className="h-10 w-20 rounded-lg border border-neutral-300 bg-white px-2"
+                className="h-11 w-20 rounded-lg border bg-surface px-2"
                 value={chosenMm ?? String(mm)}
                 onChange={(event) => setMm(event.target.value)}
               />
@@ -156,7 +156,7 @@ export function QrLabelsPage() {
         </div>
       </div>
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm print:hidden">
-        <span className="text-neutral-600">Pod QR kódom:</span>
+        <span className="text-muted-foreground">Pod QR kódom:</span>
         {(
           [
             ['name', 'Názov'],
@@ -174,6 +174,8 @@ export function QrLabelsPage() {
       {items.length === 0 ? (
         <p>Nie je čo tlačiť.</p>
       ) : (
+        // Biely papier v šírke A4 (190 mm bez okrajov), aby veľkosť na obrazovke sedela s tlačou.
+        <div className="mx-auto w-full max-w-[190mm] rounded-xl bg-white p-[6mm] text-black shadow-lg print:max-w-none print:rounded-none print:p-0 print:shadow-none">
         <ul className={cn('grid gap-3', !custom && look.grid)} style={custom ? { gridTemplateColumns: `repeat(auto-fill, ${mm + 8}mm)`, justifyContent: 'center' } : undefined}>
           {items.map((item) => (
             <li key={item.id} className={cn('flex break-inside-avoid flex-col items-center rounded-lg border border-neutral-400 text-center', custom ? 'p-[4mm]' : look.card)}>
@@ -198,6 +200,7 @@ export function QrLabelsPage() {
             </li>
           ))}
         </ul>
+        </div>
       )}
     </div>
   )
