@@ -50,6 +50,7 @@ import { CableColorsSettings } from '@/features/equipment/CableColorsSettings'
 import { KindColorsSettings } from '@/features/equipment/KindColorsSettings'
 import { KindOrderSettings } from '@/features/equipment/KindOrderSettings'
 import { PrintSettings } from '@/features/print/PrintSettings'
+import { MaintenanceSettings } from '@/features/maintenance/MaintenanceSettings'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -314,6 +315,7 @@ export function SettingsPage() {
     { id: 'stage', label: 'Nivtec', shown: can(company, 'lookups.manage') },
     { id: 'packages', label: 'Balíky', shown: can(company, 'lookups.manage') },
     { id: 'reminders', label: 'Pripomienky', shown: can(company, 'lookups.manage') },
+    { id: 'maintenance', label: 'Limity a revízie', shown: can(company, 'maintenance.manage') },
     { id: 'account', label: 'Účet', shown: true },
   ].filter((tab) => tab.shown)
   // Záložka je v adrese, aby sa na ňu dalo odkázať a aby ju prežilo obnovenie stránky.
@@ -464,6 +466,12 @@ export function SettingsPage() {
       {tab === 'reminders' && isAdmin && (
         <Section title="Úrovne kontroly (cases, prevádzkové hodiny)">
           <CheckLevelsSettings companyId={company.companyId} />
+        </Section>
+      )}
+
+      {tab === 'maintenance' && (
+        <Section title="Limity hodín a revízie">
+          <MaintenanceSettings companyId={company.companyId} />
         </Section>
       )}
 

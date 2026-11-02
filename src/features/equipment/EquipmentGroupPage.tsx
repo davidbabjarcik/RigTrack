@@ -3,6 +3,7 @@ import { ArrowLeft, Camera, ChevronRight, Combine, Package, Pencil, QrCode } fro
 import { useRef, useState } from 'react'
 import { usePastedImage } from '@/lib/usePastedImage'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { EquipmentMaintenance } from '@/features/maintenance/EquipmentMaintenance'
 import { GroupDmx } from './GroupDmx'
 import { GroupHours } from './GroupHours'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -303,6 +304,7 @@ export function EquipmentGroupPage() {
           ))}
         </ul>
       </section>
+      <EquipmentMaintenance companyId={companyId} items={parts} />
     </>
   )
 }

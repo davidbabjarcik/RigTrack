@@ -5,6 +5,19 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.16 – 2. 11. 2026
+
+- **Limity hodín**: napr. Výbojka 1 500 h alebo servis každých 500 h prevádzky. Upozorní pri nastavenom % (predvolene 90 %).
+  Po výmene alebo servise sa zapíše stav počítadla a limit sa počíta odznova (funguje aj s vynulovaným počítadlom).
+- **Revízie**: elektro revízia káblov, spotrebičov alebo akákoľvek pravidelná kontrola – interval v mesiacoch a koľko dní
+  vopred upozorniť. Revízia sa zapisuje po kusoch alebo všetkým naraz, s výsledkom vyhovela / nevyhovela.
+- Všetko sa nastavuje v **Nastavenia → Limity a revízie** (predvoľby jedným klikom) – pre druhy techniky, kategórie
+  alebo vybranú techniku. Voliteľne vznikne aj úloha.
+- Stav je pri technike (sekcia Limity a revízie, aj na prehľade skupiny) a v **Kontrolách**. Raz denne príde upozornenie
+  tým, čo smú limity nastavovať, a zodpovedným za daný druh techniky.
+- Nové oprávnenia: **Nastavovať limity hodín a revízie** a **Zapisovať výmeny, servis a revízie**.
+- Nová migrácia: `0122` (je aj v `supabase/update-all.sql`).
+
 ### 5.15.1 – 2. 11. 2026
 
 - **Text pod QR kódom na A4 podľa výberu**: zaškrtávacie políčka Názov, V ktorom case, Číslo / inventár, Firma –

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Pencil, QrCode, SlidersHorizontal, Trash2, Wrench } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { caseTitle } from '@/features/cases/model'
+import { EquipmentMaintenance } from '@/features/maintenance/EquipmentMaintenance'
 import { GroupDmx } from './GroupDmx'
 import { describePorts } from './dmxNode'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -329,6 +330,7 @@ export function EquipmentDetailPage() {
 
       <AmpPresetsInfo companyId={company.companyId} equipment={equipment} />
       {!simple && <OperatingHours companyId={company.companyId} equipment={equipment} canEdit={can(company, 'equipment.edit')} only={focusUnit} />}
+      <EquipmentMaintenance companyId={company.companyId} items={[equipment]} only={focusUnit} />
 
       {!simple && <EquipmentServiceHistory companyId={company.companyId} equipmentId={equipment.id} canEdit={can(company, 'service.edit')} />}
 

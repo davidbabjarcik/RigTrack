@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronRight, ClipboardCheck, Gauge, Wrench } from 'lucide-react'
+import { ChevronRight, ClipboardCheck, Gauge, ShieldCheck, Wrench } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -9,7 +9,8 @@ import { caseTitle, needsCheck, type Case } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
-import { cableBaseName, groupSplitEquipment, hoursState, serviceState, type Equipment } from '@/features/equipment/model'
+import { cableBaseName, formatNumber, groupSplitEquipment, hoursState, serviceState, type Equipment } from '@/features/equipment/model'
+import { describeDue, isLate, needsAttention, useMaintenanceDue, useMaintenanceRules, type MaintenanceDue } from '@/features/maintenance/api'
 import { concernsMe } from '@/features/notifications/model'
 import { useResponsibilities, type Responsibility } from '@/features/responsibilities/api'
 import { formatDate, todayIso } from '@/lib/format'
@@ -62,6 +63,8 @@ export function ChecksPage() {
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
   const responsibilities = useResponsibilities(companyId).data ?? []
   const checkDays = useCheckLevels(companyId).days
+  const rules = useMaintenanceRules(companyId).data ?? []
+  const maintenance = useMaintenanceDue(companyId, rules.length > 0)
   const today = todayIso()
   const [now] = useState(() => Date.now())
 
@@ -79,6 +82,20 @@ export function ChecksPage() {
   const service = groups.filter((group) => group.items.some((item) => ['overdue', 'soon'].includes(serviceState(item, today).state)))
   const linkOf = (items: Equipment[]) => (items.length === 1 ? `/equipment/${items[0].id}` : `/equipment/group?ids=${items.map((item) => item.id).join(',')}`)
   const nameOf = (items: Equipment[]) => (items[0].kind === 'cable' ? cableBaseName(items[0].name) : items[0].name)
+  // Limity a revízie: jeden riadok na pravidlo a techniku, najhorší stav jej kusov.
+  const STATE_ORDER = ['failed', 'overdue', 'unknown', 'soon', 'ok']
+  const limitRows = Object.values(
+    (maintenance.data ?? [])
+      .filter((row) => needsAttention(row, rules.find((rule) => rule.id === row.ruleId)))
+      .reduce<Record<string, MaintenanceDue[]>>((all, row) => {
+        ;(all[`${row.ruleId}|${row.equipmentId}`] ??= []).push(row)
+        return all
+      }, {}),
+  )
+    .map((rows) => ({ rows, item: gear.find((item) => item.id === rows[0].equipmentId), rule: rules.find((rule) => rule.id === rows[0].ruleId)! }))
+    .filter((entry): entry is typeof entry & { item: Equipment } => Boolean(entry.item) && mine(entry.item!))
+    .map((entry) => ({ ...entry, worst: [...entry.rows].sort((a, b) => STATE_ORDER.indexOf(a.state) - STATE_ORDER.indexOf(b.state))[0] }))
+    .sort((a, b) => STATE_ORDER.indexOf(a.worst.state) - STATE_ORDER.indexOf(b.worst.state) || a.item.name.localeCompare(b.item.name, 'sk'))
   const someoneResponsible = responsibilities.some((r) => r.memberIds.length > 0)
 
   return (
@@ -118,6 +135,20 @@ export function ChecksPage() {
           return <Row key={group.key} to={linkOf(group.items)} title={nameOf(group.items)} detail={late ? 'servis po termíne' : 'servis do 30 dní'} late={late} />
         })}
       </Section>
+
+      {rules.length > 0 && (
+        <Section icon={<ShieldCheck className="size-5 text-accent" aria-hidden />} title="Limity a revízie" count={limitRows.length}>
+          {limitRows.map(({ rows, item, rule, worst }) => (
+            <Row
+              key={`${rule.id}|${item.id}`}
+              to={`/equipment/${item.id}`}
+              title={`${rule.name}: ${item.name}`}
+              detail={[rows.length > 1 && `${rows.length} ks`, rows.length === 1 && rows[0].unit !== null && `#${rows[0].unit}`, describeDue(worst, rule, formatDate, formatNumber)].filter(Boolean).join(' · ')}
+              late={isLate(worst.state)}
+            />
+          ))}
+        </Section>
+      )}
     </>
   )
 }
