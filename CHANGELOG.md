@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.15.1 – 2. 11. 2026
+
+- **Text pod QR kódom na A4 podľa výberu**: zaškrtávacie políčka Názov, V ktorom case, Číslo / inventár, Firma –
+  bez všetkých ostane len samotný QR. Voľba sa uloží k účtu.
+
 ### 5.15 – 2. 11. 2026
 
 - **Do tlače priamo tam, kde sa tlačí**: QR štítky (technika aj cases) – „QR do tlače“ na stránke QR štítkov,

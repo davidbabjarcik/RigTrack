@@ -16,6 +16,7 @@ import { qrUrl } from './qr'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { clampQrMm, QR_MM_MAX, QR_MM_MIN, QR_SIZE_LABELS, QR_SIZES, useCompanyPrefs, type QrSize } from '@/features/print/api'
 import { cn } from '@/lib/utils'
+import { useUserPrefs } from '@/features/settings/userPrefs'
 
 /** Samotný QR kód ako PNG (bez textu, s malým bielym okrajom, aby sa dal naskenovať). */
 async function downloadQr(item: { url: string; name: string; number: string }) {
@@ -49,6 +50,10 @@ export function QrLabelsPage() {
   const [chosenMm, setMm] = useState<string | null>(null)
   const mm = clampQrMm(Number(chosenMm ?? companyPrefs?.qrMm ?? 50))
   const custom = size === 'custom'
+  // Čo je pod QR: dá sa vypnúť všetko (len samotný kód). Ukladá sa k účtu.
+  const { prefs: userPrefs, update: updateUserPrefs } = useUserPrefs()
+  const text = { name: true, place: true, number: true, company: true, ...userPrefs.qrText }
+  const toggleText = (key: keyof typeof text) => updateUserPrefs({ qrText: { ...text, [key]: !text[key] } })
   const companyId = company.companyId
   const isCases = type === 'cases'
   const isSpots = type === 'spots'
@@ -148,6 +153,22 @@ export function QrLabelsPage() {
           </Button>
         </div>
       </div>
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm print:hidden">
+        <span className="text-neutral-600">Pod QR kódom:</span>
+        {(
+          [
+            ['name', 'Názov'],
+            ['place', 'V ktorom case'],
+            ['number', 'Číslo / inventár'],
+            ['company', 'Firma'],
+          ] as const
+        ).map(([key, label]) => (
+          <label key={key} className="flex items-center gap-1.5">
+            <input type="checkbox" className="size-4" checked={text[key]} onChange={() => toggleText(key)} />
+            {label}
+          </label>
+        ))}
+      </div>
       {items.length === 0 ? (
         <p>Nie je čo tlačiť.</p>
       ) : (
@@ -155,17 +176,19 @@ export function QrLabelsPage() {
           {items.map((item) => (
             <li key={item.id} className={cn('flex break-inside-avoid flex-col items-center rounded-lg border border-neutral-400 text-center', custom ? 'p-[4mm]' : look.card)}>
               <QrCode text={item.url} label={`QR kód: ${item.name}`} className={cn('w-full', !custom && look.qr)} style={custom ? { width: `${mm}mm`, maxWidth: `${mm}mm` } : undefined} />
-              <p className={cn('mt-1 line-clamp-2 font-bold', !custom && look.name)} style={custom ? { fontSize: `${Math.max(2.6, mm * 0.085)}mm`, lineHeight: 1.15 } : undefined}>
+              {text.name && <p className={cn('mt-1 line-clamp-2 font-bold', !custom && look.name)} style={custom ? { fontSize: `${Math.max(2.6, mm * 0.085)}mm`, lineHeight: 1.15 } : undefined}>
                 {item.name}
-              </p>
-              {item.place && (
+              </p>}
+              {text.place && item.place && (
                 <p className={cn('font-medium', !custom && look.small)} style={custom ? { fontSize: `${Math.max(2.2, mm * 0.055)}mm` } : undefined}>
                   v {item.place}
                 </p>
               )}
-              <p className={cn('text-neutral-600', !custom && look.small)} style={custom ? { fontSize: `${Math.max(2.2, mm * 0.05)}mm` } : undefined}>
-                {[item.number, company.companyName].filter(Boolean).join(' · ')}
-              </p>
+              {(text.number || text.company) && (
+                <p className={cn('text-neutral-600', !custom && look.small)} style={custom ? { fontSize: `${Math.max(2.2, mm * 0.05)}mm` } : undefined}>
+                  {[text.number && item.number, text.company && company.companyName].filter(Boolean).join(' · ')}
+                </p>
+              )}
               <button type="button" className="mt-1 inline-flex items-center gap-1 text-xs text-neutral-600 hover:text-black print:hidden" onClick={() => void downloadQr(item)}>
                 <Download className="size-3.5" aria-hidden />
                 PNG

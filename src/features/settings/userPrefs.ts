@@ -27,6 +27,8 @@ export type UserPrefs = {
   kindOrder?: string[]
   /** Voľby hárku s obsahom case. */
   sheet?: SheetPrefs
+  /** Text pod QR na A4: názov, kde je (case), číslo a firma; chýbajúce = zapnuté. */
+  qrText?: Partial<Record<'name' | 'place' | 'number' | 'company', boolean>>
 }
 
 /** Hárok s obsahom case: veľkosť, orientácia, rozloženie typov káblov, poradie, časti a DMX. */
