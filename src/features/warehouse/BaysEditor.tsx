@@ -1,25 +1,25 @@
 import { Copy, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { cleanBays, MAX_BAY_LEVELS, MAX_BAYS, PALLET_CM, type RackBay } from './model'
+import { cleanBays, MAX_BAY_LEVELS, MAX_BAYS, PALLET_ALIGN_LABELS, PALLET_CM, type PalletAlign, type RackBay } from './model'
 
-type Props = { bays: RackBay[]; saving: boolean; onSave: (bays: RackBay[]) => void; onCancel: () => void }
+type Props = { bays: RackBay[]; saving: boolean; onSave: (bays: RackBay[]) => void; onCancel: () => void; /** Úzky panel vedľa výkresu: polia pod sebou. */ compact?: boolean }
 
 const input = 'h-9 w-20 rounded-lg border bg-surface px-2 text-sm tabular-nums'
 
 /** Úprava polí regála: šírka poľa, police zdola nahor (výška, palety), pridať / kopírovať / odstrániť pole. */
-export function BaysEditor({ bays, saving, onSave, onCancel }: Props) {
+export function BaysEditor({ bays, saving, onSave, onCancel, compact = false }: Props) {
   const [draft, setDraft] = useState<RackBay[]>(bays)
   const setBay = (index: number, bay: RackBay) => setDraft(draft.map((item, i) => (i === index ? bay : item)))
   const num = (value: string) => Number(value.replace(',', '.'))
 
   return (
-    <div className="mt-3 flex flex-col gap-3 rounded-xl border bg-surface p-4">
+    <div className={compact ? 'flex flex-col gap-3 rounded-xl border bg-surface p-4' : 'mt-3 flex flex-col gap-3 rounded-xl border bg-surface p-4'}>
       <p className="text-sm text-muted-foreground">
         Pole je časť regála medzi dvoma stojkami. Každé pole môže mať iný počet políc a každá polica inú výšku (svetlá výška od nosníka po
         nosník). Police sú zdola nahor; palety sú europalety {PALLET_CM} cm spredu.
       </p>
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className={compact ? 'grid gap-3' : 'grid gap-3 lg:grid-cols-2'}>
         {draft.map((bay, index) => (
           <fieldset key={index} className="rounded-lg border p-3">
             <legend className="px-1 text-sm font-medium">Pole {index + 1}</legend>
@@ -60,6 +60,20 @@ export function BaysEditor({ bays, saving, onSave, onCancel }: Props) {
                     />
                     paliet
                   </label>
+                  {(level.pallets ?? 0) > 0 && (
+                    <select
+                      aria-label={`Palety na ${levelIndex + 1}. polici`}
+                      className="h-9 rounded-lg border bg-surface px-2 text-sm"
+                      value={level.palletAlign ?? 'spread'}
+                      onChange={(e) => setBay(index, { ...bay, levels: bay.levels.map((item, i) => (i === levelIndex ? { ...item, palletAlign: e.target.value as PalletAlign } : item)) })}
+                    >
+                      {(Object.keys(PALLET_ALIGN_LABELS) as PalletAlign[]).map((value) => (
+                        <option key={value} value={value}>
+                          {PALLET_ALIGN_LABELS[value]}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <Button
                     size="sm"
                     variant="ghost"

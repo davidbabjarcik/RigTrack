@@ -93,3 +93,22 @@ describe('rack bays', () => {
     expect(cleanBays([{ widthCm: 5, levels: [] }])).toEqual([{ widthCm: 20, levels: [{ heightCm: 100 }] }])
   })
 })
+
+describe('rotation and rack length', () => {
+  it('turns a rack around its centre and keeps it inside', async () => {
+    const { rotated, rackLengthCm } = await import('./model')
+    expect(rotated({ x: 100, y: 100, length: 300, width: 100 }, { lengthCm: 2000, widthCm: 1000 })).toEqual({ x: 200, y: 0, length: 100, width: 300 })
+    expect(rotated({ x: 0, y: 0, length: 300, width: 100 }, { lengthCm: 2000, widthCm: 1000 })).toEqual({ x: 100, y: 0, length: 100, width: 300 })
+    expect(rackLengthCm([{ widthCm: 267, levels: [] }, { widthCm: 267, levels: [] }])).toBe(561)
+  })
+})
+
+describe('pallets on a shelf', () => {
+  it('spreads them or packs them to one side', async () => {
+    const { palletPositions } = await import('./model')
+    expect(palletPositions(267, { heightCm: 150, pallets: 3, palletAlign: 'left' })).toEqual([0, 80, 160])
+    expect(palletPositions(267, { heightCm: 150, pallets: 3, palletAlign: 'right' })).toEqual([27, 107, 187])
+    expect(palletPositions(267, { heightCm: 150, pallets: 3 }).map(Math.round)).toEqual([7, 94, 180])
+    expect(palletPositions(267, { heightCm: 150 })).toEqual([])
+  })
+})

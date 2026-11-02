@@ -26,10 +26,45 @@ export const SPOT_KIND_FILLS: Record<SpotKind, string> = {
 /** Stavebné prvky (stĺp, stena, dvere, okno) – nie sú miestom na cases. */
 export const isStructure = (kind: SpotKind) => kind === 'column' || kind === 'wall' || kind === 'door' || kind === 'window'
 
-export type Warehouse = { lengthCm: number; widthCm: number }
+export type Warehouse = { lengthCm: number; widthCm: number; rackTypes?: RackType[] }
+
+/** Typ regálu, ktorý firma používa (Nastavenia → Sklad): hĺbka a polia s policami. */
+export type RackType = { id: string; name: string; depthCm: number; bays: RackBay[] }
+
+/** Stojka medzi poliami (cm) – dĺžka regála = polia + stojky. */
+export const POST_CM = 9
+export const rackLengthCm = (bays: RackBay[]) => bays.reduce((sum, bay) => sum + bay.widthCm, 0) + POST_CM * (bays.length + 1)
+export const rackHeightCm = (bays: RackBay[]) => Math.max(...bays.map((bay) => bay.levels.reduce((sum, level) => sum + level.heightCm + 12, 0)))
+
+/** Miesto otočené o 90° okolo stredu (dĺžka ↔ šírka), aby ostalo v sklade. */
+export function rotated(spot: Pick<Spot, 'x' | 'y' | 'length' | 'width'>, warehouse: Pick<Warehouse, 'lengthCm' | 'widthCm'>) {
+  const length = spot.width
+  const width = spot.length
+  const x = Math.round(spot.x + (spot.length - length) / 2)
+  const y = Math.round(spot.y + (spot.width - width) / 2)
+  return {
+    length,
+    width,
+    x: Math.max(0, Math.min(x, warehouse.lengthCm - length)),
+    y: Math.max(0, Math.min(y, warehouse.widthCm - width)),
+  }
+}
 
 /** Polica v poli regála (zdola nahor): svetlá výška a voliteľne koľko paliet na nej stojí. */
-export type RackLevel = { heightCm: number; pallets?: number }
+export type RackLevel = { heightCm: number; pallets?: number; palletAlign?: PalletAlign }
+/** Palety rozložené rovnomerne, alebo natesno vedľa seba zľava / sprava (voľné miesto ostane na druhom kraji). */
+export type PalletAlign = 'spread' | 'left' | 'right'
+export const PALLET_ALIGN_LABELS: Record<PalletAlign, string> = { spread: 'rozložené', left: 'natesno zľava', right: 'natesno sprava' }
+
+/** Ľavé okraje paliet na polici (cm od ľavej stojky). */
+export function palletPositions(widthCm: number, level: RackLevel) {
+  const count = level.pallets ?? 0
+  if (count === 0) return []
+  if (level.palletAlign === 'left') return Array.from({ length: count }, (_, index) => index * PALLET_CM)
+  if (level.palletAlign === 'right') return Array.from({ length: count }, (_, index) => widthCm - (count - index) * PALLET_CM)
+  const gap = Math.max(0, (widthCm - count * PALLET_CM) / (count + 1))
+  return Array.from({ length: count }, (_, index) => gap + index * (PALLET_CM + gap))
+}
 /** Pole regála medzi dvoma stojkami (napr. 267 cm) s vlastnými policami. */
 export type RackBay = { widthCm: number; levels: RackLevel[] }
 
@@ -129,6 +164,7 @@ export function cleanBays(bays: RackBay[]): RackBay[] {
     levels: (bay.levels.length > 0 ? bay.levels : [{ heightCm: 100 }]).slice(0, MAX_BAY_LEVELS).map((level) => ({
       heightCm: clamp(level.heightCm, 5, 1000),
       ...(level.pallets ? { pallets: clamp(level.pallets, 0, 20) } : {}),
+      ...(level.pallets && level.palletAlign && level.palletAlign !== 'spread' ? { palletAlign: level.palletAlign } : {}),
     })),
   }))
 }

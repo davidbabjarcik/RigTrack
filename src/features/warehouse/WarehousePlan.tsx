@@ -174,20 +174,25 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
         const structure = isStructure(spot.kind)
         const textFill = spot.kind === 'wall' || spot.kind === 'column' ? '#ffffff' : INK
         return (
+          // Stavebné prvky (stĺp, stena, dvere, okno) sú len na orientáciu – kliknúť sa na ne nedá (upravujú sa v Upraviť plán).
           <g
             key={spot.id}
-            role="button"
-            tabIndex={0}
-            aria-pressed={active}
-            aria-label={structure ? spot.name : `${spot.name}, cases: ${count}`}
-            className="cursor-pointer outline-none"
-            onClick={select}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                select()
-              }
-            }}
+            {...(structure
+              ? { 'aria-label': spot.name, pointerEvents: 'none' as const }
+              : {
+                  role: 'button',
+                  tabIndex: 0,
+                  'aria-pressed': active,
+                  'aria-label': `${spot.name}, cases: ${count}`,
+                  className: 'cursor-pointer outline-none',
+                  onClick: select,
+                  onKeyDown: (event: React.KeyboardEvent) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      select()
+                    }
+                  },
+                })}
           >
             {shape}
             {(active || hit) && <rect x={x - unit * 0.8} y={y - unit * 0.8} width={w + unit * 1.6} height={h + unit * 1.6} rx={unit} fill="none" stroke={ACCENT} strokeOpacity={0.35} strokeWidth={unit * 1.2} pointerEvents="none" />}

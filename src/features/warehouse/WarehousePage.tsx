@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, LayoutGrid, Pencil, QrCode, ScanLine, Search, Settings2, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Check, LayoutGrid, Pencil, QrCode, RotateCw, ScanLine, Search, Settings2, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -31,6 +31,8 @@ import {
   levelUsage,
   metres,
   nextSpotName,
+  rackLengthCm,
+  rotated,
   rackBays,
   SPOT_KIND_FILLS,
   SPOT_KIND_LABELS,
@@ -50,7 +52,9 @@ export function WarehousePage() {
   const canPlace = can(company, 'cases.edit')
   const queryClient = useQueryClient()
   const [params, setParams] = useSearchParams()
-  const [editing, setEditing] = useState(false)
+  // ?edit=1 (z Nastavení → Sklad) otvorí rovno úpravu plánu.
+  const [editing, setEditing] = useState(() => params.get('edit') === '1')
+  const [newType, setNewType] = useState('')
   const [search, setSearch] = useState('')
   const [addCaseId, setAddCaseId] = useState('')
   const [addLevel, setAddLevel] = useState(1)
@@ -232,7 +236,46 @@ export function WarehousePage() {
 
       {warehouse && editing && (
         <>
-          <SizeForm key={`${warehouse.lengthCm}x${warehouse.widthCm}`} companyId={companyId} current={warehouse} onDone={() => {}} />
+          {/* Pridať regál podľa typu z Nastavení → Sklad; potom sa posunie ťahaním a otočí. */}
+          <div className="mb-3 flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-3">
+            {(warehouse.rackTypes ?? []).length > 0 ? (
+              <>
+                <SelectField label="Pridať regál typu" className="min-w-56 flex-1 sm:flex-none" value={newType} onChange={(e) => setNewType(e.target.value)}>
+                  <option value="">— vyberte typ —</option>
+                  {(warehouse.rackTypes ?? []).map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name} ({metres(rackLengthCm(type.bays))} × {type.depthCm} cm)
+                    </option>
+                  ))}
+                </SelectField>
+                <Button
+                  disabled={!newType || add.isPending}
+                  onClick={() => {
+                    const type = warehouse.rackTypes!.find((item) => item.id === newType)!
+                    const length = Math.min(rackLengthCm(type.bays), warehouse.lengthCm)
+                    add.mutate({
+                      name: nextSpotName(spots).replace('Miesto', 'Regál'),
+                      kind: 'rack',
+                      x: Math.max(0, Math.round((warehouse.lengthCm - length) / 2)),
+                      y: Math.max(0, Math.round((warehouse.widthCm - type.depthCm) / 2)),
+                      length,
+                      width: Math.min(type.depthCm, warehouse.widthCm),
+                      levels: Math.min(20, Math.max(...type.bays.map((bay) => bay.levels.length))),
+                      bays: type.bays,
+                    })
+                  }}
+                >
+                  Pridať doprostred
+                </Button>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Typy regálov (šírka, police, palety) si nastavíte v Nastaveniach → Sklad, potom ich tu pridáte jedným klikom.</p>
+            )}
+            <LinkButton to="/settings?tab=warehouse" variant="outline" className="ml-auto">
+              <Settings2 className="size-4" aria-hidden />
+              Typy regálov a rozmery
+            </LinkButton>
+          </div>
           <RectEditor
             length={warehouse.lengthCm}
             width={warehouse.widthCm}
@@ -257,6 +300,41 @@ export function WarehousePage() {
           />
           {selected && (
             <div key={selected.id} className="mt-3 grid items-end gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-4">
+              <div className="flex flex-wrap gap-2 sm:col-span-4">
+                <Button variant="outline" size="sm" disabled={change.isPending} onClick={() => change.mutate({ id: selected.id, fields: rotated(selected, warehouse) })}>
+                  <RotateCw className="size-4" aria-hidden />
+                  Otočiť o 90°
+                </Button>
+                {selected.kind === 'rack' && (warehouse.rackTypes ?? []).length > 0 && (
+                  <select
+                    aria-label="Nastaviť typ regálu"
+                    className="h-9 rounded-lg border bg-surface px-2 text-sm"
+                    value=""
+                    onChange={(event) => {
+                      const type = warehouse.rackTypes!.find((item) => item.id === event.target.value)
+                      if (!type) return
+                      // Dlhšia strana ostane v smere, v akom regál stojí.
+                      const length = rackLengthCm(type.bays)
+                      const horizontal = selected.length >= selected.width
+                      change.mutate({
+                        id: selected.id,
+                        fields: {
+                          bays: type.bays,
+                          levels: Math.min(20, Math.max(...type.bays.map((bay) => bay.levels.length))),
+                          ...(horizontal ? { length, width: type.depthCm } : { length: type.depthCm, width: length }),
+                        },
+                      })
+                    }}
+                  >
+                    <option value="">Nastaviť podľa typu…</option>
+                    {warehouse.rackTypes!.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
               <Field
                 label="Názov miesta"
                 defaultValue={selected.name}
@@ -382,8 +460,10 @@ export function WarehousePage() {
             </ul>
           )}
 
+          {/* Pohľad spredu: na širokej obrazovke regál vľavo, polica alebo úprava polí vpravo. */}
+          <div className={front ? 'grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(340px,2fr)] lg:items-start' : undefined}>
           {front && selected && (
-            <>
+            <div className="min-w-0">
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <Button variant="outline" size="sm" onClick={backToPlan}>
                   <ArrowLeft className="size-4" aria-hidden />
@@ -405,21 +485,22 @@ export function WarehousePage() {
                 highlighted={new Set(hits.map((item) => item.id))}
                 onSelect={setCell}
               />
-              {editingBays && (
-                <BaysEditor
-                  bays={bays}
-                  saving={change.isPending}
-                  onCancel={() => setEditingBays(false)}
-                  onSave={(next) =>
-                    change.mutate(
-                      { id: selected.id, fields: { bays: next, levels: Math.min(20, Math.max(...next.map((bay) => bay.levels.length))) } },
-                      { onSuccess: () => setEditingBays(false) },
-                    )
-                  }
-                />
-              )}
-              <p className="mt-2 text-sm text-muted-foreground">Kliknite na policu – dole uvidíte, čo na nej je, a môžete na ňu uložiť case. Prerušovaná škatuľa = case bez rozmerov.</p>
-            </>
+              <p className="mt-2 text-sm text-muted-foreground">Kliknite na policu – uvidíte, čo na nej je, a môžete na ňu uložiť case. Prerušovaná škatuľa = case bez rozmerov.</p>
+            </div>
+          )}
+          {front && selected && editingBays && (
+            <BaysEditor
+              compact
+              bays={bays}
+              saving={change.isPending}
+              onCancel={() => setEditingBays(false)}
+              onSave={(next) =>
+                change.mutate(
+                  { id: selected.id, fields: { bays: next, levels: Math.min(20, Math.max(...next.map((bay) => bay.levels.length))) } },
+                  { onSuccess: () => setEditingBays(false) },
+                )
+              }
+            />
           )}
           {!front && (
           <WarehousePlan
@@ -456,8 +537,8 @@ export function WarehousePage() {
             </p>
           )}
 
-          {selected && (
-            <section aria-labelledby="spot-heading" className="mt-5 rounded-xl border bg-surface p-4">
+          {selected && !(front && editingBays) && (
+            <section aria-labelledby="spot-heading" className={cn('mt-5 rounded-xl border bg-surface p-4', front && 'lg:mt-0')}>
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 id="spot-heading" className="truncate text-lg font-semibold">
@@ -643,6 +724,7 @@ export function WarehousePage() {
               )}
             </section>
           )}
+          </div>
 
           {unplaced.length > 0 && (
             <section className="mt-5" aria-labelledby="unplaced-heading">

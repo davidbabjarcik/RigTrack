@@ -41,4 +41,11 @@ describe('print queue and company prefs', () => {
     expect(await t.as('outsider', 'select * from public.printed_labels')).toEqual([])
     await expect(t.as('outsider', `insert into public.printed_labels (company_id, kind, target_id) values ($1, 'case', $2)`, [a, box])).rejects.toThrow(/row-level/)
   })
+
+  it('takes warehouse spot QR labels too', async () => {
+    const spot = (await t.as('boss', `insert into public.warehouse_spots (company_id, name, x, y, length, width) values ($1, 'Regál A', 0, 0, 200, 80) returning id`, [a]))[0].id
+    await t.as('viewer', `insert into public.print_queue (company_id, kind, target_id) values ($1, 'spot', $2)`, [a, spot])
+    await t.as('viewer', `insert into public.printed_labels (company_id, kind, target_id) values ($1, 'spot', $2)`, [a, spot])
+    expect(await t.as('boss', `select kind from public.print_queue where kind = 'spot'`)).toEqual([{ kind: 'spot' }])
+  })
 })

@@ -71,4 +71,12 @@ describe('warehouse plan', () => {
     await expect(addSpot('skladnik', 'Regál S')).rejects.toThrow(/row-level security/)
     expect(await t.as('technik', `select public.can($1, 'lookups.manage') as lists`, [companyA])).toEqual([{ lists: false }])
   })
+
+  it('keeps the rack types of the company', async () => {
+    const types = JSON.stringify([{ id: 'a', name: 'Paletový', depthCm: 110, bays: [{ widthCm: 267, levels: [{ heightCm: 160, pallets: 3 }] }] }])
+    await t.as('admin', 'update public.warehouses set rack_types = $2::jsonb where company_id = $1', [companyA, types])
+    expect(await t.as('viewer', `select rack_types->0->>'name' as name from public.warehouses`)).toEqual([{ name: 'Paletový' }])
+    expect(await t.as('viewer', 'update public.warehouses set rack_types = $2::jsonb where company_id = $1 returning 1', [companyA, '[]'])).toEqual([])
+    await expect(t.as('admin', `update public.warehouses set rack_types = '{}'::jsonb where company_id = $1`, [companyA])).rejects.toThrow(/check/)
+  })
 })

@@ -1,5 +1,5 @@
 import { getSupabase } from '@/lib/supabase/client'
-import type { RackBay, Spot, SpotKind, Warehouse } from './model'
+import type { RackBay, RackType, Spot, SpotKind, Warehouse } from './model'
 
 export const warehouseKeys = {
   plan: (companyId: string) => ['company', companyId, 'warehouse'] as const,
@@ -12,18 +12,21 @@ type SpotRow = { id: string; name: string; kind: SpotKind; x: number; y: number;
 export async function fetchWarehouse(companyId: string): Promise<{ warehouse: Warehouse | null; spots: Spot[] }> {
   const db = getSupabase()
   const [warehouse, spots] = await Promise.all([
-    db.from('warehouses').select('length_cm, width_cm').eq('company_id', companyId).maybeSingle(),
+    db.from('warehouses').select('length_cm, width_cm, rack_types').eq('company_id', companyId).maybeSingle(),
     db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels, level_height_cm, note, bays').eq('company_id', companyId).order('created_at'),
   ])
   // Bez migrácie 0124 nie sú polia regála, bez 0119 ani výška poschodia a poznámka.
   let rows: { data: unknown[] | null; error: { message: string } | null } = spots
   if (rows.error && /bays/.test(rows.error.message)) rows = await db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels, level_height_cm, note').eq('company_id', companyId).order('created_at')
   if (rows.error && /level_height_cm|note/.test(rows.error.message)) rows = await db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels').eq('company_id', companyId).order('created_at')
-  const error = warehouse.error ?? rows.error
+  // Bez migrácie 0126 nie sú typy regálov.
+  let house: { data: unknown; error: { message: string } | null } = warehouse
+  if (house.error && /rack_types/.test(house.error.message)) house = await db.from('warehouses').select('length_cm, width_cm').eq('company_id', companyId).maybeSingle()
+  const error = house.error ?? rows.error
   if (error) throw error
-  const size = warehouse.data as { length_cm: number; width_cm: number } | null
+  const size = house.data as { length_cm: number; width_cm: number; rack_types?: RackType[] } | null
   return {
-    warehouse: size && { lengthCm: size.length_cm, widthCm: size.width_cm },
+    warehouse: size && { lengthCm: size.length_cm, widthCm: size.width_cm, rackTypes: Array.isArray(size.rack_types) ? size.rack_types : [] },
     spots: (rows.data as SpotRow[]).map(({ level_height_cm, note, bays, ...spot }) => ({ ...spot, levelHeightCm: level_height_cm ?? null, note: note ?? '', bays: Array.isArray(bays) ? bays : [] })),
   }
 }
@@ -74,4 +77,11 @@ export async function fetchCaseBays(companyId: string): Promise<Map<string, numb
   const { data, error } = await getSupabase().from('cases').select('id, spot_bay').eq('company_id', companyId).not('spot_bay', 'is', null)
   if (error) return new Map()
   return new Map((data as { id: string; spot_bay: number }[]).map((row) => [row.id, row.spot_bay]))
+}
+
+/** Uloží typy regálov firmy (sklad už musí mať rozmery). */
+export async function saveRackTypes(companyId: string, types: RackType[]) {
+  const { data, error } = await getSupabase().from('warehouses').update({ rack_types: types }).eq('company_id', companyId).select('company_id')
+  if (error) throw error
+  if (data.length === 0) throw new Error('Najprv zadajte rozmery skladu.')
 }

@@ -98,8 +98,8 @@ export function QrLabelsPage() {
         </Link>
         <p className="text-sm text-neutral-600">{items.length} štítkov · QR otvorí detail v appke</p>
         <div className="flex flex-wrap gap-2">
-          {(isCases || type === 'equipment') && items.length > 0 && (
-            <AddToPrintButton companyId={company.companyId} kind={isCases ? 'case' : 'equipment'} targetIds={[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))]} />
+          {items.length > 0 && (
+            <AddToPrintButton companyId={company.companyId} kind={isSpots ? 'spot' : isCases ? 'case' : 'equipment'} targetIds={[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))]} />
           )}
           {items.length > 0 && (
             <Button

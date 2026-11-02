@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { caseFrontCm, casesInCell, cellUsage, PALLET_CM, type PlacedCase, type RackBay } from './model'
+import { caseFrontCm, casesInCell, cellUsage, PALLET_CM, palletPositions, type PlacedCase, type RackBay } from './model'
 
 type Props = {
   name: string
@@ -92,9 +92,9 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
               const active = selected?.bay === bayIndex + 1 && selected.level === levelNo
               const hit = inside.some((item) => highlighted?.has(item.id))
               const palletH = level.pallets ? Math.min(14, level.heightCm * 0.12) : 0
-              const palletGap = level.pallets ? Math.max(0, (bay.widthCm - level.pallets * PALLET_CM) / (level.pallets + 1)) : 0
+              const pallets = palletPositions(bay.widthCm, level)
               const select = () => onSelect(active ? null : { bay: bayIndex + 1, level: levelNo })
-              let cursor = x + (level.pallets ? palletGap : 3)
+              let cursor = x + (pallets[0] ?? 3)
               return (
                 <g
                   key={levelNo}
@@ -116,13 +116,14 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
                   <rect x={x} y={beamY + BEAM_H - Math.min(BEAM_H, px(6))} width={bay.widthCm} height={Math.min(BEAM_H, px(6))} fill="#d97706" fillOpacity={0.85} />
 
                   {/* Palety: doska a tri hranoly. */}
-                  {Array.from({ length: level.pallets ?? 0 }, (_, index) => {
-                    const left = x + palletGap + index * (PALLET_CM + palletGap)
+                  {pallets.map((offset, index) => {
+                    // 1 cm od susednej palety, aby boli natesno postavené palety rozoznateľné.
+                    const left = x + offset + 1
                     return (
                       <g key={`p${index}`} fill="#a16207" fillOpacity={0.55}>
-                        <rect x={left} y={beamY - palletH} width={PALLET_CM} height={palletH * 0.28} />
+                        <rect x={left} y={beamY - palletH} width={PALLET_CM - 2} height={palletH * 0.28} />
                         {[0, 0.43, 0.86].map((offset) => (
-                          <rect key={offset} x={left + PALLET_CM * offset} y={beamY - palletH * 0.72} width={PALLET_CM * 0.14} height={palletH * 0.72} />
+                          <rect key={offset} x={left + (PALLET_CM - 2) * offset} y={beamY - palletH * 0.72} width={(PALLET_CM - 2) * 0.14} height={palletH * 0.72} />
                         ))}
                       </g>
                     )

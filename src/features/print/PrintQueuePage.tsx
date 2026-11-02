@@ -8,6 +8,7 @@ import { caseTitle } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { addToPrintQueue, markPrinted, printKeys, removeFromPrintQueue, useCompanyPrefs, usePrintedLabels, usePrintQueue, type PrintItem } from './api'
 
 /**
@@ -22,6 +23,7 @@ export function PrintQueuePage() {
   const prefs = useCompanyPrefs(companyId).data ?? {}
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const cases = useCases(companyId)
+  const spots = useQuery({ queryKey: warehouseKeys.plan(companyId), queryFn: () => fetchWarehouse(companyId) })
   const remove = useMutation({ mutationFn: (ids: string[]) => removeFromPrintQueue(companyId, ids), onSettled: () => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }) })
   const printed = usePrintedLabels(companyId)
   // Vytlačené: zapamätať (kvôli „Bez QR štítku“) a vyprázdniť frontu.
@@ -46,6 +48,7 @@ export function PrintQueuePage() {
 
   const items = queue.data
   const nameOf = (item: PrintItem) => {
+    if (item.kind === 'spot') return spots.data?.spots.find((candidate) => candidate.id === item.targetId)?.name ?? 'Miesto (zmazané)'
     if (item.kind === 'case') {
       const box = cases.data?.find((candidate) => candidate.id === item.targetId)
       return box ? caseTitle(box) : 'Case (zmazaný)'
@@ -54,6 +57,7 @@ export function PrintQueuePage() {
   }
   const qrEquipment = items.filter((item) => item.label === 'qr' && item.kind === 'equipment')
   const qrCases = items.filter((item) => item.label === 'qr' && item.kind === 'case')
+  const qrSpots = items.filter((item) => item.label === 'qr' && item.kind === 'spot')
   const tape = items.filter((item) => item.label === 'tape')
   const caseLabels = items.filter((item) => item.label === 'case_label')
   const contents = items.filter((item) => item.label === 'content')
@@ -79,7 +83,7 @@ export function PrintQueuePage() {
         <ul className="divide-y text-sm">
           {list.map((item) => (
             <li key={item.id} className="flex items-center gap-3 py-1.5">
-              <Link to={item.kind === 'case' ? `/cases/${item.targetId}` : `/equipment/${item.targetId}`} className="min-w-0 flex-1 truncate hover:underline">
+              <Link to={item.kind === 'spot' ? `/warehouse?spot=${item.targetId}` : item.kind === 'case' ? `/cases/${item.targetId}` : `/equipment/${item.targetId}`} className="min-w-0 flex-1 truncate hover:underline">
                 {nameOf(item)}
               </Link>
               {item.note && <span className="truncate text-muted-foreground">{item.note}</span>}
@@ -137,6 +141,7 @@ export function PrintQueuePage() {
             qrCases,
             a4 ? printLink(`/qr/cases?ids=${ids(qrCases)}`, 'Tlačiť na A4') : printLink(`/labels/tape?cases=${ids(qrCases)}&back=/print`, 'Na Brother'),
           )}
+          {group('QR štítky miest v sklade', <Tag className="size-5 text-accent" aria-hidden />, qrSpots, printLink(`/qr/spots?ids=${ids(qrSpots)}`, 'Tlačiť na A4'))}
           {caseLabels.length + contents.length > 1 && (
             <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
               <span className="flex-1">Štítky a obsahy cases môžete vytlačiť všetky naraz (alebo stiahnuť jedno PDF).</span>

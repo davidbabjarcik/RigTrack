@@ -5,6 +5,20 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.1 – 2. 11. 2026
+
+- **Typy regálov** v Nastaveniach → Sklad: regály, ktoré používate – názov, hĺbka, polia so šírkou, police s výškou a
+  paletami. Tlačidlo „Rozmiestniť regály v sklade“ otvorí rovno úpravu plánu.
+- **Úprava plánu**: „Pridať regál typu…“ ho pridá doprostred skladu, potom ho posuniete ťahaním. Vybrané miesto sa dá
+  **otočiť o 90°** a už nakreslený regál nastaviť podľa typu.
+- **Palety na polici**: rozložené, natesno zľava alebo natesno sprava – voľné miesto ostane na jednom kraji. Polica bez
+  paliet = 0 paliet.
+- **Pohľad spredu vedľa panelu**: na širokej obrazovke je regál vľavo a polica (čo na nej je, uložiť case) alebo úprava
+  polí vpravo.
+- Stĺp, stena, dvere a okno sa v pôdoryse nedajú kliknúť (upravujú sa v Upraviť plán).
+- QR štítky miest v sklade sa dajú pridať do tlačovej fronty.
+- Nová migrácia: `0126` (je aj v `supabase/update-all.sql`).
+
 ### 6.0.1 – 2. 11. 2026
 
 - Regál spredu ako technický výkres: tenké stojky a nosníky, kóty výšky políc a šírky polí, drobné písmo rovnako veľké
