@@ -579,7 +579,7 @@ export function WarehousePage() {
                 </div>
               )}
 
-              {canPlace && (
+              {canPlace && !isStructure(selected.kind) && (
                 <form
                   className="mt-4 flex flex-wrap items-end gap-3 border-t pt-4"
                   onSubmit={(event) => {

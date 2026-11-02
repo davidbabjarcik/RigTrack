@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { caseFrontCm, casesInCell, cellUsage, PALLET_CM, type PlacedCase, type RackBay } from './model'
 
 type Props = {
@@ -6,94 +7,102 @@ type Props = {
   cases: PlacedCase[]
   /** Vybraná polica: pole a polica (1 = dole). */
   selected: { bay: number; level: number } | null
-  /** Polica s hľadaným case. */
+  /** Cases, ktoré sa hľadajú. */
   highlighted?: Set<string>
   onSelect: (cell: { bay: number; level: number } | null) => void
 }
 
-const UPRIGHT = '#1d4ed8'
-const UPRIGHT_DARK = '#1e3a8a'
-const BEAM = '#ea580c'
-const INK = '#1f2937'
-const ACCENT = '#f97316'
-const POST = 9 // šírka stojky (cm)
-const BEAM_H = 12 // výška nosníka (cm)
-const CASE_FILLS = ['#e5e7eb', '#dbeafe', '#fef3c7', '#dcfce7', '#fce7f3', '#ede9fe']
+const POST = 8 // šírka stojky (cm)
+const BEAM_H = 8 // výška nosníka (cm)
 
-/** Názov skrátený na šírku škatule. */
-function fit(text: string, widthCm: number, fontCm: number) {
-  const max = Math.max(2, Math.floor(widthCm / (fontCm * 0.58)))
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text
+/** Šírka prvku v pixeloch (písmo a čiary sa držia v px bez ohľadu na veľkosť regála). */
+function useWidth() {
+  const ref = useRef<SVGSVGElement>(null)
+  const [width, setWidth] = useState(900)
+  useEffect(() => {
+    const element = ref.current
+    if (!element) return
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width || 900))
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+  return { ref, width }
+}
+
+/** Text skrátený na šírku (px). */
+function fit(text: string, widthPx: number, fontPx: number) {
+  const max = Math.max(1, Math.floor(widthPx / (fontPx * 0.56)))
+  return text.length > max ? `${text.slice(0, Math.max(1, max - 1))}…` : text
 }
 
 /**
- * Regál spredu: modré stojky, oranžové nosníky, police s vlastnou výškou v každom poli, palety a cases ako škatule
- * (šírka a výška podľa rozmerov case). Pri každej polici je výška a voľné miesto; kliknutím sa polica vyberie.
+ * Regál spredu ako technický výkres: tenké stojky a nosníky, police s kótami výšky, šírka poľa dole,
+ * palety a cases ako obdĺžniky podľa rozmerov. Farby idú z témy (svetlá aj tmavá). Kliknutím sa polica vyberie.
  */
 export function RackFront({ name, bays, cases, selected, highlighted, onSelect }: Props) {
   const heights = bays.map((bay) => bay.levels.reduce((sum, level) => sum + level.heightCm + BEAM_H, 0))
-  const totalHeight = Math.max(...heights, 100)
-  const totalWidth = bays.reduce((sum, bay) => sum + bay.widthCm + POST, POST)
-  const unit = Math.max(totalWidth, totalHeight) / 100
-  const font = Math.max(unit * 2.2, 9)
-  const margin = { left: unit * 4, right: unit * 4, top: unit * 7, bottom: unit * 9 }
-  const floor = totalHeight
+  const rackH = Math.max(...heights, 50)
+  const rackW = bays.reduce((sum, bay) => sum + bay.widthCm + POST, POST)
+  const { ref, width } = useWidth()
 
+  // Mierka: koľko cm je jeden pixel (podľa šírky aj výšky, ktorá je obmedzená).
+  const padPx = { left: 64, right: 16, top: 16, bottom: 44 }
+  const maxHeightPx = 520
+  const scale = Math.max((rackW + 1) / Math.max(200, width - padPx.left - padPx.right), rackH / (maxHeightPx - padPx.top - padPx.bottom))
+  const px = (value: number) => value * scale
+  const font = px(12)
+  const small = px(10.5)
+  const pad = { left: px(padPx.left), right: px(padPx.right), top: px(padPx.top), bottom: px(padPx.bottom) }
+  const floor = rackH
   const bayX = bays.map((_, index) => POST + bays.slice(0, index).reduce((sum, bay) => sum + bay.widthCm + POST, 0))
+  const tick = px(4)
 
   return (
     <svg
-      viewBox={`${-margin.left} ${-margin.top} ${totalWidth + margin.left + margin.right} ${totalHeight + margin.top + margin.bottom}`}
-      className="max-h-[70dvh] w-full rounded-xl border bg-[#f4f4f5] select-none dark:bg-[#1c1f26]"
+      ref={ref}
+      viewBox={`${-pad.left} ${-pad.top} ${rackW + pad.left + pad.right} ${rackH + pad.top + pad.bottom}`}
+      className="block w-full rounded-xl border bg-surface text-foreground select-none"
+      style={{ maxHeight: maxHeightPx }}
       role="group"
       aria-label={`Regál ${name} spredu`}
       fontFamily="inherit"
     >
       <defs>
-        <linearGradient id="rack-upright" x1="0" x2="1">
-          <stop offset="0" stopColor={UPRIGHT_DARK} />
-          <stop offset="0.45" stopColor={UPRIGHT} />
-          <stop offset="1" stopColor={UPRIGHT_DARK} />
-        </linearGradient>
-        <pattern id="rack-holes" width={POST} height={8} patternUnits="userSpaceOnUse">
-          <rect x={POST * 0.38} y={2} width={POST * 0.24} height={3.5} rx={1} fill="#0f172a" opacity={0.55} />
+        <pattern id="rf-floor" width={px(6)} height={px(6)} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1={0} y1={0} x2={0} y2={px(6)} stroke="currentColor" strokeOpacity={0.25} strokeWidth={px(1)} />
         </pattern>
       </defs>
 
-      <text x={totalWidth / 2} y={-unit * 3} fontSize={font * 1.25} fontWeight={700} fill={INK} textAnchor="middle" className="dark:fill-white">
-        {name} – pohľad spredu
-      </text>
-
       {/* Podlaha. */}
-      <rect x={-margin.left} y={floor} width={totalWidth + margin.left + margin.right} height={unit * 1.2} fill="#a8a29e" />
+      <line x1={-pad.left * 0.4} y1={floor} x2={rackW + pad.right * 0.5} y2={floor} stroke="currentColor" strokeOpacity={0.5} strokeWidth={px(1.2)} />
+      <rect x={-pad.left * 0.4} y={floor} width={rackW + pad.left * 0.4 + pad.right * 0.5} height={px(7)} fill="url(#rf-floor)" />
 
       {bays.map((bay, bayIndex) => {
         const x = bayX[bayIndex]
-        let bottom = floor
+        const levels = bay.levels.map((level, levelIndex) => {
+          const below = bay.levels.slice(0, levelIndex).reduce((sum, item) => sum + item.heightCm + BEAM_H, 0)
+          const beamY = floor - below - BEAM_H
+          return { level, levelNo: levelIndex + 1, beamY, top: beamY - level.heightCm }
+        })
         return (
           <g key={bayIndex}>
-            {bay.levels.map((level, levelIndex) => {
-              const levelNo = levelIndex + 1
-              const beamY = bottom - BEAM_H
-              const top = beamY - level.heightCm
-              bottom = top
+            {levels.map(({ level, levelNo, beamY, top }) => {
               const inside = casesInCell(cases, bayIndex + 1, levelNo)
               const usage = cellUsage(bay, level, inside)
               const active = selected?.bay === bayIndex + 1 && selected.level === levelNo
               const hit = inside.some((item) => highlighted?.has(item.id))
-              const palletH = level.pallets ? Math.min(15, level.heightCm * 0.15) : 0
-              // Palety rovnomerne po polici.
-              const palletGap = level.pallets ? (bay.widthCm - level.pallets * PALLET_CM) / (level.pallets + 1) : 0
-              let caseX = x + Math.max(0, palletGap > 0 && level.pallets ? palletGap : 2)
+              const palletH = level.pallets ? Math.min(14, level.heightCm * 0.12) : 0
+              const palletGap = level.pallets ? Math.max(0, (bay.widthCm - level.pallets * PALLET_CM) / (level.pallets + 1)) : 0
               const select = () => onSelect(active ? null : { bay: bayIndex + 1, level: levelNo })
+              let cursor = x + (level.pallets ? palletGap : 3)
               return (
                 <g
-                  key={levelIndex}
+                  key={levelNo}
                   role="button"
                   tabIndex={0}
                   aria-pressed={active}
                   aria-label={`Pole ${bayIndex + 1}, ${levelNo}. polica: ${inside.length} cases, voľné ${Math.max(0, usage.freeCm)} cm`}
-                  className="cursor-pointer outline-none"
+                  className="cursor-pointer outline-none [&:hover>rect:first-child]:fill-[var(--color-accent)] [&:hover>rect:first-child]:[fill-opacity:0.06]"
                   onClick={select}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
@@ -102,88 +111,124 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
                     }
                   }}
                 >
-                  {/* Priestor police a nosník pod ňou. */}
-                  <rect x={x} y={top} width={bay.widthCm} height={level.heightCm} fill={active ? '#ffedd5' : hit ? '#fff7ed' : '#ffffff'} fillOpacity={active || hit ? 1 : 0.55} />
-                  <rect x={x - 1} y={beamY} width={bay.widthCm + 2} height={BEAM_H} fill={BEAM} rx={1.5} />
-                  <rect x={x - 1} y={beamY + BEAM_H * 0.15} width={bay.widthCm + 2} height={BEAM_H * 0.18} fill="#fdba74" opacity={0.7} />
+                  <rect x={x} y={top} width={bay.widthCm} height={level.heightCm} fill={active || hit ? 'var(--color-accent)' : 'transparent'} fillOpacity={active ? 0.12 : hit ? 0.08 : 0} />
+                  {/* Nosník. */}
+                  <rect x={x} y={beamY + BEAM_H - Math.min(BEAM_H, px(6))} width={bay.widthCm} height={Math.min(BEAM_H, px(6))} fill="#d97706" fillOpacity={0.85} />
 
-                  {/* Palety. */}
+                  {/* Palety: doska a tri hranoly. */}
                   {Array.from({ length: level.pallets ?? 0 }, (_, index) => {
-                    const px = x + palletGap + index * (PALLET_CM + palletGap)
+                    const left = x + palletGap + index * (PALLET_CM + palletGap)
                     return (
-                      <g key={`p${index}`}>
-                        <rect x={px} y={beamY - palletH} width={PALLET_CM} height={palletH * 0.3} fill="#c8a165" />
-                        {[0, 0.42, 0.84].map((offset) => (
-                          <rect key={offset} x={px + PALLET_CM * offset} y={beamY - palletH * 0.7} width={PALLET_CM * 0.16} height={palletH * 0.7} fill="#a47a3f" />
+                      <g key={`p${index}`} fill="#a16207" fillOpacity={0.55}>
+                        <rect x={left} y={beamY - palletH} width={PALLET_CM} height={palletH * 0.28} />
+                        {[0, 0.43, 0.86].map((offset) => (
+                          <rect key={offset} x={left + PALLET_CM * offset} y={beamY - palletH * 0.72} width={PALLET_CM * 0.14} height={palletH * 0.72} />
                         ))}
                       </g>
                     )
                   })}
 
-                  {/* Cases ako škatule zľava (na paletách, ak sú). */}
-                  {inside.map((item, index) => {
+                  {/* Cases. */}
+                  {inside.map((item) => {
                     const known = caseFrontCm(item)
-                    const w = Math.min(known ?? 60, bay.widthCm)
-                    const h = Math.min(item.depthCm ?? level.heightCm * 0.6, level.heightCm - palletH - 2)
-                    const cx = caseX
-                    caseX += w + 2
-                    const overflow = cx + w > x + bay.widthCm
-                    const fontCm = Math.min(font, w / 4, h / 2.2)
-                    const tall = Boolean(item.depthCm && item.depthCm > level.heightCm)
+                    const w = Math.min(known ?? 60, bay.widthCm - 2)
+                    const h = Math.max(px(14), Math.min(item.depthCm ?? level.heightCm * 0.55, level.heightCm - palletH - 2))
+                    const left = Math.min(cursor, x + bay.widthCm - w)
+                    cursor += w + 2
+                    const bad = cursor - 2 > x + bay.widthCm || Boolean(item.depthCm && item.depthCm > level.heightCm)
+                    const found = highlighted?.has(item.id)
                     return (
                       <g key={item.id}>
                         <rect
-                          x={Math.min(cx, x + bay.widthCm - w)}
+                          x={left}
                           y={beamY - palletH - h}
                           width={w}
                           height={h}
-                          rx={2}
-                          fill={CASE_FILLS[index % CASE_FILLS.length]}
-                          stroke={highlighted?.has(item.id) ? ACCENT : overflow || tall ? '#dc2626' : '#374151'}
-                          strokeWidth={highlighted?.has(item.id) ? unit * 0.6 : unit * 0.25}
-                          strokeDasharray={known === null ? `${unit} ${unit * 0.6}` : undefined}
+                          rx={px(2)}
+                          fill="currentColor"
+                          fillOpacity={0.07}
+                          stroke={found ? 'var(--color-accent)' : bad ? '#dc2626' : 'currentColor'}
+                          strokeOpacity={found || bad ? 1 : 0.55}
+                          strokeWidth={px(found ? 2 : 1)}
+                          strokeDasharray={known === null ? `${px(4)} ${px(3)}` : undefined}
                         />
-                        <text x={Math.min(cx, x + bay.widthCm - w) + w / 2} y={beamY - palletH - h / 2} fontSize={fontCm} fill={INK} textAnchor="middle" dominantBaseline="central" pointerEvents="none">
-                          {fit(item.name, w, fontCm)}
-                        </text>
+                        {w / scale > 28 && (
+                          <text x={left + w / 2} y={beamY - palletH - h / 2} fontSize={small} fill="currentColor" textAnchor="middle" dominantBaseline="central" pointerEvents="none">
+                            {fit(item.name, w / scale - 6, 10.5)}
+                          </text>
+                        )}
                       </g>
                     )
                   })}
 
-                  {/* Výška police vľavo hore a voľné miesto vpravo hore. */}
-                  <text x={x + unit} y={top + font * 1.1} fontSize={font * 0.8} fill="#6b7280" pointerEvents="none">
-                    {level.heightCm} cm
-                  </text>
-                  <text x={x + bay.widthCm - unit} y={top + font * 1.1} fontSize={font * 0.8} fontWeight={600} fill={usage.freeCm < 0 ? '#dc2626' : usage.freeCm < 30 ? '#c2410c' : '#15803d'} textAnchor="end" pointerEvents="none">
-                    {usage.freeCm < 0 ? `chýba ${-usage.freeCm} cm` : `voľné ${usage.freeCm} cm`}
-                  </text>
-                  {active && <rect x={x + unit * 0.3} y={top + unit * 0.3} width={bay.widthCm - unit * 0.6} height={level.heightCm - unit * 0.6} fill="none" stroke={ACCENT} strokeWidth={unit * 0.6} rx={unit} pointerEvents="none" />}
+                  {/* Voľné miesto vpravo hore v polici. */}
+                  {level.heightCm / scale > 18 && (
+                    <text
+                      x={x + bay.widthCm - px(6)}
+                      y={top + px(13)}
+                      fontSize={small}
+                      textAnchor="end"
+                      fill={usage.freeCm < 0 ? '#dc2626' : 'currentColor'}
+                      fillOpacity={usage.freeCm < 0 ? 1 : 0.6}
+                      pointerEvents="none"
+                    >
+                      {usage.freeCm < 0 ? `chýba ${-usage.freeCm} cm` : `voľné ${usage.freeCm} cm`}
+                    </text>
+                  )}
+                  {active && <rect x={x + px(1)} y={top + px(1)} width={bay.widthCm - px(2)} height={level.heightCm - px(2)} fill="none" stroke="var(--color-accent)" strokeWidth={px(2)} pointerEvents="none" />}
                 </g>
               )
             })}
-            {/* Šírka poľa a jeho číslo pod ním. */}
-            <text x={x + bay.widthCm / 2} y={floor + unit * 4.2} fontSize={font} fontWeight={600} fill={INK} textAnchor="middle" className="dark:fill-white">
-              Pole {bayIndex + 1} · {bay.widthCm} cm
+
+            {/* Kóta šírky poľa dole. */}
+            <g stroke="currentColor" strokeOpacity={0.45} strokeWidth={px(1)} pointerEvents="none">
+              <line x1={x} y1={floor + px(18)} x2={x + bay.widthCm} y2={floor + px(18)} />
+              <line x1={x} y1={floor + px(18) - tick} x2={x} y2={floor + px(18) + tick} />
+              <line x1={x + bay.widthCm} y1={floor + px(18) - tick} x2={x + bay.widthCm} y2={floor + px(18) + tick} />
+            </g>
+            <text x={x + bay.widthCm / 2} y={floor + px(34)} fontSize={small} fill="currentColor" fillOpacity={0.7} textAnchor="middle" pointerEvents="none">
+              {bays.length > 1 ? `Pole ${bayIndex + 1} · ` : ''}
+              {bay.widthCm} cm
             </text>
           </g>
         )
       })}
 
-      {/* Stojky medzi poliami (výška podľa vyššieho suseda). */}
-      {[...bayX.map((x) => x - POST), totalWidth - POST].map((x, index) => {
-        const h = Math.max(heights[index - 1] ?? 0, heights[index] ?? 0)
+      {/* Stojky. */}
+      {[...bayX.map((x) => x - POST), rackW - POST].map((x, index) => {
+        const h = Math.max(heights[index - 1] ?? 0, heights[index] ?? 0) + 4
         return (
           <g key={`u${index}`} pointerEvents="none">
-            <rect x={x} y={floor - h - 6} width={POST} height={h + 6} fill="url(#rack-upright)" rx={1} />
-            <rect x={x} y={floor - h - 6} width={POST} height={h + 6} fill="url(#rack-holes)" />
-            <rect x={x - 3} y={floor - 2} width={POST + 6} height={3} fill="#334155" />
+            <rect x={x + (POST - Math.min(POST, px(9))) / 2} y={floor - h} width={Math.min(POST, px(9))} height={h} fill="#475569" stroke="#334155" strokeWidth={px(0.8)} />
+            <line x1={x + POST / 2} y1={floor - h + 4} x2={x + POST / 2} y2={floor - 2} stroke="#cbd5e1" strokeOpacity={0.5} strokeWidth={px(1.2)} strokeDasharray={`${px(2)} ${px(4)}`} />
           </g>
         )
       })}
 
-      {/* Celková výška vľavo. */}
-      <text x={-unit * 1.5} y={floor - totalHeight / 2} fontSize={font * 0.85} fill="#6b7280" textAnchor="middle" transform={`rotate(-90 ${-unit * 1.5} ${floor - totalHeight / 2})`}>
-        {totalHeight} cm
+      {/* Kóty výšok políc prvého poľa vľavo. */}
+      {bays[0] &&
+        bays[0].levels.map((level, levelIndex) => {
+          const below = bays[0].levels.slice(0, levelIndex).reduce((sum, item) => sum + item.heightCm + BEAM_H, 0)
+          const bottom = floor - below - BEAM_H
+          const top = bottom - level.heightCm
+          const dx = -px(16)
+          return (
+            <g key={`d${levelIndex}`} pointerEvents="none">
+              <g stroke="currentColor" strokeOpacity={0.45} strokeWidth={px(1)}>
+                <line x1={dx} y1={top} x2={dx} y2={bottom} />
+                <line x1={dx - tick} y1={top} x2={dx + tick} y2={top} />
+                <line x1={dx - tick} y1={bottom} x2={dx + tick} y2={bottom} />
+              </g>
+              {level.heightCm / scale > 14 && (
+                <text x={dx - px(6)} y={(top + bottom) / 2} fontSize={small} fill="currentColor" fillOpacity={0.7} textAnchor="end" dominantBaseline="central">
+                  {level.heightCm}
+                </text>
+              )}
+            </g>
+          )
+        })}
+      <text x={-pad.left + px(4)} y={-pad.top + font} fontSize={small} fill="currentColor" fillOpacity={0.5}>
+        výška {rackH} cm
       </text>
     </svg>
   )

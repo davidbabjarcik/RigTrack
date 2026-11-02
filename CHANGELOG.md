@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.0.1 – 2. 11. 2026
+
+- Regál spredu ako technický výkres: tenké stojky a nosníky, kóty výšky políc a šírky polí, drobné písmo rovnako veľké
+  pri každom regáli, farby podľa svetlej / tmavej témy.
+- Pri stĺpe, stene, dverách a okne už nie je „Uložiť sem case“.
+
 ### 6.0 – 2. 11. 2026
 
 - **Nastavenia → Sklad**: rozmery skladu a všetky regály na jednom mieste – pri každom regáli polia (šírka), police
