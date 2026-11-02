@@ -79,7 +79,9 @@ export function buildNotifications(sources: NotificationSources, today: string, 
       })
     }
     const hours = hoursState(item, today).state
-    if (hours === 'overdue' || hours === 'soon' || hours === 'unknown') {
+    // Kto za techniku zodpovedá, má hodiny na Prehľade v „Moje zodpovednosti“ – hore sa neopakujú.
+    const mine = (sources.responsibilities ?? []).some((r) => r.memberIds.includes(userId) && (r.kinds.includes(item.kind) || (item.caseId !== null && r.caseIds.includes(item.caseId))))
+    if (!mine && (hours === 'overdue' || hours === 'soon' || hours === 'unknown')) {
       list.push({
         id: `hours-${item.id}`,
         severity: hours === 'soon' ? 'soon' : 'urgent',

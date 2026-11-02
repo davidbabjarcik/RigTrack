@@ -5,7 +5,7 @@ import { isAdminRole } from '@/lib/roles'
 // v 0030_permissions.sql; zhodu stráži supabase/tests/permissions.test.ts.
 
 /** Roly, ktorým sa dajú oprávnenia meniť. Admin má vždy všetko. */
-export const CONFIGURABLE_ROLES = ['skladnik', 'technik', 'viewer', 'helper'] as const satisfies readonly Role[]
+export const CONFIGURABLE_ROLES = ['skladnik', 'technik', 'helper', 'viewer'] as const satisfies readonly Role[]
 export type ConfigurableRole = (typeof CONFIGURABLE_ROLES)[number]
 
 const ALL: ConfigurableRole[] = ['skladnik', 'technik', 'viewer']

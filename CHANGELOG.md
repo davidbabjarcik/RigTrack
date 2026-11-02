@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.12.2 – 3. 11. 2026
+
+- **Moje zodpovednosti** na Prehľade: klik pri jednom druhu techniky (napr. len Beam 7R) otvorí techniku vyhľadanú
+  podľa názvu, inak Kontroly; bez názvu zodpovednosti a bez opakovania rovnakých názvov.
+- Prevádzkové hodiny, ktoré máte v „Moje zodpovednosti“, sa už neopakujú v upozorneniach hore.
+- Oprávnenia: stĺpec Helper je pred „Len na čítanie“.
+
 ### 6.12.1 – 3. 11. 2026
 
 - **QR štítky** vo farbách appky; štítky sú na bielom „papieri“ v šírke A4, takže veľkosť na obrazovke sedí s tlačou.

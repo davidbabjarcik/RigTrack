@@ -63,7 +63,10 @@ export function EquipmentListPage() {
   const canWrite = can(company, 'equipment.edit')
   // ?case=none otvorí zoznam rovno s technikou mimo cases (odkaz z prehľadu cases).
   const [params] = useSearchParams()
-  const [filter, setFilter] = useState<EquipmentFilter>(() => (params.get('case') ? { ...NO_FILTER, caseId: params.get('case')! } : savedFilter()))
+  // ?case= (technika v case) alebo ?q= (napr. z Moje zodpovednosti: „Beam 7R“).
+  const [filter, setFilter] = useState<EquipmentFilter>(() =>
+    params.get('case') ? { ...NO_FILTER, caseId: params.get('case')! } : params.get('q') ? { ...NO_FILTER, search: params.get('q')! } : savedFilter(),
+  )
   useEffect(() => {
     try {
       sessionStorage.setItem(FILTER_KEY, JSON.stringify(filter))
