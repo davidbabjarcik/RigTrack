@@ -15,7 +15,7 @@ import { usePhotoThumbs } from './usePhotoThumbs'
 
 const ACCENTS = ['#3b82f6', '#84cc16', '#f97316', '#a855f7', '#06b6d4', '#ef4444']
 
-type Settings = { title: string; subtitle: string; notes: string; theme: 'dark' | 'light'; hidden: string[] }
+type Settings = { title: string; subtitle: string; notes: string; hidden: string[] }
 
 const PRINT_CSS = `
 @page { size: A4 landscape; margin: 0; @top-left { content: ""; } @top-center { content: ""; } @top-right { content: ""; } @bottom-left { content: ""; } @bottom-center { content: ""; } @bottom-right { content: ""; } }
@@ -30,7 +30,7 @@ const PRINT_CSS = `
 const storageKey = (companyId: string, kind: string) => `rigtrack:poster:${companyId}:${kind}`
 
 function loadSettings(companyId: string, kind: EquipmentKind): Settings {
-  const fallback: Settings = { title: POSTER_TITLES[kind] ?? `${KIND_LABELS[kind]} – inventár`, subtitle: '', notes: '', theme: 'dark', hidden: [] }
+  const fallback: Settings = { title: POSTER_TITLES[kind] ?? `${KIND_LABELS[kind]} – inventár`, subtitle: '', notes: '', hidden: [] }
   try {
     return { ...fallback, ...JSON.parse(localStorage.getItem(storageKey(companyId, kind)) ?? '{}') }
   } catch {
@@ -81,14 +81,13 @@ export function InventoryPosterPage() {
   const narrow = shown.filter((section) => section.tiles.length <= 4)
   const isWide = (section: (typeof shown)[number]) =>
     shown.length === 1 || section.tiles.length > 4 || (narrow.length % 2 === 1 && narrow.at(-1) === section)
-  const dark = settings.theme === 'dark'
   const notes = settings.notes
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
     .slice(0, 4)
-  // Logo musí byť vidno na tmavom aj svetlom podklade.
-  const logoFilter = logo.data && ((dark && logo.data.tone === 'dark') || (!dark && logo.data.tone === 'light')) ? 'brightness(0)' + (dark ? ' invert(1)' : '') : undefined
+  // Plagát je na biely papier: svetlé logo by zaniklo, prefarbí sa na čierno.
+  const logoFilter = logo.data?.tone === 'light' ? 'brightness(0)' : undefined
 
   return (
     <>
@@ -115,10 +114,6 @@ export function InventoryPosterPage() {
         </SelectField>
         <Field label="Nadpis" maxLength={60} value={settings.title} onChange={(e) => update({ title: e.target.value })} />
         <Field label="Podnadpis" maxLength={80} placeholder="napr. Modulárny pódiový systém" value={settings.subtitle} onChange={(e) => update({ subtitle: e.target.value })} />
-        <SelectField label="Vzhľad" value={settings.theme} onChange={(e) => update({ theme: e.target.value as Settings['theme'] })}>
-          <option value="dark">tmavý</option>
-          <option value="light">svetlý (šetrí farbu pri tlači)</option>
-        </SelectField>
         <TextareaField
           label="Poznámky dole (každá na riadok, najviac 4)"
           className="sm:col-span-2"
@@ -154,8 +149,8 @@ export function InventoryPosterPage() {
       ) : (
         <div className="overflow-x-auto pb-2">
           <article
-            className="poster mx-auto flex w-[297mm] min-w-[297mm] flex-col gap-[5mm] overflow-hidden rounded-xl p-[9mm] shadow-lg"
-            style={{ minHeight: '210mm', background: dark ? 'radial-gradient(120% 80% at 80% 0%, #1e293b 0%, #0b1120 55%, #05070d 100%)' : '#ffffff', color: dark ? '#f8fafc' : '#0f172a' }}
+            className="poster mx-auto flex w-[297mm] min-w-[297mm] flex-col gap-[5mm] overflow-hidden rounded-xl border p-[9mm] shadow-lg"
+            style={{ minHeight: '210mm', background: '#ffffff', color: '#0f172a' }}
           >
             <header className="flex items-center gap-[6mm]">
               {logo.data && <img src={logo.data.url} alt="" className="h-[16mm] max-w-[60mm] object-contain" style={{ filter: logoFilter }} />}
@@ -178,7 +173,7 @@ export function InventoryPosterPage() {
                   <section
                     key={section.key}
                     className="flex flex-col rounded-[3mm] border p-[4mm]"
-                    style={{ gridColumn: wide ? '1 / -1' : undefined, borderColor: `${accent}55`, background: dark ? 'rgba(15,23,42,0.6)' : '#f8fafc' }}
+                    style={{ gridColumn: wide ? '1 / -1' : undefined, borderColor: `${accent}88`, background: '#ffffff' }}
                   >
                     <h2 className="mb-[3mm] flex items-center gap-[2.5mm] text-[5mm] font-bold tracking-wide uppercase">
                       <span className="grid size-[7mm] place-items-center rounded-[1.5mm] text-[4mm] text-white" style={{ background: accent }}>
@@ -189,7 +184,7 @@ export function InventoryPosterPage() {
                     </h2>
                     <div className="grid gap-[3mm]" style={{ gridTemplateColumns: wide ? 'repeat(auto-fill, minmax(62mm, 1fr))' : 'repeat(2, minmax(0, 1fr))' }}>
                       {section.tiles.map((tile) => (
-                        <div key={tile.key} className="flex min-h-[26mm] items-center gap-[3mm] rounded-[2mm] p-[3mm]" style={{ background: dark ? 'rgba(255,255,255,0.04)' : '#ffffff', border: `0.3mm solid ${dark ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}` }}>
+                        <div key={tile.key} className="flex min-h-[26mm] items-center gap-[3mm] rounded-[2mm] p-[3mm]" style={{ background: '#ffffff', border: '0.3mm solid #e2e8f0' }}>
                           <div className="min-w-0 flex-1">
                             <p className="text-[11mm] leading-none font-black tabular-nums" style={{ color: accent }}>
                               {tile.count}
@@ -214,7 +209,7 @@ export function InventoryPosterPage() {
             </div>
 
             {notes.length > 0 && (
-              <footer className="flex flex-wrap items-center gap-x-[8mm] gap-y-[2mm] rounded-[3mm] border px-[5mm] py-[3mm] text-[3.5mm] font-medium tracking-wide uppercase" style={{ borderColor: dark ? 'rgba(255,255,255,0.12)' : '#e2e8f0' }}>
+              <footer className="flex flex-wrap items-center gap-x-[8mm] gap-y-[2mm] rounded-[3mm] border px-[5mm] py-[3mm] text-[3.5mm] font-medium tracking-wide uppercase" style={{ borderColor: '#e2e8f0' }}>
                 {notes.map((note, index) => (
                   <span key={index} className="flex items-center gap-[2mm]">
                     <span className="size-[2mm] rounded-full" style={{ background: ACCENTS[index % ACCENTS.length] }} />

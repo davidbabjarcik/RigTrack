@@ -5,6 +5,10 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.6.1 – 2. 11. 2026
+
+- Plagát inventára je vždy na bielom pozadí (na tlač na biely papier); svetlé logo sa na ňom prefarbí na čierno.
+
 ### 6.6 – 2. 11. 2026
 
 - **Hliník v sklade** (Sklad → Hliník): miesto na trussy ako mriežka zhora – na každom políčku stoh dielov nastojato.
