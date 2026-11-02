@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Download, Printer } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
 import { downloadCanvas, fileSlug, qrCanvas } from '@/features/cases/canvas'
@@ -42,6 +42,8 @@ export function QrLabelsPage() {
   const { type = 'cases' } = useParams()
   const [params] = useSearchParams()
   const company = useCompany().active!
+  // Páska Brother sa vráti sem (Späť), nie na techniku.
+  const here = useLocation()
   const companyPrefs = useCompanyPrefs(company.companyId).data
   const [chosenSize, setSize] = useState<QrSize | null>(null)
   const size: QrSize = chosenSize ?? companyPrefs?.qrSize ?? 'medium'
@@ -99,7 +101,7 @@ export function QrLabelsPage() {
         <p className="text-sm text-neutral-600">{items.length} štítkov · QR otvorí detail v appke</p>
         <div className="flex flex-wrap gap-2">
           {items.length > 0 && (
-            <AddToPrintButton companyId={company.companyId} kind={isSpots ? 'spot' : isCases ? 'case' : 'equipment'} targetIds={[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))]} />
+            <AddToPrintButton light companyId={company.companyId} kind={isSpots ? 'spot' : isCases ? 'case' : 'equipment'} targetIds={[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))]} />
           )}
           {items.length > 0 && (
             <Button
@@ -119,7 +121,7 @@ export function QrLabelsPage() {
           )}
           {(isCases || type === 'equipment') && items.length > 0 && (
             <Link
-              to={`/labels/tape?${isCases ? 'cases' : 'ids'}=${[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))].join(',')}`}
+              to={`/labels/tape?${isCases ? 'cases' : 'ids'}=${[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))].join(',')}&back=${encodeURIComponent(here.pathname + here.search)}`}
               className="inline-flex h-10 items-center gap-1 rounded-lg border border-neutral-300 px-3 text-sm font-medium hover:bg-neutral-100"
             >
               Na pásku Brother

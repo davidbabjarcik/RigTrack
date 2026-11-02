@@ -159,7 +159,7 @@ export function InventoryPosterPage() {
         </Link>
         <span className="flex-1" />
         <AddToPrintButton companyId={companyId} kind="poster" targetIds={[companyId]} label={`poster:${kind}`} />
-        <Button disabled={!ready} onClick={print}>
+        <Button variant="outline" disabled={!ready} onClick={print}>
           <Printer className="size-4" aria-hidden />
           Tlačiť
         </Button>

@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.9.1 – 3. 11. 2026
+
+- Plagát inventára: všetky tlačidlá (tlačová fronta, Tlačiť, PDF, PNG) rovnakej farby.
+- QR štítky: „QR do tlače“ je na bielej stránke čitateľné aj v tmavej téme.
+- Páska Brother otvorená zo stránky QR štítkov sa tlačidlom Späť vráti na QR štítky, nie na techniku.
+
 ### 6.9 – 3. 11. 2026
 
 - **Nastavenia → Pripomienky a limity**: pripomienky pri eventoch, činnosti, úrovne kontroly aj limity hodín a revízie
