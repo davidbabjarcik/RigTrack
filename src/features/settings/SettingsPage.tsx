@@ -315,14 +315,16 @@ export function SettingsPage() {
     { id: 'lists', label: 'Zoznamy', shown: can(company, 'lookups.manage') },
     { id: 'stage', label: 'Nivtec', shown: can(company, 'lookups.manage') },
     { id: 'packages', label: 'Balíky', shown: can(company, 'lookups.manage') },
-    { id: 'reminders', label: 'Pripomienky', shown: can(company, 'lookups.manage') },
-    { id: 'maintenance', label: 'Limity a revízie', shown: can(company, 'maintenance.manage') },
+    // Pripomienky, úrovne kontroly a limity hodín / revízie sú spolu.
+    { id: 'reminders', label: 'Pripomienky a limity', shown: can(company, 'lookups.manage') || can(company, 'maintenance.manage') },
     { id: 'warehouse', label: 'Sklad', shown: can(company, 'warehouse.manage') },
     { id: 'account', label: 'Účet', shown: true },
   ].filter((tab) => tab.shown)
   // Záložka je v adrese, aby sa na ňu dalo odkázať a aby ju prežilo obnovenie stránky.
   const [params, setParams] = useSearchParams()
-  const tab = tabs.find((item) => item.id === params.get('tab'))?.id ?? 'company'
+  // Stará záložka „Limity a revízie“ je teraz v Pripomienkach.
+  const wanted = params.get('tab') === 'maintenance' ? 'reminders' : params.get('tab')
+  const tab = tabs.find((item) => item.id === wanted)?.id ?? 'company'
 
   return (
     <>
@@ -453,7 +455,7 @@ export function SettingsPage() {
         </Section>
       )}
 
-      {tab === 'reminders' && (
+      {tab === 'reminders' && can(company, 'lookups.manage') && (
         <Section title="Pripomienky pri eventoch">
           <RulesSettings companyId={company.companyId} />
         </Section>
@@ -471,7 +473,7 @@ export function SettingsPage() {
         </Section>
       )}
 
-      {tab === 'maintenance' && (
+      {tab === 'reminders' && can(company, 'maintenance.manage') && (
         <Section title="Limity hodín a revízie">
           <MaintenanceSettings companyId={company.companyId} />
         </Section>

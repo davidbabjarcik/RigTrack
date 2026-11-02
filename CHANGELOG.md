@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.9 – 3. 11. 2026
+
+- **Nastavenia → Pripomienky a limity**: pripomienky pri eventoch, činnosti, úrovne kontroly aj limity hodín a revízie
+  sú na jednej záložke.
+- **Zodpovedné osoby** už nemajú vlastné „odčítať hodiny / skontrolovať case každých … dní“ – kedy pripomenúť, určujú
+  Úrovne kontroly (pri technike úroveň hodín, pri case úroveň kontroly).
+
 ### 6.8 – 2. 11. 2026
 
 - **Upraviť plán → Pridať**: jedno miesto, kde vyberiete, čo pridať – regál (podľa typu), paletu (podľa typu), miesto /

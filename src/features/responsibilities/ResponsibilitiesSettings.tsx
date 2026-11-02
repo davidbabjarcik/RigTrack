@@ -37,7 +37,6 @@ export function ResponsibilitiesSettings({ companyId }: { companyId: string }) {
     event.preventDefault()
     if (fields.name.trim()) save.mutate()
   }
-  const days = (value: string) => (value.trim() === '' ? null : Math.min(365, Math.max(1, Math.trunc(Number(value)) || 1)))
 
   if (list.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Zodpovednosti zatiaľ nie sú dostupné – treba spustiť migráciu 0089.</p>
 
@@ -63,8 +62,6 @@ export function ResponsibilitiesSettings({ companyId }: { companyId: string }) {
                 </p>
                 <p className="text-muted-foreground">
                   {item.memberIds.map((id) => memberName(members.data, id) || 'bývalý člen').join(', ') || 'nikto'}
-                  {item.hoursEveryDays && ` · hodiny každých ${item.hoursEveryDays} dní`}
-                  {item.checkEveryDays && ` · kontrola každých ${item.checkEveryDays} dní`}
                 </p>
               </div>
               <Button variant="ghost" size="sm" aria-label={`Upraviť ${item.name}`} onClick={() => open(item)}>
@@ -127,27 +124,10 @@ export function ResponsibilitiesSettings({ companyId }: { companyId: string }) {
               ))}
             </div>
           </fieldset>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field
-              label="Odčítať prevádzkové hodiny každých (dní)"
-              type="number"
-              min={1}
-              max={365}
-              placeholder="nie"
-              value={fields.hoursEveryDays ?? ''}
-              onChange={(event) => set({ hoursEveryDays: days(event.target.value) })}
-            />
-            <Field
-              label="Skontrolovať case každých (dní)"
-              type="number"
-              min={1}
-              max={365}
-              placeholder="nie"
-              value={fields.checkEveryDays ?? ''}
-              onChange={(event) => set({ checkEveryDays: days(event.target.value) })}
-            />
-          </div>
-          <p className="-mt-2 text-xs text-muted-foreground">Hodiny sa sledujú pri technike so zaškrtnutým „sledovať prevádzkové hodiny“. Prázdne = nepripomínať.</p>
+          <p className="text-xs text-muted-foreground">
+            Zodpovedným appka pripomenie odčítať prevádzkové hodiny a skontrolovať cases podľa Úrovní kontroly (Nastavenia → Pripomienky) –
+            pri technike je úroveň hodín, pri case úroveň kontroly.
+          </p>
           <Field label="Poznámka" maxLength={500} value={fields.note} onChange={(event) => set({ note: event.target.value })} />
           {save.isError && <p className="text-sm text-destructive">Nepodarilo sa uložiť.</p>}
           <div className="flex gap-2">
