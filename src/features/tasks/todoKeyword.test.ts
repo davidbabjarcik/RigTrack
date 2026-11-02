@@ -49,10 +49,13 @@ describe('@toprint keyword', () => {
       if (result.hit) hits.push(result.hit)
     }
     expect(hits).toEqual(['print'])
-    expect(pushKey('3112180', '1').hit).toBe('print')
+    expect(pushKey('0100180', '0').hit).toBe('print')
     expect(pushKey('3112180', '0').hit).toBe('todo')
     expect(stripKeyword('4 @toprint')).toBe('4')
-    expect(hasKeyword('31121801')).toBe(true)
+    expect(hasKeyword('01001800')).toBe(true)
+    expect(hasKeyword('1800-01-01')).toBe(true)
+    // Číselné políčko zahodí úvodnú nulu: 01001800 → 1001800.
+    expect(stripKeyword('1001800')).toBe('')
     expect(printTitle('Číslo case na štítku', 'Beam case')).toBe('Vytlačiť: Číslo case na štítku – Beam case')
     expect(printTargetFromPath('/cases/3f1c2a4e-0000-4000-8000-123456789abc/edit')).toEqual({ kind: 'case', id: '3f1c2a4e-0000-4000-8000-123456789abc' })
     expect(printTargetFromPath('/equipment/new')).toBeNull()

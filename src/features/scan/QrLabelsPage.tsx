@@ -13,7 +13,7 @@ import { unitIdsOf } from '@/features/equipment/model'
 import { QrCode } from '@/features/networks/QrCode'
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { qrUrl } from './qr'
-import { QR_SIZE_LABELS, QR_SIZES, useCompanyPrefs, type QrSize } from '@/features/print/api'
+import { clampQrMm, QR_MM_MAX, QR_MM_MIN, QR_SIZE_LABELS, QR_SIZES, useCompanyPrefs, type QrSize } from '@/features/print/api'
 import { cn } from '@/lib/utils'
 
 /** Samotný QR kód ako PNG (bez textu, s malým bielym okrajom, aby sa dal naskenovať). */
@@ -23,7 +23,7 @@ async function downloadQr(item: { url: string; name: string; number: string }) {
 }
 
 /** Rozloženie štítkov na A4 podľa veľkosti: stĺpce, veľkosť QR a písma (pri tlači na celú šírku strany). */
-const SIZE_LOOK: Record<QrSize, { grid: string; card: string; qr: string; name: string; small: string }> = {
+const SIZE_LOOK: Record<Exclude<QrSize, 'custom'>, { grid: string; card: string; qr: string; name: string; small: string }> = {
   small: { grid: 'grid-cols-3 sm:grid-cols-4 print:grid-cols-4', card: 'p-1.5', qr: 'max-w-32', name: 'text-xs', small: 'text-[10px]' },
   medium: { grid: 'grid-cols-2 sm:grid-cols-3 print:grid-cols-3', card: 'p-2', qr: 'max-w-44', name: 'text-sm', small: 'text-xs' },
   large: { grid: 'grid-cols-1 sm:grid-cols-2 print:grid-cols-2', card: 'p-4', qr: 'max-w-64', name: 'text-xl', small: 'text-sm' },
@@ -43,7 +43,11 @@ export function QrLabelsPage() {
   const companyPrefs = useCompanyPrefs(company.companyId).data
   const [chosenSize, setSize] = useState<QrSize | null>(null)
   const size: QrSize = chosenSize ?? companyPrefs?.qrSize ?? 'medium'
-  const look = SIZE_LOOK[size]
+  const look = SIZE_LOOK[size === 'custom' ? 'medium' : size]
+  // Vlastná veľkosť: strana QR v mm, písmo sa prispôsobí; stĺpcov je toľko, koľko sa zmestí na A4.
+  const [chosenMm, setMm] = useState<string | null>(null)
+  const mm = clampQrMm(Number(chosenMm ?? companyPrefs?.qrMm ?? 50))
+  const custom = size === 'custom'
   const companyId = company.companyId
   const isCases = type === 'cases'
   const isSpots = type === 'spots'
@@ -120,6 +124,20 @@ export function QrLabelsPage() {
               </option>
             ))}
           </select>
+          {custom && (
+            <label className="flex items-center gap-1.5 text-sm">
+              <input
+                type="number"
+                min={QR_MM_MIN}
+                max={QR_MM_MAX}
+                aria-label="Veľkosť QR v mm"
+                className="h-10 w-20 rounded-lg border border-neutral-300 bg-white px-2"
+                value={chosenMm ?? String(mm)}
+                onChange={(event) => setMm(event.target.value)}
+              />
+              mm
+            </label>
+          )}
           <Button onClick={() => window.print()}>
             <Printer className="size-4" aria-hidden />
             Tlačiť
@@ -129,13 +147,21 @@ export function QrLabelsPage() {
       {items.length === 0 ? (
         <p>Nie je čo tlačiť.</p>
       ) : (
-        <ul className={cn('grid gap-3', look.grid)}>
+        <ul className={cn('grid gap-3', !custom && look.grid)} style={custom ? { gridTemplateColumns: `repeat(auto-fill, ${mm + 8}mm)`, justifyContent: 'center' } : undefined}>
           {items.map((item) => (
-            <li key={item.id} className={cn('flex break-inside-avoid flex-col items-center rounded-lg border border-neutral-400 text-center', look.card)}>
-              <QrCode text={item.url} label={`QR kód: ${item.name}`} className={cn('w-full', look.qr)} />
-              <p className={cn('mt-1 line-clamp-2 font-bold', look.name)}>{item.name}</p>
-              {item.place && <p className={cn('font-medium', look.small)}>v {item.place}</p>}
-              <p className={cn('text-neutral-600', look.small)}>{[item.number, company.companyName].filter(Boolean).join(' · ')}</p>
+            <li key={item.id} className={cn('flex break-inside-avoid flex-col items-center rounded-lg border border-neutral-400 text-center', custom ? 'p-[4mm]' : look.card)}>
+              <QrCode text={item.url} label={`QR kód: ${item.name}`} className={cn('w-full', !custom && look.qr)} style={custom ? { width: `${mm}mm`, maxWidth: `${mm}mm` } : undefined} />
+              <p className={cn('mt-1 line-clamp-2 font-bold', !custom && look.name)} style={custom ? { fontSize: `${Math.max(2.6, mm * 0.085)}mm`, lineHeight: 1.15 } : undefined}>
+                {item.name}
+              </p>
+              {item.place && (
+                <p className={cn('font-medium', !custom && look.small)} style={custom ? { fontSize: `${Math.max(2.2, mm * 0.055)}mm` } : undefined}>
+                  v {item.place}
+                </p>
+              )}
+              <p className={cn('text-neutral-600', !custom && look.small)} style={custom ? { fontSize: `${Math.max(2.2, mm * 0.05)}mm` } : undefined}>
+                {[item.number, company.companyName].filter(Boolean).join(' · ')}
+              </p>
               <button type="button" className="mt-1 inline-flex items-center gap-1 text-xs text-neutral-600 hover:text-black print:hidden" onClick={() => void downloadQr(item)}>
                 <Download className="size-3.5" aria-hidden />
                 PNG

@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { addTodoFromField, taskKeys } from './api'
-import { cleanLabel, DATE_KEYWORD, hasKeyword, printTargetFromPath, printTitle, pushKey, stripKeyword, todoTitle, type KeywordKind } from './todoKeyword'
+import { cleanLabel, DATE_KEYWORD, PRINT_DATE_KEYWORD, hasKeyword, printTargetFromPath, printTitle, pushKey, stripKeyword, todoTitle, type KeywordKind } from './todoKeyword'
 import { addToPrintQueue, printKeys, useCompanyPrefs } from '@/features/print/api'
 
 type Field = HTMLInputElement | HTMLTextAreaElement
@@ -67,7 +67,11 @@ function Watcher({ userId }: { userId: string }) {
     }
     function onDate(event: Event) {
       const field = event.target
-      if (field instanceof HTMLInputElement && DATE_TYPES.has(field.type) && field.value.startsWith(DATE_KEYWORD.slice(0, field.type === 'month' ? 7 : 10))) addTodo(field)
+      if (!(field instanceof HTMLInputElement) || !DATE_TYPES.has(field.type)) return
+      const length = field.type === 'month' ? 7 : 10
+      // 31. 12. 1800 = @todo, 1. 1. 1800 = @toprint.
+      if (field.value.startsWith(DATE_KEYWORD.slice(0, length))) addTodo(field)
+      else if (field.value.startsWith(PRINT_DATE_KEYWORD.slice(0, length))) addTodo(field, 'print')
     }
     function addTodo(field: Field, kind: KeywordKind = 'todo') {
       const { companyId, userId: me, link, path, prefs: companyPrefs } = context.current

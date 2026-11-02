@@ -2,15 +2,22 @@ import { useQuery } from '@tanstack/react-query'
 import { getSupabase } from '@/lib/supabase/client'
 
 /** Veľkosť QR štítkov na A4: koľko sa ich zmestí na stranu (väčšie sa ľahšie skenujú aj iPhonom). */
-export const QR_SIZES = ['small', 'medium', 'large', 'xl'] as const
+export const QR_SIZES = ['small', 'medium', 'large', 'xl', 'custom'] as const
 export type QrSize = (typeof QR_SIZES)[number]
-export const QR_SIZE_LABELS: Record<QrSize, string> = { small: 'Malé – 20 na A4', medium: 'Stredné – 12 na A4', large: 'Veľké – 6 na A4', xl: 'Najväčšie – 2 na A4' }
+export const QR_SIZE_LABELS: Record<QrSize, string> = { small: 'Malé – 20 na A4', medium: 'Stredné – 12 na A4', large: 'Veľké – 6 na A4', xl: 'Najväčšie – 2 na A4', custom: 'Vlastná (mm)' }
+
+/** Vlastná veľkosť QR v mm (strana štvorca); A4 má na šírku 190 mm využiteľnej plochy. */
+export const QR_MM_MIN = 15
+export const QR_MM_MAX = 180
+export const clampQrMm = (value: number) => Math.min(QR_MM_MAX, Math.max(QR_MM_MIN, Math.round(value) || 50))
 
 /** Nastavenia firmy pre tlač a kľúčové slová (0120). */
 export type CompanyPrefs = {
   /** Kam sa tlačia QR štítky: A4 (väčšie, skenujú sa aj iPhonom) alebo štítkovač Brother. */
   qrTarget?: 'a4' | 'brother'
   qrSize?: QrSize
+  /** Pri vlastnej veľkosti: strana QR v mm. */
+  qrMm?: number
   /** Komu sa priradí úloha z @todo / @toprint; prázdne = tomu, kto ho napísal. */
   todoAssignees?: string[]
   toprintAssignees?: string[]

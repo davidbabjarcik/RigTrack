@@ -1,10 +1,12 @@
 // Kľúčové slovo @todo (alebo @addtodo) v ľubovoľnom políčku: z políčka sa stane úloha „Doplniť: …“.
 // @toprint: úloha „Vytlačiť: …“ a štítok do tlačovej fronty (napr. pri čísle case).
-// Do číselného políčka (kg, ks…) sa „@“ napísať nedá, preto tam platí 31121800 (@todo) a 31121801 (@toprint); v dátume 31. 12. 1800.
+// Do číselného políčka (kg, ks…) sa „@“ napísať nedá, preto tam platí 31121800 (@todo) a 01001800 (@toprint);
+// v dátume 31. 12. 1800 (@todo) a 1. 1. 1800 (@toprint).
 
 /** Číselné kľúčové slovo a dátum, ktorý znamená to isté. */
 export const NUMBER_KEYWORD = '31121800'
-export const PRINT_NUMBER_KEYWORD = '31121801'
+export const PRINT_NUMBER_KEYWORD = '01001800'
+export const PRINT_DATE_KEYWORD = '1800-01-01'
 export const DATE_KEYWORD = '1800-12-31'
 const KEYWORDS: { word: string; kind: KeywordKind }[] = [
   { word: '@addtodo', kind: 'todo' },
@@ -31,10 +33,10 @@ export function pushKey(buffer: string, key: string): { buffer: string; hit: Key
 
 /** Odstráni kľúčové slová z textu políčka (aj s medzerou pred nimi). */
 export const stripKeyword = (value: string) =>
-  value.replace(/\s?@(add)?todo\b/gi, '').replace(/\s?@toprint\b/gi, '').replace(NUMBER_KEYWORD, '').replace(PRINT_NUMBER_KEYWORD, '').trimEnd()
+  value.replace(/\s?@(add)?todo\b/gi, '').replace(/\s?@toprint\b/gi, '').replace(NUMBER_KEYWORD, '').replace(PRINT_NUMBER_KEYWORD, '').replace(/^1001800$/, '').trimEnd()
 
 /** Obsahuje hodnota políčka kľúčové slovo (aby sa vedelo, či ho treba zmazať)? */
-export const hasKeyword = (value: string) => /@(add)?todo|@toprint/i.test(value) || value.includes(NUMBER_KEYWORD) || value.includes(PRINT_NUMBER_KEYWORD) || value === DATE_KEYWORD
+export const hasKeyword = (value: string) => /@(add)?todo|@toprint/i.test(value) || value.includes(NUMBER_KEYWORD) || value.includes(PRINT_NUMBER_KEYWORD) || value === '1001800' || value === DATE_KEYWORD || value === PRINT_DATE_KEYWORD
 
 /** Čo sa má vytlačiť podľa adresy stránky: technika alebo case (/equipment/:id, /cases/:id aj ich úprava). */
 export function printTargetFromPath(path: string): { kind: 'equipment' | 'case'; id: string } | null {

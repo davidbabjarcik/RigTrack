@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useMembers } from '@/features/companies/useMembers'
 import { errorDetail } from '@/lib/supabase/errors'
 import { cn } from '@/lib/utils'
-import { printKeys, QR_SIZE_LABELS, QR_SIZES, saveCompanyPrefs, useCompanyPrefs, type CompanyPrefs } from './api'
+import { clampQrMm, printKeys, QR_MM_MAX, QR_MM_MIN, QR_SIZE_LABELS, QR_SIZES, saveCompanyPrefs, useCompanyPrefs, type CompanyPrefs } from './api'
 
 /**
  * Nastavenia → Zoznamy → Tlač a kľúčové slová: kam sa tlačia QR štítky (A4 alebo Brother), ich veľkosť na A4
@@ -69,9 +69,27 @@ export function PrintSettings({ companyId }: { companyId: string }) {
             </button>
           ))}
         </div>
+        {current.qrSize === 'custom' && (
+          <label className="mt-2 flex items-center gap-2 text-sm">
+            Strana QR kódu
+            <input
+              key={current.qrMm ?? 50}
+              type="number"
+              min={QR_MM_MIN}
+              max={QR_MM_MAX}
+              className="h-9 w-24 rounded-lg border bg-background px-2"
+              defaultValue={current.qrMm ?? 50}
+              onBlur={(event) => {
+                const value = clampQrMm(Number(event.target.value))
+                if (value !== current.qrMm) save.mutate({ qrMm: value })
+              }}
+            />
+            mm <span className="text-xs text-muted-foreground">({QR_MM_MIN}–{QR_MM_MAX} mm; iPhone spoľahlivo číta od cca 30 mm)</span>
+          </label>
+        )}
       </fieldset>
       {people('todoAssignees', 'Komu ukázať úlohy z @todo', '@todo v políčku (napr. pri váhe) vytvorí úlohu „Doplniť: …“.')}
-      {people('toprintAssignees', 'Komu ukázať úlohy z @toprint', '@toprint v políčku (napr. pri čísle case) vytvorí úlohu „Vytlačiť: …“ a štítok dá do tlačovej fronty.')}
+      {people('toprintAssignees', 'Komu ukázať úlohy z @toprint', '@toprint v políčku (napr. pri čísle case; do čísla 01001800) vytvorí úlohu „Vytlačiť: …“ a štítok dá do tlačovej fronty.')}
       {(save.isError || prefs.isError) && (
         <p className="text-sm text-destructive">
           {/company_prefs/.test(String(save.error?.message ?? '')) ? 'Nastavenia tlače ešte databáza nepozná – spustite v Supabase supabase/update-all.sql (migrácia 0120).' : `Nepodarilo sa uložiť. ${errorDetail(save.error)}`}

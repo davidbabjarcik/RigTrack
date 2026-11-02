@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.14.1 – 2. 11. 2026
+
+- **Vlastná veľkosť QR na A4**: „Vlastná (mm)“ – stranu QR zadáte v milimetroch (15–180 mm), písmo sa prispôsobí a na
+  stranu sa zmestí toľko štítkov, koľko sa vojde. Dá sa nastaviť v Nastaveniach aj priamo pri tlači.
+- **@toprint do čísla a dátumu**: v číselnom políčku 01001800, v dátume 1. 1. 1800.
+
 ### 5.14 – 2. 11. 2026
 
 - **Tlač** (nová položka v menu): tlačová fronta štítkov. Pri technike, rozdelenej technike, case aj sade cases je
@@ -14,7 +20,7 @@ v **Nastavenia → O aplikácii → Čo je nové**.
   20, 12, 6 alebo 2 na stranu – veľké štítky s veľkým písmom sa dobre skenujú aj iPhonom. Veľkosť sa dá zmeniť
   aj priamo pri tlači. Adresy, módy a odber idú vždy na pásku Brother.
 - **@toprint**: napíšte do políčka (napr. pri čísle case) @toprint – vznikne úloha „Vytlačiť: …“ a QR štítok tej
-  techniky alebo case sa pridá do tlačovej fronty. Do číselného políčka 31121801.
+  techniky alebo case sa pridá do tlačovej fronty. Do číselného políčka 01001800, do dátumu 1. 1. 1800.
 - **Komu ukázať @todo a @toprint**: v nastaveniach vyberiete ľudí, ktorým sa úlohy priradia (inak tomu, kto
   kľúčové slovo napísal).
 - Nová migrácia: `0120` (je aj v `supabase/update-all.sql`).
