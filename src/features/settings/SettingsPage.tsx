@@ -462,7 +462,7 @@ export function SettingsPage() {
       )}
 
       {tab === 'reminders' && isAdmin && (
-        <Section title="Činnosti pri eventoch (nakladanie, kontrola hliníka…)">
+        <Section title="Činnosti pred, počas a po evente (nakladanie, kontrola hliníka…)">
           <DutySettings companyId={company.companyId} />
         </Section>
       )}

@@ -38,3 +38,10 @@ describe('hours with work outside events', () => {
     expect(hoursByPerson(logs, '2026', (id) => id, 10, extra)).toEqual([{ id: 'a', label: 'a', value: 3.5 }])
   })
 })
+
+describe('guessPhase', () => {
+  it('puts loading before and checks after the event', async () => {
+    const { guessPhase } = await import('./model')
+    expect(['Nakladanie', 'Vykladanie', 'Kontrola a naskladnenie hliníka', 'Kontrola kabeláže', 'Stavba pódia'].map(guessPhase)).toEqual(['before', 'after', 'after', 'after', 'event'])
+  })
+})

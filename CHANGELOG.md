@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.11 – 3. 11. 2026
+
+- **Činnosti pred, počas a po evente**: každá činnosť má, kedy sa robí – pred eventom (nakladanie), na evente alebo
+  po evente (vykladanie, kontrola a naskladnenie hliníka, kontrola kabeláže). V Nastaveniach aj pri evente sú
+  zoskupené podľa toho; existujúcim sa to nastavilo podľa názvu a dá sa zmeniť.
+- Nová migrácia: `0133` (je aj v `supabase/update-all.sql`).
+
 ### 6.10 – 3. 11. 2026
 
 - **Bezdrôtový systém** (napr. Wisycom MRK960 + MTH410): okrem frekvencie a kapsúl aj **model prijímača**, **vysielač**

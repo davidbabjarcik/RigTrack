@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0132 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0133 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -3067,6 +3067,24 @@ language sql stable security definer set search_path = '' as $$
   group by r.id, r.name, r.member_ids;
 $$;
 revoke execute on function public.responsibility_due(uuid) from public, anon, authenticated;
+
+-- ===== 0133_duty_phase.sql =====
+-- RigTrack 6.11: činnosti pri eventoch majú fázu – pred eventom (nakladanie), na evente, po evente (vykladanie, kontrola
+-- a naskladnenie hliníka, kontrola kabeláže). Existujúcim sa fáza odhadne podľa názvu.
+
+alter table public.company_duty_types add column if not exists phase text not null default 'event';
+do $$
+begin
+  alter table public.company_duty_types drop constraint if exists company_duty_types_phase_check;
+  alter table public.company_duty_types add constraint company_duty_types_phase_check check (phase in ('before', 'event', 'after'));
+end;
+$$;
+grant update (phase) on public.company_duty_types to authenticated;
+
+update public.company_duty_types set phase = 'after'
+where phase = 'event' and (name ilike '%vyklad%' or name ilike '%kontrol%' or name ilike '%naskladn%' or name ilike '%upratan%');
+update public.company_duty_types set phase = 'before'
+where phase = 'event' and (name ilike 'naklad%' or name ilike '%príprav%' or name ilike '%balen%');
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

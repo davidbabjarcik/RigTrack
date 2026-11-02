@@ -7,7 +7,7 @@ import { useAuth } from '@/features/auth/auth-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import type { CompanyEvent } from '@/features/events/model'
 import { addDuty, dutyKeys, removeDuty, useDutyTypes, useEventDuties } from './api'
-import type { DutyType, EventDuty } from './model'
+import { DUTY_PHASE_LABELS, DUTY_PHASES, type DutyType, type EventDuty } from './model'
 
 const EXTERNAL = 'external'
 
@@ -100,8 +100,16 @@ export function EventDutiesSection({ companyId, event, canEdit }: Props) {
 
   return (
     <CollapsibleSection id="event.duties" title={<>Kto čo robil ({count})</>}>
+      <div className="flex flex-col gap-3">
+      {DUTY_PHASES.map((phase) => {
+        const inPhase = shown.filter((type) => type.phase === phase)
+        if (inPhase.length === 0) return null
+        return (
+      <div key={phase}>
+      {/* Pred eventom, na evente, po evente (kontrola hliníka, kabeláže…). */}
+      <h3 className="mb-1 text-sm font-medium text-muted-foreground">{DUTY_PHASE_LABELS[phase]}</h3>
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
-        {shown.map((type) => {
+        {inPhase.map((type) => {
           const here = all.filter((duty) => duty.dutyTypeId === type.id)
           const mine = here.some((duty) => duty.memberId === userId)
           return (
@@ -136,6 +144,10 @@ export function EventDutiesSection({ companyId, event, canEdit }: Props) {
           )
         })}
       </ul>
+      </div>
+        )
+      })}
+      </div>
       {(add.isError || remove.isError) && <p className="mt-2 text-sm text-destructive">Zmena sa nepodarila.</p>}
     </CollapsibleSection>
   )

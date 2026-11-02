@@ -1,7 +1,20 @@
 // Činnosti pri evente (nakladanie, vykladanie, kontrola hliníka, kabeláže…) a z nich štatistiky.
 import type { Ranked } from '@/features/stats/model'
 
-export type DutyType = { id: string; name: string; sort: number; active: boolean }
+/** Kedy sa činnosť robí: pred eventom (nakladanie), na evente, po evente (vykladanie, kontrola hliníka a kabeláže). */
+export const DUTY_PHASES = ['before', 'event', 'after'] as const
+export type DutyPhase = (typeof DUTY_PHASES)[number]
+export const DUTY_PHASE_LABELS: Record<DutyPhase, string> = { before: 'Pred eventom', event: 'Na evente', after: 'Po evente' }
+
+/** Odhad fázy podľa názvu (pri pridaní činnosti; dá sa zmeniť). */
+export function guessPhase(name: string): DutyPhase {
+  const text = name.toLowerCase()
+  if (/vyklad|kontrol|naskladn|upratan/.test(text)) return 'after'
+  if (/^naklad|príprav|balen/.test(text)) return 'before'
+  return 'event'
+}
+
+export type DutyType = { id: string; name: string; sort: number; active: boolean; phase: DutyPhase }
 export type EventDuty = { id: string; eventId: string; dutyTypeId: string; memberId: string | null; personName: string }
 export type WorkLog = { userId: string; workDate: string; startsAt: string; endsAt: string; breakMinutes: number }
 

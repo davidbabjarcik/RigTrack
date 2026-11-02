@@ -22,6 +22,9 @@ describe('event duties', () => {
     await expect(t.as('admin', `insert into public.company_duty_types (company_id, name) values ($1, ' nakladanie ')`, [company])).rejects.toThrow(/duplicate key/)
     await expect(t.as('viewer', `insert into public.company_duty_types (company_id, name) values ($1, 'Iné')`, [company])).rejects.toThrow(/row-level security/)
     expect(await t.as('viewer', 'select name from public.company_duty_types')).toEqual([{ name: 'Nakladanie' }])
+    await t.as('admin', `update public.company_duty_types set phase = 'before' where id = $1`, [loading])
+    expect(await t.as('viewer', 'select phase from public.company_duty_types')).toEqual([{ phase: 'before' }])
+    await expect(t.as('admin', `update public.company_duty_types set phase = 'neskôr' where id = $1`, [loading])).rejects.toThrow(/check/)
   })
 
   it('records people on duties: editors anyone, crew only themselves', async () => {

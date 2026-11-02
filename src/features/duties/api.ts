@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getSupabase } from '@/lib/supabase/client'
-import type { DutyType, EventDuty, WorkLog } from './model'
+import { guessPhase, type DutyType, type EventDuty, type WorkLog } from './model'
 
 export const dutyKeys = {
   types: (companyId: string) => ['company', companyId, 'duty-types'] as const,
@@ -10,9 +10,12 @@ export const dutyKeys = {
 }
 
 export async function fetchDutyTypes(companyId: string): Promise<DutyType[]> {
-  const { data, error } = await getSupabase().from('company_duty_types').select('id, name, sort, active').eq('company_id', companyId).order('sort').order('name')
+  const select = (columns: string) => getSupabase().from('company_duty_types').select(columns).eq('company_id', companyId).order('sort').order('name')
+  let { data, error } = await select('id, name, sort, active, phase')
+  // Bez migrácie 0133 nie je fáza – odhadne sa z názvu.
+  if (error && /phase/.test(error.message)) ({ data, error } = await select('id, name, sort, active'))
   if (error) throw error
-  return data as DutyType[]
+  return (data as unknown as (Omit<DutyType, 'phase'> & { phase?: DutyType['phase'] })[]).map((row) => ({ ...row, phase: row.phase ?? guessPhase(row.name) }))
 }
 
 export function useDutyTypes(companyId: string) {
@@ -22,11 +25,18 @@ export function useDutyTypes(companyId: string) {
 export async function addDutyTypes(companyId: string, names: string[], firstSort: number) {
   const { error } = await getSupabase()
     .from('company_duty_types')
-    .insert(names.map((name, index) => ({ company_id: companyId, name: name.trim(), sort: firstSort + index })))
+    .insert(names.map((name, index) => ({ company_id: companyId, name: name.trim(), sort: firstSort + index, phase: guessPhase(name) })))
+  if (error && /phase/.test(error.message)) {
+    const retry = await getSupabase()
+      .from('company_duty_types')
+      .insert(names.map((name, index) => ({ company_id: companyId, name: name.trim(), sort: firstSort + index })))
+    if (retry.error) throw retry.error
+    return
+  }
   if (error) throw error
 }
 
-export async function updateDutyType(id: string, fields: Partial<Pick<DutyType, 'name' | 'sort' | 'active'>>) {
+export async function updateDutyType(id: string, fields: Partial<Pick<DutyType, 'name' | 'sort' | 'active' | 'phase'>>) {
   const { error } = await getSupabase().from('company_duty_types').update(fields).eq('id', id)
   if (error) throw error
 }
