@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.10 – 3. 11. 2026
+
+- **Bezdrôtový systém** (napr. Wisycom MRK960 + MTH410): okrem frekvencie a kapsúl aj **model prijímača**, **vysielač**
+  (ručný mikrofón / bodypack / oba) a **model vysielača**. Ukáže sa v detaile aj v zozname techniky.
+- V detaile techniky sú vidno **kapsule**, ktoré k mikrofónu pasujú.
+
 ### 6.9.1 – 3. 11. 2026
 
 - Plagát inventára: všetky tlačidlá (tlačová fronta, Tlačiť, PDF, PNG) rovnakej farby.

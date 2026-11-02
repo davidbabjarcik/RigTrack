@@ -62,6 +62,10 @@ export const TRUSS_SHAPE_LABELS: Record<TrussShape, string> = {
 }
 
 /** Pódium: dosky alebo príslušenstvo. */
+export const WIRELESS_TX = ['handheld', 'bodypack', 'both'] as const
+export type WirelessTx = (typeof WIRELESS_TX)[number]
+export const WIRELESS_TX_LABELS: Record<WirelessTx, string> = { handheld: 'ručný mikrofón (handka)', bodypack: 'bodypack (madona / headset)', both: 'ručný aj bodypack' }
+
 export const STAGE_TYPES = ['deck', 'accessory'] as const
 export type StageType = (typeof STAGE_TYPES)[number]
 export const STAGE_TYPE_LABELS: Record<StageType, string> = { deck: 'Dosky', accessory: 'Príslušenstvo' }
@@ -277,6 +281,10 @@ export type EquipmentAttributes = {
   micType?: 'dynamic' | 'condenser'
   /** Bezdrôtový mikrofón: kapsule, ktoré k nemu pasujú (id zo zoznamu kapsúl). */
   capsuleIds?: string[]
+  /** Bezdrôtový systém: model prijímača (napr. MRK960), vysielač – ručný (handka), bodypack alebo oba – a jeho model (napr. MTH410). */
+  wirelessRx?: string
+  wirelessTx?: WirelessTx
+  wirelessTxModel?: string
   /** Reprobox / sub / odposluch: aktívny alebo pasívny, výkon RMS a peak, woofery, max SPL, konektory, hniezdo na stojan. */
   powered?: 'active' | 'passive'
   rmsW?: number
@@ -558,6 +566,9 @@ export const equipmentSchema = z.object({
   rfRange: text(60).optional(),
   micType: z.enum(['dynamic', 'condenser', '']).optional(),
   capsuleIds: z.array(z.string()).max(30).optional(),
+  wirelessRx: text(60).optional(),
+  wirelessTx: z.enum([...WIRELESS_TX, '']).optional(),
+  wirelessTxModel: text(60).optional(),
   powered: z.enum(['active', 'passive', '']).optional(),
   rmsW: optionalNumber(100000),
   peakW: optionalNumber(200000),
@@ -748,6 +759,9 @@ export function attributesFor(
         | 'rfRange'
         | 'micType'
         | 'capsuleIds'
+        | 'wirelessRx'
+        | 'wirelessTx'
+        | 'wirelessTxModel'
         | 'powered'
         | 'rmsW'
         | 'peakW'
@@ -863,6 +877,11 @@ export function attributesFor(
   }
   const wireless = audio && (values.audioType === 'wireless' || (values.audioType === 'microphone' && values.micKind === 'wireless'))
   if (wireless && values.capsuleIds?.length) attributes.capsuleIds = values.capsuleIds
+  if (audio && values.audioType === 'wireless') {
+    if (values.wirelessRx?.trim()) attributes.wirelessRx = values.wirelessRx.trim()
+    if (values.wirelessTx) attributes.wirelessTx = values.wirelessTx
+    if (values.wirelessTxModel?.trim()) attributes.wirelessTxModel = values.wirelessTxModel.trim()
+  }
   if (values.kind === 'dj' && values.djType) attributes.djType = values.djType
   if (values.kind === 'video' && values.videoType && !values.isLedPanel && !values.isLedProcessor && !values.isDisplay) attributes.videoType = values.videoType
   if (attributes.videoType === 'camera') {
@@ -1030,6 +1049,8 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>, options:
     a.cableType === 'di' && 'DI box',
     a.cableType === 'adapter' && 'Redukcia',
     a.rfRange,
+    a.wirelessRx && `prijímač ${a.wirelessRx}`,
+    (a.wirelessTx || a.wirelessTxModel) && `vysielač ${[a.wirelessTx && WIRELESS_TX_LABELS[a.wirelessTx], a.wirelessTxModel].filter(Boolean).join(' ')}`,
     a.mixerKind && (a.mixerKind === 'digital' ? 'digitálny' : 'analógový'),
     a.mixerChannels !== undefined && `${a.mixerChannels} ch`,
     a.mixerCard && `karta ${a.mixerCard}`,

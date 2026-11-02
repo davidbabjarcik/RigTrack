@@ -552,3 +552,14 @@ describe('DMX channel map', () => {
     expect(channelMap({ name: 'Basic', channels: 4 })).toEqual([])
   })
 })
+
+describe('wireless system', () => {
+  it('describes the receiver and transmitter', async () => {
+    const { describeAttributes } = await import('./model')
+    expect(describeAttributes({ attributes: { audioType: 'wireless', wirelessRx: 'MRK960', wirelessTx: 'handheld', wirelessTxModel: 'MTH410' } })).toEqual([
+      'Bezdrôtový systém',
+      'prijímač MRK960',
+      'vysielač ručný mikrofón (handka) MTH410',
+    ])
+  })
+})

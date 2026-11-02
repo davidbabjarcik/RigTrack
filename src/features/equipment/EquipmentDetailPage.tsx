@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Pencil, QrCode, SlidersHorizontal, Trash2, Wrench } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
+import { useCapsules } from '@/features/capsules/api'
 import { caseTitle } from '@/features/cases/model'
 import { EquipmentMaintenance } from '@/features/maintenance/EquipmentMaintenance'
 import { GroupDmx } from './GroupDmx'
@@ -35,6 +36,7 @@ import { equipmentValue } from './value'
 export function EquipmentDetailPage() {
   const { id = '' } = useParams()
   const company = useCompany().active!
+  const capsules = useCapsules(company.companyId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { categories, locations } = useEquipmentLookups(company.companyId)
@@ -105,6 +107,16 @@ export function EquipmentDetailPage() {
     ['Druh', [KIND_LABELS[equipment.kind], ...describeAttributes(equipment)].join(' · ')],
     ['Vlastník', equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
     ['Kategória', categories.find((c) => c.id === equipment.categoryId)?.name],
+    [
+      'Kapsule',
+      equipment.attributes.capsuleIds?.length
+        ? equipment.attributes.capsuleIds
+            .map((id) => capsules.data?.find((capsule) => capsule.id === id))
+            .filter((capsule) => capsule !== undefined)
+            .map((capsule) => [capsule.manufacturer, capsule.name].filter(Boolean).join(' '))
+            .join(', ') || undefined
+        : undefined,
+    ],
     ['Príkon', equipment.attributes.powerW !== undefined && `${equipment.attributes.powerW} W`],
     [
       'DMX módy',
