@@ -17,14 +17,16 @@ import { parseQr } from '@/features/scan/qr'
 import { caseTitle } from '@/features/cases/model'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { addSpot, deleteSpot, fetchCaseBays, fetchWarehouse, placeCase, updateSpot, warehouseKeys } from './api'
+import { addSpot, deleteSpot, fetchCaseBays, fetchWarehouse, placeCase, setCasePallet, setCaseSize, updateSpot, warehouseKeys } from './api'
+import { CellCases } from './CellCases'
 import { BaysEditor } from './BaysEditor'
-import { RackFront } from './RackFront'
+import { RackFront, type RackCell } from './RackFront'
 import {
   byLevel,
   casesBySpot,
   casesInCell,
   cellUsage,
+  layoutCell,
   describeSpot,
   findCases,
   isStructure,
@@ -62,7 +64,7 @@ export function WarehousePage() {
   const [scanning, setScanning] = useState<'find' | 'place' | null>(null)
   const [found, setFound] = useState<{ text: string; to?: string } | null>(null)
   // Pohľad spredu na regál: vybraná polica (pole, polica zdola) a úprava polí.
-  const [cell, setCell] = useState<{ bay: number; level: number } | null>(null)
+  const [cell, setCell] = useState<RackCell | null>(null)
   const [editingBays, setEditingBays] = useState(false)
 
   const plan = useQuery({ queryKey: warehouseKeys.plan(companyId), queryFn: () => fetchWarehouse(companyId) })
@@ -81,18 +83,25 @@ export function WarehousePage() {
   })
   const remove = useMutation({ mutationFn: (id: string) => deleteSpot(companyId, id), onSettled: refreshAll })
   const place = useMutation({
-    mutationFn: ({ caseId, spotId, level, bay = null }: { caseId: string; spotId: string | null; level: number | null; bay?: number | null }) =>
-      placeCase(companyId, caseId, spotId, level, bay),
+    mutationFn: ({ caseId, spotId, level, bay = null, pallet = null }: { caseId: string; spotId: string | null; level: number | null; bay?: number | null; pallet?: number | null }) =>
+      placeCase(companyId, caseId, spotId, level, bay, pallet),
     onSettled: refreshAll,
   })
-  const mutations = [add, change, remove, place]
+  const movePallet = useMutation({ mutationFn: ({ caseId, pallet }: { caseId: string; pallet: number | null }) => setCasePallet(companyId, caseId, pallet), onSettled: refreshAll })
+  const resize = useMutation({
+    mutationFn: ({ caseId, size }: { caseId: string; size: Parameters<typeof setCaseSize>[2] }) => setCaseSize(companyId, caseId, size),
+    onSettled: refreshAll,
+  })
+  const mutations = [add, change, remove, place, movePallet, resize]
 
   if (plan.isPending || casesQuery.isPending) return <LoadingBlock />
   if (plan.isError || casesQuery.isError) {
     return <ErrorBlock message="Plán skladu sa nepodarilo načítať." onRetry={() => void Promise.all([plan.refetch(), casesQuery.refetch()])} />
   }
   // Pole regála, v ktorom case leží (0124).
-  const cases = { data: casesQuery.data.map((item) => ({ ...item, spotBay: caseBays.data?.get(item.id) ?? null })) }
+  const cases = {
+    data: casesQuery.data.map((item) => ({ ...item, spotBay: caseBays.data?.get(item.id)?.bay ?? null, spotPallet: caseBays.data?.get(item.id)?.pallet ?? null })),
+  }
 
   const { warehouse, spots } = plan.data
   const selectedId = spots.some((spot) => spot.id === params.get('spot')) ? params.get('spot') : null
@@ -120,9 +129,12 @@ export function WarehousePage() {
     const spot = spotOf(item.spotId)
     return spot ? describeSpot(spot, item.spotLevel, item.spotBay) : 'nemá miesto v sklade'
   }
-  // Kam uložiť: pri regáli s poliami vybraná polica, inak poschodie z výberu.
+  // Kam uložiť: pri regáli s poliami vybraná polica (a paleta), inak poschodie z výberu.
   const placeTarget = (spot: Spot) =>
-    spot.kind === 'rack' && multiBay && cell ? { level: cell.level, bay: cell.bay } : { level: spot.levels > 1 ? Math.min(addLevel, spot.levels) : null, bay: null }
+    spot.kind === 'rack' && multiBay && cell
+      ? { level: cell.level, bay: cell.bay, pallet: cell.pallet ?? null }
+      : { level: spot.levels > 1 ? Math.min(addLevel, spot.levels) : null, bay: null, pallet: null }
+  const cellLevel = cell ? bays[cell.bay - 1]?.levels[cell.level - 1] : undefined
 
   /** Naskenovaný štítok: ukáže, kde leží (case, technika v case, miesto), alebo ho uloží na vybrané miesto. */
   const onScan = (text: string): string | void => {
@@ -133,9 +145,9 @@ export function WarehousePage() {
       const item = cases.data.find((candidate) => candidate.id === target.id)
       if (!item) return '✗ Tento case v evidencii nie je.'
       if (item.spotId === selected.id) return `✓ ${item.name} už tu je.`
-      const { level, bay } = placeTarget(selected)
-      place.mutate({ caseId: item.id, spotId: selected.id, level, bay })
-      return `✓ ${item.name} → ${describeSpot(selected, level, bay)}`
+      const into = placeTarget(selected)
+      place.mutate({ caseId: item.id, spotId: selected.id, ...into })
+      return `✓ ${item.name} → ${describeSpot(selected, into.level, into.bay)}${into.pallet ? `, paleta ${into.pallet}` : ''}`
     }
     setScanning(null)
     setSearch('')
@@ -485,7 +497,7 @@ export function WarehousePage() {
                 highlighted={new Set(hits.map((item) => item.id))}
                 onSelect={setCell}
               />
-              <p className="mt-2 text-sm text-muted-foreground">Kliknite na policu – uvidíte, čo na nej je, a môžete na ňu uložiť case. Prerušovaná škatuľa = case bez rozmerov.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Kliknite na policu alebo paletu – uvidíte, čo na nej je, a môžete tam uložiť case. Bez zvolenej palety sa cases poskladajú na palety samy. Prerušovaná škatuľa = case bez rozmerov.</p>
             </div>
           )}
           {front && selected && editingBays && (
@@ -567,35 +579,29 @@ export function WarehousePage() {
                       .map(({ bay: currentBay, level, bayNo, levelNo }) => {
                         const inside = casesInCell(bySpot.get(selected.id) ?? [], bayNo, levelNo)
                         const usage = cellUsage(currentBay, level, inside)
+                        const layout = layoutCell(currentBay, level, inside)
+                        const onPallet = cell?.bay === bayNo && cell.level === levelNo ? cell.pallet : null
                         return (
                           <div key={`${bayNo}-${levelNo}`}>
                             <h3 className="mb-1 text-sm font-medium">
-                              Pole {bayNo}, {levelNo}. polica <span className="font-normal text-muted-foreground">· {level.heightCm} cm na výšku · {currentBay.widthCm} cm</span>
+                              Pole {bayNo}, {levelNo}. polica{onPallet ? `, paleta ${onPallet}` : ''}{' '}
+                              <span className="font-normal text-muted-foreground">· {level.heightCm} cm na výšku · {currentBay.widthCm} cm</span>
                             </h3>
-                            <p className={cn('mb-1 text-xs', usage.freeCm < 0 ? 'text-destructive' : 'text-muted-foreground')}>
-                              {usage.freeCm < 0 ? `chýba ${-usage.freeCm} cm` : `voľné ${usage.freeCm} cm`}
+                            <p className={cn('mb-1 text-xs', layout.notFit.length > 0 ? 'text-destructive' : 'text-muted-foreground')}>
+                              {layout.notFit.length > 0 ? `nezmestí sa: ${layout.notFit.map((item) => item.name).join(', ')}` : `voľné spredu ${layout.freeCm} cm`}
                               {level.pallets ? ` · ${level.pallets} palety` : ` · zmestia sa ${usage.palletFit} palety + ${usage.palletRest} cm`}
                               {usage.unknown > 0 && ` · ${usage.unknown} bez rozmerov`}
                             </p>
-                            {usage.tooTall.length > 0 && <p className="mb-1 text-xs text-destructive">Na výšku sa nezmestí: {usage.tooTall.map((item) => item.name).join(', ')}</p>}
-                            {inside.length === 0 ? (
-                              <p className="text-sm text-muted-foreground">prázdne</p>
-                            ) : (
-                              <ul className="divide-y rounded-lg border">
-                                {inside.map((item) => (
-                                  <li key={item.id} className="flex items-center justify-between gap-3 px-3 py-2">
-                                    <Link to={`/cases/${item.id}`} className="min-w-0 truncate font-medium hover:underline">
-                                      {item.name}
-                                    </Link>
-                                    {canPlace && (
-                                      <Button variant="ghost" size="sm" aria-label={`Vybrať z miesta: ${item.name}`} disabled={place.isPending} onClick={() => place.mutate({ caseId: item.id, spotId: null, level: null })}>
-                                        <X className="size-4" aria-hidden />
-                                      </Button>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
+                            <CellCases
+                              boxes={layout.boxes}
+                              pallets={layout.pallets.length}
+                              pallet={onPallet}
+                              canEdit={canPlace}
+                              busy={place.isPending || movePallet.isPending || resize.isPending}
+                              onRemove={(item) => place.mutate({ caseId: item.id, spotId: null, level: null })}
+                              onPallet={(item, pallet) => movePallet.mutate({ caseId: item.id, pallet })}
+                              onSize={(item, size) => resize.mutate({ caseId: item.id, size })}
+                            />
                           </div>
                         )
                       }),
@@ -702,6 +708,21 @@ export function WarehousePage() {
                           </option>
                         )),
                       )}
+                    </SelectField>
+                  )}
+                  {selected.kind === 'rack' && multiBay && (cellLevel?.pallets ?? 0) > 0 && (
+                    <SelectField
+                      label="Paleta"
+                      className="w-40"
+                      value={cell?.pallet ? String(cell.pallet) : ''}
+                      onChange={(e) => cell && setCell({ bay: cell.bay, level: cell.level, pallet: e.target.value ? Number(e.target.value) : null })}
+                    >
+                      <option value="">automaticky</option>
+                      {Array.from({ length: cellLevel!.pallets! }, (_, index) => (
+                        <option key={index} value={index + 1}>
+                          paleta {index + 1}
+                        </option>
+                      ))}
                     </SelectField>
                   )}
                   {selected.levels > 1 && !(selected.kind === 'rack' && multiBay) && (

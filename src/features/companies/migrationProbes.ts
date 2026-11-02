@@ -57,6 +57,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0124', label: 'polia regála (pohľad spredu)', table: 'warehouse_spots', column: 'bays' },
   { migration: '0126', label: 'typy regálov, QR miest do tlače', table: 'warehouses', column: 'rack_types' },
   { migration: '0127', label: 'chyby v appke pre vývojára', table: 'app_errors', column: 'fingerprint' },
+  { migration: '0128', label: 'case na konkrétnej palete', table: 'cases', column: 'spot_pallet' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

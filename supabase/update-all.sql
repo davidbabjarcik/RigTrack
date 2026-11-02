@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0127 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0128 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -2944,6 +2944,12 @@ exception when others then
   raise notice 'pg_cron nie je k dispozícii – staré chyby sa nemažú samy';
 end;
 $$;
+
+-- ===== 0128_case_pallet.sql =====
+-- RigTrack 6.3: case na konkrétnej palete police (1 = prvá zľava). Prázdne = appka ho poskladá na palety sama.
+
+alter table public.cases add column if not exists spot_pallet integer check (spot_pallet between 1 and 20);
+grant update (spot_pallet) on public.cases to authenticated;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { caseFrontCm, casesInCell, cellUsage, PALLET_CM, palletPositions, type PlacedCase, type RackBay } from './model'
+import { casesInCell, layoutCell, PALLET_CM, PALLET_H_CM, type PlacedCase, type RackBay } from './model'
+
+/** Vybraná polica (pole, polica zdola) a voliteľne paleta na nej. */
+export type RackCell = { bay: number; level: number; pallet?: number | null }
 
 type Props = {
   name: string
   bays: RackBay[]
   cases: PlacedCase[]
-  /** Vybraná polica: pole a polica (1 = dole). */
-  selected: { bay: number; level: number } | null
+  /** Vybraná polica: pole a polica (1 = dole), prípadne paleta. */
+  selected: RackCell | null
   /** Cases, ktoré sa hľadajú. */
   highlighted?: Set<string>
-  onSelect: (cell: { bay: number; level: number } | null) => void
+  onSelect: (cell: RackCell | null) => void
 }
 
 const POST = 8 // šírka stojky (cm)
@@ -37,7 +40,7 @@ function fit(text: string, widthPx: number, fontPx: number) {
 
 /**
  * Regál spredu ako technický výkres: tenké stojky a nosníky, police s kótami výšky, šírka poľa dole,
- * palety a cases ako obdĺžniky podľa rozmerov. Farby idú z témy (svetlá aj tmavá). Kliknutím sa polica vyberie.
+ * palety a cases poskladané na nich (layoutCell). Farby idú z témy (svetlá aj tmavá). Klik vyberie policu alebo paletu.
  */
 export function RackFront({ name, bays, cases, selected, highlighted, onSelect }: Props) {
   const heights = bays.map((bay) => bay.levels.reduce((sum, level) => sum + level.heightCm + BEAM_H, 0))
@@ -88,20 +91,17 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
           <g key={bayIndex}>
             {levels.map(({ level, levelNo, beamY, top }) => {
               const inside = casesInCell(cases, bayIndex + 1, levelNo)
-              const usage = cellUsage(bay, level, inside)
+              const layout = layoutCell(bay, level, inside)
               const active = selected?.bay === bayIndex + 1 && selected.level === levelNo
               const hit = inside.some((item) => highlighted?.has(item.id))
-              const palletH = level.pallets ? Math.min(14, level.heightCm * 0.12) : 0
-              const pallets = palletPositions(bay.widthCm, level)
-              const select = () => onSelect(active ? null : { bay: bayIndex + 1, level: levelNo })
-              let cursor = x + (pallets[0] ?? 3)
+              const select = () => onSelect(active && !selected?.pallet ? null : { bay: bayIndex + 1, level: levelNo })
               return (
                 <g
                   key={levelNo}
                   role="button"
                   tabIndex={0}
                   aria-pressed={active}
-                  aria-label={`Pole ${bayIndex + 1}, ${levelNo}. polica: ${inside.length} cases, voľné ${Math.max(0, usage.freeCm)} cm`}
+                  aria-label={`Pole ${bayIndex + 1}, ${levelNo}. polica: ${inside.length} cases, voľné ${layout.freeCm} cm`}
                   className="cursor-pointer outline-none [&:hover>rect:first-child]:fill-[var(--color-accent)] [&:hover>rect:first-child]:[fill-opacity:0.06]"
                   onClick={select}
                   onKeyDown={(event) => {
@@ -115,46 +115,59 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
                   {/* Nosník. */}
                   <rect x={x} y={beamY + BEAM_H - Math.min(BEAM_H, px(6))} width={bay.widthCm} height={Math.min(BEAM_H, px(6))} fill="#d97706" fillOpacity={0.85} />
 
-                  {/* Palety: doska a tri hranoly. */}
-                  {pallets.map((offset, index) => {
+                  {/* Palety: doska a tri hranoly; klik vyberie paletu. */}
+                  {layout.pallets.map((offset, index) => {
                     // 1 cm od susednej palety, aby boli natesno postavené palety rozoznateľné.
                     const left = x + offset + 1
+                    const chosen = active && selected?.pallet === index + 1
+                    const pick = () => onSelect(chosen ? { bay: bayIndex + 1, level: levelNo } : { bay: bayIndex + 1, level: levelNo, pallet: index + 1 })
                     return (
-                      <g key={`p${index}`} fill="#a16207" fillOpacity={0.55}>
-                        <rect x={left} y={beamY - palletH} width={PALLET_CM - 2} height={palletH * 0.28} />
-                        {[0, 0.43, 0.86].map((offset) => (
-                          <rect key={offset} x={left + (PALLET_CM - 2) * offset} y={beamY - palletH * 0.72} width={(PALLET_CM - 2) * 0.14} height={palletH * 0.72} />
-                        ))}
+                      <g
+                        key={`p${index}`}
+                        role="button"
+                        aria-label={`Paleta ${index + 1}`}
+                        aria-pressed={chosen}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          pick()
+                        }}
+                      >
+                        {/* Neviditeľná plocha nad paletou, aby sa na ňu dalo ľahko kliknúť. */}
+                        <rect x={left} y={beamY - Math.min(level.heightCm, Math.max(PALLET_H_CM, px(18)))} width={PALLET_CM - 2} height={Math.min(level.heightCm, Math.max(PALLET_H_CM, px(18)))} fill="transparent" />
+                        <g fill={chosen ? 'var(--color-accent)' : '#a16207'} fillOpacity={chosen ? 0.9 : 0.55}>
+                          <rect x={left} y={beamY - PALLET_H_CM} width={PALLET_CM - 2} height={PALLET_H_CM * 0.28} />
+                          {[0, 0.43, 0.86].map((part) => (
+                            <rect key={part} x={left + (PALLET_CM - 2) * part} y={beamY - PALLET_H_CM * 0.72} width={(PALLET_CM - 2) * 0.14} height={PALLET_H_CM * 0.72} />
+                          ))}
+                        </g>
+                        {chosen && <rect x={left} y={top + px(1)} width={PALLET_CM - 2} height={level.heightCm - px(1)} fill="none" stroke="var(--color-accent)" strokeWidth={px(1.5)} strokeDasharray={`${px(5)} ${px(3)}`} pointerEvents="none" />}
                       </g>
                     )
                   })}
 
-                  {/* Cases. */}
-                  {inside.map((item) => {
-                    const known = caseFrontCm(item)
-                    const w = Math.min(known ?? 60, bay.widthCm - 2)
-                    const h = Math.max(px(14), Math.min(item.depthCm ?? level.heightCm * 0.55, level.heightCm - palletH - 2))
-                    const left = Math.min(cursor, x + bay.widthCm - w)
-                    cursor += w + 2
-                    const bad = cursor - 2 > x + bay.widthCm || Boolean(item.depthCm && item.depthCm > level.heightCm)
+                  {/* Cases poskladané na paletách / na polici. */}
+                  {layout.boxes.map(({ item, x: offset, bottom, w, h, known, bad }) => {
+                    const left = x + offset + 0.5
+                    const height = Math.min(h, level.heightCm - bottom) - 1
                     const found = highlighted?.has(item.id)
+                    if (height <= 0) return null
                     return (
                       <g key={item.id}>
                         <rect
                           x={left}
-                          y={beamY - palletH - h}
-                          width={w}
-                          height={h}
+                          y={beamY - bottom - height}
+                          width={Math.max(1, w - 1)}
+                          height={height}
                           rx={px(2)}
                           fill="currentColor"
                           fillOpacity={0.07}
                           stroke={found ? 'var(--color-accent)' : bad ? '#dc2626' : 'currentColor'}
                           strokeOpacity={found || bad ? 1 : 0.55}
                           strokeWidth={px(found ? 2 : 1)}
-                          strokeDasharray={known === null ? `${px(4)} ${px(3)}` : undefined}
+                          strokeDasharray={known ? undefined : `${px(4)} ${px(3)}`}
                         />
-                        {w / scale > 28 && (
-                          <text x={left + w / 2} y={beamY - palletH - h / 2} fontSize={small} fill="currentColor" textAnchor="middle" dominantBaseline="central" pointerEvents="none">
+                        {w / scale > 28 && height / scale > 12 && (
+                          <text x={left + w / 2} y={beamY - bottom - height / 2} fontSize={small} fill="currentColor" textAnchor="middle" dominantBaseline="central" pointerEvents="none">
                             {fit(item.name, w / scale - 6, 10.5)}
                           </text>
                         )}
@@ -169,14 +182,14 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
                       y={top + px(13)}
                       fontSize={small}
                       textAnchor="end"
-                      fill={usage.freeCm < 0 ? '#dc2626' : 'currentColor'}
-                      fillOpacity={usage.freeCm < 0 ? 1 : 0.6}
+                      fill={layout.notFit.length > 0 ? '#dc2626' : 'currentColor'}
+                      fillOpacity={layout.notFit.length > 0 ? 1 : 0.6}
                       pointerEvents="none"
                     >
-                      {usage.freeCm < 0 ? `chýba ${-usage.freeCm} cm` : `voľné ${usage.freeCm} cm`}
+                      {layout.notFit.length > 0 ? `nezmestí sa ${layout.notFit.length}` : `voľné ${layout.freeCm} cm`}
                     </text>
                   )}
-                  {active && <rect x={x + px(1)} y={top + px(1)} width={bay.widthCm - px(2)} height={level.heightCm - px(2)} fill="none" stroke="var(--color-accent)" strokeWidth={px(2)} pointerEvents="none" />}
+                  {active && !selected?.pallet && <rect x={x + px(1)} y={top + px(1)} width={bay.widthCm - px(2)} height={level.heightCm - px(2)} fill="none" stroke="var(--color-accent)" strokeWidth={px(2)} pointerEvents="none" />}
                 </g>
               )
             })}

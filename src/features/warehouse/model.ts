@@ -98,6 +98,8 @@ export type PlacedCase = {
   spotLevel: number | null
   /** Pole regála (1, 2…); prázdne = prvé pole. */
   spotBay?: number | null
+  /** Paleta na polici (1 = prvá zľava); prázdne = poskladá sa automaticky. */
+  spotPallet?: number | null
   inventoryNumber?: string
   labelNumber?: string
   oldNumbers?: string
@@ -215,4 +217,91 @@ export function nextSpotName(spots: Pick<Spot, 'name'>[]) {
     const name = `Miesto ${number}`
     if (!spots.some((spot) => spot.name === name)) return name
   }
+}
+
+/** Výška europalety (cm). */
+export const PALLET_H_CM = 14
+/** Case bez rozmerov sa kreslí takto veľký (cm spredu). */
+export const UNKNOWN_FRONT_CM = 60
+
+/** Case poskladaný na polici: x zľava od stojky, bottom od nosníka nahor (cm), na ktorej palete. */
+export type CellBox<T extends PlacedCase = PlacedCase> = {
+  item: T
+  x: number
+  bottom: number
+  w: number
+  h: number
+  pallet: number | null
+  /** Rozmery case sú zadané. */
+  known: boolean
+  /** Nezmestí sa (presahuje paletu, policu alebo je vyšší ako polica). */
+  bad: boolean
+}
+
+type Slot = { x: number; w: number; base: number; pallet: number | null; rows: { y: number; h: number; used: number }[] }
+
+/**
+ * Poskladá cases na polici: na palety (ručne zvolenú, inak prvú, kde je miesto), keď sa nezmestia, tak vedľa paliet;
+ * na polici bez paliet zľava doprava. Keď je rad plný, ďalšie cases idú na ne (ak to výška police dovolí).
+ */
+export function layoutCell<T extends PlacedCase>(bay: RackBay, level: RackLevel, cases: T[]) {
+  const positions = palletPositions(bay.widthCm, level)
+  const slots: Slot[] = positions.map((x, index) => ({ x, w: PALLET_CM, base: PALLET_H_CM, pallet: index + 1, rows: [] }))
+  // Miesto vedľa paliet (aspoň 20 cm), na polici bez paliet celá šírka.
+  const edges = [0, ...positions.flatMap((x) => [x, x + PALLET_CM]), bay.widthCm]
+  for (let index = 0; index < edges.length; index += 2) {
+    const width = edges[index + 1] - edges[index]
+    if (width >= 20) slots.push({ x: edges[index], w: width, base: 0, pallet: null, rows: [] })
+  }
+  if (slots.length === 0) slots.push({ x: 0, w: bay.widthCm, base: 0, pallet: null, rows: [] })
+
+  const size = (item: T) => {
+    const front = caseFrontCm(item)
+    return { w: front ?? UNKNOWN_FRONT_CM, h: item.depthCm ?? Math.min(50, Math.max(10, level.heightCm * 0.5)), known: front !== null }
+  }
+  // Skúsi case položiť do slotu: do posledného radu, inak nový rad navrch.
+  const tryPut = (slot: Slot, w: number, h: number) => {
+    if (w > slot.w) return null
+    const row = slot.rows.at(-1)
+    if (row && row.used + w <= slot.w && slot.base + row.y + h <= level.heightCm) {
+      const box = { x: slot.x + row.used, bottom: slot.base + row.y }
+      row.used += w
+      row.h = Math.max(row.h, h)
+      return box
+    }
+    const y = row ? row.y + row.h : 0
+    if (slot.base + y + h > level.heightCm) return null
+    slot.rows.push({ y, h, used: w })
+    return { x: slot.x, bottom: slot.base + y }
+  }
+  // Keď sa nikde nezmestí: navrch slotu, vycentrované, označené.
+  const force = (slot: Slot, w: number, h: number) => {
+    const row = slot.rows.at(-1)
+    const y = row ? row.y + row.h : 0
+    slot.rows.push({ y, h, used: slot.w })
+    return { x: slot.x + (slot.w - w) / 2, bottom: slot.base + y }
+  }
+
+  const boxes: CellBox<T>[] = []
+  const failed: { item: T; slot: Slot }[] = []
+  const manual = cases.filter((item) => item.spotPallet && item.spotPallet <= positions.length)
+  for (const item of [...manual, ...cases.filter((item) => !manual.includes(item))]) {
+    const { w, h, known } = size(item)
+    const candidates = manual.includes(item) ? [slots[item.spotPallet! - 1]] : slots
+    const slot = candidates.find((candidate) => {
+      const put = tryPut(candidate, w, h)
+      if (put) boxes.push({ item, ...put, w, h, pallet: candidate.pallet, known, bad: false })
+      return Boolean(put)
+    })
+    if (!slot) failed.push({ item, slot: manual.includes(item) ? candidates[0] : slots.reduce((best, candidate) => (candidate.rows.length < best.rows.length ? candidate : best)) })
+  }
+  // Čo sa nezmestilo, ide navrch až nakoniec, aby nezabralo miesto ostatným.
+  for (const { item, slot } of failed) {
+    const { w, h, known } = size(item)
+    boxes.push({ item, ...force(slot, w, h), w, h, pallet: slot.pallet, known, bad: true })
+  }
+  boxes.sort((a, b) => cases.indexOf(a.item) - cases.indexOf(b.item))
+  // Voľné miesto spredu: čo ostalo v spodnom rade na paletách a vedľa nich.
+  const freeCm = Math.round(slots.reduce((sum, slot) => sum + slot.w - (slot.rows[0]?.used ?? 0), 0))
+  return { boxes, pallets: positions, freeCm, notFit: boxes.filter((box) => box.bad).map((box) => box.item) }
 }

@@ -112,3 +112,33 @@ describe('pallets on a shelf', () => {
     expect(palletPositions(267, { heightCm: 150 })).toEqual([])
   })
 })
+
+describe('layoutCell', () => {
+  const bay = { widthCm: 267, levels: [] }
+  const box = (id: string, lengthCm: number | null, depthCm: number | null, spotPallet: number | null = null) => ({ id, name: id, spotId: 's', spotLevel: 1, lengthCm, depthCm, spotPallet })
+
+  it('puts cases on pallets, stacks a full pallet and keeps manual choices', async () => {
+    const { layoutCell } = await import('./model')
+    const level = { heightCm: 150, pallets: 3, palletAlign: 'left' as const }
+    const { boxes, freeCm, notFit } = layoutCell(bay, level, [box('a', 60, 40), box('b', 60, 40), box('c', 40, 30, 3), box('d', 30, 30)])
+    const at = Object.fromEntries(boxes.map((b) => [b.item.id, { x: b.x, bottom: b.bottom, pallet: b.pallet }]))
+    expect(at.c).toEqual({ x: 160, bottom: 14, pallet: 3 })
+    expect(at.a).toEqual({ x: 0, bottom: 14, pallet: 1 })
+    // 60 + 60 > 80 → b ide navrch a na prvú paletu
+    expect(at.b).toEqual({ x: 0, bottom: 54, pallet: 1 })
+    expect(at.d).toEqual({ x: 0, bottom: 94, pallet: 1 })
+    expect(notFit).toEqual([])
+    // Voľné spredu: paleta 1 (20) + paleta 2 (80) + paleta 3 (40) + 27 cm vpravo.
+    expect(freeCm).toBe(167)
+  })
+
+  it('uses the side gap and flags what does not fit', async () => {
+    const { layoutCell } = await import('./model')
+    const level = { heightCm: 60, pallets: 3, palletAlign: 'left' as const }
+    const { boxes, notFit } = layoutCell(bay, level, [box('wide', 120, 30), box('small', 25, 30), box('tall', 50, 70)])
+    expect(boxes.find((b) => b.item.id === 'small')).toMatchObject({ pallet: 1, x: 0 })
+    expect(notFit.map((item) => item.id)).toEqual(['wide', 'tall'])
+    const { boxes: plain } = layoutCell(bay, { heightCm: 100 }, [box('x', null, null), box('y', 100, 40)])
+    expect(plain.map((b) => [b.x, b.bottom, b.known])).toEqual([[0, 0, false], [60, 0, true]])
+  })
+})

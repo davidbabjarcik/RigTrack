@@ -62,6 +62,9 @@ describe('warehouse plan', () => {
     await expect(t.as('skladnik', `update public.warehouse_spots set bays = '{}'::jsonb where id = $1`, [id])).rejects.toThrow(/check/)
     await t.as('technik', 'update public.cases set spot_id = $2, spot_bay = 2, spot_level = 1 where id = $1', [box, id])
     expect(await t.as('viewer', 'select spot_bay, spot_level from public.cases where id = $1', [box])).toEqual([{ spot_bay: 2, spot_level: 1 }])
+    await t.as('technik', 'update public.cases set spot_pallet = 3 where id = $1', [box])
+    expect(await t.as('viewer', 'select spot_pallet from public.cases where id = $1', [box])).toEqual([{ spot_pallet: 3 }])
+    await expect(t.as('technik', 'update public.cases set spot_pallet = 0 where id = $1', [box])).rejects.toThrow(/check/)
   })
 
   it('follows the warehouse permission, not the lists one', async () => {

@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.3 – 2. 11. 2026
+
+- **Cases na paletách**: v pohľade spredu stoja cases na paletách, nie vedľa nich. Bez voľby sa poskladajú samy – na
+  prvú paletu, kde je miesto, a keď je rad plný, na seba (ak to výška police dovolí). Čo sa nezmestí, ide vedľa paliet
+  alebo svieti na červeno.
+- **Klik na paletu** ju vyberie: vidíte, čo na nej leží, a case uložíte rovno na ňu. Pri každom case na polici sa dá
+  zvoliť paleta ručne alebo nechať „auto“.
+- **Rozmery case priamo v sklade** (ikona pravítka): spredu, dozadu a na výšku – bez nich appka nevie, koľko miesta case
+  zaberá.
+- Nová migrácia: `0128` (je aj v `supabase/update-all.sql`).
+
 ### 6.2.1 – 2. 11. 2026
 
 - Aktualizované knižnice (React, React Router, Supabase, Vite, ikony, čítanie PDF a Excelu) – opravy chýb, bez zmien vo

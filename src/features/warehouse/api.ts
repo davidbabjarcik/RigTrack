@@ -61,22 +61,44 @@ export async function deleteSpot(companyId: string, id: string) {
   if (data.length === 0) throw new Error('Not deleted')
 }
 
-/** Uloží case na miesto (a poschodie), alebo ho z plánu vyberie (`spotId = null`). */
-export async function placeCase(companyId: string, caseId: string, spotId: string | null, level: number | null, bay: number | null = null) {
+/** Uloží case na miesto (poschodie, pole, paletu), alebo ho z plánu vyberie (`spotId = null`). */
+export async function placeCase(companyId: string, caseId: string, spotId: string | null, level: number | null, bay: number | null = null, pallet: number | null = null) {
   const write = (row: Record<string, unknown>) => getSupabase().from('cases').update(row).eq('company_id', companyId).eq('id', caseId).select('id')
   const row = { spot_id: spotId, spot_level: spotId ? level : null }
-  let { data, error } = await write({ ...row, spot_bay: spotId ? bay : null })
-  // Bez migrácie 0124 sa pole neuloží.
+  let { data, error } = await write({ ...row, spot_bay: spotId ? bay : null, spot_pallet: spotId ? pallet : null })
+  // Bez migrácie 0128 sa paleta neuloží, bez 0124 ani pole.
+  if (error && /spot_pallet/.test(error.message)) ({ data, error } = await write({ ...row, spot_bay: spotId ? bay : null }))
   if (error && /spot_bay/.test(error.message)) ({ data, error } = await write(row))
   if (error) throw error
   if (!data || data.length === 0) throw new Error('Not updated')
 }
 
-/** Pole regála, v ktorom case leží (case id → číslo poľa); bez migrácie 0124 prázdne. */
-export async function fetchCaseBays(companyId: string): Promise<Map<string, number>> {
-  const { data, error } = await getSupabase().from('cases').select('id, spot_bay').eq('company_id', companyId).not('spot_bay', 'is', null)
-  if (error) return new Map()
-  return new Map((data as { id: string; spot_bay: number }[]).map((row) => [row.id, row.spot_bay]))
+/** Ručne zvolená paleta case (null = automaticky). */
+export async function setCasePallet(companyId: string, caseId: string, pallet: number | null) {
+  const { data, error } = await getSupabase().from('cases').update({ spot_pallet: pallet }).eq('company_id', companyId).eq('id', caseId).select('id')
+  if (error) throw /spot_pallet/.test(error.message) ? new Error('Palety ešte databáza nepozná – spustite migráciu 0128 (supabase/update-all.sql).') : error
+  if (!data || data.length === 0) throw new Error('Not updated')
+}
+
+/** Rozmery case priamo zo skladu: dĺžka = spredu, šírka = dozadu, hĺbka = na výšku (cm). */
+export async function setCaseSize(companyId: string, caseId: string, size: { lengthCm: number | null; widthCm: number | null; depthCm: number | null }) {
+  const { data, error } = await getSupabase()
+    .from('cases')
+    .update({ length_cm: size.lengthCm, width_cm: size.widthCm, depth_cm: size.depthCm })
+    .eq('company_id', companyId)
+    .eq('id', caseId)
+    .select('id')
+  if (error) throw error
+  if (!data || data.length === 0) throw new Error('Not updated')
+}
+
+/** Pole a paleta, kde case leží (case id → pole, paleta); bez migrácií 0124 / 0128 prázdne. */
+export async function fetchCaseBays(companyId: string): Promise<Map<string, { bay: number | null; pallet: number | null }>> {
+  const select = (columns: string) => getSupabase().from('cases').select(columns).eq('company_id', companyId).not('spot_id', 'is', null)
+  let { data, error } = await select('id, spot_bay, spot_pallet')
+  if (error) ({ data, error } = await select('id, spot_bay'))
+  if (error || !data) return new Map()
+  return new Map((data as unknown as { id: string; spot_bay: number | null; spot_pallet?: number | null }[]).map((row) => [row.id, { bay: row.spot_bay, pallet: row.spot_pallet ?? null }]))
 }
 
 /** Uloží typy regálov firmy (sklad už musí mať rozmery). */
