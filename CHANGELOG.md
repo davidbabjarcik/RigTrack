@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.6 – 2. 11. 2026
+
+- **Hliník v sklade** (Sklad → Hliník): miesto na trussy ako mriežka zhora – na každom políčku stoh dielov nastojato.
+  Zhora vidno stohy vo farbe dielu s počtom kusov, spredu diely na sebe (farba podľa dĺžky, zadné rady bledšie) s
+  výškou v metroch. Klik na políčko ukáže stoh: pridať diely navrch (aj viac kusov naraz), poradie hore / dole,
+  vybrať, presunúť celý stoh. Zoznam trussov ukáže, koľko kusov je uložených z koľkých. Počet stĺpcov, radov a veľkosť
+  políčka sa dá nastaviť (spravovať sklad).
+- Nová migrácia: `0130` (je aj v `supabase/update-all.sql`).
+
 ### 6.5 – 2. 11. 2026
 
 - **Plagát inventára** (Technika → Plagát inventára): technika jedného druhu na A4 na šírku – veľký počet kusov,

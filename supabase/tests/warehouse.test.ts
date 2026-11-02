@@ -69,6 +69,9 @@ describe('warehouse plan', () => {
     await t.as('skladnik', `update public.warehouse_spots set kind = 'pallet', material = 'plastic' where id = $1`, [pallet])
     expect(await t.as('viewer', 'select material from public.warehouse_spots where id = $1', [pallet])).toEqual([{ material: 'plastic' }])
     await expect(t.as('skladnik', `update public.warehouse_spots set material = 'kov' where id = $1`, [pallet])).rejects.toThrow(/check/)
+    await t.as('skladnik', `update public.warehouses set truss_layout = '{"cols": 4, "rows": 2, "stacks": []}' where company_id = $1`, [companyA])
+    expect(await t.as('viewer', `select truss_layout->>'cols' as cols from public.warehouses where company_id = $1`, [companyA])).toEqual([{ cols: '4' }])
+    await expect(t.as('skladnik', `update public.warehouses set truss_layout = '[]' where company_id = $1`, [companyA])).rejects.toThrow(/check/)
   })
 
   it('follows the warehouse permission, not the lists one', async () => {

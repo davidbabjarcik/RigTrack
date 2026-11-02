@@ -1,5 +1,6 @@
 import { getSupabase } from '@/lib/supabase/client'
 import type { PalletMaterial, RackBay, RackType, Spot, SpotKind, Warehouse } from './model'
+import { cleanTrussLayout, type TrussLayout } from './truss'
 
 export const warehouseKeys = {
   plan: (companyId: string) => ['company', companyId, 'warehouse'] as const,
@@ -117,4 +118,19 @@ export async function saveRackTypes(companyId: string, types: RackType[]) {
   const { data, error } = await getSupabase().from('warehouses').update({ rack_types: types }).eq('company_id', companyId).select('company_id')
   if (error) throw error
   if (data.length === 0) throw new Error('Najprv zadajte rozmery skladu.')
+}
+
+export const trussKeys = { layout: (companyId: string) => ['company', companyId, 'warehouse', 'truss'] as const }
+
+/** Hliník v sklade (mriežka a stohy); bez migrácie 0130 alebo bez skladu prázdne. */
+export async function fetchTrussLayout(companyId: string): Promise<{ layout: TrussLayout; ready: boolean }> {
+  const { data, error } = await getSupabase().from('warehouses').select('truss_layout').eq('company_id', companyId).maybeSingle()
+  if (error) return { layout: cleanTrussLayout(null), ready: false }
+  return { layout: cleanTrussLayout((data as { truss_layout?: unknown } | null)?.truss_layout), ready: Boolean(data) }
+}
+
+export async function saveTrussLayout(companyId: string, layout: TrussLayout) {
+  const { data, error } = await getSupabase().from('warehouses').update({ truss_layout: layout }).eq('company_id', companyId).select('company_id')
+  if (error) throw /truss_layout/.test(error.message) ? new Error('Hliník ešte databáza nepozná – spustite migráciu 0130 (supabase/update-all.sql).') : error
+  if (data.length === 0) throw new Error('Najprv zadajte rozmery skladu, alebo nemáte oprávnenie spravovať sklad.')
 }

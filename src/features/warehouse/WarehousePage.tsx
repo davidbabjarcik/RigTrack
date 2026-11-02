@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, LayoutGrid, Pencil, QrCode, RotateCw, ScanLine, Search, Settings2, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Boxes, Check, LayoutGrid, Pencil, QrCode, RotateCw, ScanLine, Search, Settings2, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -196,6 +196,10 @@ export function WarehousePage() {
                   Skenovať
                 </Button>
               )}
+              <LinkButton to="/warehouse/truss" variant="outline">
+                <Boxes className="size-4" aria-hidden />
+                Hliník
+              </LinkButton>
               {canPlan && (
                 <LinkButton to="/settings?tab=warehouse" variant="outline">
                   <Settings2 className="size-4" aria-hidden />
