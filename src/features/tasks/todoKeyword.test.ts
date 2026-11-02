@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hasKeyword, pushKey, stripKeyword, todoTitle } from './todoKeyword'
+import { hasKeyword, printTargetFromPath, printTitle, pushKey, stripKeyword, todoTitle } from './todoKeyword'
 
 const type = (text: string) => {
   let buffer = ''
@@ -36,5 +36,25 @@ describe('@todo keyword', () => {
     expect(hasKeyword('12,5')).toBe(false)
     expect(todoTitle('Hmotnosť (kg) *', 'LED Par')).toBe('Doplniť: Hmotnosť (kg) – LED Par')
     expect(todoTitle('', '')).toBe('Doplniť: údaj')
+  })
+})
+
+describe('@toprint keyword', () => {
+  it('fires as a print keyword and knows what to print from the page', () => {
+    let buffer = ''
+    const hits: (string | null)[] = []
+    for (const key of '12 @toprint') {
+      const result = pushKey(buffer, key)
+      buffer = result.buffer
+      if (result.hit) hits.push(result.hit)
+    }
+    expect(hits).toEqual(['print'])
+    expect(pushKey('3112180', '1').hit).toBe('print')
+    expect(pushKey('3112180', '0').hit).toBe('todo')
+    expect(stripKeyword('4 @toprint')).toBe('4')
+    expect(hasKeyword('31121801')).toBe(true)
+    expect(printTitle('Číslo case na štítku', 'Beam case')).toBe('Vytlačiť: Číslo case na štítku – Beam case')
+    expect(printTargetFromPath('/cases/3f1c2a4e-0000-4000-8000-123456789abc/edit')).toEqual({ kind: 'case', id: '3f1c2a4e-0000-4000-8000-123456789abc' })
+    expect(printTargetFromPath('/equipment/new')).toBeNull()
   })
 })

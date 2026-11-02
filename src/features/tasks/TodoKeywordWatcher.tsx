@@ -5,7 +5,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { addTodoFromField, taskKeys } from './api'
-import { cleanLabel, DATE_KEYWORD, hasKeyword, pushKey, stripKeyword, todoTitle } from './todoKeyword'
+import { cleanLabel, DATE_KEYWORD, hasKeyword, printTargetFromPath, printTitle, pushKey, stripKeyword, todoTitle, type KeywordKind } from './todoKeyword'
+import { addToPrintQueue, printKeys, useCompanyPrefs } from '@/features/print/api'
 
 type Field = HTMLInputElement | HTMLTextAreaElement
 const SKIPPED = new Set(['password', 'checkbox', 'radio', 'file', 'submit', 'button', 'range', 'color', 'hidden'])
@@ -49,10 +50,11 @@ function Watcher({ userId }: { userId: string }) {
   const queryClient = useQueryClient()
   const buffers = useRef(new WeakMap<Element, string>())
   const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null)
-  const context = useRef({ companyId: company?.companyId, userId, link: location.pathname + location.search })
+  const prefs = useCompanyPrefs(company?.companyId).data
+  const context = useRef({ companyId: company?.companyId, userId, link: location.pathname + location.search, path: location.pathname, prefs })
   useEffect(() => {
-    context.current = { companyId: company?.companyId, userId, link: location.pathname + location.search }
-  }, [company?.companyId, userId, location.pathname, location.search])
+    context.current = { companyId: company?.companyId, userId, link: location.pathname + location.search, path: location.pathname, prefs }
+  }, [company?.companyId, userId, location.pathname, location.search, prefs])
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -61,22 +63,30 @@ function Watcher({ userId }: { userId: string }) {
       if (field instanceof HTMLInputElement && (SKIPPED.has(field.type) || DATE_TYPES.has(field.type))) return
       const { buffer, hit } = pushKey(buffers.current.get(field) ?? '', event.key)
       buffers.current.set(field, buffer)
-      if (hit) addTodo(field)
+      if (hit) addTodo(field, hit)
     }
     function onDate(event: Event) {
       const field = event.target
       if (field instanceof HTMLInputElement && DATE_TYPES.has(field.type) && field.value.startsWith(DATE_KEYWORD.slice(0, field.type === 'month' ? 7 : 10))) addTodo(field)
     }
-    function addTodo(field: Field) {
-      const { companyId, userId: me, link } = context.current
+    function addTodo(field: Field, kind: KeywordKind = 'todo') {
+      const { companyId, userId: me, link, path, prefs: companyPrefs } = context.current
       if (!companyId || !me) return
-      const title = todoTitle(fieldLabel(field), itemName(field))
+      const title = kind === 'print' ? printTitle(fieldLabel(field), itemName(field)) : todoTitle(fieldLabel(field), itemName(field))
+      const assignees = kind === 'print' ? companyPrefs?.toprintAssignees : companyPrefs?.todoAssignees
+      // @toprint na stránke techniky alebo case: jej QR štítok ide rovno do tlačovej fronty.
+      const target = kind === 'print' ? printTargetFromPath(path) : null
+      if (target) {
+        addToPrintQueue(companyId, [{ kind: target.kind, targetId: target.id, note: cleanLabel(fieldLabel(field)) }])
+          .then(() => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }))
+          .catch(() => {})
+      }
       // Kľúčové slovo (aj 31121800 a dátum 31. 12. 1800) z políčka zmizne.
       window.setTimeout(() => {
         if (field instanceof HTMLInputElement && DATE_TYPES.has(field.type)) setNativeValue(field, '')
         else if (hasKeyword(field.value)) setNativeValue(field, stripKeyword(field.value))
       }, 0)
-      addTodoFromField(companyId, me, title, link)
+      addTodoFromField(companyId, me, title, link, { category: kind === 'print' ? 'Tlač' : undefined, assignees })
         .then(() => {
           setToast({ ok: true, text: title })
           void queryClient.invalidateQueries({ queryKey: taskKeys.list(companyId) })
@@ -104,7 +114,7 @@ function Watcher({ userId }: { userId: string }) {
       <span className="min-w-0 flex-1">
         {toast.ok ? (
           <>
-            Pridané do úloh: <span className="font-medium">{toast.text}</span>
+            Pridané do úloh{toast.text.startsWith('Vytlačiť') ? ' a do tlače' : ''}: <span className="font-medium">{toast.text}</span>
           </>
         ) : (
           <span className="text-destructive">{toast.text}</span>

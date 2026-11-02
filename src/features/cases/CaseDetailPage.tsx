@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CirclePlus, ClipboardList, Copy, MapPin, Pencil, Plug, Plus, QrCode, Star, Tag, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -170,6 +171,7 @@ export function CaseDetailPage() {
             <QrCode className="size-4" aria-hidden />
             QR štítok
           </LinkButton>
+          <AddToPrintButton companyId={companyId} kind="case" targetIds={[id]} />
           <LinkButton to={`/cases/${id}/content`} variant="outline" size="sm">
             <ClipboardList className="size-4" aria-hidden />
             Obsah

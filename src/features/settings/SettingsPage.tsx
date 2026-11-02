@@ -49,6 +49,7 @@ import { PriorityColorsSettings } from '@/features/tasks/PriorityColorsSettings'
 import { CableColorsSettings } from '@/features/equipment/CableColorsSettings'
 import { KindColorsSettings } from '@/features/equipment/KindColorsSettings'
 import { KindOrderSettings } from '@/features/equipment/KindOrderSettings'
+import { PrintSettings } from '@/features/print/PrintSettings'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -287,6 +288,9 @@ function InventoryLookups({ companyId }: { companyId: string }) {
       </Section>
       <Section title="Šablóny cases">
         <CaseTemplateSettings companyId={companyId} />
+      </Section>
+      <Section title="Tlač a kľúčové slová (@todo, @toprint)">
+        <PrintSettings companyId={companyId} />
       </Section>
       <Section title="Farby dĺžok káblov">
         <CableColorsSettings companyId={companyId} />

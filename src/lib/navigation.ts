@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Briefcase, Building2, Cable, Calculator, CalendarDays, Car, ChartColumn, ClipboardCheck, Coffee, FileText, LayoutDashboard, Lightbulb, ListTodo, Receipt, Settings, ShieldAlert, Speaker, StickyNote, Ticket, Timer, Users, Wallet, Warehouse, Wifi, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, Briefcase, Building2, Cable, Calculator, CalendarDays, Car, ChartColumn, ClipboardCheck, Coffee, FileText, LayoutDashboard, Lightbulb, ListTodo, Printer, Receipt, Settings, ShieldAlert, Speaker, StickyNote, Ticket, Timer, Users, Wallet, Warehouse, Wifi, Wrench, type LucideIcon } from 'lucide-react'
 import type { PermissionKey } from '@/features/permissions/catalog'
 import { can, type Permitted } from './permissions'
 import type { Role } from './roles'
@@ -51,6 +51,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'todos', permission: 'tasks.view', label: 'Úlohy', to: '/todos', icon: ListTodo, description: 'Úlohy pre viac ľudí, kategórie, úlohy po evente' },
   { id: 'patch', permission: 'events.view', label: 'Patch listy', to: '/patch', icon: Cable, description: 'Šablóny patch listov zvuku a DMX pre eventy', hiddenFor: ['helper'] },
   { id: 'checks', permission: 'equipment.view', label: 'Kontroly', to: '/checks', icon: ClipboardCheck, description: 'Cases na kontrolu, odčítanie hodín a servis – moje alebo všetky' },
+  { id: 'print', label: 'Tlač', to: '/print', icon: Printer, description: 'Štítky na tlač naraz – QR na A4 alebo Brother, adresy a módy na Brother' },
   { id: 'notes', label: 'Poznámky', to: '/notes', icon: StickyNote, description: 'Zdieľané firemné poznámky, označení ľudia dostanú upozornenie' },
   { id: 'office', label: 'Kancelária', to: '/office', icon: Coffee, description: 'Voda, káva, poháre… – kto čo kúpil', hiddenFor: ['helper'] },
   { id: 'incidents', label: 'Škody a úrazy', to: '/incidents', icon: ShieldAlert, description: 'Rozbitá technika a úrazy, štatistiky' },
