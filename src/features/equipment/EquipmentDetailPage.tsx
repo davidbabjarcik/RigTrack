@@ -5,7 +5,6 @@ import { caseTitle } from '@/features/cases/model'
 import { GroupDmx } from './GroupDmx'
 import { describePorts } from './dmxNode'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { useCases } from '@/features/cases/useCases'
@@ -251,9 +250,6 @@ export function EquipmentDetailPage() {
             <QrCode className="size-4" aria-hidden />
             QR štítok
           </LinkButton>
-          <AddToPrintButton companyId={company.companyId} kind="equipment" targetIds={[equipment.id]} />
-          {/* Svetlá: štítok na pásku Brother (DMX adresa, módy, odber) do tej istej fronty. */}
-          {equipment.kind === 'light' && !equipment.attributes.lightType?.startsWith('acc_') && <AddToPrintButton companyId={company.companyId} kind="equipment" targetIds={[equipment.id]} label="tape" />}
           {can(company, 'equipment.edit') && (
             <LinkButton to={`/equipment/${equipment.id}/edit`} variant="outline" size="sm">
               <Pencil className="size-4" aria-hidden />

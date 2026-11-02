@@ -3,7 +3,6 @@ import { ArrowLeft, Camera, ChevronRight, Combine, Package, Pencil, QrCode } fro
 import { useRef, useState } from 'react'
 import { usePastedImage } from '@/lib/usePastedImage'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { GroupDmx } from './GroupDmx'
 import { GroupHours } from './GroupHours'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -208,7 +207,6 @@ export function EquipmentGroupPage() {
             <QrCode className="size-4" aria-hidden />
             QR štítky všetkých{units.length > 0 && ` (${units.length})`}
           </LinkButton>
-          <AddToPrintButton companyId={companyId} kind="equipment" targetIds={parts.map((part) => part.id)} />
           {isDmx && !dmxOpen && can(company, 'equipment.edit') && <GroupDmx companyId={companyId} parts={parts} caseName={caseName} open={false} onOpen={() => setDmxOpen(true)} onClose={() => {}} />}
           {canMerge && (
             <Button variant="outline" size="sm" disabled={merge.isPending} onClick={() => window.confirm(`Spojiť ${freeParts.length} časti mimo case do jednej (${freePieces} ks)? História sa prenesie.`) && merge.mutate()}>

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Download, Printer, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
 import { downloadCanvas, fileSlug } from '@/features/cases/canvas'
@@ -132,6 +133,8 @@ ${lengths.map((length) => `  .tape-sheet img.tape${length} { page: tape${length}
             <p className="text-sm text-muted-foreground">Brother P-touch · {images.length} štítkov</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            {/* Páska techniky do tlačovej fronty (vytlačí sa neskôr spolu s ostatnými). */}
+            {ids.length > 0 && <AddToPrintButton companyId={companyId} kind="equipment" targetIds={ids} label="tape" />}
             <Button variant="outline" disabled={images.length === 0} onClick={() => void downloadAll()}>
               <Download className="size-4" aria-hidden />
               PNG ({images.length})

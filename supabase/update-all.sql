@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0120 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0121 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -2339,6 +2339,16 @@ create policy print_queue_insert on public.print_queue for insert to authenticat
   with check (public.is_company_member(company_id) and (public.can(company_id, 'equipment.view') or public.can(company_id, 'cases.view')));
 drop policy if exists print_queue_delete on public.print_queue;
 create policy print_queue_delete on public.print_queue for delete to authenticated using (public.is_company_member(company_id));
+
+-- ===== 0121_print_queue_labels.sql =====
+-- RigTrack 5.15: do tlačovej fronty aj štítok case (case_label) a hárok s obsahom case (content), nielen QR a páska.
+
+do $$
+begin
+  alter table public.print_queue drop constraint if exists print_queue_label_check;
+  alter table public.print_queue add constraint print_queue_label_check check (label in ('qr', 'tape', 'case_label', 'content'));
+end;
+$$;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

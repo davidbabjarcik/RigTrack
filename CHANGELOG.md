@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 5.15 – 2. 11. 2026
+
+- **Do tlače priamo tam, kde sa tlačí**: QR štítky (technika aj cases) – „QR do tlače“ na stránke QR štítkov,
+  páska Brother – „Páska do tlače“ na stránke štítkov na pásku, **štítok case** – „Štítok do tlače“ a **obsah case**
+  – „Obsah do tlače“. Z detailov techniky a cases tlačidlo zmizlo.
+- Tlačová fronta má nové skupiny Štítky cases a Obsah cases (každý sa otvorí a vytlačí zvlášť).
+- V nastaveniach sú pri @todo a @toprint aj číselné kódy (31121800, 01001800).
+- Nová migrácia: `0121` (je aj v `supabase/update-all.sql`).
+
 ### 5.14.1 – 2. 11. 2026
 
 - **Vlastná veľkosť QR na A4**: „Vlastná (mm)“ – stranu QR zadáte v milimetroch (15–180 mm), písmo sa prispôsobí a na

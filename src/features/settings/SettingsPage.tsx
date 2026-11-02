@@ -289,7 +289,7 @@ function InventoryLookups({ companyId }: { companyId: string }) {
       <Section title="Šablóny cases">
         <CaseTemplateSettings companyId={companyId} />
       </Section>
-      <Section title="Tlač a kľúčové slová (@todo, @toprint)">
+      <Section title="Tlač a kľúčové slová (@todo 31121800, @toprint 01001800)">
         <PrintSettings companyId={companyId} />
       </Section>
       <Section title="Farby dĺžok káblov">

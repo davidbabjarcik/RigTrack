@@ -13,6 +13,7 @@ import { unitIdsOf } from '@/features/equipment/model'
 import { QrCode } from '@/features/networks/QrCode'
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { qrUrl } from './qr'
+import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { clampQrMm, QR_MM_MAX, QR_MM_MIN, QR_SIZE_LABELS, QR_SIZES, useCompanyPrefs, type QrSize } from '@/features/print/api'
 import { cn } from '@/lib/utils'
 
@@ -92,6 +93,9 @@ export function QrLabelsPage() {
         </Link>
         <p className="text-sm text-neutral-600">{items.length} štítkov · QR otvorí detail v appke</p>
         <div className="flex flex-wrap gap-2">
+          {(isCases || type === 'equipment') && items.length > 0 && (
+            <AddToPrintButton companyId={company.companyId} kind={isCases ? 'case' : 'equipment'} targetIds={[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))]} />
+          )}
           {items.length > 0 && (
             <Button
               variant="outline"

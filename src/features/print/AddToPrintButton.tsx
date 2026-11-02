@@ -5,6 +5,9 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { addToPrintQueue, printKeys, usePrintQueue, type PrintItem } from './api'
 
+const ADD: Record<PrintItem['label'], string> = { qr: 'QR do tlače', tape: 'Páska do tlače', case_label: 'Štítok do tlače', content: 'Obsah do tlače' }
+const IN_QUEUE: Record<PrintItem['label'], string> = { qr: 'QR v tlači', tape: 'Páska v tlači', case_label: 'Štítok v tlači', content: 'Obsah v tlači' }
+
 type Props = {
   companyId: string
   kind: PrintItem['kind']
@@ -30,14 +33,14 @@ export function AddToPrintButton({ companyId, kind, targetIds, label = 'qr' }: P
     return (
       <Link to="/print" className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm text-emerald-600 hover:bg-muted dark:text-emerald-400">
         <Check className="size-4" aria-hidden />
-        {label === 'tape' ? 'Páska v tlači' : 'V tlači'}
+        {IN_QUEUE[label]}
       </Link>
     )
   }
   return (
     <Button variant="outline" size="sm" disabled={add.isPending || targetIds.length === 0} onClick={() => add.mutate()} title="Pridať štítky do tlačovej fronty – vytlačíte ich naraz v menu Tlač">
       <Printer className="size-4" aria-hidden />
-      {label === 'tape' ? 'Páska do tlače' : 'Do tlače'}
+      {ADD[label]}
       {targetIds.length > 1 ? ` (${targetIds.length})` : ''}
     </Button>
   )

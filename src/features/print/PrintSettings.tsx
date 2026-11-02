@@ -88,8 +88,8 @@ export function PrintSettings({ companyId }: { companyId: string }) {
           </label>
         )}
       </fieldset>
-      {people('todoAssignees', 'Komu ukázať úlohy z @todo', '@todo v políčku (napr. pri váhe) vytvorí úlohu „Doplniť: …“.')}
-      {people('toprintAssignees', 'Komu ukázať úlohy z @toprint', '@toprint v políčku (napr. pri čísle case; do čísla 01001800) vytvorí úlohu „Vytlačiť: …“ a štítok dá do tlačovej fronty.')}
+      {people('todoAssignees', 'Komu ukázať úlohy z @todo (31121800)', '@todo v políčku (napr. pri váhe) vytvorí úlohu „Doplniť: …“. Do čísla 31121800, do dátumu 31. 12. 1800.')}
+      {people('toprintAssignees', 'Komu ukázať úlohy z @toprint (01001800)', '@toprint v políčku (napr. pri čísle case) vytvorí úlohu „Vytlačiť: …“ a štítok dá do tlačovej fronty. Do čísla 01001800, do dátumu 1. 1. 1800.')}
       {(save.isError || prefs.isError) && (
         <p className="text-sm text-destructive">
           {/company_prefs/.test(String(save.error?.message ?? '')) ? 'Nastavenia tlače ešte databáza nepozná – spustite v Supabase supabase/update-all.sql (migrácia 0120).' : `Nepodarilo sa uložiť. ${errorDetail(save.error)}`}

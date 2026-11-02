@@ -3,7 +3,6 @@ import { ArrowLeft, Camera, ChevronRight, ClipboardCheck, Copy, Pencil, QrCode }
 import { useRef, useState } from 'react'
 import { usePastedImage } from '@/lib/usePastedImage'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
@@ -140,7 +139,6 @@ export function CaseGroupPage() {
             <QrCode className="size-4" aria-hidden />
             QR štítky všetkých ({members.length})
           </LinkButton>
-          <AddToPrintButton companyId={companyId} kind="case" targetIds={members.map((item) => item.id)} />
           {canEdit && (
             <Button variant="outline" size="sm" disabled={checkAll.isPending} onClick={() => window.confirm(`Označiť všetkých ${members.length} ako skontrolované teraz?`) && checkAll.mutate()}>
               <ClipboardCheck className="size-4" aria-hidden />

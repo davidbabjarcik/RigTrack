@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Download } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -124,10 +125,13 @@ export function CaseLabelPage() {
         title="Flight case štítok"
         description={`${current.name} · ${LABEL_WIDTH} × ${LABEL_HEIGHT} px`}
         action={
-          <Button disabled={!drawn} onClick={() => canvas.current && downloadCanvas(canvas.current, fileName)}>
-            <Download className="size-4" aria-hidden />
-            Stiahnuť PNG
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <AddToPrintButton companyId={companyId} kind="case" targetIds={[current.id]} label="case_label" />
+            <Button disabled={!drawn} onClick={() => canvas.current && downloadCanvas(canvas.current, fileName)}>
+              <Download className="size-4" aria-hidden />
+              Stiahnuť PNG
+            </Button>
+          </div>
         }
       />
       {(logo.isError || photo.isError) && (

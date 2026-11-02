@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-5.14-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-5.15-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,10 +51,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **5.15** | Do tlače z QR, pásky, štítku aj obsahu case; čísla kľúčových slov v nastaveniach |
 | **5.14** | Tlačová fronta, QR na A4 vo väčších veľkostiach, @toprint a komu ukázať @todo / @toprint |
 | **5.13** | Nový pôdorys skladu: steny, regály s obsadenosťou, palety, stĺpy, dvere a okná |
 | **5.12** | Firemné poznámky s označením ľudí, presety zosilňovača na tlač, sklad so stĺpmi, dverami a obsadenosťou |
-| **5.11** | Vývojár: prehľad účtov – posledné prihlásenie, firmy a role |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

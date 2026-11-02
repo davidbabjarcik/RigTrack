@@ -38,6 +38,8 @@ export function PrintQueuePage() {
   const qrEquipment = items.filter((item) => item.label === 'qr' && item.kind === 'equipment')
   const qrCases = items.filter((item) => item.label === 'qr' && item.kind === 'case')
   const tape = items.filter((item) => item.label === 'tape')
+  const caseLabels = items.filter((item) => item.label === 'case_label')
+  const contents = items.filter((item) => item.label === 'content')
   const ids = (list: PrintItem[]) => [...new Set(list.map((item) => item.targetId))].join(',')
   const a4 = (prefs.qrTarget ?? 'a4') === 'a4'
 
@@ -58,6 +60,13 @@ export function PrintQueuePage() {
                 {nameOf(item)}
               </Link>
               {item.note && <span className="truncate text-muted-foreground">{item.note}</span>}
+              {/* Štítok a obsah case sa tlačia každý zvlášť (vlastná stránka s tlačou / PDF). */}
+              {(item.label === 'case_label' || item.label === 'content') && (
+                <Link to={`/cases/${item.targetId}/${item.label === 'content' ? 'content' : 'label'}`} className="inline-flex items-center gap-1 text-accent hover:underline">
+                  <Printer className="size-4" aria-hidden />
+                  Otvoriť a tlačiť
+                </Link>
+              )}
               <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={`Odobrať z tlače: ${nameOf(item)}`} disabled={remove.isPending} onClick={() => remove.mutate([item.id])}>
                 <X className="size-4" aria-hidden />
               </Button>
@@ -77,7 +86,7 @@ export function PrintQueuePage() {
     <>
       <PageHeader
         title="Tlač"
-        description={`Štítky na tlač naraz – QR ${a4 ? 'na A4' : 'na Brother'}, adresy a módy na Brother (nastavíte v Nastavenia → Zoznamy → Tlač)`}
+        description={`Štítky na tlač – QR ${a4 ? 'na A4' : 'na Brother'}, adresy a módy na Brother, štítky a obsah cases (nastavíte v Nastavenia → Zoznamy → Tlač)`}
         action={
           items.length > 0 && (
             <Button variant="outline" disabled={remove.isPending} onClick={() => window.confirm('Všetko je vytlačené? Fronta sa vyprázdni.') && remove.mutate(items.map((item) => item.id))}>
@@ -89,7 +98,7 @@ export function PrintQueuePage() {
       />
       {items.length === 0 ? (
         <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">
-          Fronta je prázdna. Štítky pridáte tlačidlom „Do tlače“ pri technike alebo case, alebo napíšte @toprint do políčka.
+          Fronta je prázdna. Pri technike je tlačidlo „QR do tlače“, pri case na stránkach QR štítok, Štítok a Obsah; alebo napíšte @toprint do políčka.
         </p>
       ) : (
         <>
@@ -105,6 +114,8 @@ export function PrintQueuePage() {
             qrCases,
             a4 ? printLink(`/qr/cases?ids=${ids(qrCases)}`, 'Tlačiť na A4') : printLink(`/labels/tape?cases=${ids(qrCases)}&back=/print`, 'Na Brother'),
           )}
+          {group('Štítky cases', <Tag className="size-5 text-accent" aria-hidden />, caseLabels, null)}
+          {group('Obsah cases (hárky)', <Briefcase className="size-5 text-accent" aria-hidden />, contents, null)}
           {group('Štítky na pásku Brother (adresy, módy, odber)', <Tag className="size-5 text-accent" aria-hidden />, tape, printLink(`/labels/tape?ids=${ids(tape.filter((item) => item.kind === 'equipment'))}&back=/print`, 'Na Brother'))}
         </>
       )}

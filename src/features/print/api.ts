@@ -50,7 +50,9 @@ export async function saveCompanyPrefs(companyId: string, current: CompanyPrefs,
   if (error) throw error
 }
 
-export type PrintItem = { id: string; kind: 'equipment' | 'case'; targetId: string; label: 'qr' | 'tape'; note: string; createdAt: string }
+/** Čo sa tlačí: QR štítok, páska Brother, štítok case (A5/A4) alebo hárok s obsahom case. */
+export type PrintLabel = 'qr' | 'tape' | 'case_label' | 'content'
+export type PrintItem = { id: string; kind: 'equipment' | 'case'; targetId: string; label: PrintLabel; note: string; createdAt: string }
 
 export async function fetchPrintQueue(companyId: string): Promise<PrintItem[]> {
   const { data, error } = await getSupabase().from('print_queue').select('id, kind, target_id, label, note, created_at').eq('company_id', companyId).order('created_at')

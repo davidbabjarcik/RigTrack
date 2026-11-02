@@ -20,6 +20,8 @@ describe('print queue and company prefs', () => {
     await expect(t.as('boss', `insert into public.print_queue (company_id, kind, target_id) values ($1, 'case', $2)`, [a, box])).rejects.toThrow(/duplicate|unique/)
     expect(await t.as('viewer', 'select kind from public.print_queue')).toEqual([{ kind: 'case' }])
     expect(await t.as('outsider', 'select * from public.print_queue')).toEqual([])
+    await t.as('boss', `insert into public.print_queue (company_id, kind, target_id, label) values ($1, 'case', $2, 'case_label'), ($1, 'case', $2, 'content')`, [a, box])
+    await expect(t.as('boss', `insert into public.print_queue (company_id, kind, target_id, label) values ($1, 'case', $2, 'poster')`, [a, box])).rejects.toThrow(/check/)
     await t.as('boss', 'delete from public.print_queue where company_id = $1', [a])
     expect(await t.as('boss', 'select count(*)::int as n from public.print_queue')).toEqual([{ n: 0 }])
   })

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, ChevronDown, ChevronUp, Download, FileDown, Printer } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -241,6 +242,7 @@ export function CaseContentSheetPage() {
         description={`${current.name} · ${paper} ${landscape ? 'na šírku' : 'na výšku'} (${paper === 'A5' ? `${a5W} × ${a5H}` : `${sheetW} × ${sheetH}`} px)`}
         action={
           <div className="flex flex-wrap gap-2">
+            <AddToPrintButton companyId={companyId} kind="case" targetIds={[current.id]} label="content" />
             <Button disabled={!drawn} onClick={print}>
               <Printer className="size-4" aria-hidden />
               Tlačiť
