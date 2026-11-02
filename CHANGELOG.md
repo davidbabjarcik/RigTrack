@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 6.5 – 2. 11. 2026
+
+- **Plagát inventára** (Technika → Plagát inventára): technika jedného druhu na A4 na šírku – veľký počet kusov,
+  rozmer, názov a fotka. Pódium sa rozdelí na platne a nohy / zábradlia / schody, hliník na rovné diely (zvlášť podľa
+  série), rohy / T / kríže a základne. Rovnaká technika rozdelená do viacerých cases sa zráta dokopy, vyradená sa
+  nepočíta. Nadpis, podnadpis, poznámky dole, tmavý alebo svetlý vzhľad a ktoré časti ukázať; tlač alebo PDF.
+
 ### 6.4 – 2. 11. 2026
 
 - **Palety na zemi** v Sklade → Upraviť plán: „Pridať paletu“ s rozmerom (EUR 120 × 80, priemyselná 120 × 100,

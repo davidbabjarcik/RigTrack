@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight, Plus, Search } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Presentation, Search } from 'lucide-react'
 import { Fragment, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -224,6 +224,10 @@ export function EquipmentListPage() {
         action={
           <div className="flex flex-wrap gap-2">
             <ScanButton />
+            <LinkButton to="/equipment/poster" variant="outline">
+              <Presentation className="size-4" aria-hidden />
+              Plagát inventára
+            </LinkButton>
             {canWrite && (
               <LinkButton to="/equipment/new">
                 <Plus className="size-4" aria-hidden />
