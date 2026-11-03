@@ -121,8 +121,10 @@ export function EquipmentGroupPage() {
       Number(!parts.some((item) => item.caseId === a.id)) - Number(!parts.some((item) => item.caseId === b.id)) ||
       caseTitle(a).localeCompare(caseTitle(b), 'sk', { numeric: true }),
   )
-  // Časti: v cases hore, mimo case dole.
-  const shownParts = cables ? parts : [...parts].sort((a, b) => Number(a.caseId === null) - Number(b.caseId === null))
+  // Časti: v cases hore v poradí #1, #2, #3…, mimo case dole.
+  const shownParts = cables
+    ? parts
+    : [...parts].sort((a, b) => Number(a.caseId === null) - Number(b.caseId === null) || caseName(a.caseId).localeCompare(caseName(b.caseId), 'sk', { numeric: true }))
   // Po kusoch: každý kus (#1…) s tým, kde je.
   const units = parts
     .filter((item) => item.trackUnits)

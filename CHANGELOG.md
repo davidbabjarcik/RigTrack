@@ -5,6 +5,10 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.18.1 – 3. 11. 2026
+
+- Technika rozdelená do cases: časti sú zoradené podľa case (#1, #2, #3…), mimo case na konci.
+
 ### 7.18 – 3. 11. 2026
 
 - **Dať do viacerých cases naraz**: pri technike počítanej na kusy (napr. háky, svorky) na stránke so všetkými časťami
