@@ -49,3 +49,12 @@ describe('tape labels', () => {
     expect(tapeLabels(dip, ['address'])[0].lines).toEqual(['Beam #1 · Basic · 16 ch', 'DIP ON: 1, 5'])
   })
 })
+
+describe('network tape label', () => {
+  it('prints the IP with its prefix and the MAC', async () => {
+    const { tapeLabels } = await import('./tape')
+    const item = { id: 'e1', name: 'Pult', attributes: { ipPrefix: 8 }, ipAddress: '2.1.0.1', macAddress: '00:11:22:33:44:55', trackUnits: false, quantity: 1, unitIds: [], caseId: null, categoryId: null } as never
+    const [label] = tapeLabels(item, ['network'])
+    expect(label).toMatchObject({ kind: 'network', title: '2.1.0.1/8', lines: ['00:11:22:33:44:55', 'Pult'] })
+  })
+})

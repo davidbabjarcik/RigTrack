@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.7.3 – 3. 11. 2026
+
+- **Štítok na pásku „Sieť (IP / MAC)“**: IP adresa s prefixom (napr. 2.1.0.1/8), MAC a názov. Zo Sietí → IP tabuľka sa otvára
+  rovno tento štítok (predtým sa omylom ponúkla DMX adresa).
+
 ### 7.7.2 – 3. 11. 2026
 
 - **Bez QR štítku** prehľadnejšie a bez omylov: pri každej položke zaškrtávacie políčko, „vybrať všetko“ po stĺpcoch,

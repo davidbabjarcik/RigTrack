@@ -77,7 +77,7 @@ export function NetworksPage() {
   // Štítky na pásku Brother s IP / MAC – pre techniku (zariadenia členov a hostí nemajú štítok v appke).
   const equipmentIdOf = (row: (typeof rows)[number]) => (row.source === 'equipment' && row.to?.startsWith('/equipment/') ? row.to.slice('/equipment/'.length) : null)
   const visibleEquipment = [...new Set(visible.map(equipmentIdOf).filter((id): id is string => Boolean(id)))]
-  const tapeLink = (ids: string[]) => `/labels/tape?ids=${ids.join(',')}&kinds=address&back=${encodeURIComponent(`/networks?tab=${tab}`)}`
+  const tapeLink = (ids: string[]) => `/labels/tape?ids=${ids.join(',')}&kinds=network&back=${encodeURIComponent(`/networks?tab=${tab}`)}`
 
   return (
     <>

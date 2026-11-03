@@ -12,13 +12,14 @@ export const dipOn = (address: number, count: number) =>
 export const TAPES = [9, 12, 18] as const
 export type TapeMm = (typeof TAPES)[number]
 
-export const LABEL_KINDS = ['qr', 'address', 'modes', 'power'] as const
+export const LABEL_KINDS = ['qr', 'address', 'modes', 'power', 'network'] as const
 export type LabelKind = (typeof LABEL_KINDS)[number]
 export const LABEL_KIND_LABELS: Record<LabelKind, string> = {
   qr: 'QR + názov',
   address: 'Moja DMX adresa',
   modes: 'DMX módy',
   power: 'Odber a váha',
+  network: 'Sieť (IP / MAC)',
 }
 
 /**
@@ -52,6 +53,11 @@ export const TAPE_FIELDS = {
     'power.watts': 'Príkon (W)',
     'power.amps': 'Prúd (A pri 230 V)',
     'power.weight': 'Váha (kg)',
+  },
+  network: {
+    'network.ip': 'IP adresa s prefixom (napr. 2.1.0.1/8)',
+    'network.mac': 'MAC adresa',
+    'network.name': 'Názov',
   },
   case: {
     'case.code': 'QR kód',
@@ -144,6 +150,12 @@ export function tapeLabels(item: Equipment, kinds: LabelKind[], options: Options
         ])
       }
     }
+  }
+  // Sieť: IP (s prefixom) a MAC – jeden štítok na techniku (adresy sú pri technike, nie pri kuse).
+  if (kinds.includes('network') && (item.ipAddress || item.macAddress)) {
+    const ip = item.ipAddress ? `${item.ipAddress}${item.attributes.ipPrefix ? `/${item.attributes.ipPrefix}` : ''}` : ''
+    currentName = item.name
+    push({ key: `${item.id}-network`, kind: 'network' }, on('network.ip') ? ip : '', [on('network.mac') ? item.macAddress : '', on('network.name') ? item.name : ''])
   }
   return labels
 }
