@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.4 – 3. 11. 2026
+
+- **Kanban úloh**: do strán sa dá posúvať ťahaním myšou aj za prázdny stĺpec alebo medzeru (karty sa presúvajú ako
+  doteraz).
+
 ### 7.3 – 3. 11. 2026
 
 - **Poznámka → úlohy** (ako v TickTicku): riadky dlhej poznámky prevediete na úlohy jedným klikom – vyberiete riadky,
