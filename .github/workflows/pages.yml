@@ -27,7 +27,8 @@ concurrency:
 jobs:
   # Jeden job v prostredí github-pages, aby videl aj premenné nastavené v tomto prostredí.
   deploy:
-    runs-on: ubuntu-latest
+    # Pevná verzia – prechod ubuntu-latest na Ubuntu 26 (od 19. 10. 2026) nemá zmeniť zostavenie bez kontroly.
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

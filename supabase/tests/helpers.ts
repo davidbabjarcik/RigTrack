@@ -1,5 +1,6 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { PGlite } from '@electric-sql/pglite'
+import { inject } from 'vitest'
 
 // Minimum zo Supabase, o ktoré sa migrácie opierajú: roly a auth schéma.
 const SUPABASE_STUB = `
@@ -46,11 +47,10 @@ const BASELINE = 'supabase/baseline.sql'
 
 type Row = Record<string, string>
 
-/** Čistá databáza so všetkými migráciami a pomôckami na dotazy v mene používateľa. */
-export async function createTestDb() {
+/** Databáza postavená od nuly: Supabase náhrady, baseline a migrácie novšie ako baseline. */
+export async function buildMigratedDb() {
   const db = new PGlite()
   await db.exec(SUPABASE_STUB)
-  // Najprv celá databáza naraz (baseline), potom len migrácie novšie ako baseline.
   const baseline = readFileSync(BASELINE, 'utf8')
   const last = Number(baseline.match(/^-- baseline: (\d+)/m)?.[1] ?? 0)
   await db.exec(baseline)
@@ -58,6 +58,23 @@ export async function createTestDb() {
     if (Number(file.slice(0, 4)) <= last) continue
     await db.exec(readFileSync(`${MIGRATIONS}/${file}`, 'utf8'))
   }
+  return db
+}
+
+/** Snímka hotovej databázy z global-setup.ts (postaví sa raz na celý beh testov); inak sa stavia od nuly. */
+function snapshotPath() {
+  try {
+    const path = inject('dbSnapshot')
+    return path && existsSync(path) ? path : null
+  } catch {
+    return null
+  }
+}
+
+/** Čistá databáza so všetkými migráciami a pomôckami na dotazy v mene používateľa. */
+export async function createTestDb() {
+  const snapshot = snapshotPath()
+  const db = snapshot ? new PGlite({ loadDataDir: new Blob([readFileSync(snapshot)]) }) : await buildMigratedDb()
   const users: Record<string, string> = {}
 
   const rows = async (sql: string, params: unknown[] = []) => (await db.query<Row>(sql, params)).rows

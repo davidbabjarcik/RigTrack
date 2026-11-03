@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.15 – 3. 11. 2026
+
+- **Rýchlejšia databáza**: pravidlá prístupu overujú prihláseného používateľa raz na dopyt namiesto pri každom
+  riadku, pri čítaní sa kontroluje jedno pravidlo namiesto dvoch a pribudli indexy pre prepojenia tabuliek –
+  zoznamy techniky, cases a eventov sa načítajú rýchlejšie, najmä keď dát pribúda. Oprávnenia sa nemenia.
+- Upratanie bezpečnosti: interné funkcie databázy sa nedajú volať zvonku, rozšírenie na odosielanie push upozornení
+  je vo vlastnej schéme.
+- Vývoj: testy bežia asi 3,5× rýchlejšie, zostavenie stránky má pevnú verziu systému.
+- Nová migrácia: `0143` (je aj v `supabase/update-all.sql`).
+
 ### 7.14 – 3. 11. 2026
 
 - **Overenie, že nie ste robot** (Cloudflare Turnstile) pri prihlásení, registrácii a obnove hesla – chráni účty aj

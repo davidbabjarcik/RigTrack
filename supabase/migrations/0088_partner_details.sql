@@ -88,7 +88,8 @@ grant update (logo_style) on public.companies to authenticated;
 --    kým tam nie sú, nič sa neposiela. Kto už má Database Webhook, nech ho zmaže, inak príde upozornenie dvakrát.
 do $$
 begin
-  create extension if not exists pg_net;
+  create schema if not exists extensions;
+  create extension if not exists pg_net with schema extensions;
 exception when others then
   raise notice 'pg_net nie je k dispozícii – push sa bude posielať len cez Database Webhook';
 end;

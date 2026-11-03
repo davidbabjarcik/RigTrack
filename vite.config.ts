@@ -121,6 +121,10 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Databáza so všetkými migráciami sa postaví raz (snímka), testy ju len načítajú.
+    globalSetup: ['./supabase/tests/global-setup.ts'],
+    // Izolované kontexty vo vláknach – rýchlejšie ako samostatné procesy s novým jsdom pre každý súbor.
+    pool: 'vmThreads',
     // Databázové testy si v beforeAll stavajú celú schému zo všetkých migrácií;
     // pri paralelnom behu to pri predvolených 10 s občas nestihnú.
     hookTimeout: 60_000,
