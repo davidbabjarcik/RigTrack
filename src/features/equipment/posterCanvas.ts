@@ -1,3 +1,4 @@
+import { stampGenerated } from '@/features/cases/canvas'
 // Plagát inventára nakreslený do obrázka (A4, 150 dpi): z neho je náhľad, tlač, PDF aj PNG – všade rovnaký.
 // Čierno-sivý na bielom papieri; rozmery v mm sa prepočítajú na pixely.
 
@@ -128,6 +129,9 @@ export function renderPoster(input: PosterInput): HTMLCanvasElement[] {
       ctx.fillText(`${pageIndex + 1} / ${pages.length}`, page.w - M, page.h - 4)
       ctx.textAlign = 'left'
     }
+    // Dátum vygenerovania (v pixeloch, mimo mierky mm).
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    stampGenerated(canvas, new Date(), 'left')
     return canvas
   })
 }

@@ -155,7 +155,7 @@ export function PrintBatchPage() {
       {printing && pages && (
         <>
           {/* Pomenované strany: štítky na A4 na výšku, hárky podľa volieb (A4 / A5, na výšku / na šírku). */}
-          <style>{`@page batch-a4 { size: A4 portrait; margin: 0 } @page batch-sheet { size: ${options.paper} ${options.landscape ? 'landscape' : 'portrait'}; margin: 0 } @media print { body * { visibility: hidden !important } .batch-print, .batch-print * { visibility: visible !important } .batch-print { position: absolute; inset: 0 } .batch-print img { display: block; width: 100%; height: auto; break-after: page } }`}</style>
+          <style>{`@page { margin: 0 } @page batch-a4 { size: A4 portrait; margin: 0 } @page batch-sheet { size: ${options.paper} ${options.landscape ? 'landscape' : 'portrait'}; margin: 0 } @media print { body * { visibility: hidden !important } .batch-print, .batch-print * { visibility: visible !important } .batch-print { position: absolute; inset: 0 } .batch-print img { display: block; width: 100%; height: auto; break-after: page } }`}</style>
           <div className="batch-print hidden print:block">
             {pages.map((page, index) => (
               <img key={index} src={page.canvas.toDataURL('image/jpeg', 0.92)} alt="" style={{ page: page.kind === 'label' ? 'batch-a4' : 'batch-sheet' }} />

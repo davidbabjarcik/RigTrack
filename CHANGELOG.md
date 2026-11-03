@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.8 – 3. 11. 2026
+
+- **Dátum vygenerovania** na každom hárku s obsahom case, štítku case a plagáte inventára (v PDF, PNG aj pri tlači).
+- Hromadná tlač štítkov a obsahov bez hlavičky a pätičky prehliadača (dátum, adresa stránky, číslo strany).
+
 ### 7.7.3 – 3. 11. 2026
 
 - **Štítok na pásku „Sieť (IP / MAC)“**: IP adresa s prefixom (napr. 2.1.0.1/8), MAC a názov. Zo Sietí → IP tabuľka sa otvára

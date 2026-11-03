@@ -3,7 +3,7 @@ import type { DmxMode, Equipment } from '@/features/equipment/model'
 import { fetchPhotoBlob } from '@/features/equipment/photo'
 import { qrUrl } from '@/features/scan/qr'
 import type { SheetPrefs } from '@/features/settings/userPrefs'
-import { qrCanvas } from './canvas'
+import { qrCanvas, stampGenerated } from './canvas'
 import { buildCableMatrix, DEFAULT_SHOW, drawContentSheet, matrixPages, orderColumns, SHEET_HEIGHT, SHEET_LAYOUTS, SHEET_WIDTH, type SheetLayout, type SheetShow } from './contentSheet'
 import { drawCaseLabel, formatWeight, labelContentLines } from './label'
 import { caseBaseName, caseNumber, type Case } from './model'
@@ -118,6 +118,7 @@ export async function renderContentSheets(current: Case, context: SheetContext):
       companyName: context.companyName,
       photos,
     })
+    stampGenerated(canvas)
     return canvas
   })
   bitmap?.close()
@@ -155,6 +156,7 @@ export async function drawCaseLabelFor(target: HTMLCanvasElement, current: Case,
     logo: logoBitmap,
     companyName: context.companyName,
   })
+  stampGenerated(target)
   logoBitmap?.close()
   photoBitmap?.close()
 }

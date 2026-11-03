@@ -63,3 +63,18 @@ export async function qrCanvas(text: string, size = 520, margin = 0) {
   await toCanvas(canvas, text, { margin, width: size, errorCorrectionLevel: 'M' })
   return canvas
 }
+
+/** Dátum a čas vygenerovania drobným písmom do pravého dolného rohu (na každom PDF / PNG hárku). */
+export function stampGenerated(canvas: HTMLCanvasElement, when = new Date(), side: 'left' | 'right' = 'right') {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const size = Math.max(10, Math.round(canvas.width * 0.0085))
+  const text = `Vygenerované ${when.toLocaleDateString('sk-SK')} ${when.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`
+  ctx.save()
+  ctx.font = `500 ${size}px ui-sans-serif, system-ui, sans-serif`
+  ctx.fillStyle = '#6b7280'
+  ctx.textAlign = side
+  ctx.textBaseline = 'bottom'
+  ctx.fillText(text, side === 'right' ? canvas.width - size * 1.2 : size * 1.2, canvas.height - size * 0.6)
+  ctx.restore()
+}
