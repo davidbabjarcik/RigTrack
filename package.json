@@ -1,7 +1,7 @@
 {
   "name": "rigtrack",
   "private": true,
-  "version": "7.19.1",
+  "version": "8.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -8,6 +8,7 @@ import { RestockList } from '@/features/equipment/RestockList'
 import { LoanAlerts } from '@/features/loans/LoanAlerts'
 import { MyAttendance } from '@/features/attendance/MyAttendance'
 import { SideWidgets } from '@/features/dashboard/SideWidgets'
+import { GlobalSearch } from '@/features/search/GlobalSearch'
 import { VehicleDeadlineAlerts } from '@/features/vehicles/VehicleDeadlineAlerts'
 import { visibleNavItems } from '@/lib/navigation'
 import { isAdminRole } from '@/lib/roles'
@@ -22,6 +23,7 @@ export function DashboardPage() {
     <>
       {/* Na mobile chýba bočný panel s firmou – názov firmy je preto v popise. */}
       <PageHeader title="Prehľad" description={active ? active.companyName : 'Evidencia techniky a jej prevádzky'} />
+      {isSupabaseConfigured && active && <GlobalSearch company={active} />}
       <InstallHint />
       {/* Na mobile sú bloky (úlohy, kalendár, čísla) na samostatnej karte, aby Prehľad nebol preplnený. */}
       {isSupabaseConfigured && active && (

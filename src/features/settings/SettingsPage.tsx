@@ -537,6 +537,9 @@ export function SettingsPage() {
                 RigTrack <strong>verzia {APP_VERSION}</strong>
               </p>
               <CheckUpdateButton />
+              <Link to="/help" className="text-accent hover:underline">
+                Návod a tipy – ako na veci, ktoré nie sú hneď vidieť
+              </Link>
             </div>
           </Section>
         </>

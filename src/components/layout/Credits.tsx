@@ -60,6 +60,9 @@ export function Credits({ className }: { className?: string }) {
       <Link to="/about" className="hover:text-foreground hover:underline">
         O aplikácii
       </Link>
+      <Link to="/help" className="hover:text-foreground hover:underline">
+        Návod a tipy
+      </Link>
       <Link to="/ochrana-sukromia" className="hover:text-foreground hover:underline">
         Ochrana súkromia
       </Link>

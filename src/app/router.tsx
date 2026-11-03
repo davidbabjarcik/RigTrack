@@ -110,6 +110,7 @@ const privacy = async () => ({ Component: (await import('@/features/legal/LegalP
 const cookies = async () => ({ Component: (await import('@/features/legal/LegalPages')).CookiesPage })
 const terms = async () => ({ Component: (await import('@/features/legal/LegalPages')).TermsPage })
 const about = async () => ({ Component: (await import('@/features/about/AboutPage')).AboutPage })
+const help = async () => ({ Component: (await import('@/features/help/HelpPage')).HelpPage })
 const welcome = lazyPage(() => import('@/features/staff/WelcomePage').then((m) => m.WelcomePage))
 const partners = lazyPage(() => import('@/features/partners/PartnersPage').then((m) => m.PartnersPage), 'events.view')
 const partnerDetail = lazyPage(() => import('@/features/partners/PartnerDetailPage').then((m) => m.PartnerDetailPage), 'events.view')
@@ -133,6 +134,7 @@ export const routes: RouteObject[] = [
       { path: 'auth/update-password', element: <UpdatePasswordPage /> },
       { path: 'changelog', lazy: changelog },
       { path: 'about', lazy: about },
+      { path: 'help', lazy: help },
       // Právne informácie – dostupné aj bez prihlásenia.
       { path: 'ochrana-sukromia', lazy: privacy },
       { path: 'cookies', lazy: cookies },

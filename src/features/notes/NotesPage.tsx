@@ -14,31 +14,9 @@ import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { NoteToTasks } from './NoteToTasks'
 import { noteLines } from './noteTasks'
+import { fetchNotes, notesKey, type Note } from './api'
 
-type Note = { id: string; title: string; body: string; pinned: boolean; people: string[]; createdBy: string | null; authorName: string; updatedAt: string }
 type Draft = { id: string | null; title: string; body: string; pinned: boolean; people: string[] }
-
-const notesKey = (companyId: string) => ['company', companyId, 'notes'] as const
-
-async function fetchNotes(companyId: string): Promise<Note[]> {
-  const { data, error } = await getSupabase()
-    .from('company_notes')
-    .select('id, title, body, pinned, people, created_by, author_name, updated_at')
-    .eq('company_id', companyId)
-    .order('pinned', { ascending: false })
-    .order('updated_at', { ascending: false })
-  if (error) throw error
-  return (data as { id: string; title: string; body: string; pinned: boolean; people: string[]; created_by: string | null; author_name: string; updated_at: string }[]).map((row) => ({
-    id: row.id,
-    title: row.title,
-    body: row.body,
-    pinned: row.pinned,
-    people: row.people ?? [],
-    createdBy: row.created_by,
-    authorName: row.author_name,
-    updatedAt: row.updated_at,
-  }))
-}
 
 async function saveNote(companyId: string, draft: Draft) {
   const fields = { title: draft.title.trim(), body: draft.body.trim(), pinned: draft.pinned, people: draft.people }

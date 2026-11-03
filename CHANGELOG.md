@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.0 – 3. 11. 2026
+
+- **Hľadať všade** hore na Prehľade: jedno políčko cez techniku, cases, eventy, firmy, kontakty, úlohy, poznámky
+  a miesta v sklade. Bez ohľadu na diakritiku, viac slov zúži výsledky, „#7“ nájde kus číslo 7 aj s tým, v ktorom case
+  je. Enter otvorí prvý výsledok.
+- **Skenovať QR** hore na Prehľade: kamera hneď, štítok techniky, case alebo miesta otvorí jeho detail.
+- **Návod a tipy**: nová stránka s krátkymi „ako na to“ (sklad, sady cases, príslušenstvo, vrátenie po evente,
+  tlač) a hľadaním v nej – odkaz v pätičke a v Nastaveniach → O aplikácii.
+
 ### 7.19.1 – 3. 11. 2026
 
 - Príslušenstvo v obsahu sady: zmeny sa zapíšu až tlačidlom **Uložiť** (alebo Zrušiť). Poradie je priamo v zozname –
