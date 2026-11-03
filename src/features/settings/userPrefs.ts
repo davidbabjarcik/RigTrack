@@ -37,6 +37,8 @@ export type SheetPrefs = {
   landscape?: boolean
   layout?: string
   order?: string[]
+  /** Poradie príslušenstva na hárku s obsahom (názvy); neuvedené idú za nimi podľa abecedy. */
+  accessoryOrder?: string[]
   show?: Record<string, boolean>
   dmx?: 'off' | 'modes' | 'channels'
 }

@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.19 – 3. 11. 2026
+
+- **Príslušenstvo naraz pre celú sadu cases**: na stránke sady (napr. K10 Case #1–#5) tlačidlo „Príslušenstvo
+  v obsahu“ – zaškrtnete, čo je na hárku s obsahom príslušenstvo (lanko, hák, omega…), a platí to vo všetkých cases
+  sady naraz.
+- **Poradie príslušenstva** na hárku s obsahom sa dá meniť šípkami (na stránke sady aj pri hárku case); platí pre
+  hárky všetkých cases.
+- **Čísla kusov na hárku s obsahom**: pri technike evidovanej po kusoch (napr. svetlá) je pod názvom, ktoré kusy do
+  case patria – napr. „#3, #4“.
+
 ### 7.18.1 – 3. 11. 2026
 
 - Technika rozdelená do cases: časti sú zoradené podľa case (#1, #2, #3…), mimo case na konci.

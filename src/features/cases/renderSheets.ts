@@ -43,7 +43,7 @@ export function caseLightsOf(inside: Equipment[]) {
 /** Tabuľka káblov a karty case v uloženom poradí, rozdelené na hárky podľa rozloženia. */
 export function sheetPagesOf(inside: Equipment[], sheet: SheetPrefs) {
   const options = sheetOptions(sheet)
-  const matrix = buildCableMatrix(inside)
+  const matrix = buildCableMatrix(inside, sheet.accessoryOrder ?? [])
   const ordered = orderColumns(matrix, options.order)
   return { matrix, ordered, pages: options.layout === 'pages' ? matrixPages(ordered) : [ordered] }
 }

@@ -85,7 +85,17 @@ export function CaseContentSheetPage() {
 
   // Poradie typov (čo hore, čo dole / na ktorom hárku).
   const order = useMemo(() => sheet.order ?? [], [sheet.order])
-  const { matrix, ordered, pages } = useMemo(() => sheetPagesOf(inside, { order, layout }), [inside, order, layout])
+  const accessoryOrder = useMemo(() => sheet.accessoryOrder ?? [], [sheet.accessoryOrder])
+  const { matrix, ordered, pages } = useMemo(() => sheetPagesOf(inside, { order, layout, accessoryOrder }), [inside, order, layout, accessoryOrder])
+  // Poradie príslušenstva: ostatné názvy (z iných cases) ostanú v uloženom poradí za týmito.
+  const moveAccessory = (name: string, step: -1 | 1) => {
+    const names = (matrix.accessories ?? []).map((item) => item.name)
+    const index = names.indexOf(name)
+    const target = index + step
+    if (target < 0 || target >= names.length) return
+    ;[names[index], names[target]] = [names[target], names[index]]
+    setSheet({ accessoryOrder: [...names, ...accessoryOrder.filter((value) => !names.includes(value))] })
+  }
   const move = (column: string, step: -1 | 1) => {
     const columns = [...ordered.columns]
     const index = columns.indexOf(column)
@@ -106,7 +116,7 @@ export function CaseContentSheetPage() {
         footer: branding.data?.labelFooter ?? '',
         logo: logo.data ?? null,
         companyName: company.companyName,
-        sheet: { order, layout, landscape, dmx: dmxInfo, show },
+        sheet: { order, layout, landscape, dmx: dmxInfo, show, accessoryOrder },
         origin: window.location.origin,
       })
       if (cancelled) return
@@ -122,7 +132,7 @@ export function CaseContentSheetPage() {
     return () => {
       cancelled = true
     }
-  }, [ready, current, order, layout, show, landscape, dmxInfo, colors.data, branding.data, logo.data, company.companyName, equipment.data])
+  }, [ready, current, order, layout, accessoryOrder, show, landscape, dmxInfo, colors.data, branding.data, logo.data, company.companyName, equipment.data])
 
   // Z tlačovej fronty (?back=/print) sa vráti do nej, inak na case.
   const backTo = backParams.get('back') ?? `/cases/${id}`
@@ -315,6 +325,25 @@ export function CaseContentSheetPage() {
               </Button>
             </span>
           ))}
+        </div>
+      )}
+      {(matrix.accessories?.length ?? 0) > 1 && (
+        <div className="mx-auto mb-3 flex w-full max-w-2xl flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Poradie príslušenstva:</span>
+          {(matrix.accessories ?? []).map((item, index, all) => (
+            <span key={item.name} className="inline-flex items-center gap-1 rounded-lg border bg-surface py-1 pr-1 pl-3">
+              <span className="font-medium">
+                {index + 1}. {item.name}
+              </span>
+              <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={`${item.name} skôr`} disabled={index === 0} onClick={() => moveAccessory(item.name, -1)}>
+                <ChevronUp className="size-4" aria-hidden />
+              </Button>
+              <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={`${item.name} neskôr`} disabled={index === all.length - 1} onClick={() => moveAccessory(item.name, 1)}>
+                <ChevronDown className="size-4" aria-hidden />
+              </Button>
+            </span>
+          ))}
+          <span className="w-full text-xs text-muted-foreground">Platí pre hárky všetkých cases.</span>
         </div>
       )}
       <div className="flex flex-col gap-4">

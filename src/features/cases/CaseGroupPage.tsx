@@ -15,6 +15,7 @@ import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { addCaseCheck, caseKeys, duplicateCase, setCaseGroupPhoto } from './api'
 import { caseNumber, formatDimensions, groupCases, kindLabel, kindWord, needsCheck, type Case } from './model'
+import { SetAccessories } from './SetAccessories'
 import { useCases } from './useCases'
 
 const ROLE_ORDER: Record<string, number> = { main: 0, secondary: 1, '': 2 }
@@ -157,6 +158,7 @@ export function CaseGroupPage() {
               {checkAll.isPending ? 'Ukladám…' : 'Skontrolované všetky'}
             </Button>
           )}
+          <SetAccessories companyId={companyId} members={members} equipment={equipment.data ?? []} canEdit={canEdit} />
         </div>
       </header>
       {checkAll.isError && <p className="mb-4 text-sm text-destructive">Kontrolu sa nepodarilo uložiť pri všetkých.</p>}

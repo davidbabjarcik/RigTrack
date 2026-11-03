@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { orderColumns, textShade, buildCableMatrix } from './contentSheet'
+import { orderColumns, textShade, buildCableMatrix, unitsText } from './contentSheet'
 
 const cable = (connector: string, lengthM: number, quantity: number) => ({
   name: `${connector} ${lengthM} m`,
@@ -52,6 +52,21 @@ describe('buildCableMatrix', () => {
       { name: 'Redukcia', kind: 'general', quantity: 1, attributes: {}, photoPath: 'p.jpg' },
     ])
     expect(matrix.others).toEqual([{ name: 'Redukcia', quantity: 3, photoPath: 'p.jpg' }])
+  })
+
+  it('lists unit numbers of tracked equipment and orders accessories as chosen', () => {
+    const matrix = buildCableMatrix(
+      [
+        { name: 'B-EYE K10', kind: 'light', quantity: 2, attributes: {}, trackUnits: true, unitIds: [3, 4] },
+        { name: 'Hák', kind: 'truss', quantity: 4, attributes: { sheetAccessory: true } },
+        { name: 'Omega', kind: 'truss', quantity: 4, attributes: { sheetAccessory: true } },
+        { name: 'Lanko', kind: 'general', quantity: 2, attributes: { sheetAccessory: true } },
+      ],
+      ['Omega', 'Hák'],
+    )
+    expect(matrix.others).toEqual([{ name: 'B-EYE K10', quantity: 2, units: [3, 4] }])
+    expect(unitsText(matrix.others[0])).toBe('#3, #4')
+    expect(matrix.accessories?.map((item) => item.name)).toEqual(['Omega', 'Hák', 'Lanko'])
   })
 
   it('returns an empty table for an empty case', () => {

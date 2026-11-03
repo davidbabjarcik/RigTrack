@@ -3,7 +3,7 @@
 // s fotkou a počtom pod ňou, pri veľa položkách zoznam.
 
 import { findCableColor, type CableColor } from '@/features/equipment/cableColors'
-import { channelMap, formatNumber, type DmxMode, type EquipmentAttributes, type EquipmentKind } from '@/features/equipment/model'
+import { channelMap, describeUnitIds, formatNumber, type DmxMode, type EquipmentAttributes, type EquipmentKind } from '@/features/equipment/model'
 import { ellipsize, fitSize, font, INK, sourceSize, type Ctx } from './canvas'
 
 export const SHEET_WIDTH = 2480
@@ -12,7 +12,7 @@ export const SHEET_HEIGHT = 3508
 let pageWidth = SHEET_WIDTH
 let pageHeight = SHEET_HEIGHT
 
-type SheetItem = { name: string; kind: EquipmentKind; quantity: number; attributes: EquipmentAttributes; photoPath?: string }
+type SheetItem = { name: string; kind: EquipmentKind; quantity: number; attributes: EquipmentAttributes; photoPath?: string; trackUnits?: boolean; unitIds?: number[] }
 
 export type CableMatrix = {
   /** Typy káblov (konektor), jeden stĺpec za každý. */
@@ -25,12 +25,16 @@ export type CableMatrix = {
   accessories?: SheetEntry[]
 }
 
-export type SheetEntry = { name: string; quantity: number; photoPath?: string }
+/** units: čísla kusov (napr. #1, #2), keď sa technika eviduje po kusoch. */
+export type SheetEntry = { name: string; quantity: number; photoPath?: string; units?: number[] }
+
+/** „#1, #2“ pod názvom na hárku (súvislý rad skrátene). */
+export const unitsText = (entry: SheetEntry) => (entry.units && entry.units.length > 0 ? describeUnitIds(entry.units) : '')
 
 const NO_TYPE = 'Kábel'
 
 /** Z obsahu case zostaví tabuľku káblov (dĺžka × typ) a zoznam ostatných vecí. */
-export function buildCableMatrix(items: SheetItem[]): CableMatrix {
+export function buildCableMatrix(items: SheetItem[], accessoryOrder: string[] = []): CableMatrix {
   // Káble označené ako príslušenstvo idú medzi karty, nie do tabuľky dĺžok.
   const cables = items.filter((item) => item.kind === 'cable' && item.attributes.lengthM !== undefined && !item.attributes.sheetAccessory)
   const typeOf = (item: SheetItem) => item.attributes.connector?.trim() || NO_TYPE
@@ -59,18 +63,30 @@ export function buildCableMatrix(items: SheetItem[]): CableMatrix {
 
   // Rovnaké názvy spolu (súčet kusov), zoradené podľa názvu.
   const entries = (list: SheetItem[]): SheetEntry[] => {
-    const totals = new Map<string, { quantity: number; photoPath?: string }>()
+    const totals = new Map<string, { quantity: number; photoPath?: string; units: number[] }>()
     for (const item of list) {
       const found = totals.get(item.name)
-      totals.set(item.name, { quantity: (found?.quantity ?? 0) + item.quantity, photoPath: found?.photoPath || item.photoPath || undefined })
+      // Čísla kusov (#1, #2…) pri technike evidovanej po kusoch, napr. svetlá.
+      const own = item.trackUnits ? (item.unitIds && item.unitIds.length > 0 ? item.unitIds : Array.from({ length: item.quantity }, (_, index) => index + 1)) : []
+      totals.set(item.name, { quantity: (found?.quantity ?? 0) + item.quantity, photoPath: found?.photoPath || item.photoPath || undefined, units: [...(found?.units ?? []), ...own] })
     }
     return [...totals.entries()]
       .sort(([a], [b]) => a.localeCompare(b, 'sk', { numeric: true }))
-      .map(([name, value]) => ({ name, quantity: value.quantity, ...(value.photoPath ? { photoPath: value.photoPath } : {}) }))
+      .map(([name, value]) => ({
+        name,
+        quantity: value.quantity,
+        ...(value.photoPath ? { photoPath: value.photoPath } : {}),
+        ...(value.units.length > 0 ? { units: [...new Set(value.units)].sort((a, b) => a - b) } : {}),
+      }))
+  }
+  // Príslušenstvo v nastavenom poradí, ostatné za ním podľa abecedy.
+  const rank = (name: string) => {
+    const index = accessoryOrder.indexOf(name)
+    return index === -1 ? accessoryOrder.length : index
   }
   const rest = items.filter((item) => !cables.includes(item))
   const others = entries(rest.filter((item) => !item.attributes.sheetAccessory))
-  const accessories = entries(rest.filter((item) => item.attributes.sheetAccessory))
+  const accessories = entries(rest.filter((item) => item.attributes.sheetAccessory)).sort((a, b) => rank(a.name) - rank(b.name))
 
   return { columns, rows, others, ...(accessories.length > 0 ? { accessories } : {}) }
 }
@@ -284,7 +300,8 @@ function drawItems(ctx: Ctx, title: string, items: SheetEntry[], y: number, heig
     ctx.textBaseline = 'top'
     items.forEach((item, index) => {
       const column = Math.floor(index / perColumn)
-      const text = item.quantity > 1 ? `${item.quantity}× ${item.name}` : item.name
+      const units = unitsText(item)
+      const text = `${item.quantity > 1 ? `${item.quantity}× ` : ''}${item.name}${units ? ` (${units})` : ''}`
       ctx.fillText(ellipsize(ctx, text, columnWidth), left + column * (columnWidth + gap), y + (index % perColumn) * lineHeight)
     })
     return y + perColumn * lineHeight + 60
@@ -330,12 +347,34 @@ function drawItems(ctx: Ctx, title: string, items: SheetEntry[], y: number, heig
       // Názov zvislo vycentrovaný: najprv odhad počtu riadkov, potom kreslenie.
       font(ctx, nameSize)
       const lines = Math.min(3, Math.ceil(ctx.measureText(item.name).width / Math.max(1, textWidth)))
-      wrapped(ctx, item.name, textX, top + (cardHeight - lines * nameSize * 1.15) / 2, textWidth, nameSize, 'left')
+      const units = unitsText(item)
+      const unitSize = Math.floor(nameSize * 0.8)
+      const nameTop = top + (cardHeight - lines * nameSize * 1.15 - (units ? unitSize * 1.4 : 0)) / 2
+      const nameEnd = wrapped(ctx, item.name, textX, nameTop, textWidth, nameSize, 'left')
+      if (units) {
+        font(ctx, unitSize, 700)
+        ctx.fillStyle = MUTED
+        ctx.textBaseline = 'top'
+        ctx.fillText(ellipsize(ctx, units, textWidth), textX, nameEnd + unitSize * 0.3)
+        ctx.fillStyle = INK
+      }
       countText(ctx, item.quantity, x + cardWidth - countWidth / 2, top + cardHeight / 2, countSize)
       return
     }
     const nameSize = Math.max(34, Math.min(withCables ? 60 : 80, Math.floor(cardWidth / 6.5)))
-    const nameBottom = wrapped(ctx, item.name, x + cardWidth / 2, top + pad, cardWidth - 2 * pad, nameSize)
+    let nameBottom = wrapped(ctx, item.name, x + cardWidth / 2, top + pad, cardWidth - 2 * pad, nameSize)
+    const units = unitsText(item)
+    if (units) {
+      const unitSize = Math.floor(nameSize * 0.75)
+      font(ctx, unitSize, 700)
+      ctx.fillStyle = MUTED
+      ctx.textBaseline = 'top'
+      ctx.textAlign = 'center'
+      ctx.fillText(ellipsize(ctx, units, cardWidth - 2 * pad), x + cardWidth / 2, nameBottom + 8)
+      ctx.textAlign = 'left'
+      ctx.fillStyle = INK
+      nameBottom += unitSize * 1.3
+    }
     const countSize = Math.floor(nameSize * 1.7)
     const imageTop = nameBottom + 16
     const imageBottom = top + cardHeight - pad - countSize * 1.2
