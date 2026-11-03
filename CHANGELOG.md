@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.8.1 – 3. 11. 2026
+
+- Sada cases (napr. 8× Beam 7R Case): **Obsahy všetkých** a **Štítky všetkých** naraz (jedna tlač / PDF) a obe aj do tlačovej
+  fronty jedným klikom.
+
 ### 7.8 – 3. 11. 2026
 
 - **Dátum vygenerovania** na každom hárku s obsahom case, štítku case a plagáte inventára (v PDF, PNG aj pri tlači).

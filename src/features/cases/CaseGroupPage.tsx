@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Camera, ChevronRight, ClipboardCheck, Copy, Pencil, QrCode } from 'lucide-react'
+import { ArrowLeft, Camera, ChevronRight, ClipboardCheck, Copy, FileText, Pencil, QrCode, Tag } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { usePastedImage } from '@/lib/usePastedImage'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
+import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
@@ -139,6 +140,17 @@ export function CaseGroupPage() {
             <QrCode className="size-4" aria-hidden />
             QR štítky všetkých ({members.length})
           </LinkButton>
+          {/* Obsahy a štítky všetkých cases sady naraz – jedno PDF / tlač, alebo do tlačovej fronty. */}
+          <LinkButton to={`/print/batch?contents=${allIds}`} variant="outline" size="sm">
+            <FileText className="size-4" aria-hidden />
+            Obsahy všetkých ({members.length})
+          </LinkButton>
+          <LinkButton to={`/print/batch?labels=${allIds}`} variant="outline" size="sm">
+            <Tag className="size-4" aria-hidden />
+            Štítky všetkých ({members.length})
+          </LinkButton>
+          <AddToPrintButton companyId={companyId} kind="case" targetIds={members.map((item) => item.id)} label="content" />
+          <AddToPrintButton companyId={companyId} kind="case" targetIds={members.map((item) => item.id)} label="case_label" />
           {canEdit && (
             <Button variant="outline" size="sm" disabled={checkAll.isPending} onClick={() => window.confirm(`Označiť všetkých ${members.length} ako skontrolované teraz?`) && checkAll.mutate()}>
               <ClipboardCheck className="size-4" aria-hidden />
