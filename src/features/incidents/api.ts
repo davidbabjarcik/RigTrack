@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { getSupabase } from '@/lib/supabase/client'
 
-export const INCIDENT_KINDS = ['damage', 'injury'] as const
+export const INCIDENT_KINDS = ['damage', 'loss', 'injury'] as const
 export type IncidentKind = (typeof INCIDENT_KINDS)[number]
-export const INCIDENT_KIND_LABELS: Record<IncidentKind, string> = { damage: 'Škoda', injury: 'Úraz' }
+export const INCIDENT_KIND_LABELS: Record<IncidentKind, string> = { damage: 'Škoda', loss: 'Strata', injury: 'Úraz' }
 
 export const SEVERITIES = ['minor', 'medium', 'serious'] as const
 export type Severity = (typeof SEVERITIES)[number]

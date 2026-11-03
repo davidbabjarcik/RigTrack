@@ -23,7 +23,7 @@ import { useCases } from '@/features/cases/useCases'
 import { unpackedEquipment } from '@/features/equipment/model'
 import { isFillTask } from '@/features/tasks/board'
 import { caseTitle } from '@/features/cases/model'
-import { lastReturns, returnedUnchecked, stillOut, useRecentPackMarks } from '@/features/pack/returns'
+import { useEventReturns, lastReturns, returnedUnchecked, stillOut, useRecentPackMarks } from '@/features/pack/returns'
 
 const WEEKDAYS = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']
 
@@ -120,7 +120,8 @@ function OutsideWidget({ company }: { company: Membership }) {
   const cases = useCases(companyId)
   const returns = lastReturns(marks)
   const toCheck = (cases.data ?? []).filter((item) => returnedUnchecked(returns.get(item.id), item.lastCheck?.checkedAt))
-  const outside = stillOut(marks, events.data ?? [], today)
+  const closed = useEventReturns(companyId, can(company, 'events.view')).data ?? []
+  const outside = stillOut(marks, events.data ?? [], today, new Set(closed.map((item) => item.eventId)))
   return (
     <section className="mb-6 rounded-xl border bg-surface p-4">
       <h2 className="mb-2 flex items-center gap-2 font-medium">
@@ -135,7 +136,7 @@ function OutsideWidget({ company }: { company: Membership }) {
         <ul className="flex flex-col gap-1 text-sm">
           {outside.map(({ event, items }) => (
             <li key={event.id}>
-              <Link to={`/events/${event.id}/pack`} className="flex gap-2 rounded-md px-1 py-0.5 text-destructive hover:bg-muted">
+              <Link to={`/events/${event.id}#vratenie`} className="flex gap-2 rounded-md px-1 py-0.5 text-destructive hover:bg-muted">
                 <span className="min-w-0 flex-1 truncate">{event.name}</span>
                 <span className="shrink-0">{items.length} nevrátené</span>
               </Link>

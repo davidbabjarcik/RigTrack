@@ -31,6 +31,7 @@ import { EventIncomeSection } from './EventIncomeSection'
 import { EventPhotosSection } from './EventPhotosSection'
 import { EventStagePlan } from '@/features/stage/EventStagePlan'
 import { EventEquipmentSection } from './EventEquipmentSection'
+import { EventReturnSection } from './EventReturnSection'
 import { EventStatusBadge } from './EventStatusBadge'
 import { describeTimes, POWER_LABELS, SETTING_LABELS } from './model'
 import { EventWeather } from './EventWeather'
@@ -218,6 +219,7 @@ export function EventDetailPage() {
       <EventSharesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
       <EventLinksSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
       <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+      <EventReturnSection company={company} event={event} />
       <EventStagePlan companyId={companyId} eventId={event.id} />
       <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
       <DmxPatchSection companyId={companyId} event={event} canEdit={canEdit} />

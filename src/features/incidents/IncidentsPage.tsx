@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bandage, Hammer, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Bandage, Hammer, PackageX, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -108,7 +108,7 @@ function IncidentForm({ companyId, current, preset, onDone }: { companyId: strin
           ))}
         </SelectField>
       )}
-      {fields.kind === 'damage' && equipment.data && (
+      {fields.kind !== 'injury' && equipment.data && (
         <SelectField label="Poškodená technika" value={fields.equipmentId ?? ''} onChange={(e) => set({ equipmentId: e.target.value || null })}>
           <option value="">— žiadna / iné —</option>
           {equipment.data.map((item) => (
@@ -251,7 +251,7 @@ export function IncidentsPage() {
               </li>
             ) : (
               <li key={item.id} className="flex items-start gap-3 rounded-xl border bg-surface px-4 py-3">
-                {item.kind === 'injury' ? <Bandage className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden /> : <Hammer className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />}
+                {item.kind === 'injury' ? <Bandage className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden /> : item.kind === 'loss' ? <PackageX className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden /> : <Hammer className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />}
                 <div className="min-w-0 flex-1">
                   <p className="font-medium break-words">
                     {item.title}

@@ -35,5 +35,7 @@ describe('returns from events', () => {
     const out = stillOut(marks, events, '2026-11-02')
     expect(out.map((group) => group.event.name)).toEqual(['Ples'])
     expect(out[0].items.map((item) => item.caseId ?? item.equipmentId)).toEqual(['amp', 'mic'])
+    // Uzavreté vrátenie už nesvieti.
+    expect(stillOut(marks, events, '2026-11-02', new Set(['e1']))).toEqual([])
   })
 })

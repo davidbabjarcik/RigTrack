@@ -26,3 +26,21 @@ describe('pack list', () => {
     expect(await t.as('viewer', 'select phase from public.event_pack_checks')).toEqual([{ phase: 'out' }])
   })
 })
+
+describe('event return (0145)', () => {
+  it('lets crew close the return with the missing list, only editors reopen, nobody writes directly', async () => {
+    await expect(t.as('viewer', `select public.close_event_return($1, '[]'::jsonb)`, [event])).rejects.toThrow(/Not allowed/)
+    await t.as('helper', `select public.close_event_return($1, '["SM58"]'::jsonb)`, [event])
+    const [row] = await t.as('viewer', 'select missing, closed_by_name from public.event_returns where event_id = $1', [event])
+    expect(row).toEqual({ missing: ['SM58'], closed_by_name: 'helper@example.com' })
+    await expect(t.as('helper', 'select public.reopen_event_return($1)', [event])).rejects.toThrow(/Not allowed/)
+    await expect(t.as('admin', `insert into public.event_returns (company_id, event_id) values ($1, $2)`, [company, event])).rejects.toThrow(/permission denied/)
+    await t.as('admin', 'select public.reopen_event_return($1)', [event])
+    expect(await t.as('viewer', 'select event_id from public.event_returns')).toEqual([])
+  })
+
+  it('accepts a loss report', async () => {
+    const [row] = await t.as('helper', `insert into public.incidents (company_id, kind, title, event_id, equipment_id) values ($1, 'loss', 'Strata: SM58', $2, $3) returning kind`, [company, event, mic])
+    expect(row.kind).toBe('loss')
+  })
+})

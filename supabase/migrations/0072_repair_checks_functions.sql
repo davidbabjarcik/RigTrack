@@ -1479,7 +1479,7 @@ begin
   if to_regclass('public.incidents') is not null then
     begin
       execute $sql$alter table public.incidents drop constraint if exists incidents_kind_check$sql$;
-      execute $sql$alter table public.incidents add constraint incidents_kind_check CHECK ((kind = ANY (ARRAY['damage'::text, 'injury'::text]))) not valid$sql$;
+      execute $sql$alter table public.incidents add constraint incidents_kind_check CHECK ((kind = ANY (ARRAY['damage'::text, 'injury'::text, 'loss'::text]))) not valid$sql$;
     exception when others then raise notice 'Kontrola incidents_kind_check: %', sqlerrm;
     end;
   end if;

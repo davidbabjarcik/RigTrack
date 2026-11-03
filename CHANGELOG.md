@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.17 – 3. 11. 2026
+
+- **Vrátenie po evente** v detaile eventu: čo sa pri odchode naložilo a pri návrate neodškrtlo. Pri každej veci
+  **Strata** alebo **Poškodené** – zapíše sa rovno do Škôd a úrazov (s eventom a poznámkou). Tlačidlo **Uzavrieť
+  vrátenie** uloží, kto a kedy ho uzavrel a čo chýbalo; event potom zmizne z „Ešte vonku“ na Prehľade. Uzavrieť môže
+  posádka eventu alebo kto upravuje eventy, znova otvoriť len ten, kto upravuje eventy.
+- Prehľad: klik na event v „Ešte vonku a vrátené“ otvorí rovno vrátenie v detaile eventu.
+- Škody a úrazy: nový druh **Strata**.
+- Nová migrácia: `0145` (je aj v `supabase/update-all.sql`).
+
 ### 7.16 – 3. 11. 2026
 
 - **Hliník leží na Mieste spolu s cases**: samostatný druh „Hliník“ zmizol, je len Miesto. Pri mieste je tlačidlo

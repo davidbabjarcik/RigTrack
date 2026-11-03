@@ -6,6 +6,7 @@ export type PackMark = { eventId: string; equipmentId: string | null; caseId: st
 
 export const returnKeys = {
   recent: (companyId: string) => ['company', companyId, 'pack-returns'] as const,
+  closed: (companyId: string) => ['company', companyId, 'event-returns'] as const,
 }
 
 const WINDOW_DAYS = 120
@@ -52,8 +53,9 @@ type EventLike = { id: string; name: string; endsOn: string; status: string }
  * Ešte vonku: z eventov, ktoré už skončili, bolo naložené, ale nie vrátené.
  * Zoskupené po eventoch, najstaršie hore.
  */
-export function stillOut(marks: PackMark[], events: EventLike[], today: string) {
-  const ended = new Map(events.filter((event) => event.endsOn < today && event.status !== 'cancelled').map((event) => [event.id, event]))
+export function stillOut(marks: PackMark[], events: EventLike[], today: string, closed: Set<string> = new Set()) {
+  // Uzavreté vrátenie (čo chýbalo, je nahlásené) už nesvieti.
+  const ended = new Map(events.filter((event) => event.endsOn < today && event.status !== 'cancelled' && !closed.has(event.id)).map((event) => [event.id, event]))
   const key = (mark: PackMark) => `${mark.eventId}|${mark.caseId ?? ''}|${mark.equipmentId ?? ''}`
   const back = new Set(marks.filter((mark) => mark.phase === 'back').map(key))
   const groups = new Map<string, { event: EventLike; items: PackMark[] }>()
@@ -65,4 +67,38 @@ export function stillOut(marks: PackMark[], events: EventLike[], today: string) 
     groups.set(event.id, group)
   }
   return [...groups.values()].sort((a, b) => a.event.endsOn.localeCompare(b.event.endsOn))
+}
+
+/** Uzavreté vrátenie eventu: kto, kedy a čo pri tom chýbalo (0145). */
+export type EventReturn = { eventId: string; closedAt: string; closedByName: string; missing: string[] }
+
+/** Uzavreté vrátenia firmy; bez migrácie 0145 prázdne. */
+export async function fetchEventReturns(companyId: string): Promise<EventReturn[]> {
+  const { data, error } = await getSupabase().from('event_returns').select('event_id, closed_at, closed_by_name, missing').eq('company_id', companyId)
+  if (error) return []
+  type Row = { event_id: string; closed_at: string; closed_by_name: string; missing: unknown }
+  return (data as Row[]).map((row) => ({
+    eventId: row.event_id,
+    closedAt: row.closed_at,
+    closedByName: row.closed_by_name,
+    missing: Array.isArray(row.missing) ? row.missing.filter((name): name is string => typeof name === 'string') : [],
+  }))
+}
+
+export function useEventReturns(companyId: string, enabled = true) {
+  return useQuery({ queryKey: returnKeys.closed(companyId), queryFn: () => fetchEventReturns(companyId), enabled, retry: false, staleTime: 60_000 })
+}
+
+const migrationHint = (error: { message: string }) =>
+  /close_event_return|reopen_event_return|event_returns/.test(error.message) ? new Error('Uzavretie vrátenia ešte databáza nepozná – spustite migráciu 0145 (supabase/update-all.sql).') : error
+
+/** Uzavrie vrátenie: uloží, čo chýbalo (názvy), a kto to uzavrel. */
+export async function closeEventReturn(eventId: string, missing: string[]) {
+  const { error } = await getSupabase().rpc('close_event_return', { _event_id: eventId, _missing: missing.slice(0, 500).map((name) => name.slice(0, 200)) })
+  if (error) throw migrationHint(error)
+}
+
+export async function reopenEventReturn(eventId: string) {
+  const { error } = await getSupabase().rpc('reopen_event_return', { _event_id: eventId })
+  if (error) throw migrationHint(error)
 }
