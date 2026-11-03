@@ -30,10 +30,10 @@ export const SPOT_KIND_FILLS: Record<SpotKind, string> = {
 /** Stavebné prvky (stĺp, stena, dvere, okno, miestnosť) – nie sú miestom na cases a v pôdoryse sa nedajú kliknúť. */
 export const isStructure = (kind: SpotKind) => kind === 'column' || kind === 'wall' || kind === 'door' || kind === 'window' || kind === 'room'
 
-export type Warehouse = { lengthCm: number; widthCm: number; rackTypes?: RackType[]; palletTypes?: PalletType[] | null }
+export type Warehouse = { lengthCm: number; widthCm: number; rackTypes?: RackType[]; palletTypes?: PalletType[] | null; planColors?: Partial<Record<SpotKind, string>> }
 
 /** Typ palety firmy (Nastavenia → Sklad): rozmer a materiál. */
-export type PalletType = { id: string; name: string; length: number; width: number; material: PalletMaterial }
+export type PalletType = { id: string; name: string; length: number; width: number; material: PalletMaterial; /** Vlastná farba v pláne; inak podľa materiálu. */ color?: string }
 export const DEFAULT_PALLET_TYPES: PalletType[] = [
   { id: 'eur-wood', name: 'EUR drevená', length: 120, width: 80, material: 'wood' },
   { id: 'eur-plastic', name: 'EUR plastová', length: 120, width: 80, material: 'plastic' },
@@ -55,6 +55,25 @@ export function wallItemRect(rect: { x: number; y: number; length: number; width
   const thickness = Math.min(spot.length, spot.width)
   const fixed = horizontal ? { ...rect, width: thickness } : { ...rect, length: thickness }
   return snapToPerimeter(fixed, warehouse)
+}
+
+/** Farba druhu miesta v pláne: vlastná z Nastavení → Sklad, inak predvolená. */
+export const spotColor = (kind: SpotKind, warehouse: Pick<Warehouse, 'planColors'> | null | undefined) => warehouse?.planColors?.[kind] || SPOT_KIND_FILLS[kind]
+
+/** Tmavší odtieň farby (na obrys a dosky palety). */
+export function darker(hex: string, amount = 0.35) {
+  const value = hex.replace('#', '')
+  if (!/^[0-9a-f]{6}$/i.test(value)) return hex
+  const channel = (index: number) => Math.round(parseInt(value.slice(index, index + 2), 16) * (1 - amount)).toString(16).padStart(2, '0')
+  return `#${channel(0)}${channel(2)}${channel(4)}`
+}
+
+/** Farba palety v pláne: vlastná farba jej typu (podľa rozmeru a materiálu), inak drevená hnedá / plastová čierna. */
+export function palletTone(spot: Pick<Spot, 'length' | 'width' | 'material'>, warehouse: Pick<Warehouse, 'palletTypes'> | null | undefined) {
+  const [long, short] = [Math.max(spot.length, spot.width), Math.min(spot.length, spot.width)]
+  const type = palletTypesOf(warehouse).find((item) => Math.max(item.length, item.width) === long && Math.min(item.length, item.width) === short && (!spot.material || item.material === spot.material))
+  if (type?.color) return { fill: type.color, line: darker(type.color) }
+  return PALLET_COLORS[spot.material ?? 'wood']
 }
 
 /** Prvky na obvode skladu (dvere, okno) sa prichytia k najbližšej stene, ak sú do 60 cm od nej; pozdĺž steny ostanú. */

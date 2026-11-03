@@ -7,6 +7,7 @@ import { fetchWarehouse, saveRackTypes, warehouseKeys } from './api'
 import { BaysEditor } from './BaysEditor'
 import { metres, PALLET_CM, palletTypesOf, rackHeightCm, rackLengthCm, type RackType } from './model'
 import { PalletTypesSettings } from './PalletTypesSettings'
+import { PlanColorsSettings } from './PlanColorsSettings'
 import { SizeForm } from './SizeForm'
 
 const newType = (count: number): RackType => ({
@@ -132,6 +133,8 @@ export function WarehouseSettings({ companyId }: { companyId: string }) {
       </div>
 
       <PalletTypesSettings companyId={companyId} types={palletTypesOf(warehouse)} disabled={!warehouse} />
+
+      {warehouse && <PlanColorsSettings key={JSON.stringify(warehouse.planColors ?? {})} companyId={companyId} warehouse={warehouse} />}
 
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">

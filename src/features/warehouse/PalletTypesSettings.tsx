@@ -32,7 +32,14 @@ export function PalletTypesSettings({ companyId, types, disabled }: { companyId:
       <ul className="flex flex-col gap-2">
         {draft.map((item, index) => (
           <li key={item.id} className="flex flex-wrap items-center gap-2 rounded-xl border bg-surface px-3 py-2 text-sm">
-            <span className="size-4 shrink-0 rounded-sm border" style={{ background: PALLET_COLORS[item.material].fill, borderColor: PALLET_COLORS[item.material].line }} aria-hidden />
+            <input
+              type="color"
+              aria-label={`Farba palety ${item.name}`}
+              title="Farba v pláne (inak podľa materiálu)"
+              className="h-9 w-10 shrink-0 cursor-pointer rounded-lg border bg-surface p-0.5"
+              value={item.color ?? PALLET_COLORS[item.material].fill}
+              onChange={(e) => set(index, { color: e.target.value })}
+            />
             <input aria-label="Názov palety" className={`${input} w-44`} maxLength={40} value={item.name} onChange={(e) => set(index, { name: e.target.value })} />
             <input aria-label="Dĺžka (cm)" type="number" min={20} max={1000} className={`${input} w-20 tabular-nums`} value={item.length} onChange={(e) => set(index, { length: Number(e.target.value) })} />
             ×

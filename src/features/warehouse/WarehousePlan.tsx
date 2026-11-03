@@ -1,4 +1,4 @@
-import { isStructure, metres, PALLET_COLORS, SPOT_KIND_FILLS, type Spot, type Warehouse } from './model'
+import { isStructure, metres, palletTone, spotColor, type Spot, type Warehouse } from './model'
 
 type Props = {
   warehouse: Warehouse
@@ -80,7 +80,7 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
         const active = spot.id === selectedId
         const hit = highlighted.has(spot.id)
         const count = counts.get(spot.id) ?? 0
-        const color = SPOT_KIND_FILLS[spot.kind]
+        const color = spotColor(spot.kind, warehouse)
         const { x, y, length: w, width: h } = spot
         const size = Math.min(font, h * 0.3, (w / Math.max(spot.name.length, 4)) * 1.6)
         const percent = usage?.get(spot.id)
@@ -90,9 +90,9 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
         // Stavebné prvky: stĺp (šrafovaný), stena, dvere s oblúkom otvárania, okno dvojitou čiarou.
         let shape
         if (spot.kind === 'column') {
-          shape = <rect x={x} y={y} width={w} height={h} fill="url(#wh-hatch)" stroke={outline ?? INK} strokeWidth={outline ? unit * 0.6 : unit * 0.25} />
+          shape = <rect x={x} y={y} width={w} height={h} fill="url(#wh-hatch)" stroke={outline ?? color} strokeWidth={outline ? unit * 0.6 : unit * 0.25} />
         } else if (spot.kind === 'wall') {
-          shape = <rect x={x} y={y} width={w} height={h} fill={INK} stroke={outline ?? INK} strokeWidth={outline ? unit * 0.6 : 0} />
+          shape = <rect x={x} y={y} width={w} height={h} fill={color} stroke={outline ?? color} strokeWidth={outline ? unit * 0.6 : 0} />
         } else if (spot.kind === 'door') {
           // Krídlo sa otvára dovnútra skladu (od bližšej steny).
           const horizontal = w >= h
@@ -124,7 +124,7 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
           shape = <rect x={x} y={y} width={w} height={h} rx={unit} fill={`${color}1f`} stroke={outline ?? color} strokeWidth={outline ? unit * 0.6 : unit * 0.35} strokeDasharray={`${unit * 1.4} ${unit * 0.9}`} />
         } else if (spot.kind === 'room') {
           // Miestnosť: hrubé steny, priehľadná, názov v rohu.
-          shape = <rect x={x} y={y} width={w} height={h} fill="none" stroke={INK} strokeWidth={unit * 0.9} />
+          shape = <rect x={x} y={y} width={w} height={h} fill="none" stroke={color} strokeWidth={unit * 0.9} />
         } else if (spot.kind === 'truss') {
           // Hliník: sivá plocha s mriežkou ako truss.
           shape = (
@@ -136,7 +136,7 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
         } else if (spot.kind === 'pallet') {
           // Paleta: dosky naprieč; drevená hnedá, plastová čierna.
           const boards = Math.max(3, Math.round(w / 25))
-          const tone = PALLET_COLORS[spot.material ?? 'wood']
+          const tone = palletTone(spot, warehouse)
           shape = (
             <g filter="url(#wh-shadow)">
               <rect x={x} y={y} width={w} height={h} rx={unit * 0.3} fill={tone.fill} stroke={outline ?? tone.line} strokeWidth={outline ? unit * 0.6 : unit * 0.25} />

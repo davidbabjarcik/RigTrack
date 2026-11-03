@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.11 – 3. 11. 2026
+
+- **Vlastné farby skladu** (Nastavenia → Sklad → Farby v pláne): regál, miesto, hliník, miestnosť, dvere, okno, stĺp a stena;
+  „Predvolená“ vráti pôvodnú farbu.
+- **Farba typu palety**: pri každom type palety vlastná farba v pláne (inak drevená hnedá, plastová čierna).
+- Nová migrácia: `0141` (je aj v `supabase/update-all.sql`).
+
 ### 7.10.1 – 3. 11. 2026
 
 - **Sada cases**: QR štítky, Obsahy a Štítky všetkých; tlačidlá „do tlače“ sú až na stránke tlače. „Pridať ďalší do sady“

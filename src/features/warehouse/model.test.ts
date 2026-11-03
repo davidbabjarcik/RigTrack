@@ -154,3 +154,14 @@ describe('pallets and perimeter', () => {
     expect(snapToPerimeter({ x: 300, y: 300, length: 120, width: 15 }, house)).toEqual({ x: 300, y: 300, length: 120, width: 15 })
   })
 })
+
+describe('plan colours', () => {
+  it('uses custom kind colours and pallet type colours', async () => {
+    const { spotColor, palletTone, SPOT_KIND_FILLS, darker } = await import('./model')
+    expect(spotColor('rack', { planColors: { rack: '#ff0000' } })).toBe('#ff0000')
+    expect(spotColor('zone', { planColors: {} })).toBe(SPOT_KIND_FILLS.zone)
+    const warehouse = { palletTypes: [{ id: 'a', name: 'EUR modrá', length: 120, width: 80, material: 'plastic' as const, color: '#3366ff' }] }
+    expect(palletTone({ length: 80, width: 120, material: 'plastic' }, warehouse)).toEqual({ fill: '#3366ff', line: darker('#3366ff') })
+    expect(palletTone({ length: 120, width: 80, material: 'wood' }, warehouse).fill).toBe('#d6b88a')
+  })
+})

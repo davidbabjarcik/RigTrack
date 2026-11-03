@@ -76,6 +76,8 @@ describe('warehouse plan', () => {
     await t.as('skladnik', `update public.warehouse_spots set kind = 'truss' where id = $1`, [pallet])
     await t.as('skladnik', `update public.warehouses set pallet_types = '[{"id": "a", "name": "EUR", "length": 120, "width": 80, "material": "wood"}]' where company_id = $1`, [companyA])
     expect(await t.as('viewer', `select jsonb_array_length(pallet_types) as n from public.warehouses where company_id = $1`, [companyA])).toEqual([{ n: 1 }])
+    await t.as('skladnik', `update public.warehouses set plan_colors = '{"rack": "#ff0000"}' where company_id = $1`, [companyA])
+    await expect(t.as('skladnik', `update public.warehouses set plan_colors = '[]' where company_id = $1`, [companyA])).rejects.toThrow(/check/)
   })
 
   it('follows the warehouse permission, not the lists one', async () => {

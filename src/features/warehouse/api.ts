@@ -13,7 +13,7 @@ type SpotRow = { id: string; name: string; kind: SpotKind; x: number; y: number;
 export async function fetchWarehouse(companyId: string): Promise<{ warehouse: Warehouse | null; spots: Spot[] }> {
   const db = getSupabase()
   const [warehouse, spots] = await Promise.all([
-    db.from('warehouses').select('length_cm, width_cm, rack_types, pallet_types').eq('company_id', companyId).maybeSingle(),
+    db.from('warehouses').select('length_cm, width_cm, rack_types, pallet_types, plan_colors').eq('company_id', companyId).maybeSingle(),
     db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels, level_height_cm, note, bays, material').eq('company_id', companyId).order('created_at'),
   ])
   // Bez migrácie 0129 nie je materiál palety, bez 0124 polia regála, bez 0119 ani výška poschodia a poznámka.
@@ -23,18 +23,20 @@ export async function fetchWarehouse(companyId: string): Promise<{ warehouse: Wa
   if (rows.error && /level_height_cm|note/.test(rows.error.message)) rows = await db.from('warehouse_spots').select('id, name, kind, x, y, length, width, levels').eq('company_id', companyId).order('created_at')
   // Bez migrácie 0126 nie sú typy regálov.
   let house: { data: unknown; error: { message: string } | null } = warehouse
-  // Bez migrácie 0132 nie sú typy paliet.
+  // Bez migrácie 0141 nie sú vlastné farby, bez 0132 typy paliet.
+  if (house.error && /plan_colors/.test(house.error.message)) house = await db.from('warehouses').select('length_cm, width_cm, rack_types, pallet_types').eq('company_id', companyId).maybeSingle()
   if (house.error && /pallet_types/.test(house.error.message)) house = await db.from('warehouses').select('length_cm, width_cm, rack_types').eq('company_id', companyId).maybeSingle()
   if (house.error && /rack_types/.test(house.error.message)) house = await db.from('warehouses').select('length_cm, width_cm').eq('company_id', companyId).maybeSingle()
   const error = house.error ?? rows.error
   if (error) throw error
-  const size = house.data as { length_cm: number; width_cm: number; rack_types?: RackType[]; pallet_types?: PalletType[] | null } | null
+  const size = house.data as { length_cm: number; width_cm: number; rack_types?: RackType[]; pallet_types?: PalletType[] | null; plan_colors?: Warehouse['planColors'] } | null
   return {
     warehouse: size && {
       lengthCm: size.length_cm,
       widthCm: size.width_cm,
       rackTypes: Array.isArray(size.rack_types) ? size.rack_types : [],
       palletTypes: Array.isArray(size.pallet_types) ? size.pallet_types : null,
+      planColors: size.plan_colors && typeof size.plan_colors === 'object' ? size.plan_colors : {},
     },
     spots: (rows.data as SpotRow[]).map(({ level_height_cm, note, bays, material, ...spot }) => ({
       ...spot,
@@ -146,5 +148,12 @@ export async function saveTrussLayout(companyId: string, layout: TrussLayout) {
 export async function savePalletTypes(companyId: string, types: PalletType[]) {
   const { data, error } = await getSupabase().from('warehouses').update({ pallet_types: types }).eq('company_id', companyId).select('company_id')
   if (error) throw /pallet_types/.test(error.message) ? new Error('Typy paliet ešte databáza nepozná – spustite migráciu 0132 (supabase/update-all.sql).') : error
+  if (data.length === 0) throw new Error('Najprv zadajte rozmery skladu.')
+}
+
+/** Uloží vlastné farby plánu skladu (prázdne = predvolené). */
+export async function savePlanColors(companyId: string, colors: Warehouse['planColors']) {
+  const { data, error } = await getSupabase().from('warehouses').update({ plan_colors: colors ?? {} }).eq('company_id', companyId).select('company_id')
+  if (error) throw /plan_colors/.test(error.message) ? new Error('Farby plánu ešte databáza nepozná – spustite migráciu 0141 (supabase/update-all.sql).') : error
   if (data.length === 0) throw new Error('Najprv zadajte rozmery skladu.')
 }

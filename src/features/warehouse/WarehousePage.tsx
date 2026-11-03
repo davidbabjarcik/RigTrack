@@ -32,14 +32,14 @@ import {
   isStructure,
   levelUsage,
   metres,
-  PALLET_COLORS,
+  palletTone,
+  spotColor,
   palletName,
   palletTypesOf,
   wallItemRect,
   rackLengthCm,
   rotated,
   rackBays,
-  SPOT_KIND_FILLS,
   SPOT_KIND_LABELS,
   SPOT_KINDS,
   type RackBay,
@@ -270,7 +270,7 @@ export function WarehousePage() {
               const spot = buildSpot(addSelection, warehouse, spots, rect)
               if (spot) add.mutate(spot)
             }}
-            fillOf={(index) => (editorSpots[index].kind === 'pallet' ? PALLET_COLORS[editorSpots[index].material ?? 'wood'].fill : SPOT_KIND_FILLS[editorSpots[index].kind])}
+            fillOf={(index) => (editorSpots[index].kind === 'pallet' ? palletTone(editorSpots[index], warehouse).fill : spotColor(editorSpots[index].kind, warehouse))}
             labelOf={(index) => editorSpots[index].name}
             describe={(rect) => `${metres(rect.length)} × ${metres(rect.width)} · ${metres(rect.x)} zľava, ${metres(rect.y)} zhora`}
             ariaLabel="Editor plánu skladu"
@@ -503,7 +503,7 @@ export function WarehousePage() {
           <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Legenda">
             {SPOT_KINDS.filter((kind) => kind === 'rack' || kind === 'pallet' || kind === 'zone' || spots.some((spot) => spot.kind === kind)).map((kind) => (
               <li key={kind} className="flex items-center gap-1.5">
-                <span className={cn('size-3 rounded-sm', kind === 'zone' && 'border border-dashed')} style={{ backgroundColor: kind === 'zone' ? 'transparent' : SPOT_KIND_FILLS[kind], borderColor: SPOT_KIND_FILLS[kind] }} />
+                <span className={cn('size-3 rounded-sm', kind === 'zone' && 'border border-dashed')} style={{ backgroundColor: kind === 'zone' ? 'transparent' : spotColor(kind, warehouse), borderColor: spotColor(kind, warehouse) }} />
                 {SPOT_KIND_LABELS[kind]}
               </li>
             ))}
