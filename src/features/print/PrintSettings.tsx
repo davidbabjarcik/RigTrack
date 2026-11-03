@@ -55,10 +55,10 @@ export function PrintSettings({ companyId }: { companyId: string }) {
             A4 (väčšie – skenujú sa aj iPhonom)
           </button>
           <button type="button" aria-pressed={current.qrTarget === 'brother'} disabled={save.isPending} onClick={() => save.mutate({ qrTarget: 'brother' })} className={chip(current.qrTarget === 'brother')}>
-            Štítkovač Brother
+            Štítky (páska)
           </button>
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">Adresy, DMX módy a odber sa tlačia vždy na pásku Brother.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Adresy, DMX módy a odber sa tlačia vždy na pásku (štítky).</p>
       </fieldset>
       <fieldset>
         <legend className="mb-1.5 text-sm font-medium">Veľkosť QR na A4</legend>

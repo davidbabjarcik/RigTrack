@@ -10,6 +10,7 @@ import { buildPdf, canvasJpeg, pageSizePt } from '@/features/cases/sheetPdf'
 import { brandingKeys, fetchBranding, fetchLogoBlob, logoForLightBackground } from '@/features/companies/branding'
 import { useCompany } from '@/features/companies/company-context'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
+import { formatOf } from '@/features/print/api'
 import { equipmentKeys, fetchEquipmentList } from './api'
 import { KIND_LABELS, type EquipmentKind } from './model'
 import { fetchPhotoBlob, PHOTO_URL_STALE_MS } from './photo'
@@ -59,6 +60,13 @@ export function InventoryPosterPage() {
   const [state, setState] = useState(() => ({ key: `${companyId}:${kind}`, settings: loadSettings(companyId, kind) }))
   if (state.key !== `${companyId}:${kind}`) setState({ key: `${companyId}:${kind}`, settings: loadSettings(companyId, kind) })
   const settings = state.settings
+  // Z tlačovej fronty (?landscape=1/0): orientácia, s akou sa plagát do fronty pridal.
+  const queueLandscape = params.get('landscape')
+  const [queueApplied, setQueueApplied] = useState(false)
+  if (!queueApplied && queueLandscape !== null) {
+    setQueueApplied(true)
+    if (settings.portrait === (queueLandscape === '1')) setState({ key: state.key, settings: { ...settings, portrait: queueLandscape !== '1' } })
+  }
   const update = (patch: Partial<Settings>) => {
     const next = { ...settings, ...patch }
     setState({ key: `${companyId}:${kind}`, settings: next })
@@ -158,7 +166,7 @@ export function InventoryPosterPage() {
           Technika
         </Link>
         <span className="flex-1" />
-        <AddToPrintButton companyId={companyId} kind="poster" targetIds={[companyId]} label={`poster:${kind}`} />
+        <AddToPrintButton companyId={companyId} kind="poster" targetIds={[companyId]} label={`poster:${kind}`} format={formatOf('A4', !settings.portrait)} />
         <Button variant="outline" disabled={!ready} onClick={print}>
           <Printer className="size-4" aria-hidden />
           Tlačiť

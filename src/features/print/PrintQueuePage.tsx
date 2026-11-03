@@ -12,7 +12,7 @@ import { KIND_LABELS, type EquipmentKind } from '@/features/equipment/model'
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { useEvents } from '@/features/events/useEvents'
 import { MissingLabels } from './MissingLabels'
-import { markPrinted, printKeys, removeFromPrintQueue, useCompanyPrefs, usePrintedLabels, usePrintQueue, type PrintItem } from './api'
+import { FORMAT_LABELS, formatParams, markPrinted, printKeys, type PrintFormat, removeFromPrintQueue, useCompanyPrefs, usePrintedLabels, usePrintQueue, type PrintItem } from './api'
 
 /**
  * Tlačová fronta: štítky pridané cez „Do tlače“ alebo @toprint. QR idú na A4 alebo na Brother (podľa nastavenia firmy),
@@ -70,7 +70,13 @@ export function PrintQueuePage() {
   const missingEquipment = (equipment.data ?? []).filter((item) => item.status !== 'retired' && item.kind !== 'consumable' && item.kind !== 'cable' && !hasQr.has(`equipment|${item.id}`))
   const missingCases = (cases.data ?? []).filter((item) => !hasQr.has(`case|${item.id}`))
   const missing = [...missingEquipment.map((item) => ({ kind: 'equipment' as const, targetId: item.id })), ...missingCases.map((item) => ({ kind: 'case' as const, targetId: item.id }))]
-  const batchLink = (labels: PrintItem[], sheets: PrintItem[]) => `/print/batch?labels=${ids(labels)}&contents=${ids(sheets)}`
+  // Hárky s obsahom: ak majú všetky rovnaký formát, hromadná tlač ho použije.
+  const commonFormat = (list: PrintItem[]) => (list.length > 0 && list.every((item) => item.format && item.format === list[0].format) ? list[0].format : '')
+  const batchLink = (labels: PrintItem[], sheets: PrintItem[]) => {
+    const format = formatParams(commonFormat(sheets))
+    return `/print/batch?labels=${ids(labels)}&contents=${ids(sheets)}${format ? `&${format}` : ''}`
+  }
+  const withFormat = (path: string, item: PrintItem) => (item.format ? `${path}${path.includes('?') ? '&' : '?'}${formatParams(item.format)}` : path)
 
   const group = (title: string, icon: React.ReactNode, list: PrintItem[], actions: React.ReactNode) =>
     list.length > 0 && (
@@ -89,6 +95,7 @@ export function PrintQueuePage() {
                 {nameOf(item)}
               </Link>
               {item.note && <span className="truncate text-muted-foreground">{item.note}</span>}
+              {item.format && <span className="shrink-0 rounded-full border px-2 py-0.5 text-xs text-muted-foreground">{FORMAT_LABELS[item.format as Exclude<PrintFormat, ''>]}</span>}
               {/* Štítok a obsah case sa tlačia každý zvlášť (vlastná stránka s tlačou / PDF). */}
               {item.kind === 'event' && (
                 <Link to={`/events/${item.targetId}/${item.label === 'dmx' ? 'dmx' : 'patch'}`} className="inline-flex items-center gap-1 text-accent hover:underline">
@@ -97,13 +104,13 @@ export function PrintQueuePage() {
                 </Link>
               )}
               {item.kind === 'poster' && (
-                <Link to={`/equipment/poster?kind=${item.label.slice(7)}`} className="inline-flex items-center gap-1 text-accent hover:underline">
+                <Link to={withFormat(`/equipment/poster?kind=${item.label.slice(7)}`, item)} className="inline-flex items-center gap-1 text-accent hover:underline">
                   <Printer className="size-4" aria-hidden />
                   Otvoriť a tlačiť
                 </Link>
               )}
               {(item.label === 'case_label' || item.label === 'content') && (
-                <Link to={`/cases/${item.targetId}/${item.label === 'content' ? 'content' : 'label'}`} className="inline-flex items-center gap-1 text-accent hover:underline">
+                <Link to={withFormat(`/cases/${item.targetId}/${item.label === 'content' ? 'content' : 'label'}`, item)} className="inline-flex items-center gap-1 text-accent hover:underline">
                   <Printer className="size-4" aria-hidden />
                   Otvoriť a tlačiť
                 </Link>
@@ -127,7 +134,7 @@ export function PrintQueuePage() {
     <>
       <PageHeader
         title="Tlač"
-        description={`Štítky na tlač – QR ${a4 ? 'na A4' : 'na Brother'}, adresy a módy na Brother, štítky a obsah cases (nastavíte v Nastavenia → Zoznamy → Tlač)`}
+        description={`Štítky na tlač – QR ${a4 ? 'na A4' : 'na pásku'}, adresy a módy na pásku, štítky a obsah cases (nastavíte v Nastavenia → Zoznamy → Tlač)`}
         action={
           items.length > 0 && (
             <Button variant="outline" disabled={done.isPending} onClick={() => window.confirm('Všetko je vytlačené? Fronta sa vyprázdni.') && done.mutate(items)}>
@@ -147,13 +154,13 @@ export function PrintQueuePage() {
             'QR štítky techniky',
             <Speaker className="size-5 text-accent" aria-hidden />,
             qrEquipment,
-            a4 ? printLink(`/qr/equipment?ids=${ids(qrEquipment)}&back=/print`, 'Tlačiť na A4') : printLink(`/labels/tape?ids=${ids(qrEquipment)}&back=/print`, 'Na Brother'),
+            a4 ? printLink(`/qr/equipment?ids=${ids(qrEquipment)}&back=/print`, 'Tlačiť na A4') : printLink(`/labels/tape?ids=${ids(qrEquipment)}&back=/print`, 'Štítky'),
           )}
           {group(
             'QR štítky cases',
             <Briefcase className="size-5 text-accent" aria-hidden />,
             qrCases,
-            a4 ? printLink(`/qr/cases?ids=${ids(qrCases)}&back=/print`, 'Tlačiť na A4') : printLink(`/labels/tape?cases=${ids(qrCases)}&back=/print`, 'Na Brother'),
+            a4 ? printLink(`/qr/cases?ids=${ids(qrCases)}&back=/print`, 'Tlačiť na A4') : printLink(`/labels/tape?cases=${ids(qrCases)}&back=/print`, 'Štítky'),
           )}
           {group('QR štítky miest v sklade', <Tag className="size-5 text-accent" aria-hidden />, qrSpots, printLink(`/qr/spots?ids=${ids(qrSpots)}&back=/print`, 'Tlačiť na A4'))}
           {caseLabels.length + contents.length > 1 && (
@@ -166,7 +173,7 @@ export function PrintQueuePage() {
           {group('Obsah cases (hárky)', <Briefcase className="size-5 text-accent" aria-hidden />, contents, contents.length > 1 ? printLink(batchLink([], contents), 'Všetky obsahy') : null)}
           {group('Patch listy eventov', <Cable className="size-5 text-accent" aria-hidden />, patchLists, null)}
           {group('Plagáty inventára', <Presentation className="size-5 text-accent" aria-hidden />, posters, null)}
-          {group('Štítky na pásku Brother (adresy, módy, odber)', <Tag className="size-5 text-accent" aria-hidden />, tape, printLink(`/labels/tape?ids=${ids(tape.filter((item) => item.kind === 'equipment'))}&back=/print`, 'Na Brother'))}
+          {group('Štítky (adresy, módy, odber)', <Tag className="size-5 text-accent" aria-hidden />, tape, printLink(`/labels/tape?ids=${ids(tape.filter((item) => item.kind === 'equipment'))}&back=/print`, 'Štítky'))}
         </>
       )}
       {printed.data && missing.length > 0 && (

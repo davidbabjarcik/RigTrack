@@ -135,7 +135,7 @@ ${lengths.map((length) => `  .tape-sheet img.tape${length} { page: tape${length}
         <header className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Štítky na pásku</h1>
-            <p className="text-sm text-muted-foreground">Brother P-touch · {images.length} štítkov</p>
+            <p className="text-sm text-muted-foreground">{images.length} štítkov na pásku</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {/* Páska techniky do tlačovej fronty (vytlačí sa neskôr spolu s ostatnými). */}
@@ -219,8 +219,8 @@ ${lengths.map((length) => `  .tape-sheet img.tape${length} { page: tape${length}
         <details className="rounded-xl border bg-surface px-4 py-3 text-sm text-muted-foreground">
           <summary className="cursor-pointer font-medium text-foreground">Ako tlačiť</summary>
           <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Z PC: Tlačiť → tlačiareň Brother PT-D460BT, páska {settings.tape} mm, okraje žiadne, mierka 100 %. Každý štítok dostane svoju dĺžku.</li>
-            <li>Z mobilu: stiahnite PNG a vytlačte ich v aplikácii Brother iPrint&amp;Label (dĺžku nastavte podľa čísla pri štítku).</li>
+            <li>Z PC: Tlačiť → vaša štítkovačka, páska {settings.tape} mm, okraje žiadne, mierka 100 %. Každý štítok dostane svoju dĺžku.</li>
+            <li>Z mobilu: stiahnite PNG a vytlačte ich v aplikácii štítkovačky (dĺžku nastavte podľa čísla pri štítku).</li>
             {black && <li>Čierna páska: tlačiareň tlačí bielou farbou kazety – súbor aj tlač sú rovnaké, náhľad ukazuje výsledok.</li>}
             {!onlyCases && <li>Prázdne druhy (svetlo bez DMX adresy alebo príkonu) sa vynechajú – adresy nastavíte cez „DMX všetkým“, príkon a váhu v úprave techniky.</li>}
           </ul>

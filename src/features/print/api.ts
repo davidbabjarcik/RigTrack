@@ -53,12 +53,26 @@ export async function saveCompanyPrefs(companyId: string, current: CompanyPrefs,
 /** Čo sa tlačí: QR štítok, páska Brother, štítok case (A5/A4), hárok s obsahom case alebo plagát inventára (poster:druh). */
 export type PrintLabel = 'qr' | 'tape' | 'case_label' | 'content' | 'patch' | 'dmx' | `poster:${string}`
 /** Plagát inventára je vo fronte ako kind „poster“ s id firmy a druhom techniky v label (0131). */
-export type PrintItem = { id: string; kind: 'equipment' | 'case' | 'spot' | 'poster' | 'event'; targetId: string; label: PrintLabel; note: string; createdAt: string }
+export type PrintItem = { id: string; kind: 'equipment' | 'case' | 'spot' | 'poster' | 'event'; targetId: string; label: PrintLabel; note: string; createdAt: string; format?: PrintFormat }
+/** Papier a orientácia uložené pri pridaní do fronty (0139); prázdne = podľa nastavení pri tlači. */
+export type PrintFormat = '' | 'A4-portrait' | 'A4-landscape' | 'A5-portrait' | 'A5-landscape'
+export const formatOf = (paper: 'A4' | 'A5', landscape: boolean): PrintFormat => `${paper}-${landscape ? 'landscape' : 'portrait'}`
+export const FORMAT_LABELS: Record<Exclude<PrintFormat, ''>, string> = { 'A4-portrait': 'A4 na výšku', 'A4-landscape': 'A4 na šírku', 'A5-portrait': 'A5 na výšku', 'A5-landscape': 'A5 na šírku' }
+/** Parametre adresy pre tlačovú stránku podľa formátu (?paper=A5&landscape=1). */
+export const formatParams = (format: PrintFormat | undefined) => {
+  if (!format) return ''
+  const [paper, orientation] = format.split('-')
+  return `paper=${paper}&landscape=${orientation === 'landscape' ? 1 : 0}`
+}
 
 export async function fetchPrintQueue(companyId: string): Promise<PrintItem[]> {
-  const { data, error } = await getSupabase().from('print_queue').select('id, kind, target_id, label, note, created_at').eq('company_id', companyId).order('created_at')
+  const select = (columns: string) => getSupabase().from('print_queue').select(columns).eq('company_id', companyId).order('created_at')
+  let { data, error } = await select('id, kind, target_id, label, note, created_at, format')
+  // Bez migrácie 0139 nie je formát.
+  if (error && /format/.test(error.message)) ({ data, error } = await select('id, kind, target_id, label, note, created_at'))
   if (error) throw error
-  return (data as { id: string; kind: PrintItem['kind']; target_id: string; label: PrintItem['label']; note: string; created_at: string }[]).map((row) => ({
+  return (data as unknown as { id: string; kind: PrintItem['kind']; target_id: string; label: PrintItem['label']; note: string; created_at: string; format?: PrintFormat }[]).map((row) => ({
+    format: row.format ?? '',
     id: row.id,
     kind: row.kind,
     targetId: row.target_id,
@@ -73,9 +87,15 @@ export function usePrintQueue(companyId: string) {
 }
 
 /** Pridá štítky do tlačovej fronty; čo už vo fronte je, sa preskočí. */
-export async function addToPrintQueue(companyId: string, items: { kind: PrintItem['kind']; targetId: string; label?: PrintItem['label']; note?: string }[]) {
-  const rows = items.map((item) => ({ company_id: companyId, kind: item.kind, target_id: item.targetId, label: item.label ?? 'qr', note: (item.note ?? '').slice(0, 200) }))
+export async function addToPrintQueue(companyId: string, items: { kind: PrintItem['kind']; targetId: string; label?: PrintItem['label']; note?: string; format?: PrintFormat }[]) {
+  const rows = items.map((item) => ({ company_id: companyId, kind: item.kind, target_id: item.targetId, label: item.label ?? 'qr', note: (item.note ?? '').slice(0, 200), ...(item.format ? { format: item.format } : {}) }))
   const { error } = await getSupabase().from('print_queue').upsert(rows, { onConflict: 'company_id,kind,target_id,label', ignoreDuplicates: true })
+  // Bez migrácie 0139 sa formát neuloží.
+  if (error && /format/.test(error.message)) {
+    const retry = await getSupabase().from('print_queue').upsert(rows.map(({ format: _f, ...row }) => (void _f, row)), { onConflict: 'company_id,kind,target_id,label', ignoreDuplicates: true })
+    if (retry.error) throw retry.error
+    return
+  }
   if (error) throw error
 }
 

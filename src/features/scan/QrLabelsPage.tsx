@@ -124,7 +124,7 @@ export function QrLabelsPage() {
               variant="outline"
               to={`/labels/tape?${isCases ? 'cases' : 'ids'}=${[...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))].join(',')}&back=${encodeURIComponent(here.pathname + here.search)}`}
             >
-              Na pásku Brother
+              Štítky
             </LinkButton>
           )}
           {/* Veľkosť QR na A4 – predvolená z nastavení firmy; väčšie sa ľahšie skenujú (aj iPhonom). */}

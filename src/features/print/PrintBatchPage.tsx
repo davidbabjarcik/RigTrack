@@ -59,7 +59,9 @@ export function PrintBatchPage() {
   const contentIds = (params.get('contents') ?? '').split(',').filter(Boolean)
   const { prefs } = useUserPrefs()
   const sheet = prefs.sheet ?? {}
-  const options = sheetOptions(sheet)
+  // Z tlačovej fronty: formát hárkov (?paper=A5&landscape=1), inak podľa volieb hárku.
+  const queuePaper = params.get('paper')
+  const options = sheetOptions(queuePaper === 'A4' || queuePaper === 'A5' ? { ...sheet, paper: queuePaper, landscape: params.get('landscape') === '1' } : sheet)
   const cases = useCases(companyId)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const colors = useQuery({ queryKey: cableColorKeys.list(companyId), queryFn: () => fetchCableColors(companyId) })

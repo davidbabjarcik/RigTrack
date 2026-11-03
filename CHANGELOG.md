@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.9 – 3. 11. 2026
+
+- **Tlačová fronta si pamätá formát**: obsah case aj plagát sa pridajú s papierom a orientáciou, ako ich máte práve
+  nastavené (napr. A5 na šírku); vo fronte je to vidno a tlač z fronty ich použije (aj hromadná, ak majú rovnaký formát).
+- V appke už nie je názov výrobcu štítkovačky – všade len „Štítky“.
+- Nová migrácia: `0139` (je aj v `supabase/update-all.sql`).
+
 ### 7.8.1 – 3. 11. 2026
 
 - Sada cases (napr. 8× Beam 7R Case): **Obsahy všetkých** a **Štítky všetkých** naraz (jedna tlač / PDF) a obe aj do tlačovej

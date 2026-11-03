@@ -3,7 +3,7 @@ import { Check, Printer } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { addToPrintQueue, printKeys, usePrintQueue, type PrintItem } from './api'
+import { addToPrintQueue, FORMAT_LABELS, printKeys, usePrintQueue, type PrintFormat, type PrintItem } from './api'
 
 const ADD: Record<string, string> = { qr: 'QR do tlače', tape: 'Páska do tlače', case_label: 'Štítok do tlače', content: 'Obsah do tlače', poster: 'Do tlačovej fronty', patch: 'Do tlačovej fronty', dmx: 'Do tlačovej fronty' }
 const IN_QUEUE: Record<string, string> = { qr: 'QR v tlači', tape: 'Páska v tlači', case_label: 'Štítok v tlači', content: 'Obsah v tlači', poster: 'V tlačovej fronte', patch: 'V tlačovej fronte', dmx: 'V tlačovej fronte' }
@@ -17,15 +17,17 @@ type Props = {
   label?: PrintItem['label']
   /** Na bielej stránke (QR štítky) svetlé tlačidlo aj v tmavej téme. */
   light?: boolean
+  /** Papier a orientácia, ako sú práve nastavené – tlač z fronty ich použije. */
+  format?: PrintFormat
 }
 
 /** „Do tlače“: pridá štítky do tlačovej fronty; všetko vo fronte sa potom vytlačí naraz (menu Tlač). */
-export function AddToPrintButton({ companyId, kind, targetIds, label = 'qr', light = false }: Props) {
+export function AddToPrintButton({ companyId, kind, targetIds, label = 'qr', light = false, format }: Props) {
   const queryClient = useQueryClient()
   const queue = usePrintQueue(companyId)
   const [justAdded, setJustAdded] = useState(false)
   const add = useMutation({
-    mutationFn: () => addToPrintQueue(companyId, targetIds.map((targetId) => ({ kind, targetId, label }))),
+    mutationFn: () => addToPrintQueue(companyId, targetIds.map((targetId) => ({ kind, targetId, label, format }))),
     onSuccess: () => setJustAdded(true),
     onSettled: () => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }),
   })
@@ -44,6 +46,7 @@ export function AddToPrintButton({ companyId, kind, targetIds, label = 'qr', lig
     <Button variant="outline" className={light ? 'border-neutral-300 bg-white text-black hover:bg-neutral-100' : undefined} disabled={add.isPending || targetIds.length === 0} onClick={() => add.mutate()} title="Pridať štítky do tlačovej fronty – vytlačíte ich naraz v menu Tlač">
       <Printer className="size-4" aria-hidden />
       {ADD[textKey(label)]}
+      {format ? ` (${FORMAT_LABELS[format as Exclude<PrintFormat, ''>]})` : ''}
       {targetIds.length > 1 ? ` (${targetIds.length})` : ''}
     </Button>
   )

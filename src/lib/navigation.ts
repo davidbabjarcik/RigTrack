@@ -51,7 +51,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'todos', permission: 'tasks.view', label: 'Úlohy', to: '/todos', icon: ListTodo, description: 'Úlohy pre viac ľudí, kategórie, úlohy po evente' },
   { id: 'patch', permission: 'events.view', label: 'Patch listy', to: '/patch', icon: Cable, description: 'Šablóny patch listov zvuku a DMX pre eventy', hiddenFor: ['helper'] },
   { id: 'checks', permission: 'equipment.view', label: 'Kontroly', to: '/checks', icon: ClipboardCheck, description: 'Cases na kontrolu, odčítanie hodín a servis – moje alebo všetky' },
-  { id: 'print', label: 'Tlač', to: '/print', icon: Printer, description: 'Štítky na tlač naraz – QR na A4 alebo Brother, adresy a módy na Brother' },
+  { id: 'print', label: 'Tlač', to: '/print', icon: Printer, description: 'Štítky na tlač naraz – QR na A4 alebo na pásku, adresy a módy' },
   { id: 'notes', label: 'Poznámky', to: '/notes', icon: StickyNote, description: 'Zdieľané firemné poznámky, označení ľudia dostanú upozornenie' },
   { id: 'office', label: 'Kancelária', to: '/office', icon: Coffee, description: 'Voda, káva, poháre… – kto čo kúpil', hiddenFor: ['helper'] },
   { id: 'incidents', label: 'Škody a úrazy', to: '/incidents', icon: ShieldAlert, description: 'Rozbitá technika a úrazy, štatistiky' },

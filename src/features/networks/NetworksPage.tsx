@@ -218,7 +218,7 @@ export function NetworksPage() {
           {visibleEquipment.length > 0 && (
             <LinkButton variant="outline" to={tapeLink(visibleEquipment)}>
               <Tag className="size-4" aria-hidden />
-              Štítky na pásku ({visibleEquipment.length})
+              Štítky ({visibleEquipment.length})
             </LinkButton>
           )}
         </div>
@@ -304,7 +304,7 @@ export function NetworksPage() {
                       <td className="px-4 py-2 text-muted-foreground">{networkName(row.networkId) ?? '—'}</td>
                       <td className="px-2 py-2 print:hidden">
                         {equipmentIdOf(row) && (
-                          <Link to={tapeLink([equipmentIdOf(row)!])} className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Štítok na pásku: ${row.name}`} title="Štítok s IP / MAC na pásku Brother">
+                          <Link to={tapeLink([equipmentIdOf(row)!])} className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Štítok: ${row.name}`} title="Štítok s IP / MAC">
                             <Tag className="size-4" aria-hidden />
                           </Link>
                         )}

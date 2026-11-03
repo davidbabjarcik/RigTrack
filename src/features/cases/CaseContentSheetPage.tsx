@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, ChevronDown, ChevronUp, Download, FileDown, Printer } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
+import { formatOf } from '@/features/print/api'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -34,6 +35,16 @@ export function CaseContentSheetPage() {
   const setPaper = (next: Paper) => setSheet({ paper: next })
   const landscape = Boolean(sheet.landscape)
   const setLandscape = (next: boolean) => setSheet({ landscape: next })
+  // Z tlačovej fronty (?paper=A5&landscape=1): formát, s akým sa hárok do fronty pridal.
+  const [params] = useSearchParams()
+  const wanted = useRef(false)
+  useEffect(() => {
+    if (wanted.current) return
+    wanted.current = true
+    const fromQueue = params.get('paper')
+    if (fromQueue === 'A4' || fromQueue === 'A5') setSheet({ paper: fromQueue, landscape: params.get('landscape') === '1' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- len raz pri otvorení z fronty
+  }, [])
   // DMX na hárku: nie / módy / módy s rozpisom kanálov – len keď je v case svetlo.
   const dmxInfo: 'off' | 'modes' | 'channels' = sheet.dmx === 'modes' || sheet.dmx === 'channels' ? sheet.dmx : 'off'
   const setDmxInfo = (next: 'off' | 'modes' | 'channels') => setSheet({ dmx: next })
@@ -182,7 +193,7 @@ export function CaseContentSheetPage() {
         description={`${current.name} · ${paper} ${landscape ? 'na šírku' : 'na výšku'} (${paper === 'A5' ? `${a5W} × ${a5H}` : `${sheetW} × ${sheetH}`} px)`}
         action={
           <div className="flex flex-wrap gap-2">
-            <AddToPrintButton companyId={companyId} kind="case" targetIds={[current.id]} label="content" />
+            <AddToPrintButton companyId={companyId} kind="case" targetIds={[current.id]} label="content" format={formatOf(paper, landscape)} />
             <Button disabled={!drawn} onClick={print}>
               <Printer className="size-4" aria-hidden />
               Tlačiť
