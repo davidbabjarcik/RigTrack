@@ -5,6 +5,10 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.5.3 – 3. 11. 2026
+
+- Oprava: v Tlač → Bez QR štítku sa zoznamy cases a techniky zobrazovali ako bodky.
+
 ### 7.5.2 – 3. 11. 2026
 
 - Ochrana súkromia a Podmienky používania doplnené o prevádzkovateľa a kontakt na žiadosti k osobným údajom.

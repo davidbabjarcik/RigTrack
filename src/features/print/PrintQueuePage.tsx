@@ -203,7 +203,7 @@ export function PrintQueuePage() {
                 ) : (
                   <ul className="flex max-h-48 flex-col gap-0.5 overflow-y-auto text-sm">
                     {entries.map((entry) => (
-                      <li key={entry.id} className="truncate">
+                      <li key={entry.id} className="shrink-0 truncate">
                         <Link to={entry.to} className="hover:underline">
                           {entry.name}
                         </Link>
