@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { errorDetail } from '@/lib/supabase/errors'
-import { AlertTriangle, Fingerprint, Laptop, ListOrdered, Plus, Search, Speaker, UserRoundPlus, Wifi, type LucideIcon } from 'lucide-react'
+import { AlertTriangle, Fingerprint, Laptop, ListOrdered, Plus, Printer, Search, Speaker, Tag, UserRoundPlus, Wifi, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Button } from '@/components/ui/button'
+import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { useDevices } from '@/features/devices/api'
@@ -74,6 +74,10 @@ export function NetworksPage() {
     return network ? suggestFreeIp(network, rows.filter((row) => row.networkId === network.id).map((row) => row.ip)) : null
   }
   const editedGuest = guests.data?.find((guest) => guest.id === guestEditing) ?? null
+  // Štítky na pásku Brother s IP / MAC – pre techniku (zariadenia členov a hostí nemajú štítok v appke).
+  const equipmentIdOf = (row: (typeof rows)[number]) => (row.source === 'equipment' && row.to?.startsWith('/equipment/') ? row.to.slice('/equipment/'.length) : null)
+  const visibleEquipment = [...new Set(visible.map(equipmentIdOf).filter((id): id is string => Boolean(id)))]
+  const tapeLink = (ids: string[]) => `/labels/tape?ids=${ids.join(',')}&kinds=address&back=${encodeURIComponent(`/networks?tab=${tab}`)}`
 
   return (
     <>
@@ -120,6 +124,14 @@ export function NetworksPage() {
         })}
       </div>
 
+      {tab === 'wifi' && allNetworks.length > 0 && (
+        <div className="mb-3 flex justify-end">
+          <LinkButton to="/networks/qr" variant="outline" size="sm">
+            <Printer className="size-4" aria-hidden />
+            QR kódy sietí na tlač
+          </LinkButton>
+        </div>
+      )}
       {tab === 'wifi' && (
       <section aria-label="Wi-Fi siete">
         {editing === 'new' && (
@@ -171,7 +183,12 @@ export function NetworksPage() {
             onDone={() => setGuestEditing(null)}
           />
         )}
-        <div className="mb-3 flex flex-wrap gap-2">
+        {/* Na tlači: nadpis s firmou, sieťou a dátumom; ovládanie sa skryje. */}
+        <h2 className="mb-3 hidden text-lg font-semibold print:block">
+          {tab === 'ip' ? 'IP tabuľka' : 'MAC adresy'} – {company.companyName}
+          {selected ? ` – ${selected.ssid}` : ''} · {new Date().toLocaleDateString('sk-SK')}
+        </h2>
+        <div className="mb-3 flex flex-wrap gap-2 print:hidden">
           <div className="relative min-w-56 flex-1">
             <Search className="pointer-events-none absolute top-3.5 left-3 size-4 text-muted-foreground" aria-hidden />
             <Field
@@ -194,6 +211,16 @@ export function NetworksPage() {
             ))}
             <option value="none">Bez siete</option>
           </SelectField>
+          <Button variant="outline" onClick={() => window.print()}>
+            <Printer className="size-4" aria-hidden />
+            Tlačiť
+          </Button>
+          {visibleEquipment.length > 0 && (
+            <LinkButton variant="outline" to={tapeLink(visibleEquipment)}>
+              <Tag className="size-4" aria-hidden />
+              Štítky na pásku ({visibleEquipment.length})
+            </LinkButton>
+          )}
         </div>
         {freeIp && tab === 'ip' && (
           <p className="mb-3 text-sm text-muted-foreground">
@@ -213,14 +240,15 @@ export function NetworksPage() {
             Zatiaľ žiadne adresy. IP a MAC sa zadávajú pri technike (časť Sieť), pri zariadeniach členov (Nastavenia → Účet) a pre hostí tlačidlom „Pridať hosťa“.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border bg-surface">
-            <table className="w-full min-w-[40rem] text-sm">
+          <div className="overflow-x-auto rounded-xl border bg-surface print:overflow-visible print:border-0 print:bg-white print:text-black">
+            <table className="w-full min-w-[40rem] text-sm print:min-w-0">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="px-4 py-2 font-medium">{tab === 'ip' ? 'IP' : 'MAC'}</th>
                   <th className="px-4 py-2 font-medium">{tab === 'ip' ? 'MAC' : 'IP'}</th>
                   <th className="px-4 py-2 font-medium">Zariadenie</th>
                   <th className="px-4 py-2 font-medium">Sieť</th>
+                  <th className="w-10 print:hidden" />
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -274,6 +302,13 @@ export function NetworksPage() {
                         </span>
                       </td>
                       <td className="px-4 py-2 text-muted-foreground">{networkName(row.networkId) ?? '—'}</td>
+                      <td className="px-2 py-2 print:hidden">
+                        {equipmentIdOf(row) && (
+                          <Link to={tapeLink([equipmentIdOf(row)!])} className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Štítok na pásku: ${row.name}`} title="Štítok s IP / MAC na pásku Brother">
+                            <Tag className="size-4" aria-hidden />
+                          </Link>
+                        )}
+                      </td>
                     </tr>
                   )
                 })}
@@ -282,7 +317,7 @@ export function NetworksPage() {
             {visible.length === 0 && <p className="px-4 py-6 text-center text-sm text-muted-foreground">Nič sa nenašlo.</p>}
           </div>
         )}
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 text-xs text-muted-foreground print:hidden">
           Ikona reproduktora = technika firmy, notebook = zariadenie člena, osoba s plusom = hosť. Zariadenia členov vidí admin a skladník (ostatní len svoje).
         </p>
       </section>

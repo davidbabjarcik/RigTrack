@@ -41,7 +41,12 @@ export function TapeLabelsPage() {
   const cases = useCases(companyId)
   const back = params.get('back') ?? (ids.length === 1 ? `/equipment/${ids[0]}` : params.get('cases') ? '/cases' : '/equipment')
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
-  const [settings, setSettings] = useState(savedSettings)
+  // ?kinds=address (napr. z IP tabuľky) – predvolený druh štítku.
+  const [settings, setSettings] = useState(() => {
+    const saved = savedSettings()
+    const wanted = (params.get('kinds') ?? '').split(',').filter((kind): kind is LabelKind => (LABEL_KINDS as readonly string[]).includes(kind))
+    return wanted.length > 0 ? { ...saved, kinds: wanted } : saved
+  })
   // Obsah štítkov a farba pásky sa ukladajú k účtu (rovnaké na PC aj v mobile).
   const { prefs, update } = useUserPrefs()
   const fields = prefs.tapeFields ?? {}

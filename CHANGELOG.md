@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.6 – 3. 11. 2026
+
+- **Siete – tlač**: IP tabuľka aj MAC adresy sa dajú vytlačiť (s nadpisom, firmou, sieťou a dátumom; tlačí sa to, čo je
+  vyfiltrované).
+- **Štítok pri IP tabuľke**: pri technike ikona štítku – páska Brother s IP / MAC; „Štítky na pásku“ pre všetku
+  vyfiltrovanú techniku naraz.
+- **QR kódy Wi-Fi na tlač** (Siete → QR kódy sietí na tlač): A4, výber sietí, heslo pod kódom voliteľne.
+
 ### 7.5.3 – 3. 11. 2026
 
 - Oprava: v Tlač → Bez QR štítku sa zoznamy cases a techniky zobrazovali ako bodky.

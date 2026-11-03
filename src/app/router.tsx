@@ -41,6 +41,7 @@ const inventoryPoster = lazyPage(() => import('@/features/equipment/InventoryPos
 const equipmentGroup = lazyPage(() => import('@/features/equipment/EquipmentGroupPage').then((m) => m.EquipmentGroupPage), 'equipment.view')
 const equipmentForm = lazyPage(() => import('@/features/equipment/EquipmentFormPage').then((m) => m.EquipmentFormPage), 'equipment.view')
 const equipmentExcel = lazyPage(() => import('@/features/equipment/EquipmentExcelPage').then((m) => m.EquipmentExcelPage), 'equipment.view')
+const wifiQrPrint = lazyPage(() => import('@/features/networks/WifiQrPrintPage').then((m) => m.WifiQrPrintPage), 'networks.view')
 const networks = lazyPage(() => import('@/features/networks/NetworksPage').then((m) => m.NetworksPage), 'networks.view')
 const capsules = lazyPage(() => import('@/features/capsules/CapsulesPage').then((m) => m.CapsulesPage), 'equipment.view')
 const serviceRequests = lazyPage(() => import('@/features/requests/ServiceRequestsPage').then((m) => m.ServiceRequestsPage))
@@ -160,6 +161,7 @@ export const routes: RouteObject[] = [
           { path: 'offers/:id/print', lazy: offerPrint },
           { path: 'qr/:type', lazy: qrLabels },
           { path: 'labels/tape', lazy: tapeLabels },
+          { path: 'networks/qr', lazy: wifiQrPrint },
           {
             path: '/',
             element: <AppLayout />,
