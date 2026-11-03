@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { addToPrintQueue, printKeys, usePrintQueue, type PrintItem } from './api'
 
-const ADD: Record<string, string> = { qr: 'QR do tlače', tape: 'Páska do tlače', case_label: 'Štítok do tlače', content: 'Obsah do tlače', poster: 'Do tlačovej fronty' }
-const IN_QUEUE: Record<string, string> = { qr: 'QR v tlači', tape: 'Páska v tlači', case_label: 'Štítok v tlači', content: 'Obsah v tlači', poster: 'V tlačovej fronte' }
+const ADD: Record<string, string> = { qr: 'QR do tlače', tape: 'Páska do tlače', case_label: 'Štítok do tlače', content: 'Obsah do tlače', poster: 'Do tlačovej fronty', patch: 'Do tlačovej fronty', dmx: 'Do tlačovej fronty' }
+const IN_QUEUE: Record<string, string> = { qr: 'QR v tlači', tape: 'Páska v tlači', case_label: 'Štítok v tlači', content: 'Obsah v tlači', poster: 'V tlačovej fronte', patch: 'V tlačovej fronte', dmx: 'V tlačovej fronte' }
 const textKey = (label: PrintItem['label']) => (label.startsWith('poster:') ? 'poster' : label)
 
 type Props = {

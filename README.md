@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-7.4-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-7.5-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,10 +51,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **7.5** | Tlač šablón patch listov, patch listy eventov do tlačovej fronty |
 | **7.4** | Kanban úloh: posun do strán ťahaním za prázdne miesto |
 | **7.3** | Poznámka → úlohy (ako v TickTicku), tlačidlo Upraviť |
 | **7.2** | Komu činnosť patrí (ľudia alebo roly), ponuka pri evente |
-| **6.12** | Pridať do plánu: regál, miesto, paleta a stavba; kreslenie ťahaním |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

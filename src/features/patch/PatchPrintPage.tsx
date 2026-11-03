@@ -8,6 +8,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { useEvents } from '@/features/events/useEvents'
 import { formatDate } from '@/lib/format'
+import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { usePatch } from './api'
 import { describeSource, patchSummary, STAND_LABELS } from './model'
 
@@ -46,10 +47,13 @@ export function PatchPrintPage() {
           <ArrowLeft className="size-4" aria-hidden />
           Späť na event
         </Link>
+        <div className="flex gap-2">
+        <AddToPrintButton light companyId={companyId} kind="event" targetIds={[id]} label="patch" />
         <Button onClick={() => window.print()}>
           <Printer className="size-4" aria-hidden />
           Tlačiť / PDF
         </Button>
+        </div>
       </div>
       <header className="mb-4 border-b border-neutral-400 pb-2">
         <h1 className="text-xl font-bold">Patch list – {event.name}</h1>

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Briefcase, Presentation, Printer, QrCode, Speaker, Tag, Trash2, X } from 'lucide-react'
+import { Briefcase, Cable, Presentation, Printer, QrCode, Speaker, Tag, Trash2, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -10,6 +10,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { KIND_LABELS, type EquipmentKind } from '@/features/equipment/model'
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
+import { useEvents } from '@/features/events/useEvents'
 import { addToPrintQueue, markPrinted, printKeys, removeFromPrintQueue, useCompanyPrefs, usePrintedLabels, usePrintQueue, type PrintItem } from './api'
 
 /**
@@ -24,6 +25,7 @@ export function PrintQueuePage() {
   const prefs = useCompanyPrefs(companyId).data ?? {}
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const cases = useCases(companyId)
+  const eventsList = useEvents(companyId)
   const spots = useQuery({ queryKey: warehouseKeys.plan(companyId), queryFn: () => fetchWarehouse(companyId) })
   const remove = useMutation({ mutationFn: (ids: string[]) => removeFromPrintQueue(companyId, ids), onSettled: () => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }) })
   const printed = usePrintedLabels(companyId)
@@ -31,7 +33,7 @@ export function PrintQueuePage() {
   const done = useMutation({
     mutationFn: async (list: PrintItem[]) => {
       // Plagáty sa nepamätajú (nie sú to štítky).
-      const labels = list.filter((item) => item.kind !== 'poster')
+      const labels = list.filter((item) => item.kind !== 'poster' && item.kind !== 'event')
       await markPrinted(companyId, labels.map((item) => ({ kind: item.kind as 'equipment' | 'case' | 'spot', targetId: item.targetId, label: item.label }))).catch(() => undefined)
       await removeFromPrintQueue(companyId, list.map((item) => item.id))
     },
@@ -51,6 +53,7 @@ export function PrintQueuePage() {
 
   const items = queue.data
   const nameOf = (item: PrintItem) => {
+    if (item.kind === 'event') return `${item.label === 'dmx' ? 'DMX patch' : 'Patch list'} – ${eventsList.data?.find((event) => event.id === item.targetId)?.name ?? 'event (zmazaný)'}`
     if (item.kind === 'poster') return `Plagát inventára – ${KIND_LABELS[item.label.slice(7) as EquipmentKind] ?? item.label.slice(7)}`
     if (item.kind === 'spot') return spots.data?.spots.find((candidate) => candidate.id === item.targetId)?.name ?? 'Miesto (zmazané)'
     if (item.kind === 'case') {
@@ -66,6 +69,7 @@ export function PrintQueuePage() {
   const caseLabels = items.filter((item) => item.label === 'case_label')
   const contents = items.filter((item) => item.label === 'content')
   const posters = items.filter((item) => item.kind === 'poster')
+  const patchLists = items.filter((item) => item.kind === 'event')
   const ids = (list: PrintItem[]) => [...new Set(list.map((item) => item.targetId))].join(',')
   const a4 = (prefs.qrTarget ?? 'a4') === 'a4'
   // Bez QR štítku: technika (okrem spotrebného materiálu) a cases, ktoré ešte nemajú vytlačený ani zaradený QR.
@@ -88,11 +92,17 @@ export function PrintQueuePage() {
         <ul className="divide-y text-sm">
           {list.map((item) => (
             <li key={item.id} className="flex items-center gap-3 py-1.5">
-              <Link to={item.kind === 'poster' ? `/equipment/poster?kind=${item.label.slice(7)}` : item.kind === 'spot' ? `/warehouse?spot=${item.targetId}` : item.kind === 'case' ? `/cases/${item.targetId}` : `/equipment/${item.targetId}`} className="min-w-0 flex-1 truncate hover:underline">
+              <Link to={item.kind === 'event' ? `/events/${item.targetId}/${item.label === 'dmx' ? 'dmx' : 'patch'}` : item.kind === 'poster' ? `/equipment/poster?kind=${item.label.slice(7)}` : item.kind === 'spot' ? `/warehouse?spot=${item.targetId}` : item.kind === 'case' ? `/cases/${item.targetId}` : `/equipment/${item.targetId}`} className="min-w-0 flex-1 truncate hover:underline">
                 {nameOf(item)}
               </Link>
               {item.note && <span className="truncate text-muted-foreground">{item.note}</span>}
               {/* Štítok a obsah case sa tlačia každý zvlášť (vlastná stránka s tlačou / PDF). */}
+              {item.kind === 'event' && (
+                <Link to={`/events/${item.targetId}/${item.label === 'dmx' ? 'dmx' : 'patch'}`} className="inline-flex items-center gap-1 text-accent hover:underline">
+                  <Printer className="size-4" aria-hidden />
+                  Otvoriť a tlačiť
+                </Link>
+              )}
               {item.kind === 'poster' && (
                 <Link to={`/equipment/poster?kind=${item.label.slice(7)}`} className="inline-flex items-center gap-1 text-accent hover:underline">
                   <Printer className="size-4" aria-hidden />
@@ -161,6 +171,7 @@ export function PrintQueuePage() {
           )}
           {group('Štítky cases', <Tag className="size-5 text-accent" aria-hidden />, caseLabels, caseLabels.length > 1 ? printLink(batchLink(caseLabels, []), 'Všetky štítky') : null)}
           {group('Obsah cases (hárky)', <Briefcase className="size-5 text-accent" aria-hidden />, contents, contents.length > 1 ? printLink(batchLink([], contents), 'Všetky obsahy') : null)}
+          {group('Patch listy eventov', <Cable className="size-5 text-accent" aria-hidden />, patchLists, null)}
           {group('Plagáty inventára', <Presentation className="size-5 text-accent" aria-hidden />, posters, null)}
           {group('Štítky na pásku Brother (adresy, módy, odber)', <Tag className="size-5 text-accent" aria-hidden />, tape, printLink(`/labels/tape?ids=${ids(tape.filter((item) => item.kind === 'equipment'))}&back=/print`, 'Na Brother'))}
         </>

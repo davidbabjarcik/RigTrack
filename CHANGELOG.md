@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.5 – 3. 11. 2026
+
+- **Tlač patch listov**: šablóny patch listov (zvuk aj DMX) sa dajú vytlačiť alebo uložiť do PDF (ikona tlačiarne pri
+  šablóne). Patch list a DMX patch eventu sa dajú pridať do tlačovej fronty (Tlač → Patch listy eventov).
+- Nová migrácia: `0138` (je aj v `supabase/update-all.sql`).
+
 ### 7.4 – 3. 11. 2026
 
 - **Kanban úloh**: do strán sa dá posúvať ťahaním myšou aj za prázdny stĺpec alebo medzeru (karty sa presúvajú ako

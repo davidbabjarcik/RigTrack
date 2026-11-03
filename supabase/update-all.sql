@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0137 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0138 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -3333,6 +3333,21 @@ begin
 end;
 $$;
 grant update (owner_ids, owner_roles) on public.company_duty_types to authenticated;
+
+-- ===== 0138_event_print.sql =====
+-- RigTrack 7.5: patch list eventu (zvuk aj DMX) do tlačovej fronty – kind „event“, label „patch“ alebo „dmx“.
+
+do $$
+begin
+  alter table public.print_queue drop constraint if exists print_queue_kind_check;
+  alter table public.print_queue add constraint print_queue_kind_check check (kind in ('equipment', 'case', 'spot', 'poster', 'event'));
+  alter table public.print_queue drop constraint if exists print_queue_label_check;
+  alter table public.print_queue add constraint print_queue_label_check
+    check (label in ('qr', 'tape', 'case_label', 'content')
+      or (kind = 'poster' and label ~ '^poster:[a-z_]{1,20}$')
+      or (kind = 'event' and label in ('patch', 'dmx')));
+end;
+$$;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

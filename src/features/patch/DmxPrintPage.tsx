@@ -4,6 +4,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { dipOn } from '@/features/labels/tape'
 import { portsForUniverse } from '@/features/equipment/dmxNode'
 import { Link, useParams } from 'react-router-dom'
+import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
@@ -50,10 +51,13 @@ export function DmxPrintPage() {
           <ArrowLeft className="size-4" aria-hidden />
           Späť na event
         </Link>
-        <Button onClick={() => window.print()}>
-          <Printer className="size-4" aria-hidden />
-          Tlačiť / PDF
-        </Button>
+        <div className="flex gap-2">
+          <AddToPrintButton light companyId={companyId} kind="event" targetIds={[id]} label="dmx" />
+          <Button onClick={() => window.print()}>
+            <Printer className="size-4" aria-hidden />
+            Tlačiť / PDF
+          </Button>
+        </div>
       </div>
       <header className="mb-4 border-b border-neutral-400 pb-2">
         <h1 className="text-xl font-bold">DMX patch list – {event.name}</h1>

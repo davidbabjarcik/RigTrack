@@ -54,4 +54,11 @@ describe('print queue and company prefs', () => {
     expect(await t.as('boss', `select label from public.print_queue where kind = 'poster'`)).toEqual([{ label: 'poster:truss' }])
     await expect(t.as('viewer', `insert into public.print_queue (company_id, kind, target_id, label) values ($1, 'case', $1, 'poster:truss')`, [a])).rejects.toThrow(/check/)
   })
+
+  it('takes event patch lists', async () => {
+    const event = (await t.as('boss', `insert into public.events (company_id, name, starts_on, ends_on) values ($1, 'Koncert', current_date, current_date) returning id`, [a]))[0].id
+    await t.as('viewer', `insert into public.print_queue (company_id, kind, target_id, label) values ($1, 'event', $2, 'patch'), ($1, 'event', $2, 'dmx')`, [a, event])
+    expect(await t.as('boss', `select label from public.print_queue where kind = 'event' order by label`)).toEqual([{ label: 'dmx' }, { label: 'patch' }])
+    await expect(t.as('viewer', `insert into public.print_queue (company_id, kind, target_id, label) values ($1, 'event', $2, 'poster:x')`, [a, event])).rejects.toThrow(/check/)
+  })
 })

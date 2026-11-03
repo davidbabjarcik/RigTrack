@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Cable, ChevronRight, Lightbulb, Plus, Trash2, X } from 'lucide-react'
+import { Cable, ChevronRight, Lightbulb, Plus, Printer, Trash2, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -255,7 +256,7 @@ export function PatchTemplatesPage() {
           ) : (
             <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
               {list(kind).map((template) => (
-                <li key={template.id}>
+                <li key={template.id} className="flex items-center">
                   <button type="button" disabled={!canEdit} onClick={() => open(template)} className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left enabled:hover:bg-muted">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{template.name}</span>
@@ -265,6 +266,9 @@ export function PatchTemplatesPage() {
                     </span>
                     {canEdit && <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
                   </button>
+                  <Link to={`/patch/${template.id}/print`} className="mr-3 inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Tlačiť ${template.name}`} title="Tlačiť / PDF">
+                    <Printer className="size-4" aria-hidden />
+                  </Link>
                 </li>
               ))}
             </ul>
