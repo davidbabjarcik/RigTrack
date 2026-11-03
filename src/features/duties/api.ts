@@ -11,11 +11,18 @@ export const dutyKeys = {
 
 export async function fetchDutyTypes(companyId: string): Promise<DutyType[]> {
   const select = (columns: string) => getSupabase().from('company_duty_types').select(columns).eq('company_id', companyId).order('sort').order('name')
-  let { data, error } = await select('id, name, sort, active, phase')
-  // Bez migrácie 0133 nie je fáza – odhadne sa z názvu.
+  let { data, error } = await select('id, name, sort, active, phase, owner_ids, owner_roles')
+  // Bez migrácie 0137 nie sú vlastníci, bez 0133 ani fáza – odhadne sa z názvu.
+  if (error && /owner/.test(error.message)) ({ data, error } = await select('id, name, sort, active, phase'))
   if (error && /phase/.test(error.message)) ({ data, error } = await select('id, name, sort, active'))
   if (error) throw error
-  return (data as unknown as (Omit<DutyType, 'phase'> & { phase?: DutyType['phase'] })[]).map((row) => ({ ...row, phase: row.phase ?? guessPhase(row.name) }))
+  type Row = { id: string; name: string; sort: number; active: boolean; phase?: DutyType['phase']; owner_ids?: string[]; owner_roles?: string[] }
+  return (data as unknown as Row[]).map(({ owner_ids, owner_roles, ...row }) => ({
+    ...row,
+    phase: row.phase ?? guessPhase(row.name),
+    ownerIds: owner_ids ?? [],
+    ownerRoles: owner_roles ?? [],
+  }))
 }
 
 export function useDutyTypes(companyId: string) {
@@ -36,8 +43,10 @@ export async function addDutyTypes(companyId: string, names: string[], firstSort
   if (error) throw error
 }
 
-export async function updateDutyType(id: string, fields: Partial<Pick<DutyType, 'name' | 'sort' | 'active' | 'phase'>>) {
-  const { error } = await getSupabase().from('company_duty_types').update(fields).eq('id', id)
+export async function updateDutyType(id: string, fields: Partial<Pick<DutyType, 'name' | 'sort' | 'active' | 'phase' | 'ownerIds' | 'ownerRoles'>>) {
+  const { ownerIds, ownerRoles, ...rest } = fields
+  const row = { ...rest, ...(ownerIds ? { owner_ids: ownerIds } : {}), ...(ownerRoles ? { owner_roles: ownerRoles } : {}) }
+  const { error } = await getSupabase().from('company_duty_types').update(row).eq('id', id)
   if (error) throw error
 }
 

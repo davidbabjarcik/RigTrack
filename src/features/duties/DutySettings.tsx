@@ -3,6 +3,12 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
+import { memberName, useMembers } from '@/features/companies/useMembers'
+import { ROLE_LABELS, type Role } from '@/lib/roles'
+import { cn } from '@/lib/utils'
+
+/** Roly, ktorým sa dá činnosť priradiť. */
+const OWNER_ROLES: Role[] = ['technik', 'skladnik', 'helper', 'ceo', 'admin']
 import { addDutyTypes, deleteDutyType, dutyKeys, updateDutyType, useDutyTypes } from './api'
 import { DEFAULT_DUTIES, DUTY_PHASE_LABELS, DUTY_PHASES, type DutyPhase, type DutyType } from './model'
 
@@ -11,6 +17,13 @@ export function DutySettings({ companyId }: { companyId: string }) {
   const queryClient = useQueryClient()
   const types = useDutyTypes(companyId)
   const [name, setName] = useState('')
+  const [ownersOf, setOwnersOf] = useState<string | null>(null)
+  const members = useMembers(companyId)
+  const ownerLabel = (type: DutyType) =>
+    [
+      ...type.ownerRoles.map((role) => ROLE_LABELS[role as Role] ?? role),
+      ...type.ownerIds.map((id) => memberName(members.data, id)).filter(Boolean),
+    ].join(', ')
   const refresh = () => queryClient.invalidateQueries({ queryKey: dutyKeys.types(companyId) })
   const list = types.data ?? []
   const nextSort = list.reduce((max, type) => Math.max(max, type.sort), 0) + 1
@@ -47,7 +60,12 @@ export function DutySettings({ companyId }: { companyId: string }) {
                 <ul className="divide-y overflow-hidden rounded-lg border">
                   {group.map((type, index) => (
                     <li key={type.id} className="flex flex-wrap items-center gap-2 px-3 py-2">
-                      <span className={type.active ? 'min-w-0 flex-1 font-medium' : 'min-w-0 flex-1 text-muted-foreground line-through'}>{type.name}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className={type.active ? 'block font-medium' : 'block text-muted-foreground line-through'}>{type.name}</span>
+                        <button type="button" className="text-xs text-accent hover:underline" onClick={() => setOwnersOf(ownersOf === type.id ? null : type.id)}>
+                          {ownerLabel(type) || 'Komu patrí – nastaviť'}
+                        </button>
+                      </span>
                       <select
                         aria-label={`Kedy: ${type.name}`}
                         className="h-8 rounded-lg border bg-background px-2 text-sm"
@@ -79,6 +97,44 @@ export function DutySettings({ companyId }: { companyId: string }) {
                       >
                         <Trash2 className="size-4" aria-hidden />
                       </Button>
+                      {ownersOf === type.id && (
+                        <div className="flex w-full flex-col gap-2 rounded-lg bg-muted/40 p-2 text-sm">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="mr-1 text-muted-foreground">Roly:</span>
+                            {OWNER_ROLES.map((role) => {
+                              const on = type.ownerRoles.includes(role)
+                              return (
+                                <button
+                                  key={role}
+                                  type="button"
+                                  aria-pressed={on}
+                                  className={cn('rounded-full border px-2.5 py-0.5', on ? 'border-accent bg-accent text-accent-foreground' : 'hover:bg-muted')}
+                                  onClick={() => update.mutate({ id: type.id, fields: { ownerRoles: on ? type.ownerRoles.filter((value) => value !== role) : [...type.ownerRoles, role] } })}
+                                >
+                                  {ROLE_LABELS[role]}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="mr-1 text-muted-foreground">Ľudia:</span>
+                            {(members.data ?? []).map((member) => {
+                              const on = type.ownerIds.includes(member.userId)
+                              return (
+                                <button
+                                  key={member.userId}
+                                  type="button"
+                                  aria-pressed={on}
+                                  className={cn('rounded-full border px-2.5 py-0.5', on ? 'border-accent bg-accent text-accent-foreground' : 'hover:bg-muted')}
+                                  onClick={() => update.mutate({ id: type.id, fields: { ownerIds: on ? type.ownerIds.filter((value) => value !== member.userId) : [...type.ownerIds, member.userId] } })}
+                                >
+                                  {member.fullName || member.email}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>

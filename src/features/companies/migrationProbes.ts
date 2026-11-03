@@ -63,6 +63,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0132', label: 'typy paliet, miestnosti a hliník v pláne', table: 'warehouses', column: 'pallet_types' },
   { migration: '0133', label: 'činnosti pred a po evente', table: 'company_duty_types', column: 'phase' },
   { migration: '0135', label: 'záznam súhlasu s ukladaním', table: 'consent_records', column: 'version' },
+  { migration: '0137', label: 'komu činnosť patrí', table: 'company_duty_types', column: 'owner_ids' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

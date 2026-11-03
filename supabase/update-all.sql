@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0136 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0137 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -3317,6 +3317,22 @@ end;
 $$;
 revoke execute on function public.delete_my_account(text) from public, anon;
 grant execute on function public.delete_my_account(text) to authenticated;
+
+-- ===== 0137_duty_owners.sql =====
+-- RigTrack 7.2: komu činnosť patrí – konkrétni členovia a / alebo roly (napr. „Fotky na soc. siete“ → soc. media maker,
+-- „Kontrola kabeláže“ → rola skladník). Pri evente sa títo ľudia ponúknu na jedno kliknutie.
+
+alter table public.company_duty_types add column if not exists owner_ids uuid[] not null default '{}';
+alter table public.company_duty_types add column if not exists owner_roles text[] not null default '{}';
+do $$
+begin
+  alter table public.company_duty_types drop constraint if exists company_duty_types_owners_check;
+  alter table public.company_duty_types add constraint company_duty_types_owners_check
+    check (cardinality(owner_ids) <= 30 and cardinality(owner_roles) <= 10
+      and owner_roles <@ array['admin', 'ceo', 'technik', 'skladnik', 'viewer', 'helper']::text[]);
+end;
+$$;
+grant update (owner_ids, owner_roles) on public.company_duty_types to authenticated;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

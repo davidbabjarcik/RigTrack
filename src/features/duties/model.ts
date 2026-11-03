@@ -14,7 +14,12 @@ export function guessPhase(name: string): DutyPhase {
   return 'event'
 }
 
-export type DutyType = { id: string; name: string; sort: number; active: boolean; phase: DutyPhase }
+export type DutyType = { id: string; name: string; sort: number; active: boolean; phase: DutyPhase; ownerIds: string[]; ownerRoles: string[] }
+
+/** Komu činnosť patrí: vybraní členovia a členovia s vybranou rolou. */
+export function dutyOwners<M extends { userId: string; role: string }>(type: Pick<DutyType, 'ownerIds' | 'ownerRoles'>, members: M[]) {
+  return members.filter((member) => type.ownerIds.includes(member.userId) || type.ownerRoles.includes(member.role))
+}
 export type EventDuty = { id: string; eventId: string; dutyTypeId: string; memberId: string | null; personName: string }
 export type WorkLog = { userId: string; workDate: string; startsAt: string; endsAt: string; breakMinutes: number }
 

@@ -7,7 +7,7 @@ import { useAuth } from '@/features/auth/auth-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import type { CompanyEvent } from '@/features/events/model'
 import { addDuty, dutyKeys, removeDuty, useDutyTypes, useEventDuties } from './api'
-import { DUTY_PHASE_LABELS, DUTY_PHASES, type DutyType, type EventDuty } from './model'
+import { DUTY_PHASE_LABELS, DUTY_PHASES, dutyOwners, type DutyType, type EventDuty } from './model'
 
 const EXTERNAL = 'external'
 
@@ -127,6 +127,24 @@ export function EventDutiesSection({ companyId, event, canEdit }: Props) {
                   </span>
                 ))}
                 {here.length === 0 && <span className="text-sm text-muted-foreground">nikto</span>}
+                {/* Komu činnosť patrí (Nastavenia) – ponuka na jedno kliknutie. */}
+                {canEdit &&
+                  type.active &&
+                  dutyOwners(type, members.data ?? [])
+                    .filter((member) => !here.some((duty) => duty.memberId === member.userId))
+                    .map((member) => (
+                      <button
+                        key={member.userId}
+                        type="button"
+                        className="inline-flex items-center gap-1 rounded-full border border-dashed px-2.5 py-1 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                        disabled={add.isPending}
+                        title="Patrí k tejto činnosti – pridať"
+                        onClick={() => add.mutate({ typeId: type.id, person: { memberId: member.userId } })}
+                      >
+                        <Plus className="size-3.5" aria-hidden />
+                        {member.fullName || member.email}
+                      </button>
+                    ))}
                 {canEdit && type.active && adding?.typeId !== type.id && (
                   <Button size="sm" variant="ghost" aria-label={`Pridať človeka: ${type.name}`} onClick={() => setAdding({ typeId: type.id, who: '', name: '' })}>
                     <Plus className="size-4" aria-hidden />

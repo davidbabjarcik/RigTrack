@@ -45,3 +45,16 @@ describe('guessPhase', () => {
     expect(['Nakladanie', 'Vykladanie', 'Kontrola a naskladnenie hliníka', 'Kontrola kabeláže', 'Stavba pódia'].map(guessPhase)).toEqual(['before', 'after', 'after', 'after', 'event'])
   })
 })
+
+describe('dutyOwners', () => {
+  it('offers chosen people and everyone with a chosen role', async () => {
+    const { dutyOwners } = await import('./model')
+    const members = [
+      { userId: 'a', role: 'technik' },
+      { userId: 'b', role: 'skladnik' },
+      { userId: 'c', role: 'helper' },
+    ]
+    expect(dutyOwners({ ownerIds: ['c'], ownerRoles: ['skladnik'] }, members).map((m) => m.userId)).toEqual(['b', 'c'])
+    expect(dutyOwners({ ownerIds: [], ownerRoles: [] }, members)).toEqual([])
+  })
+})

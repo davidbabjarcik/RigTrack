@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.2 – 3. 11. 2026
+
+- **Komu činnosť patrí**: v Nastaveniach → Pripomienky a limity pri každej činnosti vyberiete ľudí alebo roly (napr.
+  „Fotky na soc. siete“ → konkrétny človek, „Kontrola kabeláže“ → skladníci). Pri evente sa ponúknu na jedno kliknutie.
+- Nová migrácia: `0137` (je aj v `supabase/update-all.sql`).
+
 ### 7.1.1 – 3. 11. 2026
 
 - Ochrana súkromia, Cookies a Podmienky používania sú na PC v širokom zobrazení (nie úzke ako na mobile).

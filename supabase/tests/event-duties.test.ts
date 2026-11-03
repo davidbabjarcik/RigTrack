@@ -25,6 +25,10 @@ describe('event duties', () => {
     await t.as('admin', `update public.company_duty_types set phase = 'before' where id = $1`, [loading])
     expect(await t.as('viewer', 'select phase from public.company_duty_types')).toEqual([{ phase: 'before' }])
     await expect(t.as('admin', `update public.company_duty_types set phase = 'neskôr' where id = $1`, [loading])).rejects.toThrow(/check/)
+    await t.as('admin', `update public.company_duty_types set owner_roles = '{skladnik}', owner_ids = array[$2::uuid] where id = $1`, [loading, t.users.admin])
+    expect(await t.as('viewer', 'select owner_roles from public.company_duty_types')).toEqual([{ owner_roles: ['skladnik'] }])
+    await expect(t.as('admin', `update public.company_duty_types set owner_roles = '{boss}' where id = $1`, [loading])).rejects.toThrow(/check/)
+    await expect(t.as('viewer', `update public.company_duty_types set owner_roles = '{technik}' where id = $1 returning 1`, [loading])).resolves.toEqual([])
   })
 
   it('records people on duties: editors anyone, crew only themselves', async () => {
