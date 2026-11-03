@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.18 – 3. 11. 2026
+
+- **Dať do viacerých cases naraz**: pri technike počítanej na kusy (napr. háky, svorky) na stránke so všetkými časťami
+  tlačidlo „Dať do viacerých cases“ – zaškrtnete cases, zadáte počet do každého a kusy mimo case sa rozdelia jedným
+  klikom. Sama navrhne cases zo sady, kde technika ešte nie je, s rovnakým počtom ako v ostatných; kde už je, kusy
+  sa pridajú k nej.
+
 ### 7.17 – 3. 11. 2026
 
 - **Vrátenie po evente** v detaile eventu: čo sa pri odchode naložilo a pri návrate neodškrtlo. Pri každej veci

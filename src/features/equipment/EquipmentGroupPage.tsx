@@ -6,6 +6,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { EquipmentMaintenance } from '@/features/maintenance/EquipmentMaintenance'
 import { GroupDmx } from './GroupDmx'
 import { GroupHours } from './GroupHours'
+import { GroupToCases } from './GroupToCases'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { caseNumber, caseTitle, groupCases } from '@/features/cases/model'
@@ -216,6 +217,8 @@ export function EquipmentGroupPage() {
             </Button>
           )}
           {tracksHours && !hoursOpen && can(company, 'equipment.edit') && <GroupHours companyId={companyId} parts={parts} caseName={caseName} onOpen={() => setHoursOpen(true)} />}
+          {/* Technika bez čísel kusov (napr. háky): kusy mimo case do viacerých cases naraz. */}
+          {canMove && units.length === 0 && <GroupToCases companyId={companyId} parts={parts} cases={cases.data ?? []} ids={ids} />}
         </div>
       </header>
       {dmxOpen && <GroupDmx companyId={companyId} parts={parts} caseName={caseName} open onOpen={() => {}} onClose={() => setDmxOpen(false)} />}
