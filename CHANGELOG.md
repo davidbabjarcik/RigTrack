@@ -5,6 +5,18 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.0 – 3. 11. 2026
+
+- **Ochrana prihlásenia**: po 5 neúspešných pokusoch sa prihlasovanie na 5 minút zablokuje (rieši to server, odpočet
+  pokračuje aj po obnovení stránky alebo v novej karte). Chráni aj pred skúšaním mnohých účtov z jednej siete.
+- **Ochrana súkromia, Cookies, Podmienky používania**: nové verejné stránky (odkazy v pätičke).
+- **Súhlas s ukladaním v prehliadači**: RigTrack nepoužíva cookies, analytiku ani reklamu; vaše nastavenia zobrazenia
+  (vzhľad, filtre, rozloženie) sa uložia len so súhlasom. Zmeníte ho v pätičke „Nastavenia ukladania“.
+- **Moje údaje** (Nastavenia → Účet): stiahnutie všetkých vašich osobných údajov a zmazanie účtu.
+- Bezpečnosť: kontrola odkazov zadaných používateľmi, prísnejšia Content-Security-Policy, bezpečnostné hlavičky na
+  serveri. Správa z auditu je v `docs/AUDIT-2026-11.md`.
+- Nové migrácie: `0134`–`0136` (sú aj v `supabase/update-all.sql`) a Edge Function `login`.
+
 ### 6.12.2 – 3. 11. 2026
 
 - **Moje zodpovednosti** na Prehľade: klik pri jednom druhu techniky (napr. len Beam 7R) otvorí techniku vyhľadanú

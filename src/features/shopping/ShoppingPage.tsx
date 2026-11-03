@@ -27,6 +27,7 @@ import { ShoppingEditor } from './ShoppingEditor'
 import { CompactPhoto } from '@/features/equipment/CompactPhoto'
 import { discardPhotoFile, trashPhoto } from '@/features/equipment/photo'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
+import { safeUrl } from '@/lib/safeUrl'
 
 const NEXT_STATUS: Partial<Record<ShoppingStatus, { status: ShoppingStatus; label: string }>> = {
   planned: { status: 'ordered', label: 'Objednané' },
@@ -181,7 +182,7 @@ export function ShoppingPage() {
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {item.url && (
                     <a
-                      href={item.url}
+                      href={safeUrl(item.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"

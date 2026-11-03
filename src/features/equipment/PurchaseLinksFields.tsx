@@ -3,6 +3,7 @@ import { useFieldArray, type Control, type FieldErrors, type UseFormRegister } f
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { asOptionalNumber, LINK_TAG_LABELS, LINK_TAGS, type EquipmentFormValues } from './model'
+import { safeUrl } from '@/lib/safeUrl'
 
 type Props = {
   control: Control<EquipmentFormValues>
@@ -75,7 +76,7 @@ export function EquipmentLinks({ links }: { links: { title: string; url: string;
     <ul className="flex flex-col gap-1.5">
       {links.map((link, index) => (
         <li key={index}>
-          <a href={link.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 text-accent hover:underline">
+          <a href={safeUrl(link.url)} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 text-accent hover:underline">
             <ExternalLink className="size-4 shrink-0" aria-hidden />
             <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-foreground">{LINK_TAG_LABELS[link.tag] ?? link.tag}</span>
             <span className="break-all">{link.title || link.url.replace(/^https?:\/\//, '')}</span>

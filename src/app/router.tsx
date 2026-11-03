@@ -103,6 +103,9 @@ const technicians = lazyPage(() => import('@/features/technicians/TechniciansPag
 const delay = lazyPage(() => import('@/features/delay/DelayPage').then((m) => m.DelayPage))
 // Verejná stránka (aj bez prihlásenia a firmy), preto bez lazyPage.
 const changelog = async () => ({ Component: (await import('@/features/changelog/ChangelogPage')).ChangelogPage })
+const privacy = async () => ({ Component: (await import('@/features/legal/LegalPages')).PrivacyPage })
+const cookies = async () => ({ Component: (await import('@/features/legal/LegalPages')).CookiesPage })
+const terms = async () => ({ Component: (await import('@/features/legal/LegalPages')).TermsPage })
 const about = async () => ({ Component: (await import('@/features/about/AboutPage')).AboutPage })
 const welcome = lazyPage(() => import('@/features/staff/WelcomePage').then((m) => m.WelcomePage))
 const partners = lazyPage(() => import('@/features/partners/PartnersPage').then((m) => m.PartnersPage), 'events.view')
@@ -127,6 +130,10 @@ export const routes: RouteObject[] = [
       { path: 'auth/update-password', element: <UpdatePasswordPage /> },
       { path: 'changelog', lazy: changelog },
       { path: 'about', lazy: about },
+      // Právne informácie – dostupné aj bez prihlásenia.
+      { path: 'ochrana-sukromia', lazy: privacy },
+      { path: 'cookies', lazy: cookies },
+      { path: 'podmienky-pouzivania', lazy: terms },
     ],
   },
   {

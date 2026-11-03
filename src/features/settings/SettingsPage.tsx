@@ -52,6 +52,7 @@ import { KindOrderSettings } from '@/features/equipment/KindOrderSettings'
 import { PrintSettings } from '@/features/print/PrintSettings'
 import { MaintenanceSettings } from '@/features/maintenance/MaintenanceSettings'
 import { WarehouseSettings } from '@/features/warehouse/WarehouseSettings'
+import { MyDataSettings } from './MyDataSettings'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -500,6 +501,9 @@ export function SettingsPage() {
                 Odhlásiť sa
               </Button>
             </div>
+          </Section>
+          <Section title="Moje údaje (GDPR)">
+            <MyDataSettings email={user.email ?? ''} />
           </Section>
           <Section title="Farby priorít úloh">
             <PriorityColorsSettings />

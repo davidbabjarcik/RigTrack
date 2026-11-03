@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-6.12-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-7.0-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,10 +51,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **7.0** | Ochrana prihlásenia, GDPR (súhlas, Moje údaje, právne stránky), bezpečnostný audit |
 | **6.12** | Pridať do plánu: regál, miesto, paleta a stavba; kreslenie ťahaním |
 | **6.11** | Činnosti pred, počas a po evente |
 | **6.10** | Bezdrôtový systém: prijímač, vysielač a kapsule v detaile |
-| **6.7** | Plagát inventára na výšku aj na šírku, PDF, PNG a do tlačovej fronty |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

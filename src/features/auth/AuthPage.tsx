@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { BackendRequired } from '@/components/feedback/BackendRequired'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from './auth-context'
+import { formatRemaining, loginLockStatus, signInGuarded, type Lock } from './loginGuard'
 
 type Mode = 'signin' | 'signup' | 'reset'
 
@@ -28,6 +29,29 @@ function AuthForm() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // Blok po zlých pokusoch – koniec určuje server; tu sa len odpočítava.
+  const [lock, setLock] = useState<Lock | null>(null)
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    let alive = true
+    void loginLockStatus().then((value) => alive && setLock(value))
+    return () => {
+      alive = false
+    }
+  }, [])
+  useEffect(() => {
+    if (!lock) return
+    const timer = window.setInterval(() => {
+      setNow(Date.now())
+      // Po uplynutí sa overí na serveri, či sa už dá prihlásiť.
+      if (Date.now() >= lock.until) {
+        window.clearInterval(timer)
+        void loginLockStatus().then(setLock)
+      }
+    }, 500)
+    return () => window.clearInterval(timer)
+  }, [lock])
+  const locked = mode === 'signin' && lock !== null && lock.until > now
 
   function switchMode(next: Mode) {
     setMode(next)
@@ -46,15 +70,17 @@ function AuthForm() {
 
     // Hlásenia zámerne neprezrádzajú, či účet s daným e-mailom existuje.
     if (mode === 'signin') {
-      const { error } = await auth.signInWithPassword({ email, password })
-      if (error) {
-        setError(
-          error.code === 'email_not_confirmed'
-            ? 'Najprv potvrďte e-mail odkazom, ktorý sme vám poslali.'
-            : error.status === 400
-              ? 'Nesprávny e-mail alebo heslo.'
-              : 'Prihlásenie zlyhalo. Skúste to znova.',
-        )
+      if (locked) {
+        setBusy(false)
+        return
+      }
+      const result = await signInGuarded(email, password)
+      if (!result.ok) {
+        if (result.lock) {
+          setLock(result.lock)
+          setNow(Date.now())
+          setPassword('')
+        } else setError(result.message)
       }
     } else if (mode === 'signup') {
       const { error } = await auth.signUp({
@@ -123,6 +149,14 @@ function AuthForm() {
           />
         )}
 
+        {locked && lock && (
+          <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+            <p className="text-destructive">Príliš veľa neúspešných pokusov o prihlásenie. Z bezpečnostných dôvodov je prihlasovanie dočasne zablokované.</p>
+            <p className="mt-1">
+              Skúste to znova o <span className="font-mono text-base font-semibold tabular-nums">{formatRemaining(lock.until - now)}</span>
+            </p>
+          </div>
+        )}
         {error && (
           <p role="alert" className="text-sm text-destructive">
             {error}
@@ -134,8 +168,8 @@ function AuthForm() {
           </p>
         )}
 
-        <Button type="submit" disabled={busy}>
-          {busy ? 'Čakajte…' : SUBMIT_LABELS[mode]}
+        <Button type="submit" disabled={busy || locked}>
+          {busy ? 'Čakajte…' : locked && lock ? `Zablokované – ${formatRemaining(lock.until - now)}` : SUBMIT_LABELS[mode]}
         </Button>
       </form>
 

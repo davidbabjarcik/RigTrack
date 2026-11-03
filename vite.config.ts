@@ -3,13 +3,48 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // Podpriečinok, z ktorého sa appka servíruje: „/“ na vlastnej doméne či NAS, „/RigTrack/“ na GitHub Pages.
 const base = process.env.BASE_PATH || '/'
 
 const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8')) as { version: string }
+
+/**
+ * Content-Security-Policy do index.html (len pri builde – vývojový server potrebuje vlastné skripty a websocket).
+ * Skripty iba z appky, spojenia iba na Supabase a služby, ktoré appka volá (počasie, adresy, trasa).
+ */
+function securityHeaders(): Plugin {
+  return {
+    name: 'rigtrack-csp',
+    apply: 'build',
+    transformIndexHtml(html, context) {
+      const env = loadEnv(context.server?.config.mode ?? 'production', process.cwd(), 'VITE_')
+      const supabase = (process.env.VITE_SUPABASE_URL || env.VITE_SUPABASE_URL || 'https://*.supabase.co').replace(/\/$/, '')
+      const realtime = supabase.replace(/^https:/, 'wss:')
+      const policy = [
+        "default-src 'self'",
+        "script-src 'self'",
+        // React <style> pri tlači a inline štýly komponentov.
+        "style-src 'self' 'unsafe-inline'",
+        `img-src 'self' data: blob: ${supabase}`,
+        "font-src 'self' data:",
+        `connect-src 'self' ${supabase} ${realtime} https://api.open-meteo.com https://geocoding-api.open-meteo.com https://nominatim.openstreetmap.org https://router.project-osrm.org`,
+        "worker-src 'self' blob:",
+        "manifest-src 'self'",
+        "media-src 'self' blob:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-src 'none'",
+      ].join('; ')
+      return html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="${policy}" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />`)
+    },
+  }
+}
 
 export default defineConfig({
   base,
@@ -31,6 +66,7 @@ export default defineConfig({
     },
     react(),
     tailwindcss(),
+    securityHeaders(),
     VitePWA({
       // Novú verziu ponúkneme používateľovi, nikdy nereloadujeme uprostred formulára.
       registerType: 'prompt',

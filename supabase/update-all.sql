@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0133 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0136 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -3085,6 +3085,238 @@ update public.company_duty_types set phase = 'after'
 where phase = 'event' and (name ilike '%vyklad%' or name ilike '%kontrol%' or name ilike '%naskladn%' or name ilike '%upratan%');
 update public.company_duty_types set phase = 'before'
 where phase = 'event' and (name ilike 'naklad%' or name ilike '%príprav%' or name ilike '%balen%');
+
+-- ===== 0134_login_guard.sql =====
+-- RigTrack 7.0: ochrana prihlásenia pred hádaním hesiel. Prihlásenie ide cez Edge Function `login`, ktorá pred
+-- overením hesla skontroluje blokovanie a po neúspechu ho zapíše. Všetko je na serveri (čas, počítadlá) – obnovenie
+-- stránky ani nová karta ho neresetuje.
+--
+-- Kľúče (e-mail aj IP sú len ako HMAC odtlačok, nie čitateľne):
+--   ei:<email>:<ip>  5 zlých pokusov za 15 min → blok 5 min (bežný prípad – jeden človek / jeden útočník),
+--   e:<email>        20 zlých pokusov z rôznych IP za 15 min → blok 5 min (útok na účet z mnohých IP),
+--   i:<ip>           30 zlých pokusov na rôzne účty za 15 min → blok 5 min (skúšanie mnohých účtov z jednej IP).
+-- Cudzí účet sa tak nedá zablokovať 5 pokusmi z inej siete; na blok celého účtu treba 20 pokusov z rôznych IP.
+
+create table if not exists public.login_guard (
+  key text primary key check (char_length(key) <= 200),
+  failures integer not null default 0,
+  window_start timestamptz not null default now(),
+  locked_until timestamptz,
+  updated_at timestamptz not null default now()
+);
+alter table public.login_guard enable row level security;
+revoke all on public.login_guard from public, anon, authenticated;
+
+-- Bezpečnostné udalosti (bez hesiel, tokenov a čitateľných e-mailov / IP); mažú sa po 30 dňoch.
+create table if not exists public.login_events (
+  id bigint generated always as identity primary key,
+  at timestamptz not null default now(),
+  email_hash text not null check (char_length(email_hash) <= 100),
+  ip_hash text not null check (char_length(ip_hash) <= 100),
+  outcome text not null check (outcome in ('success', 'failure', 'locked'))
+);
+create index if not exists login_events_at_idx on public.login_events (at);
+alter table public.login_events enable row level security;
+revoke all on public.login_events from public, anon, authenticated;
+
+/** Do kedy je prihlásenie z tejto IP (a pre tento e-mail) zablokované; null = nie je. */
+create or replace function public.login_guard_status(_email_hash text, _ip_hash text)
+returns timestamptz language sql stable security definer set search_path = '' as $$
+  select max(g.locked_until)
+  from public.login_guard g
+  where g.locked_until > now()
+    and g.key in (
+      'i:' || _ip_hash,
+      case when _email_hash <> '' then 'e:' || _email_hash end,
+      case when _email_hash <> '' then 'ei:' || _email_hash || ':' || _ip_hash end
+    );
+$$;
+
+/** Blokovanie celej IP (veľa účtov z jednej siete) – pri otvorení prihlasovacej stránky, keď e-mail ešte nepoznáme. */
+create or replace function public.login_guard_ip_status(_ip_hash text)
+returns timestamptz language sql stable security definer set search_path = '' as $$
+  select max(g.locked_until)
+  from public.login_guard g
+  where g.locked_until > now() and g.key = 'i:' || _ip_hash;
+$$;
+
+/** Zapíše neúspešný pokus (atomicky – aj pri súbežných požiadavkách) a vráti, do kedy je blok, ak vznikol. */
+create or replace function public.login_guard_fail(_email_hash text, _ip_hash text)
+returns timestamptz language plpgsql volatile security definer set search_path = '' as $$
+declare
+  rule record;
+  until timestamptz;
+  result timestamptz := null;
+begin
+  for rule in
+    select * from (values
+      ('ei:' || _email_hash || ':' || _ip_hash, 5),
+      ('e:' || _email_hash, 20),
+      ('i:' || _ip_hash, 30)
+    ) as r(key, max_failures)
+  loop
+    insert into public.login_guard as g (key, failures, window_start, updated_at)
+    values (rule.key, 1, now(), now())
+    on conflict (key) do update set
+      -- Nové okno 15 min, ak staré vypršalo (a blok už neplatí).
+      failures = case when g.window_start < now() - interval '15 minutes' and coalesce(g.locked_until, '-infinity') <= now() then 1 else g.failures + 1 end,
+      window_start = case when g.window_start < now() - interval '15 minutes' and coalesce(g.locked_until, '-infinity') <= now() then now() else g.window_start end,
+      updated_at = now()
+    returning case when g.failures >= rule.max_failures and coalesce(g.locked_until, '-infinity') <= now() then now() + interval '5 minutes' end into until;
+    if until is not null then
+      update public.login_guard set locked_until = until, failures = 0, window_start = now() where key = rule.key;
+      result := greatest(coalesce(result, until), until);
+    end if;
+  end loop;
+  insert into public.login_events (email_hash, ip_hash, outcome) values (_email_hash, _ip_hash, case when result is null then 'failure' else 'locked' end);
+  return result;
+end;
+$$;
+
+/** Po úspešnom prihlásení vynuluje počítadlá pre tento e-mail (a e-mail z tejto IP). */
+create or replace function public.login_guard_success(_email_hash text, _ip_hash text)
+returns void language plpgsql volatile security definer set search_path = '' as $$
+begin
+  delete from public.login_guard where key in ('ei:' || _email_hash || ':' || _ip_hash, 'e:' || _email_hash) and coalesce(locked_until, '-infinity') <= now();
+  insert into public.login_events (email_hash, ip_hash, outcome) values (_email_hash, _ip_hash, 'success');
+end;
+$$;
+
+-- Volá ich len Edge Function (service role), nie appka.
+revoke execute on function public.login_guard_status(text, text) from public, anon, authenticated;
+revoke execute on function public.login_guard_ip_status(text) from public, anon, authenticated;
+revoke execute on function public.login_guard_fail(text, text) from public, anon, authenticated;
+revoke execute on function public.login_guard_success(text, text) from public, anon, authenticated;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant execute on function public.login_guard_status(text, text) to service_role;
+    grant execute on function public.login_guard_ip_status(text) to service_role;
+    grant execute on function public.login_guard_fail(text, text) to service_role;
+    grant execute on function public.login_guard_success(text, text) to service_role;
+  end if;
+end;
+$$;
+
+-- Spúšťače nemajú byť volateľné cez API (advisor: security definer pre anon).
+do $$
+begin
+  revoke execute on function public.company_notes_stamp() from public, anon;
+  revoke execute on function public.create_member_staff_card() from public, anon;
+  revoke execute on function public.equipment_move_addresses() from public, anon;
+exception when undefined_function then null;
+end;
+$$;
+
+-- Upratovanie: staré záznamy o pokusoch a udalosti po 30 dňoch.
+do $$
+begin
+  create extension if not exists pg_cron;
+  perform cron.unschedule(jobid) from cron.job where jobname = 'rigtrack-clean-login-guard';
+  perform cron.schedule('rigtrack-clean-login-guard', '15 4 * * *',
+    $job$delete from public.login_guard where updated_at < now() - interval '1 day' and coalesce(locked_until, '-infinity') < now();
+         delete from public.login_events where at < now() - interval '30 days'$job$);
+exception when others then
+  raise notice 'pg_cron nie je k dispozícii – záznamy o prihlásení sa nemažú samy';
+end;
+$$;
+
+-- ===== 0135_consent_records.sql =====
+-- RigTrack 7.0: záznam o súhlase s ukladaním v prehliadači (GDPR – preukázanie súhlasu). Prihlásený používateľ
+-- si zapíše svoju voľbu (verzia pravidiel, čas, kategórie); vidí len svoje záznamy, nikto ich nemení.
+-- Neprihlásený návštevník má záznam len v prehliadači. Záznamy sa mažú s účtom.
+
+create table if not exists public.consent_records (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references public.profiles (id) on delete cascade,
+  version text not null check (char_length(version) between 1 and 20),
+  functional boolean not null,
+  analytics boolean not null default false,
+  marketing boolean not null default false,
+  given_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists consent_records_user_idx on public.consent_records (user_id, created_at desc);
+
+alter table public.consent_records enable row level security;
+revoke all on public.consent_records from anon, authenticated;
+grant select, insert on public.consent_records to authenticated;
+
+drop policy if exists consent_records_select on public.consent_records;
+create policy consent_records_select on public.consent_records for select to authenticated using (user_id = auth.uid());
+drop policy if exists consent_records_insert on public.consent_records;
+create policy consent_records_insert on public.consent_records for insert to authenticated
+  with check (user_id = auth.uid() and analytics = false and marketing = false and given_at <= now() + interval '1 minute');
+
+-- ===== 0136_my_data.sql =====
+-- RigTrack 7.0: GDPR – moje údaje. Každý si stiahne svoje osobné údaje (čl. 15, 20) a môže zmazať svoj účet (čl. 17).
+-- Firmu, v ktorej je jediný admin a sú v nej aj iní ľudia, treba najprv odovzdať inému adminovi; firmu, kde je sám,
+-- najprv zmazať – účet sa nezmaže omylom spolu s dátami celej firmy.
+
+/** Všetky moje osobné údaje naprieč firmami (JSON na stiahnutie). */
+create or replace function public.export_my_data()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then
+    raise exception 'Nie ste prihlásený' using errcode = 'insufficient_privilege';
+  end if;
+  return jsonb_build_object(
+    'exported_at', now(),
+    'account', (select to_jsonb(p) from public.profiles p where p.id = uid),
+    'personal_profile', (select to_jsonb(pp) - 'user_id' from public.personal_profiles pp where pp.user_id = uid),
+    'memberships', coalesce((select jsonb_agg(jsonb_build_object('company', c.name, 'role', m.role)) from public.company_members m join public.companies c on c.id = m.company_id where m.user_id = uid), '[]'::jsonb),
+    'staff_cards', coalesce((select jsonb_agg(to_jsonb(s) - 'member_id') from public.staff s where s.member_id = uid), '[]'::jsonb),
+    'devices', coalesce((select jsonb_agg(to_jsonb(d) - 'user_id') from public.member_devices d where d.user_id = uid), '[]'::jsonb),
+    'home_addresses', coalesce((select jsonb_agg(to_jsonb(h) - 'user_id') from public.member_homes h where h.user_id = uid), '[]'::jsonb),
+    'event_attendance', coalesce((select jsonb_agg(to_jsonb(a) - 'user_id') from public.event_attendance a where a.user_id = uid), '[]'::jsonb),
+    'work_sessions', coalesce((select jsonb_agg(to_jsonb(w) - 'user_id') from public.work_sessions w where w.user_id = uid), '[]'::jsonb),
+    'event_work_logs', coalesce((select jsonb_agg(to_jsonb(l) - 'user_id') from public.event_work_logs l where l.user_id = uid), '[]'::jsonb),
+    'push_subscriptions', coalesce((select jsonb_agg(jsonb_build_object('user_agent', ps.user_agent, 'created_at', ps.created_at)) from public.push_subscriptions ps where ps.user_id = uid), '[]'::jsonb),
+    'consent_records', coalesce((select jsonb_agg(to_jsonb(cr) - 'user_id') from public.consent_records cr where cr.user_id = uid), '[]'::jsonb)
+  );
+end;
+$$;
+revoke execute on function public.export_my_data() from public, anon;
+grant execute on function public.export_my_data() to authenticated;
+
+/**
+ * Zmaže môj účet (po potvrdení e-mailom): osobný profil, zariadenia, dochádzka, odbery upozornení a pod. sa zmažú;
+ * záznamy, ktoré patria firme (karta zamestnanca, výkazy, história zmien), ostanú bez prepojenia na účet – za ne zodpovedá firma.
+ */
+create or replace function public.delete_my_account(_confirm_email text)
+returns void language plpgsql volatile security definer set search_path = '' as $$
+declare
+  uid uuid := auth.uid();
+  my_email text;
+  blocking text;
+begin
+  if uid is null then
+    raise exception 'Nie ste prihlásený' using errcode = 'insufficient_privilege';
+  end if;
+  select lower(email) into my_email from auth.users where id = uid;
+  if my_email is null or lower(trim(coalesce(_confirm_email, ''))) <> my_email then
+    raise exception 'Pre potvrdenie napíšte svoj e-mail' using errcode = 'check_violation';
+  end if;
+  -- Firmy, kde som jediný admin: s ďalšími členmi → odovzdať admina; sám → najprv firmu zmazať.
+  select string_agg(c.name, ', ') into blocking
+  from public.company_members m
+  join public.companies c on c.id = m.company_id
+  where m.user_id = uid and m.role = 'admin'
+    and not exists (select 1 from public.company_members o where o.company_id = m.company_id and o.role = 'admin' and o.user_id <> uid);
+  if blocking is not null then
+    raise exception 'Ste jediný admin vo firme: %. Najprv určite iného admina alebo firmu zmažte.', blocking using errcode = 'check_violation';
+  end if;
+  -- Karta zamestnanca vo firme ostane (je to záznam firmy), len už bez prepojenia na účet – musí mať meno.
+  update public.staff s
+     set name = coalesce(nullif(trim(s.name), ''), nullif(trim((select p.full_name from public.profiles p where p.id = uid)), ''), 'Bývalý člen')
+   where s.member_id = uid;
+  delete from auth.users where id = uid;
+end;
+$$;
+revoke execute on function public.delete_my_account(text) from public, anon;
+grant execute on function public.delete_my_account(text) to authenticated;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

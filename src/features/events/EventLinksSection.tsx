@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { LINK_TAG_LABELS, LINK_TAGS, type LinkTag } from './plan'
 import { addLink, deleteLink, fetchLinks, planKeys } from './planApi'
+import { safeUrl } from '@/lib/safeUrl'
 
 /** Krátky popis odkazu, keď chýba názov: „drive.google.com“. */
 function hostOf(url: string) {
@@ -62,7 +63,7 @@ export function EventLinksSection({ companyId, eventId, canEdit }: { companyId: 
             <li key={link.id} className="flex items-center gap-3 px-4 py-3">
               <Link2 className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">{LINK_TAG_LABELS[link.tag]}</span>
-              <a href={link.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-0 flex-1 items-center gap-1 text-accent hover:underline">
+              <a href={safeUrl(link.url)} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-0 flex-1 items-center gap-1 text-accent hover:underline">
                 <span className="truncate">{link.title || hostOf(link.url)}</span>
                 <ExternalLink className="size-3.5 shrink-0" aria-hidden />
               </a>

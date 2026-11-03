@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { openConsentSettings } from '@/lib/consent'
 import { CREDITS, type CreditIcon } from '@/lib/credits'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -59,6 +60,18 @@ export function Credits({ className }: { className?: string }) {
       <Link to="/about" className="hover:text-foreground hover:underline">
         O aplikácii
       </Link>
+      <Link to="/ochrana-sukromia" className="hover:text-foreground hover:underline">
+        Ochrana súkromia
+      </Link>
+      <Link to="/cookies" className="hover:text-foreground hover:underline">
+        Cookies
+      </Link>
+      <Link to="/podmienky-pouzivania" className="hover:text-foreground hover:underline">
+        Podmienky
+      </Link>
+      <button type="button" className="hover:text-foreground hover:underline" onClick={openConsentSettings}>
+        Nastavenia ukladania
+      </button>
       <span className="flex items-center gap-1">
         {links.map((link) => {
           const icon = ICONS[link.icon]

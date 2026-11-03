@@ -10,6 +10,7 @@ import { formatDate } from '@/lib/format'
 import { DAY_KIND_LABELS, eventDates, LINK_TAG_LABELS } from './plan'
 import { fetchCrewDays, fetchLinks, fetchPlace, planKeys, useEventDays } from './planApi'
 import { useEvents } from './useEvents'
+import { safeUrl } from '@/lib/safeUrl'
 
 const weekday = (iso: string) => new Date(iso).toLocaleDateString('sk-SK', { weekday: 'short', day: 'numeric', month: 'numeric' })
 
@@ -140,7 +141,7 @@ export function CrewSheetPage() {
           <ul className="flex flex-col gap-1.5 text-sm">
             {links.data!.map((link) => (
               <li key={link.id}>
-                <a href={link.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 text-accent hover:underline">
+                <a href={safeUrl(link.url)} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 text-accent hover:underline">
                   <ExternalLink className="size-4" aria-hidden />
                   {LINK_TAG_LABELS[link.tag]}
                   {link.title && ` – ${link.title}`}
