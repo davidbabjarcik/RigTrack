@@ -3747,6 +3747,10 @@ begin
   perform public.seed_demo_extras(_id, auth.uid());
   perform public.seed_demo_v4(_id, auth.uid());
   perform public.seed_demo_v46(_id);
+  begin
+    perform public.seed_demo_v7(_id);
+  exception when undefined_function then null;
+  end;
   return _id;
 end;
 $function$$repairfn$;

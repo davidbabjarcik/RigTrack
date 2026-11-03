@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.13 – 3. 11. 2026
+
+- **Demo firma doplnená**: plán skladu (regály s policami a paletami, palety na zemi, hliník, kancelária, brána, okno,
+  stĺp), cases uložené na regáli a palete, hliník v stohoch, činnosti pred / na / po evente a bezdrôtový systém
+  s vysielačmi. Existujúce demo firmy sa doplnili samy.
+- README: nové snímky (plán skladu, regál spredu, hliník, plagát inventára, IP tabuľka), staré odstránené.
+- Opravené staršie migrácie, aby sa `supabase/update-all.sql` dal znova spustiť aj na databáze s novými dátami.
+- Nová migrácia: `0142` (je aj v `supabase/update-all.sql`).
+
 ### 7.12 – 3. 11. 2026
 
 - **Registrácia**: potvrdenie „Mám aspoň 16 rokov a súhlasím s podmienkami používania“ (s odkazmi na podmienky a ochranu

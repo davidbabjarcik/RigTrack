@@ -96,4 +96,16 @@ describe('demo company 4.6', () => {
     const beam = await t.as('dora', `select unit_info -> '3' ->> 'dmxAddress' as a from public.equipment where company_id = $1 and name = 'Beam 230' and 3 = any (unit_ids)`, [demo])
     expect(beam).toEqual([{ a: '33' }])
   })
+
+  it('includes the warehouse plan, aluminium stacks and duties (7.13)', async () => {
+    const [{ id }] = await t.as('anna', 'select public.create_demo_company() as id')
+    const spots = await t.as('anna', 'select kind, count(*)::int as n from public.warehouse_spots where company_id = $1 group by kind order by kind', [id])
+    expect(spots.map((row: { kind: string }) => row.kind)).toEqual(['column', 'door', 'pallet', 'rack', 'room', 'truss', 'window'])
+    const [{ stacks }] = await t.as('anna', `select jsonb_array_length(truss_layout -> 'stacks') as stacks from public.warehouses where company_id = $1`, [id])
+    expect(stacks).toBe(6)
+    const placed = await t.as('anna', 'select count(*)::int as n from public.cases where company_id = $1 and spot_id is not null', [id])
+    expect(placed[0].n).toBeGreaterThan(0)
+    const duties = await t.as('anna', `select phase from public.company_duty_types where company_id = $1 order by sort`, [id])
+    expect(duties.map((row: { phase: string }) => row.phase)).toEqual(['before', 'event', 'after', 'after', 'after'])
+  })
 })

@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-7.12-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-7.13-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -24,24 +24,24 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/select.png" alt="Vyberte firmu" /><br /><sub><b>Vyberte firmu</b> – firmy a môj účet naprieč firmami</sub></td>
-    <td width="50%"><img src="docs/screenshots/calendar.png" alt="Môj kalendár" /><br /><sub><b>Môj kalendár</b> – akcie zo všetkých firiem a kolízie</sub></td>
+    <td width="50%"><img src="docs/screenshots/plan.png" alt="Plán skladu" /><br /><sub><b>Plán skladu</b> – regály, palety, hliník, miestnosti, dvere a okná</sub></td>
+    <td width="50%"><img src="docs/screenshots/rack.png" alt="Regál spredu" /><br /><sub><b>Regál spredu</b> – police, palety a cases poskladané na nich</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/stats.png" alt="Moje štatistiky" /><br /><sub><b>Moje štatistiky</b> – akcie, hodiny, odmeny, jazdy</sub></td>
-    <td><img src="docs/screenshots/stage.png" alt="Pódium Nivtec" /><br /><sub><b>Pódium Nivtec</b> – dosky, nohy a poradie stavania</sub></td>
+    <td><img src="docs/screenshots/truss.png" alt="Hliník v sklade" /><br /><sub><b>Hliník v sklade</b> – stohy trussov zhora aj spredu</sub></td>
+    <td><img src="docs/screenshots/poster.png" alt="Plagát inventára" /><br /><sub><b>Plagát inventára</b> – na tlač, do PDF aj PNG</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/group.png" alt="Prehľad skupiny techniky" /><br /><sub><b>Technika po kusoch</b> – kde je ktorý kus, úprava, DMX a hodiny všetkým naraz</sub></td>
+    <td><img src="docs/screenshots/ip.png" alt="IP tabuľka" /><br /><sub><b>IP tabuľka</b> – tlač A4 / A5, duplicitné IP červené</sub></td>
+    <td><img src="docs/screenshots/sheet-cables.png" alt="Hárok s obsahom káblového case" /><br /><sub><b>Obsah case</b> – káble podľa dĺžky a farby, príslušenstvo, QR</sub></td>
+  </tr>
+  <tr>
     <td><img src="docs/screenshots/kanban.png" alt="Kanban úloh" /><br /><sub><b>Úlohy</b> – kanban podľa priority, stavu, kategórie či človeka</sub></td>
+    <td><img src="docs/screenshots/calendar.png" alt="Môj kalendár" /><br /><sub><b>Môj kalendár</b> – akcie zo všetkých firiem a kolízie</sub></td>
   </tr>
   <tr>
+    <td><img src="docs/screenshots/stage.png" alt="Pódium Nivtec" /><br /><sub><b>Pódium Nivtec</b> – dosky, nohy a poradie stavania</sub></td>
     <td><img src="docs/screenshots/dmx.png" alt="DMX patch list" /><br /><sub><b>DMX patch list</b> – zo svetiel eventu, kontrola adries, tlač</sub></td>
-    <td><img src="docs/screenshots/tape.png" alt="Štítky na pásku" /><br /><sub><b>Štítky na pásku</b> – Brother P-touch: QR, DMX adresa, módy, odber</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/sheet-cables.png" alt="Hárok s obsahom káblového case" /><br /><sub><b>Obsah case</b> – káble podľa dĺžky a farby, varianty, príslušenstvo, QR</sub></td>
-    <td><img src="docs/screenshots/sheet-dmx.png" alt="Hárok s obsahom svetelného case" /><br /><sub><b>Obsah case so svetlami</b> – fotky bez pozadia, DMX módy a kanály</sub></td>
   </tr>
 </table>
 
@@ -51,10 +51,10 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **7.13** | Demo s plánom skladu, hliníkom a činnosťami; nové snímky v README |
 | **7.12** | Registrácia od 16 rokov, nahlásenie nezákonného obsahu, doplnok právneho auditu |
 | **7.11** | Vlastné farby plánu skladu a typov paliet |
 | **7.10** | Siete: pekná tlač IP / MAC tabuľky (A4/A5, PDF, PNG, tlačová fronta) |
-| **7.9** | Tlačová fronta si pamätá formát (A4/A5, orientácia) |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

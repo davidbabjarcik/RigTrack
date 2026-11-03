@@ -15,8 +15,9 @@ grant update (rack_types) on public.warehouses to authenticated;
 -- QR štítky miest v sklade (regál, paleta, zóna) aj do tlačovej fronty.
 do $$
 begin
+  -- Kontrola je zámerne aktuálna (0140), aby opakované spustenie update-all.sql nezlyhalo na novších dátach.
   alter table public.print_queue drop constraint if exists print_queue_kind_check;
-  alter table public.print_queue add constraint print_queue_kind_check check (kind in ('equipment', 'case', 'spot'));
+  alter table public.print_queue add constraint print_queue_kind_check check (kind in ('equipment', 'case', 'spot', 'poster', 'event', 'network'));
   alter table public.printed_labels drop constraint if exists printed_labels_kind_check;
   alter table public.printed_labels add constraint printed_labels_kind_check check (kind in ('equipment', 'case', 'spot'));
 end;

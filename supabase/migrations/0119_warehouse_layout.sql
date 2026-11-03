@@ -4,7 +4,7 @@
 do $$
 begin
   alter table public.warehouse_spots drop constraint if exists warehouse_spots_kind_check;
-  alter table public.warehouse_spots add constraint warehouse_spots_kind_check check (kind in ('rack', 'pallet', 'zone', 'column', 'wall', 'door', 'window'));
+  alter table public.warehouse_spots add constraint warehouse_spots_kind_check check (kind in ('rack', 'pallet', 'zone', 'column', 'wall', 'door', 'window', 'truss', 'room')); -- aktuálne (0132) kvôli opakovanému spusteniu
 end;
 $$;
 
