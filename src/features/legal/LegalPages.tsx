@@ -312,6 +312,12 @@ export function TermsPage() {
         <li>Prihlasovacie údaje nesmiete nikomu dať. Po 5 neúspešných pokusoch o prihlásenie sa prihlasovanie na 5 minút zablokuje.</li>
         <li>Admin firmy určuje, kto čo vo firme vidí a smie (role a oprávnenia).</li>
       </ul>
+      <h2>Vek</h2>
+      <p>
+        Účet si môže vytvoriť osoba, ktorá má aspoň 16 rokov (potvrdzuje to pri registrácii). Ak chce firma do aplikácie pozvať mladšieho
+        pracovníka, zodpovedá za súhlas jeho zákonného zástupcu. Aplikácia nie je určená deťom a nezbiera údaje o veku okrem dobrovoľného dátumu
+        narodenia v profile.
+      </p>
       <h2>2. Údaje firmy</h2>
       <ul>
         <li>Za obsah, ktorý firma a jej členovia zadajú (vrátane osobných údajov zamestnancov, posádky a kontaktov), zodpovedá firma.</li>
@@ -323,6 +329,13 @@ export function TermsPage() {
         <li>obchádzanie oprávnení, prístup k cudzím údajom, automatizované skúšanie hesiel, zaťažovanie služby,</li>
         <li>nahrávanie škodlivého obsahu alebo obsahu porušujúceho práva tretích osôb.</li>
       </ul>
+      <h2>Nahlásenie nezákonného obsahu alebo porušenia autorských práv</h2>
+      <p>
+        Obsah (fotky, dokumenty, texty) nahrávajú používatelia a vidia ho len členovia ich firmy. Ak si myslíte, že niektorý obsah je nezákonný alebo
+        porušuje vaše práva (napr. autorské), napíšte na <Mail />: kde obsah je (firma, stránka), prečo je podľa vás nezákonný, kto ste a ako vás
+        kontaktovať. Oznámenie preveríme bez zbytočného odkladu, o výsledku vás informujeme a ak je oprávnené, obsah odstránime alebo zneprístupníme;
+        prijaté oznámenia a zásahy evidujeme. Kontaktné miesto pre úrady aj používateľov podľa nariadenia (EÚ) 2022/2065 (DSA) je ten istý e-mail.
+      </p>
       <h2>4. Dostupnosť a zodpovednosť</h2>
       <p>
         RigTrack je pracovný nástroj, ktorý vyvíja jedna osoba, a priebežne sa mení (časti označené „Vo fáze vývoja“ si pred použitím

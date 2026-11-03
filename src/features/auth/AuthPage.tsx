@@ -26,6 +26,8 @@ function AuthForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  // Registrácia od 16 rokov (vek digitálneho súhlasu v SR, § 15 zákona č. 18/2018 Z. z.).
+  const [adult, setAdult] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -86,7 +88,7 @@ function AuthForm() {
       const { error } = await auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName.trim() }, emailRedirectTo: origin },
+        options: { data: { full_name: fullName.trim(), age_confirmed: adult, terms_accepted_at: new Date().toISOString() }, emailRedirectTo: origin },
       })
       if (error) {
         setError(
@@ -137,6 +139,22 @@ function AuthForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
+        {mode === 'signup' && (
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" className="mt-0.5 size-4" required checked={adult} onChange={(e) => setAdult(e.target.checked)} />
+            <span>
+              Mám aspoň 16 rokov a súhlasím s{' '}
+              <a href={`${import.meta.env.BASE_URL}podmienky-pouzivania`} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                podmienkami používania
+              </a>
+              . Ako narábame s údajmi:{' '}
+              <a href={`${import.meta.env.BASE_URL}ochrana-sukromia`} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                ochrana súkromia
+              </a>
+              .
+            </span>
+          </label>
+        )}
         {mode !== 'reset' && (
           <Field
             label="Heslo"

@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.12 – 3. 11. 2026
+
+- **Registrácia**: potvrdenie „Mám aspoň 16 rokov a súhlasím s podmienkami používania“ (s odkazmi na podmienky a ochranu
+  súkromia).
+- **Podmienky používania**: časť Vek a postup na nahlásenie nezákonného obsahu alebo porušenia autorských práv.
+- Doplňujúci právny audit (vek, sledovanie, e-maily, predplatné, autorské práva) – `docs/AUDIT-2026-11-doplnok.md`.
+
 ### 7.11 – 3. 11. 2026
 
 - **Vlastné farby skladu** (Nastavenia → Sklad → Farby v pláne): regál, miesto, hliník, miestnosť, dvere, okno, stĺp a stena;
