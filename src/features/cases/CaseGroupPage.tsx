@@ -5,7 +5,6 @@ import { usePastedImage } from '@/lib/usePastedImage'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
-import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
@@ -64,6 +63,8 @@ export function CaseGroupPage() {
     },
   })
 
+  // Odkazy na tlač sa sem vrátia tlačidlom Späť.
+  const backHere = encodeURIComponent(`/cases/group?ids=${ids.join(',')}`)
   const back = (
     <Link to="/cases" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
       <ArrowLeft className="size-4" aria-hidden />
@@ -136,31 +137,24 @@ export function CaseGroupPage() {
               Upraviť všetky naraz
             </LinkButton>
           )}
-          <LinkButton to={`/qr/cases?ids=${allIds}`} variant="outline" size="sm">
+          <LinkButton to={`/qr/cases?ids=${allIds}&back=${backHere}`} variant="outline" size="sm">
             <QrCode className="size-4" aria-hidden />
             QR štítky všetkých ({members.length})
           </LinkButton>
           {/* Obsahy a štítky všetkých cases sady naraz – jedno PDF / tlač, alebo do tlačovej fronty. */}
-          <LinkButton to={`/print/batch?contents=${allIds}`} variant="outline" size="sm">
+          <LinkButton to={`/print/batch?contents=${allIds}&back=${backHere}`} variant="outline" size="sm">
             <FileText className="size-4" aria-hidden />
             Obsahy všetkých ({members.length})
           </LinkButton>
-          <LinkButton to={`/print/batch?labels=${allIds}`} variant="outline" size="sm">
+          <LinkButton to={`/print/batch?labels=${allIds}&back=${backHere}`} variant="outline" size="sm">
             <Tag className="size-4" aria-hidden />
             Štítky všetkých ({members.length})
           </LinkButton>
-          <AddToPrintButton companyId={companyId} kind="case" targetIds={members.map((item) => item.id)} label="content" />
-          <AddToPrintButton companyId={companyId} kind="case" targetIds={members.map((item) => item.id)} label="case_label" />
+
           {canEdit && (
             <Button variant="outline" size="sm" disabled={checkAll.isPending} onClick={() => window.confirm(`Označiť všetkých ${members.length} ako skontrolované teraz?`) && checkAll.mutate()}>
               <ClipboardCheck className="size-4" aria-hidden />
               {checkAll.isPending ? 'Ukladám…' : 'Skontrolované všetky'}
-            </Button>
-          )}
-          {canEdit && (
-            <Button variant="outline" size="sm" disabled={duplicate.isPending} onClick={() => duplicate.mutate()}>
-              <Copy className="size-4" aria-hidden />
-              {duplicate.isPending ? 'Pridávam…' : 'Pridať ďalší do sady'}
             </Button>
           )}
         </div>
@@ -203,6 +197,20 @@ export function CaseGroupPage() {
             </li>
           )
         })}
+        {/* Ďalší case do sady – sivý riadok pod posledným. */}
+        {canEdit && (
+          <li>
+            <button
+              type="button"
+              disabled={duplicate.isPending}
+              onClick={() => duplicate.mutate()}
+              className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <Copy className="size-4" aria-hidden />
+              {duplicate.isPending ? 'Pridávam…' : `Pridať ďalší do sady (#${members.length + 1})`}
+            </button>
+          </li>
+        )}
       </ul>
     </>
   )

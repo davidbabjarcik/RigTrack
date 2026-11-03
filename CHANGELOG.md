@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.10.1 – 3. 11. 2026
+
+- **Sada cases**: QR štítky, Obsahy a Štítky všetkých; tlačidlá „do tlače“ sú až na stránke tlače. „Pridať ďalší do sady“
+  je sivý riadok pod posledným case. Späť z tlače vráti do sady.
+- **Tlačiť všetko naraz**: pri obsahoch výber A4 / A5 a na výšku / na šírku; obsahy aj štítky sa dajú pridať do tlačovej
+  fronty (obsahy s vybraným formátom).
+- Z Tlače → „Otvoriť a tlačiť“ (obsah, štítok case, plagát, IP tabuľka) sa tlačidlom Späť vrátite do Tlače.
+
 ### 7.10 – 3. 11. 2026
 
 - **Siete – pekná tlač IP tabuľky a MAC adries**: hlavička s firmou, sieťou a počtom, prehľadná tabuľka (duplicitné IP

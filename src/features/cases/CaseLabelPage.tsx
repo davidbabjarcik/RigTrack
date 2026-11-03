@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Download } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -20,6 +20,7 @@ import { useCases } from './useCases'
 
 export function CaseLabelPage() {
   const { id = '' } = useParams()
+  const [backParams] = useSearchParams()
   const company = useCompany().active!
   const companyId = company.companyId
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -88,10 +89,12 @@ export function CaseLabelPage() {
     }
   }, [ready, current, equipment.data, branding.data, logo.data, photo.data, company.companyName, withQr])
 
+  // Z tlačovej fronty (?back=/print) sa vráti do nej, inak na case.
+  const backTo = backParams.get('back') ?? `/cases/${id}`
   const back = (
-    <Link to={`/cases/${id}`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+    <Link to={backTo} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
       <ArrowLeft className="size-4" aria-hidden />
-      Späť na case
+      {backTo === '/print' ? 'Späť do tlače' : 'Späť na case'}
     </Link>
   )
 

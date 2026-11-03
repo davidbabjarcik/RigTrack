@@ -113,9 +113,9 @@ export function AddressPrintPage() {
         </>
       )}
       <div className="mb-4 flex flex-wrap items-center gap-2 print:hidden">
-        <Link to={`/networks?tab=${mode}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link to={params.get('back') ?? `/networks?tab=${mode}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" aria-hidden />
-          Siete
+          {params.get('back') === '/print' ? 'Späť do tlače' : 'Siete'}
         </Link>
         <span className="flex-1" />
         <AddToPrintButton companyId={companyId} kind="network" targetIds={[networkFilter && networkFilter !== 'none' ? networkFilter : companyId]} label={mode} format={formatOf(paper, landscape)} />

@@ -79,7 +79,10 @@ export function PrintQueuePage() {
     const format = formatParams(commonFormat(sheets))
     return `/print/batch?labels=${ids(labels)}&contents=${ids(sheets)}${format ? `&${format}` : ''}`
   }
-  const withFormat = (path: string, item: PrintItem) => (item.format ? `${path}${path.includes('?') ? '&' : '?'}${formatParams(item.format)}` : path)
+  const withFormat = (path: string, item: PrintItem) => {
+    const query = [item.format ? formatParams(item.format) : '', 'back=/print'].filter(Boolean).join('&')
+    return `${path}${path.includes('?') ? '&' : '?'}${query}`
+  }
 
   const group = (title: string, icon: React.ReactNode, list: PrintItem[], actions: React.ReactNode) =>
     list.length > 0 && (

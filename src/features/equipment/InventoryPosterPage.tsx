@@ -161,9 +161,9 @@ export function InventoryPosterPage() {
         </>
       )}
       <div className="mb-4 flex flex-wrap items-center gap-2 print:hidden">
-        <Link to="/equipment" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link to={params.get('back') ?? '/equipment'} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" aria-hidden />
-          Technika
+          {params.get('back') === '/print' ? 'Späť do tlače' : 'Technika'}
         </Link>
         <span className="flex-1" />
         <AddToPrintButton companyId={companyId} kind="poster" targetIds={[companyId]} label={`poster:${kind}`} format={formatOf('A4', !settings.portrait)} />

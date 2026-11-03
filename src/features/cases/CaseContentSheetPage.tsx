@@ -24,6 +24,7 @@ type Paper = (typeof PAPERS)[number]
 
 export function CaseContentSheetPage() {
   const { id = '' } = useParams()
+  const [backParams] = useSearchParams()
   const company = useCompany().active!
   const companyId = company.companyId
   const canvases = useRef<(HTMLCanvasElement | null)[]>([])
@@ -123,10 +124,12 @@ export function CaseContentSheetPage() {
     }
   }, [ready, current, order, layout, show, landscape, dmxInfo, colors.data, branding.data, logo.data, company.companyName, equipment.data])
 
+  // Z tlačovej fronty (?back=/print) sa vráti do nej, inak na case.
+  const backTo = backParams.get('back') ?? `/cases/${id}`
   const back = (
-    <Link to={`/cases/${id}`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+    <Link to={backTo} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
       <ArrowLeft className="size-4" aria-hidden />
-      Späť na case
+      {backTo === '/print' ? 'Späť do tlače' : 'Späť na case'}
     </Link>
   )
 

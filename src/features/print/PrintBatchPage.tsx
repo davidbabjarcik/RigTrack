@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { AddToPrintButton } from './AddToPrintButton'
+import { formatOf } from './api'
 import { Button } from '@/components/ui/button'
 import { caseTitle } from '@/features/cases/model'
 import { drawCaseLabelFor, renderContentSheets, scaledCanvas, sheetOptions } from '@/features/cases/renderSheets'
@@ -58,10 +60,15 @@ export function PrintBatchPage() {
   const labelIds = (params.get('labels') ?? '').split(',').filter(Boolean)
   const contentIds = (params.get('contents') ?? '').split(',').filter(Boolean)
   const { prefs } = useUserPrefs()
-  const sheet = prefs.sheet ?? {}
-  // Z tlačovej fronty: formát hárkov (?paper=A5&landscape=1), inak podľa volieb hárku.
+  const savedSheet = prefs.sheet ?? {}
+  // Papier a orientácia hárkov s obsahom: z tlačovej fronty (?paper=A5&landscape=1), inak z volieb hárku; dá sa zmeniť tu.
   const queuePaper = params.get('paper')
-  const options = sheetOptions(queuePaper === 'A4' || queuePaper === 'A5' ? { ...sheet, paper: queuePaper, landscape: params.get('landscape') === '1' } : sheet)
+  const [format, setFormat] = useState<{ paper: 'A4' | 'A5'; landscape: boolean } | null>(() =>
+    queuePaper === 'A4' || queuePaper === 'A5' ? { paper: queuePaper, landscape: params.get('landscape') === '1' } : null,
+  )
+  const sheet = format ? { ...savedSheet, ...format } : savedSheet
+  const options = sheetOptions(sheet)
+  const back = params.get('back') ?? '/print'
   const cases = useCases(companyId)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const colors = useQuery({ queryKey: cableColorKeys.list(companyId), queryFn: () => fetchCableColors(companyId) })
@@ -165,15 +172,17 @@ export function PrintBatchPage() {
           </div>
         </>
       )}
-      <Link to="/print" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link to={back} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" aria-hidden />
-        Tlačová fronta
+        {back === '/print' ? 'Tlačová fronta' : 'Späť'}
       </Link>
       <PageHeader
         title="Tlačiť všetko naraz"
-        description={`${labelIds.length} štítkov cases (2 na A4) · ${contentIds.length} hárkov s obsahom (${options.paper}${options.landscape ? ', na šírku' : ''} – podľa volieb hárku)`}
+        description={`${labelIds.length} štítkov cases (2 na A4) · ${contentIds.length} hárkov s obsahom (${options.paper}, ${options.landscape ? 'na šírku' : 'na výšku'})`}
         action={
           <div className="flex flex-wrap gap-2">
+            {contentIds.length > 0 && <AddToPrintButton companyId={companyId} kind="case" targetIds={contentIds} label="content" format={formatOf(options.paper, options.landscape)} />}
+            {labelIds.length > 0 && <AddToPrintButton companyId={companyId} kind="case" targetIds={labelIds} label="case_label" />}
             <Button disabled={!pages || pages.length === 0} onClick={print}>
               <Printer className="size-4" aria-hidden />
               Tlačiť
@@ -185,6 +194,25 @@ export function PrintBatchPage() {
           </div>
         }
       />
+      {contentIds.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border bg-surface p-3 print:hidden">
+          <label className="flex flex-col gap-1 text-sm">
+            Obsahy – papier
+            <select className="h-10 rounded-lg border bg-background px-2" value={options.paper} onChange={(e) => { setPages(null); setFormat({ paper: e.target.value as 'A4' | 'A5', landscape: options.landscape }) }}>
+              <option value="A4">A4</option>
+              <option value="A5">A5</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            Orientácia
+            <select className="h-10 rounded-lg border bg-background px-2" value={options.landscape ? 'landscape' : 'portrait'} onChange={(e) => { setPages(null); setFormat({ paper: options.paper, landscape: e.target.value === 'landscape' }) }}>
+              <option value="portrait">na výšku</option>
+              <option value="landscape">na šírku</option>
+            </select>
+          </label>
+          <p className="pb-2 text-xs text-muted-foreground">Štítky cases sú vždy 2 na A4.</p>
+        </div>
+      )}
       {!pages ? (
         <LoadingBlock />
       ) : pages.length === 0 ? (
