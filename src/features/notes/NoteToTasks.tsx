@@ -28,7 +28,9 @@ export function NoteToTasks({ companyId, note, members, onDone, onCancel }: Prop
   const convert = useMutation({
     mutationFn: async () => {
       const chosen = lines.filter((_, index) => picked.has(index))
-      for (const title of chosen) {
+      // Číslo podľa poradia riadkov (1., 2., 3. …), aby sa úlohy v zozname zoradili rovnako ako v poznámke.
+      for (const [index, line] of chosen.entries()) {
+        const title = `${index + 1}. ${line}`
         await saveTask(companyId, null, { title: title.slice(0, 200), note: '', assigneeId: people[0] ?? '', assigneeIds: people, category, priority: 'normal', dueOn: '', status: 'open' })
       }
       const rest = remainingBody(note.body, picked)
@@ -100,6 +102,7 @@ export function NoteToTasks({ companyId, note, members, onDone, onCancel }: Prop
           })}
         </div>
       </div>
+      <p className="text-xs text-muted-foreground">Úlohy dostanú číslo podľa poradia (1., 2., 3. …), aby sa v Úlohách zoradili ako v poznámke.</p>
       <label className="flex items-center gap-2">
         <input type="checkbox" className="size-4" checked={dropEmpty} onChange={(e) => setDropEmpty(e.target.checked)} />
         Zmazať poznámku, keď v nej nič neostane

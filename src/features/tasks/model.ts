@@ -91,6 +91,6 @@ export function sortTasks(tasks: Task[], today: string) {
     if (overdue !== 0) return overdue
     const priority = priorityRank(a.priority) - priorityRank(b.priority)
     if (priority !== 0) return priority
-    return (a.dueOn ?? '9999').localeCompare(b.dueOn ?? '9999') || a.title.localeCompare(b.title, 'sk')
+    return (a.dueOn ?? '9999').localeCompare(b.dueOn ?? '9999') || a.title.localeCompare(b.title, 'sk', { numeric: true })
   })
 }

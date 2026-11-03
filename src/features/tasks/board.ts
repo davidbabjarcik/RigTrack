@@ -63,7 +63,7 @@ export function sortTaskList(tasks: Task[], sort: TaskSort, today: string) {
   const list = sortTasks(tasks, today)
   if (sort === 'due') return list.sort((a, b) => (a.dueOn ?? '9999').localeCompare(b.dueOn ?? '9999'))
   if (sort === 'priority') return list.sort((a, b) => rank(a.priority) - rank(b.priority))
-  if (sort === 'title') return list.sort((a, b) => a.title.localeCompare(b.title, 'sk'))
+  if (sort === 'title') return list.sort((a, b) => a.title.localeCompare(b.title, 'sk', { numeric: true }))
   if (sort === 'newest') return list.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
   return list
 }

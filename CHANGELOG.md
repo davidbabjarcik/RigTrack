@@ -5,6 +5,10 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.7.1 – 3. 11. 2026
+
+- Poznámka → úlohy: úlohy dostanú číslo podľa poradia riadkov (1., 2., 3. …) a v Úlohách sa tak aj zoradia (aj 2 pred 10).
+
 ### 7.7 – 3. 11. 2026
 
 - **Bezdrôtový systém – návrh názvu a modelu**: z prijímača, vysielačov a kapsúl appka navrhne názov (napr. „Výrobca
