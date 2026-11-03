@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.5.1 – 3. 11. 2026
+
+- Činnosti: tlačidlo **Upraviť** (ceruzka) – zmena názvu s tlačidlom Uložiť a kto / ktoré roly k činnosti patria;
+  Zavrieť.
+
 ### 7.5 – 3. 11. 2026
 
 - **Tlač patch listov**: šablóny patch listov (zvuk aj DMX) sa dajú vytlačiť alebo uložiť do PDF (ikona tlačiarne pri

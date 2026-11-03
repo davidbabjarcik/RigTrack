@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -18,6 +18,7 @@ export function DutySettings({ companyId }: { companyId: string }) {
   const types = useDutyTypes(companyId)
   const [name, setName] = useState('')
   const [ownersOf, setOwnersOf] = useState<string | null>(null)
+  const [rename, setRename] = useState('')
   const members = useMembers(companyId)
   const ownerLabel = (type: DutyType) =>
     [
@@ -78,6 +79,18 @@ export function DutySettings({ companyId }: { companyId: string }) {
                           </option>
                         ))}
                       </select>
+                      <Button
+                        variant={ownersOf === type.id ? 'outline' : 'ghost'}
+                        size="sm"
+                        aria-label={`Upraviť ${type.name}`}
+                        title="Upraviť názov a komu patrí"
+                        onClick={() => {
+                          setRename(type.name)
+                          setOwnersOf(ownersOf === type.id ? null : type.id)
+                        }}
+                      >
+                        <Pencil className="size-4" aria-hidden />
+                      </Button>
                       <label className="flex items-center gap-1 text-sm">
                         <input type="checkbox" className="size-4" checked={type.active} onChange={(event) => update.mutate({ id: type.id, fields: { active: event.target.checked } })} />
                         Zapnutá
@@ -99,6 +112,10 @@ export function DutySettings({ companyId }: { companyId: string }) {
                       </Button>
                       {ownersOf === type.id && (
                         <div className="flex w-full flex-col gap-2 rounded-lg bg-muted/40 p-2 text-sm">
+                          <label className="flex flex-wrap items-center gap-2">
+                            <span className="text-muted-foreground">Názov:</span>
+                            <input className="h-9 min-w-48 flex-1 rounded-lg border bg-background px-2" maxLength={60} value={rename} onChange={(event) => setRename(event.target.value)} />
+                          </label>
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span className="mr-1 text-muted-foreground">Roly:</span>
                             {OWNER_ROLES.map((role) => {
@@ -132,6 +149,19 @@ export function DutySettings({ companyId }: { companyId: string }) {
                                 </button>
                               )
                             })}
+                          </div>
+                          <p className="text-xs text-muted-foreground">Ľudia a roly sa uložia hneď po kliknutí.</p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              disabled={update.isPending || !rename.trim() || rename.trim() === type.name || list.some((other) => other.id !== type.id && other.name.trim().toLowerCase() === rename.trim().toLowerCase())}
+                              onClick={() => update.mutate({ id: type.id, fields: { name: rename.trim() } })}
+                            >
+                              Uložiť názov
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setOwnersOf(null)}>
+                              Zavrieť
+                            </Button>
                           </div>
                         </div>
                       )}
