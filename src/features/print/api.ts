@@ -51,9 +51,9 @@ export async function saveCompanyPrefs(companyId: string, current: CompanyPrefs,
 }
 
 /** Čo sa tlačí: QR štítok, páska Brother, štítok case (A5/A4), hárok s obsahom case alebo plagát inventára (poster:druh). */
-export type PrintLabel = 'qr' | 'tape' | 'case_label' | 'content' | 'patch' | 'dmx' | `poster:${string}`
+export type PrintLabel = 'qr' | 'tape' | 'case_label' | 'content' | 'patch' | 'dmx' | 'ip' | 'mac' | `poster:${string}`
 /** Plagát inventára je vo fronte ako kind „poster“ s id firmy a druhom techniky v label (0131). */
-export type PrintItem = { id: string; kind: 'equipment' | 'case' | 'spot' | 'poster' | 'event'; targetId: string; label: PrintLabel; note: string; createdAt: string; format?: PrintFormat }
+export type PrintItem = { id: string; kind: 'equipment' | 'case' | 'spot' | 'poster' | 'event' | 'network'; targetId: string; label: PrintLabel; note: string; createdAt: string; format?: PrintFormat }
 /** Papier a orientácia uložené pri pridaní do fronty (0139); prázdne = podľa nastavení pri tlači. */
 export type PrintFormat = '' | 'A4-portrait' | 'A4-landscape' | 'A5-portrait' | 'A5-landscape'
 export const formatOf = (paper: 'A4' | 'A5', landscape: boolean): PrintFormat => `${paper}-${landscape ? 'landscape' : 'portrait'}`

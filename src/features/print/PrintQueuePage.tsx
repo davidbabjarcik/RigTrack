@@ -34,7 +34,7 @@ export function PrintQueuePage() {
   const done = useMutation({
     mutationFn: async (list: PrintItem[]) => {
       // Plagáty sa nepamätajú (nie sú to štítky).
-      const labels = list.filter((item) => item.kind !== 'poster' && item.kind !== 'event')
+      const labels = list.filter((item) => item.kind !== 'poster' && item.kind !== 'event' && item.kind !== 'network')
       await markPrinted(companyId, labels.map((item) => ({ kind: item.kind as 'equipment' | 'case' | 'spot', targetId: item.targetId, label: item.label }))).catch(() => undefined)
       await removeFromPrintQueue(companyId, list.map((item) => item.id))
     },
@@ -46,6 +46,7 @@ export function PrintQueuePage() {
 
   const items = queue.data
   const nameOf = (item: PrintItem) => {
+    if (item.kind === 'network') return `${item.label === 'mac' ? 'MAC adresy' : 'IP tabuľka'}${item.targetId === companyId ? '' : ' – vybraná sieť'}`
     if (item.kind === 'event') return `${item.label === 'dmx' ? 'DMX patch' : 'Patch list'} – ${eventsList.data?.find((event) => event.id === item.targetId)?.name ?? 'event (zmazaný)'}`
     if (item.kind === 'poster') return `Plagát inventára – ${KIND_LABELS[item.label.slice(7) as EquipmentKind] ?? item.label.slice(7)}`
     if (item.kind === 'spot') return spots.data?.spots.find((candidate) => candidate.id === item.targetId)?.name ?? 'Miesto (zmazané)'
@@ -63,6 +64,8 @@ export function PrintQueuePage() {
   const contents = items.filter((item) => item.label === 'content')
   const posters = items.filter((item) => item.kind === 'poster')
   const patchLists = items.filter((item) => item.kind === 'event')
+  const networkPrints = items.filter((item) => item.kind === 'network')
+  const networkLink = (item: PrintItem) => withFormat(`/networks/print?tab=${item.label}${item.targetId === companyId ? '' : `&network=${item.targetId}`}`, item)
   const ids = (list: PrintItem[]) => [...new Set(list.map((item) => item.targetId))].join(',')
   const a4 = (prefs.qrTarget ?? 'a4') === 'a4'
   // Bez QR štítku: technika (okrem spotrebného materiálu) a cases, ktoré ešte nemajú vytlačený ani zaradený QR.
@@ -91,12 +94,18 @@ export function PrintQueuePage() {
         <ul className="divide-y text-sm">
           {list.map((item) => (
             <li key={item.id} className="flex items-center gap-3 py-1.5">
-              <Link to={item.kind === 'event' ? `/events/${item.targetId}/${item.label === 'dmx' ? 'dmx' : 'patch'}` : item.kind === 'poster' ? `/equipment/poster?kind=${item.label.slice(7)}` : item.kind === 'spot' ? `/warehouse?spot=${item.targetId}` : item.kind === 'case' ? `/cases/${item.targetId}` : `/equipment/${item.targetId}`} className="min-w-0 flex-1 truncate hover:underline">
+              <Link to={item.kind === 'network' ? networkLink(item) : item.kind === 'event' ? `/events/${item.targetId}/${item.label === 'dmx' ? 'dmx' : 'patch'}` : item.kind === 'poster' ? `/equipment/poster?kind=${item.label.slice(7)}` : item.kind === 'spot' ? `/warehouse?spot=${item.targetId}` : item.kind === 'case' ? `/cases/${item.targetId}` : `/equipment/${item.targetId}`} className="min-w-0 flex-1 truncate hover:underline">
                 {nameOf(item)}
               </Link>
               {item.note && <span className="truncate text-muted-foreground">{item.note}</span>}
               {item.format && <span className="shrink-0 rounded-full border px-2 py-0.5 text-xs text-muted-foreground">{FORMAT_LABELS[item.format as Exclude<PrintFormat, ''>]}</span>}
               {/* Štítok a obsah case sa tlačia každý zvlášť (vlastná stránka s tlačou / PDF). */}
+              {item.kind === 'network' && (
+                <Link to={networkLink(item)} className="inline-flex items-center gap-1 text-accent hover:underline">
+                  <Printer className="size-4" aria-hidden />
+                  Otvoriť a tlačiť
+                </Link>
+              )}
               {item.kind === 'event' && (
                 <Link to={`/events/${item.targetId}/${item.label === 'dmx' ? 'dmx' : 'patch'}`} className="inline-flex items-center gap-1 text-accent hover:underline">
                   <Printer className="size-4" aria-hidden />
@@ -171,6 +180,7 @@ export function PrintQueuePage() {
           )}
           {group('Štítky cases', <Tag className="size-5 text-accent" aria-hidden />, caseLabels, caseLabels.length > 1 ? printLink(batchLink(caseLabels, []), 'Všetky štítky') : null)}
           {group('Obsah cases (hárky)', <Briefcase className="size-5 text-accent" aria-hidden />, contents, contents.length > 1 ? printLink(batchLink([], contents), 'Všetky obsahy') : null)}
+          {group('Siete (IP / MAC)', <Tag className="size-5 text-accent" aria-hidden />, networkPrints, null)}
           {group('Patch listy eventov', <Cable className="size-5 text-accent" aria-hidden />, patchLists, null)}
           {group('Plagáty inventára', <Presentation className="size-5 text-accent" aria-hidden />, posters, null)}
           {group('Štítky (adresy, módy, odber)', <Tag className="size-5 text-accent" aria-hidden />, tape, printLink(`/labels/tape?ids=${ids(tape.filter((item) => item.kind === 'equipment'))}&back=/print`, 'Štítky'))}

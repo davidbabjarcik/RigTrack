@@ -68,4 +68,9 @@ describe('print queue and company prefs', () => {
     expect(await t.as('boss', `select format from public.print_queue where target_id = $1`, [box])).toEqual([{ format: 'A5-landscape' }])
     await expect(t.as('viewer', `insert into public.print_queue (company_id, kind, target_id, label, format) values ($1, 'case', $2, 'case_label', 'A3')`, [a, box])).rejects.toThrow(/check/)
   })
+
+  it('takes network address tables', async () => {
+    await t.as('viewer', `insert into public.print_queue (company_id, kind, target_id, label, format) values ($1, 'network', $1, 'ip', 'A4-landscape')`, [a])
+    await expect(t.as('viewer', `insert into public.print_queue (company_id, kind, target_id, label) values ($1, 'network', $1, 'dmx')`, [a])).rejects.toThrow(/check/)
+  })
 })

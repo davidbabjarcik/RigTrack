@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.10 – 3. 11. 2026
+
+- **Siete – pekná tlač IP tabuľky a MAC adries**: hlavička s firmou, sieťou a počtom, prehľadná tabuľka (duplicitné IP
+  červené), dátum vygenerovania; A4 alebo A5, na výšku alebo na šírku; Tlačiť, PDF, PNG aj do tlačovej fronty (s formátom).
+- Nová migrácia: `0140` (je aj v `supabase/update-all.sql`).
+
 ### 7.9 – 3. 11. 2026
 
 - **Tlačová fronta si pamätá formát**: obsah case aj plagát sa pridajú s papierom a orientáciou, ako ich máte práve

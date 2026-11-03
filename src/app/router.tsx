@@ -41,6 +41,7 @@ const inventoryPoster = lazyPage(() => import('@/features/equipment/InventoryPos
 const equipmentGroup = lazyPage(() => import('@/features/equipment/EquipmentGroupPage').then((m) => m.EquipmentGroupPage), 'equipment.view')
 const equipmentForm = lazyPage(() => import('@/features/equipment/EquipmentFormPage').then((m) => m.EquipmentFormPage), 'equipment.view')
 const equipmentExcel = lazyPage(() => import('@/features/equipment/EquipmentExcelPage').then((m) => m.EquipmentExcelPage), 'equipment.view')
+const addressPrint = lazyPage(() => import('@/features/networks/AddressPrintPage').then((m) => m.AddressPrintPage), 'networks.view')
 const wifiQrPrint = lazyPage(() => import('@/features/networks/WifiQrPrintPage').then((m) => m.WifiQrPrintPage), 'networks.view')
 const networks = lazyPage(() => import('@/features/networks/NetworksPage').then((m) => m.NetworksPage), 'networks.view')
 const capsules = lazyPage(() => import('@/features/capsules/CapsulesPage').then((m) => m.CapsulesPage), 'equipment.view')
@@ -184,6 +185,7 @@ export const routes: RouteObject[] = [
               { path: 'notes', lazy: notes },
               { path: 'print', lazy: printQueue },
               { path: 'print/batch', lazy: printBatch },
+              { path: 'networks/print', lazy: addressPrint },
               { path: 'equipment/:id', lazy: equipmentDetail },
               { path: 'equipment/:id/presets', lazy: ampPresets },
               { path: 'equipment/:id/edit', lazy: equipmentForm },

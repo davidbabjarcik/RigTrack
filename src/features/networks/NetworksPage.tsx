@@ -211,10 +211,10 @@ export function NetworksPage() {
             ))}
             <option value="none">Bez siete</option>
           </SelectField>
-          <Button variant="outline" onClick={() => window.print()}>
+          <LinkButton variant="outline" to={`/networks/print?tab=${tab}${networkFilter ? `&network=${networkFilter}` : ''}`}>
             <Printer className="size-4" aria-hidden />
-            Tlačiť
-          </Button>
+            Tlačiť / PDF
+          </LinkButton>
           {visibleEquipment.length > 0 && (
             <LinkButton variant="outline" to={tapeLink(visibleEquipment)}>
               <Tag className="size-4" aria-hidden />
