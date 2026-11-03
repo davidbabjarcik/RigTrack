@@ -5,10 +5,16 @@ import { useAuth } from '@/features/auth/auth-context'
 import { CONSENT_VERSION, openConsentSettings } from '@/lib/consent'
 
 // Právne stránky (verejné, aj bez prihlásenia). Obsah vychádza zo skutočnej implementácie appky (databáza, služby,
-// automatické mazanie). Údaje, ktoré musí potvrdiť prevádzkovateľ, sú označené [DOPLNIŤ].
+// automatické mazanie) a z údajov, ktoré dodal prevádzkovateľ (3. 11. 2026).
 
 const UPDATED = '3. 11. 2026'
-const FILL = <mark className="rounded bg-amber-200 px-1 text-black">[DOPLNIŤ]</mark>
+const OPERATOR = 'Dávid Babjarčík'
+const CONTACT = 'davidbabjarcik@gmail.com'
+const Mail = () => (
+  <a href={`mailto:${CONTACT}`} className="text-accent hover:underline">
+    {CONTACT}
+  </a>
+)
 
 function Page({ title, children }: { title: string; children: ReactNode }) {
   const signedIn = Boolean(useAuth().session)
@@ -43,11 +49,11 @@ function Page({ title, children }: { title: string; children: ReactNode }) {
 function Operator() {
   return (
     <ul>
-      <li>Prevádzkovateľ aplikácie RigTrack: {FILL} (meno / obchodné meno)</li>
-      <li>Sídlo / adresa: {FILL}</li>
-      <li>IČO (ak je): {FILL}</li>
-      <li>E-mail na otázky k osobným údajom: {FILL}</li>
-      <li>Zodpovedná osoba (DPO), ak je určená: {FILL}</li>
+      <li>Prevádzkovateľ aplikácie RigTrack: {OPERATOR} – fyzická osoba, ktorá aplikáciu vyvíja a prevádzkuje ako pracovný nástroj (nie podnikateľ, preto bez IČO).</li>
+      <li>
+        E-mail na otázky a žiadosti k osobným údajom: <Mail />
+      </li>
+      <li>Zodpovedná osoba (DPO): nie je určená – pri tomto rozsahu spracúvania nie je povinná.</li>
     </ul>
   )
 }
@@ -66,7 +72,7 @@ export function PrivacyPage() {
       <p>
         <strong>Firmy v aplikácii.</strong> Každá firma (napr. produkčná spoločnosť), ktorá RigTrack používa, je vo vzťahu k údajom svojich
         zamestnancov, posádky, kontaktov a klientov, ktoré do aplikácie zadá, samostatným prevádzkovateľom; prevádzkovateľ RigTracku je pre ňu
-        sprostredkovateľom. Zmluvu o spracúvaní (čl. 28 GDPR) medzi prevádzkovateľom RigTracku a firmami treba uzavrieť: {FILL}
+        sprostredkovateľom. Písomná zmluva o spracúvaní (čl. 28 GDPR) zatiaľ uzavretá nie je; firma si ju môže vyžiadať e-mailom.
       </p>
 
       <h2>2. Aké údaje spracúvame</h2>
@@ -158,9 +164,9 @@ export function PrivacyPage() {
         <li>Poskytovanie aplikácie a účtu (prihlásenie, firmy, evidencia) – plnenie zmluvy, čl. 6 ods. 1 písm. b) GDPR.</li>
         <li>
           Údaje zamestnancov a posádky zadané firmou – oprávnený záujem firmy na organizácii práce a plnenie jej povinností ako zamestnávateľa, čl. 6
-          ods. 1 písm. b), c), f); posúdenie a doplnenie zodpovedá firma {FILL}.
+          ods. 1 písm. b), c), f); za správny právny základ zodpovedá firma.
         </li>
-        <li>Údaje o úrazoch (zdravie) – plnenie povinností v oblasti BOZP, čl. 9 ods. 2 písm. b) GDPR; zodpovedá firma {FILL}.</li>
+        <li>Údaje o úrazoch (zdravie) – plnenie povinností v oblasti BOZP, čl. 9 ods. 2 písm. b) GDPR; zodpovedá firma.</li>
         <li>Dobrovoľné údaje v profile (narodeniny, meniny, sociálne siete, fotka) – súhlas, čl. 6 ods. 1 písm. a); dajú sa kedykoľvek zmazať.</li>
         <li>Overenie dochádzky polohou – súhlas (zapína sa v appke na zariadení) a oprávnený záujem firmy na evidencii práce.</li>
         <li>Bezpečnosť (ochrana prihlásenia, história zmien, zachytávanie chýb) – oprávnený záujem na bezpečnej a funkčnej aplikácii, čl. 6 ods. 1 písm. f).</li>
@@ -172,26 +178,27 @@ export function PrivacyPage() {
         <li>Účet a údaje firmy: počas používania aplikácie; po zmazaní firmy alebo účtu sa zmažú. Zmazané položky ostanú v koši firmy, kým ich admin nevyprázdni.</li>
         <li>Automaticky zachytené chyby appky: vyriešené 90 dní, ostatné najviac 180 dní (automatické mazanie).</li>
         <li>Záznamy o pokusoch o prihlásenie: 30 dní; blokovanie sa zmaže deň po skončení (automatické mazanie).</li>
-        <li>Záloha databázy u poskytovateľa a prevádzkové logy hostingu: podľa nastavení poskytovateľa {FILL}.</li>
-        <li>Údaje, ktoré firma musí uchovávať podľa zákona (napr. evidencia pracovného času, BOZP): podľa príslušných predpisov – určí firma {FILL}.</li>
+        <li>Zálohy databázy a prevádzkové logy hostingu: podľa podmienok poskytovateľov (Supabase, GitHub) – spravidla dni až týždne.</li>
+        <li>Údaje, ktoré firma musí uchovávať podľa zákona (napr. evidencia pracovného času, BOZP): podľa príslušných predpisov – určuje firma.</li>
       </ul>
 
       <h2>5. Príjemcovia a sprostredkovatelia</h2>
       <ul>
         <li>Supabase Inc. (USA) – databáza, prihlásenie, súbory a serverové funkcie; údaje sú uložené v dátovom centre v EÚ (Írsko, AWS eu-west-1).</li>
-        <li>GitHub Inc. / Microsoft (USA) – hosting webovej aplikácie (GitHub Pages), alebo vlastný server prevádzkovateľa {FILL}.</li>
+        <li>GitHub Inc. / Microsoft (USA) – hosting webovej aplikácie (GitHub Pages).</li>
         <li>OpenStreetMap Foundation (Nominatim) – vyhľadanie adresy, keď ju zadáte (napr. miesto eventu, sklad, domov); posiela sa len hľadaný text.</li>
         <li>OSRM (router.project-osrm.org) – výpočet trasy a kilometrov zo skladu na miesto eventu; posielajú sa len súradnice.</li>
         <li>Open-Meteo (Švajčiarsko) – počasie pre miesto eventu; posielajú sa len súradnice.</li>
         <li>Poskytovateľ push upozornení vášho prehliadača (napr. Google, Apple, Mozilla) – len ak upozornenia zapnete.</li>
-        <li>Odosielanie e-mailov (potvrdenie účtu, obnova hesla, upozornenia) – Supabase Auth a prípadne Resend, Inc. (USA) {FILL}.</li>
+        <li>Odosielanie e-mailov (potvrdenie účtu, obnova hesla, upozornenia) – Supabase Auth; e-maily o nahlásenej chybe a novom evente cez Resend, Inc. (USA), ak sú zapnuté.</li>
         <li>Členovia vašej firmy podľa svojich oprávnení; prepojené partnerské firmy len to, čo im firma výslovne zdieľa.</li>
       </ul>
 
       <h2>6. Prenos do tretích krajín</h2>
       <p>
         Niektorí poskytovatelia sídlia v USA (Supabase, GitHub, Resend, poskytovatelia push upozornení). Prenos sa opiera o rozhodnutie Komisie o
-        primeranosti (EU-U.S. Data Privacy Framework) alebo štandardné zmluvné doložky – stav u každého poskytovateľa potvrdí prevádzkovateľ {FILL}.
+        primeranosti (EU-U.S. Data Privacy Framework) alebo štandardné zmluvné doložky, ktoré títo poskytovatelia uvádzajú vo svojich zmluvných
+        podmienkach (DPA).
         Databáza a súbory sú uložené v EÚ.
       </p>
 
@@ -199,7 +206,7 @@ export function PrivacyPage() {
       <ul>
         <li>prístup k údajom a kópia (čl. 15) – svoje údaje vidíte v profile; export údajov firmy je v Nastaveniach → Import a export,</li>
         <li>oprava (čl. 16) – priamo v profile alebo cez admina firmy,</li>
-        <li>vymazanie (čl. 17) – dobrovoľné údaje zmažete sami; zmazanie celého účtu na požiadanie {FILL},</li>
+        <li>vymazanie (čl. 17) – dobrovoľné údaje zmažete sami, celý účet v Nastaveniach → Účet → Moje údaje alebo na požiadanie e-mailom,</li>
         <li>obmedzenie spracúvania (čl. 18),</li>
         <li>prenosnosť (čl. 20) – export v strojovo čitateľnom formáte (Excel / JSON),</li>
         <li>námietka proti spracúvaniu na základe oprávneného záujmu (čl. 21),</li>
@@ -213,7 +220,7 @@ export function PrivacyPage() {
         </li>
       </ul>
       <p>
-        Žiadosť pošlite e-mailom prevádzkovateľovi ({FILL}); ak ide o údaje, ktoré zadala vaša firma, aj adminovi firmy. Odpovieme do jedného
+        Žiadosť pošlite e-mailom na <Mail />; ak ide o údaje, ktoré zadala vaša firma, aj adminovi firmy. Odpovieme do jedného
         mesiaca.
       </p>
 
@@ -296,7 +303,9 @@ export function CookiesPage() {
 export function TermsPage() {
   return (
     <Page title="Podmienky používania">
-      <p>Tieto podmienky upravujú používanie webovej aplikácie RigTrack. Prevádzkovateľ: {FILL}.</p>
+      <p>
+        Tieto podmienky upravujú používanie webovej aplikácie RigTrack. Prevádzkovateľ: {OPERATOR}, kontakt: <Mail />.
+      </p>
       <h2>1. Prístup</h2>
       <ul>
         <li>Účet sa dá vytvoriť len z pozvánky do firmy. Novú firmu zakladá prevádzkovateľ alebo ten, komu to povolí.</li>
@@ -316,7 +325,9 @@ export function TermsPage() {
       </ul>
       <h2>4. Dostupnosť a zodpovednosť</h2>
       <p>
-        Aplikácia sa priebežne vyvíja (časti označené „Vo fáze vývoja“ si pred použitím skontrolujte). Rozsah zodpovednosti, cena a podpora: {FILL}
+        RigTrack je pracovný nástroj, ktorý vyvíja jedna osoba, a priebežne sa mení (časti označené „Vo fáze vývoja“ si pred použitím
+        skontrolujte). Poskytuje sa tak, ako je, bez záruky nepretržitej dostupnosti; prevádzkovateľ zodpovedá len v rozsahu, ktorý nemožno
+        vylúčiť podľa práva SR. Dôležité údaje si pravidelne exportujte. Otázky a podporu riešte e-mailom.
       </p>
       <h2>5. Ochrana osobných údajov</h2>
       <p>

@@ -5,6 +5,10 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.5.2 – 3. 11. 2026
+
+- Ochrana súkromia a Podmienky používania doplnené o prevádzkovateľa a kontakt na žiadosti k osobným údajom.
+
 ### 7.5.1 – 3. 11. 2026
 
 - Činnosti: tlačidlo **Upraviť** (ceruzka) – zmena názvu s tlačidlom Uložiť a kto / ktoré roly k činnosti patria;
