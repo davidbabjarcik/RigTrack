@@ -7,8 +7,8 @@ import { ThemeToggle } from './ThemeToggle'
 /** Obrazovky mimo hlavnej navigácie: prihlásenie a výber firmy. */
 export function CenteredLayout() {
   const { pathname } = useLocation()
-  // Prihlásenie ostáva úzke; výber firmy, môj účet, O aplikácii a Čo je nové sú na PC širšie.
-  const wide = pathname === '/about' || pathname === '/changelog' || pathname === '/company/select'
+  // Prihlásenie ostáva úzke; výber firmy, môj účet, O aplikácii, Čo je nové a právne stránky sú na PC širšie.
+  const wide = ['/about', '/changelog', '/company/select', '/ochrana-sukromia', '/cookies', '/podmienky-pouzivania'].includes(pathname)
   return (
     <div className="flex min-h-dvh flex-col">
       <OfflineBanner />

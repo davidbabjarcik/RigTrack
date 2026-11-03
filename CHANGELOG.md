@@ -5,6 +5,10 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.1.1 – 3. 11. 2026
+
+- Ochrana súkromia, Cookies a Podmienky používania sú na PC v širokom zobrazení (nie úzke ako na mobile).
+
 ### 7.1 – 3. 11. 2026
 
 - **Bezdrôtový systém – vysielače ako zoznam**: „Pridať vysielač“ – ručný (handka) aj bodypack, každý s modelom a počtom
