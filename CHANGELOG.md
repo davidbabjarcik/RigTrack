@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.19.1 – 3. 11. 2026
+
+- Príslušenstvo v obsahu sady: zmeny sa zapíšu až tlačidlom **Uložiť** (alebo Zrušiť). Poradie je priamo v zozname –
+  príslušenstvo hore s číslom 1., 2., 3. a šípkami, ostatný obsah pod ním.
+
 ### 7.19 – 3. 11. 2026
 
 - **Príslušenstvo naraz pre celú sadu cases**: na stránke sady (napr. K10 Case #1–#5) tlačidlo „Príslušenstvo
