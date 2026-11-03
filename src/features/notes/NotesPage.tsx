@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pin, PinOff, Plus, Search, Trash2 } from 'lucide-react'
+import { ListTodo, Pencil, Pin, PinOff, Plus, Search, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -10,7 +10,10 @@ import { useCompany } from '@/features/companies/company-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { formatDate } from '@/lib/format'
 import { getSupabase } from '@/lib/supabase/client'
+import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
+import { NoteToTasks } from './NoteToTasks'
+import { noteLines } from './noteTasks'
 
 type Note = { id: string; title: string; body: string; pinned: boolean; people: string[]; createdBy: string | null; authorName: string; updatedAt: string }
 type Draft = { id: string | null; title: string; body: string; pinned: boolean; people: string[] }
@@ -55,6 +58,9 @@ export function NotesPage() {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [search, setSearch] = useState('')
   const [mine, setMine] = useState(false)
+  const [converting, setConverting] = useState<string | null>(null)
+  const [converted, setConverted] = useState<string | null>(null)
+  const canTasks = can(company, 'tasks.edit')
   const refresh = () => queryClient.invalidateQueries({ queryKey: notesKey(companyId) })
   const save = useMutation({ mutationFn: (value: Draft) => saveNote(companyId, value), onSuccess: () => setDraft(null), onSettled: refresh })
   const pin = useMutation({ mutationFn: (note: Note) => saveNote(companyId, { ...note, pinned: !note.pinned }), onSettled: refresh })
@@ -148,6 +154,15 @@ export function NotesPage() {
         </button>
       </div>
 
+      {converted && (
+        <p role="status" className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+          <span>Úlohy z „{converted}“ sú v Úlohách.</span>
+          <button type="button" className="text-muted-foreground hover:text-foreground" onClick={() => setConverted(null)}>
+            ✕
+          </button>
+        </p>
+      )}
+
       {shown.length === 0 ? (
         <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">{notes.data.length === 0 ? 'Zatiaľ žiadne poznámky.' : 'Nič nenájdené.'}</p>
       ) : (
@@ -158,6 +173,14 @@ export function NotesPage() {
                 <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setDraft({ id: note.id, title: note.title, body: note.body, pinned: note.pinned, people: note.people })}>
                   <span className="block font-medium break-words">{note.title || note.body.split('\n')[0]}</span>
                 </button>
+                <Button size="sm" variant="ghost" className="size-8 p-0" aria-label="Upraviť poznámku" title="Upraviť" onClick={() => setDraft({ id: note.id, title: note.title, body: note.body, pinned: note.pinned, people: note.people })}>
+                  <Pencil className="size-4" aria-hidden />
+                </Button>
+                {canTasks && noteLines(note.body).length > 0 && (
+                  <Button size="sm" variant="ghost" className="size-8 p-0" aria-label="Previesť na úlohy" title="Previesť riadky na úlohy" onClick={() => setConverting(converting === note.id ? null : note.id)}>
+                    <ListTodo className="size-4" aria-hidden />
+                  </Button>
+                )}
                 <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={note.pinned ? 'Odopnúť' : 'Pripnúť hore'} disabled={pin.isPending} onClick={() => pin.mutate(note)}>
                   {note.pinned ? <PinOff className="size-4" aria-hidden /> : <Pin className="size-4" aria-hidden />}
                 </Button>
@@ -167,7 +190,19 @@ export function NotesPage() {
                   </Button>
                 )}
               </div>
-              {note.body && note.title && <p className="text-sm break-words whitespace-pre-wrap">{note.body}</p>}
+              {converting === note.id && (
+                <NoteToTasks
+                  companyId={companyId}
+                  note={note}
+                  members={members.data ?? []}
+                  onCancel={() => setConverting(null)}
+                  onDone={() => {
+                    setConverting(null)
+                    setConverted(note.title || 'poznámky')
+                  }}
+                />
+              )}
+              {note.body && note.title && converting !== note.id && <p className="text-sm break-words whitespace-pre-wrap">{note.body}</p>}
               {note.people.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {note.people.map((person) => (

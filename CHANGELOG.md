@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.3 – 3. 11. 2026
+
+- **Poznámka → úlohy** (ako v TickTicku): riadky dlhej poznámky prevediete na úlohy jedným klikom – vyberiete riadky,
+  kategória sa predvyplní z nadpisu, ľudia z poznámky. Prevedené riadky z poznámky zmiznú (prázdna sa môže zmazať).
+- Pri poznámke je tlačidlo **Upraviť** (netreba klikať na text).
+
 ### 7.2 – 3. 11. 2026
 
 - **Komu činnosť patrí**: v Nastaveniach → Pripomienky a limity pri každej činnosti vyberiete ľudí alebo roly (napr.
