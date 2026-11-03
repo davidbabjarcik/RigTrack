@@ -26,7 +26,7 @@ import { OwnerLink } from '@/features/staff/OwnerLink'
 import { AmpPresetsInfo } from './AmpPresetsInfo'
 import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { EquipmentLinks } from './PurchaseLinksFields'
-import { CAPTURE_MATCH_LABELS, channelMap, hoursSinceLamp, describeAttributes, describeUnitIds, groupSplitEquipment, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
+import { capsuleLabel, transmitterLabel, wirelessTransmitters, CAPTURE_MATCH_LABELS, channelMap, hoursSinceLamp, describeAttributes, describeUnitIds, groupSplitEquipment, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
 import { OperatingHours } from './OperatingHours'
 import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
@@ -107,13 +107,15 @@ export function EquipmentDetailPage() {
     ['Druh', [KIND_LABELS[equipment.kind], ...describeAttributes(equipment)].join(' · ')],
     ['Vlastník', equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
     ['Kategória', categories.find((c) => c.id === equipment.categoryId)?.name],
+    ['Prijímač', equipment.attributes.wirelessRx],
+    ['Vysielače', wirelessTransmitters(equipment.attributes).map(transmitterLabel).join(', ') || undefined],
     [
       'Kapsule',
       equipment.attributes.capsuleIds?.length
         ? equipment.attributes.capsuleIds
             .map((id) => capsules.data?.find((capsule) => capsule.id === id))
             .filter((capsule) => capsule !== undefined)
-            .map((capsule) => [capsule.manufacturer, capsule.name].filter(Boolean).join(' '))
+            .map(capsuleLabel)
             .join(', ') || undefined
         : undefined,
     ],

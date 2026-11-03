@@ -560,7 +560,7 @@ describe('wireless system', () => {
       describeAttributes({
         attributes: { audioType: 'wireless', wirelessRx: 'MRK960', wirelessTxs: [{ kind: 'handheld', model: 'MTH410', count: 2 }, { kind: 'bodypack', model: 'MTP40', count: 1 }] },
       }),
-    ).toEqual(['Bezdrôtový systém', 'prijímač MRK960', 'vysielače 2× handka MTH410, bodypack MTP40'])
+    ).toEqual(['Bezdrôtový systém', 'prijímač MRK960', 'vysielače 2× ručný MTH410, bodypack MTP40'])
   })
 
   it('reads the old single transmitter as a list', async () => {
@@ -568,5 +568,13 @@ describe('wireless system', () => {
     expect(wirelessTransmitters({ wirelessTx: 'handheld', wirelessTxModel: 'MTH410' })).toEqual([{ kind: 'handheld', model: 'MTH410', count: 1 }])
     expect(wirelessTransmitters({ wirelessTx: 'both' }).map((tx) => tx.kind)).toEqual(['handheld', 'bodypack'])
     expect(wirelessTransmitters({})).toEqual([])
+  })
+
+  it('suggests a name and model from the system parts', async () => {
+    const { wirelessSuggestion, capsuleLabel } = await import('./model')
+    expect(capsuleLabel({ manufacturer: 'Značka', name: 'Značka K1' })).toBe('Značka K1')
+    expect(
+      wirelessSuggestion({ manufacturer: 'Výrobca', receiver: 'RX1', transmitters: [{ kind: 'handheld', model: 'TX2', count: 2 }, { kind: 'bodypack', model: 'BP3', count: 1 }], capsules: ['Kapsula K1'] }),
+    ).toEqual({ name: 'Výrobca RX1 – 2× TX2 + Kapsula K1, BP3', model: 'RX1 + TX2 + BP3' })
   })
 })

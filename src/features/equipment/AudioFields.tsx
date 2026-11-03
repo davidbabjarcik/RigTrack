@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { asOptionalNumber, AUDIO_TYPE_LABELS, AUDIO_TYPES, PA_TYPES, STAND_TYPES, SUB_DESIGN_LABELS, hasBox, isAudio, type EquipmentFormValues } from './model'
 import { AmpPresetsFields } from './AmpPresetsFields'
 import { Group } from './FormGroup'
-import { TransmittersFields } from './TransmittersFields'
+import { TransmittersFields, WirelessSuggestion } from './TransmittersFields'
 
 /** Časť formulára Zvuk: typ, reproboxy a suby, pulty, mikrofóny a kapsule, zosilňovače. */
 export function AudioFields({ companyId }: { companyId: string }) {
@@ -93,6 +93,7 @@ export function AudioFields({ companyId }: { companyId: string }) {
           <>
             <Field label="Prijímač (model)" placeholder="napr. MRK960" maxLength={60} {...register('wirelessRx')} />
             <TransmittersFields />
+            <WirelessSuggestion />
           </>
         )}
         {audioType === 'stagebox' && <Field label="Karta / protokol" placeholder="napr. Dante, AES50, MADI" maxLength={80} {...register('mixerCard')} />}

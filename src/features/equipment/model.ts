@@ -71,6 +71,33 @@ export type TransmitterKind = (typeof TRANSMITTER_KINDS)[number]
 export const TRANSMITTER_LABELS: Record<TransmitterKind, string> = { handheld: 'Ručný (handka)', bodypack: 'Bodypack (madona / headset)' }
 export type WirelessTransmitter = { kind: TransmitterKind; model: string; count: number }
 
+/** Kapsula ako text: „DPA d:facto 4018V“ (výrobca sa nezopakuje, ak už je v názve). */
+export function capsuleLabel(capsule: { manufacturer: string; name: string }) {
+  const name = capsule.name.trim()
+  const maker = capsule.manufacturer.trim()
+  return maker && !name.toLowerCase().startsWith(maker.toLowerCase()) ? `${maker} ${name}` : name
+}
+
+/** Vysielač ako text do zoznamu / detailu: „2× ručný MTH410“. */
+export const transmitterLabel = (tx: WirelessTransmitter) => `${tx.count > 1 ? `${tx.count}× ` : ''}${tx.kind === 'handheld' ? 'ručný' : 'bodypack'}${tx.model ? ` ${tx.model}` : ''}`
+
+/**
+ * Návrh názvu a modelu bezdrôtového systému z vyplnených polí, napr. „Wisycom MRK960 – 2× MTH410 + DPA d:facto 4018V“
+ * a model „MRK960 + MTH410“. Kapsula sa pridá k ručným vysielačom. Len návrh – použije sa až po kliknutí.
+ */
+export function wirelessSuggestion(input: { manufacturer: string; receiver: string; transmitters: WirelessTransmitter[]; capsules: string[] }) {
+  const receiver = input.receiver.trim()
+  const models = [receiver, ...input.transmitters.map((tx) => tx.model.trim())].filter(Boolean)
+  const model = [...new Set(models)].join(' + ')
+  const capsule = input.capsules.join(' / ')
+  const parts = input.transmitters
+    .filter((tx) => tx.model.trim())
+    .map((tx) => `${tx.count > 1 ? `${tx.count}× ` : ''}${tx.model.trim()}${tx.kind === 'handheld' && capsule ? ` + ${capsule}` : ''}`)
+  const head = [input.manufacturer.trim(), receiver].filter(Boolean).join(' ')
+  const name = [head, parts.join(', ')].filter(Boolean).join(' – ')
+  return { name: name.slice(0, 120), model: model.slice(0, 120) }
+}
+
 /** Vysielače systému – nový zoznam, alebo starý jeden vysielač z verzie 6.10. */
 export function wirelessTransmitters(a: Pick<EquipmentAttributes, 'wirelessTxs' | 'wirelessTx' | 'wirelessTxModel'>): WirelessTransmitter[] {
   if (a.wirelessTxs?.length) return a.wirelessTxs
@@ -1066,10 +1093,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>, options:
     a.cableType === 'adapter' && 'Redukcia',
     a.rfRange,
     a.wirelessRx && `prijímač ${a.wirelessRx}`,
-    wirelessTransmitters(a).length > 0 &&
-      `vysielače ${wirelessTransmitters(a)
-        .map((tx) => `${tx.count > 1 ? `${tx.count}× ` : ''}${tx.kind === 'handheld' ? 'handka' : 'bodypack'}${tx.model ? ` ${tx.model}` : ''}`)
-        .join(', ')}`,
+    wirelessTransmitters(a).length > 0 && `vysielače ${wirelessTransmitters(a).map(transmitterLabel).join(', ')}`,
     a.mixerKind && (a.mixerKind === 'digital' ? 'digitálny' : 'analógový'),
     a.mixerChannels !== undefined && `${a.mixerChannels} ch`,
     a.mixerCard && `karta ${a.mixerCard}`,

@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.7 – 3. 11. 2026
+
+- **Bezdrôtový systém – návrh názvu a modelu**: z prijímača, vysielačov a kapsúl appka navrhne názov (napr. „Výrobca
+  RX – 2× vysielač + kapsula, bodypack“) aj model; klik na návrh ho použije, inak sa nič nemení.
+- V detaile techniky samostatné riadky **Prijímač** a **Vysielače** (vedľa Kapsúl).
+
 ### 7.6 – 3. 11. 2026
 
 - **Siete – tlač**: IP tabuľka aj MAC adresy sa dajú vytlačiť (s nadpisom, firmou, sieťou a dátumom; tlačí sa to, čo je
