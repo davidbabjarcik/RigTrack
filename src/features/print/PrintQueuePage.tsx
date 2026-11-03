@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Briefcase, Cable, Presentation, Printer, QrCode, Speaker, Tag, Trash2, X } from 'lucide-react'
+import { Briefcase, Cable, Presentation, Printer, Speaker, Tag, Trash2, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -11,7 +11,8 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { KIND_LABELS, type EquipmentKind } from '@/features/equipment/model'
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { useEvents } from '@/features/events/useEvents'
-import { addToPrintQueue, markPrinted, printKeys, removeFromPrintQueue, useCompanyPrefs, usePrintedLabels, usePrintQueue, type PrintItem } from './api'
+import { MissingLabels } from './MissingLabels'
+import { markPrinted, printKeys, removeFromPrintQueue, useCompanyPrefs, usePrintedLabels, usePrintQueue, type PrintItem } from './api'
 
 /**
  * Tlačová fronta: štítky pridané cez „Do tlače“ alebo @toprint. QR idú na A4 alebo na Brother (podľa nastavenia firmy),
@@ -37,14 +38,6 @@ export function PrintQueuePage() {
       await markPrinted(companyId, labels.map((item) => ({ kind: item.kind as 'equipment' | 'case' | 'spot', targetId: item.targetId, label: item.label }))).catch(() => undefined)
       await removeFromPrintQueue(companyId, list.map((item) => item.id))
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }),
-  })
-  const addMissing = useMutation({
-    mutationFn: (list: { kind: PrintItem['kind']; targetId: string }[]) => addToPrintQueue(companyId, list),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }),
-  })
-  const markMissing = useMutation({
-    mutationFn: (list: { kind: PrintItem['kind']; targetId: string }[]) => markPrinted(companyId, list.map((item) => ({ ...item, label: 'qr' as const }))),
     onSettled: () => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }),
   })
 
@@ -177,53 +170,16 @@ export function PrintQueuePage() {
         </>
       )}
       {printed.data && missing.length > 0 && (
-        <section className="mt-6 rounded-xl border bg-surface p-4">
-          <h2 className="mb-1 flex items-center gap-2 font-medium">
-            <QrCode className="size-5 text-accent" aria-hidden />
-            Bez QR štítku ({missing.length})
-          </h2>
-          <p className="mb-3 text-sm text-muted-foreground">
-            Technika (okrem káblov a spotrebného materiálu) a cases, ktoré ešte nemajú vytlačený QR štítok
-            {missingEquipment.length > 0 && missingCases.length > 0 && ` (${missingEquipment.length} techniky, ${missingCases.length} cases)`}. Štítok sa
-            zapamätá po „Vytlačené – vyprázdniť“. Ak už nalepené sú, označte ich.
-          </p>
-          <div className="mb-3 grid gap-4 sm:grid-cols-2">
-            {(
-              [
-                ['Cases', missingCases.map((item) => ({ id: item.id, to: `/cases/${item.id}`, name: caseTitle(item) }))],
-                ['Technika', missingEquipment.map((item) => ({ id: item.id, to: `/equipment/${item.id}`, name: item.name }))],
-              ] as const
-            ).map(([title, entries]) => (
-              <div key={title} className="min-w-0">
-                <h3 className="mb-1 text-sm font-medium text-muted-foreground">
-                  {title} ({entries.length})
-                </h3>
-                {entries.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">všetko má štítok</p>
-                ) : (
-                  <ul className="flex max-h-48 flex-col gap-0.5 overflow-y-auto text-sm">
-                    {entries.map((entry) => (
-                      <li key={entry.id} className="shrink-0 truncate">
-                        <Link to={entry.to} className="hover:underline">
-                          {entry.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" disabled={addMissing.isPending} onClick={() => addMissing.mutate(missing)}>
-              <Printer className="size-4" aria-hidden />
-              Pridať všetky do tlače
-            </Button>
-            <Button size="sm" variant="outline" disabled={markMissing.isPending} onClick={() => window.confirm(`Označiť ${missing.length} ako už olepené?`) && markMissing.mutate(missing)}>
-              Už sú olepené – označiť
-            </Button>
-          </div>
-        </section>
+        <MissingLabels
+          companyId={companyId}
+          entries={[
+            ...missingCases.map((item) => ({ kind: 'case' as const, id: item.id, name: caseTitle(item), detail: '', to: `/cases/${item.id}` })),
+            ...missingEquipment.map((item) => {
+              const box = item.caseId ? cases.data?.find((candidate) => candidate.id === item.caseId) : undefined
+              return { kind: 'equipment' as const, id: item.id, name: item.name, detail: box ? `v ${caseTitle(box)}` : '', to: `/equipment/${item.id}` }
+            }),
+          ]}
+        />
       )}
     </>
   )

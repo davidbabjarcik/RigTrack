@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.7.2 – 3. 11. 2026
+
+- **Bez QR štítku** prehľadnejšie a bez omylov: pri každej položke zaškrtávacie políčko, „vybrať všetko“ po stĺpcoch,
+  hľadanie; „Do tlače“ a „Už olepené“ pracujú len s vybranými (olepené sa ešte potvrdí). Pri technike je vidno, v ktorom
+  je case; zoradené prirodzene (#1, #2 … #10).
+
 ### 7.7.1 – 3. 11. 2026
 
 - Poznámka → úlohy: úlohy dostanú číslo podľa poradia riadkov (1., 2., 3. …) a v Úlohách sa tak aj zoradia (aj 2 pred 10).
