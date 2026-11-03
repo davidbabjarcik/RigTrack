@@ -554,12 +554,19 @@ describe('DMX channel map', () => {
 })
 
 describe('wireless system', () => {
-  it('describes the receiver and transmitter', async () => {
+  it('describes the receiver and a list of transmitters', async () => {
     const { describeAttributes } = await import('./model')
-    expect(describeAttributes({ attributes: { audioType: 'wireless', wirelessRx: 'MRK960', wirelessTx: 'handheld', wirelessTxModel: 'MTH410' } })).toEqual([
-      'Bezdrôtový systém',
-      'prijímač MRK960',
-      'vysielač ručný mikrofón (handka) MTH410',
-    ])
+    expect(
+      describeAttributes({
+        attributes: { audioType: 'wireless', wirelessRx: 'MRK960', wirelessTxs: [{ kind: 'handheld', model: 'MTH410', count: 2 }, { kind: 'bodypack', model: 'MTP40', count: 1 }] },
+      }),
+    ).toEqual(['Bezdrôtový systém', 'prijímač MRK960', 'vysielače 2× handka MTH410, bodypack MTP40'])
+  })
+
+  it('reads the old single transmitter as a list', async () => {
+    const { wirelessTransmitters } = await import('./model')
+    expect(wirelessTransmitters({ wirelessTx: 'handheld', wirelessTxModel: 'MTH410' })).toEqual([{ kind: 'handheld', model: 'MTH410', count: 1 }])
+    expect(wirelessTransmitters({ wirelessTx: 'both' }).map((tx) => tx.kind)).toEqual(['handheld', 'bodypack'])
+    expect(wirelessTransmitters({})).toEqual([])
   })
 })

@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.1 – 3. 11. 2026
+
+- **Bezdrôtový systém – vysielače ako zoznam**: „Pridať vysielač“ – ručný (handka) aj bodypack, každý s modelom a počtom
+  kusov; systém môže byť aj len prijímač bez vysielača. Doterajší jeden vysielač sa prevzal do zoznamu.
+
 ### 7.0 – 3. 11. 2026
 
 - **Ochrana prihlásenia**: po 5 neúspešných pokusoch sa prihlasovanie na 5 minút zablokuje (rieši to server, odpočet

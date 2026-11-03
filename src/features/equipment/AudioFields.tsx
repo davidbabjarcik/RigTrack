@@ -4,9 +4,10 @@ import { Link } from 'react-router-dom'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCapsules } from '@/features/capsules/api'
 import { cn } from '@/lib/utils'
-import { asOptionalNumber, AUDIO_TYPE_LABELS, AUDIO_TYPES, PA_TYPES, STAND_TYPES, SUB_DESIGN_LABELS, hasBox, isAudio, WIRELESS_TX, WIRELESS_TX_LABELS, type EquipmentFormValues } from './model'
+import { asOptionalNumber, AUDIO_TYPE_LABELS, AUDIO_TYPES, PA_TYPES, STAND_TYPES, SUB_DESIGN_LABELS, hasBox, isAudio, type EquipmentFormValues } from './model'
 import { AmpPresetsFields } from './AmpPresetsFields'
 import { Group } from './FormGroup'
+import { TransmittersFields } from './TransmittersFields'
 
 /** Časť formulára Zvuk: typ, reproboxy a suby, pulty, mikrofóny a kapsule, zosilňovače. */
 export function AudioFields({ companyId }: { companyId: string }) {
@@ -91,15 +92,7 @@ export function AudioFields({ companyId }: { companyId: string }) {
         {audioType === 'wireless' && (
           <>
             <Field label="Prijímač (model)" placeholder="napr. MRK960" maxLength={60} {...register('wirelessRx')} />
-            <SelectField label="Vysielač" {...register('wirelessTx')}>
-              <option value="">— nezadané —</option>
-              {WIRELESS_TX.map((value) => (
-                <option key={value} value={value}>
-                  {WIRELESS_TX_LABELS[value]}
-                </option>
-              ))}
-            </SelectField>
-            <Field label="Vysielač (model)" placeholder="napr. MTH410 (handka), MTP40 (bodypack)" maxLength={60} {...register('wirelessTxModel')} />
+            <TransmittersFields />
           </>
         )}
         {audioType === 'stagebox' && <Field label="Karta / protokol" placeholder="napr. Dante, AES50, MADI" maxLength={80} {...register('mixerCard')} />}

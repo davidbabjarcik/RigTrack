@@ -65,6 +65,19 @@ export const TRUSS_SHAPE_LABELS: Record<TrussShape, string> = {
 export const WIRELESS_TX = ['handheld', 'bodypack', 'both'] as const
 export type WirelessTx = (typeof WIRELESS_TX)[number]
 export const WIRELESS_TX_LABELS: Record<WirelessTx, string> = { handheld: 'ručný mikrofón (handka)', bodypack: 'bodypack (madona / headset)', both: 'ručný aj bodypack' }
+/** Druh vysielača v zozname. */
+export const TRANSMITTER_KINDS = ['handheld', 'bodypack'] as const
+export type TransmitterKind = (typeof TRANSMITTER_KINDS)[number]
+export const TRANSMITTER_LABELS: Record<TransmitterKind, string> = { handheld: 'Ručný (handka)', bodypack: 'Bodypack (madona / headset)' }
+export type WirelessTransmitter = { kind: TransmitterKind; model: string; count: number }
+
+/** Vysielače systému – nový zoznam, alebo starý jeden vysielač z verzie 6.10. */
+export function wirelessTransmitters(a: Pick<EquipmentAttributes, 'wirelessTxs' | 'wirelessTx' | 'wirelessTxModel'>): WirelessTransmitter[] {
+  if (a.wirelessTxs?.length) return a.wirelessTxs
+  if (!a.wirelessTx && !a.wirelessTxModel) return []
+  if (a.wirelessTx === 'both') return [{ kind: 'handheld', model: a.wirelessTxModel ?? '', count: 1 }, { kind: 'bodypack', model: '', count: 1 }]
+  return [{ kind: a.wirelessTx === 'bodypack' ? 'bodypack' : 'handheld', model: a.wirelessTxModel ?? '', count: 1 }]
+}
 
 export const STAGE_TYPES = ['deck', 'accessory'] as const
 export type StageType = (typeof STAGE_TYPES)[number]
@@ -281,8 +294,10 @@ export type EquipmentAttributes = {
   micType?: 'dynamic' | 'condenser'
   /** Bezdrôtový mikrofón: kapsule, ktoré k nemu pasujú (id zo zoznamu kapsúl). */
   capsuleIds?: string[]
-  /** Bezdrôtový systém: model prijímača (napr. MRK960), vysielač – ručný (handka), bodypack alebo oba – a jeho model (napr. MTH410). */
+  /** Bezdrôtový systém: model prijímača (napr. MRK960) a vysielače – ručné (handka) aj bodypacky, každý s modelom a počtom. */
   wirelessRx?: string
+  wirelessTxs?: WirelessTransmitter[]
+  /** Staré (6.10): jeden vysielač; číta sa ako prvý zo zoznamu. */
   wirelessTx?: WirelessTx
   wirelessTxModel?: string
   /** Reprobox / sub / odposluch: aktívny alebo pasívny, výkon RMS a peak, woofery, max SPL, konektory, hniezdo na stojan. */
@@ -567,8 +582,10 @@ export const equipmentSchema = z.object({
   micType: z.enum(['dynamic', 'condenser', '']).optional(),
   capsuleIds: z.array(z.string()).max(30).optional(),
   wirelessRx: text(60).optional(),
-  wirelessTx: z.enum([...WIRELESS_TX, '']).optional(),
-  wirelessTxModel: text(60).optional(),
+  wirelessTxs: z
+    .array(z.object({ kind: z.enum(TRANSMITTER_KINDS), model: text(60), count: z.number('Zadajte počet').int().min(1, 'Aspoň 1').max(100) }))
+    .max(20)
+    .optional(),
   powered: z.enum(['active', 'passive', '']).optional(),
   rmsW: optionalNumber(100000),
   peakW: optionalNumber(200000),
@@ -760,8 +777,7 @@ export function attributesFor(
         | 'micType'
         | 'capsuleIds'
         | 'wirelessRx'
-        | 'wirelessTx'
-        | 'wirelessTxModel'
+        | 'wirelessTxs'
         | 'powered'
         | 'rmsW'
         | 'peakW'
@@ -879,8 +895,8 @@ export function attributesFor(
   if (wireless && values.capsuleIds?.length) attributes.capsuleIds = values.capsuleIds
   if (audio && values.audioType === 'wireless') {
     if (values.wirelessRx?.trim()) attributes.wirelessRx = values.wirelessRx.trim()
-    if (values.wirelessTx) attributes.wirelessTx = values.wirelessTx
-    if (values.wirelessTxModel?.trim()) attributes.wirelessTxModel = values.wirelessTxModel.trim()
+    const transmitters = (values.wirelessTxs ?? []).map((tx) => ({ kind: tx.kind, model: tx.model.trim(), count: tx.count }))
+    if (transmitters.length > 0) attributes.wirelessTxs = transmitters
   }
   if (values.kind === 'dj' && values.djType) attributes.djType = values.djType
   if (values.kind === 'video' && values.videoType && !values.isLedPanel && !values.isLedProcessor && !values.isDisplay) attributes.videoType = values.videoType
@@ -1050,7 +1066,10 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>, options:
     a.cableType === 'adapter' && 'Redukcia',
     a.rfRange,
     a.wirelessRx && `prijímač ${a.wirelessRx}`,
-    (a.wirelessTx || a.wirelessTxModel) && `vysielač ${[a.wirelessTx && WIRELESS_TX_LABELS[a.wirelessTx], a.wirelessTxModel].filter(Boolean).join(' ')}`,
+    wirelessTransmitters(a).length > 0 &&
+      `vysielače ${wirelessTransmitters(a)
+        .map((tx) => `${tx.count > 1 ? `${tx.count}× ` : ''}${tx.kind === 'handheld' ? 'handka' : 'bodypack'}${tx.model ? ` ${tx.model}` : ''}`)
+        .join(', ')}`,
     a.mixerKind && (a.mixerKind === 'digital' ? 'digitálny' : 'analógový'),
     a.mixerChannels !== undefined && `${a.mixerChannels} ch`,
     a.mixerCard && `karta ${a.mixerCard}`,

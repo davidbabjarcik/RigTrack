@@ -50,6 +50,7 @@ import {
   type Equipment,
   type EquipmentFormValues,
   type Lookup,
+  wirelessTransmitters,
 } from './model'
 import { PurchaseLinksFields } from './PurchaseLinksFields'
 import { UnitDetailsFields } from './UnitDetailsFields'
@@ -114,8 +115,7 @@ const EMPTY: EquipmentFormValues = {
   micType: '',
   capsuleIds: [],
   wirelessRx: '',
-  wirelessTx: '',
-  wirelessTxModel: '',
+  wirelessTxs: [],
   powered: '',
   woofer: '',
   connectors: '',
@@ -255,8 +255,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     micType: equipment.attributes.micType ?? '',
     capsuleIds: equipment.attributes.capsuleIds ?? [],
     wirelessRx: equipment.attributes.wirelessRx ?? '',
-    wirelessTx: equipment.attributes.wirelessTx ?? '',
-    wirelessTxModel: equipment.attributes.wirelessTxModel ?? '',
+    wirelessTxs: wirelessTransmitters(equipment.attributes),
     powered: equipment.attributes.powered ?? '',
     rmsW: equipment.attributes.rmsW,
     peakW: equipment.attributes.peakW,
