@@ -13,7 +13,7 @@ const { version } = JSON.parse(readFileSync(new URL('./package.json', import.met
 
 /**
  * Content-Security-Policy do index.html (len pri builde – vývojový server potrebuje vlastné skripty a websocket).
- * Skripty iba z appky, spojenia iba na Supabase a služby, ktoré appka volá (počasie, adresy, trasa).
+ * Skripty iba z appky (a Cloudflare Turnstile na prihlásení), spojenia iba na Supabase a služby, ktoré appka volá (počasie, adresy, trasa).
  */
 function securityHeaders(): Plugin {
   return {
@@ -25,7 +25,8 @@ function securityHeaders(): Plugin {
       const realtime = supabase.replace(/^https:/, 'wss:')
       const policy = [
         "default-src 'self'",
-        "script-src 'self'",
+        // Cloudflare Turnstile (overenie, že nie ste robot) pri prihlásení.
+        "script-src 'self' https://challenges.cloudflare.com",
         // React <style> pri tlači a inline štýly komponentov.
         "style-src 'self' 'unsafe-inline'",
         `img-src 'self' data: blob: ${supabase}`,
@@ -37,7 +38,7 @@ function securityHeaders(): Plugin {
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
-        "frame-src 'none'",
+        "frame-src https://challenges.cloudflare.com",
       ].join('; ')
       return html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy" content="${policy}" />

@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.14 – 3. 11. 2026
+
+- **Overenie, že nie ste robot** (Cloudflare Turnstile) pri prihlásení, registrácii a obnove hesla – chráni účty aj
+  pred hádaním hesiel mimo appky. Väčšinou nič nepýta, len krátko overí prehliadač.
+- Zásady ochrany súkromia a cookies doplnené o Cloudflare Turnstile.
+
 ### 7.13 – 3. 11. 2026
 
 - **Demo firma doplnená**: plán skladu (regály s policami a paletami, palety na zemi, hliník, kancelária, brána, okno,

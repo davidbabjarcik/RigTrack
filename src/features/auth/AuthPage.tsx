@@ -1,11 +1,12 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { BackendRequired } from '@/components/feedback/BackendRequired'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from './auth-context'
-import { formatRemaining, loginLockStatus, signInGuarded, type Lock } from './loginGuard'
+import { formatRemaining, loginLockStatus, signInGuarded, TURNSTILE_SITE_KEY, type Lock } from './loginGuard'
+import { Turnstile, type TurnstileHandle } from './Turnstile'
 
 type Mode = 'signin' | 'signup' | 'reset'
 
@@ -31,6 +32,11 @@ function AuthForm() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // Overenie, že nie ste robot (Cloudflare Turnstile) – token platí na jeden pokus.
+  const [captcha, setCaptcha] = useState<string | null>(null)
+  const captchaRef = useRef<TurnstileHandle>(null)
+  const [captchaDown, setCaptchaDown] = useState(false)
+  const needsCaptcha = TURNSTILE_SITE_KEY !== '' && !captchaDown
   // Blok po zlých pokusoch – koniec určuje server; tu sa len odpočítava.
   const [lock, setLock] = useState<Lock | null>(null)
   const [now, setNow] = useState(() => Date.now())
@@ -71,12 +77,20 @@ function AuthForm() {
     const origin = `${window.location.origin}${import.meta.env.BASE_URL}`.replace(/\/$/, '')
 
     // Hlásenia zámerne neprezrádzajú, či účet s daným e-mailom existuje.
+    if (needsCaptcha && !captcha) {
+      setError('Počkajte na overenie, že nie ste robot.')
+      setBusy(false)
+      return
+    }
+    const captchaToken = captcha ?? undefined
+    // Token sa dá použiť len raz – na ďalší pokus treba nový.
+    captchaRef.current?.reset()
     if (mode === 'signin') {
       if (locked) {
         setBusy(false)
         return
       }
-      const result = await signInGuarded(email, password)
+      const result = await signInGuarded(email, password, captchaToken)
       if (!result.ok) {
         if (result.lock) {
           setLock(result.lock)
@@ -88,12 +102,14 @@ function AuthForm() {
       const { error } = await auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName.trim(), age_confirmed: adult, terms_accepted_at: new Date().toISOString() }, emailRedirectTo: origin },
+        options: { data: { full_name: fullName.trim(), age_confirmed: adult, terms_accepted_at: new Date().toISOString() }, emailRedirectTo: origin, captchaToken },
       })
       if (error) {
         setError(
           error.code === 'weak_password'
             ? 'Heslo je príliš slabé. Zvoľte dlhšie.'
+            : error.code === 'captcha_failed'
+              ? 'Overenie, že nie ste robot, zlyhalo. Skúste to znova.'
             : error.status === 403 || /pozv/i.test(error.message)
               ? 'Pre tento e-mail nemáme pozvánku. Účet sa dá vytvoriť len s e-mailom, na ktorý vás pozval admin firmy.'
               : 'Vytvorenie účtu zlyhalo. Skúste to znova.',
@@ -104,8 +120,8 @@ function AuthForm() {
         setPassword('')
       }
     } else {
-      const { error } = await auth.resetPasswordForEmail(email, { redirectTo: `${origin}/auth/update-password` })
-      if (error) setError('Odoslanie zlyhalo. Skúste to znova o chvíľu.')
+      const { error } = await auth.resetPasswordForEmail(email, { redirectTo: `${origin}/auth/update-password`, captchaToken })
+      if (error) setError(error.code === 'captcha_failed' ? 'Overenie, že nie ste robot, zlyhalo. Skúste to znova.' : 'Odoslanie zlyhalo. Skúste to znova o chvíľu.')
       else setNotice('Ak účet s týmto e-mailom existuje, poslali sme naň odkaz na nastavenie nového hesla.')
     }
     setBusy(false)
@@ -167,6 +183,8 @@ function AuthForm() {
           />
         )}
 
+        {TURNSTILE_SITE_KEY !== '' && !locked && <Turnstile ref={captchaRef} onToken={setCaptcha} onUnavailable={setCaptchaDown} />}
+
         {locked && lock && (
           <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
             <p className="text-destructive">Príliš veľa neúspešných pokusov o prihlásenie. Z bezpečnostných dôvodov je prihlasovanie dočasne zablokované.</p>
@@ -186,8 +204,8 @@ function AuthForm() {
           </p>
         )}
 
-        <Button type="submit" disabled={busy || locked}>
-          {busy ? 'Čakajte…' : locked && lock ? `Zablokované – ${formatRemaining(lock.until - now)}` : SUBMIT_LABELS[mode]}
+        <Button type="submit" disabled={busy || locked || (needsCaptcha && !captcha)}>
+          {busy ? 'Čakajte…' : needsCaptcha && !captcha && !locked ? 'Overujem…' : locked && lock ? `Zablokované – ${formatRemaining(lock.until - now)}` : SUBMIT_LABELS[mode]}
         </Button>
       </form>
 

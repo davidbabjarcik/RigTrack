@@ -5,6 +5,8 @@ import { getSupabase } from '@/lib/supabase/client'
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined
+/** Cloudflare Turnstile – verejný site key (prázdny VITE_TURNSTILE_SITE_KEY = bez overenia, napr. vlastné nasadenie). */
+export const TURNSTILE_SITE_KEY = ((import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) ?? '0x4AAAAAAFxqGMPpz_A-Wln_').trim()
 /** E-mail, pri ktorom vznikol blok – aby odpočet pokračoval aj po obnovení stránky (len kým blok trvá). */
 const LOCK_KEY = 'rigtrack:login-lock'
 
@@ -58,16 +60,16 @@ export async function loginLockStatus(): Promise<Lock | null> {
 export type SignInResult = { ok: true } | { ok: false; message: string; lock?: Lock | null; code?: string }
 
 /** Prihlásenie s ochranou; bez nasadenej funkcie (404) klasicky cez Supabase Auth. */
-export async function signInGuarded(email: string, password: string): Promise<SignInResult> {
+export async function signInGuarded(email: string, password: string, captchaToken?: string): Promise<SignInResult> {
   let response: Awaited<ReturnType<typeof call>>
   try {
-    response = await call({ email, password })
+    response = await call({ email, password, ...(captchaToken ? { captchaToken } : {}) })
   } catch {
     return { ok: false, message: 'Prihlásenie zlyhalo – skontrolujte pripojenie a skúste to znova.' }
   }
   const { status, data } = response
   if (status === 404) {
-    const { error } = await getSupabase().auth.signInWithPassword({ email, password })
+    const { error } = await getSupabase().auth.signInWithPassword({ email, password, options: { captchaToken } })
     if (!error) return { ok: true }
     return { ok: false, code: error.code, message: error.code === 'email_not_confirmed' ? 'Najprv potvrďte e-mail odkazom, ktorý sme vám poslali.' : error.status === 400 ? 'Nesprávny e-mail alebo heslo.' : 'Prihlásenie zlyhalo. Skúste to znova.' }
   }

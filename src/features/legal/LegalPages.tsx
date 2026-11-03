@@ -186,6 +186,7 @@ export function PrivacyPage() {
       <ul>
         <li>Supabase Inc. (USA) – databáza, prihlásenie, súbory a serverové funkcie; údaje sú uložené v dátovom centre v EÚ (Írsko, AWS eu-west-1).</li>
         <li>GitHub Inc. / Microsoft (USA) – hosting webovej aplikácie (GitHub Pages).</li>
+        <li>Cloudflare, Inc. (USA) – Turnstile, overenie, že nie ste robot, pri prihlásení, registrácii a obnove hesla (ochrana pred zneužitím účtov); spracúva technické údaje prehliadača a IP adresu, bez reklamných cookies.</li>
         <li>OpenStreetMap Foundation (Nominatim) – vyhľadanie adresy, keď ju zadáte (napr. miesto eventu, sklad, domov); posiela sa len hľadaný text.</li>
         <li>OSRM (router.project-osrm.org) – výpočet trasy a kilometrov zo skladu na miesto eventu; posielajú sa len súradnice.</li>
         <li>Open-Meteo (Švajčiarsko) – počasie pre miesto eventu; posielajú sa len súradnice.</li>
@@ -196,7 +197,7 @@ export function PrivacyPage() {
 
       <h2>6. Prenos do tretích krajín</h2>
       <p>
-        Niektorí poskytovatelia sídlia v USA (Supabase, GitHub, Resend, poskytovatelia push upozornení). Prenos sa opiera o rozhodnutie Komisie o
+        Niektorí poskytovatelia sídlia v USA (Supabase, GitHub, Cloudflare, Resend, poskytovatelia push upozornení). Prenos sa opiera o rozhodnutie Komisie o
         primeranosti (EU-U.S. Data Privacy Framework) alebo štandardné zmluvné doložky, ktoré títo poskytovatelia uvádzajú vo svojich zmluvných
         podmienkach (DPA).
         Databáza a súbory sú uložené v EÚ.
@@ -259,8 +260,9 @@ export function CookiesPage() {
   return (
     <Page title="Zásady používania cookies a úložiska">
       <p>
-        RigTrack <strong>nepoužíva cookies</strong>, analytické nástroje, reklamu ani remarketing a nenačítava písma, obrázky ani skripty z cudzích
-        serverov. Do úložiska prehliadača (localStorage) ukladá len údaje uvedené nižšie. Nevyhnutné sú potrebné na fungovanie a nepotrebujú súhlas;
+        RigTrack <strong>nepoužíva cookies</strong>, analytické nástroje, reklamu ani remarketing a nenačítava písma ani obrázky z cudzích serverov.
+        Jedinou výnimkou je overenie, že nie ste robot (Cloudflare Turnstile), na stránke prihlásenia – je nevyhnutné na ochranu účtov, preto
+        nepotrebuje súhlas; Cloudflare uvádza, že nepoužíva reklamné cookies ani sledovanie. Do úložiska prehliadača (localStorage) ukladá len údaje uvedené nižšie. Nevyhnutné sú potrebné na fungovanie a nepotrebujú súhlas;
         funkčné sa uložia len s vaším súhlasom – bez neho sa ich zápis vôbec nevykoná.
       </p>
       <p>
