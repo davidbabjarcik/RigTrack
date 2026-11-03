@@ -4,7 +4,8 @@
 import type { Equipment } from '@/features/equipment/model'
 
 export type TrussStack = { col: number; row: number; pieces: string[] }
-export type TrussLayout = { cellCm: number; cols: number; rows: number; stacks: TrussStack[] }
+/** spotId = miesto v pláne skladu, kde hliník leží (spolu s cases). */
+export type TrussLayout = { cellCm: number; cols: number; rows: number; stacks: TrussStack[]; spotId?: string | null }
 
 export const EMPTY_TRUSS_LAYOUT: TrussLayout = { cellCm: 35, cols: 10, rows: 6, stacks: [] }
 export const MAX_TRUSS_GRID = 40
@@ -20,7 +21,8 @@ export function cleanTrussLayout(value: unknown): TrussLayout {
   const stacks = (Array.isArray(raw.stacks) ? raw.stacks : [])
     .map((stack) => ({ col: clamp(stack?.col, 0, cols - 1, 0), row: clamp(stack?.row, 0, rows - 1, 0), pieces: (Array.isArray(stack?.pieces) ? stack.pieces : []).filter((id): id is string => typeof id === 'string').slice(0, 40) }))
     .filter((stack, index, all) => stack.pieces.length > 0 && all.findIndex((other) => other.col === stack.col && other.row === stack.row) === index)
-  return { cellCm: clamp(raw.cellCm, 20, 100, EMPTY_TRUSS_LAYOUT.cellCm), cols, rows, stacks }
+  const spotId = typeof raw.spotId === 'string' && raw.spotId.length <= 64 ? raw.spotId : null
+  return { cellCm: clamp(raw.cellCm, 20, 100, EMPTY_TRUSS_LAYOUT.cellCm), cols, rows, stacks, spotId }
 }
 
 /** Výška dielu postaveného nastojato (cm): rovný diel podľa dĺžky, roh a kocka ako profil, základňa nízka. */

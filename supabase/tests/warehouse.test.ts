@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { readFileSync } from 'node:fs'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { createTestDb } from './helpers'
 
@@ -94,5 +95,18 @@ describe('warehouse plan', () => {
     expect(await t.as('viewer', `select rack_types->0->>'name' as name from public.warehouses`)).toEqual([{ name: 'Paletový' }])
     expect(await t.as('viewer', 'update public.warehouses set rack_types = $2::jsonb where company_id = $1 returning 1', [companyA, '[]'])).toEqual([])
     await expect(t.as('admin', `update public.warehouses set rack_types = '{}'::jsonb where company_id = $1`, [companyA])).rejects.toThrow(/check/)
+  })
+})
+
+describe('aluminium on a place (0144)', () => {
+  it('turns old aluminium spots into places and remembers where the aluminium lies', async () => {
+    const db = await createTestDb()
+    await db.signUp('boss', 'boss@example.com')
+    const [{ id }] = await db.as('boss', `select public.create_company('Hliníková firma') as id`)
+    await db.as('boss', 'insert into public.warehouses (company_id, length_cm, width_cm) values ($1, 1000, 800)', [id])
+    const [{ id: spot }] = await db.rows(`insert into public.warehouse_spots (company_id, name, kind, x, y, length, width) values ($1, 'Hliník', 'truss', 0, 0, 300, 200) returning id`, [id])
+    await db.exec(readFileSync('supabase/migrations/0144_truss_on_place.sql', 'utf8'))
+    const [row] = await db.rows(`select s.kind, w.truss_layout ->> 'spotId' as truss_spot from public.warehouse_spots s join public.warehouses w on w.company_id = s.company_id where s.id = $1`, [spot])
+    expect(row).toEqual({ kind: 'zone', truss_spot: spot })
   })
 })

@@ -10,6 +10,8 @@ type Props = {
   selectedId: string | null
   /** Miesta, kde leží hľadaný case. */
   highlighted: Set<string>
+  /** Miesto, na ktorom leží hliník (stohy trussov). */
+  trussSpotId?: string | null
   onSelect: (id: string | null) => void
 }
 
@@ -18,7 +20,7 @@ const FLOOR = '#f3f1ec'
 const ACCENT = '#f97316'
 
 /** Pôdorys skladu, pohľad zhora: betónová podlaha s mriežkou po 1 m, steny, regály, palety, stĺpy, dvere a okná. */
-export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, highlighted, onSelect }: Props) {
+export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, highlighted, trussSpotId, onSelect }: Props) {
   const { lengthCm, widthCm } = warehouse
   const unit = Math.max(lengthCm, widthCm) / 100 // 1 % dlhšej strany – hrúbky čiar a písmo sa škálujú s veľkosťou skladu
   const wall = Math.max(12, unit * 1.2)
@@ -228,7 +230,7 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
                 </text>
                 {!structure && (
                   <text x={x + w / 2} y={y + h / 2 + size * 0.75} fontSize={size * 0.75} fill="#4b5563" dominantBaseline="central">
-                    {spot.kind === 'truss' ? 'trussy – otvoriť' : [count === 0 ? 'prázdne' : `${count} ${count === 1 ? 'case' : count < 5 ? 'cases' : 'cases'}`, spot.levels > 1 && `${spot.levels} posch.`].filter(Boolean).join(' · ')}
+                    {[count === 0 && spot.kind !== 'truss' && spot.id !== trussSpotId ? 'prázdne' : count > 0 && `${count} cases`, (spot.kind === 'truss' || spot.id === trussSpotId) && 'hliník', spot.levels > 1 && `${spot.levels} posch.`].filter(Boolean).join(' · ')}
                   </text>
                 )}
               </g>

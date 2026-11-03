@@ -15,15 +15,15 @@ import { equipmentKeys, fetchEquipmentList } from './api'
 import { KIND_LABELS, type EquipmentKind } from './model'
 import { fetchPhotoBlob, PHOTO_URL_STALE_MS } from './photo'
 import { POSTER_KINDS, POSTER_TITLES, posterSections } from './poster'
-import { renderPoster } from './posterCanvas'
+import { renderPoster, type PosterPaper } from './posterCanvas'
 import { useEquipmentLookups } from './useEquipmentLookups'
 
-type Settings = { title: string; subtitle: string; notes: string; hidden: string[]; portrait: boolean }
+type Settings = { title: string; subtitle: string; notes: string; hidden: string[]; portrait: boolean; paper: PosterPaper }
 
 const storageKey = (companyId: string, kind: string) => `rigtrack:poster:${companyId}:${kind}`
 
 function loadSettings(companyId: string, kind: EquipmentKind): Settings {
-  const fallback: Settings = { title: POSTER_TITLES[kind] ?? `${KIND_LABELS[kind]} – inventár`, subtitle: '', notes: '', hidden: [], portrait: true }
+  const fallback: Settings = { title: POSTER_TITLES[kind] ?? `${KIND_LABELS[kind]} – inventár`, subtitle: '', notes: '', hidden: [], portrait: true, paper: 'A4' }
   try {
     return { ...fallback, ...JSON.parse(localStorage.getItem(storageKey(companyId, kind)) ?? '{}') }
   } catch {
@@ -48,7 +48,7 @@ async function loadPhotos(paths: string[]) {
 }
 
 /**
- * Plagát inventára (A4 na výšku alebo na šírku, biely papier): technika jedného druhu po častiach – veľký počet kusov,
+ * Plagát inventára (A4 alebo A5, na výšku alebo na šírku, biely papier): technika jedného druhu po častiach – veľký počet kusov,
  * rozmer, názov a fotka. Nakreslí sa do obrázka – náhľad, tlač, PDF aj PNG sú rovnaké. /equipment/poster?kind=truss
  */
 export function InventoryPosterPage() {
@@ -65,7 +65,8 @@ export function InventoryPosterPage() {
   const [queueApplied, setQueueApplied] = useState(false)
   if (!queueApplied && queueLandscape !== null) {
     setQueueApplied(true)
-    if (settings.portrait === (queueLandscape === '1')) setState({ key: state.key, settings: { ...settings, portrait: queueLandscape !== '1' } })
+    const queuePaper: PosterPaper = params.get('paper') === 'A5' ? 'A5' : 'A4'
+    if (settings.portrait === (queueLandscape === '1') || settings.paper !== queuePaper) setState({ key: state.key, settings: { ...settings, portrait: queueLandscape !== '1', paper: queuePaper } })
   }
   const update = (patch: Partial<Settings>) => {
     const next = { ...settings, ...patch }
@@ -111,6 +112,7 @@ export function InventoryPosterPage() {
       subtitle: settings.subtitle,
       notes,
       portrait: settings.portrait,
+      paper: settings.paper,
       sections: shown,
       photos: photos.data,
       logo: logo.data ?? null,
@@ -126,7 +128,7 @@ export function InventoryPosterPage() {
   const baseName = `inventar-${fileSlug(settings.title || KIND_LABELS[kind])}`
   const downloadPdf = async () => {
     const images = await Promise.all(pages.map((canvas) => canvasJpeg(canvas, 0.92)))
-    const url = URL.createObjectURL(buildPdf(images, pageSizePt('A4', !settings.portrait)))
+    const url = URL.createObjectURL(buildPdf(images, pageSizePt(settings.paper, !settings.portrait)))
     const link = document.createElement('a')
     link.href = url
     link.download = `${baseName}.pdf`
@@ -152,7 +154,7 @@ export function InventoryPosterPage() {
     <>
       {printUrls.length > 0 && (
         <>
-          <style>{`@page { size: A4 ${settings.portrait ? 'portrait' : 'landscape'}; margin: 0 } @media print { body * { visibility: hidden !important } .sheet-print, .sheet-print * { visibility: visible !important } .sheet-print { position: absolute; inset: 0 } .sheet-print img { display: block; width: 100%; height: auto; break-after: page } }`}</style>
+          <style>{`@page { size: ${settings.paper} ${settings.portrait ? 'portrait' : 'landscape'}; margin: 0 } @media print { body * { visibility: hidden !important } .sheet-print, .sheet-print * { visibility: visible !important } .sheet-print { position: absolute; inset: 0 } .sheet-print img { display: block; width: 100%; height: auto; break-after: page } }`}</style>
           <div className="sheet-print hidden print:block">
             {printUrls.map((url, index) => (
               <img key={index} src={url} alt="" />
@@ -166,7 +168,7 @@ export function InventoryPosterPage() {
           {params.get('back') === '/print' ? 'Späť do tlače' : 'Technika'}
         </Link>
         <span className="flex-1" />
-        <AddToPrintButton companyId={companyId} kind="poster" targetIds={[companyId]} label={`poster:${kind}`} format={formatOf('A4', !settings.portrait)} />
+        <AddToPrintButton companyId={companyId} kind="poster" targetIds={[companyId]} label={`poster:${kind}`} format={formatOf(settings.paper, !settings.portrait)} />
         <Button variant="outline" disabled={!ready} onClick={print}>
           <Printer className="size-4" aria-hidden />
           Tlačiť
@@ -189,9 +191,13 @@ export function InventoryPosterPage() {
             </option>
           ))}
         </SelectField>
-        <SelectField label="Papier" value={settings.portrait ? 'portrait' : 'landscape'} onChange={(e) => update({ portrait: e.target.value === 'portrait' })}>
-          <option value="portrait">A4 na výšku</option>
-          <option value="landscape">A4 na šírku</option>
+        <SelectField label="Papier" value={settings.paper} onChange={(e) => update({ paper: e.target.value === 'A5' ? 'A5' : 'A4' })}>
+          <option value="A4">A4</option>
+          <option value="A5">A5</option>
+        </SelectField>
+        <SelectField label="Orientácia" value={settings.portrait ? 'portrait' : 'landscape'} onChange={(e) => update({ portrait: e.target.value === 'portrait' })}>
+          <option value="portrait">na výšku</option>
+          <option value="landscape">na šírku</option>
         </SelectField>
         <Field label="Nadpis" maxLength={60} value={settings.title} onChange={(e) => update({ title: e.target.value })} />
         <Field label="Podnadpis" maxLength={80} placeholder="napr. Modulárny pódiový systém" value={settings.subtitle} onChange={(e) => update({ subtitle: e.target.value })} />

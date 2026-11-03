@@ -379,3 +379,18 @@ export function layoutCell<T extends PlacedCase>(bay: RackBay, level: RackLevel,
   const freeCm = Math.round(slots.reduce((sum, slot) => sum + slot.w - (slot.rows[0]?.used ?? 0), 0))
   return { boxes, pallets: positions, freeCm, notFit: boxes.filter((box) => box.bad).map((box) => box.item) }
 }
+
+/**
+ * Kam case položiť, keď polica nie je vybraná: prvá polica (pole po poli, odspodu), kde sa zmestí vedľa toho, čo tam
+ * už leží. Case bez rozmerov počíta ako 60 cm spredu. Keď sa nezmestí nikde, prvá polica (označí sa „nezmestí sa“).
+ */
+export function autoCell<T extends PlacedCase>(bays: RackBay[], inSpot: T[], item: T): { bay: number; level: number } {
+  for (const [bayIndex, bay] of bays.entries()) {
+    for (const [levelIndex, level] of bay.levels.entries()) {
+      const inside = casesInCell(inSpot, bayIndex + 1, levelIndex + 1).filter((other) => other.id !== item.id)
+      const layout = layoutCell(bay, level, [...inside, { ...item, spotBay: bayIndex + 1, spotLevel: levelIndex + 1, spotPallet: null }])
+      if (!layout.notFit.some((other) => other.id === item.id)) return { bay: bayIndex + 1, level: levelIndex + 1 }
+    }
+  }
+  return { bay: 1, level: 1 }
+}

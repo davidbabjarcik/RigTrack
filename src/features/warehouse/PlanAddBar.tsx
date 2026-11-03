@@ -2,8 +2,8 @@ import { Plus, Settings2 } from 'lucide-react'
 import { Button, LinkButton } from '@/components/ui/button'
 import { SelectField } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
-import { metres, palletTypesOf, rackLengthCm, type Spot, type SpotKind, type Warehouse } from './model'
-import { BUILDING, buildSpot, CHOICE_LABELS, PLACE_USES, PLACES, selectionKind, type AddSelection, type Choice } from './planAdd'
+import { metres, palletTypesOf, rackLengthCm, type Spot, type Warehouse } from './model'
+import { BUILDING, buildSpot, CHOICE_LABELS, PLACES, selectionKind, type AddSelection, type Choice } from './planAdd'
 
 type Props = {
   warehouse: Warehouse
@@ -69,21 +69,12 @@ export function PlanAddBar({ warehouse, spots, busy, selection, onSelection, onA
           </SelectField>
         )}
         {kind === 'pallet' && palletTypes.length === 0 && <p className="text-sm text-muted-foreground">Typy paliet si nastavíte v Nastaveniach skladu.</p>}
-        {selection.choice === 'place' && (
-          <SelectField label="Na čo je miesto" className="min-w-48" value={selection.placeUse} onChange={(e) => set({ placeUse: e.target.value as SpotKind })}>
-            {PLACE_USES.map((use) => (
-              <option key={use.kind} value={use.kind}>
-                {use.label}
-              </option>
-            ))}
-          </SelectField>
-        )}
+        {selection.choice === 'place' && <p className="text-sm text-muted-foreground">Na miesto dáte cases aj hliník (stohy trussov).</p>}
         {(kind === 'door' || kind === 'window') && <p className="text-sm text-muted-foreground">Ide na stenu skladu; natiahnuť sa dá len pozdĺž steny.</p>}
-        {kind === 'truss' && <p className="text-sm text-muted-foreground">Klikom na miesto v pláne otvoríte stohy trussov.</p>}
         {kind === 'room' && <p className="text-sm text-muted-foreground">Miestnosť (napr. kancelária, dielňa) – v pláne len na orientáciu.</p>}
         <Button disabled={busy || (kind === 'pallet' && !pickedPallet)} onClick={add}>
           <Plus className="size-4" aria-hidden />
-          Pridať {kind === 'truss' ? 'miesto na hliník' : CHOICE_LABELS[selection.choice].toLowerCase()}
+          Pridať {CHOICE_LABELS[selection.choice].toLowerCase()}
         </Button>
         <p className="w-full text-xs text-muted-foreground">Tlačidlom sa pridá doprostred, alebo to ťahaním po prázdnom mieste plánu nakreslite.</p>
       </div>

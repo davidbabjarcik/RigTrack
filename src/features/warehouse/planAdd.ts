@@ -1,26 +1,20 @@
 import { nextSpotName, palletTypesOf, rackLengthCm, snapToPerimeter, type Spot, type SpotKind, type Warehouse } from './model'
 
-/** Miesta na veci (regál, miesto, paleta) a zvlášť stavebné prvky. „Miesto“ je zóna alebo miesto na hliník. */
+/** Miesta na veci (regál, miesto, paleta) a zvlášť stavebné prvky. Na „Miesto“ sa dávajú cases aj hliník. */
 export type Choice = 'rack' | 'place' | 'pallet' | 'room' | 'door' | 'window' | 'column' | 'wall'
 export const PLACES: Choice[] = ['rack', 'place', 'pallet']
 export const BUILDING: Choice[] = ['room', 'door', 'window', 'column', 'wall']
 export const CHOICE_LABELS: Record<Choice, string> = { rack: 'Regál', place: 'Miesto', pallet: 'Paleta', room: 'Miestnosť', door: 'Dvere', window: 'Okno', column: 'Stĺp', wall: 'Stena' }
-/** Na čo je miesto: cases a iné veci, alebo hliník (stohy trussov). */
-export const PLACE_USES: { kind: SpotKind; label: string }[] = [
-  { kind: 'zone', label: 'cases a iné veci' },
-  { kind: 'truss', label: 'hliník (trussy)' },
-]
 
 /** Čo je hore vybrané na pridanie (platí aj pre kreslenie ťahaním v pláne). */
-export type AddSelection = { choice: Choice; placeUse: SpotKind; rackType: string; palletType: string }
-export const DEFAULT_ADD: AddSelection = { choice: 'rack', placeUse: 'zone', rackType: '', palletType: '' }
+export type AddSelection = { choice: Choice; rackType: string; palletType: string }
+export const DEFAULT_ADD: AddSelection = { choice: 'rack', rackType: '', palletType: '' }
 
-export const selectionKind = (selection: AddSelection): SpotKind => (selection.choice === 'place' ? selection.placeUse : selection.choice)
+export const selectionKind = (selection: AddSelection): SpotKind => (selection.choice === 'place' ? 'zone' : selection.choice)
 
 /** Predvolená veľkosť nového prvku (cm) a ako sa volá. */
 const DEFAULTS: Partial<Record<SpotKind, { length: number; width: number; name: string }>> = {
   zone: { length: 300, width: 200, name: 'Miesto' },
-  truss: { length: 350, width: 210, name: 'Hliník' },
   room: { length: 400, width: 300, name: 'Miestnosť' },
   door: { length: 120, width: 15, name: 'Dvere' },
   window: { length: 150, width: 15, name: 'Okno' },

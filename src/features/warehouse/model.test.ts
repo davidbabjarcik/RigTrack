@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { byLevel, casesBySpot, describeSpot, findCases, levelUsage, metres, nextSpotName, type PlacedCase } from './model'
+import { autoCell, byLevel, casesBySpot, describeSpot, findCases, levelUsage, metres, nextSpotName, type PlacedCase } from './model'
 
 const item = (id: string, spotId: string | null, spotLevel: number | null = null, name = id): PlacedCase => ({ id, name, spotId, spotLevel })
 
@@ -163,5 +163,22 @@ describe('plan colours', () => {
     const warehouse = { palletTypes: [{ id: 'a', name: 'EUR modrá', length: 120, width: 80, material: 'plastic' as const, color: '#3366ff' }] }
     expect(palletTone({ length: 80, width: 120, material: 'plastic' }, warehouse)).toEqual({ fill: '#3366ff', line: darker('#3366ff') })
     expect(palletTone({ length: 120, width: 80, material: 'wood' }, warehouse).fill).toBe('#d6b88a')
+  })
+})
+
+describe('autoCell', () => {
+  const bays = [
+    { widthCm: 100, levels: [{ heightCm: 100 }, { heightCm: 100 }] },
+    { widthCm: 100, levels: [{ heightCm: 100 }] },
+  ]
+  const placed = (id: string, bay: number, level: number, lengthCm: number | null) =>
+    ({ id, name: id, spotId: 's', spotLevel: level, spotBay: bay, spotPallet: null, lengthCm, widthCm: null, depthCm: 90 }) as unknown as PlacedCase
+
+  it('puts a case without size on the first shelf with room', () => {
+    const item = placed('new', 1, 1, null)
+    expect(autoCell(bays, [], item)).toEqual({ bay: 1, level: 1 })
+    // Prvá polica plná (90 cm z 100, vysoké) – case bez rozmerov (60 cm) ide na druhú.
+    expect(autoCell(bays, [placed('a', 1, 1, 90)], item)).toEqual({ bay: 1, level: 2 })
+    expect(autoCell(bays, [placed('a', 1, 1, 90), placed('b', 1, 2, 90)], item)).toEqual({ bay: 2, level: 1 })
   })
 })

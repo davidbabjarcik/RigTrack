@@ -77,7 +77,7 @@ export function TrussStoragePage() {
         title="Hliník v sklade"
         description={`${layout.stacks.length} stohov · uložených ${totals.placed} z ${totals.all} kusov trussu`}
         action={
-          <Link to="/warehouse" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <Link to={layout.spotId ? `/warehouse?spot=${layout.spotId}` : '/warehouse'} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="size-4" aria-hidden />
             Sklad
           </Link>

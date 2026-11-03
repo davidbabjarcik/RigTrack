@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Check, LayoutGrid, Pencil, QrCode, RotateCw, ScanLine, Search, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { RectEditor } from '@/components/plan/RectEditor'
@@ -17,11 +17,12 @@ import { parseQr } from '@/features/scan/qr'
 import { caseTitle } from '@/features/cases/model'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { addSpot, deleteSpot, fetchCaseBays, fetchWarehouse, placeCase, setCasePallet, setCaseSize, updateSpot, warehouseKeys } from './api'
+import { addSpot, deleteSpot, fetchCaseBays, fetchTrussLayout, fetchWarehouse, placeCase, saveTrussLayout, setCasePallet, setCaseSize, trussKeys, updateSpot, warehouseKeys } from './api'
 import { CellCases } from './CellCases'
 import { BaysEditor } from './BaysEditor'
 import { RackFront, type RackCell } from './RackFront'
 import {
+  autoCell,
   byLevel,
   casesBySpot,
   casesInCell,
@@ -44,6 +45,7 @@ import {
   SPOT_KINDS,
   type RackBay,
   type Spot,
+  type PlacedCase,
 } from './model'
 import { WarehousePlan } from './WarehousePlan'
 import { DevNotice } from '@/components/feedback/DevNotice'
@@ -58,7 +60,6 @@ export function WarehousePage() {
   const canPlace = can(company, 'cases.edit')
   const queryClient = useQueryClient()
   const [params, setParams] = useSearchParams()
-  const navigate = useNavigate()
   // ?edit=1 (z Nastavení → Sklad) otvorí rovno úpravu plánu.
   const [editing, setEditing] = useState(() => params.get('edit') === '1')
   const [search, setSearch] = useState('')
@@ -75,6 +76,12 @@ export function WarehousePage() {
   const plan = useQuery({ queryKey: warehouseKeys.plan(companyId), queryFn: () => fetchWarehouse(companyId) })
   const casesQuery = useCases(companyId)
   const caseBays = useQuery({ queryKey: warehouseKeys.bays(companyId), queryFn: () => fetchCaseBays(companyId) })
+  // Hliník (stohy trussov) leží na jednom mieste spolu s cases.
+  const truss = useQuery({ queryKey: trussKeys.layout(companyId), queryFn: () => fetchTrussLayout(companyId) })
+  const moveTruss = useMutation({
+    mutationFn: (spotId: string | null) => saveTrussLayout(companyId, { ...truss.data!.layout, spotId }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: trussKeys.layout(companyId) }),
+  })
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
   const { locations } = useEquipmentLookups(companyId)
 
@@ -109,6 +116,9 @@ export function WarehousePage() {
   }
 
   const { warehouse, spots } = plan.data
+  // Miesto s hliníkom: zvolené v rozložení hliníka, inak staré miesto druhu „hliník“.
+  const trussSpotId = spots.find((spot) => spot.id === truss.data?.layout.spotId)?.id ?? spots.find((spot) => spot.kind === 'truss')?.id ?? null
+  const trussStacks = truss.data?.layout.stacks.length ?? 0
   const selectedId = spots.some((spot) => spot.id === params.get('spot')) ? params.get('spot') : null
   const selected = spots.find((spot) => spot.id === selectedId)
   // V editore sú miestnosti vespod, aby sa dalo chytiť, čo je v nich.
@@ -117,7 +127,6 @@ export function WarehousePage() {
   const select = (id: string | null) => {
     const spot = spots.find((item) => item.id === id)
     // Hliník: klik otvorí stohy trussov.
-    if (spot?.kind === 'truss' && !editing) return void navigate('/warehouse/truss')
     setCell(null)
     setEditingBays(false)
     setParams(id ? { spot: id, ...(spot?.kind === 'rack' && !editing ? { view: 'front' } : {}) } : {}, { replace: true })
@@ -138,11 +147,15 @@ export function WarehousePage() {
     const spot = spotOf(item.spotId)
     return spot ? describeSpot(spot, item.spotLevel, item.spotBay) : 'nemá miesto v sklade'
   }
-  // Kam uložiť: pri regáli s poliami vybraná polica (a paleta), inak poschodie z výberu.
-  const placeTarget = (spot: Spot) =>
-    spot.kind === 'rack' && multiBay && cell
-      ? { level: cell.level, bay: cell.bay, pallet: cell.pallet ?? null }
-      : { level: spot.levels > 1 ? Math.min(addLevel, spot.levels) : null, bay: null, pallet: null }
+  // Kam uložiť: pri regáli s poliami vybraná polica (a paleta), bez nej prvá polica, kde je miesto; inak poschodie z výberu.
+  const placeTarget = (spot: Spot, item: PlacedCase) => {
+    if (spot.kind === 'rack' && multiBay) {
+      if (cell) return { level: cell.level, bay: cell.bay, pallet: cell.pallet ?? null }
+      const auto = autoCell(bays, bySpot.get(spot.id) ?? [], item)
+      return { level: auto.level, bay: auto.bay, pallet: null }
+    }
+    return { level: spot.levels > 1 ? Math.min(addLevel, spot.levels) : null, bay: null, pallet: null }
+  }
   const cellLevel = cell ? bays[cell.bay - 1]?.levels[cell.level - 1] : undefined
 
   /** Naskenovaný štítok: ukáže, kde leží (case, technika v case, miesto), alebo ho uloží na vybrané miesto. */
@@ -154,7 +167,7 @@ export function WarehousePage() {
       const item = cases.data.find((candidate) => candidate.id === target.id)
       if (!item) return '✗ Tento case v evidencii nie je.'
       if (item.spotId === selected.id) return `✓ ${item.name} už tu je.`
-      const into = placeTarget(selected)
+      const into = placeTarget(selected, item)
       place.mutate({ caseId: item.id, spotId: selected.id, ...into })
       return `✓ ${item.name} → ${describeSpot(selected, into.level, into.bay)}${into.pallet ? `, paleta ${into.pallet}` : ''}`
     }
@@ -366,6 +379,29 @@ export function WarehousePage() {
                   }}
                 />
               )}
+              {/* Miesto, miestnosť, stena, stĺp: rozmery v metroch (regál a paleta majú rozmer podľa typu). */}
+              {['zone', 'truss', 'room', 'wall', 'column'].includes(selected.kind) &&
+                (['length', 'width'] as const).map((side) => (
+                  <Field
+                    key={`${side}-${selected[side]}`}
+                    label={side === 'length' ? 'Dĺžka (m)' : 'Šírka (m)'}
+                    inputMode="decimal"
+                    defaultValue={String(selected[side] / 100).replace('.', ',')}
+                    onBlur={(event) => {
+                      const metresValue = Number(event.target.value.replace(',', '.').trim())
+                      const cm = Math.round(metresValue * 100)
+                      const max = side === 'length' ? warehouse.lengthCm : warehouse.widthCm
+                      if (!Number.isFinite(metresValue) || cm < 10 || cm > max) {
+                        event.target.value = String(selected[side] / 100).replace('.', ',')
+                        return
+                      }
+                      if (cm === selected[side]) return
+                      // Keď by presahovalo sklad, posunie sa dovnútra.
+                      const position = side === 'length' ? 'x' : 'y'
+                      change.mutate({ id: selected.id, fields: { [side]: cm, [position]: Math.min(selected[position], max - cm) } })
+                    }}
+                  />
+                ))}
               <Field
                 label="Poznámka"
                 className="sm:col-span-2"
@@ -496,6 +532,7 @@ export function WarehousePage() {
             }
             selectedId={selectedId}
             highlighted={new Set(hits.map((item) => item.spotId).filter((id): id is string => id !== null))}
+            trussSpotId={trussSpotId}
             onSelect={select}
           />
           )}
@@ -538,6 +575,34 @@ export function WarehousePage() {
                 </Button>
               </div>
 
+              {(selected.kind === 'zone' || selected.kind === 'truss') && truss.data?.ready && (
+                <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg bg-muted/60 p-3 text-sm">
+                  {selected.id === trussSpotId ? (
+                    <>
+                      <span className="flex-1">
+                        <span className="font-medium">Hliník</span> · {trussStacks} {trussStacks === 1 ? 'stoh' : trussStacks > 1 && trussStacks < 5 ? 'stohy' : 'stohov'} trussov
+                      </span>
+                      <LinkButton to="/warehouse/truss" size="sm" variant="outline">
+                        Otvoriť hliník
+                      </LinkButton>
+                      {canPlan && selected.kind === 'zone' && (
+                        <Button size="sm" variant="ghost" disabled={moveTruss.isPending} onClick={() => moveTruss.mutate(null)}>
+                          Hliník tu nie je
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    canPlan && (
+                      <>
+                        <span className="flex-1 text-muted-foreground">Leží tu aj hliník (stohy trussov)?</span>
+                        <Button size="sm" variant="outline" disabled={moveTruss.isPending} onClick={() => moveTruss.mutate(selected.id)}>
+                          Hliník je na tomto mieste
+                        </Button>
+                      </>
+                    )
+                  )}
+                </div>
+              )}
               {selected.kind === 'rack' && multiBay ? (
                 <div className="flex flex-col gap-3">
                   {bays.flatMap((bay, bayIndex) =>
@@ -641,8 +706,9 @@ export function WarehousePage() {
                   className="mt-4 flex flex-wrap items-end gap-3 border-t pt-4"
                   onSubmit={(event) => {
                     event.preventDefault()
-                    if (!addCaseId) return
-                    place.mutate({ caseId: addCaseId, spotId: selected.id, ...placeTarget(selected) })
+                    const item = cases.data.find((candidate) => candidate.id === addCaseId)
+                    if (!item) return
+                    place.mutate({ caseId: item.id, spotId: selected.id, ...placeTarget(selected, item) })
                     setAddCaseId('')
                   }}
                 >
@@ -670,7 +736,7 @@ export function WarehousePage() {
                         setCell(e.target.value ? { bay, level } : null)
                       }}
                     >
-                      <option value="">— vyberte policu —</option>
+                      <option value="">automaticky (kde je miesto)</option>
                       {bays.flatMap((bay, bayIndex) =>
                         bay.levels.map((_, levelIndex) => (
                           <option key={`${bayIndex}-${levelIndex}`} value={`${bayIndex + 1}-${levelIndex + 1}`}>
@@ -704,10 +770,10 @@ export function WarehousePage() {
                       ))}
                     </SelectField>
                   )}
-                  <Button type="submit" disabled={!addCaseId || place.isPending || (selected.kind === 'rack' && multiBay && !cell)}>
+                  <Button type="submit" disabled={!addCaseId || place.isPending}>
                     Uložiť sem
                   </Button>
-                  <Button variant="outline" disabled={selected.kind === 'rack' && multiBay && !cell} onClick={() => setScanning('place')}>
+                  <Button variant="outline" onClick={() => setScanning('place')}>
                     <ScanLine className="size-4" aria-hidden />
                     Uložiť sem skenovaním
                   </Button>

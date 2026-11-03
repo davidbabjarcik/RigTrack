@@ -5,9 +5,10 @@ const piece = (id: string, attributes: object) => ({ id, name: id, quantity: 4, 
 
 describe('truss storage', () => {
   it('cleans the stored layout', () => {
-    expect(cleanTrussLayout(null)).toEqual({ cellCm: 35, cols: 10, rows: 6, stacks: [] })
+    expect(cleanTrussLayout(null)).toEqual({ cellCm: 35, cols: 10, rows: 6, stacks: [], spotId: null })
     const layout = cleanTrussLayout({ cellCm: 500, cols: 3, rows: 2, stacks: [{ col: 9, row: 0, pieces: ['a', 1] }, { col: 2, row: 0, pieces: ['b'] }, { col: 1, row: 1, pieces: [] }] })
-    expect(layout).toEqual({ cellCm: 100, cols: 3, rows: 2, stacks: [{ col: 2, row: 0, pieces: ['a'] }] })
+    expect(layout).toEqual({ cellCm: 100, cols: 3, rows: 2, stacks: [{ col: 2, row: 0, pieces: ['a'] }], spotId: null })
+    expect(cleanTrussLayout({ spotId: 'abc' }).spotId).toBe('abc')
   })
 
   it('stacks, counts and moves pieces', () => {

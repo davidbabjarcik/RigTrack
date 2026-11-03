@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 7.16 – 3. 11. 2026
+
+- **Hliník leží na Mieste spolu s cases**: samostatný druh „Hliník“ zmizol, je len Miesto. Pri mieste je tlačidlo
+  „Hliník je na tomto mieste“ a potom „Otvoriť hliník“ so stohmi trussov; cases sa naň ukladajú ako doteraz.
+  Existujúce miesta s hliníkom sa zmenili na Miesto samy.
+- **Rozmery miesta v metroch**: v Upraviť plán pri mieste, miestnosti, stene a stĺpe zadáte dĺžku a šírku v m.
+- **Uložiť case do regála bez výberu police**: tlačidlo „Uložiť sem“ už nie je sivé – bez zvolenej police sa case
+  uloží na prvú policu, kde je miesto (case bez rozmerov počíta ako 60 cm). Platí aj pri skenovaní.
+- **Plagát inventára na A4 aj A5**, na výšku aj na šírku (aj v tlačovej fronte).
+- Nová migrácia: `0144` (je aj v `supabase/update-all.sql`).
+
 ### 7.15 – 3. 11. 2026
 
 - **Rýchlejšia databáza**: pravidlá prístupu overujú prihláseného používateľa raz na dopyt namiesto pri každom

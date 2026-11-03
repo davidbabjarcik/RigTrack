@@ -29,4 +29,12 @@ describe('layoutPoster', () => {
     expect(blocks.reduce((sum, block) => sum + block.tiles.length, 0)).toBe(60)
     expect(blocks.slice(1).every((block) => block.continued)).toBe(true)
   })
+
+  it('fits less on A5 with the same tile size and keeps every tile', () => {
+    const a4 = layoutPoster([section('big', 40)], true, false)
+    const a5 = layoutPoster([section('big', 40)], true, false, 'A5')
+    expect(a5.page).toEqual({ w: 148, h: 210 })
+    expect(a5.pages.length).toBeGreaterThan(a4.pages.length)
+    expect(a5.pages.flat().flatMap((row) => row.blocks).reduce((sum, block) => sum + block.tiles.length, 0)).toBe(40)
+  })
 })

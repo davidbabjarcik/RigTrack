@@ -1,5 +1,5 @@
 import { stampGenerated } from '@/features/cases/canvas'
-// Plagát inventára nakreslený do obrázka (A4, 150 dpi): z neho je náhľad, tlač, PDF aj PNG – všade rovnaký.
+// Plagát inventára nakreslený do obrázka (A4 alebo A5, 150 dpi): z neho je náhľad, tlač, PDF aj PNG – všade rovnaký.
 // Čierno-sivý na bielom papieri; rozmery v mm sa prepočítajú na pixely.
 
 import type { PosterSection } from './poster'
@@ -9,6 +9,8 @@ export type PosterInput = {
   subtitle: string
   notes: string[]
   portrait: boolean
+  /** Papier; na A5 je písmo rovnako veľké, len sa zmestí menej na stranu. */
+  paper?: PosterPaper
   sections: PosterSection[]
   /** Fotky podľa cesty v Storage. */
   photos: Map<string, CanvasImageSource & { width: number; height: number }>
@@ -32,9 +34,13 @@ const TILE_MIN_W = 55
 const HEADER_H = 24 // hlavička s čiarou
 const FOOTER_H = 13
 
-export const posterPageMm = (portrait: boolean) => (portrait ? { w: 210, h: 297 } : { w: 297, h: 210 })
-export const posterPagePx = (portrait: boolean) => {
-  const { w, h } = posterPageMm(portrait)
+export type PosterPaper = 'A4' | 'A5'
+export const posterPageMm = (portrait: boolean, paper: PosterPaper = 'A4') => {
+  const [short, long] = paper === 'A5' ? [148, 210] : [210, 297]
+  return portrait ? { w: short, h: long } : { w: long, h: short }
+}
+export const posterPagePx = (portrait: boolean, paper: PosterPaper = 'A4') => {
+  const { w, h } = posterPageMm(portrait, paper)
   return { width: Math.round(w * PX_PER_MM), height: Math.round(h * PX_PER_MM) }
 }
 
@@ -51,8 +57,8 @@ const blockHeight = (count: number, cols: number) => {
  * Rozloží časti na strany: na šírku malé časti (do 4 dlaždíc) po dvoch vedľa seba, veľké cez celú šírku; na výšku
  * všetko pod sebou. Časť, ktorá sa nezmestí ani na prázdnu stranu, sa rozdelí (pokračuje na ďalšej).
  */
-export function layoutPoster(sections: PosterSection[], portrait: boolean, hasNotes: boolean) {
-  const page = posterPageMm(portrait)
+export function layoutPoster(sections: PosterSection[], portrait: boolean, hasNotes: boolean, paper: PosterPaper = 'A4') {
+  const page = posterPageMm(portrait, paper)
   const contentW = page.w - 2 * M
   const halfW = (contentW - GAP) / 2
   const usable = page.h - 2 * M - HEADER_H - (hasNotes ? FOOTER_H + GAP : 0)
@@ -98,8 +104,8 @@ export function layoutPoster(sections: PosterSection[], portrait: boolean, hasNo
 
 /** Nakreslí plagát; vráti jedno plátno na každú stranu. */
 export function renderPoster(input: PosterInput): HTMLCanvasElement[] {
-  const { pages, contentW, halfW, page } = layoutPoster(input.sections, input.portrait, input.notes.length > 0)
-  const size = posterPagePx(input.portrait)
+  const { pages, contentW, halfW, page } = layoutPoster(input.sections, input.portrait, input.notes.length > 0, input.paper)
+  const size = posterPagePx(input.portrait, input.paper)
   return pages.map((rows, pageIndex) => {
     const canvas = document.createElement('canvas')
     canvas.width = size.width

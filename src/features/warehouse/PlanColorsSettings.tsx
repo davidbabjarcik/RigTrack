@@ -6,7 +6,7 @@ import { savePlanColors, warehouseKeys } from './api'
 import { SPOT_KIND_FILLS, SPOT_KIND_LABELS, type SpotKind, type Warehouse } from './model'
 
 /** Druhy, ktorým sa dá zmeniť farba (palety majú farbu pri type palety). */
-const KINDS: SpotKind[] = ['rack', 'zone', 'truss', 'room', 'door', 'window', 'column', 'wall']
+const KINDS: SpotKind[] = ['rack', 'zone', 'room', 'door', 'window', 'column', 'wall']
 
 /** Nastavenia → Sklad: vlastné farby plánu (regál, miesto, hliník…); „Predvolené“ vráti pôvodné. */
 export function PlanColorsSettings({ companyId, warehouse }: { companyId: string; warehouse: Warehouse }) {
