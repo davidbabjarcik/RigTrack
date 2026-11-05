@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.13 – 5. 11. 2026
+
+- **Vývojár → Celá databáza techniky** (samostatná stránka): filtre podľa druhu, značky, overenia a toho, či model
+  má technické údaje, hľadanie a strany po 100 modeloch. Pri každom modeli úprava druhu, značky, modelu a jednotlivých
+  technických údajov (pridať, zmeniť, odobrať), príznak „Údaje sú overené“ a zmazanie. „Overiť zobrazené“ overí
+  naraz všetko, čo filtre ukazujú.
+- Pri každom modeli je vidieť, **čo chýba** (podľa druhu – napr. pri boxe výkon, frekvencie, váha, rozmery), a filter
+  „Neúplné / Úplné“.
+- **Kód Thomann** (číslo artiklu) pri modeli – z neho vedie odkaz priamo na produkt v Thomanne.
+- Stránka je len pre vývojára: komu to appka nedovolí, toho presmeruje preč aj pri ručne zadanej adrese.
+
 ### 8.12 – 5. 11. 2026
 
 - **RCF v spoločnej databáze techniky** podľa katalógov Touring 2026 a Portable: line array HDL (50-A 4K, 30-A,

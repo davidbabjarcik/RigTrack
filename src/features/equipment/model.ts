@@ -346,6 +346,8 @@ export type EquipmentAttributes = {
   crossover?: string
   biamp?: boolean
   hfDriver?: string
+  /** Spoločná databáza techniky: číslo artiklu v Thomanne (len v katalógu, kvôli objednávaniu). */
+  thomannCode?: string
   /** Sub: konštrukcia – priamy (bass reflex), horna alebo slimák. */
   subDesign?: 'direct' | 'horn' | 'snail'
   /** Váha jedného kusu (kg). */

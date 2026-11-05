@@ -11,7 +11,7 @@ export function CenteredLayout() {
   const { pathname } = useLocation()
   const t = useT()
   // Prihlásenie ostáva úzke; výber firmy, môj účet, O aplikácii, Čo je nové a právne stránky sú na PC širšie.
-  const wide = ['/about', '/help', '/changelog', '/company/select', '/ochrana-sukromia', '/cookies', '/podmienky-pouzivania'].includes(pathname)
+  const wide = ['/about', '/help', '/changelog', '/company/select', '/developer/catalog', '/ochrana-sukromia', '/cookies', '/podmienky-pouzivania'].includes(pathname)
   return (
     <div className="flex min-h-dvh flex-col">
       <OfflineBanner />

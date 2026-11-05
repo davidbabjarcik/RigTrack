@@ -83,6 +83,20 @@ describe('equipment catalog (0146)', () => {
     expect(approved).toEqual({ verified: true, verified_by: t.users.dev })
   })
 
+  it('lets only a developer edit a model, its data and verification (0156)', async () => {
+    const [row] = await t.as('viewer', `select id from public.equipment_catalog where manufacturer = 'TAF' and model = 'FT34-200'`)
+    const edit = (user: string, model: string, verified = true) =>
+      t.as(user, `select public.update_catalog_entry($1, 'truss', 'TAF', $2, '{"lengthM": 2, "weightKg": 11}'::jsonb, $3)`, [row.id, model, verified])
+    await expect(edit('bossA', 'FT34-200')).rejects.toThrow(/Not allowed/)
+    await expect(edit('dev', 'FT34-250')).rejects.toThrow(/Duplicate model/)
+    await edit('dev', 'FT34-200')
+    const [after] = await t.as('viewer', `select attributes, verified, verified_by from public.equipment_catalog where id = $1`, [row.id])
+    expect(after).toEqual({ attributes: { lengthM: 2, weightKg: 11 }, verified: true, verified_by: t.users.dev })
+    await edit('dev', 'FT34-200', false)
+    const [undone] = await t.as('viewer', `select verified, verified_by from public.equipment_catalog where id = $1`, [row.id])
+    expect(undone).toEqual({ verified: false, verified_by: null })
+  })
+
   it('starts unverified and only a developer verifies (0153)', async () => {
     const [{ n }] = await t.as('viewer', `select count(*)::int as n from public.equipment_catalog where verified and manufacturer <> 'Ukážka Audio'`)
     expect(n).toBe(0)

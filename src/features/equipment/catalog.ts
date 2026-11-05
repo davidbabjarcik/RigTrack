@@ -23,13 +23,14 @@ export const CATALOG_KEYS = [
   'rfRange', 'micType', 'wirelessRx', 'wirelessTxs', 'powered', 'rmsW', 'peakW', 'woofer', 'maxSplDb', 'connectors',
   'poleMount', 'subDesign', 'programW', 'maxSplPeakDb', 'sensitivityDb', 'impedanceOhm', 'freqRange', 'freqResponse',
   'coverage', 'crossover', 'biamp', 'hfDriver', 'weightKg', 'boxWidthCm', 'boxDepthCm', 'boxHeightCm', 'dmxModes',
-  'ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8', 'lengthM',
+  'ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8', 'lengthM', 'thomannCode',
   'ledPanel', 'ledProcessor', 'display',
 ] as const
 
 /** Polia formulára, ktoré katalóg vyplní (rovnaké názvy ako vo formulári techniky). */
 export const CATALOG_FORM_KEYS = [
-  ...CATALOG_KEYS.filter((key) => key !== 'ledPanel' && key !== 'ledProcessor' && key !== 'display'),
+  // Kód Thomann je len v databáze techniky (na objednanie), do formulára techniky sa nevypĺňa.
+  ...CATALOG_KEYS.filter((key) => key !== 'ledPanel' && key !== 'ledProcessor' && key !== 'display' && key !== 'thomannCode'),
   'isLedPanel', 'ledPitchMm', 'ledWidthMm', 'ledHeightMm', 'ledPxW', 'ledPxH', 'ledWeightKg', 'ledMaxW', 'ledAvgW',
   'isLedProcessor', 'isDisplay', 'displayType', 'displayResW', 'displayResH', 'displayDiagonalIn', 'displayLumens',
   'procOutputs', 'procPixels', 'procInputs', 'procChip', 'procControl', 'procHdmi', 'procDvi', 'procSdi', 'procDp',
@@ -46,6 +47,63 @@ export function catalogAttributes(attributes: EquipmentAttributes): EquipmentAtt
     picked[key] = value
   }
   return picked as EquipmentAttributes
+}
+
+/** Odkaz na produkt v Thomanne podľa kódu (číslo artiklu); iný text sa vyhľadá. */
+export function thomannUrl(code: string) {
+  const value = code.trim()
+  if (!value) return ''
+  return /^\d{3,9}$/.test(value) ? `https://www.thomann.de/intl/prod_AR${value}.html` : `https://www.thomann.de/intl/search_dir.html?sw=${encodeURIComponent(value)}`
+}
+
+/** Ktoré dôležité údaje modelu chýbajú (podľa druhu a typu) – pre Vývojár → Databáza techniky. */
+export function catalogMissing(entry: Pick<CatalogEntry, 'kind' | 'attributes'>): string[] {
+  const a = entry.attributes as Record<string, unknown>
+  const has = (...keys: string[]) => keys.some((key) => a[key] !== undefined && a[key] !== null && a[key] !== '')
+  const missing: string[] = []
+  const need = (label: string, ...keys: string[]) => {
+    if (!has(...keys)) missing.push(label)
+  }
+  const type = String(a.audioType ?? a.lightType ?? a.trussType ?? a.stageType ?? '')
+  if (entry.kind === 'audio') {
+    need('typ', 'audioType')
+    if (['line_array', 'speaker', 'monitor', 'subwoofer', ''].includes(type)) {
+      need('aktívny / pasívny', 'powered')
+      need('výkon', 'rmsW', 'peakW', 'programW')
+      need('frekvenčný rozsah', 'freqRange')
+      need('max SPL / citlivosť', 'maxSplDb', 'maxSplPeakDb', 'sensitivityDb')
+      if (a.powered !== 'active') need('impedancia', 'impedanceOhm')
+      if (type !== 'subwoofer') need('vyžarovací uhol', 'coverage')
+      need('meniče', 'woofer')
+      need('váha', 'weightKg')
+      need('rozmery', 'boxWidthCm')
+    } else if (type === 'amplifier') {
+      need('výkon 2 / 4 / 8 Ω', 'ampW4', 'ampW8', 'ampW2')
+      need('váha', 'weightKg')
+    } else if (type === 'mixer') need('počet kanálov', 'mixerChannels')
+    else if (type === 'wireless' || type === 'iem') {
+      need('frekvenčné pásmo', 'rfRange')
+      need('prijímač', 'wirelessRx')
+    } else if (type === 'microphone') need('typ mikrofónu', 'micType', 'micKind')
+  } else if (entry.kind === 'light') {
+    need('typ svetla', 'lightType')
+    if (!type.startsWith('acc_')) {
+      need('zdroj svetla', 'lightSource')
+      need('príkon', 'powerW')
+      need('DMX módy', 'dmxModes')
+      need('váha', 'weightKg')
+    }
+  } else if (entry.kind === 'truss') {
+    need('typ', 'trussType')
+    if (type.startsWith('point')) need('dĺžka', 'lengthM')
+    need('váha', 'weightKg')
+  } else if (entry.kind === 'stage') {
+    need('typ', 'stageType')
+    need('veľkosť', 'stageSize')
+    need('váha', 'weightKg')
+  } else if (Object.keys(a).length === 0) missing.push('všetko')
+  need('kód Thomann', 'thomannCode')
+  return missing
 }
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
@@ -128,6 +186,19 @@ export async function verifyCatalogEntries(ids: string[], verified: boolean): Pr
   const { data, error } = await getSupabase().rpc('verify_catalog_entries', { _ids: ids, _verified: verified })
   if (error) throw error
   return Number(data ?? 0)
+}
+
+/** Vývojár: úprava modelu (druh, značka, model, údaje, overenie). Rovnaký model už v katalógu → chyba 23505. */
+export async function updateCatalogEntry(entry: Pick<CatalogEntry, 'id' | 'kind' | 'manufacturer' | 'model' | 'attributes' | 'verified'>) {
+  const { error } = await getSupabase().rpc('update_catalog_entry', {
+    _id: entry.id,
+    _kind: entry.kind,
+    _manufacturer: entry.manufacturer.trim(),
+    _model: entry.model.trim(),
+    _attributes: entry.attributes,
+    _verified: entry.verified,
+  })
+  if (error) throw error
 }
 
 export async function deleteCatalogEntry(id: string) {

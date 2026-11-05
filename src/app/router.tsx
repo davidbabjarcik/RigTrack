@@ -30,6 +30,7 @@ const lazyPage = (load: () => Promise<ComponentType>, permission?: PermissionKey
 // Aj veľké stránky mimo modulov (Nastavenia, výber firmy) sa sťahujú až pri otvorení.
 const settings = lazyPage(() => import('@/features/settings/SettingsPage').then((m) => m.SettingsPage))
 const companySelect = lazyPage(() => import('@/features/companies/CompanySelectPage').then((m) => m.CompanySelectPage))
+const catalogAdmin = lazyPage(() => import('@/features/equipment/CatalogAdminPage').then((m) => m.CatalogAdminPage))
 const companyCreate = lazyPage(() => import('@/features/companies/CompanyCreatePage').then((m) => m.CompanyCreatePage))
 const equipmentList = lazyPage(() => import('@/features/equipment/EquipmentListPage').then((m) => m.EquipmentListPage), 'equipment.view')
 const equipmentDetail = lazyPage(() => import('@/features/equipment/EquipmentDetailPage').then((m) => m.EquipmentDetailPage), 'equipment.view')
@@ -153,6 +154,7 @@ export const routes: RouteObject[] = [
         children: [
           { path: 'company/select', lazy: companySelect },
           { path: 'company/create', lazy: companyCreate },
+          { path: 'developer/catalog', lazy: catalogAdmin },
         ],
       },
       {
