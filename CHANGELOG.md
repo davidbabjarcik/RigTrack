@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.10 – 5. 11. 2026
+
+- **Hliník Global Truss a Duratruss v databáze techniky**: rovné diely F14, F23, F24, F31, F32, F33, F34, DT34P
+  a DT44P s kódom, dĺžkou a váhou (napr. Global Truss → „F34 – 2 m (SQ-4112)“).
+- **JBL 2026**: VRX900 (aj aktívne VRX932LAP a VRX918SP), VTX A, V, F a M, VTX suby (B15, B18, B28, S25, S28),
+  SRX900 a PRX400 – typ, aktívny / pasívny, výkon, meniče, frekvencie, citlivosť, impedancia a uhol podľa katalógu.
+- **Bezdrôtové systémy Shure**: BLX, GLX-D+, SLX-D, QLX-D a ULX-D – prijímač a frekvenčné pásmo.
+
 ### 8.9 – 5. 11. 2026
 
 - **Hliník TAF v spoločnej databáze techniky**: vyše 300 rovných dielov (FT, HT, PT, TT, TC, FTR, GS…) s typom

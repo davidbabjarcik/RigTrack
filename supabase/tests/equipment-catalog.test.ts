@@ -33,6 +33,15 @@ describe('equipment catalog (0146)', () => {
     expect(n).toBeGreaterThan(40)
   })
 
+  it('has Global Truss, JBL 2026 and Shure wireless entries (0151)', async () => {
+    const [gta] = await t.as('viewer', `select attributes from public.equipment_catalog where kind = 'truss' and model = 'F34 – 2 m (SQ-4112)'`)
+    expect(gta.attributes).toMatchObject({ trussType: 'point4', lengthM: 2, weightKg: 13.17 })
+    const [m22] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'JBL' and model = 'VTX M22'`)
+    expect(m22.attributes).toMatchObject({ audioType: 'monitor', rmsW: 1500 })
+    const [ulx] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'Shure' and model = 'ULXD4'`)
+    expect(ulx.attributes).toMatchObject({ audioType: 'wireless', rfRange: 'VHF / UHF / 900 MHz, ladenie 64 MHz' })
+  })
+
   it('is readable by everyone signed in and has seeded brands, but nobody writes it directly', async () => {
     const [{ n }] = await t.as('viewer', `select count(*)::int as n from public.equipment_catalog where manufacturer = 'JBL'`)
     expect(n).toBeGreaterThan(0)
