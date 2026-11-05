@@ -57,6 +57,9 @@ export function Credits({ className }: { className?: string }) {
       <Link to="/changelog" className="hover:text-foreground hover:underline" title="Čo je nové v jednotlivých verziách">
         RigTrack v{APP_VERSION}
       </Link>
+      <Link to="/home" className="hover:text-foreground hover:underline">
+        Úvod
+      </Link>
       <Link to="/about" className="hover:text-foreground hover:underline">
         O aplikácii
       </Link>

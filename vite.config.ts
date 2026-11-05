@@ -93,7 +93,8 @@ export default defineConfig({
         // (firemné dáta, signed URL, dokumenty) sa do Cache Storage neukladajú.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         // Čítanie PDF sa sťahuje až pri importe faktúry; do offline shellu nepatrí.
-        globIgnores: ['**/pdf-*.js'],
+        // Snímky úvodnej stránky do offline shellu nepatria.
+        globIgnores: ['**/pdf-*.js', 'home/**'],
         navigateFallback: `${base}index.html`,
         cleanupOutdatedCaches: true,
         // Push upozornenia (public/push-sw.js): zobrazenie a otvorenie appky po ťuknutí.

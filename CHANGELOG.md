@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.2 – 5. 11. 2026
+
+- **Úvodná stránka RigTracku** pre každého: čo appka vie, ukážky z ukážkovej firmy a ako začať, s tlačidlami
+  Prihlásiť sa a Mám pozvánku (otvorí rovno vytvorenie účtu). Bez prihlásenia sa ukáže na hlavnej adrese, inak na
+  /home; odkaz „Úvod“ je v pätičke.
+
 ### 8.1 – 5. 11. 2026
 
 - **Plagát inventára – drobný údaj pri technike**: malým sivým písmom vedľa počtu reproduktor aktívny / pasívny,

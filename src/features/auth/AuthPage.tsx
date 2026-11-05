@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { BackendRequired } from '@/components/feedback/BackendRequired'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -23,7 +23,9 @@ const SUBMIT_LABELS: Record<Mode, string> = {
 }
 
 function AuthForm() {
-  const [mode, setMode] = useState<Mode>('signin')
+  // ?mode=signup (z úvodnej stránky „Mám pozvánku“) otvorí rovno vytvorenie účtu.
+  const [params] = useSearchParams()
+  const [mode, setMode] = useState<Mode>(() => (params.get('mode') === 'signup' ? 'signup' : 'signin'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')

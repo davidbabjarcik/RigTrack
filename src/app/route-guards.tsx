@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { LoadingScreen } from '@/components/feedback/LoadingScreen'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,9 @@ import { isSupabaseConfigured } from '@/lib/supabase/client'
 import { FoundPage } from '@/features/scan/FoundPage'
 
 // Guardy sú iba UX. Dáta chráni RLS v databáze.
+
+// Úvodná stránka pre neprihlásených na „/“ (načíta sa až keď treba).
+const HomePage = lazy(() => import('@/features/home/HomePage').then((module) => ({ default: module.HomePage })))
 
 export function RequireAuth() {
   const { session, loading } = useAuth()
@@ -24,6 +27,13 @@ export function RequireAuth() {
     if (scanned) {
       const unit = Number(new URLSearchParams(location.search).get('unit')) || null
       return <FoundPage kind={scanned[1].toLowerCase() === 'cases' ? 'case' : 'equipment'} id={scanned[2].toLowerCase()} unit={unit} />
+    }
+    if (location.pathname === '/') {
+      return (
+        <Suspense fallback={<LoadingScreen />}>
+          <HomePage />
+        </Suspense>
+      )
     }
     return <Navigate to="/auth" replace state={{ from: location.pathname + location.search }} />
   }
