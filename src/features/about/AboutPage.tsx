@@ -89,6 +89,13 @@ export function AboutPage() {
       </section>
       </div>
 
+      <section className="text-center text-xs text-muted-foreground">
+        {tx('Údaje o svetlách v spoločnej databáze techniky sú z')}{' '}
+        <a href="https://open-fixture-library.org" target="_blank" rel="noreferrer" className="text-accent hover:underline">
+          Open Fixture Library
+        </a>{' '}
+        {tx('(licencia MIT, © Florian & Felix Edelmann a prispievatelia).')}
+      </section>
       <section className="text-center text-sm text-muted-foreground">{tx('Aplikáciu vyvíja')}{' '}<span className="font-medium text-foreground">{CREDITS.author}</span>{tx('. Nápady a chyby môžete poslať priamo v appke (Návrhy) alebo cez profily v pätičke.')}</section>
     </article>
   )

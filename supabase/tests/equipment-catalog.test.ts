@@ -19,6 +19,13 @@ beforeAll(async () => {
 })
 
 describe('equipment catalog (0146)', () => {
+  it('has datasheet specs (0147) and lights from Open Fixture Library (0148)', async () => {
+    const [jbl] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'JBL' and model = 'VRX932LA-1'`)
+    expect(jbl.attributes).toMatchObject({ audioType: 'line_array', rmsW: 800, impedanceOhm: 8 })
+    const [{ n }] = await t.as('viewer', `select count(*)::int as n from public.equipment_catalog where kind = 'light' and attributes ? 'dmxModes'`)
+    expect(n).toBeGreaterThan(600)
+  })
+
   it('is readable by everyone signed in and has seeded brands, but nobody writes it directly', async () => {
     const [{ n }] = await t.as('viewer', `select count(*)::int as n from public.equipment_catalog where manufacturer = 'JBL'`)
     expect(n).toBeGreaterThan(0)

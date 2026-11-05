@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.8 – 5. 11. 2026
+
+- **Vyše 650 svetiel v spoločnej databáze techniky** (Open Fixture Library, 138 výrobcov – Robe, Chauvet, ADJ,
+  Cameo, Martin, Clay Paky a ďalší): pri svetle vyberiete značku a model a vyplní sa typ, zdroj svetla, príkon,
+  váha a DMX módy s rozpisom kanálov. Údaje, ktoré už v databáze boli, ostali.
+- V O aplikácii je uvedený zdroj údajov o svetlách.
+
 ### 8.7 – 5. 11. 2026
 
 - **Nahrať GDTF súbor pri svetle**: súbor svetla z gdtf-share.com (rovnaký ako pre grandMA či Vectorworks) vyplní

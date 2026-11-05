@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-8.7-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-8.8-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **8.8** | 650+ svetiel z Open Fixture Library v databáze techniky |
 | **8.7** | Nahrať GDTF súbor pri svetle (módy, kanály, príkon) |
 | **8.6.2** | Údaje JBL a Crown I-Tech v spoločnej databáze techniky |
 | **8.6.1** | Ponuka novej verzie na každej stránke |
