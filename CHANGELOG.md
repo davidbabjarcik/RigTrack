@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.10.1 – 5. 11. 2026
+
+- Výrobníky hmly (hazery) sú v spoločnej databáze techniky pri svetlách, nie pri spotrebičoch – pri svetle → typ
+  Hazer ich nájdete medzi značkami.
+
 ### 8.10 – 5. 11. 2026
 
 - **Hliník Global Truss a Duratruss v databáze techniky**: rovné diely F14, F23, F24, F31, F32, F33, F34, DT34P

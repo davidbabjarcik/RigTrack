@@ -9,13 +9,12 @@ doplnení katalógov. Stačí poslať PDF (celý katalóg výrobcu alebo list ku
 
 | Druh | Modelov spolu | Bez údajov | Neúplné |
 |---|---:|---:|---:|
-| Svetlá | 689 | 36 | ~140 bez typu svetla |
+| Svetlá (vrátane výrobníkov hmly) | 692 | 36 + 3 hazery bez údajov | ~140 bez typu svetla |
 | Hliník | 406 | 5 | – |
 | Zvuk | 105 | 51 | 35 |
 | Pódium (Nivtec) | 49 | 0 | – |
 | DJ technika | 6 | 6 | – |
 | Video | 4 | 4 | – |
-| Výrobníky hmly | 3 | 3 | – |
 
 **Najviac by pomohli (podľa poradia):** d&b audiotechnik, L-Acoustics, RCF, Shure (mikrofóny), Sennheiser,
 Yamaha (pulty), Allen & Heath, listy k JBL SRX900 a VTX.
@@ -80,7 +79,7 @@ Starší všeobecný záznam bez dĺžky dielu – nové diely s váhou už v da
 - **Global Truss** F44P – v katalógu 2019 nie je (novší katalóg alebo list)
 - Global Truss F34 (všeobecný) – diely F34 s váhou už sú, tento sa dá ignorovať
 
-## DJ, video, výrobníky – bez údajov
+## DJ a video – bez údajov
 
 | Výrobca | Modely |
 |---|---|
@@ -90,9 +89,6 @@ Starší všeobecný záznam bez dĺžky dielu – nové diely s váhou už v da
 | Novastar | VX1000, MCTRL4K |
 | Barco | E2 |
 | Blackmagic Design | ATEM Mini Pro |
-| MDG | theONE |
-| Look Solutions | Unique 2.1 |
-| Showtec | Compact Hazer |
 
 ## Svetlá
 
@@ -118,6 +114,7 @@ GDTF súbor pri svetle, alebo pošlite list / GDTF súbor:
 | ADJ | Focus Spot 4Z |
 | Minuit Une | M-Carré |
 | Lixada, U`King | Mini Beam RGBW, Mini Moving Head RGBW, Mini Gobo Moving Head Light |
+| Výrobníky hmly (hazery) | MDG theONE, Look Solutions Unique 2.1, Showtec Compact Hazer – typ je zadaný, chýba príkon, váha a DMX |
 | Pulty na svetlá | MA Lighting grandMA3 compact XT a light, Avolites Titan Mobile, ChamSys MagicQ MQ80 |
 
 Pri asi 140 svetlách chýba **typ** (beam / wash / spot / PAR…) – Open Fixture Library ho nemá jednoznačne. Najviac

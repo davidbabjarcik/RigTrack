@@ -40,6 +40,9 @@ describe('equipment catalog (0146)', () => {
     expect(m22.attributes).toMatchObject({ audioType: 'monitor', rmsW: 1500 })
     const [ulx] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'Shure' and model = 'ULXD4'`)
     expect(ulx.attributes).toMatchObject({ audioType: 'wireless', rfRange: 'VHF / UHF / 900 MHz, ladenie 64 MHz' })
+    // 0152: výrobníky hmly sú pri svetlách
+    const [haze] = await t.as('viewer', `select kind, attributes from public.equipment_catalog where manufacturer = 'MDG' and model = 'theONE'`)
+    expect(haze).toMatchObject({ kind: 'light', attributes: { lightType: 'hazer' } })
   })
 
   it('is readable by everyone signed in and has seeded brands, but nobody writes it directly', async () => {
