@@ -1,4 +1,4 @@
-import { BookCheck, Info } from 'lucide-react'
+import { BookCheck, Info, ShieldAlert } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Field, SelectField } from '@/components/ui/field'
 import { catalogBrands, catalogModels, findCatalogEntry, type CatalogEntry } from './catalog'
@@ -151,10 +151,12 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
           <option value={OTHER}>{tx('+ Iný model (pridať)…')}</option>
         </SelectField>
       )}
-      {known && knownFacts(known.attributes) >= FEW_FACTS && (
+      {known && (
         <p className="-mt-2 flex items-center gap-1.5 text-xs text-muted-foreground sm:col-span-2">
-          <BookCheck className="size-3.5 text-emerald-600" aria-hidden />
-          {tx('Model zo spoločnej databázy techniky – technické údaje sa doplnili.')}
+          {known.verified ? <BookCheck className="size-3.5 shrink-0 text-emerald-600" aria-hidden /> : <ShieldAlert className="size-3.5 shrink-0 text-amber-600" aria-hidden />}
+          {known.verified
+            ? tx('Model zo spoločnej databázy techniky – údaje sú overené.')
+            : tx('Model zo spoločnej databázy techniky – údaje zatiaľ nie sú overené, skontrolujte ich.')}
         </p>
       )}
       {known && knownFacts(known.attributes) < FEW_FACTS && (

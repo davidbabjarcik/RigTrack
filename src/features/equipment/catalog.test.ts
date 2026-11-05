@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { catalogAttributes, catalogBrands, catalogModels, findCatalogEntry, type CatalogEntry } from './catalog'
 
-const entry = (manufacturer: string, model: string, kind: CatalogEntry['kind'] = 'audio'): CatalogEntry => ({ id: `${manufacturer}-${model}`, kind, manufacturer, model, attributes: {} })
+const entry = (manufacturer: string, model: string, kind: CatalogEntry['kind'] = 'audio'): CatalogEntry => ({ id: `${manufacturer}-${model}`, kind, manufacturer, model, attributes: {}, verified: false })
 const catalog = [entry('JBL', 'SRX835P'), entry('JBL', 'EON715'), entry('Shure', 'SM58'), entry('Robe', 'Spiider', 'light')]
 
 describe('catalog', () => {

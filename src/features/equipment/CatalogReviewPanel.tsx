@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Trash2, X } from 'lucide-react'
+import { Check, ShieldCheck, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import {
   fetchReviewQueue,
   rejectCatalogEntry,
   useCatalog,
+  verifyCatalogEntries,
   type CatalogReviewItem,
 } from './catalog'
 import { describeAttributes, KIND_LABELS, type EquipmentKind } from './model'
@@ -87,40 +88,101 @@ function ReviewRow({ item }: { item: CatalogReviewItem }) {
   )
 }
 
-/** Oficiálny katalóg: hľadanie a zmazanie chybného modelu. */
+type Filter = 'unverified' | 'verified' | 'all'
+const SHOWN = 100
+
+/**
+ * Oficiálny katalóg: overovanie modelov (všetko prevzaté z katalógov výrobcov je neoverené), hľadanie a zmazanie
+ * chybného modelu. „Overiť zobrazené“ overí všetko, čo filter a hľadanie práve ukazujú (napr. celú značku).
+ */
 function CatalogList() {
   const queryClient = useQueryClient()
   const catalog = useCatalog()
   const [search, setSearch] = useState('')
-  const remove = useMutation({ mutationFn: deleteCatalogEntry, onSuccess: () => queryClient.invalidateQueries({ queryKey: catalogKeys.all }) })
+  const [filter, setFilter] = useState<Filter>('unverified')
+  const refresh = () => queryClient.invalidateQueries({ queryKey: catalogKeys.all })
+  const remove = useMutation({ mutationFn: deleteCatalogEntry, onSuccess: refresh })
+  const verify = useMutation({ mutationFn: ({ ids, verified }: { ids: string[]; verified: boolean }) => verifyCatalogEntries(ids, verified), onSuccess: refresh })
   const all = catalog.data ?? []
+  const verifiedCount = all.filter((entry) => entry.verified).length
   const words = plain(search.trim()).split(/\s+/).filter(Boolean)
-  const shown = words.length === 0 ? [] : all.filter((entry) => words.every((word) => plain(`${entry.manufacturer} ${entry.model} ${KIND_LABELS[entry.kind]}`).includes(word))).slice(0, 50)
+  const matching = all.filter(
+    (entry) =>
+      (filter === 'all' || entry.verified === (filter === 'verified')) &&
+      words.every((word) => plain(`${entry.manufacturer} ${entry.model} ${KIND_LABELS[entry.kind]}`).includes(word)),
+  )
+  const shown = matching.slice(0, SHOWN)
+  const toVerify = matching.filter((entry) => !entry.verified)
 
   return (
     <section>
-      <h3 className="mb-2 text-sm font-medium">{tx('Katalóg (')}{all.length}{' '}{tx('modelov)')}</h3>
-      <input className={`${input} mb-2 max-w-md`} placeholder={tx('Hľadať značku alebo model…')} value={search} onChange={(event) => setSearch(event.target.value)} />
-      {shown.length > 0 && (
+      <h3 className="mb-1 text-sm font-medium">{tf('Katalóg – {0} modelov, overených {1}', all.length, verifiedCount)}</h3>
+      <p className="mb-2 text-xs text-muted-foreground">
+        {tx('Pri výbere modelu firmy vidia, či sú údaje overené. Skontrolujte údaje a overte ich – jednotlivo alebo všetky zobrazené.')}
+      </p>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <input className={`${input} max-w-md`} placeholder={tx('Hľadať značku alebo model…')} value={search} onChange={(event) => setSearch(event.target.value)} />
+        <select className={`${input} w-auto`} aria-label={tx('Zobraziť')} value={filter} onChange={(event) => setFilter(event.target.value as Filter)}>
+          <option value="unverified">{tx('Neoverené')}</option>
+          <option value="verified">{tx('Overené')}</option>
+          <option value="all">{tx('Všetko')}</option>
+        </select>
+        {toVerify.length > 0 && (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={verify.isPending}
+            onClick={() =>
+              window.confirm(tf('Overiť všetkých {0} zobrazených modelov? Skontrolovali ste ich údaje?', toVerify.length)) &&
+              verify.mutate({ ids: toVerify.map((entry) => entry.id), verified: true })
+            }
+          >
+            <ShieldCheck className="size-4" aria-hidden />
+            {tf('Overiť zobrazené ({0})', toVerify.length)}
+          </Button>
+        )}
+      </div>
+      {verify.isError && <p className="mb-2 text-sm text-destructive">{tx('Overenie sa nepodarilo – je spustená migrácia 0153?')}</p>}
+      {matching.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{tx('Nič sa nenašlo.')}</p>
+      ) : (
         <ul className="divide-y rounded-xl border bg-surface">
-          {shown.map((entry) => (
-            <li key={entry.id} className="flex items-center gap-3 px-3 py-2 text-sm">
-              <span className="w-24 shrink-0 text-muted-foreground">{tx(KIND_LABELS[entry.kind])}</span>
-              <span className="min-w-0 flex-1 truncate">
-                <span className="font-medium">{entry.manufacturer}</span> {entry.model}
-              </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="size-8 p-0"
-                aria-label={tf('Zmazať {0} {1}', entry.manufacturer, entry.model)}
-                disabled={remove.isPending}
-                onClick={() => window.confirm(tf('Zmazať z katalógu {0} {1}? Technika firiem ostane.', entry.manufacturer, entry.model)) && remove.mutate(entry.id)}
-              >
-                <Trash2 className="size-4" aria-hidden />
-              </Button>
-            </li>
-          ))}
+          {shown.map((entry) => {
+            const details = describeAttributes({ attributes: entry.attributes })
+            return (
+              <li key={entry.id} className="flex items-start gap-3 px-3 py-2 text-sm">
+                <span className="w-24 shrink-0 pt-0.5 text-muted-foreground">{tx(KIND_LABELS[entry.kind])}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block">
+                    <span className="font-medium">{entry.manufacturer}</span> {entry.model}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">{details || tx('bez technických údajov')}</span>
+                </span>
+                <Button
+                  size="sm"
+                  variant={entry.verified ? 'ghost' : 'outline'}
+                  className="shrink-0"
+                  disabled={verify.isPending}
+                  aria-label={entry.verified ? tf('Zrušiť overenie: {0} {1}', entry.manufacturer, entry.model) : tf('Overiť: {0} {1}', entry.manufacturer, entry.model)}
+                  onClick={() => verify.mutate({ ids: [entry.id], verified: !entry.verified })}
+                >
+                  {entry.verified ? <ShieldCheck className="size-4 text-emerald-600" aria-hidden /> : <Check className="size-4" aria-hidden />}
+                  {entry.verified ? tx('Overené') : tx('Overiť')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="size-8 shrink-0 p-0"
+                  aria-label={tf('Zmazať {0} {1}', entry.manufacturer, entry.model)}
+                  disabled={remove.isPending}
+                  onClick={() => window.confirm(tf('Zmazať z katalógu {0} {1}? Technika firiem ostane.', entry.manufacturer, entry.model)) && remove.mutate(entry.id)}
+                >
+                  <Trash2 className="size-4" aria-hidden />
+                </Button>
+              </li>
+            )
+          })}
+          {matching.length > SHOWN && <li className="px-3 py-2 text-xs text-muted-foreground">{tf('a ďalších {0} – spresnite hľadanie', matching.length - SHOWN)}</li>}
         </ul>
       )}
     </section>

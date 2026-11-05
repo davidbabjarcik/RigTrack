@@ -5,6 +5,20 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.11 – 5. 11. 2026
+
+- **Overené / neoverené údaje v spoločnej databáze techniky**: pri výbere modelu je vidieť, či údaje overil
+  vývojár („údaje sú overené“), alebo ich treba skontrolovať. Všetko prevzaté z katalógov výrobcov a z Open Fixture
+  Library je zatiaľ neoverené.
+- **Vývojár → Databáza techniky**: filter Neoverené / Overené / Všetko, pri každom modeli jeho údaje a tlačidlo
+  Overiť; „Overiť zobrazené“ overí naraz všetko, čo hľadanie ukazuje (napr. celú značku). Schválený návrh od firmy
+  je overený hneď.
+- **Global Truss podľa katalógu 2023** (Nemecko): rovné diely F14 až F54 vrátane čiernych a P verzií s kódom
+  (napr. F34200), dĺžkou a váhou. Diely z amerického katalógu (iné kódy) sú odstránené.
+- **Spojky Global Truss**: half coupler, swivel coupler a selflock háky s priemerom rúry a nosnosťou – pri svetlách,
+  typ Klemy.
+- **JBL EON700, EON ONE a PRX900**: typ, výkon, meniče, max SPL, frekvencie a uhol podľa katalógu 2026.
+
 ### 8.10.1 – 5. 11. 2026
 
 - Výrobníky hmly (hazery) sú v spoločnej databáze techniky pri svetlách, nie pri spotrebičoch – pri svetle → typ

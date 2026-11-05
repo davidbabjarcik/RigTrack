@@ -5,8 +5,9 @@ import type { EquipmentAttributes, EquipmentKind } from './model'
 // Spoločný katalóg techniky (0146): oficiálne značky a modely s technickými údajmi. Firma, ktorá zadá model mimo
 // katalógu, pošle návrh; vývojár ho overí. Do katalógu idú len údaje modelu, nikdy kusa ani firmy.
 
-export type CatalogEntry = { id: string; kind: EquipmentKind; manufacturer: string; model: string; attributes: EquipmentAttributes }
-export type CatalogReviewItem = CatalogEntry & { name: string; companies: number; submittedAt: string }
+/** verified – údaje overil vývojár (0153); prevzaté z katalógov výrobcov sú neoverené, kým ich niekto neskontroluje. */
+export type CatalogEntry = { id: string; kind: EquipmentKind; manufacturer: string; model: string; attributes: EquipmentAttributes; verified: boolean }
+export type CatalogReviewItem = Omit<CatalogEntry, 'verified'> & { name: string; companies: number; submittedAt: string }
 
 /** Druhy techniky, pri ktorých sa ponúka výber značky a modelu z katalógu. */
 export const CATALOG_KINDS: EquipmentKind[] = ['audio', 'light', 'video', 'dj', 'truss', 'stage', 'it', 'appliance']
@@ -70,13 +71,15 @@ export const catalogKeys = {
   review: ['equipment-catalog', 'review'] as const,
 }
 
-type Row = { id: string; kind: EquipmentKind; manufacturer: string; model: string; attributes: EquipmentAttributes | null }
+type Row = { id: string; kind: EquipmentKind; manufacturer: string; model: string; attributes: EquipmentAttributes | null; verified?: boolean | null }
 
-/** Celý katalóg; bez migrácie 0146 prázdny. */
+/** Celý katalóg; bez migrácie 0146 prázdny, bez 0153 všetko neoverené. */
 export async function fetchCatalog(): Promise<CatalogEntry[]> {
-  const { data, error } = await getSupabase().from('equipment_catalog').select('id, kind, manufacturer, model, attributes').order('manufacturer').limit(10000)
-  if (error) return []
-  return (data as Row[]).map((row) => ({ ...row, attributes: row.attributes ?? {} }))
+  const load = (columns: string) => getSupabase().from('equipment_catalog').select(columns).order('manufacturer').limit(10000)
+  let result = await load('id, kind, manufacturer, model, attributes, verified')
+  if (result.error) result = await load('id, kind, manufacturer, model, attributes')
+  if (result.error) return []
+  return (result.data as unknown as Row[]).map((row) => ({ ...row, attributes: row.attributes ?? {}, verified: row.verified === true }))
 }
 
 export function useCatalog(enabled = true) {
@@ -118,6 +121,13 @@ export async function approveCatalogEntry(submissionId: string, entry: Pick<Cata
 export async function rejectCatalogEntry(submissionId: string, note: string) {
   const { error } = await getSupabase().rpc('reject_catalog_entry', { _submission_id: submissionId, _note: note })
   if (error) throw error
+}
+
+/** Vývojár: overiť (alebo zrušiť overenie) modelom; vráti počet zmenených. */
+export async function verifyCatalogEntries(ids: string[], verified: boolean): Promise<number> {
+  const { data, error } = await getSupabase().rpc('verify_catalog_entries', { _ids: ids, _verified: verified })
+  if (error) throw error
+  return Number(data ?? 0)
 }
 
 export async function deleteCatalogEntry(id: string) {

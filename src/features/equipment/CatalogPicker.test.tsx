@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { CatalogEntry } from './catalog'
 import { CatalogPicker, knownFacts } from './CatalogPicker'
 
-const entry = (attributes: Record<string, unknown>) =>
-  ({ id: '1', kind: 'audio', manufacturer: 'Značka', model: 'Box 1', attributes }) as unknown as CatalogEntry
+const entry = (attributes: Record<string, unknown>, verified = false) =>
+  ({ id: '1', kind: 'audio', manufacturer: 'Značka', model: 'Box 1', attributes, verified }) as unknown as CatalogEntry
 
 function renderPicker(item: CatalogEntry) {
   render(<CatalogPicker kind="audio" catalog={[item]} manufacturer="Značka" model="Box 1" onManufacturer={() => {}} onModel={() => {}} onPick={() => {}} />)
@@ -28,9 +28,12 @@ describe('CatalogPicker', () => {
     expect(screen.getByText(/len základné údaje \(2\)/)).toBeInTheDocument()
   })
 
-  it('confirms filled specifications for a well-known model', () => {
+  it('says whether a well-known model is verified', () => {
     renderPicker(entry({ audioType: 'top', impedance: 8, powerRms: 500, splMax: 130 }))
     expect(screen.queryByText(/zatiaľ nie sú známe|len základné údaje/)).toBeNull()
-    expect(screen.getByText(/technické údaje sa doplnili/)).toBeInTheDocument()
+    expect(screen.getByText(/údaje zatiaľ nie sú overené/)).toBeInTheDocument()
+    cleanup()
+    renderPicker(entry({ audioType: 'top', impedance: 8, powerRms: 500, splMax: 130 }, true))
+    expect(screen.getByText(/údaje sú overené/)).toBeInTheDocument()
   })
 })

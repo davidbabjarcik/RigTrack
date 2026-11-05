@@ -33,9 +33,12 @@ describe('equipment catalog (0146)', () => {
     expect(n).toBeGreaterThan(40)
   })
 
-  it('has Global Truss, JBL 2026 and Shure wireless entries (0151)', async () => {
-    const [gta] = await t.as('viewer', `select attributes from public.equipment_catalog where kind = 'truss' and model = 'F34 – 2 m (SQ-4112)'`)
-    expect(gta.attributes).toMatchObject({ trussType: 'point4', lengthM: 2, weightKg: 13.17 })
+  it('has Global Truss 2023 (0154 replaces the US catalogue), JBL 2026 and Shure wireless entries (0151, 0154)', async () => {
+    expect(await t.as('viewer', `select model from public.equipment_catalog where model = 'F34 – 2 m (SQ-4112)'`)).toEqual([])
+    const [gt] = await t.as('viewer', `select attributes from public.equipment_catalog where kind = 'truss' and manufacturer = 'Global Truss' and model = 'F34 – 2 m (F34200)'`)
+    expect(gt.attributes).toMatchObject({ trussType: 'point4', lengthM: 2, weightKg: 12 })
+    const [eon] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'JBL' and model = 'EON715'`)
+    expect(eon.attributes).toMatchObject({ powered: 'active', peakW: 1300 })
     const [m22] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'JBL' and model = 'VTX M22'`)
     expect(m22.attributes).toMatchObject({ audioType: 'monitor', rmsW: 1500 })
     const [ulx] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'Shure' and model = 'ULXD4'`)
@@ -73,6 +76,22 @@ describe('equipment catalog (0146)', () => {
     const [entry] = await t.as('viewer', `select model, attributes from public.equipment_catalog where manufacturer = 'Ukážka Audio'`)
     expect(entry).toEqual({ model: 'UA-1 Pro', attributes: { powered: 'passive' } })
     expect(await t.as('bossB', `select status from public.equipment_catalog_submissions`)).toEqual([{ status: 'approved' }])
+    // Schválený návrh je overený (0153).
+    const [approved] = await t.as('viewer', `select verified, verified_by from public.equipment_catalog where manufacturer = 'Ukážka Audio'`)
+    expect(approved).toEqual({ verified: true, verified_by: t.users.dev })
+  })
+
+  it('starts unverified and only a developer verifies (0153)', async () => {
+    const [{ n }] = await t.as('viewer', `select count(*)::int as n from public.equipment_catalog where verified and manufacturer <> 'Ukážka Audio'`)
+    expect(n).toBe(0)
+    const ids = (await t.as('viewer', `select id from public.equipment_catalog where manufacturer = 'TAF' order by model limit 3`)).map((row) => row.id as string)
+    await expect(t.as('bossA', `select public.verify_catalog_entries($1::uuid[], true)`, [ids])).rejects.toThrow(/Not allowed/)
+    const [{ changed }] = await t.as('dev', `select public.verify_catalog_entries($1::uuid[], true) as changed`, [ids])
+    expect(changed).toBe(3)
+    const [{ verified }] = await t.as('viewer', `select count(*)::int as verified from public.equipment_catalog where id = any($1::uuid[]) and verified`, [ids])
+    expect(verified).toBe(3)
+    const [{ undone }] = await t.as('dev', `select public.verify_catalog_entries($1::uuid[], false) as undone`, [ids.slice(0, 1)])
+    expect(undone).toBe(1)
   })
 
   it('rejects all pending suggestions of the same model with a note', async () => {
