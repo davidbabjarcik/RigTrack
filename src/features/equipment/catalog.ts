@@ -131,13 +131,24 @@ export const catalogKeys = {
 
 type Row = { id: string; kind: EquipmentKind; manufacturer: string; model: string; attributes: EquipmentAttributes | null; verified?: boolean | null }
 
+/** Databáza vráti naraz najviac 1 000 riadkov – katalóg sa preto načíta po stranách. */
+const CATALOG_PAGE = 1000
+
 /** Celý katalóg; bez migrácie 0146 prázdny, bez 0153 všetko neoverené. */
 export async function fetchCatalog(): Promise<CatalogEntry[]> {
-  const load = (columns: string) => getSupabase().from('equipment_catalog').select(columns).order('manufacturer').limit(10000)
-  let result = await load('id, kind, manufacturer, model, attributes, verified')
-  if (result.error) result = await load('id, kind, manufacturer, model, attributes')
-  if (result.error) return []
-  return (result.data as unknown as Row[]).map((row) => ({ ...row, attributes: row.attributes ?? {}, verified: row.verified === true }))
+  const loadAll = async (columns: string) => {
+    const rows: Row[] = []
+    for (let from = 0; from < 50 * CATALOG_PAGE; from += CATALOG_PAGE) {
+      const { data, error } = await getSupabase().from('equipment_catalog').select(columns).order('manufacturer').order('id').range(from, from + CATALOG_PAGE - 1)
+      if (error) return null
+      rows.push(...(data as unknown as Row[]))
+      if (data.length < CATALOG_PAGE) break
+    }
+    return rows
+  }
+  const rows = (await loadAll('id, kind, manufacturer, model, attributes, verified')) ?? (await loadAll('id, kind, manufacturer, model, attributes'))
+  if (!rows) return []
+  return rows.map((row) => ({ ...row, attributes: row.attributes ?? {}, verified: row.verified === true }))
 }
 
 export function useCatalog(enabled = true) {

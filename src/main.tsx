@@ -6,6 +6,7 @@ import { router } from './app/router'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { CompanyProvider } from './features/companies/CompanyProvider'
 import { installErrorReporting } from './lib/errorReporting'
+import { installStaleChunkReload } from './lib/staleChunks'
 import { installStorageGuard } from './lib/consent'
 import { ConsentBanner } from './components/consent/ConsentBanner'
 import { i18nReady, useLangKey } from './lib/i18n'
@@ -17,6 +18,7 @@ import './styles/index.css'
 // Funkčné údaje sa do prehliadača nezapíšu bez súhlasu (ešte pred prvým renderom).
 installStorageGuard()
 installErrorReporting()
+installStaleChunkReload()
 
 const queryClient = new QueryClient()
 

@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.14 – 6. 11. 2026
+
+- **Databáza techniky načíta všetky modely** – predtým sa načítalo najviac 1 000, takže časť značiek a modelov
+  pri výbere techniky chýbala.
+- **Úprava modelu (Vývojár)**: všetky údaje, ktoré k druhu patria, aj prázdne, v mriežke vedľa seba; typy, zdroje
+  a podobne sa vyberajú zo zoznamu; DMX módy po riadkoch (názov, počet kanálov, rozpis kanálov) namiesto surového
+  zápisu. Tlačidlo Upraviť je rovnako veľké ako Overiť, „Overiť zobrazené“ je preč.
+- V okne Vývojár je sekcia Databáza techniky len s návrhmi od firiem a odkazom na celú databázu.
+- **Po novej verzii sa stránka sama obnoví**, keď stará otvorená verzia nenájde súbor inej stránky (doteraz sa
+  ukázala chyba „Niečo sa pokazilo“).
+
 ### 8.13 – 5. 11. 2026
 
 - **Vývojár → Celá databáza techniky** (samostatná stránka): filtre podľa druhu, značky, overenia a toho, či model

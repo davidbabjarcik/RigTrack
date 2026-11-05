@@ -11,7 +11,7 @@ export type ConsentChoice = { functional: boolean; analytics: false; marketing: 
 export type ConsentRecord = ConsentChoice & { version: string; at: string; synced?: boolean }
 
 /** Kľúče, ktoré appka potrebuje na fungovanie (bez súhlasu). Supabase si prihlásenie ukladá pod „sb-…“. */
-const NECESSARY = [/^sb-/, /^rigtrack:consent$/, /^rigtrack:active-company$/, /^rigtrack:login-lock$/, /^rigtrack\.pack\./, /^rigtrack\.attendance\.enabled$/]
+const NECESSARY = [/^sb-/, /^rigtrack:consent$/, /^rigtrack:active-company$/, /^rigtrack:login-lock$/, /^rigtrack\.pack\./, /^rigtrack\.attendance\.enabled$/, /^rigtrack:stale-reload$/]
 export const isNecessaryKey = (key: string) => NECESSARY.some((pattern) => pattern.test(key))
 /** Funkčné = ostatné kľúče appky (rigtrack…). Cudzie kľúče appka nepoužíva. */
 export const isFunctionalKey = (key: string) => /^rigtrack/.test(key) && !isNecessaryKey(key)

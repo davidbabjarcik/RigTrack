@@ -7,8 +7,38 @@ import { Button } from '@/components/ui/button'
 import { bugKeys, fetchIsDeveloper } from '@/features/bugs/api'
 import { plain } from '@/features/search/searchAll'
 import { tf, tx } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { CATALOG_KEYS, CATALOG_KINDS, catalogKeys, catalogMissing, deleteCatalogEntry, thomannUrl, updateCatalogEntry, useCatalog, verifyCatalogEntries, type CatalogEntry } from './catalog'
-import { describeAttributes, KIND_LABELS, type EquipmentAttributes, type EquipmentKind } from './model'
+import {
+  APPLIANCE_TYPE_LABELS,
+  APPLIANCE_TYPES,
+  AUDIO_TYPE_LABELS,
+  AUDIO_TYPES,
+  CAMERA_SENSOR_LABELS,
+  CAMERA_SENSORS,
+  describeAttributes,
+  DJ_TYPE_LABELS,
+  DJ_TYPES,
+  IT_TYPE_LABELS,
+  IT_TYPES,
+  KIND_LABELS,
+  LIGHT_SOURCE_LABELS,
+  LIGHT_SOURCES,
+  LIGHT_TYPE_LABELS,
+  LIGHT_TYPES,
+  STAGE_TYPE_LABELS,
+  STAGE_TYPES,
+  TRUSS_SHAPE_LABELS,
+  TRUSS_SHAPES,
+  TRUSS_TYPE_LABELS,
+  TRUSS_TYPES,
+  VIDEO_TYPE_LABELS,
+  VIDEO_TYPES,
+  type DmxMode,
+  type EquipmentAttributes,
+  type EquipmentKind,
+  type LightType,
+} from './model'
 
 // Vývojár → Databáza techniky: filtre (druh, značka, overené, údaje), úprava modelu a jeho technických údajov,
 // overovanie. Zápis robia len funkcie v databáze, ktoré pustia iba vývojára.
@@ -36,20 +66,73 @@ const JSON_KEYS = new Set(['dmxModes', 'wirelessTxs', 'nodeProtocols', 'ledPanel
 const isNumberKey = (key: string) => /(W|Db|Ohm|Kg|Cm|M|Slots|Channels|Ports|Switches|W2|W4|W8|Bridge4|Bridge8)$/.test(key) && !['powered', 'woofer'].includes(key)
 const label = (key: string) => (KEY_LABELS[key] ? tx(KEY_LABELS[key]) : key)
 
-type Draft = { kind: EquipmentKind; manufacturer: string; model: string; verified: boolean; values: Record<string, string> }
+/** Hodnoty na výber (namiesto písania): kľúč → [hodnota, popis]. */
+const pairs = <T extends string>(values: readonly T[], labels: Record<T, string>) => values.map((value) => [value, labels[value]] as [string, string])
+const SELECTS: Record<string, [string, string][]> = {
+  audioType: pairs(AUDIO_TYPES, AUDIO_TYPE_LABELS),
+  powered: [['active', 'Aktívny'], ['passive', 'Pasívny']],
+  subDesign: [['direct', 'Priamy (bass reflex)'], ['horn', 'Horna'], ['snail', 'Slimák']],
+  ampKind: [['analog', 'Analógový'], ['digital', 'Digitálny (DSP, presety)']],
+  mixerKind: [['analog', 'Analógový'], ['digital', 'Digitálny']],
+  micKind: [['wired', 'Káblový'], ['wireless', 'Bezdrôtový']],
+  micType: [['dynamic', 'Dynamický'], ['condenser', 'Kondenzátorový']],
+  lightType: pairs(LIGHT_TYPES as readonly LightType[], LIGHT_TYPE_LABELS),
+  lightSource: pairs(LIGHT_SOURCES, LIGHT_SOURCE_LABELS),
+  trussType: pairs(TRUSS_TYPES, TRUSS_TYPE_LABELS),
+  trussShape: pairs(TRUSS_SHAPES, TRUSS_SHAPE_LABELS),
+  stageType: pairs(STAGE_TYPES, STAGE_TYPE_LABELS),
+  djType: pairs(DJ_TYPES, DJ_TYPE_LABELS),
+  videoType: pairs(VIDEO_TYPES, VIDEO_TYPE_LABELS),
+  cameraSensor: pairs(CAMERA_SENSORS, CAMERA_SENSOR_LABELS),
+  itType: pairs(IT_TYPES, IT_TYPE_LABELS),
+  applianceType: pairs(APPLIANCE_TYPES, APPLIANCE_TYPE_LABELS),
+}
+
+const SPEAKER_FIELDS = ['powered', 'rmsW', 'programW', 'peakW', 'woofer', 'hfDriver', 'freqRange', 'freqResponse', 'maxSplDb', 'maxSplPeakDb', 'sensitivityDb', 'impedanceOhm', 'coverage', 'crossover', 'biamp', 'subDesign', 'poleMount', 'connectors', 'weightKg', 'boxWidthCm', 'boxDepthCm', 'boxHeightCm']
+
+/** Údaje, ktoré sa pri úprave ukážu vždy (aj prázdne) – podľa druhu a typu. */
+function fieldsFor(kind: EquipmentKind, values: Record<string, string>): string[] {
+  const audio = values.audioType ?? ''
+  const fields: Record<string, string[]> = {
+    audio: ['audioType', ...(audio === 'amplifier'
+      ? ['ampKind', 'ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8', 'ampPresetSlots', 'connectors', 'weightKg']
+      : audio === 'mixer'
+        ? ['mixerKind', 'mixerChannels', 'connectors', 'weightKg']
+        : audio === 'microphone'
+          ? ['micKind', 'micType', 'freqRange', 'connectors']
+          : audio === 'wireless' || audio === 'iem'
+            ? ['rfRange', 'wirelessRx', 'connectors', 'weightKg']
+            : SPEAKER_FIELDS)],
+    light: ['lightType', 'lightSource', 'powerW', 'weightKg', 'dipSwitches'],
+    truss: ['trussType', 'trussShape', 'lengthM', 'weightKg'],
+    stage: ['stageType', 'stageSize', 'weightKg'],
+    dj: ['djType', 'connectors', 'weightKg'],
+    video: ['videoType', 'cameraSensor', 'hdmiOut', 'powerW', 'weightKg'],
+    it: ['itType', 'weightKg'],
+    appliance: ['applianceType', 'powerW', 'weightKg'],
+  }
+  return [...(fields[kind] ?? []), 'thomannCode']
+}
+
+type Mode = { name: string; channels: string; map: string }
+type Draft = { kind: EquipmentKind; manufacturer: string; model: string; verified: boolean; values: Record<string, string>; modes: Mode[] }
 
 const toText = (value: unknown) => (typeof value === 'object' && value !== null ? JSON.stringify(value, null, 1) : String(value ?? ''))
 
 function toDraft(entry: CatalogEntry): Draft {
   const values: Record<string, string> = {}
-  for (const [key, value] of Object.entries(entry.attributes as Record<string, unknown>)) values[key] = toText(value)
-  return { kind: entry.kind, manufacturer: entry.manufacturer, model: entry.model, verified: entry.verified, values }
+  let modes: Mode[] = []
+  for (const [key, value] of Object.entries(entry.attributes as Record<string, unknown>)) {
+    if (key === 'dmxModes' && Array.isArray(value)) modes = value.map((mode: DmxMode) => ({ name: mode.name ?? '', channels: String(mode.channels ?? ''), map: mode.map ?? '' }))
+    else values[key] = toText(value)
+  }
+  return { kind: entry.kind, manufacturer: entry.manufacturer, model: entry.model, verified: entry.verified, values, modes }
 }
 
-/** Text z formulára späť na údaje; chybný JSON alebo číslo vráti chybu s názvom poľa. */
-function toAttributes(values: Record<string, string>): { attributes?: EquipmentAttributes; error?: string } {
+/** Formulár späť na údaje; chybný JSON, číslo alebo DMX mód vráti chybu s názvom poľa. */
+function toAttributes(draft: Draft): { attributes?: EquipmentAttributes; error?: string } {
   const out: Record<string, unknown> = {}
-  for (const [key, raw] of Object.entries(values)) {
+  for (const [key, raw] of Object.entries(draft.values)) {
     const text = raw.trim()
     if (text === '') continue
     if (BOOLEAN_KEYS.has(key)) out[key] = text === 'true'
@@ -65,6 +148,14 @@ function toAttributes(values: Record<string, string>): { attributes?: EquipmentA
       out[key] = number
     } else out[key] = text
   }
+  const modes: DmxMode[] = []
+  for (const mode of draft.modes) {
+    if (!mode.name.trim() && !mode.channels.trim()) continue
+    const channels = Number(mode.channels)
+    if (!mode.name.trim() || !Number.isInteger(channels) || channels < 1 || channels > 512) return { error: tx('Každý DMX mód potrebuje názov a počet kanálov 1–512.') }
+    modes.push({ name: mode.name.trim().slice(0, 40), channels, ...(mode.map.trim() ? { map: mode.map.replace(/\s+$/, '').slice(0, 6000) } : {}) })
+  }
+  if (modes.length) out.dmxModes = modes
   return { attributes: out as EquipmentAttributes }
 }
 
@@ -111,7 +202,6 @@ function CatalogAdmin() {
   const pages = Math.max(1, Math.ceil(matching.length / PAGE))
   const current = Math.min(page, pages - 1)
   const shown = matching.slice(current * PAGE, current * PAGE + PAGE)
-  const toVerify = matching.filter((entry) => !entry.verified)
   const resetPage = <T,>(set: (value: T) => void) => (value: T) => {
     set(value)
     setPage(0)
@@ -167,20 +257,6 @@ function CatalogAdmin() {
 
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-muted-foreground">{tf('Nájdených {0}', matching.length)}</span>
-        {toVerify.length > 0 && (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={verify.isPending}
-            onClick={() =>
-              window.confirm(tf('Overiť všetkých {0} zobrazených modelov? Skontrolovali ste ich údaje?', toVerify.length)) &&
-              verify.mutate({ ids: toVerify.map((entry) => entry.id).slice(0, 2000), value: true })
-            }
-          >
-            <ShieldCheck className="size-4" aria-hidden />
-            {tf('Overiť zobrazené ({0})', Math.min(toVerify.length, 2000))}
-          </Button>
-        )}
         {verify.isError && <span className="text-destructive">{tx('Overenie sa nepodarilo.')}</span>}
       </div>
 
@@ -214,8 +290,9 @@ function CatalogAdmin() {
                   {entry.verified ? <ShieldCheck className="size-4 text-emerald-600" aria-hidden /> : <Check className="size-4" aria-hidden />}
                   {entry.verified ? tx('Overené') : tx('Overiť')}
                 </Button>
-                <Button size="sm" variant="ghost" className="size-8 shrink-0 p-0" aria-label={tf('Upraviť {0}', `${entry.manufacturer} ${entry.model}`)} onClick={() => setEditing(entry.id)}>
+                <Button size="sm" variant="outline" className="shrink-0" aria-label={tf('Upraviť {0}', `${entry.manufacturer} ${entry.model}`)} onClick={() => setEditing(entry.id)}>
                   <Pencil className="size-4" aria-hidden />
+                  {tx('Upraviť')}
                 </Button>
               </li>
             ),
@@ -259,7 +336,7 @@ function Missing({ entry }: { entry: CatalogEntry }) {
   )
 }
 
-/** Úprava modelu: druh, značka, model, technické údaje (po jednom poli) a overenie. */
+/** Úprava modelu: všetky údaje, ktoré k druhu patria (aj prázdne), DMX módy po riadkoch a overenie. */
 function Editor({ entry, onDone }: { entry: CatalogEntry; onDone: () => void }) {
   const queryClient = useQueryClient()
   const [draft, setDraft] = useState<Draft>(() => toDraft(entry))
@@ -275,19 +352,24 @@ function Editor({ entry, onDone }: { entry: CatalogEntry; onDone: () => void }) 
     onError: (failure: { code?: string }) => setError(failure.code === '23505' ? tx('Taký model (druh, značka a model) už v databáze je.') : tx('Uloženie sa nepodarilo.')),
   })
   const remove = useMutation({ mutationFn: () => deleteCatalogEntry(entry.id), onSuccess: refresh })
-  const unused = CATALOG_KEYS.filter((key) => !(key in draft.values))
+  const standard = fieldsFor(draft.kind, draft.values)
+  const extra = Object.keys(draft.values).filter((key) => !standard.includes(key))
+  const shownKeys = [...standard, ...extra]
+  const unused = CATALOG_KEYS.filter((key) => key !== 'dmxModes' && !shownKeys.includes(key))
+  const showModes = draft.kind === 'light' || draft.modes.length > 0
   const setValue = (key: string, value: string) => setDraft((current) => ({ ...current, values: { ...current.values, [key]: value } }))
+  const setMode = (index: number, patch: Partial<Mode>) => setDraft((current) => ({ ...current, modes: current.modes.map((mode, i) => (i === index ? { ...mode, ...patch } : mode)) }))
 
   function submit() {
     setError('')
     if (!draft.manufacturer.trim()) return setError(tx('Zadajte značku.'))
-    const result = toAttributes(draft.values)
+    const result = toAttributes(draft)
     if (result.error || !result.attributes) return setError(result.error ?? tx('Uloženie sa nepodarilo.'))
     save.mutate({ id: entry.id, kind: draft.kind, manufacturer: draft.manufacturer, model: draft.model, attributes: result.attributes, verified: draft.verified })
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <div className="grid gap-2 sm:grid-cols-[10rem_1fr_1fr]">
         <label className="flex flex-col gap-1 text-xs text-muted-foreground">
           {tx('Druh')}
@@ -309,63 +391,114 @@ function Editor({ entry, onDone }: { entry: CatalogEntry; onDone: () => void }) 
         </label>
       </div>
 
-      <div className="flex flex-col gap-2">
-        {Object.keys(draft.values).length === 0 && <p className="text-sm text-muted-foreground">{tx('Bez technických údajov – pridajte ich nižšie.')}</p>}
-        {Object.entries(draft.values).map(([key, value]) => (
-          <div key={key} className="grid items-start gap-2 sm:grid-cols-[14rem_1fr_auto]">
-            <span className="pt-2 text-xs text-muted-foreground">{label(key)}</span>
-            {BOOLEAN_KEYS.has(key) ? (
-              <select className={input} aria-label={label(key)} value={value === 'true' ? 'true' : 'false'} onChange={(event) => setValue(key, event.target.value)}>
-                <option value="true">{tx('Áno')}</option>
-                <option value="false">{tx('Nie')}</option>
-              </select>
-            ) : JSON_KEYS.has(key) ? (
-              <textarea className="min-h-24 w-full rounded-lg border bg-background p-2 font-mono text-xs" aria-label={label(key)} value={value} onChange={(event) => setValue(key, event.target.value)} />
-            ) : (
-              <input className={input} aria-label={label(key)} inputMode={isNumberKey(key) ? 'decimal' : undefined} value={value} onChange={(event) => setValue(key, event.target.value)} />
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="size-9 p-0"
-              aria-label={tf('Odobrať {0}', label(key))}
-              onClick={() =>
-                setDraft((current) => {
-                  const values = { ...current.values }
-                  delete values[key]
-                  return { ...current, values }
-                })
-              }
-            >
-              <X className="size-4" aria-hidden />
-            </Button>
-          </div>
-        ))}
-        {unused.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <select className={`${input} max-w-xs`} aria-label={tx('Pridať údaj')} value={newKey} onChange={(event) => setNewKey(event.target.value)}>
-              <option value="">{tx('— pridať údaj —')}</option>
-              {unused.map((key) => (
-                <option key={key} value={key}>
-                  {label(key)}
-                </option>
-              ))}
-            </select>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={!newKey}
-              onClick={() => {
-                setValue(newKey, BOOLEAN_KEYS.has(newKey) ? 'true' : '')
-                setNewKey('')
-              }}
-            >
-              <Plus className="size-4" aria-hidden />
-              {tx('Pridať')}
-            </Button>
-          </div>
-        )}
+      <div className="grid gap-x-3 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+        {shownKeys.map((key) => {
+          const value = draft.values[key] ?? ''
+          const options = SELECTS[key]
+          return (
+            <div key={key} className={cn('flex flex-col gap-1', JSON_KEYS.has(key) && 'sm:col-span-2 lg:col-span-3')}>
+              <span className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                {label(key)}
+                {extra.includes(key) && (
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-destructive"
+                    aria-label={tf('Odobrať {0}', label(key))}
+                    onClick={() =>
+                      setDraft((current) => {
+                        const values = { ...current.values }
+                        delete values[key]
+                        return { ...current, values }
+                      })
+                    }
+                  >
+                    <X className="size-3.5" aria-hidden />
+                  </button>
+                )}
+              </span>
+              {options ? (
+                <select className={input} aria-label={label(key)} value={value} onChange={(event) => setValue(key, event.target.value)}>
+                  <option value="">{tx('— nezadané —')}</option>
+                  {options.map(([optionValue, optionLabel]) => (
+                    <option key={optionValue} value={optionValue}>
+                      {tx(optionLabel)}
+                    </option>
+                  ))}
+                  {value && !options.some(([optionValue]) => optionValue === value) && <option value={value}>{value}</option>}
+                </select>
+              ) : BOOLEAN_KEYS.has(key) ? (
+                <select className={input} aria-label={label(key)} value={value} onChange={(event) => setValue(key, event.target.value)}>
+                  <option value="">{tx('— nezadané —')}</option>
+                  <option value="true">{tx('Áno')}</option>
+                  <option value="false">{tx('Nie')}</option>
+                </select>
+              ) : JSON_KEYS.has(key) ? (
+                <textarea className="min-h-24 w-full rounded-lg border bg-background p-2 font-mono text-xs" aria-label={label(key)} value={value} onChange={(event) => setValue(key, event.target.value)} />
+              ) : (
+                <input className={input} aria-label={label(key)} inputMode={isNumberKey(key) ? 'decimal' : undefined} value={value} onChange={(event) => setValue(key, event.target.value)} />
+              )}
+              {key === 'thomannCode' && value.trim() && (
+                <a href={thomannUrl(value)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:underline">
+                  {tx('Otvoriť v Thomanne')}
+                  <ExternalLink className="size-3" aria-hidden />
+                </a>
+              )}
+            </div>
+          )
+        })}
       </div>
+
+      {unused.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <select className={`${input} max-w-xs`} aria-label={tx('Pridať údaj')} value={newKey} onChange={(event) => setNewKey(event.target.value)}>
+            <option value="">{tx('— pridať ďalší údaj —')}</option>
+            {unused.map((key) => (
+              <option key={key} value={key}>
+                {label(key)}
+              </option>
+            ))}
+          </select>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!newKey}
+            onClick={() => {
+              setValue(newKey, '')
+              setNewKey('')
+            }}
+          >
+            <Plus className="size-4" aria-hidden />
+            {tx('Pridať')}
+          </Button>
+        </div>
+      )}
+
+      {showModes && (
+        <section className="flex flex-col gap-2 rounded-lg border p-3">
+          <h3 className="text-sm font-medium">{tf('DMX módy ({0})', draft.modes.length)}</h3>
+          {draft.modes.map((mode, index) => (
+            <div key={index} className="grid gap-2 sm:grid-cols-[1fr_7rem_auto]">
+              <input className={input} placeholder={tx('Názov módu')} aria-label={tf('Názov módu {0}', index + 1)} maxLength={40} value={mode.name} onChange={(event) => setMode(index, { name: event.target.value })} />
+              <input className={input} placeholder={tx('Kanály')} aria-label={tf('Kanály módu {0}', index + 1)} inputMode="numeric" value={mode.channels} onChange={(event) => setMode(index, { channels: event.target.value })} />
+              <Button size="sm" variant="ghost" className="size-9 p-0" aria-label={tf('Odobrať mód {0}', index + 1)} onClick={() => setDraft((current) => ({ ...current, modes: current.modes.filter((_, i) => i !== index) }))}>
+                <X className="size-4" aria-hidden />
+              </Button>
+              <textarea
+                className="min-h-20 w-full rounded-lg border bg-background p-2 font-mono text-xs sm:col-span-3"
+                placeholder={tx('Rozpis kanálov – jeden riadok = jeden kanál')}
+                aria-label={tf('Rozpis kanálov módu {0}', index + 1)}
+                rows={Math.min(12, Math.max(3, mode.map.split('\n').length))}
+                value={mode.map}
+                onChange={(event) => setMode(index, { map: event.target.value })}
+              />
+            </div>
+          ))}
+          <Button size="sm" variant="outline" className="self-start" onClick={() => setDraft((current) => ({ ...current, modes: [...current.modes, { name: '', channels: '', map: '' }] }))}>
+            <Plus className="size-4" aria-hidden />
+            {tx('Pridať mód')}
+          </Button>
+        </section>
+      )}
 
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" className="size-4" checked={draft.verified} onChange={(event) => setDraft({ ...draft, verified: event.target.checked })} />

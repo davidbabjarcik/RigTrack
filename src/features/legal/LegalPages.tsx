@@ -247,6 +247,7 @@ const STORAGE_ROWS: [string, string, string, string][] = [
   ['rigtrack:login-lock', 'Nevyhnutné', 'Odpočet pri zablokovanom prihlásení', 'localStorage, kým blok trvá'],
   ['rigtrack.pack.*', 'Nevyhnutné', 'Pack list rozpracovaný bez signálu (aby sa nestratil)', 'localStorage, kým sa neodošle'],
   ['rigtrack.attendance.enabled', 'Nevyhnutné', 'Dochádzka polohou zapnutá na tomto zariadení (zapínate ju vy)', 'localStorage, do vypnutia'],
+  ['rigtrack:stale-reload', 'Nevyhnutné', 'Čas posledného obnovenia po novej verzii (aby sa stránka neobnovovala dokola)', 'sessionStorage, do zatvorenia karty'],
   ['rigtrack:consent', 'Nevyhnutné', 'Vaša voľba v tejto lište', 'localStorage, do zmeny pravidiel'],
   ['Cache Storage (service worker)', 'Nevyhnutné', 'Súbory appky na rýchle a offline spustenie (bez vašich údajov)', 'do novej verzie'],
   ['rigtrack:theme', 'Funkčné', 'Svetlý / tmavý režim', 'localStorage, do zmeny'],

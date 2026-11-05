@@ -1,5 +1,6 @@
 import { getSupabase } from '@/lib/supabase/client'
 import { APP_VERSION } from '@/lib/version'
+import { isStaleChunkError } from './staleChunks'
 
 export type ErrorSource = 'render' | 'error' | 'promise'
 
@@ -62,6 +63,10 @@ export function reportError(error: unknown, source: ErrorSource = 'error') {
 
 /** Zachytí neošetrené chyby v prehliadači (volá sa raz pri štarte). */
 export function installErrorReporting() {
-  window.addEventListener('error', (event) => reportError(event.error ?? event.message, 'error'))
-  window.addEventListener('unhandledrejection', (event) => reportError(event.reason, 'promise'))
+  // Starý súbor po novej verzii nie je chyba appky – rieši ho staleChunks (obnovenie stránky).
+  const report = (error: unknown, source: 'error' | 'promise') => {
+    if (!isStaleChunkError(error)) reportError(error, source)
+  }
+  window.addEventListener('error', (event) => report(event.error ?? event.message, 'error'))
+  window.addEventListener('unhandledrejection', (event) => report(event.reason, 'promise'))
 }
