@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.7 – 5. 11. 2026
+
+- **Nahrať GDTF súbor pri svetle**: súbor svetla z gdtf-share.com (rovnaký ako pre grandMA či Vectorworks) vyplní
+  výrobcu, model, všetky DMX módy aj s rozpisom kanálov, príkon, váhu a zdroj svetla. Súbor sa číta len vo vašom
+  prehliadači a nikam sa neposiela; model mimo databázy ide po uložení na overenie do spoločnej databázy techniky.
+
 ### 8.6.2 – 5. 11. 2026
 
 - **Spoločná databáza techniky – údaje z listov výrobcu**: JBL VRX932LA-1, VRX928LA, VRX915M, SRX712M a VT4880

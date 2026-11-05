@@ -56,6 +56,8 @@ import {
 import { PurchaseLinksFields } from './PurchaseLinksFields'
 import { CATALOG_FORM_KEYS, CATALOG_KINDS, findCatalogEntry, submitCatalogEntry, useCatalog, type CatalogEntry } from './catalog'
 import { CatalogPicker } from './CatalogPicker'
+import { GdtfImport } from './GdtfImport'
+import type { GdtfFixture } from './gdtf'
 import { UnitDetailsFields } from './UnitDetailsFields'
 import { CableMakersField } from './CableMakersField'
 import { makerModeOf, makersOver, makersToSave, type Maker, type MakerMode } from './makers'
@@ -430,6 +432,19 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
     }
     if (!getValues('name').trim()) setValue('name', entry.model, { shouldDirty: true })
   }
+  // GDTF súbor svetla: výrobca, model, DMX módy, príkon, váha a zdroj svetla (výber značky sa prekreslí).
+  const [pickerKey, setPickerKey] = useState(0)
+  const applyGdtf = (fixture: GdtfFixture) => {
+    const dirty = { shouldDirty: true }
+    if (fixture.manufacturer) setValue('manufacturer', fixture.manufacturer, dirty)
+    if (fixture.model) setValue('model', fixture.model, dirty)
+    if (!getValues('name').trim() && fixture.model) setValue('name', fixture.model, dirty)
+    if (fixture.modes.length > 0) setValue('dmxModes', fixture.modes, dirty)
+    if (fixture.powerW) setValue('powerW', fixture.powerW, dirty)
+    if (fixture.weightKg) setValue('weightKg', fixture.weightKg, dirty)
+    if (fixture.lightSource) setValue('lightSource', fixture.lightSource, dirty)
+    setPickerKey((value) => value + 1)
+  }
   const categoryText = useWatch({ control, name: 'category' })
   // Časť Svetlo sa ukáže pri druhu Svetlo aj pri kategórii, ktorá je o svetlách.
   const lighting = isLighting(kind, categoryText ?? '')
@@ -566,9 +581,10 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
 
       {/* Výrobca a model hneď pod druhom: model zo spoločnej databázy doplní údaje nižšie. */}
       <div className="grid gap-4 sm:grid-cols-2">
+        {lighting && <GdtfImport onFixture={applyGdtf} />}
         {useCatalogPicker ? (
           <CatalogPicker
-            key={kind}
+            key={`${kind}-${pickerKey}`}
             kind={kind}
             catalog={catalog}
             manufacturer={manufacturerValue}

@@ -95,9 +95,9 @@ export function createZip(entries: ZipEntry[], now = new Date()): Uint8Array {
 
 /**
  * Prečíta ZIP (aj z Windows / macOS „Komprimovať“): súbory bez kompresie aj s kompresiou deflate.
- * Priečinky preskočí; názvy berie z centrálneho adresára.
+ * Priečinky preskočí; názvy berie z centrálneho adresára. `only` – rozbalí len vybrané súbory (napr. popis v GDTF).
  */
-export async function readZip(bytes: Uint8Array): Promise<ZipEntry[]> {
+export async function readZip(bytes: Uint8Array, only?: (name: string) => boolean): Promise<ZipEntry[]> {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   let end = -1
   for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65_557); i--) {
@@ -121,7 +121,7 @@ export async function readZip(bytes: Uint8Array): Promise<ZipEntry[]> {
     const local = view.getUint32(pointer + 42, true)
     const name = decoder.decode(bytes.subarray(pointer + 46, pointer + 46 + nameLength))
     pointer += 46 + nameLength + extraLength + commentLength
-    if (name.endsWith('/')) continue
+    if (name.endsWith('/') || (only && !only(name))) continue
     const start = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true)
     const raw = bytes.subarray(start, start + compressed)
     if (method === 0) {
