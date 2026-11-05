@@ -296,6 +296,13 @@ function drawBlock(ctx: CanvasRenderingContext2D, input: PosterInput, block: Blo
     setFont(ctx, 700, 5.5)
     ctx.fillStyle = GRAY
     ctx.fillText('×', left + countW + 0.6, ty + 11)
+    // Drobný údaj (aktívny / pasívny, frekvencia, LED…) nenápadne vedľa počtu.
+    if (tile.info) {
+      const infoX = left + countW + 5
+      setFont(ctx, 500, 2.8)
+      ctx.fillStyle = GRAY
+      ctx.fillText(fitText(ctx, tile.info, Math.max(6, left + textW - infoX)), infoX, ty + 10.6)
+    }
 
     let line = ty + 11
     if (tile.detail) {

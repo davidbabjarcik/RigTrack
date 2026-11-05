@@ -11,6 +11,7 @@ import { brandingKeys, fetchBranding, fetchLogoBlob, logoForLightBackground } fr
 import { useCompany } from '@/features/companies/company-context'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { formatOf } from '@/features/print/api'
+import { useLinkedEquipment } from '@/features/links/api'
 import { equipmentKeys, fetchEquipmentList } from './api'
 import { KIND_LABELS, type EquipmentKind } from './model'
 import { fetchPhotoBlob, PHOTO_URL_STALE_MS } from './photo'
@@ -18,12 +19,13 @@ import { POSTER_KINDS, POSTER_TITLES, posterSections } from './poster'
 import { renderPoster, type PosterPaper } from './posterCanvas'
 import { useEquipmentLookups } from './useEquipmentLookups'
 
-type Settings = { title: string; subtitle: string; notes: string; hidden: string[]; portrait: boolean; paper: PosterPaper }
+/** staff: aj technika zamestnancov, linked: aj technika zdieľaných (prepojených) firiem. */
+type Settings = { title: string; subtitle: string; notes: string; hidden: string[]; portrait: boolean; paper: PosterPaper; staff: boolean; linked: boolean }
 
 const storageKey = (companyId: string, kind: string) => `rigtrack:poster:${companyId}:${kind}`
 
 function loadSettings(companyId: string, kind: EquipmentKind): Settings {
-  const fallback: Settings = { title: POSTER_TITLES[kind] ?? `${KIND_LABELS[kind]} – inventár`, subtitle: '', notes: '', hidden: [], portrait: true, paper: 'A4' }
+  const fallback: Settings = { title: POSTER_TITLES[kind] ?? `${KIND_LABELS[kind]} – inventár`, subtitle: '', notes: '', hidden: [], portrait: true, paper: 'A4', staff: false, linked: false }
   try {
     return { ...fallback, ...JSON.parse(localStorage.getItem(storageKey(companyId, kind)) ?? '{}') }
   } catch {
@@ -91,10 +93,16 @@ export function InventoryPosterPage() {
     retry: false,
   })
 
-  const sections = useMemo(
-    () => (list.data ? posterSections(list.data, kind, (id) => categories.find((category) => category.id === id)?.name ?? '') : []),
-    [list.data, kind, categories],
-  )
+  const linked = useLinkedEquipment(companyId, settings.linked)
+  const sections = useMemo(() => {
+    if (!list.data) return []
+    // Firemná technika, voliteľne aj zamestnancov a zdieľaných firiem (tie majú vlastné dlaždice s názvom firmy).
+    const own = list.data.filter((item) => settings.staff || !item.ownerStaffId)
+    const shared = settings.linked
+      ? (linked.data ?? []).map((item) => ({ ...item, photoPath: '', categoryId: null, from: item.companyName }))
+      : []
+    return posterSections([...own, ...shared], kind, (id) => categories.find((category) => category.id === id)?.name ?? '')
+  }, [list.data, linked.data, settings.staff, settings.linked, kind, categories])
   const shown = sections.filter((section) => !settings.hidden.includes(section.key))
   const paths = [...new Set(shown.flatMap((section) => section.tiles.map((tile) => tile.photoPath)).filter(Boolean))].sort()
   const photos = useQuery({ queryKey: ['company', companyId, 'poster-photos', paths], queryFn: () => loadPhotos(paths), staleTime: PHOTO_URL_STALE_MS, placeholderData: (previous) => previous })
@@ -199,6 +207,18 @@ export function InventoryPosterPage() {
           <option value="portrait">na výšku</option>
           <option value="landscape">na šírku</option>
         </SelectField>
+        <fieldset className="flex flex-col gap-1 text-sm">
+          <legend className="mb-1 font-medium">Čia technika</legend>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={settings.staff} onChange={(e) => update({ staff: e.target.checked })} />
+            aj technika zamestnancov
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={settings.linked} onChange={(e) => update({ linked: e.target.checked })} />
+            aj technika zdieľaných firiem
+          </label>
+          {settings.linked && linked.isSuccess && linked.data.length === 0 && <span className="text-xs text-muted-foreground">Žiadna prepojená firma s vami techniku nezdieľa.</span>}
+        </fieldset>
         <Field label="Nadpis" maxLength={60} value={settings.title} onChange={(e) => update({ title: e.target.value })} />
         <Field label="Podnadpis" maxLength={80} placeholder="napr. Modulárny pódiový systém" value={settings.subtitle} onChange={(e) => update({ subtitle: e.target.value })} />
         <TextareaField

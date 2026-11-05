@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.1 – 5. 11. 2026
+
+- **Plagát inventára – drobný údaj pri technike**: malým sivým písmom vedľa počtu reproduktor aktívny / pasívny,
+  bezdrôtový systém a in-ear frekvencia (napr. 470–790 MHz) a svetlo LED, výbojka, halogén alebo laser.
+- **Plagát inventára – čia technika**: zaškrtnete, či na plagáte má byť aj technika zamestnancov a technika
+  zdieľaných (prepojených) firiem; technika zdieľanej firmy má vlastnú dlaždicu s názvom firmy.
+
 ### 8.0 – 3. 11. 2026
 
 - **Hľadať všade** hore na Prehľade: jedno políčko cez techniku, cases, eventy, firmy, kontakty, úlohy, poznámky

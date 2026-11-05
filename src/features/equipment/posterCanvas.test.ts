@@ -6,7 +6,7 @@ const section = (key: string, tiles: number): PosterSection => ({
   key,
   title: key,
   total: tiles,
-  tiles: Array.from({ length: tiles }, (_, index) => ({ key: `${key}${index}`, name: `${key} ${index}`, detail: '', count: 1, photoPath: '', ids: [], sort: 0 })),
+  tiles: Array.from({ length: tiles }, (_, index) => ({ key: `${key}${index}`, name: `${key} ${index}`, detail: '', info: '', count: 1, photoPath: '', ids: [], sort: 0 })),
 })
 
 describe('layoutPoster', () => {

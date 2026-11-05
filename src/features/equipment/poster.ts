@@ -5,6 +5,7 @@ import {
   DJ_TYPE_LABELS,
   formatNumber,
   IT_TYPE_LABELS,
+  LIGHT_SOURCE_LABELS,
   LIGHT_TYPE_GROUPS,
   TRUSS_SHAPE_LABELS,
   VIDEO_TYPE_LABELS,
@@ -13,10 +14,14 @@ import {
 } from './model'
 
 /** Jedna dlaždica plagátu: rovnaká technika zrátaná dokopy (aj rozdelená do viacerých cases). */
-export type PosterTile = { key: string; name: string; detail: string; count: number; photoPath: string; ids: string[]; sort: number }
+/** info: drobný údaj vedľa počtu (aktívny / pasívny, frekvencia, LED…), from: zdieľaná firma, ktorej technika je. */
+export type PosterTile = { key: string; name: string; detail: string; info: string; count: number; photoPath: string; ids: string[]; sort: number }
 export type PosterSection = { key: string; title: string; tiles: PosterTile[]; total: number }
 
-type Item = Pick<Equipment, 'id' | 'name' | 'kind' | 'attributes' | 'quantity' | 'photoPath' | 'status' | 'manufacturer' | 'model' | 'categoryId'>
+type Item = Pick<Equipment, 'id' | 'name' | 'kind' | 'attributes' | 'quantity' | 'photoPath' | 'status' | 'manufacturer' | 'model' | 'categoryId'> & {
+  /** Technika zdieľanej firmy (názov firmy) – vlastná dlaždica. */
+  from?: string
+}
 
 /** Druhy, pre ktoré má plagát zmysel ako prvý (pódium, hliník). */
 export const POSTER_KINDS: EquipmentKind[] = ['stage', 'truss', 'light', 'audio', 'video', 'dj', 'cable', 'it', 'appliance', 'general', 'consumable']
@@ -75,6 +80,17 @@ function detailOf(item: Item) {
   return [a.stageSize, a.lengthM !== undefined && `${formatNumber(a.lengthM)} m`, a.trussShape && a.trussShape !== 'straight' && TRUSS_SHAPE_LABELS[a.trussShape]].filter(Boolean).join(' · ')
 }
 
+/** Drobný údaj na plagát: reproduktor aktívny / pasívny, bezdrôtový systém frekvencia, svetlo zdroj (LED, výbojka…). */
+export function infoOf(item: Pick<Item, 'kind' | 'attributes'>) {
+  const a = item.attributes
+  if (item.kind === 'audio') {
+    if ((a.audioType === 'wireless' || a.audioType === 'iem') && a.rfRange) return a.rfRange
+    if (a.powered) return a.powered === 'active' ? 'aktívny' : 'pasívny'
+  }
+  if (item.kind === 'light' && a.lightSource && a.lightSource !== 'other') return LIGHT_SOURCE_LABELS[a.lightSource]
+  return ''
+}
+
 /** Rozmer na triedenie: dĺžka dielu, pri platni plocha zo „2×1 m“. */
 function sizeOf(item: Item) {
   const a = item.attributes
@@ -93,7 +109,8 @@ export function posterSections(items: Item[], kind: EquipmentKind, categoryName:
     if (item.kind !== kind || item.status === 'retired' || item.quantity <= 0) continue
     const section = sectionOf(item, categoryName)
     const detail = detailOf(item)
-    const tileKey = `${item.name.trim().toLowerCase()}|${detail}`
+    const info = [infoOf(item), item.from].filter(Boolean).join(' · ')
+    const tileKey = `${item.name.trim().toLowerCase()}|${detail}|${item.from ?? ''}`
     const current = sections.get(section.key) ?? { key: section.key, title: section.title, order: section.order, tiles: [], total: 0 }
     const tile = current.tiles.find((candidate) => candidate.key === tileKey)
     if (tile) {
@@ -101,7 +118,7 @@ export function posterSections(items: Item[], kind: EquipmentKind, categoryName:
       tile.ids.push(item.id)
       if (!tile.photoPath) tile.photoPath = item.photoPath
     } else {
-      current.tiles.push({ key: tileKey, name: item.name.trim(), detail, count: item.quantity, photoPath: item.photoPath, ids: [item.id], sort: sizeOf(item) })
+      current.tiles.push({ key: tileKey, name: item.name.trim(), detail, info, count: item.quantity, photoPath: item.photoPath, ids: [item.id], sort: sizeOf(item) })
     }
     current.total += item.quantity
     sections.set(section.key, current)

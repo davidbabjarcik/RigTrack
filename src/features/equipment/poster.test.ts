@@ -58,4 +58,24 @@ describe('posterSections', () => {
     )
     expect(sections.map((s) => s.title)).toEqual(['Pohyblivé svetlá', 'Efektové svetlá', 'Príslušenstvo', 'Ostatné'])
   })
+
+  it('adds a quiet info line and keeps shared companies on their own tiles', () => {
+    const sections = posterSections(
+      [
+        item({ name: 'Box 12', kind: 'audio', attributes: { audioType: 'speaker', powered: 'active' } }),
+        item({ name: 'Mic set', kind: 'audio', attributes: { audioType: 'wireless', rfRange: '470–790 MHz' } }),
+        item({ name: 'Box 12', kind: 'audio', attributes: { audioType: 'speaker', powered: 'active' }, quantity: 2 }),
+        { ...item({ name: 'Box 12', kind: 'audio', attributes: { audioType: 'speaker', powered: 'passive' } }), from: 'Partner' },
+      ],
+      'audio',
+    )
+    const tiles = sections.flatMap((section) => section.tiles.map((tile) => [tile.name, tile.info, tile.count]))
+    expect(tiles).toEqual([
+      ['Box 12', 'aktívny', 3],
+      ['Box 12', 'pasívny · Partner', 1],
+      ['Mic set', '470–790 MHz', 1],
+    ])
+    const light = posterSections([item({ name: 'Wash', kind: 'light', attributes: { lightType: 'led_par', lightSource: 'led' } })], 'light')
+    expect(light[0].tiles[0].info).toBe('LED')
+  })
 })
