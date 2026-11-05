@@ -36,6 +36,7 @@ import {
   type SubBox,
   type SubDelay,
 } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const MODES = [
   { id: 'align', label: 'Topy ↔ suby' },
@@ -86,10 +87,9 @@ function Result({ title, ms, note }: { title: string; ms: number; note?: string 
   return (
     <div className="rounded-xl border bg-surface p-4">
       <p className="text-sm text-muted-foreground">{title}</p>
-      <p className="text-3xl font-semibold tabular-nums">{fmt(ms)} ms</p>
+      <p className="text-3xl font-semibold tabular-nums">{fmt(ms)}{' '}{tx('ms')}</p>
       <p className="text-sm text-muted-foreground tabular-nums">
-        {samples(ms)} vzoriek pri 48 kHz · {samples(ms, 96_000)} pri 96 kHz
-      </p>
+        {samples(ms)}{' '}{tx('vzoriek pri 48 kHz ·')}{' '}{samples(ms, 96_000)}{' '}{tx('pri 96 kHz')}</p>
       {note && <p className="mt-2 text-sm">{note}</p>}
     </div>
   )
@@ -116,10 +116,8 @@ function Diagram({ subs, box }: { subs: SubDelay[]; box: SubBox | null }) {
   const toX = (x: number) => x - cx + width / 2
   const toY = (y: number) => maxY - y + 0.9
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="mx-auto max-h-72 w-full" role="img" aria-label="Nákres rozmiestnenia subov zhora">
-      <text x={width / 2} y={0.35} textAnchor="middle" fontSize={0.28} className="fill-muted-foreground">
-        ↑ publikum
-      </text>
+    <svg viewBox={`0 0 ${width} ${height}`} className="mx-auto max-h-72 w-full" role="img" aria-label={tx('Nákres rozmiestnenia subov zhora')}>
+      <text x={width / 2} y={0.35} textAnchor="middle" fontSize={0.28} className="fill-muted-foreground">{tx('↑ publikum')}</text>
       {subs.map((sub) => (
         <g key={sub.label}>
           <rect
@@ -143,7 +141,7 @@ function Diagram({ subs, box }: { subs: SubDelay[]; box: SubBox | null }) {
             fontSize={font}
             className="fill-foreground"
           >
-            {fmt(sub.ms)} ms{sub.inverted ? ' ⟲' : ''}
+            {fmt(sub.ms)}{' '}{tx('ms')}{sub.inverted ? ' ⟲' : ''}
           </text>
         </g>
       ))}
@@ -166,15 +164,15 @@ const signedDb = (db: number) => (db <= -60 ? '−∞ (ticho)' : `${db > 0 ? '+'
 function ResponseTable({ target, response }: { target: number; response: (frequency: number) => { frontDb: number; rearDb: number } }) {
   const frequencies = [...new Set([...RESPONSE_FREQUENCIES, target])].sort((a, b) => a - b)
   return (
-    <CollapsibleSection id="delay.response" title="Dopredu a dozadu podľa frekvencie">
+    <CollapsibleSection id="delay.response" title={tx('Dopredu a dozadu podľa frekvencie')}>
       <div className="overflow-x-auto rounded-xl border bg-surface">
         <table className="w-full text-sm tabular-nums">
           <thead className="text-muted-foreground">
             <tr className="border-b text-left">
-              <th className="px-4 py-2 font-medium">Frekvencia</th>
-              <th className="px-4 py-2 text-right font-medium">Dopredu</th>
-              <th className="px-4 py-2 text-right font-medium">Dozadu (pódium)</th>
-              <th className="px-4 py-2 text-right font-medium">Predok – zadok</th>
+              <th className="px-4 py-2 font-medium">{tx('Frekvencia')}</th>
+              <th className="px-4 py-2 text-right font-medium">{tx('Dopredu')}</th>
+              <th className="px-4 py-2 text-right font-medium">{tx('Dozadu (pódium)')}</th>
+              <th className="px-4 py-2 text-right font-medium">{tx('Predok – zadok')}</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -183,21 +181,18 @@ function ResponseTable({ target, response }: { target: number; response: (freque
               return (
                 <tr key={frequency} className={cn(frequency === target && 'bg-accent/10 font-medium')}>
                   <td className="px-4 py-2">
-                    {fmt(frequency, 1)} Hz{frequency === target && ' (cieľ)'}
+                    {fmt(frequency, 1)}{' '}{tx('Hz')}{frequency === target && tx(' (cieľ)')}
                   </td>
                   <td className="px-4 py-2 text-right">{signedDb(frontDb)}</td>
                   <td className="px-4 py-2 text-right">{signedDb(rearDb)}</td>
-                  <td className="px-4 py-2 text-right">{rearDb <= -60 ? 'úplné' : `${fmt(frontDb - rearDb, 1)} dB`}</td>
+                  <td className="px-4 py-2 text-right">{rearDb <= -60 ? tx('úplné') : `${fmt(frontDb - rearDb, 1)} dB`}</td>
                 </tr>
               )
             })}
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Ideálny odhad (bodové zdroje, rovnaký level, voľné pole), oproti predným subom bez zadných. V praxi dolaďte meraním – podlaha, steny a pódium
-        to menia.
-      </p>
+      <p className="mt-2 text-xs text-muted-foreground">{tx('Ideálny odhad (bodové zdroje, rovnaký level, voľné pole), oproti predným subom bez zadných. V praxi dolaďte meraním – podlaha, steny a pódium to menia.')}</p>
     </CollapsibleSection>
   )
 }
@@ -216,22 +211,22 @@ function SubTable({ subs, ownMs }: { subs: SubDelay[]; ownMs: number }) {
       <table className="w-full text-sm tabular-nums">
         <thead className="text-muted-foreground">
           <tr className="border-b text-left">
-            <th className="px-4 py-2 font-medium">Sub</th>
-            <th className="px-4 py-2 text-right font-medium">Delay z polohy</th>
-            <th className="px-4 py-2 font-medium">Vlastný delay subu (ms)</th>
-            <th className="px-4 py-2 text-right font-medium">Nastaviť v procesore</th>
-            <th className="px-4 py-2 font-medium">Polarita</th>
+            <th className="px-4 py-2 font-medium">{tx('Sub')}</th>
+            <th className="px-4 py-2 text-right font-medium">{tx('Delay z polohy')}</th>
+            <th className="px-4 py-2 font-medium">{tx('Vlastný delay subu (ms)')}</th>
+            <th className="px-4 py-2 text-right font-medium">{tx('Nastaviť v procesore')}</th>
+            <th className="px-4 py-2 font-medium">{tx('Polarita')}</th>
           </tr>
         </thead>
         <tbody className="divide-y">
           {subs.map((sub, index) => (
             <tr key={sub.label}>
-              <td className="px-4 py-2">{sub.label}</td>
-              <td className="px-4 py-2 text-right">{fmt(sub.ms)} ms</td>
+              <td className="px-4 py-2">{tx(sub.label)}</td>
+              <td className="px-4 py-2 text-right">{fmt(sub.ms)}{' '}{tx('ms')}</td>
               <td className="px-4 py-1">
                 <input
                   inputMode="decimal"
-                  aria-label={`Vlastný delay: ${sub.label}`}
+                  aria-label={tf('Vlastný delay: {0}', sub.label)}
                   placeholder={fmt(ownMs)}
                   className="h-9 w-20 rounded-lg border bg-surface px-2 text-right"
                   value={own[sub.label] ?? ''}
@@ -239,18 +234,17 @@ function SubTable({ subs, ownMs }: { subs: SubDelay[]; ownMs: number }) {
                 />
               </td>
               <td className="px-4 py-2 text-right font-medium">
-                {fmt(dsp[index])} ms
-                <span className="block text-xs font-normal text-muted-foreground">{samples(dsp[index])} vz. @ 48 kHz</span>
+                {fmt(dsp[index])}{' '}{tx('ms')}<span className="block text-xs font-normal text-muted-foreground">{samples(dsp[index])}{' '}{tx('vz. @ 48 kHz')}</span>
               </td>
-              <td className={cn('px-4 py-2', sub.inverted && 'font-medium text-amber-700 dark:text-amber-300')}>{sub.inverted ? 'otočená (−)' : 'normálna (+)'}</td>
+              <td className={cn('px-4 py-2', sub.inverted && 'font-medium text-amber-700 dark:text-amber-300')}>{sub.inverted ? tx('otočená (−)') : tx('normálna (+)')}</td>
             </tr>
           ))}
         </tbody>
       </table>
       <p className="border-t px-4 py-2 text-xs text-muted-foreground">
         {mixed
-          ? 'Suby majú rôzny vlastný delay (napr. hornové a priame): v procesore nastavte stĺpec „Nastaviť v procesore“, aby zvuk prišiel naraz.'
-          : 'Všetky suby majú rovnaký vlastný delay, takže sa vyruší. Pri mixe rôznych subov (napr. slimák a priamy) zadajte vlastný delay pri každom.'}
+          ? tx('Suby majú rôzny vlastný delay (napr. hornové a priame): v procesore nastavte stĺpec „Nastaviť v procesore“, aby zvuk prišiel naraz.')
+          : tx('Všetky suby majú rovnaký vlastný delay, takže sa vyruší. Pri mixe rôznych subov (napr. slimák a priamy) zadajte vlastný delay pri každom.')}
       </p>
     </div>
   )
@@ -282,7 +276,7 @@ export function DelayPage() {
   const [boxH, setBoxH] = useState<number | null>(null)
   // Vlastné oneskorenie zvoleného subu (hornový / slimák), ms.
   const [ownMs, setOwnMs] = useState(0)
-  const box: SubBox | null = boxW && boxD ? { name: subChoices.find((item) => item.id === subId)?.name ?? 'Vlastné rozmery', widthCm: boxW, depthCm: boxD, heightCm: boxH } : null
+  const box: SubBox | null = boxW && boxD ? { name: subChoices.find((item) => item.id === subId)?.name ?? tx('Vlastné rozmery'), widthCm: boxW, depthCm: boxD, heightCm: boxH } : null
   const [layout, setLayout] = useState<CardioidLayout>('behind')
   const [gap, setGap] = useState(0)
   const [frontCount, setFrontCount] = useState(2)
@@ -300,10 +294,10 @@ export function DelayPage() {
   return (
     <>
       <CalculatorTabs />
-      <PageHeader title="Delay kalkulačka" description="Suby a zvuk: zarovnanie, delay veža, cardioid, end-fire, rad a arc" />
+      <PageHeader title={tx('Delay kalkulačka')} description={tx('Suby a zvuk: zarovnanie, delay veža, cardioid, end-fire, rad a arc')} />
       <DevNotice className="mb-4 print:hidden" />
 
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Druh výpočtu">
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label={tx('Druh výpočtu')}>
         {MODES.map((item) => (
           <button
             key={item.id}
@@ -313,29 +307,29 @@ export function DelayPage() {
             onClick={() => setParams(item.id === 'align' ? {} : { mode: item.id }, { replace: true })}
             className={cn('shrink-0 rounded-lg border px-3 py-1.5 text-sm font-medium', mode === item.id ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
           >
-            {item.label}
+            {tx(item.label)}
           </button>
         ))}
       </div>
 
       <div className="mb-4 grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-3">
-        <NumberInput label="Teplota vzduchu" unit="°C" value={temp} onChange={setTemp} step={1} min={-30} max={50} hint={`Rýchlosť zvuku ${fmt(c, 1)} m/s`} />
+        <NumberInput label={tx('Teplota vzduchu')} unit="°C" value={temp} onChange={setTemp} step={1} min={-30} max={50} hint={tf('Rýchlosť zvuku {0} m/s', fmt(c, 1))} />
         {mode === 'align' && (
           <>
-            <NumberInput label="Vzdialenosť k topom" unit="m" value={toTops} onChange={setToTops} hint="Od miesta počúvania (napr. FOH)" />
-            <NumberInput label="Vzdialenosť k subom" unit="m" value={toSubs} onChange={setToSubs} />
+            <NumberInput label={tx('Vzdialenosť k topom')} unit="m" value={toTops} onChange={setToTops} hint={tx('Od miesta počúvania (napr. FOH)')} />
+            <NumberInput label={tx('Vzdialenosť k subom')} unit="m" value={toSubs} onChange={setToSubs} />
           </>
         )}
         {mode === 'tower' && (
           <>
-            <NumberInput label="Vzdialenosť od hlavného PA" unit="m" value={towerDistance} onChange={setTowerDistance} />
-            <NumberInput label="Predstih hlavného PA (Haas)" unit="ms" value={haas} onChange={setHaas} step={1} max={30} hint="Zvyčajne 5–15 ms, aby zvuk znel z pódia" />
+            <NumberInput label={tx('Vzdialenosť od hlavného PA')} unit="m" value={towerDistance} onChange={setTowerDistance} />
+            <NumberInput label={tx('Predstih hlavného PA (Haas)')} unit="ms" value={haas} onChange={setHaas} step={1} max={30} hint={tx('Zvyčajne 5–15 ms, aby zvuk znel z pódia')} />
           </>
         )}
         {(mode === 'cardioid' || mode === 'endfire') && (
           <>
             <NumberInput
-              label="Rozostup (akustické stredy)"
+              label={tx('Rozostup (akustické stredy)')}
               unit="m"
               value={spacing}
               onChange={(value) => {
@@ -346,7 +340,7 @@ export function DelayPage() {
               max={10}
             />
             <NumberInput
-              label="Cieľová frekvencia"
+              label={tx('Cieľová frekvencia')}
               unit="Hz"
               value={target}
               onChange={(value) => {
@@ -356,7 +350,7 @@ export function DelayPage() {
               step={1}
               min={20}
               max={200}
-              hint={`Odporúčaný rozostup λ/4 = ${fmt(quarterWave(target, temp))} m`}
+              hint={tf('Odporúčaný rozostup λ/4 = {0} m', fmt(quarterWave(target, temp)))}
             />
             <div className="flex flex-col justify-end gap-2 sm:col-span-3 sm:flex-row sm:items-center">
               <label className="inline-flex items-center gap-2 text-sm">
@@ -368,29 +362,26 @@ export function DelayPage() {
                     setFollowTarget(event.target.checked)
                     if (event.target.checked) setSpacing(round(quarterWave(target, temp), 3))
                   }}
-                />
-                Rozostup podľa cieľovej frekvencie (λ/4)
-              </label>
+                />{tx('Rozostup podľa cieľovej frekvencie (λ/4)')}</label>
               {!followTarget && Math.abs(spacing - quarterWave(target, temp)) > 0.005 && (
-                <Button variant="outline" size="sm" onClick={() => setSpacing(round(quarterWave(target, temp), 3))}>
-                  Použiť λ/4 = {fmt(quarterWave(target, temp))} m
+                <Button variant="outline" size="sm" onClick={() => setSpacing(round(quarterWave(target, temp), 3))}>{tx('Použiť λ/4 =')}{' '}{fmt(quarterWave(target, temp))} m
                 </Button>
               )}
             </div>
             {mode === 'cardioid' ? (
               <>
-                <NumberInput label="Predných subov" value={frontCount} onChange={(value) => setFrontCount(Math.min(whole(value), 12))} step={1} min={1} max={12} />
+                <NumberInput label={tx('Predných subov')} value={frontCount} onChange={(value) => setFrontCount(Math.min(whole(value), 12))} step={1} min={1} max={12} />
                 <NumberInput
-                  label="Zadných (otočených) subov"
+                  label={tx('Zadných (otočených) subov')}
                   value={backCount}
                   onChange={(value) => setBackCount(Math.min(whole(value), 12))}
                   step={1}
                   min={1}
                   max={12}
-                  hint="Najčastejšie 2 predné : 1 zadný"
+                  hint={tx('Najčastejšie 2 predné : 1 zadný')}
                 />
                 <SelectField
-                  label="Uloženie"
+                  label={tx('Uloženie')}
                   value={layout}
                   onChange={(event) => {
                     const next = event.target.value as CardioidLayout
@@ -400,13 +391,13 @@ export function DelayPage() {
                 >
                   {(Object.keys(CARDIOID_LAYOUT_LABELS) as CardioidLayout[]).map((option) => (
                     <option key={option} value={option}>
-                      {CARDIOID_LAYOUT_LABELS[option]}
+                      {tx(CARDIOID_LAYOUT_LABELS[option])}
                     </option>
                   ))}
                 </SelectField>
                 {layout === 'behind' && (
                   <NumberInput
-                    label="Medzera medzi boxmi"
+                    label={tx('Medzera medzi boxmi')}
                     unit="m"
                     value={gap}
                     onChange={(value) => {
@@ -418,37 +409,37 @@ export function DelayPage() {
                 )}
               </>
             ) : (
-              <NumberInput label="Počet radov" value={rows} onChange={(value) => setRows(Math.min(Math.max(whole(value), 2), 8))} step={1} min={2} max={8} />
+              <NumberInput label={tx('Počet radov')} value={rows} onChange={(value) => setRows(Math.min(Math.max(whole(value), 2), 8))} step={1} min={2} max={8} />
             )}
           </>
         )}
         {(mode === 'line' || mode === 'arc') && (
           <>
-            <NumberInput label="Počet subov" value={count} onChange={(value) => setCount(Math.min(Math.max(whole(value), 2), 32))} step={1} min={2} max={32} />
-            <NumberInput label="Rozostup (stred–stred)" unit="m" value={lineSpacing} onChange={setLineSpacing} min={0.1} max={20} />
+            <NumberInput label={tx('Počet subov')} value={count} onChange={(value) => setCount(Math.min(Math.max(whole(value), 2), 32))} step={1} min={2} max={32} />
+            <NumberInput label={tx('Rozostup (stred–stred)')} unit="m" value={lineSpacing} onChange={setLineSpacing} min={0.1} max={20} />
             <NumberInput
-              label="Šírka radu (krajný – krajný sub)"
+              label={tx('Šírka radu (krajný – krajný sub)')}
               unit="m"
               value={(count - 1) * lineSpacing}
               onChange={(width) => setLineSpacing(Math.max(width / (count - 1), 0.1))}
               min={0.1}
               max={200}
-              hint="Zmeníte šírku a rozostup sa dopočíta (a naopak)"
+              hint={tx('Zmeníte šírku a rozostup sa dopočíta (a naopak)')}
             />
             {mode === 'line' ? (
-              <NumberInput label="Najvyššia frekvencia subov" unit="Hz" value={upper} onChange={setUpper} step={1} min={30} max={200} hint="Zvyčajne crossover s topmi" />
+              <NumberInput label={tx('Najvyššia frekvencia subov')} unit="Hz" value={upper} onChange={setUpper} step={1} min={30} max={200} hint={tx('Zvyčajne crossover s topmi')} />
             ) : (
-              <NumberInput label="Uhol oblúka" unit="°" value={angle} onChange={setAngle} step={5} min={5} max={180} hint="Širší uhol = širšie pokrytie, menej basu v strede" />
+              <NumberInput label={tx('Uhol oblúka')} unit="°" value={angle} onChange={setAngle} step={5} min={5} max={180} hint={tx('Širší uhol = širšie pokrytie, menej basu v strede')} />
             )}
           </>
         )}
       </div>
 
       {mode !== 'tower' && (
-        <CollapsibleSection id="delay.sub" title="Sub" summary={box ? `${box.name} · ${fmt(box.widthCm, 0)}×${fmt(box.depthCm, 0)} cm` : 'bez rozmerov'}>
+        <CollapsibleSection id="delay.sub" title={tx('Sub')} summary={box ? `${box.name} · ${fmt(box.widthCm, 0)}×${fmt(box.depthCm, 0)} cm` : 'bez rozmerov'}>
         <div className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-4">
           <SelectField
-            label="Sub"
+            label={tx('Sub')}
             className="sm:col-span-4"
             value={subId}
             onChange={(event) => {
@@ -463,33 +454,33 @@ export function DelayPage() {
               if (width && depth && mode === 'cardioid') setSpacing(round(cardioidSpacing({ depthCm: depth }, layout, gap), 3))
             }}
           >
-            <option value="">— vlastné rozmery / bez rozmerov —</option>
+            <option value="">{tx('— vlastné rozmery / bez rozmerov —')}</option>
             {subChoices.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
                 {item.attributes.boxWidthCm !== undefined && item.attributes.boxDepthCm !== undefined
                   ? ` · ${item.attributes.boxWidthCm}×${item.attributes.boxDepthCm} cm`
-                  : ' · bez rozmerov'}
+                  : tx(' · bez rozmerov')}
               </option>
             ))}
           </SelectField>
-          <NumberInput key={`w-${subId}`} label="Šírka boxu" unit="cm" value={boxW ?? 0} onChange={(value) => setBoxW(value || null)} step={1} max={500} />
-          <NumberInput key={`d-${subId}`} label="Hĺbka boxu" unit="cm" value={boxD ?? 0} onChange={(value) => setBoxD(value || null)} step={1} max={500} />
-          <NumberInput key={`h-${subId}`} label="Výška boxu" unit="cm" value={boxH ?? 0} onChange={(value) => setBoxH(value || null)} step={1} max={500} />
+          <NumberInput key={`w-${subId}`} label={tx('Šírka boxu')} unit="cm" value={boxW ?? 0} onChange={(value) => setBoxW(value || null)} step={1} max={500} />
+          <NumberInput key={`d-${subId}`} label={tx('Hĺbka boxu')} unit="cm" value={boxD ?? 0} onChange={(value) => setBoxD(value || null)} step={1} max={500} />
+          <NumberInput key={`h-${subId}`} label={tx('Výška boxu')} unit="cm" value={boxH ?? 0} onChange={(value) => setBoxH(value || null)} step={1} max={500} />
           <NumberInput
             key={`o-${subId}`}
-            label="Vlastný delay subu"
+            label={tx('Vlastný delay subu')}
             unit="ms"
             value={ownMs}
             onChange={setOwnMs}
             step={0.1}
             max={200}
-            hint="Hornový sub / slimák hrá neskôr (dlhšia cesta zvuku). Údaj výrobcu alebo z merania."
+            hint={tx('Hornový sub / slimák hrá neskôr (dlhšia cesta zvuku). Údaj výrobcu alebo z merania.')}
           />
           <p className="self-end text-xs text-muted-foreground sm:pb-3">
             {subChoices.length === 0
-              ? 'Suby z techniky sa ukážu, keď majú typ Subwoofer. Rozmery boxu sa zadávajú pri technike.'
-              : 'Rozmery sa dajú prepísať. Akustický stred berieme na čele boxu.'}
+              ? tx('Suby z techniky sa ukážu, keď majú typ Subwoofer. Rozmery boxu sa zadávajú pri technike.')
+              : tx('Rozmery sa dajú prepísať. Akustický stred berieme na čele boxu.')}
           </p>
         </div>
         </CollapsibleSection>
@@ -500,18 +491,18 @@ export function DelayPage() {
           const result = alignWithSubDelay(toTops, toSubs, ownMs, temp)
           return (
             <Result
-              title={result.delayed === null ? 'Topy a suby prídu naraz' : result.delayed === 'tops' ? 'Oneskorte TOPY o' : 'Oneskorte SUBY o'}
+              title={result.delayed === null ? tx('Topy a suby prídu naraz') : result.delayed === 'tops' ? tx('Oneskorte TOPY o') : tx('Oneskorte SUBY o')}
               ms={result.ms}
-              note={`${ownMs > 0 ? `Započítaný vlastný delay subu ${fmt(ownMs)} ms. ` : ''}Výpočet platí pre zvolené miesto počúvania. Doladiť sa dá meraním (napr. Smaart) okolo crossoveru; pri zmene teploty sa čas mierne mení.`}
+              note={tf('{0}Výpočet platí pre zvolené miesto počúvania. Doladiť sa dá meraním (napr. Smaart) okolo crossoveru; pri zmene teploty sa čas mierne mení.', ownMs > 0 ? `Započítaný vlastný delay subu ${fmt(ownMs)} ms. ` : '')}
             />
           )
         })()}
 
       {mode === 'tower' && (
         <Result
-          title="Delay pre vežu"
+          title={tx('Delay pre vežu')}
           ms={towerDelay(towerDistance, temp, haas)}
-          note={`${fmt(towerDelay(towerDistance, temp))} ms za vzdialenosť + ${fmt(haas, 0)} ms predstih hlavného PA.`}
+          note={tf('{0} ms za vzdialenosť + {1} ms predstih hlavného PA.', fmt(towerDelay(towerDistance, temp)), fmt(haas, 0))}
         />
       )}
 
@@ -523,32 +514,23 @@ export function DelayPage() {
               {box && Math.abs(spacing - cardioidSpacing(box, layout, gap)) > 0.005 && (
                 <Warning
                   action={
-                    <Button variant="outline" size="sm" onClick={() => setSpacing(round(cardioidSpacing(box, layout, gap), 3))}>
-                      Použiť {fmt(cardioidSpacing(box, layout, gap))} m
+                    <Button variant="outline" size="sm" onClick={() => setSpacing(round(cardioidSpacing(box, layout, gap), 3))}>{tx('Použiť')}{' '}{fmt(cardioidSpacing(box, layout, gap))} m
                     </Button>
                   }
-                >
-                  Pri uložení „{CARDIOID_LAYOUT_LABELS[layout].toLowerCase()}“ a hĺbke boxu {fmt(box.depthCm, 0)} cm vychádza rozostup čiel{' '}
-                  {fmt(cardioidSpacing(box, layout, gap))} m, zadaný je {fmt(spacing)} m.
+                >{tx('Pri uložení „')}{CARDIOID_LAYOUT_LABELS[layout].toLowerCase()}{tx('“ a hĺbke boxu')}{' '}{fmt(box.depthCm, 0)}{' '}{tx('cm vychádza rozostup čiel')}{' '}
+                  {fmt(cardioidSpacing(box, layout, gap))}{' '}{tx('m, zadaný je')}{' '}{fmt(spacing)} m.
                 </Warning>
               )}
               {layout !== 'behind' && (
-                <p className="text-sm text-muted-foreground">
-                  V nákrese stoja suby v jednom rade{layout === 'stack' ? ' (v skutočnosti na sebe)' : ''}; otočený hrá dozadu.
-                </p>
+                <p className="text-sm text-muted-foreground">{tx('V nákrese stoja suby v jednom rade')}{layout === 'stack' ? tx(' (v skutočnosti na sebe)') : ''}{tx('; otočený hrá dozadu.')}</p>
               )}
               <Diagram subs={subs} box={box} />
               <SubTable subs={subs} ownMs={ownMs} />
               <ResponseTable target={target} response={(frequency) => cardioidResponse(frontCount, backCount, spacing, frequency, temp)} />
-              <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">
-                Pri tomto rozostupe pomáhajú zadné suby dopredu najviac okolo {fmt(speedOfSound(temp) / (4 * spacing), 0)} Hz a nad{' '}
-                {fmt(speedOfSound(temp) / (2 * spacing), 0)} Hz už dopredu ubíjajú – crossover s topmi držte pod touto hranicou.{' '}
+              <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Pri tomto rozostupe pomáhajú zadné suby dopredu najviac okolo')}{' '}{fmt(speedOfSound(temp) / (4 * spacing), 0)}{' '}{tx('Hz a nad')}{' '}
+                {fmt(speedOfSound(temp) / (2 * spacing), 0)}{' '}{tx('Hz už dopredu ubíjajú – crossover s topmi držte pod touto hranicou.')}{' '}
               </p>
-              <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">
-                Zadné suby sú otočené dozadu, všetky majú rovnaký delay a otočenú polaritu a delay o čas, za ktorý zvuk prejde rozostup. Dopredu sa suby sčítajú, dozadu na pódium
-                sa vyrušia (najviac okolo {fmt(speedOfSound(temp) / (4 * spacing), 0)} Hz). Rozostup merajte medzi akustickými stredmi (zvyčajne čelá
-                reproduktorov). Pomer predných a zadných a level zadných doladíte meraním za stackom (na pódiu).
-              </p>
+              <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Zadné suby sú otočené dozadu, všetky majú rovnaký delay a otočenú polaritu a delay o čas, za ktorý zvuk prejde rozostup. Dopredu sa suby sčítajú, dozadu na pódium sa vyrušia (najviac okolo')}{' '}{fmt(speedOfSound(temp) / (4 * spacing), 0)}{' '}{tx('Hz). Rozostup merajte medzi akustickými stredmi (zvyčajne čelá reproduktorov). Pomer predných a zadných a level zadných doladíte meraním za stackom (na pódiu).')}</p>
             </div>
           )
         })()}
@@ -561,21 +543,15 @@ export function DelayPage() {
               {box && spacing < minSpacing(box, 'row') - 0.005 && (
                 <Warning
                   action={
-                    <Button variant="outline" size="sm" onClick={() => setSpacing(minSpacing(box, 'row'))}>
-                      Tesne za sebou ({fmt(minSpacing(box, 'row'))} m)
+                    <Button variant="outline" size="sm" onClick={() => setSpacing(minSpacing(box, 'row'))}>{tx('Tesne za sebou (')}{fmt(minSpacing(box, 'row'))} m)
                     </Button>
                   }
-                >
-                  Box je hlboký {fmt(box.depthCm, 0)} cm – rady sa pri rozostupe {fmt(spacing)} m nezmestia za seba.
-                </Warning>
+                >{tx('Box je hlboký')}{' '}{fmt(box.depthCm, 0)}{' '}{tx('cm – rady sa pri rozostupe')}{' '}{fmt(spacing)}{' '}{tx('m nezmestia za seba.')}</Warning>
               )}
               <Diagram subs={subs} box={box} />
               <SubTable subs={subs} ownMs={ownMs} />
               <ResponseTable target={target} response={(frequency) => endFireResponse(rows, spacing, frequency, temp)} />
-              <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">
-                Všetky rady hrajú dopredu. Zadný rad hrá bez delay, každý rad pred ním sa oneskorí o rozostup od zadného radu. Dopredu sa sčítajú,
-                dozadu sa rušia. Najlepšie funguje pri rozostupe λ/4 cieľovej frekvencie.
-              </p>
+              <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Všetky rady hrajú dopredu. Zadný rad hrá bez delay, každý rad pred ním sa oneskorí o rozostup od zadného radu. Dopredu sa sčítajú, dozadu sa rušia. Najlepšie funguje pri rozostupe λ/4 cieľovej frekvencie.')}</p>
             </div>
           )
         })()}
@@ -589,30 +565,24 @@ export function DelayPage() {
               {box && lineSpacing < minSpacing(box, 'side') - 0.005 && (
                 <Warning
                   action={
-                    <Button variant="outline" size="sm" onClick={() => setLineSpacing(minSpacing(box, 'side'))}>
-                      Tesne vedľa seba ({fmt(minSpacing(box, 'side'))} m)
+                    <Button variant="outline" size="sm" onClick={() => setLineSpacing(minSpacing(box, 'side'))}>{tx('Tesne vedľa seba (')}{fmt(minSpacing(box, 'side'))} m)
                     </Button>
                   }
-                >
-                  Box je široký {fmt(box.widthCm, 0)} cm – suby sa pri rozostupe {fmt(lineSpacing)} m nezmestia vedľa seba.
-                </Warning>
+                >{tx('Box je široký')}{' '}{fmt(box.widthCm, 0)}{' '}{tx('cm – suby sa pri rozostupe')}{' '}{fmt(lineSpacing)}{' '}{tx('m nezmestia vedľa seba.')}</Warning>
               )}
               {box && (
-                <p className="text-sm text-muted-foreground">
-                  Rad zaberie {fmt(physicalWidth(count, lineSpacing, box))} m od kraja po kraj (medzi boxmi {fmt(Math.max(lineSpacing - box.widthCm / 100, 0))} m).
+                <p className="text-sm text-muted-foreground">{tx('Rad zaberie')}{' '}{fmt(physicalWidth(count, lineSpacing, box))}{' '}{tx('m od kraja po kraj (medzi boxmi')}{' '}{fmt(Math.max(lineSpacing - box.widthCm / 100, 0))} m).
                 </p>
               )}
               <Diagram subs={subs} box={box} />
               <div className={cn('rounded-xl border p-4 text-sm', lineSpacing > limit ? 'border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40' : 'bg-surface')}>
-                <p className="font-medium">
-                  Šírka radu {fmt((count - 1) * lineSpacing)} m · rozostup {fmt(lineSpacing)} m · najviac odporúčané {fmt(limit)} m (λ/2 pri {fmt(upper, 0)} Hz)
-                </p>
+                <p className="font-medium">{tx('Šírka radu')}{' '}{fmt((count - 1) * lineSpacing)}{' '}{tx('m · rozostup')}{' '}{fmt(lineSpacing)}{' '}{tx('m · najviac odporúčané')}{' '}{fmt(limit)}{' '}{tx('m (λ/2 pri')}{' '}{fmt(upper, 0)}{' '}{tx('Hz)')}</p>
                 <p className="mt-1 text-muted-foreground">
                   {lineSpacing > limit
-                    ? 'Rozostup je väčší ako pol vlnovej dĺžky: suby sa nesčítajú ako jeden zdroj a vzniknú diery a „power alley“. Posuňte ich bližšie alebo použite arc delay.'
-                    : 'Suby sa správajú ako jeden zdroj. Rovný rad je však v strede veľmi silný a do strán úzky – na širšie pokrytie použite arc delay.'}
+                    ? tx('Rozostup je väčší ako pol vlnovej dĺžky: suby sa nesčítajú ako jeden zdroj a vzniknú diery a „power alley“. Posuňte ich bližšie alebo použite arc delay.')
+                    : tx('Suby sa správajú ako jeden zdroj. Rovný rad je však v strede veľmi silný a do strán úzky – na širšie pokrytie použite arc delay.')}
                 </p>
-                <p className="mt-1 text-muted-foreground">Vlnová dĺžka pri {fmt(upper, 0)} Hz: {fmt(wavelength(upper, temp))} m.</p>
+                <p className="mt-1 text-muted-foreground">{tx('Vlnová dĺžka pri')}{' '}{fmt(upper, 0)}{' '}{tx('Hz:')}{' '}{fmt(wavelength(upper, temp))} m.</p>
               </div>
             </div>
           )
@@ -626,26 +596,18 @@ export function DelayPage() {
               {box && lineSpacing < minSpacing(box, 'side') - 0.005 && (
                 <Warning
                   action={
-                    <Button variant="outline" size="sm" onClick={() => setLineSpacing(minSpacing(box, 'side'))}>
-                      Tesne vedľa seba ({fmt(minSpacing(box, 'side'))} m)
+                    <Button variant="outline" size="sm" onClick={() => setLineSpacing(minSpacing(box, 'side'))}>{tx('Tesne vedľa seba (')}{fmt(minSpacing(box, 'side'))} m)
                     </Button>
                   }
-                >
-                  Box je široký {fmt(box.widthCm, 0)} cm – suby sa pri rozostupe {fmt(lineSpacing)} m nezmestia vedľa seba.
-                </Warning>
+                >{tx('Box je široký')}{' '}{fmt(box.widthCm, 0)}{' '}{tx('cm – suby sa pri rozostupe')}{' '}{fmt(lineSpacing)}{' '}{tx('m nezmestia vedľa seba.')}</Warning>
               )}
               {box && (
-                <p className="text-sm text-muted-foreground">
-                  Rad zaberie {fmt(physicalWidth(count, lineSpacing, box))} m od kraja po kraj (medzi boxmi {fmt(Math.max(lineSpacing - box.widthCm / 100, 0))} m).
+                <p className="text-sm text-muted-foreground">{tx('Rad zaberie')}{' '}{fmt(physicalWidth(count, lineSpacing, box))}{' '}{tx('m od kraja po kraj (medzi boxmi')}{' '}{fmt(Math.max(lineSpacing - box.widthCm / 100, 0))} m).
                 </p>
               )}
               <Diagram subs={subs} box={box} />
               <SubTable subs={subs} ownMs={ownMs} />
-              <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">
-                Suby stoja v rovnom rade; delay ich „ohne“ do oblúka s polomerom {fmt(radius)} m a uhlom {fmt(angle, 0)}°. Stred hrá bez delay, ku krajom
-                delay rastie, akoby boli suby fyzicky vzadu na oblúku (nákres ukazuje tento virtuálny oblúk). Rovnaké čísla zadajte symetricky vľavo aj
-                vpravo.
-              </p>
+              <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Suby stoja v rovnom rade; delay ich „ohne“ do oblúka s polomerom')}{' '}{fmt(radius)}{' '}{tx('m a uhlom')}{' '}{fmt(angle, 0)}{tx('°. Stred hrá bez delay, ku krajom delay rastie, akoby boli suby fyzicky vzadu na oblúku (nákres ukazuje tento virtuálny oblúk). Rovnaké čísla zadajte symetricky vľavo aj vpravo.')}</p>
             </div>
           )
         })()}

@@ -15,6 +15,7 @@ import { cableColorKeys, fetchCableColors, resolveCableType, saveCableColor, typ
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import { cableName, cableSetSchema, COMMON_CONNECTORS, type CableSetValues, type Lookup } from './model'
 import { useEquipmentLookups } from './useEquipmentLookups'
+import { tx, tf } from '@/lib/i18n'
 
 // Nevyplnený riadok: polia ostanú prázdne a validácia si vypýta čísla.
 const EMPTY_ROW = { lengthM: undefined, quantity: undefined } as unknown as CableSetValues['rows'][number]
@@ -67,23 +68,20 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
 
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">
-        Jeden typ kábla vo viacerých dĺžkach. Za každú dĺžku vznikne jedna položka techniky s počtom kusov, napr. „XLR kábel 5 m“
-        × 20.
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Jeden typ kábla vo viacerých dĺžkach. Za každú dĺžku vznikne jedna položka techniky s počtom kusov, napr. „XLR kábel 5 m“ × 20.')}</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label="Názov bez dĺžky *"
+          label={tx('Názov bez dĺžky *')}
           autoFocus
-          placeholder="napr. XLR kábel alebo powerCON prepojovací"
+          placeholder={tx('napr. XLR kábel alebo powerCON prepojovací')}
           error={errors.namePrefix?.message}
           {...register('namePrefix')}
         />
         <Field
-          label="Konektor / typ"
+          label={tx('Konektor / typ')}
           list={connectorListId}
           autoComplete="off"
-          placeholder="napr. XLR"
+          placeholder={tx('napr. XLR')}
           error={errors.connector?.message}
           {...register('connector')}
         />
@@ -93,10 +91,10 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
           ))}
         </datalist>
         <Field
-          label="Kategória"
+          label={tx('Kategória')}
           list={categoryListId}
           autoComplete="off"
-          placeholder="Vyberte alebo napíšte novú"
+          placeholder={tx('Vyberte alebo napíšte novú')}
           error={errors.category?.message}
           {...register('category')}
         />
@@ -106,10 +104,10 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
           ))}
         </datalist>
         <Field
-          label="Umiestnenie"
+          label={tx('Umiestnenie')}
           list={locationListId}
           autoComplete="off"
-          placeholder="Vyberte alebo napíšte nové"
+          placeholder={tx('Vyberte alebo napíšte nové')}
           error={errors.location?.message}
           {...register('location')}
         />
@@ -120,7 +118,7 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
         </datalist>
       </div>
 
-      <h2 className="mt-2 text-sm font-medium text-muted-foreground">Dĺžky</h2>
+      <h2 className="mt-2 text-sm font-medium text-muted-foreground">{tx('Dĺžky')}</h2>
       <ul className="flex flex-col gap-3">
         {fields.map((field, index) => {
           const length = rows[index]?.lengthM
@@ -128,7 +126,7 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
             <li key={field.id} className="rounded-xl border bg-surface p-4">
               <div className="flex items-end gap-3">
                 <Field
-                  label="Dĺžka (m)"
+                  label={tx('Dĺžka (m)')}
                   type="number"
                   inputMode="decimal"
                   min={0}
@@ -138,7 +136,7 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
                   {...register(`rows.${index}.lengthM`, { valueAsNumber: true })}
                 />
                 <Field
-                  label="Počet kusov"
+                  label={tx('Počet kusov')}
                   type="number"
                   inputMode="numeric"
                   min={1}
@@ -149,7 +147,7 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
                 />
                 <Button
                   variant="ghost"
-                  aria-label={`Odstrániť dĺžku ${index + 1}`}
+                  aria-label={tf('Odstrániť dĺžku {0}', index + 1)}
                   disabled={fields.length === 1}
                   onClick={() => remove(index)}
                 >
@@ -157,7 +155,7 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
                 </Button>
               </div>
               {namePrefix.trim() && Number.isFinite(length) && length > 0 && (
-                <p className="mt-2 text-sm text-muted-foreground">Vznikne: {cableName(namePrefix.trim(), length)}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{tx('Vznikne:')}{' '}{cableName(namePrefix.trim(), length)}</p>
               )}
               <div className="mt-3">
                 <LengthColorField
@@ -181,24 +179,18 @@ function CableSetForm({ companyId, categories, locations, colors, canEditColors 
 
       <div>
         <Button variant="outline" onClick={() => append(EMPTY_ROW)}>
-          <Plus className="size-4" aria-hidden />
-          Pridať dĺžku
-        </Button>
+          <Plus className="size-4" aria-hidden />{tx('Pridať dĺžku')}</Button>
       </div>
 
       {save.isError && (
-        <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo, nič sa nezapísalo. Skúste to znova.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Uloženie zlyhalo, nič sa nezapísalo. Skúste to znova.')}</p>
       )}
 
       <div className="flex gap-3">
         <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : 'Vytvoriť káble'}
+          {save.isPending ? tx('Ukladám…') : tx('Vytvoriť káble')}
         </Button>
-        <LinkButton to="/equipment" variant="outline">
-          Zrušiť
-        </LinkButton>
+        <LinkButton to="/equipment" variant="outline">{tx('Zrušiť')}</LinkButton>
       </div>
     </form>
   )
@@ -211,11 +203,11 @@ export function CableSetPage() {
 
   let body
   if (!can(company, 'equipment.edit')) {
-    body = <ErrorBlock message="Na pridávanie techniky nemáte oprávnenie." />
+    body = <ErrorBlock message={tx('Na pridávanie techniky nemáte oprávnenie.')} />
   } else if (lookups.isPending) {
     body = <LoadingBlock />
   } else if (lookups.isError) {
-    body = <ErrorBlock message="Údaje sa nepodarilo načítať." />
+    body = <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} />
   } else {
     body = (
       <CableSetForm
@@ -230,7 +222,7 @@ export function CableSetPage() {
 
   return (
     <>
-      <PageHeader title="Sada káblov" />
+      <PageHeader title={tx('Sada káblov')} />
       {body}
     </>
   )

@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.5 – 5. 11. 2026
+
+- **Celá appka v angličtine**: po prepnutí na EN sú po anglicky všetky obrazovky – technika, cases, eventy,
+  sklad, výpožičky, objednávky, vozidlá, servis, siete, kalkulačky, štatistiky, nastavenia, Návod a tipy aj hlášky.
+  Anglický slovník sa stiahne len pri angličtine, slovenčinu nespomalí. Hárky na tlač, štítky, plagáty a cenové
+  ponuky pre klientov ostávajú po slovensky.
+- **Technika: výrobca a model hneď hore** pod druhom a názvom – model zo spoločnej databázy vyplní údaje nižšie
+  ešte predtým, než sa k nim dostanete.
+
 ### 8.4 – 5. 11. 2026
 
 - **Jazyk SK / EN** (1. časť): prepínač v Nastaveniach → Účet, na úvodnej stránke a pri prihlásení; jazyk sa uloží

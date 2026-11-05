@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/features/auth/auth-context'
 import { plain } from '@/features/search/searchAll'
+import { tx } from '@/lib/i18n'
 
 type Tip = { title: string; steps: string[]; link?: { to: string; label: string } }
 type Topic = { title: string; tips: Tip[] }
@@ -133,7 +134,7 @@ export function HelpPage() {
     return TOPICS.map((topic) => ({
       ...topic,
       tips: topic.tips.filter((tip) => {
-        const text = plain([topic.title, tip.title, ...tip.steps].join(' '))
+        const text = plain([topic.title, tip.title, ...tip.steps].map((part) => tx(part)).join(' '))
         return words.every((word) => text.includes(word))
       }),
     })).filter((topic) => topic.tips.length > 0)
@@ -143,44 +144,41 @@ export function HelpPage() {
     <article className="flex flex-col gap-6">
       <Link to={signedIn ? '/' : '/auth'} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" aria-hidden />
-        {signedIn ? 'Prehľad' : 'Prihlásenie'}
+        {signedIn ? tx('Prehľad') : tx('Prihlásenie')}
       </Link>
       <header>
         <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight">
-          <Lightbulb className="size-7 text-accent" aria-hidden />
-          Návod a tipy
-        </h1>
-        <p className="mt-2 text-muted-foreground">Krátke „ako na to“ k veciam, ktoré nie sú hneď vidieť.</p>
+          <Lightbulb className="size-7 text-accent" aria-hidden />{tx('Návod a tipy')}</h1>
+        <p className="mt-2 text-muted-foreground">{tx('Krátke „ako na to“ k veciam, ktoré nie sú hneď vidieť.')}</p>
       </header>
       <div className="relative">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
         <input
           type="search"
-          aria-label="Hľadať v návode"
-          placeholder="Hľadať v návode, napr. sklad, príslušenstvo, tlač…"
+          aria-label={tx('Hľadať v návode')}
+          placeholder={tx('Hľadať v návode, napr. sklad, príslušenstvo, tlač…')}
           className="h-11 w-full rounded-xl border bg-surface pr-3 pl-9 text-base outline-none focus-visible:ring-2 focus-visible:ring-accent sm:text-sm"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
       </div>
-      {topics.length === 0 && <p className="text-sm text-muted-foreground">Nič sa nenašlo.</p>}
+      {topics.length === 0 && <p className="text-sm text-muted-foreground">{tx('Nič sa nenašlo.')}</p>}
       {topics.map((topic) => (
         <section key={topic.title} aria-labelledby={`help-${plain(topic.title).replace(/\W+/g, '-')}`}>
           <h2 id={`help-${plain(topic.title).replace(/\W+/g, '-')}`} className="mb-2 text-lg font-semibold">
-            {topic.title}
+            {tx(topic.title)}
           </h2>
           <div className="grid gap-3 md:grid-cols-2">
             {topic.tips.map((tip) => (
               <div key={tip.title} className="rounded-xl border bg-surface p-4">
-                <h3 className="font-medium">{tip.title}</h3>
+                <h3 className="font-medium">{tx(tip.title)}</h3>
                 <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
                   {tip.steps.map((step) => (
-                    <li key={step}>{step}</li>
+                    <li key={step}>{tx(step)}</li>
                   ))}
                 </ol>
                 {tip.link && signedIn && (
-                  <Link to={tip.link.to} className="mt-2 inline-block text-sm text-accent hover:underline">
-                    Otvoriť {tip.link.label} →
+                  <Link to={tip.link.to} className="mt-2 inline-block text-sm text-accent hover:underline">{tx('Otvoriť')}{' '}{tx(tip.link.label)} →
                   </Link>
                 )}
               </div>

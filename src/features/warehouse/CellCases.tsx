@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { caseFrontCm, type CellBox, type PlacedCase } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Size = { lengthCm: number | null; widthCm: number | null; depthCm: number | null }
 
@@ -25,7 +26,7 @@ const sizeInput = 'h-8 w-16 rounded-lg border bg-surface px-2 text-sm tabular-nu
 export function CellCases({ boxes, pallets, pallet, canEdit, busy, onRemove, onPallet, onSize }: Props) {
   const [sizing, setSizing] = useState<string | null>(null)
   const shown = pallet ? boxes.filter((box) => box.pallet === pallet) : boxes
-  if (shown.length === 0) return <p className="text-sm text-muted-foreground">{pallet ? `Na palete ${pallet} nič neleží.` : 'prázdne'}</p>
+  if (shown.length === 0) return <p className="text-sm text-muted-foreground">{pallet ? tf('Na palete {0} nič neleží.', pallet) : tx('prázdne')}</p>
 
   return (
     <ul className="divide-y rounded-lg border">
@@ -35,8 +36,8 @@ export function CellCases({ boxes, pallets, pallet, canEdit, busy, onRemove, onP
             <Link to={`/cases/${item.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
               {item.name}
             </Link>
-            {bad && <span className="text-xs text-destructive">nezmestí sa</span>}
-            {!known && <span className="text-xs text-muted-foreground">bez rozmerov</span>}
+            {bad && <span className="text-xs text-destructive">{tx('nezmestí sa')}</span>}
+            {!known && <span className="text-xs text-muted-foreground">{tx('bez rozmerov')}</span>}
             {canEdit && pallets > 0 && (
               <select
                 aria-label={`Paleta pre ${item.name}`}
@@ -45,10 +46,9 @@ export function CellCases({ boxes, pallets, pallet, canEdit, busy, onRemove, onP
                 disabled={busy}
                 onChange={(event) => onPallet(item, event.target.value ? Number(event.target.value) : null)}
               >
-                <option value="">{on ? `auto (paleta ${on})` : 'auto (vedľa paliet)'}</option>
+                <option value="">{on ? `auto (paleta ${on})` : tx('auto (vedľa paliet)')}</option>
                 {Array.from({ length: pallets }, (_, index) => (
-                  <option key={index} value={index + 1}>
-                    paleta {index + 1}
+                  <option key={index} value={index + 1}>{tx('paleta')}{' '}{index + 1}
                   </option>
                 ))}
               </select>
@@ -59,7 +59,7 @@ export function CellCases({ boxes, pallets, pallet, canEdit, busy, onRemove, onP
               </Button>
             )}
             {canEdit && (
-              <Button variant="ghost" size="sm" className="size-8 p-0" aria-label={`Vybrať z miesta: ${item.name}`} disabled={busy} onClick={() => onRemove(item)}>
+              <Button variant="ghost" size="sm" className="size-8 p-0" aria-label={tf('Vybrať z miesta: {0}', item.name)} disabled={busy} onClick={() => onRemove(item)}>
                 <X className="size-4" aria-hidden />
               </Button>
             )}
@@ -97,21 +97,19 @@ function SizeEditor({ item, busy, onSave }: { item: PlacedCase; busy: boolean; o
       }}
     >
       <label className="flex flex-col gap-0.5">
-        <span className="text-xs text-muted-foreground">Spredu (dĺžka)</span>
+        <span className="text-xs text-muted-foreground">{tx('Spredu (dĺžka)')}</span>
         <input className={sizeInput} inputMode="decimal" value={front} onChange={(e) => setFront(e.target.value)} autoFocus />
       </label>
       <label className="flex flex-col gap-0.5">
-        <span className="text-xs text-muted-foreground">Dozadu (šírka)</span>
+        <span className="text-xs text-muted-foreground">{tx('Dozadu (šírka)')}</span>
         <input className={sizeInput} inputMode="decimal" value={back} onChange={(e) => setBack(e.target.value)} />
       </label>
       <label className="flex flex-col gap-0.5">
-        <span className="text-xs text-muted-foreground">Výška (hĺbka)</span>
+        <span className="text-xs text-muted-foreground">{tx('Výška (hĺbka)')}</span>
         <input className={sizeInput} inputMode="decimal" value={height} onChange={(e) => setHeight(e.target.value)} />
       </label>
-      <span className="pb-1.5 text-muted-foreground">cm</span>
-      <Button type="submit" size="sm" disabled={busy}>
-        Uložiť rozmery
-      </Button>
+      <span className="pb-1.5 text-muted-foreground">{tx('cm')}</span>
+      <Button type="submit" size="sm" disabled={busy}>{tx('Uložiť rozmery')}</Button>
     </form>
   )
 }

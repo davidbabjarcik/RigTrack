@@ -9,6 +9,7 @@ import { Field } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
 import { capsuleKeys, deleteCapsule, saveCapsule, useCapsules, type Capsule, type CapsuleFields } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 const EMPTY: CapsuleFields = { name: '', manufacturer: '', quantity: 1, fits: '', note: '' }
 
@@ -27,23 +28,19 @@ function CapsuleForm({ companyId, current, onDone }: { companyId: string; curren
   }
   return (
     <form onSubmit={submit} className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
-      <Field label="Názov *" autoFocus placeholder="napr. Beta 58A, KSM9, SM86" maxLength={120} value={fields.name} onChange={(e) => set({ name: e.target.value })} />
-      <Field label="Výrobca" placeholder="napr. Shure, Sennheiser" maxLength={80} value={fields.manufacturer} onChange={(e) => set({ manufacturer: e.target.value })} />
-      <Field label="Počet kusov" type="number" inputMode="numeric" min={0} step={1} value={Number.isNaN(fields.quantity) ? '' : fields.quantity} onChange={(e) => set({ quantity: e.target.valueAsNumber })} />
-      <Field label="Pasuje na" placeholder="napr. ULX-D, QLX-D, SLX-D" maxLength={200} value={fields.fits} onChange={(e) => set({ fits: e.target.value })} />
-      <Field label="Poznámka" className="sm:col-span-2" maxLength={500} value={fields.note} onChange={(e) => set({ note: e.target.value })} />
+      <Field label={tx('Názov *')} autoFocus placeholder={tx('napr. Beta 58A, KSM9, SM86')} maxLength={120} value={fields.name} onChange={(e) => set({ name: e.target.value })} />
+      <Field label={tx('Výrobca')} placeholder={tx('napr. Shure, Sennheiser')} maxLength={80} value={fields.manufacturer} onChange={(e) => set({ manufacturer: e.target.value })} />
+      <Field label={tx('Počet kusov')} type="number" inputMode="numeric" min={0} step={1} value={Number.isNaN(fields.quantity) ? '' : fields.quantity} onChange={(e) => set({ quantity: e.target.valueAsNumber })} />
+      <Field label={tx('Pasuje na')} placeholder={tx('napr. ULX-D, QLX-D, SLX-D')} maxLength={200} value={fields.fits} onChange={(e) => set({ fits: e.target.value })} />
+      <Field label={tx('Poznámka')} className="sm:col-span-2" maxLength={500} value={fields.note} onChange={(e) => set({ note: e.target.value })} />
       {save.isError && (
-        <p role="alert" className="text-sm text-destructive sm:col-span-2">
-          Uloženie zlyhalo. Skúste to znova.
-        </p>
+        <p role="alert" className="text-sm text-destructive sm:col-span-2">{tx('Uloženie zlyhalo. Skúste to znova.')}</p>
       )}
       <div className="flex gap-2 sm:col-span-2">
         <Button type="submit" size="sm" disabled={!fields.name.trim() || save.isPending}>
-          {current ? 'Uložiť' : 'Pridať kapsulu'}
+          {current ? tx('Uložiť') : tx('Pridať kapsulu')}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onDone}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" size="sm" onClick={onDone}>{tx('Zrušiť')}</Button>
       </div>
     </form>
   )
@@ -64,19 +61,15 @@ export function CapsulesPage() {
   return (
     <>
       <Link to="/equipment" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" aria-hidden />
-        Technika
-      </Link>
+        <ArrowLeft className="size-4" aria-hidden />{tx('Technika')}</Link>
       <PageHeader
-        title="Kapsule k mikrofónom"
-        description="Hlavy bezdrôtových mikrofónov – koľko ich máme a na čo pasujú. Na evente vyberiete, ktoré idú."
+        title={tx('Kapsule k mikrofónom')}
+        description={tx('Hlavy bezdrôtových mikrofónov – koľko ich máme a na čo pasujú. Na evente vyberiete, ktoré idú.')}
         action={
           canEdit &&
           editing === null && (
             <Button onClick={() => setEditing('new')}>
-              <Plus className="size-4" aria-hidden />
-              Pridať
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Pridať')}</Button>
           )
         }
       />
@@ -88,11 +81,11 @@ export function CapsulesPage() {
       {capsules.isPending ? (
         <LoadingBlock />
       ) : capsules.isError ? (
-        <ErrorBlock message="Kapsule sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void capsules.refetch()} />
+        <ErrorBlock message={tx('Kapsule sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')} onRetry={() => void capsules.refetch()} />
       ) : capsules.data.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center">
-          <p className="font-medium">Zatiaľ žiadne kapsule</p>
-          {canEdit && <p className="mt-1 text-sm text-muted-foreground">Pridajte napr. Beta 58A, KSM9 alebo SM86.</p>}
+          <p className="font-medium">{tx('Zatiaľ žiadne kapsule')}</p>
+          {canEdit && <p className="mt-1 text-sm text-muted-foreground">{tx('Pridajte napr. Beta 58A, KSM9 alebo SM86.')}</p>}
         </div>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -110,15 +103,15 @@ export function CapsulesPage() {
                 </span>
                 {canEdit && (
                   <>
-                    <Button variant="ghost" size="sm" aria-label={`Upraviť ${capsule.name}`} onClick={() => setEditing(capsule.id)}>
+                    <Button variant="ghost" size="sm" aria-label={tf('Upraviť {0}', capsule.name)} onClick={() => setEditing(capsule.id)}>
                       <Pencil className="size-4" aria-hidden />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      aria-label={`Odstrániť ${capsule.name}`}
+                      aria-label={tf('Odstrániť {0}', capsule.name)}
                       disabled={remove.isPending}
-                      onClick={() => window.confirm(`Odstrániť kapsulu ${capsule.name}? Zmizne aj z eventov.`) && remove.mutate(capsule.id)}
+                      onClick={() => window.confirm(tf('Odstrániť kapsulu {0}? Zmizne aj z eventov.', capsule.name)) && remove.mutate(capsule.id)}
                     >
                       <Trash2 className="size-4" aria-hidden />
                     </Button>

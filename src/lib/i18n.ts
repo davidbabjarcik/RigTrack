@@ -1,7 +1,9 @@
 import { useSyncExternalStore } from 'react'
 
-// Jazyk appky (SK / EN). Preklad je priamo pri texte: t('Uložiť', 'Save'). Čo ešte nie je preložené, ostáva
-// po slovensky. Hárky na tlač, štítky a plagáty sú vždy po slovensky (rovnaké pre celú firmu).
+// Jazyk appky (SK / EN). Dva spôsoby prekladu:
+// – priamo pri texte: t('Uložiť', 'Save');
+// – zo slovníka: tx('Uložiť') – anglický slovník (i18n-en.json, slovenský text → anglický) sa načíta len pri angličtine.
+// Čo v slovníku chýba, ostáva po slovensky. Hárky na tlač, štítky a plagáty sú vždy po slovensky (rovnaké pre celú firmu).
 
 export type Lang = 'sk' | 'en'
 export const LANGS: { value: Lang; label: string }[] = [
@@ -28,6 +30,26 @@ function initialLang(): Lang {
 
 let current: Lang = initialLang()
 const listeners = new Set<() => void>()
+const notify = () => listeners.forEach((listener) => listener())
+
+let dict: Record<string, string> | null = null
+let dictLoading: Promise<void> | null = null
+function loadDict() {
+  dictLoading ??= import('./i18n-en.json')
+    .then((module) => {
+      dict = module.default as Record<string, string>
+      notify()
+    })
+    .catch(() => {
+      dictLoading = null // skúsi sa znova pri ďalšom prepnutí
+    })
+  return dictLoading
+}
+
+/** Pred prvým vykreslením: pri angličtine počká na slovník (aby appka najprv neukázala slovenčinu). */
+export function i18nReady(): Promise<void> {
+  return current === 'en' ? loadDict() : Promise.resolve()
+}
 
 function apply(lang: Lang) {
   if (typeof document !== 'undefined') document.documentElement.lang = lang
@@ -48,7 +70,8 @@ export function setLang(lang: Lang) {
   } catch {
     // platí do zatvorenia
   }
-  listeners.forEach((listener) => listener())
+  if (lang === 'en') void loadDict()
+  notify()
 }
 
 function subscribe(listener: () => void) {
@@ -58,6 +81,24 @@ function subscribe(listener: () => void) {
 
 export function useLang(): Lang {
   return useSyncExternalStore(subscribe, getLang, getLang)
+}
+
+const langKey = () => (current === 'en' && dict ? 'en' : 'sk')
+
+/** Kľúč pre koreň appky – pri zmene jazyka (a po načítaní slovníka) sa obrazovky vykreslia nanovo. */
+export function useLangKey(): string {
+  return useSyncExternalStore(subscribe, langKey, langKey)
+}
+
+/** Text zo slovníka: tx('Uložiť') → „Save“ v angličtine; iné hodnoty než text vráti bez zmeny. */
+export function tx<T>(text: T): T {
+  if (current !== 'en' || typeof text !== 'string' || !dict) return text
+  return (dict[text] ?? text) as T
+}
+
+/** Veta s hodnotami: tf('Zmazať „{0}“?', name) – v slovníku je kľúč so zástupnými {0}, {1}… */
+export function tf(template: string, ...args: unknown[]): string {
+  return tx(template).replace(/\{(\d+)\}/g, (match, index: string) => (Number(index) < args.length ? String(args[Number(index)]) : match))
 }
 
 export type Translate = (sk: string, en: string) => string

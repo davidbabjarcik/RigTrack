@@ -17,6 +17,7 @@ import { addCaseCheck, caseKeys, duplicateCase, setCaseGroupPhoto } from './api'
 import { caseNumber, formatDimensions, groupCases, kindLabel, kindWord, needsCheck, type Case } from './model'
 import { SetAccessories } from './SetAccessories'
 import { useCases } from './useCases'
+import { tx, tf } from '@/lib/i18n'
 
 const ROLE_ORDER: Record<string, number> = { main: 0, secondary: 1, '': 2 }
 
@@ -68,17 +69,15 @@ export function CaseGroupPage() {
   const backHere = encodeURIComponent(`/cases/group?ids=${ids.join(',')}`)
   const back = (
     <Link to="/cases" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="size-4" aria-hidden />
-      Cases a racks
-    </Link>
+      <ArrowLeft className="size-4" aria-hidden />{tx('Cases a racks')}</Link>
   )
   if (cases.isPending || equipment.isPending) return <LoadingBlock />
-  if (cases.isError) return <ErrorBlock message="Cases sa nepodarilo načítať." onRetry={() => void cases.refetch()} />
+  if (cases.isError) return <ErrorBlock message={tx('Cases sa nepodarilo načítať.')} onRetry={() => void cases.refetch()} />
   if (!first) {
     return (
       <>
         {back}
-        <ErrorBlock message="Táto sada neexistuje alebo k nej nemáte prístup." />
+        <ErrorBlock message={tx('Táto sada neexistuje alebo k nej nemáte prístup.')} />
       </>
     )
   }
@@ -97,8 +96,8 @@ export function CaseGroupPage() {
             <button
               type="button"
               className="group relative shrink-0 rounded-lg"
-              title="Zmeniť fotku všetkým cases sady (alebo vložte obrázok cez Ctrl+V)"
-              aria-label="Zmeniť fotku všetkým cases sady"
+              title={tx('Zmeniť fotku všetkým cases sady (alebo vložte obrázok cez Ctrl+V)')}
+              aria-label={tx('Zmeniť fotku všetkým cases sady')}
               disabled={photo.isPending}
               onClick={() => fileInput.current?.click()}
             >
@@ -134,34 +133,29 @@ export function CaseGroupPage() {
         <div className="flex flex-wrap gap-2">
           {canEdit && (
             <LinkButton to={`/cases/${first.id}/edit?group=${allIds}`} variant="outline" size="sm">
-              <Pencil className="size-4" aria-hidden />
-              Upraviť všetky naraz
-            </LinkButton>
+              <Pencil className="size-4" aria-hidden />{tx('Upraviť všetky naraz')}</LinkButton>
           )}
           <LinkButton to={`/qr/cases?ids=${allIds}&back=${backHere}`} variant="outline" size="sm">
-            <QrCode className="size-4" aria-hidden />
-            QR štítky všetkých ({members.length})
+            <QrCode className="size-4" aria-hidden />{tx('QR štítky všetkých (')}{members.length})
           </LinkButton>
           {/* Obsahy a štítky všetkých cases sady naraz – jedno PDF / tlač, alebo do tlačovej fronty. */}
           <LinkButton to={`/print/batch?contents=${allIds}&back=${backHere}`} variant="outline" size="sm">
-            <FileText className="size-4" aria-hidden />
-            Obsahy všetkých ({members.length})
+            <FileText className="size-4" aria-hidden />{tx('Obsahy všetkých (')}{members.length})
           </LinkButton>
           <LinkButton to={`/print/batch?labels=${allIds}&back=${backHere}`} variant="outline" size="sm">
-            <Tag className="size-4" aria-hidden />
-            Štítky všetkých ({members.length})
+            <Tag className="size-4" aria-hidden />{tx('Štítky všetkých (')}{members.length})
           </LinkButton>
 
           {canEdit && (
-            <Button variant="outline" size="sm" disabled={checkAll.isPending} onClick={() => window.confirm(`Označiť všetkých ${members.length} ako skontrolované teraz?`) && checkAll.mutate()}>
+            <Button variant="outline" size="sm" disabled={checkAll.isPending} onClick={() => window.confirm(tf('Označiť všetkých {0} ako skontrolované teraz?', members.length)) && checkAll.mutate()}>
               <ClipboardCheck className="size-4" aria-hidden />
-              {checkAll.isPending ? 'Ukladám…' : 'Skontrolované všetky'}
+              {checkAll.isPending ? tx('Ukladám…') : tx('Skontrolované všetky')}
             </Button>
           )}
           <SetAccessories companyId={companyId} members={members} equipment={equipment.data ?? []} canEdit={canEdit} />
         </div>
       </header>
-      {checkAll.isError && <p className="mb-4 text-sm text-destructive">Kontrolu sa nepodarilo uložiť pri všetkých.</p>}
+      {checkAll.isError && <p className="mb-4 text-sm text-destructive">{tx('Kontrolu sa nepodarilo uložiť pri všetkých.')}</p>}
 
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
         {members.map((item) => {
@@ -175,7 +169,7 @@ export function CaseGroupPage() {
                   {/* Hlavný prvok štítku tučne, vedľajší normálne, ostatné menšie a sivé. */}
                   <span className="block truncate">
                     {inside.length === 0 ? (
-                      <span className="font-medium">prázdny</span>
+                      <span className="font-medium">{tx('prázdny')}</span>
                     ) : (
                       [...inside]
                         .sort((a, b) => ROLE_ORDER[a.labelRole ?? ''] - ROLE_ORDER[b.labelRole ?? ''])
@@ -189,11 +183,11 @@ export function CaseGroupPage() {
                     )}
                   </span>
                   <span className={cn('block truncate text-sm', late ? 'text-accent' : 'text-muted-foreground')}>
-                    {item.lastCheck ? `Kontrola ${formatDate(item.lastCheck.checkedAt.slice(0, 10))} · ${item.lastCheck.checkedByName || 'neznámy'}` : 'Zatiaľ nekontrolované'}
-                    {late && ' · treba skontrolovať'}
+                    {item.lastCheck ? `Kontrola ${formatDate(item.lastCheck.checkedAt.slice(0, 10))} · ${item.lastCheck.checkedByName || tx('neznámy')}` : tx('Zatiaľ nekontrolované')}
+                    {late && tx(' · treba skontrolovať')}
                   </span>
                 </span>
-                {inside.length === 0 && <span className="shrink-0 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent">prázdny</span>}
+                {inside.length === 0 && <span className="shrink-0 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent">{tx('prázdny')}</span>}
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               </Link>
             </li>
@@ -209,7 +203,7 @@ export function CaseGroupPage() {
               className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <Copy className="size-4" aria-hidden />
-              {duplicate.isPending ? 'Pridávam…' : `Pridať ďalší do sady (#${members.length + 1})`}
+              {duplicate.isPending ? tx('Pridávam…') : tf('Pridať ďalší do sady (#{0})', members.length + 1)}
             </button>
           </li>
         )}

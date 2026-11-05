@@ -3,6 +3,7 @@ import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { downloadText, safeFileName } from '@/lib/download'
 import type { LedInput, LedResult } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const fmt = (value: number) => value.toLocaleString('sk-SK', { maximumFractionDigits: 2 })
 
@@ -41,13 +42,11 @@ export function LedDiagram({ input, result, name }: { input: LedInput; result: L
   return (
     <div className="rounded-xl border bg-surface p-4">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Nákres</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">{tx('Nákres')}</h2>
         <Button variant="outline" size="sm" onClick={download}>
-          <Download className="size-4" aria-hidden />
-          Stiahnuť obrázok
-        </Button>
+          <Download className="size-4" aria-hidden />{tx('Stiahnuť obrázok')}</Button>
       </div>
-      <svg ref={svg} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${width} ${height}`} className="h-auto w-full rounded-lg bg-white" role="img" aria-label={`Nákres LED steny ${fmt(result.widthM)} × ${fmt(result.heightM)} m`}>
+      <svg ref={svg} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${width} ${height}`} className="h-auto w-full rounded-lg bg-white" role="img" aria-label={tf('Nákres LED steny {0} × {1} m', fmt(result.widthM), fmt(result.heightM))}>
         <rect x={0} y={0} width={width} height={height} fill="#ffffff" />
         {/* Podlaha */}
         <line x1={pad / 2} x2={width - pad / 2} y1={floorY} y2={floorY} stroke="#64748b" strokeWidth={2} />
@@ -90,15 +89,13 @@ export function LedDiagram({ input, result, name }: { input: LedInput; result: L
         <g fontFamily="sans-serif" fontSize={13} fill="#0f172a">
           <line x1={left} x2={left + wallW} y1={floorY + 22} y2={floorY + 22} stroke="#0f172a" />
           <text x={left + wallW / 2} y={floorY + 38} textAnchor="middle">
-            {fmt(result.widthM)} m · {result.columns} panelov
-          </text>
+            {fmt(result.widthM)} m · {result.columns}{' '}{tx('panelov')}</text>
           <line x1={left + wallW + overhang + tower + 18} x2={left + wallW + overhang + tower + 18} y1={wallTop} y2={wallTop + wallH} stroke="#0f172a" />
           <text x={left + wallW + overhang + tower + 24} y={wallTop + wallH / 2} dominantBaseline="middle">
             {fmt(result.heightM)} m
           </text>
           <text x={left + wallW / 2} y={wallTop + wallH / 2} textAnchor="middle" dominantBaseline="middle" fill="#e0f2fe" fontSize={15} fontWeight={600}>
-            {result.resolution.w} × {result.resolution.h} px
-          </text>
+            {result.resolution.w} × {result.resolution.h}{' '}{tx('px')}</text>
         </g>
       </svg>
     </div>

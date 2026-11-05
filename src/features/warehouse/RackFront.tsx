@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { casesInCell, layoutCell, PALLET_CM, PALLET_H_CM, type PlacedCase, type RackBay } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 /** Vybraná polica (pole, polica zdola) a voliteľne paleta na nej. */
 export type RackCell = { bay: number; level: number; pallet?: number | null }
@@ -67,7 +68,7 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
       className="block w-full rounded-xl border bg-surface text-foreground select-none"
       style={{ maxHeight: maxHeightPx }}
       role="group"
-      aria-label={`Regál ${name} spredu`}
+      aria-label={tf('Regál {0} spredu', name)}
       fontFamily="inherit"
     >
       <defs>
@@ -101,7 +102,7 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
                   role="button"
                   tabIndex={0}
                   aria-pressed={active}
-                  aria-label={`Pole ${bayIndex + 1}, ${levelNo}. polica: ${inside.length} cases, voľné ${layout.freeCm} cm`}
+                  aria-label={tf('Pole {0}, {1}. polica: {2} cases, voľné {3} cm', bayIndex + 1, levelNo, inside.length, layout.freeCm)}
                   className="cursor-pointer outline-none [&:hover>rect:first-child]:fill-[var(--color-accent)] [&:hover>rect:first-child]:[fill-opacity:0.06]"
                   onClick={select}
                   onKeyDown={(event) => {
@@ -186,7 +187,7 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
                       fillOpacity={layout.notFit.length > 0 ? 1 : 0.6}
                       pointerEvents="none"
                     >
-                      {layout.notFit.length > 0 ? `nezmestí sa ${layout.notFit.length}` : `voľné ${layout.freeCm} cm`}
+                      {layout.notFit.length > 0 ? tf('nezmestí sa {0}', layout.notFit.length) : tf('voľné {0} cm', layout.freeCm)}
                     </text>
                   )}
                   {active && !selected?.pallet && <rect x={x + px(1)} y={top + px(1)} width={bay.widthCm - px(2)} height={level.heightCm - px(2)} fill="none" stroke="var(--color-accent)" strokeWidth={px(2)} pointerEvents="none" />}
@@ -202,8 +203,7 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
             </g>
             <text x={x + bay.widthCm / 2} y={floor + px(34)} fontSize={small} fill="currentColor" fillOpacity={0.7} textAnchor="middle" pointerEvents="none">
               {bays.length > 1 ? `Pole ${bayIndex + 1} · ` : ''}
-              {bay.widthCm} cm
-            </text>
+              {bay.widthCm}{' '}{tx('cm')}</text>
           </g>
         )
       })}
@@ -241,9 +241,7 @@ export function RackFront({ name, bays, cases, selected, highlighted, onSelect }
             </g>
           )
         })}
-      <text x={-pad.left + px(4)} y={-pad.top + font} fontSize={small} fill="currentColor" fillOpacity={0.5}>
-        výška {rackH} cm
-      </text>
+      <text x={-pad.left + px(4)} y={-pad.top + font} fontSize={small} fill="currentColor" fillOpacity={0.5}>{tx('výška')}{' '}{rackH}{' '}{tx('cm')}</text>
     </svg>
   )
 }

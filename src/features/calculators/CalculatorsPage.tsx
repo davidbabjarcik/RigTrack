@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { CalculatorTabs } from '@/components/layout/ModuleTabs'
 import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
+import { tx } from '@/lib/i18n'
 
 type Calculator = { to: string; label: string; description: string; icon: LucideIcon; shown: boolean }
 
@@ -11,15 +12,15 @@ type Calculator = { to: string; label: string; description: string; icon: Lucide
 export function CalculatorsPage() {
   const company = useCompany().active
   const calculators: Calculator[] = [
-    { to: '/stage', label: 'Pódium Nivtec', description: 'Dosky, nohy, plachty, zábradlie a schody', icon: LayoutGrid, shown: !company || can(company, 'events.view') },
-    { to: '/delay', label: 'Delay subov', description: 'Cardioid, end-fire, rad, arc a delay veža', icon: AudioWaveform, shown: true },
-    { to: '/dmx', label: 'DMX dip switch', description: 'Adresa na prepínače a späť, adresy pre rad svetiel', icon: ToggleRight, shown: true },
-    { to: '/led', label: 'LED stena', description: 'Panely, prúd a fázy, hliník, rigging, procesor a Full HD', icon: MonitorPlay, shown: true },
+    { to: '/stage', label: tx('Pódium Nivtec'), description: tx('Dosky, nohy, plachty, zábradlie a schody'), icon: LayoutGrid, shown: !company || can(company, 'events.view') },
+    { to: '/delay', label: tx('Delay subov'), description: tx('Cardioid, end-fire, rad, arc a delay veža'), icon: AudioWaveform, shown: true },
+    { to: '/dmx', label: tx('DMX dip switch'), description: tx('Adresa na prepínače a späť, adresy pre rad svetiel'), icon: ToggleRight, shown: true },
+    { to: '/led', label: tx('LED stena'), description: tx('Panely, prúd a fázy, hliník, rigging, procesor a Full HD'), icon: MonitorPlay, shown: true },
   ]
   return (
     <>
       <CalculatorTabs />
-      <PageHeader title="Kalkulačky" description="Výpočty na prípravu akcií" />
+      <PageHeader title={tx('Kalkulačky')} description={tx('Výpočty na prípravu akcií')} />
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {calculators
           .filter((item) => item.shown)
@@ -28,8 +29,8 @@ export function CalculatorsPage() {
               <Link to={item.to} className="flex h-full items-center gap-3 rounded-xl border bg-surface p-4 hover:bg-muted">
                 <item.icon className="size-6 shrink-0 text-accent" aria-hidden />
                 <span className="min-w-0 flex-1">
-                  <span className="block font-medium">{item.label}</span>
-                  <span className="block text-sm text-muted-foreground">{item.description}</span>
+                  <span className="block font-medium">{tx(item.label)}</span>
+                  <span className="block text-sm text-muted-foreground">{tx(item.description)}</span>
                 </span>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               </Link>

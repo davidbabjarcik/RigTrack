@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { VatPayerField } from './VatPayerField'
 import { profileKey, saveProfile, useCompanyProfile, type CompanyProfile } from './profile'
+import { tx } from '@/lib/i18n'
 
 /** Údaje o firme: IČO, DIČ, adresa, CEO, kontakt a adresa skladu (odkiaľ sa rátajú km na akcie). */
 export function CompanyProfileSettings({ companyId, canEdit }: { companyId: string; canEdit: boolean }) {
@@ -17,8 +18,8 @@ export function CompanyProfileSettings({ companyId, canEdit }: { companyId: stri
       setDraft(null)
     },
   })
-  if (profile.isPending) return <p className="text-sm text-muted-foreground">Načítavam…</p>
-  if (profile.isError) return <p className="text-sm text-destructive">Údaje o firme sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
+  if (profile.isPending) return <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
+  if (profile.isError) return <p className="text-sm text-destructive">{tx('Údaje o firme sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
   const values = draft ?? profile.data
   const set = (patch: Partial<CompanyProfile>) => setDraft({ ...values, ...patch })
   const field = (label: string, key: Exclude<keyof CompanyProfile, 'publicScan'>, extra: { placeholder?: string; type?: string; className?: string } = {}) => (
@@ -31,31 +32,27 @@ export function CompanyProfileSettings({ companyId, canEdit }: { companyId: stri
   return (
     <form onSubmit={submit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        {field('Obchodné meno', 'legalName', { placeholder: 'napr. Vaša firma s.r.o.', className: 'sm:col-span-2' })}
-        {field('IČO', 'ico')}
-        {field('DIČ', 'dic')}
+        {field(tx('Obchodné meno'), 'legalName', { placeholder: tx('napr. Vaša firma s.r.o.'), className: 'sm:col-span-2' })}
+        {field(tx('IČO'), 'ico')}
+        {field(tx('DIČ'), 'dic')}
         <VatPayerField value={values.icDph} disabled={!canEdit} onChange={(icDph) => set({ icDph })} />
-        {field('CEO / konateľ', 'ceoName')}
-        {field('Sídlo / adresa', 'address', { className: 'sm:col-span-2' })}
-        {field('Telefón', 'phone', { type: 'tel' })}
+        {field(tx('CEO / konateľ'), 'ceoName')}
+        {field(tx('Sídlo / adresa'), 'address', { className: 'sm:col-span-2' })}
+        {field(tx('Telefón'), 'phone', { type: 'tel' })}
         {field('E-mail', 'email', { type: 'email' })}
         {field('Web', 'web', { placeholder: 'https://', className: 'sm:col-span-2' })}
-        {field('Adresa skladu', 'warehouseAddress', { placeholder: 'napr. Skladová 1, Mesto', className: 'sm:col-span-2' })}
+        {field('Adresa skladu', 'warehouseAddress', { placeholder: tx('napr. Skladová 1, Mesto'), className: 'sm:col-span-2' })}
       </div>
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" className="mt-0.5 size-4" disabled={!canEdit} checked={Boolean(values.publicScan)} onChange={(event) => set({ publicScan: event.target.checked })} />
-        <span>
-          QR štítok bez prihlásenia ukáže „Našli ste…“
-          <span className="block text-xs text-muted-foreground">
-            Kto naskenuje QR na technike alebo case fotoaparátom a nemá účet, uvidí len názov veci, názov firmy a tu zadaný telefón, e-mail a web. Ostatné údaje ostávajú skryté.
-          </span>
+        <span>{tx('QR štítok bez prihlásenia ukáže „Našli ste…“')}<span className="block text-xs text-muted-foreground">{tx('Kto naskenuje QR na technike alebo case fotoaparátom a nemá účet, uvidí len názov veci, názov firmy a tu zadaný telefón, e-mail a web. Ostatné údaje ostávajú skryté.')}</span>
         </span>
       </label>
-      <p className="text-xs text-muted-foreground">Z adresy skladu sa pri evente vypočítajú kilometre na akciu. Údaje môže meniť admin firmy.</p>
-      {save.isError && <p className="text-sm text-destructive">Uloženie zlyhalo.</p>}
+      <p className="text-xs text-muted-foreground">{tx('Z adresy skladu sa pri evente vypočítajú kilometre na akciu. Údaje môže meniť admin firmy.')}</p>
+      {save.isError && <p className="text-sm text-destructive">{tx('Uloženie zlyhalo.')}</p>}
       {canEdit && (
         <Button type="submit" size="sm" className="self-start" disabled={!draft || save.isPending}>
-          {save.isPending ? 'Ukladám…' : 'Uložiť údaje o firme'}
+          {save.isPending ? tx('Ukladám…') : tx('Uložiť údaje o firme')}
         </Button>
       )}
     </form>

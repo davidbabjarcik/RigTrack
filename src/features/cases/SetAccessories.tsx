@@ -7,6 +7,7 @@ import type { Equipment } from '@/features/equipment/model'
 import { useUserPrefs } from '@/features/settings/userPrefs'
 import { cn } from '@/lib/utils'
 import type { Case } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { companyId: string; members: Case[]; equipment: Equipment[]; canEdit: boolean }
 
@@ -24,9 +25,7 @@ export function SetAccessories(props: Props) {
   if (!open) {
     return (
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <Plug className="size-4" aria-hidden />
-        Príslušenstvo v obsahu
-      </Button>
+        <Plug className="size-4" aria-hidden />{tx('Príslušenstvo v obsahu')}</Button>
     )
   }
   return <Editor {...props} inside={inside} onClose={() => setOpen(false)} />
@@ -75,30 +74,26 @@ function Editor({ companyId, members, canEdit, inside, onClose }: Props & { insi
   })
 
   const caseCount = (name: string) => new Set(rowsOf(name).map((item) => item.caseId)).size
-  const where = (name: string) => (caseCount(name) === members.length ? 'vo všetkých' : `v ${caseCount(name)} z ${members.length}`)
+  const where = (name: string) => (caseCount(name) === members.length ? tx('vo všetkých') : `v ${caseCount(name)} z ${members.length}`)
 
   return (
     <section className="mb-4 w-full rounded-xl border bg-surface p-4" aria-labelledby="set-accessories-heading">
-      <h2 id="set-accessories-heading" className="font-semibold">
-        Príslušenstvo v obsahu
-      </h2>
-      <p className="mb-3 text-sm text-muted-foreground">
-        Zaškrtnuté je na hárku s obsahom ako príslušenstvo vo všetkých {members.length} cases, v poradí zhora nadol. Šípkami zmeníte poradie.
-      </p>
+      <h2 id="set-accessories-heading" className="font-semibold">{tx('Príslušenstvo v obsahu')}</h2>
+      <p className="mb-3 text-sm text-muted-foreground">{tx('Zaškrtnuté je na hárku s obsahom ako príslušenstvo vo všetkých')}{' '}{members.length}{' '}{tx('cases, v poradí zhora nadol. Šípkami zmeníte poradie.')}</p>
 
-      <p className="mb-1 text-xs font-medium text-muted-foreground uppercase">Príslušenstvo – poradie na hárku</p>
+      <p className="mb-1 text-xs font-medium text-muted-foreground uppercase">{tx('Príslušenstvo – poradie na hárku')}</p>
       <ol className="mb-3 divide-y rounded-lg border">
-        {chosen.length === 0 && <li className="px-3 py-2 text-sm text-muted-foreground">Nič – zaškrtnite niečo nižšie.</li>}
+        {chosen.length === 0 && <li className="px-3 py-2 text-sm text-muted-foreground">{tx('Nič – zaškrtnite niečo nižšie.')}</li>}
         {chosen.map((name, index) => (
           <li key={name} className="flex min-h-11 items-center gap-2 px-3 py-1.5">
-            <input type="checkbox" className="size-4" aria-label={`${name} – príslušenstvo`} disabled={!canEdit} checked onChange={() => toggle(name)} />
+            <input type="checkbox" className="size-4" aria-label={tf('{0} – príslušenstvo', name)} disabled={!canEdit} checked onChange={() => toggle(name)} />
             <span className="w-6 shrink-0 text-right font-semibold tabular-nums text-accent">{index + 1}.</span>
             <span className="min-w-0 flex-1 truncate">{name}</span>
             <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{where(name)}</span>
-            <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={`${name} vyššie`} disabled={!canEdit || index === 0} onClick={() => move(name, -1)}>
+            <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={tf('{0} vyššie', name)} disabled={!canEdit || index === 0} onClick={() => move(name, -1)}>
               <ArrowUp className="size-4" aria-hidden />
             </Button>
-            <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={`${name} nižšie`} disabled={!canEdit || index === chosen.length - 1} onClick={() => move(name, 1)}>
+            <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={tf('{0} nižšie', name)} disabled={!canEdit || index === chosen.length - 1} onClick={() => move(name, 1)}>
               <ArrowDown className="size-4" aria-hidden />
             </Button>
           </li>
@@ -107,7 +102,7 @@ function Editor({ companyId, members, canEdit, inside, onClose }: Props & { insi
 
       {others.length > 0 && (
         <>
-          <p className="mb-1 text-xs font-medium text-muted-foreground uppercase">Obsah (nie príslušenstvo)</p>
+          <p className="mb-1 text-xs font-medium text-muted-foreground uppercase">{tx('Obsah (nie príslušenstvo)')}</p>
           <ul className="mb-3 divide-y rounded-lg border">
             {others.map((name) => (
               <li key={name}>
@@ -117,7 +112,7 @@ function Editor({ companyId, members, canEdit, inside, onClose }: Props & { insi
                   <span className="min-w-0 flex-1 truncate">{name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">
                     {where(name)}
-                    {isMixed(name) && ' · teraz len niekde príslušenstvo'}
+                    {isMixed(name) && tx(' · teraz len niekde príslušenstvo')}
                   </span>
                 </label>
               </li>
@@ -129,13 +124,13 @@ function Editor({ companyId, members, canEdit, inside, onClose }: Props & { insi
       <div className="flex flex-wrap items-center gap-2">
         {canEdit && (
           <Button disabled={!changed || save.isPending} onClick={() => save.mutate()}>
-            {save.isPending ? 'Ukladám…' : 'Uložiť'}
+            {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
           </Button>
         )}
         <Button variant="ghost" disabled={save.isPending} onClick={onClose}>
-          {changed ? 'Zrušiť' : 'Zavrieť'}
+          {changed ? tx('Zrušiť') : tx('Zavrieť')}
         </Button>
-        {save.isError && <span className="text-sm text-destructive">Nepodarilo sa uložiť – skúste to znova.</span>}
+        {save.isError && <span className="text-sm text-destructive">{tx('Nepodarilo sa uložiť – skúste to znova.')}</span>}
       </div>
     </section>
   )

@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { STATUS_LABELS, type EquipmentStatus } from './model'
+import { tx } from '@/lib/i18n'
 
 const STYLES: Record<EquipmentStatus, string> = {
   available: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
@@ -12,7 +13,7 @@ const STYLES: Record<EquipmentStatus, string> = {
 export function StatusBadge({ status }: { status: EquipmentStatus }) {
   return (
     <span className={cn('inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium', STYLES[status])}>
-      {STATUS_LABELS[status]}
+      {tx(STATUS_LABELS[status])}
     </span>
   )
 }

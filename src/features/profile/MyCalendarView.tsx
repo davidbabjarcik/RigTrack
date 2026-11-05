@@ -5,6 +5,7 @@ import { useCompany, type Membership } from '@/features/companies/company-contex
 import { formatDate, todayIso } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { byMonth, overlaps, useMyEvents, type MyEvent } from './myCalendar'
+import { tx } from '@/lib/i18n'
 
 const MONTHS = ['január', 'február', 'marec', 'apríl', 'máj', 'jún', 'júl', 'august', 'september', 'október', 'november', 'december']
 const RESPONSE = { pending: 'nepotvrdené', yes: 'idem', no: 'nemôžem' } as const
@@ -17,8 +18,8 @@ export function MyCalendar({ userId, memberships }: { userId: string; membership
   const navigate = useNavigate()
   const { setActive } = useCompany()
   const [past, setPast] = useState(false)
-  if (events.isPending) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Načítavam…</p>
-  if (events.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Kalendár sa nepodarilo načítať.</p>
+  if (events.isPending) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Načítavam…')}</p>
+  if (events.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Kalendár sa nepodarilo načítať.')}</p>
 
   const today = todayIso()
   const shown = events.data.filter((event) => (past ? event.endsOn < today : event.endsOn >= today))
@@ -45,7 +46,7 @@ export function MyCalendar({ userId, memberships }: { userId: string; membership
               onClick={() => setPast(value)}
               className={cn('rounded-md px-3 py-1 text-sm font-medium', past === value ? 'bg-surface text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
             >
-              {value ? 'Minulé' : 'Nadchádzajúce'}
+              {value ? tx('Minulé') : tx('Nadchádzajúce')}
             </button>
           ))}
         </div>
@@ -63,15 +64,13 @@ export function MyCalendar({ userId, memberships }: { userId: string; membership
 
       {upcomingClashes > 0 && !past && (
         <p role="alert" className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
-          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
-          Niektoré akcie sa prekrývajú ({upcomingClashes}) – si v posádke na dvoch miestach naraz. Sú označené červenou.
-        </p>
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />{tx('Niektoré akcie sa prekrývajú (')}{upcomingClashes}{tx(') – si v posádke na dvoch miestach naraz. Sú označené červenou.')}</p>
       )}
 
       {shown.length === 0 ? (
         <p className="rounded-xl border border-dashed bg-surface p-6 text-center text-sm text-muted-foreground">
           <CalendarDays className="mx-auto mb-2 size-6" aria-hidden />
-          {past ? 'Žiadne minulé akcie.' : 'Zatiaľ nemáte žiadne nadchádzajúce akcie.'}
+          {past ? tx('Žiadne minulé akcie.') : tx('Zatiaľ nemáte žiadne nadchádzajúce akcie.')}
         </p>
       ) : (
         (past ? byMonth(shown).reverse() : byMonth(shown)).map(([month, list]) => (
@@ -93,8 +92,7 @@ export function MyCalendar({ userId, memberships }: { userId: string; membership
                         </span>
                         {clash && (
                           <span className="mt-0.5 flex items-center gap-1 text-sm text-destructive">
-                            <TriangleAlert className="size-3.5 shrink-0" aria-hidden />
-                            Prekrýva sa s: {clash.map((other) => `${other.name} (${companyName(other.companyId)})`).join(', ')}
+                            <TriangleAlert className="size-3.5 shrink-0" aria-hidden />{tx('Prekrýva sa s:')}{' '}{clash.map((other) => `${other.name} (${companyName(other.companyId)})`).join(', ')}
                           </span>
                         )}
                       </span>

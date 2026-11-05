@@ -24,6 +24,7 @@ import { useLoans } from './useLoans'
 import { LoanSignatures } from './LoanSignatures'
 import { useAuth } from '@/features/auth/auth-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
+import { tx, tf } from '@/lib/i18n'
 
 export function LoanDetailPage() {
   const { id = '' } = useParams()
@@ -71,18 +72,16 @@ export function LoanDetailPage() {
 
   const back = (
     <Link to="/loans" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="size-4" aria-hidden />
-      Výpožičky
-    </Link>
+      <ArrowLeft className="size-4" aria-hidden />{tx('Výpožičky')}</Link>
   )
 
   if (loans.isPending) return <LoadingBlock />
-  if (loans.isError) return <ErrorBlock message="Výpožičku sa nepodarilo načítať." onRetry={() => void loans.refetch()} />
+  if (loans.isError) return <ErrorBlock message={tx('Výpožičku sa nepodarilo načítať.')} onRetry={() => void loans.refetch()} />
   if (!loan) {
     return (
       <>
         {back}
-        <ErrorBlock message="Táto výpožička neexistuje alebo k nej nemáte prístup." />
+        <ErrorBlock message={tx('Táto výpožička neexistuje alebo k nej nemáte prístup.')} />
       </>
     )
   }
@@ -109,31 +108,25 @@ export function LoanDetailPage() {
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             <AddToCalendarButtons item={loanCalendarItem(loan)} />
-            <AddToContactsButton contact={{ name: loan.borrower, ...splitContact(loan.contact), address: loan.borrowerAddress, note: loan.borrowerIco && `IČO ${loan.borrowerIco}` }} />
+            <AddToContactsButton contact={{ name: loan.borrower, ...splitContact(loan.contact), address: loan.borrowerAddress, note: loan.borrowerIco && tf('IČO {0}', loan.borrowerIco) }} />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <LinkButton to={`/loans/${loan.id}/sheet`} variant="outline">
-            <FileText className="size-4" aria-hidden />
-            Listina (PDF)
-          </LinkButton>
+            <FileText className="size-4" aria-hidden />{tx('Listina (PDF)')}</LinkButton>
           {canEdit && loan.status === 'reserved' && (
             <LinkButton to={`/loans/${loan.id}/edit`} variant="outline">
-              <Pencil className="size-4" aria-hidden />
-              Upraviť
-            </LinkButton>
+              <Pencil className="size-4" aria-hidden />{tx('Upraviť')}</LinkButton>
           )}
           {canEdit && loan.status === 'reserved' && (
             <Button disabled={busy} onClick={() => issue.mutate()}>
               <PackageOpen className="size-4" aria-hidden />
-              {issue.isPending ? 'Vydávam…' : 'Vydať techniku'}
+              {issue.isPending ? tx('Vydávam…') : tx('Vydať techniku')}
             </Button>
           )}
           {canEdit && loan.status === 'issued' && !returning && (
             <Button disabled={busy} onClick={() => setReturning(true)}>
-              <PackageCheck className="size-4" aria-hidden />
-              Prijať späť
-            </Button>
+              <PackageCheck className="size-4" aria-hidden />{tx('Prijať späť')}</Button>
           )}
           {can(company, 'loans.delete') && loan.status !== 'issued' && (
             <Button
@@ -141,31 +134,22 @@ export function LoanDetailPage() {
               size="sm"
               disabled={busy}
               onClick={() => {
-                if (window.confirm(`Naozaj odstrániť výpožičku pre „${loan.borrower}“?`)) remove.mutate()
+                if (window.confirm(tf('Naozaj odstrániť výpožičku pre „{0}“?', loan.borrower))) remove.mutate()
               }}
             >
-              <Trash2 className="size-4" aria-hidden />
-              Odstrániť
-            </Button>
+              <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
           )}
         </div>
       </header>
 
       {(issue.isError || giveBack.isError || remove.isError) && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
-          Zmena sa nepodarila. Obnovte stránku a skúste to znova.
-        </p>
+        <p role="alert" className="mb-4 text-sm text-destructive">{tx('Zmena sa nepodarila. Obnovte stránku a skúste to znova.')}</p>
       )}
 
       {returning && (
         <section aria-labelledby="return-heading" className="mb-6 rounded-xl border border-accent/40 bg-accent/10 p-4">
-          <h2 id="return-heading" className="font-medium">
-            Vrátenie techniky
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Označte, čo sa vrátilo poškodené. Poškodeným kusom sa otvorí servisný záznam, ostatné sa vrátia medzi dostupnú
-            techniku.
-          </p>
+          <h2 id="return-heading" className="font-medium">{tx('Vrátenie techniky')}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{tx('Označte, čo sa vrátilo poškodené. Poškodeným kusom sa otvorí servisný záznam, ostatné sa vrátia medzi dostupnú techniku.')}</p>
           <ul className="mt-3 flex flex-col gap-4">
             {loan.items.map((item) => {
               const name = itemOf(item.equipmentId)?.name ?? 'Technika'
@@ -174,7 +158,7 @@ export function LoanDetailPage() {
                 <li key={item.equipmentId}>
                   {item.unitNumbers.length > 0 ? (
                     <UnitPicker
-                      label={`${name} — poškodené kusy`}
+                      label={tf('{0} — poškodené kusy', name)}
                       tone="destructive"
                       units={item.unitNumbers}
                       chosen={entry?.units ?? []}
@@ -182,7 +166,7 @@ export function LoanDetailPage() {
                     />
                   ) : item.quantity > 1 ? (
                     <Field
-                      label={`${name} — poškodených kusov (z ${item.quantity})`}
+                      label={tf('{0} — poškodených kusov (z {1})', name, item.quantity)}
                       type="number"
                       inputMode="numeric"
                       min={0}
@@ -205,7 +189,7 @@ export function LoanDetailPage() {
                         checked={(entry?.quantity ?? 0) > 0}
                         onChange={(e) => setDamageOf(item.equipmentId, { units: [], quantity: e.target.checked ? 1 : 0 })}
                       />
-                      <span>{name} — poškodené</span>
+                      <span>{name}{' '}{tx('— poškodené')}</span>
                     </label>
                   )}
                 </li>
@@ -214,16 +198,14 @@ export function LoanDetailPage() {
           </ul>
           <div className="mt-4 flex gap-2">
             <Button disabled={busy} onClick={() => giveBack.mutate()}>
-              {giveBack.isPending ? 'Zapisujem…' : 'Potvrdiť vrátenie'}
+              {giveBack.isPending ? 'Zapisujem…' : tx('Potvrdiť vrátenie')}
             </Button>
-            <Button variant="ghost" onClick={() => setReturning(false)}>
-              Zrušiť
-            </Button>
+            <Button variant="ghost" onClick={() => setReturning(false)}>{tx('Zrušiť')}</Button>
           </div>
         </section>
       )}
 
-      <CollapsibleSection id="loan.content" title={<>Technika ({grouped.cases.length + grouped.single.length})</>}>
+      <CollapsibleSection id="loan.content" title={<>{tx('Technika (')}{grouped.cases.length + grouped.single.length})</>}>
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {grouped.cases.map(({ caseId, content }) => (
             <li key={caseId} className="flex items-center gap-3 px-4 py-3">
@@ -244,7 +226,7 @@ export function LoanDetailPage() {
                     .join(', ')}
                 </span>
               )}
-              <span className="shrink-0 font-medium">celý case</span>
+              <span className="shrink-0 font-medium">{tx('celý case')}</span>
             </li>
           ))}
           {grouped.single.map((item) => {
@@ -264,9 +246,8 @@ export function LoanDetailPage() {
                 </Link>
                 {item.damaged && <span className="shrink-0 text-sm text-destructive">{describeDamage(item)}</span>}
                 <span className="shrink-0 text-right font-medium">
-                  {item.quantity} ks
-                  {item.unitPrice !== null && (
-                    <span className="block text-sm font-normal text-muted-foreground tabular-nums">{formatMoney(linePerDay(item), 'EUR')}/deň</span>
+                  {item.quantity}{' '}{tx('ks')}{item.unitPrice !== null && (
+                    <span className="block text-sm font-normal text-muted-foreground tabular-nums">{formatMoney(linePerDay(item), 'EUR')}{tx('/deň')}</span>
                   )}
                 </span>
               </li>
@@ -277,18 +258,18 @@ export function LoanDetailPage() {
 
       <dl className="mb-6 divide-y overflow-hidden rounded-xl border bg-surface">
         {([
-          ['IČO', loan.borrowerIco],
+          [tx('IČO'), loan.borrowerIco],
           ['Adresa', loan.borrowerAddress],
           [
             'Cena',
             pricing.priced &&
-              `${formatMoney(pricing.total, 'EUR')} (${pricing.days} ${pricing.days === 1 ? 'deň' : pricing.days < 5 ? 'dni' : 'dní'}${
-                loan.price !== null ? ', dohodnutá' : ''
+              `${formatMoney(pricing.total, 'EUR')} (${pricing.days} ${pricing.days === 1 ? tx('deň') : pricing.days < 5 ? 'dni' : tx('dní')}${
+                loan.price !== null ? tx(', dohodnutá') : ''
               })`,
           ],
           ['Kaucia', loan.deposit !== null && formatMoney(loan.deposit, 'EUR')],
-          ['Vydané', loan.issuedAt && formatDateTime(loan.issuedAt)],
-          ['Vrátené', loan.returnedAt && formatDateTime(loan.returnedAt)],
+          [tx('Vydané'), loan.issuedAt && formatDateTime(loan.issuedAt)],
+          [tx('Vrátené'), loan.returnedAt && formatDateTime(loan.returnedAt)],
         ] as [string, string | false | null][])
           .filter(([, value]) => value)
           .map(([label, value]) => (

@@ -5,6 +5,7 @@ import { formatDate, todayIso } from '@/lib/format'
 import { useUserPrefs } from '@/features/settings/userPrefs'
 import { isAssignedTo, isTaskOverdue, priorityColor, sortTasks } from './model'
 import { useTasks } from './useTasks'
+import { tx } from '@/lib/i18n'
 
 const SHOWN = 5
 
@@ -22,16 +23,12 @@ export function MyTasks({ companyId }: { companyId: string }) {
     <section aria-labelledby="my-tasks-heading" className="mb-6 rounded-xl border bg-surface p-4">
       <h2 id="my-tasks-heading" className="mb-2 flex items-center gap-2 font-medium">
         <ListTodo className="size-5 text-accent" aria-hidden />
-        <Link to="/todos" className="hover:underline">
-          Moje úlohy ({mine.length})
+        <Link to="/todos" className="hover:underline">{tx('Moje úlohy (')}{mine.length})
         </Link>
       </h2>
       {mine.length === 0 && (
-        <p className="py-2 text-sm text-muted-foreground">
-          Nemáte žiadne otvorené úlohy.{' '}
-          <Link to="/todos" className="text-accent hover:underline">
-            Pridať úlohu
-          </Link>
+        <p className="py-2 text-sm text-muted-foreground">{tx('Nemáte žiadne otvorené úlohy.')}{' '}
+          <Link to="/todos" className="text-accent hover:underline">{tx('Pridať úlohu')}</Link>
         </p>
       )}
       <ul className="divide-y">
@@ -42,16 +39,14 @@ export function MyTasks({ companyId }: { companyId: string }) {
               <span className="truncate">{task.title}</span>
             </span>
             {task.dueOn && (
-              <span className={isTaskOverdue(task, today) ? 'shrink-0 text-sm text-destructive' : 'shrink-0 text-sm text-muted-foreground'}>
-                do {formatDate(task.dueOn)}
+              <span className={isTaskOverdue(task, today) ? 'shrink-0 text-sm text-destructive' : 'shrink-0 text-sm text-muted-foreground'}>{tx('do')}{' '}{formatDate(task.dueOn)}
               </span>
             )}
           </li>
         ))}
       </ul>
       {mine.length > SHOWN && (
-        <Link to="/todos" className="mt-2 inline-block text-sm text-accent hover:underline">
-          a ďalších {mine.length - SHOWN}
+        <Link to="/todos" className="mt-2 inline-block text-sm text-accent hover:underline">{tx('a ďalších')}{' '}{mine.length - SHOWN}
         </Link>
       )}
     </section>

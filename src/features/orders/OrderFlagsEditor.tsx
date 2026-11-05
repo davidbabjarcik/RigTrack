@@ -6,6 +6,7 @@ import { memberName, useMembers } from '@/features/companies/useMembers'
 import { errorDetail } from '@/lib/supabase/errors'
 import { setOrderFlags } from './api'
 import type { OrderSummary } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 /** Kto objednal, pre koho a či s faktúrou – v detaile objednávky, dá sa zmeniť aj dodatočne. */
 export function OrderFlagsEditor({ companyId, order, canEdit }: { companyId: string; order: OrderSummary; canEdit: boolean }) {
@@ -26,10 +27,10 @@ export function OrderFlagsEditor({ companyId, order, canEdit }: { companyId: str
 
   if (!editing) {
     const facts = [
-      order.orderedBy && `Objednal: ${memberName(members.data, order.orderedBy) || 'bývalý člen'}`,
-      order.forUs === false ? `Nie pre nás${order.forWhom ? `: ${order.forWhom}` : ''}` : 'Pre nás',
-      order.addToStock === false && 'Nepridané do techniky',
-      order.hasInvoice === false ? 'Bez faktúry' : 'S faktúrou / bločkom',
+      order.orderedBy && `Objednal: ${memberName(members.data, order.orderedBy) || tx('bývalý člen')}`,
+      order.forUs === false ? tf('Nie pre nás{0}', order.forWhom ? `: ${order.forWhom}` : '') : tx('Pre nás'),
+      order.addToStock === false && tx('Nepridané do techniky'),
+      order.hasInvoice === false ? tx('Bez faktúry') : tx('S faktúrou / bločkom'),
     ].filter(Boolean)
     return (
       <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border bg-surface px-4 py-3 text-sm">
@@ -37,9 +38,7 @@ export function OrderFlagsEditor({ companyId, order, canEdit }: { companyId: str
           <span key={String(fact)}>{fact}</span>
         ))}
         {canEdit && (
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setEditing(true)}>
-            Zmeniť
-          </Button>
+          <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setEditing(true)}>{tx('Zmeniť')}</Button>
         )}
       </div>
     )
@@ -47,8 +46,8 @@ export function OrderFlagsEditor({ companyId, order, canEdit }: { companyId: str
 
   return (
     <div className="mb-6 grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
-      <SelectField label="Objednal" value={orderedBy} onChange={(e) => setOrderedBy(e.target.value)}>
-        <option value="">— neuvedené —</option>
+      <SelectField label={tx('Objednal')} value={orderedBy} onChange={(e) => setOrderedBy(e.target.value)}>
+        <option value="">{tx('— neuvedené —')}</option>
         {(members.data ?? []).map((member) => (
           <option key={member.userId} value={member.userId}>
             {member.fullName || member.email}
@@ -57,27 +56,18 @@ export function OrderFlagsEditor({ companyId, order, canEdit }: { companyId: str
       </SelectField>
       <div className="flex flex-col justify-end gap-2 pb-1">
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" className="size-4" checked={!forUs} onChange={(e) => setForUs(!e.target.checked)} />
-          Nie je pre nás
-        </label>
+          <input type="checkbox" className="size-4" checked={!forUs} onChange={(e) => setForUs(!e.target.checked)} />{tx('Nie je pre nás')}</label>
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" className="size-4" checked={!hasInvoice} onChange={(e) => setHasInvoice(!e.target.checked)} />
-          Bez faktúry / bločku
-        </label>
+          <input type="checkbox" className="size-4" checked={!hasInvoice} onChange={(e) => setHasInvoice(!e.target.checked)} />{tx('Bez faktúry / bločku')}</label>
       </div>
-      {!forUs && <Field label="Pre koho" className="sm:col-span-2" maxLength={120} value={forWhom} onChange={(e) => setForWhom(e.target.value)} />}
+      {!forUs && <Field label={tx('Pre koho')} className="sm:col-span-2" maxLength={120} value={forWhom} onChange={(e) => setForWhom(e.target.value)} />}
       {save.isError && (
-        <p role="alert" className="text-sm text-destructive sm:col-span-2">
-          Uloženie zlyhalo. {errorDetail(save.error)}
+        <p role="alert" className="text-sm text-destructive sm:col-span-2">{tx('Uloženie zlyhalo.')}{' '}{errorDetail(save.error)}
         </p>
       )}
       <div className="flex gap-2 sm:col-span-2">
-        <Button size="sm" disabled={save.isPending} onClick={() => save.mutate()}>
-          Uložiť
-        </Button>
-        <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
-          Zrušiť
-        </Button>
+        <Button size="sm" disabled={save.isPending} onClick={() => save.mutate()}>{tx('Uložiť')}</Button>
+        <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>{tx('Zrušiť')}</Button>
       </div>
     </div>
   )

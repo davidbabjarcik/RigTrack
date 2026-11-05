@@ -18,6 +18,7 @@ import { useTasks } from '@/features/tasks/useTasks'
 import { formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { yearReport } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'máj', 'jún', 'júl', 'aug', 'sep', 'okt', 'nov', 'dec']
 
@@ -69,11 +70,11 @@ export function YearReportPage() {
   return (
     <>
       <PageHeader
-        title={`Ročná správa ${year}`}
+        title={tf('Ročná správa {0}', year)}
         description={company.companyName}
         action={
           <div className="flex gap-2 print:hidden">
-            <SelectField label="Rok" hideLabel className="w-28" value={year} onChange={(e) => setYear(e.target.value)}>
+            <SelectField label={tx('Rok')} hideLabel className="w-28" value={year} onChange={(e) => setYear(e.target.value)}>
               {years.map((value) => (
                 <option key={value} value={value}>
                   {value}
@@ -81,9 +82,7 @@ export function YearReportPage() {
               ))}
             </SelectField>
             <Button variant="outline" onClick={() => window.print()}>
-              <Printer className="size-4" aria-hidden />
-              Tlačiť
-            </Button>
+              <Printer className="size-4" aria-hidden />{tx('Tlačiť')}</Button>
           </div>
         }
       />
@@ -91,14 +90,14 @@ export function YearReportPage() {
       <div className="flex flex-col gap-6">
         {report.events && (
           <section>
-            <h2 className="mb-2 text-sm font-medium text-muted-foreground">Eventy</h2>
+            <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Eventy')}</h2>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Tile label="Eventov" value={report.events.count} />
-              <Tile label="Dní na akciách" value={report.events.days} />
-              <Tile label="Ľudí v posádkach" value={report.events.crew.length} />
-              <Tile label="Klientov" value={report.events.clients.length} />
+              <Tile label={tx('Eventov')} value={report.events.count} />
+              <Tile label={tx('Dní na akciách')} value={report.events.days} />
+              <Tile label={tx('Ľudí v posádkach')} value={report.events.crew.length} />
+              <Tile label={tx('Klientov')} value={report.events.clients.length} />
             </div>
-            <div className="mt-3 flex h-32 items-end gap-1 rounded-xl border bg-surface p-3" aria-label="Eventy po mesiacoch">
+            <div className="mt-3 flex h-32 items-end gap-1 rounded-xl border bg-surface p-3" aria-label={tx('Eventy po mesiacoch')}>
               {report.events.months.map((month) => (
                 <div key={month.month} className="flex flex-1 flex-col items-center gap-1">
                   <span className="text-xs">{month.events || ''}</span>
@@ -109,21 +108,21 @@ export function YearReportPage() {
             </div>
             <div className="mt-3 grid gap-3 lg:grid-cols-2">
               <div className="rounded-xl border bg-surface p-4">
-                <p className="mb-2 text-sm text-muted-foreground">Kto bol na koľkých akciách</p>
+                <p className="mb-2 text-sm text-muted-foreground">{tx('Kto bol na koľkých akciách')}</p>
                 <ul className="flex flex-col gap-1 text-sm">
                   {report.events.crew.slice(0, 20).map((person) => (
                     <li key={person.key} className="flex justify-between gap-3">
-                      <span>{(person.memberId && memberName(members.data, person.memberId)) || person.name || 'neznámy'}</span>
+                      <span>{(person.memberId && memberName(members.data, person.memberId)) || person.name || tx('neznámy')}</span>
                       <span className="text-muted-foreground">
                         {person.events}× · {person.days} d
                       </span>
                     </li>
                   ))}
-                  {report.events.crew.length === 0 && <li className="text-muted-foreground">Bez posádok.</li>}
+                  {report.events.crew.length === 0 && <li className="text-muted-foreground">{tx('Bez posádok.')}</li>}
                 </ul>
               </div>
               <div className="rounded-xl border bg-surface p-4">
-                <p className="mb-2 text-sm text-muted-foreground">Najčastejší klienti</p>
+                <p className="mb-2 text-sm text-muted-foreground">{tx('Najčastejší klienti')}</p>
                 <ul className="flex flex-col gap-1 text-sm">
                   {report.events.clients.map(([client, count]) => (
                     <li key={client} className="flex justify-between gap-3">
@@ -131,7 +130,7 @@ export function YearReportPage() {
                       <span className="text-muted-foreground">{count}×</span>
                     </li>
                   ))}
-                  {report.events.clients.length === 0 && <li className="text-muted-foreground">Bez zapísaných klientov.</li>}
+                  {report.events.clients.length === 0 && <li className="text-muted-foreground">{tx('Bez zapísaných klientov.')}</li>}
                 </ul>
               </div>
             </div>
@@ -139,29 +138,29 @@ export function YearReportPage() {
         )}
 
         <section>
-          <h2 className="mb-2 text-sm font-medium text-muted-foreground">Technika, servis a škody</h2>
+          <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Technika, servis a škody')}</h2>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {report.equipment && <Tile label="Kúpenej techniky" value={`${report.equipment.bought} položiek`} />}
-            {report.service && <Tile label="Servisov" value={`${report.service.count}${money ? ` · ${formatMoney(report.service.cost, 'EUR')}` : ''}`} />}
-            {report.incidents && <Tile label="Škody / úrazy" value={`${report.incidents.damages} / ${report.incidents.injuries}`} />}
-            {report.tasks && <Tile label="Hotových úloh" value={report.tasks.done} />}
+            {report.equipment && <Tile label={tx('Kúpenej techniky')} value={`${report.equipment.bought} položiek`} />}
+            {report.service && <Tile label={tx('Servisov')} value={`${report.service.count}${money ? ` · ${formatMoney(report.service.cost, 'EUR')}` : ''}`} />}
+            {report.incidents && <Tile label={tx('Škody / úrazy')} value={`${report.incidents.damages} / ${report.incidents.injuries}`} />}
+            {report.tasks && <Tile label={tx('Hotových úloh')} value={report.tasks.done} />}
           </div>
         </section>
 
         {money && (
           <section>
-            <h2 className="mb-2 text-sm font-medium text-muted-foreground">Peniaze</h2>
+            <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Peniaze')}</h2>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              {report.money.income !== undefined && <Tile label="Príjmy z akcií" value={formatMoney(report.money.income, 'EUR')} />}
-              {report.money.orders !== undefined && <Tile label="Nákupy techniky" value={formatMoney(report.money.orders, 'EUR')} />}
-              {report.money.payouts !== undefined && <Tile label="Odmeny ľuďom" value={formatMoney(report.money.payouts, 'EUR')} />}
-              {report.money.income !== undefined && <Tile label="Príjmy − výdavky" value={formatMoney(report.money.income - spent, 'EUR')} />}
-              {report.incidents && <Tile label="Náklady na škody" value={formatMoney(report.incidents.cost, 'EUR')} />}
+              {report.money.income !== undefined && <Tile label={tx('Príjmy z akcií')} value={formatMoney(report.money.income, 'EUR')} />}
+              {report.money.orders !== undefined && <Tile label={tx('Nákupy techniky')} value={formatMoney(report.money.orders, 'EUR')} />}
+              {report.money.payouts !== undefined && <Tile label={tx('Odmeny ľuďom')} value={formatMoney(report.money.payouts, 'EUR')} />}
+              {report.money.income !== undefined && <Tile label={tx('Príjmy − výdavky')} value={formatMoney(report.money.income - spent, 'EUR')} />}
+              {report.incidents && <Tile label={tx('Náklady na škody')} value={formatMoney(report.incidents.cost, 'EUR')} />}
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Nákupy len v eurách a len tie „pre nás“. Výdavky zahŕňajú nákupy techniky a odmeny.</p>
+            <p className="mt-2 text-xs text-muted-foreground">{tx('Nákupy len v eurách a len tie „pre nás“. Výdavky zahŕňajú nákupy techniky a odmeny.')}</p>
           </section>
         )}
-        {!money && <p className="text-sm text-muted-foreground">Peniaze v ročnej správe vidí len ten, komu ich admin povolí (Oprávnenia → Ročná správa).</p>}
+        {!money && <p className="text-sm text-muted-foreground">{tx('Peniaze v ročnej správe vidí len ten, komu ich admin povolí (Oprávnenia → Ročná správa).')}</p>}
       </div>
     </>
   )

@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { EVENT_STATUS_LABELS, type EventStatus } from './model'
+import { tx } from '@/lib/i18n'
 
 const STYLES: Record<EventStatus, string> = {
   planned: 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
@@ -11,7 +12,7 @@ const STYLES: Record<EventStatus, string> = {
 export function EventStatusBadge({ status }: { status: EventStatus }) {
   return (
     <span className={cn('inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium', STYLES[status])}>
-      {EVENT_STATUS_LABELS[status]}
+      {tx(EVENT_STATUS_LABELS[status])}
     </span>
   )
 }

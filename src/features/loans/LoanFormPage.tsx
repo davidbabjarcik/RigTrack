@@ -26,6 +26,7 @@ import { PackagePicker } from '@/features/packages/PackagePicker'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { busyQuantity, busyUnits, describeContent, linePerDay, loanDays, loanPricing, groupByCase, loanSchema, type Loan, type LoanFormValues } from './model'
 import { useLoans } from './useLoans'
+import { tx, tf } from '@/lib/i18n'
 
 type FormProps = {
   companyId: string
@@ -157,7 +158,7 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
       onSubmit={handleSubmit((values) => {
         const missing = values.items.find((item) => itemOf(item.equipmentId)?.trackUnits && item.unitNumbers.length === 0)
         if (missing) {
-          setError('items', { message: `Pri „${itemOf(missing.equipmentId)?.name}“ vyberte konkrétne kusy.` })
+          setError('items', { message: tf('Pri „{0}“ vyberte konkrétne kusy.', itemOf(missing.equipmentId)?.name) })
           return
         }
         save.mutate(values)
@@ -166,22 +167,21 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
       className="flex flex-col gap-4"
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Komu *" autoFocus placeholder="meno alebo firma" error={errors.borrower?.message} {...register('borrower')} />
-        <Field label="Kontakt" placeholder="telefón alebo e-mail" error={errors.contact?.message} {...register('contact')} />
-        <Field label="IČO" placeholder="nepovinné" error={errors.borrowerIco?.message} {...register('borrowerIco')} />
-        <Field label="Adresa" placeholder="nepovinné" error={errors.borrowerAddress?.message} {...register('borrowerAddress')} />
-        <Field label="Od *" type="date" error={errors.startsOn?.message} {...register('startsOn')} />
-        <Field label="Do *" type="date" error={errors.endsOn?.message} {...register('endsOn')} />
+        <Field label={tx('Komu *')} autoFocus placeholder={tx('meno alebo firma')} error={errors.borrower?.message} {...register('borrower')} />
+        <Field label={tx('Kontakt')} placeholder={tx('telefón alebo e-mail')} error={errors.contact?.message} {...register('contact')} />
+        <Field label={tx('IČO')} placeholder={tx('nepovinné')} error={errors.borrowerIco?.message} {...register('borrowerIco')} />
+        <Field label={tx('Adresa')} placeholder={tx('nepovinné')} error={errors.borrowerAddress?.message} {...register('borrowerAddress')} />
+        <Field label={tx('Od *')} type="date" error={errors.startsOn?.message} {...register('startsOn')} />
+        <Field label={tx('Do *')} type="date" error={errors.endsOn?.message} {...register('endsOn')} />
       </div>
 
       <section aria-labelledby="loan-items-heading">
-        <h2 id="loan-items-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-          Vo výpožičke ({wholeCases.length + single.length})
+        <h2 id="loan-items-heading" className="mb-2 text-sm font-medium text-muted-foreground">{tx('Vo výpožičke (')}{wholeCases.length + single.length})
         </h2>
         <EventReminders
           companyId={companyId}
           lines={(liveItems ?? []).map((item) => ({ equipmentId: item.equipmentId, quantity: Number(item.quantity) || 0, caseId: item.caseId || null }))}
-          where="vo výpožičke"
+          where={tx('vo výpožičke')}
           storageKey={`loan:${current?.id ?? 'new'}`}
           equipment={equipment}
           categories={categories}
@@ -193,9 +193,7 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
           onOpenPicker={() => document.getElementById('loan-picker')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
         />
         {fields.length === 0 ? (
-          <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
-            Zatiaľ nič. Vyberte case alebo techniku zo zoznamu nižšie.
-          </p>
+          <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Zatiaľ nič. Vyberte case alebo techniku zo zoznamu nižšie.')}</p>
         ) : (
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {wholeCases.map(({ caseId, content }) => {
@@ -208,23 +206,21 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
                 <li key={caseId} className="flex items-center gap-3 px-4 py-3">
                   <Package className="size-5 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{name} · celý case</span>
+                    <span className="block truncate font-medium">{name}{' '}{tx('· celý case')}</span>
                     <span className="block text-xs text-muted-foreground">
                       {describeContent(
                         content.map(({ field }) => field),
                         (equipmentId) => itemOf(equipmentId)?.name ?? 'Technika',
                       )}
                     </span>
-                    {short && <span className="block text-sm text-destructive">Časť obsahu nie je v tomto termíne voľná.</span>}
+                    {short && <span className="block text-sm text-destructive">{tx('Časť obsahu nie je v tomto termíne voľná.')}</span>}
                   </span>
                   <span className="shrink-0 text-sm text-muted-foreground tabular-nums">
                     {formatMoney(
                       content.reduce((sum, { field }) => sum + linePerDay(field), 0),
                       'EUR',
-                    )}
-                    /deň
-                  </span>
-                  <Button variant="ghost" aria-label={`Odobrať case: ${name}`} onClick={() => removeCase(caseId)}>
+                    )}{tx('/deň')}</span>
+                  <Button variant="ghost" aria-label={tf('Odobrať case: {0}', name)} onClick={() => removeCase(caseId)}>
                     <Trash2 className="size-4" aria-hidden />
                   </Button>
                 </li>
@@ -238,13 +234,11 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
                   <PhotoThumb url={thumbs[item?.photoPath ?? '']} />
                   <span className="min-w-0 flex-1 basis-40">
                     <span className="block truncate font-medium">{item?.name ?? 'Technika'}</span>
-                    <span className="block text-sm text-muted-foreground">
-                      voľné {Math.max(free, 0)} z {item?.quantity ?? 0} ks
-                    </span>
+                    <span className="block text-sm text-muted-foreground">{tx('voľné')}{' '}{Math.max(free, 0)} z {item?.quantity ?? 0}{' '}{tx('ks')}</span>
                   </span>
                   {!item?.trackUnits && (
                     <Field
-                      label="Počet"
+                      label={tx('Počet')}
                       type="number"
                       inputMode="numeric"
                       min={1}
@@ -256,7 +250,7 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
                     />
                   )}
                   <Field
-                    label="€ / ks / deň"
+                    label={tx('€ / ks / deň')}
                     type="number"
                     inputMode="decimal"
                     min={0}
@@ -265,17 +259,17 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
                     error={errors.items?.[index]?.unitPrice?.message}
                     {...register(`items.${index}.unitPrice`, asOptionalNumber)}
                   />
-                  <Button variant="ghost" aria-label={`Odobrať: ${item?.name ?? 'technika'}`} onClick={() => remove(index)}>
+                  <Button variant="ghost" aria-label={tf('Odobrať: {0}', item?.name ?? 'technika')} onClick={() => remove(index)}>
                     <Trash2 className="size-4" aria-hidden />
                   </Button>
                   {item?.trackUnits && (
                     <div className="basis-full">
                       <UnitPicker
-                        label={`Ktoré kusy (vybrané ${field.unitNumbers.length})`}
+                        label={tf('Ktoré kusy (vybrané {0})', field.unitNumbers.length)}
                         units={unitIdsOf(item)}
                         chosen={field.unitNumbers}
                         taken={datesValid ? busyUnits(loans, item.id, startsOn, endsOn, today) : []}
-                        takenHint="v tomto termíne sú na inej výpožičke"
+                        takenHint={tx('v tomto termíne sú na inej výpožičke')}
                         onChange={(units) =>
                           update(index, {
                             equipmentId: item.id,
@@ -326,35 +320,31 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
       />
 
       <section aria-labelledby="loan-price-heading" className="rounded-xl border bg-surface p-4">
-        <h2 id="loan-price-heading" className="mb-1 font-medium">
-          Cena
-        </h2>
-        <p className="mb-3 text-sm text-muted-foreground">
-          Ceny položiek sa predvyplnia z cenníka techniky a dajú sa prepísať. Všetko je nepovinné.
-        </p>
+        <h2 id="loan-price-heading" className="mb-1 font-medium">{tx('Cena')}</h2>
+        <p className="mb-3 text-sm text-muted-foreground">{tx('Ceny položiek sa predvyplnia z cenníka techniky a dajú sa prepísať. Všetko je nepovinné.')}</p>
         <div className="grid gap-4 sm:grid-cols-3">
           <Field
-            label="Účtované dni"
+            label={tx('Účtované dni')}
             type="number"
             inputMode="numeric"
             min={1}
             step={1}
-            placeholder={`${calendarDays} (podľa termínu)`}
+            placeholder={tf('{0} (podľa termínu)', calendarDays)}
             error={errors.billedDays?.message}
             {...register('billedDays', asOptionalNumber)}
           />
           <Field
-            label="Dohodnutá cena (€)"
+            label={tx('Dohodnutá cena (€)')}
             type="number"
             inputMode="decimal"
             min={0}
             step="0.01"
-            placeholder="prázdne = vypočítaná"
+            placeholder={tx('prázdne = vypočítaná')}
             error={errors.price?.message}
             {...register('price', asOptionalNumber)}
           />
           <Field
-            label="Kaucia (€)"
+            label={tx('Kaucia (€)')}
             type="number"
             inputMode="decimal"
             min={0}
@@ -365,33 +355,30 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
         </div>
         <dl className="mt-4 flex flex-col gap-1 text-sm">
           <div className="flex justify-between gap-4">
-            <dt className="text-muted-foreground">
-              Vypočítaná cena ({formatMoney(pricing.perDay, 'EUR')} × {pricing.days} {pricing.days === 1 ? 'deň' : pricing.days < 5 ? 'dni' : 'dní'})
+            <dt className="text-muted-foreground">{tx('Vypočítaná cena (')}{formatMoney(pricing.perDay, 'EUR')} × {pricing.days} {pricing.days === 1 ? tx('deň') : pricing.days < 5 ? 'dni' : tx('dní')})
             </dt>
             <dd className="tabular-nums">{formatMoney(pricing.calculated, 'EUR')}</dd>
           </div>
           <div className="flex justify-between gap-4 text-base font-semibold">
-            <dt>Cena výpožičky</dt>
+            <dt>{tx('Cena výpožičky')}</dt>
             <dd className="tabular-nums">{formatMoney(pricing.total, 'EUR')}</dd>
           </div>
         </dl>
       </section>
 
-      <TextareaField label="Poznámka" error={errors.note?.message} {...register('note')} />
+      <TextareaField label={tx('Poznámka')} error={errors.note?.message} {...register('note')} />
 
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
-          {conflict ?? 'Uloženie zlyhalo, nič sa nezapísalo. Skúste to znova.'}
+          {conflict ?? tx('Uloženie zlyhalo, nič sa nezapísalo. Skúste to znova.')}
         </p>
       )}
 
       <div className="flex gap-3">
         <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : current ? 'Uložiť zmeny' : 'Vytvoriť rezerváciu'}
+          {save.isPending ? tx('Ukladám…') : current ? tx('Uložiť zmeny') : tx('Vytvoriť rezerváciu')}
         </Button>
-        <LinkButton to={current ? `/loans/${current.id}` : '/loans'} variant="outline">
-          Zrušiť
-        </LinkButton>
+        <LinkButton to={current ? `/loans/${current.id}` : '/loans'} variant="outline">{tx('Zrušiť')}</LinkButton>
       </div>
     </form>
   )
@@ -412,17 +399,17 @@ export function LoanFormPage() {
 
   let body
   if (!allowed) {
-    body = <ErrorBlock message="Na vytváranie výpožičiek nemáte oprávnenie." />
+    body = <ErrorBlock message={tx('Na vytváranie výpožičiek nemáte oprávnenie.')} />
   } else if (loans.isPending || equipment.isPending || events.isPending || cases.isPending) {
     body = <LoadingBlock />
   } else if (loans.isError || equipment.isError || events.isError || cases.isError) {
-    body = <ErrorBlock message="Údaje sa nepodarilo načítať." onRetry={() => void equipment.refetch()} />
+    body = <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void equipment.refetch()} />
   } else {
     const current = id ? (loans.data.find((loan) => loan.id === id) ?? null) : null
     if (id && !current) {
-      body = <ErrorBlock message="Táto výpožička neexistuje alebo k nej nemáte prístup." />
+      body = <ErrorBlock message={tx('Táto výpožička neexistuje alebo k nej nemáte prístup.')} />
     } else if (current && current.status !== 'reserved') {
-      body = <ErrorBlock message="Upraviť sa dá len rezervácia, ktorá ešte nebola vydaná." />
+      body = <ErrorBlock message={tx('Upraviť sa dá len rezervácia, ktorá ešte nebola vydaná.')} />
     } else {
       body = (
         <LoanForm
@@ -441,8 +428,8 @@ export function LoanFormPage() {
   return (
     <>
       <PageHeader
-        title={id ? 'Upraviť výpožičku' : 'Nová výpožička'}
-        description={id ? 'Rezerváciu možno meniť, kým technika neodišla.' : 'Vznikne ako rezervácia; vydanie potvrdíte, keď technika naozaj odíde.'}
+        title={id ? tx('Upraviť výpožičku') : tx('Nová výpožička')}
+        description={id ? tx('Rezerváciu možno meniť, kým technika neodišla.') : tx('Vznikne ako rezervácia; vydanie potvrdíte, keď technika naozaj odíde.')}
       />
       {body}
     </>

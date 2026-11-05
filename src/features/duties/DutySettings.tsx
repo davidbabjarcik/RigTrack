@@ -6,6 +6,7 @@ import { Field } from '@/components/ui/field'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { ROLE_LABELS, type Role } from '@/lib/roles'
 import { cn } from '@/lib/utils'
+import { tx, tf } from '@/lib/i18n'
 
 /** Roly, ktorým sa dá činnosť priradiť. */
 const OWNER_ROLES: Role[] = ['technik', 'skladnik', 'helper', 'ceo', 'admin']
@@ -40,16 +41,12 @@ export function DutySettings({ companyId }: { companyId: string }) {
     update.mutate({ id: b.id, fields: { sort: a.sort } })
   }
 
-  if (types.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
+  if (types.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
   const exists = list.some((type) => type.name.trim().toLowerCase() === name.trim().toLowerCase())
 
   return (
     <div className="rounded-xl border bg-surface p-4">
-      <p className="mb-3 text-sm text-muted-foreground">
-        Činnosti, ku ktorým sa pri evente zapisujú ľudia – pred eventom (nakladanie), na evente a po evente (vykladanie, kontrola a naskladnenie
-        hliníka, kontrola kabeláže). V Štatistikách potom uvidíte, kto čo robil najčastejšie. Vypnutá činnosť sa pri nových eventoch neponúka, ale
-        ostane v štatistikách.
-      </p>
+      <p className="mb-3 text-sm text-muted-foreground">{tx('Činnosti, ku ktorým sa pri evente zapisujú ľudia – pred eventom (nakladanie), na evente a po evente (vykladanie, kontrola a naskladnenie hliníka, kontrola kabeláže). V Štatistikách potom uvidíte, kto čo robil najčastejšie. Vypnutá činnosť sa pri nových eventoch neponúka, ale ostane v štatistikách.')}</p>
       {list.length > 0 ? (
         <div className="mb-3 flex flex-col gap-3">
           {DUTY_PHASES.map((phase) => {
@@ -57,14 +54,14 @@ export function DutySettings({ companyId }: { companyId: string }) {
             if (group.length === 0) return null
             return (
               <div key={phase}>
-                <h4 className="mb-1 text-sm font-medium text-muted-foreground">{DUTY_PHASE_LABELS[phase]}</h4>
+                <h4 className="mb-1 text-sm font-medium text-muted-foreground">{tx(DUTY_PHASE_LABELS[phase])}</h4>
                 <ul className="divide-y overflow-hidden rounded-lg border">
                   {group.map((type, index) => (
                     <li key={type.id} className="flex flex-wrap items-center gap-2 px-3 py-2">
                       <span className="min-w-0 flex-1">
                         <span className={type.active ? 'block font-medium' : 'block text-muted-foreground line-through'}>{type.name}</span>
                         <button type="button" className="text-xs text-accent hover:underline" onClick={() => setOwnersOf(ownersOf === type.id ? null : type.id)}>
-                          {ownerLabel(type) || 'Komu patrí – nastaviť'}
+                          {ownerLabel(type) || tx('Komu patrí – nastaviť')}
                         </button>
                       </span>
                       <select
@@ -75,15 +72,15 @@ export function DutySettings({ companyId }: { companyId: string }) {
                       >
                         {DUTY_PHASES.map((value) => (
                           <option key={value} value={value}>
-                            {DUTY_PHASE_LABELS[value]}
+                            {tx(DUTY_PHASE_LABELS[value])}
                           </option>
                         ))}
                       </select>
                       <Button
                         variant={ownersOf === type.id ? 'outline' : 'ghost'}
                         size="sm"
-                        aria-label={`Upraviť ${type.name}`}
-                        title="Upraviť názov a komu patrí"
+                        aria-label={tf('Upraviť {0}', type.name)}
+                        title={tx('Upraviť názov a komu patrí')}
                         onClick={() => {
                           setRename(type.name)
                           setOwnersOf(ownersOf === type.id ? null : type.id)
@@ -92,32 +89,30 @@ export function DutySettings({ companyId }: { companyId: string }) {
                         <Pencil className="size-4" aria-hidden />
                       </Button>
                       <label className="flex items-center gap-1 text-sm">
-                        <input type="checkbox" className="size-4" checked={type.active} onChange={(event) => update.mutate({ id: type.id, fields: { active: event.target.checked } })} />
-                        Zapnutá
-                      </label>
-                      <Button variant="ghost" size="sm" aria-label="Posunúť vyššie" disabled={index === 0 || update.isPending} onClick={() => swap(group, index, -1)}>
+                        <input type="checkbox" className="size-4" checked={type.active} onChange={(event) => update.mutate({ id: type.id, fields: { active: event.target.checked } })} />{tx('Zapnutá')}</label>
+                      <Button variant="ghost" size="sm" aria-label={tx('Posunúť vyššie')} disabled={index === 0 || update.isPending} onClick={() => swap(group, index, -1)}>
                         <ArrowUp className="size-4" aria-hidden />
                       </Button>
-                      <Button variant="ghost" size="sm" aria-label="Posunúť nižšie" disabled={index === group.length - 1 || update.isPending} onClick={() => swap(group, index, 1)}>
+                      <Button variant="ghost" size="sm" aria-label={tx('Posunúť nižšie')} disabled={index === group.length - 1 || update.isPending} onClick={() => swap(group, index, 1)}>
                         <ArrowDown className="size-4" aria-hidden />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        aria-label={`Zmazať ${type.name}`}
+                        aria-label={tf('Zmazať {0}', type.name)}
                         disabled={remove.isPending}
-                        onClick={() => window.confirm(`Zmazať „${type.name}“? Zmažú sa aj zápisy pri eventoch a zmizne zo štatistík. Ak ju len nechcete ponúkať, vypnite ju.`) && remove.mutate(type.id)}
+                        onClick={() => window.confirm(tf('Zmazať „{0}“? Zmažú sa aj zápisy pri eventoch a zmizne zo štatistík. Ak ju len nechcete ponúkať, vypnite ju.', type.name)) && remove.mutate(type.id)}
                       >
                         <Trash2 className="size-4" aria-hidden />
                       </Button>
                       {ownersOf === type.id && (
                         <div className="flex w-full flex-col gap-2 rounded-lg bg-muted/40 p-2 text-sm">
                           <label className="flex flex-wrap items-center gap-2">
-                            <span className="text-muted-foreground">Názov:</span>
+                            <span className="text-muted-foreground">{tx('Názov:')}</span>
                             <input className="h-9 min-w-48 flex-1 rounded-lg border bg-background px-2" maxLength={60} value={rename} onChange={(event) => setRename(event.target.value)} />
                           </label>
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="mr-1 text-muted-foreground">Roly:</span>
+                            <span className="mr-1 text-muted-foreground">{tx('Roly:')}</span>
                             {OWNER_ROLES.map((role) => {
                               const on = type.ownerRoles.includes(role)
                               return (
@@ -128,13 +123,13 @@ export function DutySettings({ companyId }: { companyId: string }) {
                                   className={cn('rounded-full border px-2.5 py-0.5', on ? 'border-accent bg-accent text-accent-foreground' : 'hover:bg-muted')}
                                   onClick={() => update.mutate({ id: type.id, fields: { ownerRoles: on ? type.ownerRoles.filter((value) => value !== role) : [...type.ownerRoles, role] } })}
                                 >
-                                  {ROLE_LABELS[role]}
+                                  {tx(ROLE_LABELS[role])}
                                 </button>
                               )
                             })}
                           </div>
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="mr-1 text-muted-foreground">Ľudia:</span>
+                            <span className="mr-1 text-muted-foreground">{tx('Ľudia:')}</span>
                             {(members.data ?? []).map((member) => {
                               const on = type.ownerIds.includes(member.userId)
                               return (
@@ -150,18 +145,14 @@ export function DutySettings({ companyId }: { companyId: string }) {
                               )
                             })}
                           </div>
-                          <p className="text-xs text-muted-foreground">Ľudia a roly sa uložia hneď po kliknutí.</p>
+                          <p className="text-xs text-muted-foreground">{tx('Ľudia a roly sa uložia hneď po kliknutí.')}</p>
                           <div className="flex flex-wrap gap-2">
                             <Button
                               size="sm"
                               disabled={update.isPending || !rename.trim() || rename.trim() === type.name || list.some((other) => other.id !== type.id && other.name.trim().toLowerCase() === rename.trim().toLowerCase())}
                               onClick={() => update.mutate({ id: type.id, fields: { name: rename.trim() } })}
-                            >
-                              Uložiť názov
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => setOwnersOf(null)}>
-                              Zavrieť
-                            </Button>
+                            >{tx('Uložiť názov')}</Button>
+                            <Button size="sm" variant="ghost" onClick={() => setOwnersOf(null)}>{tx('Zavrieť')}</Button>
                           </div>
                         </div>
                       )}
@@ -174,9 +165,8 @@ export function DutySettings({ companyId }: { companyId: string }) {
         </div>
       ) : (
         <div className="mb-3 rounded-lg border border-dashed p-3 text-sm">
-          <p className="mb-2">Zatiaľ žiadne činnosti.</p>
-          <Button size="sm" variant="outline" disabled={add.isPending || types.isPending} onClick={() => add.mutate(DEFAULT_DUTIES)}>
-            Pridať predvolené: {DEFAULT_DUTIES.join(', ')}
+          <p className="mb-2">{tx('Zatiaľ žiadne činnosti.')}</p>
+          <Button size="sm" variant="outline" disabled={add.isPending || types.isPending} onClick={() => add.mutate(DEFAULT_DUTIES)}>{tx('Pridať predvolené:')}{' '}{DEFAULT_DUTIES.join(', ')}
           </Button>
         </div>
       )}
@@ -187,14 +177,12 @@ export function DutySettings({ companyId }: { companyId: string }) {
           if (name.trim() && !exists) add.mutate([name])
         }}
       >
-        <Field label="Nová činnosť" className="min-w-48 flex-1" maxLength={60} placeholder="napr. Stavba pódia" value={name} onChange={(event) => setName(event.target.value)} />
+        <Field label={tx('Nová činnosť')} className="min-w-48 flex-1" maxLength={60} placeholder={tx('napr. Stavba pódia')} value={name} onChange={(event) => setName(event.target.value)} />
         <Button type="submit" disabled={add.isPending || !name.trim() || exists}>
-          <Plus className="size-4" aria-hidden />
-          Pridať
-        </Button>
+          <Plus className="size-4" aria-hidden />{tx('Pridať')}</Button>
       </form>
-      {exists && <p className="mt-2 text-sm text-muted-foreground">Taká činnosť už je.</p>}
-      {(add.isError || update.isError || remove.isError) && <p className="mt-2 text-sm text-destructive">Zmena sa nepodarila.</p>}
+      {exists && <p className="mt-2 text-sm text-muted-foreground">{tx('Taká činnosť už je.')}</p>}
+      {(add.isError || update.isError || remove.isError) && <p className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>}
     </div>
   )
 }

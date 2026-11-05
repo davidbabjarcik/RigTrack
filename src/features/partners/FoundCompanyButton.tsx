@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import type { Partner } from './api'
+import { tx } from '@/lib/i18n'
 
 /**
  * Stav väzby na RigTrack pri firme z adresára. Založenie aj prepojenie sa volí vo formulári firmy
@@ -17,9 +18,7 @@ export function FoundCompanyButton({ partner }: { partner: Partner }) {
 
   return (
     <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-      <Building className="size-4" aria-hidden />
-      Majú firmu v RigTracku (prepojené).
-      {canOpen && (
+      <Building className="size-4" aria-hidden />{tx('Majú firmu v RigTracku (prepojené).')}{canOpen && (
         <Button
           variant="outline"
           size="sm"
@@ -27,9 +26,7 @@ export function FoundCompanyButton({ partner }: { partner: Partner }) {
             setActive(linked)
             navigate('/settings')
           }}
-        >
-          Otvoriť a pozvať ich ľudí
-        </Button>
+        >{tx('Otvoriť a pozvať ich ľudí')}</Button>
       )}
     </p>
   )

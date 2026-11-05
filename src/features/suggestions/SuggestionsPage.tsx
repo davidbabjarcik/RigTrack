@@ -23,6 +23,7 @@ import {
   type Suggestion,
   type SuggestionStatus,
 } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 const STATUS_STYLES: Record<SuggestionStatus, string> = {
   new: 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
@@ -66,7 +67,7 @@ function SuggestionCard({ companyId, suggestion, userId, canManage, isAdmin }: C
         <div className="min-w-0 flex-1">
           <p className={cn('font-medium break-words', suggestion.status === 'done' && 'text-muted-foreground')}>{suggestion.title}</p>
           <p className="text-sm text-muted-foreground">
-            {suggestion.authorName || 'neznámy'} · {formatDateTime(suggestion.createdAt)}
+            {suggestion.authorName || tx('neznámy')} · {formatDateTime(suggestion.createdAt)}
           </p>
         </div>
         {canManage ? (
@@ -80,13 +81,13 @@ function SuggestionCard({ companyId, suggestion, userId, canManage, isAdmin }: C
           >
             {SUGGESTION_STATUSES.map((value) => (
               <option key={value} value={value}>
-                {SUGGESTION_STATUS_LABELS[value]}
+                {tx(SUGGESTION_STATUS_LABELS[value])}
               </option>
             ))}
           </SelectField>
         ) : (
           <span className={cn('inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium', STATUS_STYLES[suggestion.status])}>
-            {SUGGESTION_STATUS_LABELS[suggestion.status]}
+            {tx(SUGGESTION_STATUS_LABELS[suggestion.status])}
           </span>
         )}
       </div>
@@ -95,18 +96,17 @@ function SuggestionCard({ companyId, suggestion, userId, canManage, isAdmin }: C
 
       <div className="mt-3 flex items-center gap-2">
         <Button variant="ghost" size="sm" aria-expanded={open} onClick={() => setOpen(!open)}>
-          <MessageSquare className="size-4" aria-hidden />
-          Komentáre ({suggestion.comments.length})
+          <MessageSquare className="size-4" aria-hidden />{tx('Komentáre (')}{suggestion.comments.length})
         </Button>
         {canDelete && (
           <Button
             variant="ghost"
             size="sm"
             className="ml-auto"
-            aria-label={`Odstrániť návrh: ${suggestion.title}`}
+            aria-label={tf('Odstrániť návrh: {0}', suggestion.title)}
             disabled={remove.isPending}
             onClick={() => {
-              if (window.confirm('Odstrániť tento návrh aj s komentármi?')) remove.mutate()
+              if (window.confirm(tx('Odstrániť tento návrh aj s komentármi?'))) remove.mutate()
             }}
           >
             <Trash2 className="size-4" aria-hidden />
@@ -122,7 +122,7 @@ function SuggestionCard({ companyId, suggestion, userId, canManage, isAdmin }: C
                 <li key={item.id} className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-muted-foreground">
-                      {item.authorName || 'neznámy'} · {formatDateTime(item.createdAt)}
+                      {item.authorName || tx('neznámy')} · {formatDateTime(item.createdAt)}
                     </p>
                     <p className="whitespace-pre-wrap">{item.body}</p>
                   </div>
@@ -130,7 +130,7 @@ function SuggestionCard({ companyId, suggestion, userId, canManage, isAdmin }: C
                     <Button
                       variant="ghost"
                       size="sm"
-                      aria-label="Odstrániť komentár"
+                      aria-label={tx('Odstrániť komentár')}
                       disabled={removeComment.isPending}
                       onClick={() => removeComment.mutate(item.id)}
                     >
@@ -143,25 +143,21 @@ function SuggestionCard({ companyId, suggestion, userId, canManage, isAdmin }: C
           )}
           <form onSubmit={handleSubmit} className="flex items-end gap-2">
             <Field
-              label="Nový komentár"
+              label={tx('Nový komentár')}
               hideLabel
-              placeholder="Napíšte komentár"
+              placeholder={tx('Napíšte komentár')}
               maxLength={2000}
               className="flex-1"
               value={text}
               onChange={(e) => setText(e.target.value)}
             />
-            <Button type="submit" disabled={comment.isPending || !text.trim()}>
-              Pridať
-            </Button>
+            <Button type="submit" disabled={comment.isPending || !text.trim()}>{tx('Pridať')}</Button>
           </form>
         </div>
       )}
 
       {(status.isError || remove.isError || comment.isError || removeComment.isError) && (
-        <p role="alert" className="mt-2 text-sm text-destructive">
-          Zmena sa nepodarila.
-        </p>
+        <p role="alert" className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>
       )}
     </li>
   )
@@ -192,29 +188,25 @@ export function SuggestionsPage() {
 
   return (
     <>
-      <PageHeader title="Návrhy" description="Nápady a zlepšenia od kohokoľvek z firmy" />
+      <PageHeader title={tx('Návrhy')} description={tx('Nápady a zlepšenia od kohokoľvek z firmy')} />
 
       <form onSubmit={handleSubmit} className="mb-6 flex flex-col gap-3 rounded-xl border bg-surface p-4">
-        <Field label="Váš návrh" required maxLength={200} placeholder="Čo by sa dalo zlepšiť?" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <TextareaField label="Podrobnosti (nepovinné)" rows={3} maxLength={4000} value={body} onChange={(e) => setBody(e.target.value)} />
+        <Field label={tx('Váš návrh')} required maxLength={200} placeholder={tx('Čo by sa dalo zlepšiť?')} value={title} onChange={(e) => setTitle(e.target.value)} />
+        <TextareaField label={tx('Podrobnosti (nepovinné)')} rows={3} maxLength={4000} value={body} onChange={(e) => setBody(e.target.value)} />
         {add.isError && (
-          <p role="alert" className="text-sm text-destructive">
-            Návrh sa nepodarilo uložiť.
-          </p>
+          <p role="alert" className="text-sm text-destructive">{tx('Návrh sa nepodarilo uložiť.')}</p>
         )}
         <Button type="submit" className="self-start" disabled={add.isPending || !title.trim()}>
-          {add.isPending ? 'Odosielam…' : 'Pridať návrh'}
+          {add.isPending ? 'Odosielam…' : tx('Pridať návrh')}
         </Button>
       </form>
 
       {suggestions.isPending ? (
         <LoadingBlock />
       ) : suggestions.isError ? (
-        <ErrorBlock message="Návrhy sa nepodarilo načítať." onRetry={() => void suggestions.refetch()} />
+        <ErrorBlock message={tx('Návrhy sa nepodarilo načítať.')} onRetry={() => void suggestions.refetch()} />
       ) : suggestions.data.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center text-sm text-muted-foreground">
-          Zatiaľ žiadne návrhy. Buďte prvý.
-        </p>
+        <p className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center text-sm text-muted-foreground">{tx('Zatiaľ žiadne návrhy. Buďte prvý.')}</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {suggestions.data.map((suggestion) => (

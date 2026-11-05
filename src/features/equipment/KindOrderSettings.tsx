@@ -2,6 +2,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUserPrefs } from '@/features/settings/userPrefs'
 import { EQUIPMENT_KINDS, KIND_LABELS, type EquipmentKind } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 /** Úplné poradie druhov: uložené (moje zameranie) a za ním ostatné v predvolenom poradí. */
 function kindOrderOf(saved: string[] | undefined): EquipmentKind[] {
@@ -25,27 +26,23 @@ export function KindOrderSettings() {
   }
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm text-muted-foreground">
-        Pri triedení techniky „Podľa kategórie / druhu“ budú druhy v tomto poradí (napr. svetlá hore, ak robíte svetlá).
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Pri triedení techniky „Podľa kategórie / druhu“ budú druhy v tomto poradí (napr. svetlá hore, ak robíte svetlá).')}</p>
       <ol className="divide-y overflow-hidden rounded-xl border bg-surface">
         {order.map((kind, index) => (
           <li key={kind} className="flex items-center gap-2 px-3 py-1.5 text-sm">
             <span className="w-6 text-muted-foreground tabular-nums">{index + 1}.</span>
-            <span className="min-w-0 flex-1 truncate font-medium">{KIND_LABELS[kind]}</span>
-            <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={`${KIND_LABELS[kind]} vyššie`} disabled={index === 0} onClick={() => move(index, -1)}>
+            <span className="min-w-0 flex-1 truncate font-medium">{tx(KIND_LABELS[kind])}</span>
+            <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={tf('{0} vyššie', KIND_LABELS[kind])} disabled={index === 0} onClick={() => move(index, -1)}>
               <ChevronUp className="size-4" aria-hidden />
             </Button>
-            <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={`${KIND_LABELS[kind]} nižšie`} disabled={index === order.length - 1} onClick={() => move(index, 1)}>
+            <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={tf('{0} nižšie', KIND_LABELS[kind])} disabled={index === order.length - 1} onClick={() => move(index, 1)}>
               <ChevronDown className="size-4" aria-hidden />
             </Button>
           </li>
         ))}
       </ol>
       {prefs.kindOrder && prefs.kindOrder.length > 0 && (
-        <button type="button" className="self-start text-sm text-accent hover:underline" onClick={() => update({ kindOrder: [] })}>
-          Vrátiť predvolené poradie
-        </button>
+        <button type="button" className="self-start text-sm text-accent hover:underline" onClick={() => update({ kindOrder: [] })}>{tx('Vrátiť predvolené poradie')}</button>
       )}
     </div>
   )

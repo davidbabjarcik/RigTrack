@@ -17,6 +17,7 @@ import {
   type CableColorType,
 } from './cableColors'
 import { formatNumber } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const DEFAULT_COLOR = '#00a651'
 
@@ -41,8 +42,8 @@ export function CableColorsSettings({ companyId }: { companyId: string }) {
   const [added, setAdded] = useState<CableColorType[]>([])
   const [customName, setCustomName] = useState('')
 
-  if (colors.isPending) return <p className="text-sm text-muted-foreground">Načítavam…</p>
-  if (colors.isError) return <p className="text-sm text-destructive">Farby sa nepodarilo načítať.</p>
+  if (colors.isPending) return <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
+  if (colors.isError) return <p className="text-sm text-destructive">{tx('Farby sa nepodarilo načítať.')}</p>
   // Bez migrácie 0113 sú všetky farby spoločné.
   const supported = cableTypesSupported()
   const ofType = (type: CableColorType) => colors.data.filter((color) => (color.cableType ?? '') === type)
@@ -62,41 +63,39 @@ export function CableColorsSettings({ companyId }: { companyId: string }) {
   }
   const dropType = (type: CableColorType) => {
     const list = ofType(type)
-    if (list.length > 0 && !window.confirm(`Zmazať vlastné farby pre ${cableTypeLabel(type)}? Tieto káble potom budú mať spoločné farby.`)) return
+    if (list.length > 0 && !window.confirm(tf('Zmazať vlastné farby pre {0}? Tieto káble potom budú mať spoločné farby.', cableTypeLabel(type)))) return
     setAdded(added.filter((value) => value !== type))
     if (list.length > 0) many.mutate({ drop: list })
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">
-        Každá dĺžka má svoju farbu (páska na konektore, hárok s obsahom case). Spoločné farby platia pre všetky káble
-        {supported && ' – ak chcete pre niektorý typ iné, pridajte mu vlastné. Typ sa určí podľa konektora'}.
+      <p className="text-sm text-muted-foreground">{tx('Každá dĺžka má svoju farbu (páska na konektore, hárok s obsahom case). Spoločné farby platia pre všetky káble')}{supported && tx(' – ak chcete pre niektorý typ iné, pridajte mu vlastné. Typ sa určí podľa konektora')}.
       </p>
       <div className="grid gap-3 lg:grid-cols-2">
         <TypeCard
-          title={own.length > 0 ? 'Spoločné – všetky ostatné káble' : 'Spoločné – všetky káble'}
+          title={own.length > 0 ? tx('Spoločné – všetky ostatné káble') : tx('Spoločné – všetky káble')}
           colors={ofType('')}
           onSave={(color) => save.mutate({ ...color, cableType: '' })}
           onRemove={(color) => remove.mutate({ ...color, cableType: '' })}
           onPreset={() => fillPreset('')}
-          presetLabel="Doplniť predlohu (1 m zelená … 15 m oranžová)"
+          presetLabel={tx('Doplniť predlohu (1 m zelená … 15 m oranžová)')}
           busy={busy}
         />
         {own.map((type) => (
           <TypeCard
             key={type}
-            title={`Vlastné pre ${cableTypeLabel(type)}`}
+            title={tf('Vlastné pre {0}', cableTypeLabel(type))}
             hint={
               isBuiltinCableType(type)
-                ? 'Dĺžky, ktoré tu nie sú, majú spoločnú farbu.'
-                : `Káble, ktorých „Konektor / typ“ obsahuje „${type}“. Dĺžky, ktoré tu nie sú, majú spoločnú farbu.`
+                ? tx('Dĺžky, ktoré tu nie sú, majú spoločnú farbu.')
+                : tf('Káble, ktorých „Konektor / typ“ obsahuje „{0}“. Dĺžky, ktoré tu nie sú, majú spoločnú farbu.', type)
             }
             colors={ofType(type)}
             onSave={(color) => save.mutate({ ...color, cableType: type })}
             onRemove={(color) => remove.mutate({ ...color, cableType: type })}
             onPreset={() => fillPreset(type)}
-            presetLabel="Skopírovať spoločné farby"
+            presetLabel={tx('Skopírovať spoločné farby')}
             onDropType={() => dropType(type)}
             busy={busy}
           />
@@ -104,7 +103,7 @@ export function CableColorsSettings({ companyId }: { companyId: string }) {
       </div>
       {supported ? (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">Iné farby pre:</span>
+          <span className="text-sm text-muted-foreground">{tx('Iné farby pre:')}</span>
           {free.map((type) => (
             <Button key={type} size="sm" variant="outline" onClick={() => setAdded([...added, type])}>
               <Plus className="size-4" aria-hidden />
@@ -122,27 +121,25 @@ export function CableColorsSettings({ companyId }: { companyId: string }) {
             }}
           >
             <input
-              aria-label="Vlastný typ kábla"
-              placeholder="Iný typ, napr. Káblovka"
+              aria-label={tx('Vlastný typ kábla')}
+              placeholder={tx('Iný typ, napr. Káblovka')}
               maxLength={40}
               className="h-9 w-48 rounded-md border bg-background px-2 text-sm"
               value={customName}
               onChange={(event) => setCustomName(event.target.value)}
             />
             <Button type="submit" size="sm" variant="outline" disabled={!customValid}>
-              <Plus className="size-4" aria-hidden />
-              Pridať typ
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Pridať typ')}</Button>
           </form>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Rôzne farby pre XLR, powerCON, 230 V a vlastné typy pôjdu po aktualizácii databázy (supabase/update-all.sql).</p>
+        <p className="text-sm text-muted-foreground">{tx('Rôzne farby pre XLR, powerCON, 230 V a vlastné typy pôjdu po aktualizácii databázy (supabase/update-all.sql).')}</p>
       )}
       {(save.isError || remove.isError || many.isError) && (
         <p className="text-sm text-destructive">
           {/cable_type_check/.test(String((save.error ?? many.error)?.message ?? ''))
-            ? 'Vlastné typy káblov ešte databáza nepozná – spustite v Supabase supabase/update-all.sql (migrácia 0114).'
-            : `Nepodarilo sa uložiť. ${errorDetail(save.error ?? remove.error ?? many.error)}`}
+            ? tx('Vlastné typy káblov ešte databáza nepozná – spustite v Supabase supabase/update-all.sql (migrácia 0114).')
+            : tf('Nepodarilo sa uložiť. {0}', errorDetail(save.error ?? remove.error ?? many.error))}
         </p>
       )}
     </div>
@@ -174,12 +171,10 @@ function TypeCard({ title, hint, colors, onSave, onRemove, onPreset, presetLabel
           {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
         </div>
         {onDropType && (
-          <Button size="sm" variant="ghost" disabled={busy} onClick={onDropType}>
-            Zrušiť
-          </Button>
+          <Button size="sm" variant="ghost" disabled={busy} onClick={onDropType}>{tx('Zrušiť')}</Button>
         )}
       </div>
-      {colors.length === 0 && <p className="text-sm text-muted-foreground">Zatiaľ žiadne farby.</p>}
+      {colors.length === 0 && <p className="text-sm text-muted-foreground">{tx('Zatiaľ žiadne farby.')}</p>}
       <ul className="flex flex-col gap-2">
         {colors.map((color) => (
           <ColorRow key={color.lengthM} color={color} onSave={onSave} onRemove={onRemove} busy={busy} />
@@ -196,16 +191,14 @@ function TypeCard({ title, hint, colors, onSave, onRemove, onPreset, presetLabel
       >
         <input
           inputMode="decimal"
-          placeholder="Dĺžka v m, napr. 10"
-          aria-label={`Nová dĺžka – ${title}`}
+          placeholder={tx('Dĺžka v m, napr. 10')}
+          aria-label={tf('Nová dĺžka – {0}', title)}
           className="h-9 w-40 rounded-md border bg-background px-2 text-sm"
           value={length}
           onChange={(event) => setLength(event.target.value)}
         />
         <Button type="submit" size="sm" variant="outline" disabled={!valid || busy}>
-          <Plus className="size-4" aria-hidden />
-          Pridať dĺžku
-        </Button>
+          <Plus className="size-4" aria-hidden />{tx('Pridať dĺžku')}</Button>
       </form>
       {(colors.length === 0 || onDropType) && (
         <button type="button" className="self-start text-sm text-accent hover:underline disabled:opacity-50" disabled={busy} onClick={onPreset}>
@@ -240,14 +233,14 @@ function ColorRow({ color, onSave, onRemove, busy }: { color: CableColor; onSave
       />
       <span className="w-16 shrink-0 text-sm font-medium tabular-nums">{length}</span>
       <input
-        aria-label={`Názov farby pre ${length}`}
-        placeholder="názov farby (napr. zelená)"
+        aria-label={tf('Názov farby pre {0}', length)}
+        placeholder={tx('názov farby (napr. zelená)')}
         maxLength={40}
         className="h-9 min-w-0 flex-1 rounded-md border bg-background px-2 text-sm"
         value={draft.name}
         onChange={(event) => setDraft({ ...draft, name: event.target.value })}
       />
-      <Button size="sm" variant="ghost" aria-label={`Odstrániť farbu pre ${length}`} disabled={busy} onClick={() => onRemove(color)}>
+      <Button size="sm" variant="ghost" aria-label={tf('Odstrániť farbu pre {0}', length)} disabled={busy} onClick={() => onRemove(color)}>
         <Trash2 className="size-4" aria-hidden />
       </Button>
     </li>

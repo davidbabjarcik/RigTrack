@@ -17,6 +17,7 @@ import { useCheckLevels, levelDays } from '@/features/checks/levels'
 import { CASE_KIND_LABELS, CASE_KINDS, kindWord, caseSchema, CHECK_PRIORITIES, CHECK_PRIORITY_LABELS, LABEL_CATEGORIES, type Case, type CaseFormValues } from './model'
 import { addCaseTemplate, caseTemplateKeys, describeTemplate, fetchCaseTemplates, numberedCaseNames, type CaseTemplate } from './templates'
 import { useCases } from './useCases'
+import { tx, tf } from '@/lib/i18n'
 
 type FormProps = {
   companyId: string
@@ -87,7 +88,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
     },
     onError: (error: { code?: string; message?: string }) => {
       if (error.code === '23505' && error.message?.includes('inventory_number')) {
-        setError('inventoryNumber', { message: 'Toto označenie už má iný case' }, { shouldFocus: true })
+        setError('inventoryNumber', { message: tx('Toto označenie už má iný case') }, { shouldFocus: true })
       }
     },
   })
@@ -137,16 +138,13 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
       {current && groupIds.length > 1 && (
         <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
-          <strong>Úprava všetkých {groupIds.length} cases v sade.</strong> Rozmery, hmotnosť, kategória na štítku, case / rack (U),
-          priorita kontroly, vlastník a poznámka sa po uložení prenesú do všetkých. Názov sa zmení všetkým, ale každý case si nechá
-          svoje číslo (napr. „… #3“). Umiestnenie a fotky ostanú pri každom vlastné.
-        </p>
+          <strong>{tx('Úprava všetkých')}{' '}{groupIds.length}{' '}{tx('cases v sade.')}</strong>{' '}{tx('Rozmery, hmotnosť, kategória na štítku, case / rack (U), priorita kontroly, vlastník a poznámka sa po uložení prenesú do všetkých. Názov sa zmení všetkým, ale každý case si nechá svoje číslo (napr. „… #3“). Umiestnenie a fotky ostanú pri každom vlastné.')}</p>
       )}
       {!current && (
         <div className="grid gap-4 rounded-xl border border-accent/40 bg-accent/10 p-4 sm:grid-cols-[1fr_10rem]">
           {templates.length > 0 ? (
-            <SelectField label="Šablóna case" value={templateId} onChange={(event) => applyTemplate(event.target.value)}>
-              <option value="">— bez šablóny —</option>
+            <SelectField label={tx('Šablóna case')} value={templateId} onChange={(event) => applyTemplate(event.target.value)}>
+              <option value="">{tx('— bez šablóny —')}</option>
               {templates.map((template) => (
                 <option key={template.id} value={template.id}>
                   {template.name}
@@ -155,10 +153,10 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
               ))}
             </SelectField>
           ) : (
-            <p className="self-end text-sm text-muted-foreground">Viac rovnakých case naraz – zadajte počet. Šablónu (rozmery, hmotnosť) si uložíte dole.</p>
+            <p className="self-end text-sm text-muted-foreground">{tx('Viac rovnakých case naraz – zadajte počet. Šablónu (rozmery, hmotnosť) si uložíte dole.')}</p>
           )}
           <Field
-            label="Koľko case vytvoriť"
+            label={tx('Koľko case vytvoriť')}
             type="number"
             inputMode="numeric"
             min={1}
@@ -168,13 +166,13 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
             onChange={(event) => setCopies(Math.min(Math.max(Math.trunc(Number(event.target.value)) || 1, 1), 50))}
           />
           <p className="text-sm text-muted-foreground sm:col-span-2">
-            {templates.length > 0 && 'Šablóna doplní rozmery, hmotnosť a kategóriu. '}
-            {copies > 1 && `Vznikne ${copies} case s názvami „${numberedCaseNames(getValues('name') || 'Case', copies, caseNames)[0]}“ a ďalej podľa poradia. `}
+            {templates.length > 0 && tx('Šablóna doplní rozmery, hmotnosť a kategóriu. ')}
+            {copies > 1 && tf('Vznikne {0} case s názvami „{1}“ a ďalej podľa poradia. ', copies, numberedCaseNames(getValues('name') || 'Case', copies, caseNames)[0])}
           </p>
         </div>
       )}
       <div className="flex flex-wrap items-end gap-3">
-        <div role="radiogroup" aria-label="Case alebo rack" className="flex gap-1 rounded-lg bg-muted p-1">
+        <div role="radiogroup" aria-label={tx('Case alebo rack')} className="flex gap-1 rounded-lg bg-muted p-1">
           {CASE_KINDS.map((value) => (
             <button
               key={value}
@@ -184,44 +182,44 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
               onClick={() => setValue('kind', value, { shouldDirty: true })}
               className={kind === value ? 'h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground' : 'h-9 rounded-md px-4 text-sm font-medium hover:bg-surface'}
             >
-              {CASE_KIND_LABELS[value]}
+              {tx(CASE_KIND_LABELS[value])}
             </button>
           ))}
         </div>
         {kind === 'rack' && (
           <Field
-            label="Výška (U)"
+            label={tx('Výška (U)')}
             type="number"
             inputMode="numeric"
             min={1}
             max={60}
             step={1}
-            placeholder="napr. 12"
+            placeholder={tx('napr. 12')}
             className="w-32"
             error={errors.rackUnits?.message}
             {...register('rackUnits', asOptionalNumber)}
           />
         )}
       </div>
-      <Field label="Názov *" autoFocus={!current} error={errors.name?.message} {...register('name')} />
+      <Field label={tx('Názov *')} autoFocus={!current} error={errors.name?.message} {...register('name')} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label="Označenie / číslo"
+          label={tx('Označenie / číslo')}
           autoComplete="off"
           error={errors.inventoryNumber?.message}
           {...register('inventoryNumber')}
         />
         <Field
-          label="Staré čísla (nepovinné)"
-          placeholder="napr. 17, A-4 – podľa nich ho nájdete v Sklade"
+          label={tx('Staré čísla (nepovinné)')}
+          placeholder={tx('napr. 17, A-4 – podľa nich ho nájdete v Sklade')}
           autoComplete="off"
           error={errors.oldNumbers?.message}
           {...register('oldNumbers')}
         />
         <Field
-          label="Umiestnenie"
+          label={tx('Umiestnenie')}
           list={locationListId}
-          placeholder="Vyberte alebo napíšte nové"
+          placeholder={tx('Vyberte alebo napíšte nové')}
           autoComplete="off"
           error={errors.location?.message}
           {...register('location')}
@@ -232,25 +230,25 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
           ))}
         </datalist>
         <OwnerSelect companyId={companyId} error={errors.owner?.message} {...register('owner')} />
-        <SelectField label="Priorita kontroly" error={errors.checkPriority?.message} {...register('checkPriority')}>
+        <SelectField label={tx('Priorita kontroly')} error={errors.checkPriority?.message} {...register('checkPriority')}>
           {CHECK_PRIORITIES.map((priority) => (
             <option key={priority} value={priority}>
-              {CHECK_PRIORITY_LABELS[priority]}
-              {levelDays(priority, checkDays) !== null ? ` – kontrolovať aspoň raz za ${levelDays(priority, checkDays)} dní` : ' – nekontroluje sa'}
+              {tx(CHECK_PRIORITY_LABELS[priority])}
+              {levelDays(priority, checkDays) !== null ? tf(' – kontrolovať aspoň raz za {0} dní', levelDays(priority, checkDays)) : tx(' – nekontroluje sa')}
             </option>
           ))}
         </SelectField>
         <Field
-          label="Číslo case na štítku"
-          placeholder="napr. 1 alebo 2, ak je sada vo viacerých cases"
+          label={tx('Číslo case na štítku')}
+          placeholder={tx('napr. 1 alebo 2, ak je sada vo viacerých cases')}
           autoComplete="off"
           error={errors.labelNumber?.message}
           {...register('labelNumber')}
         />
         <Field
-          label="Kategória na štítku"
+          label={tx('Kategória na štítku')}
           list={categoryListId}
-          placeholder="napr. Sound, Light, Cables"
+          placeholder={tx('napr. Sound, Light, Cables')}
           autoComplete="off"
           error={errors.labelCategory?.message}
           {...register('labelCategory')}
@@ -261,7 +259,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
           ))}
         </datalist>
         <Field
-          label="Hmotnosť (kg)"
+          label={tx('Hmotnosť (kg)')}
           type="number"
           inputMode="decimal"
           min={0}
@@ -271,10 +269,10 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
         />
       </div>
       <fieldset className="rounded-xl border bg-surface p-4">
-        <legend className="px-1 text-sm font-medium text-muted-foreground">Vonkajšie rozmery (cm)</legend>
+        <legend className="px-1 text-sm font-medium text-muted-foreground">{tx('Vonkajšie rozmery (cm)')}</legend>
         <div className="grid grid-cols-3 gap-3">
           <Field
-            label="Šírka"
+            label={tx('Šírka')}
             type="number"
             inputMode="decimal"
             min={0}
@@ -283,7 +281,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
             {...register('widthCm', asOptionalNumber)}
           />
           <Field
-            label="Dĺžka"
+            label={tx('Dĺžka')}
             type="number"
             inputMode="decimal"
             min={0}
@@ -292,7 +290,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
             {...register('lengthCm', asOptionalNumber)}
           />
           <Field
-            label="Hĺbka"
+            label={tx('Hĺbka')}
             type="number"
             inputMode="decimal"
             min={0}
@@ -302,40 +300,34 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
           />
         </div>
       </fieldset>
-      <TextareaField label="Poznámka" error={errors.note?.message} {...register('note')} />
+      <TextareaField label={tx('Poznámka')} error={errors.note?.message} {...register('note')} />
 
       {save.isError && !errors.inventoryNumber && (
-        <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo. Skontrolujte pripojenie a skúste to znova.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Uloženie zlyhalo. Skontrolujte pripojenie a skúste to znova.')}</p>
       )}
 
-      {saveTemplate.isSuccess && <p className="text-sm text-muted-foreground">Šablóna je uložená. Nájdete ju pri zakladaní nového case.</p>}
+      {saveTemplate.isSuccess && <p className="text-sm text-muted-foreground">{tx('Šablóna je uložená. Nájdete ju pri zakladaní nového case.')}</p>}
       {saveTemplate.isError && (
         <p role="alert" className="text-sm text-destructive">
-          {(saveTemplate.error as { code?: string }).code === '23505' ? 'Šablóna s týmto názvom už existuje.' : 'Šablónu sa nepodarilo uložiť.'}
+          {(saveTemplate.error as { code?: string }).code === '23505' ? tx('Šablóna s týmto názvom už existuje.') : tx('Šablónu sa nepodarilo uložiť.')}
         </p>
       )}
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : !current && copies > 1 ? `Vytvoriť ${copies} cases` : 'Uložiť'}
+          {save.isPending ? tx('Ukladám…') : !current && copies > 1 ? tf('Vytvoriť {0} cases', copies) : tx('Uložiť')}
         </Button>
-        <LinkButton to={current ? (groupIds.length > 1 ? `/cases/group?ids=${groupIds.join(',')}` : `/cases/${current.id}`) : '/cases'} variant="outline">
-          Zrušiť
-        </LinkButton>
+        <LinkButton to={current ? (groupIds.length > 1 ? `/cases/group?ids=${groupIds.join(',')}` : `/cases/${current.id}`) : '/cases'} variant="outline">{tx('Zrušiť')}</LinkButton>
         {canManageTemplates && (
           <Button
             variant="ghost"
             className="ml-auto"
             disabled={saveTemplate.isPending}
             onClick={() => {
-              const name = window.prompt('Názov šablóny (typ case, bez poradového čísla):', getValues('name').replace(/\s+\d+$/, ''))
+              const name = window.prompt(tx('Názov šablóny (typ case, bez poradového čísla):'), getValues('name').replace(/\s+\d+$/, ''))
               if (name?.trim()) saveTemplate.mutate(name.trim())
             }}
-          >
-            Uložiť rozmery ako šablónu
-          </Button>
+          >{tx('Uložiť rozmery ako šablónu')}</Button>
         )}
       </div>
     </form>
@@ -355,13 +347,13 @@ export function CaseFormPage() {
 
   let body
   if (!can(company, 'cases.edit')) {
-    body = <ErrorBlock message="Na úpravu cases nemáte oprávnenie." />
+    body = <ErrorBlock message={tx('Na úpravu cases nemáte oprávnenie.')} />
   } else if (lookups.isPending || cases.isPending) {
     body = <LoadingBlock />
   } else if (lookups.isError || cases.isError) {
-    body = <ErrorBlock message="Údaje sa nepodarilo načítať." onRetry={() => void cases.refetch()} />
+    body = <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void cases.refetch()} />
   } else if (id && !current) {
-    body = <ErrorBlock message="Tento case neexistuje alebo k nemu nemáte prístup." />
+    body = <ErrorBlock message={tx('Tento case neexistuje alebo k nemu nemáte prístup.')} />
   } else {
     body = (
       <CaseForm
@@ -379,7 +371,7 @@ export function CaseFormPage() {
 
   return (
     <>
-      <PageHeader title={id ? `Úprava – ${kindWord(current?.kind)}` : 'Nový case / rack / taška'} />
+      <PageHeader title={id ? tf('Úprava – {0}', kindWord(current?.kind)) : tx('Nový case / rack / taška')} />
       {body}
     </>
   )

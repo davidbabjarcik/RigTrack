@@ -6,6 +6,7 @@ import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { addEventCapsule, capsuleKeys, fetchEventCapsules, removeEventCapsule, setEventCapsuleQuantity, useCapsules } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 /** Ktoré kapsule bezdrôtových mikrofónov idú na event a koľko. */
 export function EventCapsulesSection({ companyId, eventId, canEdit }: { companyId: string; eventId: string; canEdit: boolean }) {
@@ -45,15 +46,13 @@ export function EventCapsulesSection({ companyId, eventId, canEdit }: { companyI
   return (
     <CollapsibleSection
       id="event.capsules"
-      title={`Kapsule k mikrofónom (${total})`}
+      title={tf('Kapsule k mikrofónom ({0})', total)}
       actions={
         canEdit &&
         !adding &&
         available.length > 0 && (
           <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
-            <Plus className="size-4" aria-hidden />
-            Pridať kapsulu
-          </Button>
+            <Plus className="size-4" aria-hidden />{tx('Pridať kapsulu')}</Button>
         )
       }
     >
@@ -73,54 +72,46 @@ export function EventCapsulesSection({ companyId, eventId, canEdit }: { companyI
                 </span>
                 {canEdit ? (
                   <span className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" aria-label="Menej" disabled={row.quantity <= 1 || change.isPending} onClick={() => change.mutate({ id: row.id, value: row.quantity - 1 })}>
+                    <Button variant="ghost" size="sm" aria-label={tx('Menej')} disabled={row.quantity <= 1 || change.isPending} onClick={() => change.mutate({ id: row.id, value: row.quantity - 1 })}>
                       <Minus className="size-4" aria-hidden />
                     </Button>
-                    <span className="w-10 text-center font-medium">{row.quantity} ks</span>
-                    <Button variant="ghost" size="sm" aria-label="Viac" disabled={change.isPending} onClick={() => change.mutate({ id: row.id, value: row.quantity + 1 })}>
+                    <span className="w-10 text-center font-medium">{row.quantity}{' '}{tx('ks')}</span>
+                    <Button variant="ghost" size="sm" aria-label={tx('Viac')} disabled={change.isPending} onClick={() => change.mutate({ id: row.id, value: row.quantity + 1 })}>
                       <Plus className="size-4" aria-hidden />
                     </Button>
-                    <Button variant="ghost" size="sm" aria-label={`Odobrať ${capsule.name}`} disabled={remove.isPending} onClick={() => remove.mutate(row.id)}>
+                    <Button variant="ghost" size="sm" aria-label={tf('Odobrať {0}', capsule.name)} disabled={remove.isPending} onClick={() => remove.mutate(row.id)}>
                       <X className="size-4" aria-hidden />
                     </Button>
                   </span>
                 ) : (
-                  <span className="font-medium">{row.quantity} ks</span>
+                  <span className="font-medium">{row.quantity}{' '}{tx('ks')}</span>
                 )}
               </li>
             )
           })}
         </ul>
       ) : (
-        !adding && <p className="mb-3 text-sm text-muted-foreground">Zatiaľ nie sú vybrané žiadne kapsule.</p>
+        !adding && <p className="mb-3 text-sm text-muted-foreground">{tx('Zatiaľ nie sú vybrané žiadne kapsule.')}</p>
       )}
       {adding && (
         <form onSubmit={submit} className="mb-3 grid gap-2 rounded-xl border bg-surface p-4 sm:grid-cols-[1fr_6rem_1fr_auto] sm:items-end">
-          <SelectField label="Kapsula" value={capsuleId} onChange={(e) => setCapsuleId(e.target.value)}>
-            <option value="">— vyberte —</option>
+          <SelectField label={tx('Kapsula')} value={capsuleId} onChange={(e) => setCapsuleId(e.target.value)}>
+            <option value="">{tx('— vyberte —')}</option>
             {available.map((capsule) => (
               <option key={capsule.id} value={capsule.id}>
-                {[capsule.manufacturer, capsule.name].filter(Boolean).join(' ')} ({capsule.quantity} ks)
-              </option>
+                {[capsule.manufacturer, capsule.name].filter(Boolean).join(' ')} ({capsule.quantity}{' '}{tx('ks)')}</option>
             ))}
           </SelectField>
-          <Field label="Kusov" type="number" inputMode="numeric" min={1} step={1} value={Number.isNaN(quantity) ? '' : quantity} onChange={(e) => setQuantity(e.target.valueAsNumber)} />
-          <Field label="Poznámka" placeholder="napr. pre moderátora" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} />
+          <Field label={tx('Kusov')} type="number" inputMode="numeric" min={1} step={1} value={Number.isNaN(quantity) ? '' : quantity} onChange={(e) => setQuantity(e.target.valueAsNumber)} />
+          <Field label={tx('Poznámka')} placeholder={tx('napr. pre moderátora')} maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} />
           <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={!capsuleId || !(quantity >= 1) || add.isPending}>
-              Pridať
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>
-              Zrušiť
-            </Button>
+            <Button type="submit" size="sm" disabled={!capsuleId || !(quantity >= 1) || add.isPending}>{tx('Pridať')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>{tx('Zrušiť')}</Button>
           </div>
         </form>
       )}
-      <p className="text-xs text-muted-foreground">
-        Zoznam kapsúl spravujete v{' '}
-        <Link to="/equipment/capsules" className="text-accent hover:underline">
-          Technika → Kapsule
-        </Link>
+      <p className="text-xs text-muted-foreground">{tx('Zoznam kapsúl spravujete v')}{' '}
+        <Link to="/equipment/capsules" className="text-accent hover:underline">{tx('Technika → Kapsule')}</Link>
         .
       </p>
     </CollapsibleSection>

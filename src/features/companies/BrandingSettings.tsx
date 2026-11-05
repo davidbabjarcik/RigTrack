@@ -8,6 +8,7 @@ import { usePastedImage } from '@/lib/usePastedImage'
 import { brandingKeys, fetchBranding, fetchLogoBlob, LOGO_STYLES, removeLogo, saveLabelFooter, saveLogoStyle, uploadLogo, type LogoStyle } from './branding'
 import type { LogoTone } from './logoImage'
 import { useCompanyLogo } from './useCompanyLogo'
+import { tx } from '@/lib/i18n'
 
 /** Ako bude logo vyzerať na svetlom a tmavom podklade aplikácie (bez ohľadu na aktuálny režim). */
 function previewClass(style: LogoStyle, tone: LogoTone, dark: boolean) {
@@ -27,7 +28,7 @@ function AppLogoPreview({ companyId, style }: { companyId: string; style: LogoSt
     <div className="grid grid-cols-2 gap-2">
       {[false, true].map((dark) => (
         <div key={String(dark)} className={cn('flex h-20 items-center justify-center rounded-lg border p-3', dark ? 'bg-slate-900' : 'bg-white')}>
-          <img src={url} alt={dark ? 'Logo v tmavom režime' : 'Logo vo svetlom režime'} className={cn('max-h-full max-w-full object-contain', previewClass(style, tone, dark))} />
+          <img src={url} alt={dark ? tx('Logo v tmavom režime') : tx('Logo vo svetlom režime')} className={cn('max-h-full max-w-full object-contain', previewClass(style, tone, dark))} />
         </div>
       ))}
     </div>
@@ -53,15 +54,13 @@ function LogoPreview({ companyId, path }: { companyId: string; path: string }) {
 
   if (logo.isError) {
     return (
-      <p role="alert" className="text-sm text-destructive">
-        Logo sa nepodarilo načítať.
-      </p>
+      <p role="alert" className="text-sm text-destructive">{tx('Logo sa nepodarilo načítať.')}</p>
     )
   }
   // Biely podklad: logo sa tlačí na biely štítok, nech je vidieť, ako tam bude vyzerať.
   return (
     <div className="flex h-28 w-48 items-center justify-center rounded-lg border bg-white p-3">
-      {url && <img src={url} alt="Logo firmy" className="max-h-full max-w-full" />}
+      {url && <img src={url} alt={tx('Logo firmy')} className="max-h-full max-w-full" />}
     </div>
   )
 }
@@ -90,12 +89,10 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
   // Ctrl+V: skopírované logo (z webu, súbor) sa nahrá rovnako ako cez tlačidlo.
   usePastedImage(branding.isSuccess && !upload.isPending && !remove.isPending, (file) => upload.mutate(file))
 
-  if (branding.isPending) return <p className="text-sm text-muted-foreground">Načítavam…</p>
+  if (branding.isPending) return <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
   if (branding.isError) {
     return (
-      <p role="alert" className="text-sm text-destructive">
-        Nastavenie štítkov sa nepodarilo načítať.
-      </p>
+      <p role="alert" className="text-sm text-destructive">{tx('Nastavenie štítkov sa nepodarilo načítať.')}</p>
     )
   }
 
@@ -114,9 +111,7 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
         {logoPath ? (
           <LogoPreview companyId={companyId} path={logoPath} />
         ) : (
-          <div className="flex h-28 w-48 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-            bez loga
-          </div>
+          <div className="flex h-28 w-48 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">{tx('bez loga')}</div>
         )}
         <div className="flex flex-col items-start gap-2">
           <input
@@ -133,7 +128,7 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
           />
           <Button variant="outline" size="sm" disabled={busy} onClick={() => fileInput.current?.click()}>
             <ImageUp className="size-4" aria-hidden />
-            {upload.isPending ? 'Nahrávam…' : logoPath ? 'Zmeniť logo' : 'Nahrať logo'}
+            {upload.isPending ? tx('Nahrávam…') : logoPath ? tx('Zmeniť logo') : tx('Nahrať logo')}
           </Button>
           {logoPath && (
             <Button
@@ -141,25 +136,19 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
               size="sm"
               disabled={busy}
               onClick={() => {
-                if (window.confirm('Odstrániť logo firmy?')) remove.mutate()
+                if (window.confirm(tx('Odstrániť logo firmy?'))) remove.mutate()
               }}
             >
-              <Trash2 className="size-4" aria-hidden />
-              Odstrániť
-            </Button>
+              <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
           )}
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4" checked={removeBackground} onChange={(event) => setRemoveBackground(event.target.checked)} />
-            Pri nahratí odstrániť jednofarebné pozadie
-          </label>
-          <p className="text-sm text-muted-foreground">PNG, JPG alebo WebP – aj skopírované cez Ctrl+V. Prázdne okraje sa orežú. Svetlé logo sa na bielom papieri vytlačí čierne.</p>
+            <input type="checkbox" className="size-4" checked={removeBackground} onChange={(event) => setRemoveBackground(event.target.checked)} />{tx('Pri nahratí odstrániť jednofarebné pozadie')}</label>
+          <p className="text-sm text-muted-foreground">{tx('PNG, JPG alebo WebP – aj skopírované cez Ctrl+V. Prázdne okraje sa orežú. Svetlé logo sa na bielom papieri vytlačí čierne.')}</p>
         </div>
       </div>
       {logoPath && (
         <div className="flex flex-col gap-2 border-t pt-4">
-          <label className="flex flex-col gap-1 text-sm font-medium sm:max-w-sm">
-            Zobrazenie loga v aplikácii
-            <select
+          <label className="flex flex-col gap-1 text-sm font-medium sm:max-w-sm">{tx('Zobrazenie loga v aplikácii')}<select
               className="h-10 rounded-lg border bg-background px-3 font-normal"
               value={branding.data.logoStyle}
               disabled={style.isPending}
@@ -167,7 +156,7 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
             >
               {LOGO_STYLES.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.label}
+                  {tx(item.label)}
                 </option>
               ))}
             </select>
@@ -175,32 +164,28 @@ export function BrandingSettings({ companyId }: { companyId: string }) {
           <div className="sm:max-w-sm">
             <AppLogoPreview companyId={companyId} style={branding.data.logoStyle} />
           </div>
-          {style.isError && <p className="text-sm text-destructive">Nepodarilo sa uložiť. Táto časť databázy ešte nemusí byť pripravená.</p>}
+          {style.isError && <p className="text-sm text-destructive">{tx('Nepodarilo sa uložiť. Táto časť databázy ešte nemusí byť pripravená.')}</p>}
         </div>
       )}
       {(upload.isError || remove.isError) && (
-        <p role="alert" className="text-sm text-destructive">
-          Logo sa nepodarilo uložiť. Skúste iný obrázok.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Logo sa nepodarilo uložiť. Skúste iný obrázok.')}</p>
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-end">
         <Field
-          label="Kontaktný riadok na štítku"
-          placeholder="+421 900 000 000 • info@firma.sk • www.firma.sk"
+          label={tx('Kontaktný riadok na štítku')}
+          placeholder={tx('+421 900 000 000 • info@firma.sk • www.firma.sk')}
           maxLength={200}
           className="flex-1"
           value={footerValue}
           onChange={(e) => setFooter(e.target.value)}
         />
         <Button type="submit" disabled={saveFooter.isPending || footerValue.trim() === labelFooter}>
-          {saveFooter.isPending ? 'Ukladám…' : 'Uložiť'}
+          {saveFooter.isPending ? tx('Ukladám…') : tx('Uložiť')}
         </Button>
       </form>
       {saveFooter.isError && (
-        <p role="alert" className="text-sm text-destructive">
-          Text sa nepodarilo uložiť.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Text sa nepodarilo uložiť.')}</p>
       )}
     </div>
   )

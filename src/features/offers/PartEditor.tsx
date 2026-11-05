@@ -6,6 +6,7 @@ import type { Equipment } from '@/features/equipment/model'
 import { formatMoney } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { emptyPart, itemsFromLines, lineTotal, newLine, partCode, partPrice, type OfferLine, type OfferPart, type PriceMode } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = {
   part: OfferPart
@@ -71,29 +72,29 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
     <div className={cn('flex flex-col gap-3 rounded-xl border p-4', isSub ? 'bg-background' : 'bg-surface')}>
       <div className="flex items-center gap-2">
         <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-accent/15 px-2 text-sm font-bold text-accent">{code}</span>
-        <Field label={`Názov časti ${code}`} hideLabel className="flex-1" placeholder={isSub ? 'napr. Ozvučenie' : 'napr. Kompletné technické zabezpečenie'} maxLength={160} value={part.title} onChange={(e) => set({ title: e.target.value })} />
-        <Button variant="ghost" size="sm" aria-label={`Posunúť ${code} vyššie`} onClick={() => onMove(-1)}>
+        <Field label={tf('Názov časti {0}', code)} hideLabel className="flex-1" placeholder={isSub ? tx('napr. Ozvučenie') : tx('napr. Kompletné technické zabezpečenie')} maxLength={160} value={part.title} onChange={(e) => set({ title: e.target.value })} />
+        <Button variant="ghost" size="sm" aria-label={tf('Posunúť {0} vyššie', code)} onClick={() => onMove(-1)}>
           <ArrowUp className="size-4" aria-hidden />
         </Button>
-        <Button variant="ghost" size="sm" aria-label={`Posunúť ${code} nižšie`} onClick={() => onMove(1)}>
+        <Button variant="ghost" size="sm" aria-label={tf('Posunúť {0} nižšie', code)} onClick={() => onMove(1)}>
           <ArrowDown className="size-4" aria-hidden />
         </Button>
         {onSaveTemplate && (
-          <Button variant="ghost" size="sm" title="Uložiť ako šablónu" aria-label={`Uložiť ${code} ako šablónu`} onClick={onSaveTemplate}>
+          <Button variant="ghost" size="sm" title={tx('Uložiť ako šablónu')} aria-label={tf('Uložiť {0} ako šablónu', code)} onClick={onSaveTemplate}>
             <BookmarkPlus className="size-4" aria-hidden />
           </Button>
         )}
-        <Button variant="ghost" size="sm" aria-label={`Odstrániť ${code}`} onClick={() => window.confirm(`Odstrániť časť ${code}?`) && onRemove()}>
+        <Button variant="ghost" size="sm" aria-label={tf('Odstrániť {0}', code)} onClick={() => window.confirm(tf('Odstrániť časť {0}?', code)) && onRemove()}>
           <Trash2 className="size-4" aria-hidden />
         </Button>
       </div>
 
-      <TextareaField label="Popis" rows={2} maxLength={2000} placeholder="Čo časť obsahuje – jedna-dve vety pre klienta." value={part.description} onChange={(e) => set({ description: e.target.value })} />
+      <TextareaField label={tx('Popis')} rows={2} maxLength={2000} placeholder={tx('Čo časť obsahuje – jedna-dve vety pre klienta.')} value={part.description} onChange={(e) => set({ description: e.target.value })} />
       <div>
-        <TextareaField label="Zoznam (jeden riadok = jedna odrážka)" rows={3} maxLength={4000} placeholder={'napr.\n4 × Reprobox\n2 × Subwoofer'} value={part.items} onChange={(e) => set({ items: e.target.value })} />
+        <TextareaField label={tx('Zoznam (jeden riadok = jedna odrážka)')} rows={3} maxLength={4000} placeholder={tx('napr.\n4 × Reprobox\n2 × Subwoofer')} value={part.items} onChange={(e) => set({ items: e.target.value })} />
         <div className="relative mt-1">
           <Search className="pointer-events-none absolute top-3 left-3 size-4 text-muted-foreground" aria-hidden />
-          <Field label="Pridať do zoznamu z našej techniky" hideLabel placeholder="Pridať do zoznamu z našej techniky – hľadať…" className="[&_input]:h-10 [&_input]:pl-9" value={itemSearch} onChange={(e) => setItemSearch(e.target.value)} />
+          <Field label={tx('Pridať do zoznamu z našej techniky')} hideLabel placeholder={tx('Pridať do zoznamu z našej techniky – hľadať…')} className="[&_input]:h-10 [&_input]:pl-9" value={itemSearch} onChange={(e) => setItemSearch(e.target.value)} />
         </div>
         {itemFound.length > 0 && (
           <ul className="mt-1 divide-y rounded-lg border text-sm">
@@ -102,7 +103,7 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
                 <button type="button" onClick={() => addItem(item)} className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-muted">
                   <Plus className="size-4 text-accent" aria-hidden />
                   <span className="min-w-0 flex-1 truncate">{item.name}</span>
-                  <span className="text-xs text-muted-foreground">{item.quantity} ks</span>
+                  <span className="text-xs text-muted-foreground">{item.quantity}{' '}{tx('ks')}</span>
                 </button>
               </li>
             ))}
@@ -111,23 +112,19 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
         <div className="mt-1 flex flex-wrap gap-2">
           {part.lines.length > 0 && (
             <button type="button" className="inline-flex items-center gap-1 text-xs text-accent hover:underline" onClick={() => set({ items: itemsFromLines(part.lines) })}>
-              <ListPlus className="size-3.5" aria-hidden />
-              Vyplniť z riadkov ceny
-            </button>
+              <ListPlus className="size-3.5" aria-hidden />{tx('Vyplniť z riadkov ceny')}</button>
           )}
           {eventItems && (
             <button type="button" className="inline-flex items-center gap-1 text-xs text-accent hover:underline" onClick={() => set({ items: [part.items.trim(), eventItems].filter(Boolean).join('\n') })}>
-              <ListPlus className="size-3.5" aria-hidden />
-              Pridať techniku z eventu
-            </button>
+              <ListPlus className="size-3.5" aria-hidden />{tx('Pridať techniku z eventu')}</button>
           )}
         </div>
       </div>
-      <Field label="Cena zahŕňa" maxLength={300} placeholder="napr. dopravu, montáž, demontáž a obsluhu" value={part.includes} onChange={(e) => set({ includes: e.target.value })} />
+      <Field label={tx('Cena zahŕňa')} maxLength={300} placeholder={tx('napr. dopravu, montáž, demontáž a obsluhu')} value={part.includes} onChange={(e) => set({ includes: e.target.value })} />
 
       <div className="rounded-lg border p-3">
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium">Cena {code}</span>
+          <span className="text-sm font-medium">{tx('Cena')}{' '}{code}</span>
           <div role="radiogroup" className="flex gap-1 rounded-lg bg-muted p-1">
             {MODES.map((mode) => (
               <button
@@ -138,7 +135,7 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
                 onClick={() => set({ priceMode: mode.id })}
                 className={cn('rounded-md px-2.5 py-1 text-xs font-medium', part.priceMode === mode.id ? 'bg-surface text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
               >
-                {mode.label}
+                {tx(mode.label)}
               </button>
             ))}
           </div>
@@ -148,14 +145,14 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
         {part.priceMode === 'manual' ? (
           <div className="grid gap-2 sm:grid-cols-2">
             <Field
-              label="Suma (€)"
+              label={tx('Suma (€)')}
               type="number"
               min={0}
               step="0.01"
               value={part.price ?? ''}
               onChange={(e) => set({ price: e.target.value === '' ? null : Math.max(0, Number(e.target.value)) })}
             />
-            <Field label="Alebo text namiesto ceny" placeholder="napr. podľa dopytu" maxLength={120} value={part.priceNote} onChange={(e) => set({ priceNote: e.target.value })} />
+            <Field label={tx('Alebo text namiesto ceny')} placeholder={tx('napr. podľa dopytu')} maxLength={120} value={part.priceNote} onChange={(e) => set({ priceNote: e.target.value })} />
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -164,11 +161,11 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
                 <table className="w-full min-w-[34rem] text-sm">
                   <thead>
                     <tr className="text-left text-xs text-muted-foreground">
-                      <th className="pb-1 font-medium">Položka</th>
-                      <th className="w-16 pb-1 font-medium">Ks</th>
-                      <th className="w-16 pb-1 font-medium">Dni</th>
-                      <th className="w-24 pb-1 font-medium">€ / ks / deň</th>
-                      <th className="w-24 pb-1 text-right font-medium">Spolu</th>
+                      <th className="pb-1 font-medium">{tx('Položka')}</th>
+                      <th className="w-16 pb-1 font-medium">{tx('Ks')}</th>
+                      <th className="w-16 pb-1 font-medium">{tx('Dni')}</th>
+                      <th className="w-24 pb-1 font-medium">{tx('€ / ks / deň')}</th>
+                      <th className="w-24 pb-1 text-right font-medium">{tx('Spolu')}</th>
                       <th className="w-8" />
                     </tr>
                   </thead>
@@ -176,20 +173,20 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
                     {part.lines.map((line) => (
                       <tr key={line.id}>
                         <td className="pr-1 pb-1">
-                          <input aria-label="Položka" className="h-8 w-full rounded-md border bg-background px-2" value={line.label} maxLength={160} onChange={(e) => setLine(line.id, { label: e.target.value })} />
+                          <input aria-label={tx('Položka')} className="h-8 w-full rounded-md border bg-background px-2" value={line.label} maxLength={160} onChange={(e) => setLine(line.id, { label: e.target.value })} />
                         </td>
                         <td className="pr-1 pb-1">
-                          <input aria-label="Kusov" type="number" min={0} className="h-8 w-full rounded-md border bg-background px-1.5 text-right" value={line.quantity} onChange={(e) => setLine(line.id, { quantity: Math.max(0, Number(e.target.value) || 0) })} />
+                          <input aria-label={tx('Kusov')} type="number" min={0} className="h-8 w-full rounded-md border bg-background px-1.5 text-right" value={line.quantity} onChange={(e) => setLine(line.id, { quantity: Math.max(0, Number(e.target.value) || 0) })} />
                         </td>
                         <td className="pr-1 pb-1">
-                          <input aria-label="Dní" type="number" min={0} className="h-8 w-full rounded-md border bg-background px-1.5 text-right" value={line.days} onChange={(e) => setLine(line.id, { days: Math.max(0, Number(e.target.value) || 0) })} />
+                          <input aria-label={tx('Dní')} type="number" min={0} className="h-8 w-full rounded-md border bg-background px-1.5 text-right" value={line.days} onChange={(e) => setLine(line.id, { days: Math.max(0, Number(e.target.value) || 0) })} />
                         </td>
                         <td className="pr-1 pb-1">
-                          <input aria-label="Cena za kus a deň" type="number" min={0} step="0.01" className="h-8 w-full rounded-md border bg-background px-1.5 text-right" value={line.unitPrice} onChange={(e) => setLine(line.id, { unitPrice: Math.max(0, Number(e.target.value) || 0) })} />
+                          <input aria-label={tx('Cena za kus a deň')} type="number" min={0} step="0.01" className="h-8 w-full rounded-md border bg-background px-1.5 text-right" value={line.unitPrice} onChange={(e) => setLine(line.id, { unitPrice: Math.max(0, Number(e.target.value) || 0) })} />
                         </td>
                         <td className="pb-1 text-right tabular-nums">{money(lineTotal(line))}</td>
                         <td className="pb-1 text-right">
-                          <button type="button" aria-label={`Odobrať ${line.label}`} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => set({ lines: part.lines.filter((item) => item.id !== line.id) })}>
+                          <button type="button" aria-label={tf('Odobrať {0}', line.label)} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => set({ lines: part.lines.filter((item) => item.id !== line.id) })}>
                             <X className="size-4" aria-hidden />
                           </button>
                         </td>
@@ -201,7 +198,7 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
             )}
             <div className="relative">
               <Search className="pointer-events-none absolute top-3.5 left-3 size-4 text-muted-foreground" aria-hidden />
-              <Field label="Pridať techniku zo skladu" hideLabel placeholder="Pridať techniku zo skladu – hľadať názov…" className="[&_input]:pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Field label={tx('Pridať techniku zo skladu')} hideLabel placeholder={tx('Pridať techniku zo skladu – hľadať názov…')} className="[&_input]:pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             {found.length > 0 && (
               <ul className="divide-y rounded-lg border text-sm">
@@ -214,7 +211,7 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
                         <Plus className="size-4 text-accent" aria-hidden />
                         <span className="min-w-0 flex-1 truncate">{item.name}</span>
                         <span className={cn('text-xs tabular-nums', over ? 'text-destructive' : 'text-muted-foreground')}>
-                          {item.rentalPrice ? `${money(item.rentalPrice)} / deň${over ? ' · nad rozpočet' : ''}` : 'bez ceny prenájmu'}
+                          {item.rentalPrice ? tf('{0} / deň{1}', money(item.rentalPrice), over ? tx(' · nad rozpočet') : '') : tx('bez ceny prenájmu')}
                         </span>
                       </button>
                     </li>
@@ -223,9 +220,7 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
               </ul>
             )}
             <Button variant="outline" size="sm" className="self-start" onClick={() => set({ lines: [...part.lines, newLine({ days: 1 })] })}>
-              <Plus className="size-4" aria-hidden />
-              Vlastná položka (doprava, technik…)
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Vlastná položka (doprava, technik…)')}</Button>
           </div>
         )}
       </div>
@@ -272,8 +267,7 @@ function PartChildren({ part, index, equipment, defaultDays, remaining, eventIte
         />
       ))}
       <Button variant="ghost" size="sm" className="self-start" onClick={() => onChange([...part.parts, emptyPart()])}>
-        <Plus className="size-4" aria-hidden />
-        Pridať podčasť {partCode(index, part.parts.length)}
+        <Plus className="size-4" aria-hidden />{tx('Pridať podčasť')}{' '}{partCode(index, part.parts.length)}
       </Button>
     </div>
   )

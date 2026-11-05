@@ -2,6 +2,7 @@ import { Download, Smartphone, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { tx } from '@/lib/i18n'
 
 type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
 
@@ -38,7 +39,7 @@ export function InstallGuide({ compact = false, onHide }: { compact?: boolean; o
   }, [])
 
   if (installed) {
-    return compact ? null : <p className="rounded-xl border bg-surface p-4 text-sm">RigTrack už máte nainštalovaný – spúšťate ho z plochy. 👍</p>
+    return compact ? null : <p className="rounded-xl border bg-surface p-4 text-sm">{tx('RigTrack už máte nainštalovaný – spúšťate ho z plochy. 👍')}</p>
   }
   const os = platform()
   return (
@@ -46,36 +47,31 @@ export function InstallGuide({ compact = false, onHide }: { compact?: boolean; o
       <div className="flex items-start gap-3">
         <Smartphone className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
         <div className="min-w-0 flex-1">
-          <p className="font-medium">Pridajte si RigTrack na plochu</p>
-          <p className="text-muted-foreground">Otvára sa potom ako aplikácia, na celú obrazovku a rýchlejšie.</p>
+          <p className="font-medium">{tx('Pridajte si RigTrack na plochu')}</p>
+          <p className="text-muted-foreground">{tx('Otvára sa potom ako aplikácia, na celú obrazovku a rýchlejšie.')}</p>
           {prompt && (
             <Button size="sm" className="mt-2" onClick={() => void prompt.prompt().then(() => setPrompt(null))}>
-              <Download className="size-4" aria-hidden />
-              Nainštalovať
-            </Button>
+              <Download className="size-4" aria-hidden />{tx('Nainštalovať')}</Button>
           )}
           {(!compact || !prompt) && (
             <ul className="mt-2 list-disc space-y-1 pl-5">
               {(os === 'ios' || !compact) && (
                 <li>
-                  <span className="font-medium">iPhone / iPad (Safari):</span> ťuknite na ikonu Zdieľať (štvorček so šípkou) → „Pridať na plochu“ → Pridať.
-                </li>
+                  <span className="font-medium">{tx('iPhone / iPad (Safari):')}</span>{' '}{tx('ťuknite na ikonu Zdieľať (štvorček so šípkou) → „Pridať na plochu“ → Pridať.')}</li>
               )}
               {(os === 'android' || !compact) && (
                 <li>
-                  <span className="font-medium">Android (Chrome):</span> menu ⋮ vpravo hore → „Nainštalovať aplikáciu“ alebo „Pridať na plochu“.
-                </li>
+                  <span className="font-medium">{tx('Android (Chrome):')}</span>{' '}{tx('menu ⋮ vpravo hore → „Nainštalovať aplikáciu“ alebo „Pridať na plochu“.')}</li>
               )}
               {(os === 'desktop' || !compact) && (
                 <li>
-                  <span className="font-medium">Počítač (Chrome, Edge):</span> ikona inštalácie vpravo v adresnom riadku, alebo menu → „Nainštalovať RigTrack“.
-                </li>
+                  <span className="font-medium">{tx('Počítač (Chrome, Edge):')}</span>{' '}{tx('ikona inštalácie vpravo v adresnom riadku, alebo menu → „Nainštalovať RigTrack“.')}</li>
               )}
             </ul>
           )}
         </div>
         {onHide && (
-          <button type="button" aria-label="Skryť" className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={onHide}>
+          <button type="button" aria-label={tx('Skryť')} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={onHide}>
             <X className="size-4" aria-hidden />
           </button>
         )}

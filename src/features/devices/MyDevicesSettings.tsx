@@ -8,6 +8,7 @@ import { Field, SelectField } from '@/components/ui/field'
 import { useNetworks } from '@/features/networks/api'
 import { deleteDevice, deviceKeys, isDuplicateMac, saveDevice, useDevices } from './api'
 import { DEVICE_KIND_LABELS, DEVICE_KINDS, deviceSchema, isRandomMac, type DeviceFormInput, type DeviceFormValues, type DeviceKind, type MemberDevice } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const DEVICE_ICONS: Record<DeviceKind, LucideIcon> = { phone: Smartphone, laptop: Laptop, tablet: Tablet, other: Wifi }
 
@@ -37,52 +38,50 @@ function DeviceForm({ companyId, userId, current, onDone }: { companyId: string;
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} className="mt-3 flex flex-col gap-3 rounded-lg border p-3">
       <div className="grid gap-3 sm:grid-cols-3">
-        <SelectField label="Druh" {...register('kind')}>
+        <SelectField label={tx('Druh')} {...register('kind')}>
           {DEVICE_KINDS.map((kind) => (
             <option key={kind} value={kind}>
-              {DEVICE_KIND_LABELS[kind]}
+              {tx(DEVICE_KIND_LABELS[kind])}
             </option>
           ))}
         </SelectField>
-        <Field label="Názov" placeholder="napr. iPhone 15, MacBook" error={errors.name?.message} {...register('name')} />
-        <Field label="MAC Wi-Fi" placeholder="AA:BB:CC:DD:EE:FF" autoComplete="off" autoCapitalize="characters" error={errors.mac?.message} {...register('mac')} />
+        <Field label={tx('Názov')} placeholder={tx('napr. iPhone 15, MacBook')} error={errors.name?.message} {...register('name')} />
+        <Field label={tx('MAC Wi-Fi')} placeholder={tx('AA:BB:CC:DD:EE:FF')} autoComplete="off" autoCapitalize="characters" error={errors.mac?.message} {...register('mac')} />
       </div>
       <Field
-        label="MAC ethernet / LAN (nepovinné)"
-        placeholder="napr. notebook s káblom"
+        label={tx('MAC ethernet / LAN (nepovinné)')}
+        placeholder={tx('napr. notebook s káblom')}
         autoComplete="off"
         autoCapitalize="characters"
         className="sm:w-1/2"
         error={errors.ethernetMac?.message}
         {...register('ethernetMac')}
       />
-      <Field label="Poznámka" placeholder="nepovinné" error={errors.note?.message} {...register('note')} />
+      <Field label={tx('Poznámka')} placeholder={tx('nepovinné')} error={errors.note?.message} {...register('note')} />
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium">Wi-Fi siete (IP adresa a MAC v danej sieti)</legend>
+        <legend className="mb-1 text-sm font-medium">{tx('Wi-Fi siete (IP adresa a MAC v danej sieti)')}</legend>
         {networks.fields.map((field, index) => (
           <div key={field.id} className="grid items-start gap-2 rounded-lg border p-2 sm:grid-cols-[1fr_1fr_1fr_auto_auto]">
-            <Field label="Sieť (SSID / názov)" list={ssidListId} autoComplete="off" error={errors.networks?.[index]?.ssid?.message} {...register(`networks.${index}.ssid`)} />
-            <Field label="IP adresa (pevná)" placeholder="prázdne pri DHCP" inputMode="decimal" autoComplete="off" error={errors.networks?.[index]?.ip?.message} {...register(`networks.${index}.ip`)} />
+            <Field label={tx('Sieť (SSID / názov)')} list={ssidListId} autoComplete="off" error={errors.networks?.[index]?.ssid?.message} {...register(`networks.${index}.ssid`)} />
+            <Field label={tx('IP adresa (pevná)')} placeholder={tx('prázdne pri DHCP')} inputMode="decimal" autoComplete="off" error={errors.networks?.[index]?.ip?.message} {...register(`networks.${index}.ip`)} />
             <Field
-              label="MAC v tejto sieti"
-              placeholder="ak je iná (súkromná)"
+              label={tx('MAC v tejto sieti')}
+              placeholder={tx('ak je iná (súkromná)')}
               autoComplete="off"
               autoCapitalize="characters"
               error={errors.networks?.[index]?.mac?.message}
               {...register(`networks.${index}.mac`)}
             />
             <span className="flex flex-col gap-1 text-sm sm:mt-6">
-              <select aria-label="Pripojenie" className="h-9 rounded-lg border bg-surface px-2" {...register(`networks.${index}.via`)}>
-                <option value="wifi">Wi-Fi</option>
-                <option value="ethernet">Kábel (LAN)</option>
+              <select aria-label={tx('Pripojenie')} className="h-9 rounded-lg border bg-surface px-2" {...register(`networks.${index}.via`)}>
+                <option value="wifi">{tx('Wi-Fi')}</option>
+                <option value="ethernet">{tx('Kábel (LAN)')}</option>
               </select>
               <label className="flex items-center gap-2">
-                <input type="checkbox" className="size-4" {...register(`networks.${index}.dhcp`)} />
-                DHCP
-              </label>
+                <input type="checkbox" className="size-4" {...register(`networks.${index}.dhcp`)} />{tx('DHCP')}</label>
             </span>
-            <Button variant="ghost" size="sm" className="sm:mt-7" aria-label="Odobrať sieť" onClick={() => networks.remove(index)}>
+            <Button variant="ghost" size="sm" className="sm:mt-7" aria-label={tx('Odobrať sieť')} onClick={() => networks.remove(index)}>
               <X className="size-4" aria-hidden />
             </Button>
           </div>
@@ -93,23 +92,19 @@ function DeviceForm({ companyId, userId, current, onDone }: { companyId: string;
           ))}
         </datalist>
         <Button variant="outline" size="sm" className="self-start" disabled={networks.fields.length >= 20} onClick={() => networks.append({ ssid: '', ip: '', mac: '', dhcp: false, via: 'wifi' })}>
-          <Plus className="size-4" aria-hidden />
-          Pridať Wi-Fi sieť
-        </Button>
+          <Plus className="size-4" aria-hidden />{tx('Pridať Wi-Fi sieť')}</Button>
       </fieldset>
 
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
-          {isDuplicateMac(save.error) ? 'Toto zariadenie (MAC) už vo firme niekto zapísal.' : 'Nepodarilo sa uložiť. Ak ste ešte nespustili migrácie 0051 a 0052, urobte to.'}
+          {isDuplicateMac(save.error) ? tx('Toto zariadenie (MAC) už vo firme niekto zapísal.') : tx('Nepodarilo sa uložiť. Ak ste ešte nespustili migrácie 0051 a 0052, urobte to.')}
         </p>
       )}
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : current ? 'Uložiť' : 'Pridať zariadenie'}
+          {save.isPending ? tx('Ukladám…') : current ? tx('Uložiť') : tx('Pridať zariadenie')}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onDone}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" size="sm" onClick={onDone}>{tx('Zrušiť')}</Button>
       </div>
     </form>
   )
@@ -142,24 +137,24 @@ export function DeviceRow({
           <span key={index} className="mt-0.5 flex flex-wrap gap-x-2 text-xs text-muted-foreground">
             <Wifi className="size-3.5" aria-hidden />
             <span className="font-medium text-foreground">{network.ssid}</span>
-            {network.ip ? <span className="font-mono">{network.ip}</span> : network.dhcp && <span>DHCP</span>}
-            {network.via === 'ethernet' && <span>kábel</span>}
+            {network.ip ? <span className="font-mono">{network.ip}</span> : network.dhcp && <span>{tx('DHCP')}</span>}
+            {network.via === 'ethernet' && <span>{tx('kábel')}</span>}
             {network.mac && network.mac !== device.mac && <span className="font-mono">{network.mac}</span>}
           </span>
         ))}
       </span>
       <span className="shrink-0 text-right font-mono text-sm">
         {device.mac}
-        {device.ethernetMac && <span className="block text-xs text-muted-foreground">LAN {device.ethernetMac}</span>}
-        {isRandomMac(device.mac) && <span className="block font-sans text-xs text-amber-700 dark:text-amber-300">súkromná (náhodná) adresa</span>}
+        {device.ethernetMac && <span className="block text-xs text-muted-foreground">{tx('LAN')}{' '}{device.ethernetMac}</span>}
+        {isRandomMac(device.mac) && <span className="block font-sans text-xs text-amber-700 dark:text-amber-300">{tx('súkromná (náhodná) adresa')}</span>}
       </span>
       {onEdit && (
-        <Button variant="ghost" size="sm" aria-label={`Upraviť ${device.name}`} onClick={onEdit}>
+        <Button variant="ghost" size="sm" aria-label={tf('Upraviť {0}', device.name)} onClick={onEdit}>
           <Pencil className="size-4" aria-hidden />
         </Button>
       )}
       {onDelete && (
-        <Button variant="ghost" size="sm" aria-label={`Odstrániť ${device.name}`} disabled={deleting} onClick={onDelete}>
+        <Button variant="ghost" size="sm" aria-label={tf('Odstrániť {0}', device.name)} disabled={deleting} onClick={onDelete}>
           <Trash2 className="size-4" aria-hidden />
         </Button>
       )}
@@ -180,9 +175,7 @@ export function DeviceList({ companyId, userId, canEdit, empty }: { companyId: s
   return (
     <>
       {devices.isError && (
-        <p role="alert" className="mt-3 text-sm text-destructive">
-          Zariadenia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
-        </p>
+        <p role="alert" className="mt-3 text-sm text-destructive">{tx('Zariadenia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
       )}
       {mine.length > 0 ? (
         <ul className="mt-3 divide-y overflow-hidden rounded-lg border bg-surface">
@@ -200,7 +193,7 @@ export function DeviceList({ companyId, userId, canEdit, empty }: { companyId: s
               onDelete={
                 canEdit
                   ? () => {
-                      if (window.confirm(`Odstrániť zariadenie ${device.name}?`)) remove.mutate(device.id)
+                      if (window.confirm(tf('Odstrániť zariadenie {0}?', device.name))) remove.mutate(device.id)
                     }
                   : undefined
               }
@@ -216,9 +209,7 @@ export function DeviceList({ companyId, userId, canEdit, empty }: { companyId: s
           <DeviceForm companyId={companyId} userId={userId} current={null} onDone={() => setEditing(null)} />
         ) : (
           <Button variant="outline" size="sm" className="mt-3" disabled={devices.isError} onClick={() => setEditing('new')}>
-            <Plus className="size-4" aria-hidden />
-            Pridať zariadenie
-          </Button>
+            <Plus className="size-4" aria-hidden />{tx('Pridať zariadenie')}</Button>
         ))}
     </>
   )
@@ -228,18 +219,15 @@ export function DeviceList({ companyId, userId, canEdit, empty }: { companyId: s
 export function MyDevicesSettings({ companyId, userId }: { companyId: string; userId: string }) {
   return (
     <div className="rounded-xl border bg-surface p-4">
-      <p className="text-sm text-muted-foreground">
-        Zapíšte svoje mobily, notebooky a tablety s MAC adresou a pri každej Wi-Fi sieti aj IP adresu. Nie je to technika firmy – uvidí ich len
-        admin a skladník (v Sieťach a vo vašej karte zamestnanca), napr. keď treba zariadenia povoliť v sieti na akcii.
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Zapíšte svoje mobily, notebooky a tablety s MAC adresou a pri každej Wi-Fi sieti aj IP adresu. Nie je to technika firmy – uvidí ich len admin a skladník (v Sieťach a vo vašej karte zamestnanca), napr. keď treba zariadenia povoliť v sieti na akcii.')}</p>
       <details className="mt-2 text-sm text-muted-foreground">
-        <summary className="cursor-pointer text-accent">Kde nájdem MAC adresu?</summary>
+        <summary className="cursor-pointer text-accent">{tx('Kde nájdem MAC adresu?')}</summary>
         <ul className="mt-1 list-disc pl-5">
-          <li>iPhone / iPad: Nastavenia → Všeobecné → Informácie → Adresa Wi-Fi.</li>
-          <li>Android: Nastavenia → Informácie o telefóne → Stav (alebo Wi-Fi → sieť → Rozšírené).</li>
-          <li>Windows: Nastavenia → Sieť → Wi-Fi → Vlastnosti hardvéru → Fyzická adresa (MAC).</li>
-          <li>Mac: Systémové nastavenia → Wi-Fi → Podrobnosti → Hardvér → Adresa MAC.</li>
-          <li>Mobily používajú pre každú Wi-Fi „súkromnú adresu“. Pre firemnú sieť ju vypnite, inak sa MAC mení.</li>
+          <li>{tx('iPhone / iPad: Nastavenia → Všeobecné → Informácie → Adresa Wi-Fi.')}</li>
+          <li>{tx('Android: Nastavenia → Informácie o telefóne → Stav (alebo Wi-Fi → sieť → Rozšírené).')}</li>
+          <li>{tx('Windows: Nastavenia → Sieť → Wi-Fi → Vlastnosti hardvéru → Fyzická adresa (MAC).')}</li>
+          <li>{tx('Mac: Systémové nastavenia → Wi-Fi → Podrobnosti → Hardvér → Adresa MAC.')}</li>
+          <li>{tx('Mobily používajú pre každú Wi-Fi „súkromnú adresu“. Pre firemnú sieť ju vypnite, inak sa MAC mení.')}</li>
         </ul>
       </details>
       <DeviceList companyId={companyId} userId={userId} canEdit />

@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react'
 import { Field, SelectField } from '@/components/ui/field'
 import { catalogBrands, catalogModels, findCatalogEntry, type CatalogEntry } from './catalog'
 import type { EquipmentKind } from './model'
+import { tx } from '@/lib/i18n'
 
 const OTHER = '__other__'
 
@@ -43,8 +44,8 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
       {freeBrand ? (
         <div className="flex flex-col gap-1">
           <Field
-            label="Výrobca"
-            placeholder="napr. JBL"
+            label={tx('Výrobca')}
+            placeholder={tx('napr. JBL')}
             autoComplete="off"
             error={manufacturerError}
             value={manufacturer}
@@ -60,14 +61,12 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
                   onManufacturer('')
                   onModel('')
                 }}
-              >
-                Vybrať zo zoznamu značiek
-              </button>
+              >{tx('Vybrať zo zoznamu značiek')}</button>
             ) : undefined}</Hint>
         </div>
       ) : (
         <SelectField
-          label="Výrobca"
+          label={tx('Výrobca')}
           error={manufacturerError}
           value={brand ?? ''}
           onChange={(event) => {
@@ -84,22 +83,22 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
             setOwnModel(false)
           }}
         >
-          <option value="">— vyberte značku —</option>
+          <option value="">{tx('— vyberte značku —')}</option>
           {brands.map((value) => (
             <option key={value} value={value}>
               {value}
             </option>
           ))}
-          <option value={OTHER}>+ Iná značka (pridať)…</option>
+          <option value={OTHER}>{tx('+ Iná značka (pridať)…')}</option>
         </SelectField>
       )}
 
       {freeModel ? (
         <div className="flex flex-col gap-1">
           <Field
-            label="Model"
+            label={tx('Model')}
             autoComplete="off"
-            placeholder={freeBrand ? undefined : 'napr. VRX932LA-1'}
+            placeholder={freeBrand ? undefined : tx('napr. VRX932LA-1')}
             error={modelError}
             value={model}
             onChange={(event) => onModel(event.target.value)}
@@ -112,16 +111,15 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
                   setOwnModel(false)
                   onModel('')
                 }}
-              >
-                Vybrať zo zoznamu modelov {brand}
+              >{tx('Vybrať zo zoznamu modelov')}{' '}{brand}
               </button>
             ) : manufacturer.trim() ? (
-              'Model mimo katalógu – po uložení pôjde na overenie do spoločnej databázy techniky.'
+              tx('Model mimo katalógu – po uložení pôjde na overenie do spoločnej databázy techniky.')
             ) : undefined}</Hint>
         </div>
       ) : (
         <SelectField
-          label="Model"
+          label={tx('Model')}
           error={modelError}
           value={known?.model ?? ''}
           disabled={!brand}
@@ -137,19 +135,18 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
             if (entry) onPick(entry)
           }}
         >
-          <option value="">{brand ? '— vyberte model —' : 'najprv značku'}</option>
+          <option value="">{brand ? tx('— vyberte model —') : tx('najprv značku')}</option>
           {models.map((entry) => (
             <option key={entry.id} value={entry.model}>
               {entry.model}
             </option>
           ))}
-          <option value={OTHER}>+ Iný model (pridať)…</option>
+          <option value={OTHER}>{tx('+ Iný model (pridať)…')}</option>
         </SelectField>
       )}
       {known && (
         <p className="-mt-2 flex items-center gap-1.5 text-xs text-muted-foreground sm:col-span-2">
-          <BookCheck className="size-3.5 text-emerald-600" aria-hidden />
-          Model zo spoločnej databázy techniky{Object.keys(known.attributes).length > 0 ? ' – technické údaje sa doplnili.' : '.'}
+          <BookCheck className="size-3.5 text-emerald-600" aria-hidden />{tx('Model zo spoločnej databázy techniky')}{Object.keys(known.attributes).length > 0 ? tx(' – technické údaje sa doplnili.') : '.'}
         </p>
       )}
     </>

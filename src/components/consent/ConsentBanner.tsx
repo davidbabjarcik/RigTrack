@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { markSynced, onConsentChange, readConsent, saveConsent, type ConsentRecord } from '@/lib/consent'
 import { supabase } from '@/lib/supabase/client'
+import { tx } from '@/lib/i18n'
 
 const base = import.meta.env.BASE_URL
 
@@ -73,24 +74,16 @@ export function ConsentBanner() {
         <div className="flex items-start gap-3">
           <Cookie className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
           <div className="min-w-0 flex-1">
-            <h2 id="consent-title" className="font-semibold">
-              Ukladanie údajov v prehliadači
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              RigTrack nepoužíva cookies, analytiku ani reklamu. Do úložiska prehliadača ukladá len to, čo potrebuje na fungovanie, a – ak súhlasíte –
-              vaše nastavenia zobrazenia. Viac v{' '}
-              <a href={`${base}cookies`} className="text-accent hover:underline">
-                Zásadách používania cookies
-              </a>{' '}
+            <h2 id="consent-title" className="font-semibold">{tx('Ukladanie údajov v prehliadači')}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{tx('RigTrack nepoužíva cookies, analytiku ani reklamu. Do úložiska prehliadača ukladá len to, čo potrebuje na fungovanie, a – ak súhlasíte – vaše nastavenia zobrazenia. Viac v')}{' '}
+              <a href={`${base}cookies`} className="text-accent hover:underline">{tx('Zásadách používania cookies')}</a>{' '}
               a{' '}
-              <a href={`${base}ochrana-sukromia`} className="text-accent hover:underline">
-                Ochrane súkromia
-              </a>
+              <a href={`${base}ochrana-sukromia`} className="text-accent hover:underline">{tx('Ochrane súkromia')}</a>
               .
             </p>
           </div>
           {record && (
-            <Button variant="ghost" size="sm" className="size-8 p-0" aria-label="Zavrieť" onClick={() => setOpen(false)}>
+            <Button variant="ghost" size="sm" className="size-8 p-0" aria-label={tx('Zavrieť')} onClick={() => setOpen(false)}>
               <X className="size-4" aria-hidden />
             </Button>
           )}
@@ -114,8 +107,8 @@ export function ConsentBanner() {
                     <span className="min-w-0">
                       <span className="block text-sm font-medium">
                         {category.title}
-                        {category.always && <span className="ml-2 text-xs font-normal text-muted-foreground">vždy zapnuté</span>}
-                        {'unused' in category && <span className="ml-2 text-xs font-normal text-muted-foreground">nepoužívame</span>}
+                        {category.always && <span className="ml-2 text-xs font-normal text-muted-foreground">{tx('vždy zapnuté')}</span>}
+                        {'unused' in category && <span className="ml-2 text-xs font-normal text-muted-foreground">{tx('nepoužívame')}</span>}
                       </span>
                       <span className="block text-sm text-muted-foreground">{category.text}</span>
                     </span>
@@ -128,9 +121,7 @@ export function ConsentBanner() {
 
         <div className="mt-4 flex flex-wrap justify-end gap-2">
           {open ? (
-            <Button variant="outline" onClick={() => choose(functional)}>
-              Uložiť výber
-            </Button>
+            <Button variant="outline" onClick={() => choose(functional)}>{tx('Uložiť výber')}</Button>
           ) : (
             <Button
               variant="outline"
@@ -138,16 +129,10 @@ export function ConsentBanner() {
                 setFunctional(record?.functional ?? false)
                 setOpen(true)
               }}
-            >
-              Prispôsobiť
-            </Button>
+            >{tx('Prispôsobiť')}</Button>
           )}
-          <Button variant="outline" onClick={() => choose(false)}>
-            Odmietnuť nepovinné
-          </Button>
-          <Button variant="outline" onClick={() => choose(true)}>
-            Prijať všetky
-          </Button>
+          <Button variant="outline" onClick={() => choose(false)}>{tx('Odmietnuť nepovinné')}</Button>
+          <Button variant="outline" onClick={() => choose(true)}>{tx('Prijať všetky')}</Button>
         </div>
       </div>
     </div>

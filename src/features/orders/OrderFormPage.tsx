@@ -34,6 +34,7 @@ import {
   type OrderFormValues,
   type RememberedArticle,
 } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type FormProps = { companyId: string; equipment: Equipment[]; categories: Lookup[] }
 
@@ -116,8 +117,8 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
       const invoice = parseThomannInvoice(lines)
       if (invoice.items.length === 0) {
         const reason = looksLikeThomann(lines)
-          ? 'V súbore sa nenašli žiadne položky.'
-          : 'Zatiaľ viem čítať iba faktúry z Thomannu. Túto objednávku zadajte ručne.'
+          ? tx('V súbore sa nenašli žiadne položky.')
+          : tx('Zatiaľ viem čítať iba faktúry z Thomannu. Túto objednávku zadajte ručne.')
         setImportState({ busy: false, message: reason, failed: true })
         return
       }
@@ -143,12 +144,12 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
         busy: false,
         failed: false,
         message:
-          `Načítaných ${invoice.items.length} položiek z faktúry ${invoice.orderNumber}. ` +
-          (known > 0 ? `Pri ${known} z nich som predvolil to isté, čo ste zvolili naposledy. ` : '') +
-          'Skontrolujte názvy a čo sa má stať v technike, potom uložte.',
+          tf('Načítaných {0} položiek z faktúry {1}. ', invoice.items.length, invoice.orderNumber) +
+          (known > 0 ? tf('Pri {0} z nich som predvolil to isté, čo ste zvolili naposledy. ', known) : '') +
+          tx('Skontrolujte názvy a čo sa má stať v technike, potom uložte.'),
       })
     } catch {
-      setImportState({ busy: false, message: 'Súbor sa nepodarilo prečítať. Je to PDF faktúra?', failed: true })
+      setImportState({ busy: false, message: tx('Súbor sa nepodarilo prečítať. Je to PDF faktúra?'), failed: true })
     }
   }
 
@@ -161,7 +162,7 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
 
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
-      <div role="group" aria-label="Odkiaľ je nákup" className="flex flex-wrap gap-2">
+      <div role="group" aria-label={tx('Odkiaľ je nákup')} className="flex flex-wrap gap-2">
         {ORDER_SOURCES.map((option) => {
           const Icon = option === 'shop' ? Store : Tag
           return (
@@ -176,7 +177,7 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
               )}
             >
               <Icon className="size-4" aria-hidden />
-              {SOURCE_LABELS[option]}
+              {tx(SOURCE_LABELS[option])}
             </button>
           )
         })}
@@ -208,12 +209,10 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
             }}
           />
           <FileUp className="mx-auto size-7 text-muted-foreground" aria-hidden />
-          <p className="mt-2 font-medium">{dragging ? 'Pustite faktúru sem' : 'Pretiahnite sem PDF faktúru z Thomannu'}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Formulár sa vyplní sám. Súbor sa číta vo vašom prehliadači a nikam sa neodosiela.
-          </p>
+          <p className="mt-2 font-medium">{dragging ? tx('Pustite faktúru sem') : tx('Pretiahnite sem PDF faktúru z Thomannu')}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{tx('Formulár sa vyplní sám. Súbor sa číta vo vašom prehliadači a nikam sa neodosiela.')}</p>
           <Button variant="outline" size="sm" className="mt-3" disabled={importState.busy} onClick={() => fileInput.current?.click()}>
-            {importState.busy ? 'Čítam…' : 'alebo vybrať súbor'}
+            {importState.busy ? tx('Čítam…') : tx('alebo vybrať súbor')}
           </Button>
           {importState.message && (
             <p role={importState.failed ? 'alert' : 'status'} className={cn('mt-3 text-sm', importState.failed && 'text-destructive')}>
@@ -225,24 +224,24 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label={marketplace ? 'Bazár / portál *' : 'Dodávateľ *'}
-          placeholder={marketplace ? 'napr. Bazoš.sk, Kleinanzeigen' : 'napr. Thomann'}
+          label={marketplace ? tx('Bazár / portál *') : tx('Dodávateľ *')}
+          placeholder={marketplace ? tx('napr. Bazoš.sk, Kleinanzeigen') : tx('napr. Thomann')}
           list={marketplace ? marketListId : undefined}
           autoComplete="off"
           error={errors.supplier?.message}
           {...register('supplier')}
         />
         {marketplace && (
-          <Field label="Predajca" placeholder="meno alebo prezývka" autoComplete="off" error={errors.seller?.message} {...register('seller')} />
+          <Field label={tx('Predajca')} placeholder={tx('meno alebo prezývka')} autoComplete="off" error={errors.seller?.message} {...register('seller')} />
         )}
         <Field
-          label={marketplace ? 'Číslo inzerátu' : 'Číslo objednávky / faktúry'}
+          label={marketplace ? tx('Číslo inzerátu') : tx('Číslo objednávky / faktúry')}
           autoComplete="off"
           error={errors.orderNumber?.message}
           {...register('orderNumber')}
         />
-        <Field label="Dátum kúpy *" type="date" error={errors.orderedAt?.message} {...register('orderedAt')} />
-        <SelectField label="Mena" error={errors.currency?.message} {...register('currency')}>
+        <Field label={tx('Dátum kúpy *')} type="date" error={errors.orderedAt?.message} {...register('orderedAt')} />
+        <SelectField label={tx('Mena')} error={errors.currency?.message} {...register('currency')}>
           {CURRENCIES.map((code) => (
             <option key={code} value={code}>
               {code}
@@ -252,20 +251,18 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
       </div>
 
       <fieldset className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
-        <legend className="px-1 text-sm font-medium text-muted-foreground">Kto a pre koho</legend>
-        <SelectField label="Objednal" {...register('orderedBy')}>
+        <legend className="px-1 text-sm font-medium text-muted-foreground">{tx('Kto a pre koho')}</legend>
+        <SelectField label={tx('Objednal')} {...register('orderedBy')}>
           {(members.data ?? []).map((member) => (
             <option key={member.userId} value={member.userId}>
               {member.fullName || member.email}
             </option>
           ))}
-          {!members.data && <option value={userId}>ja</option>}
+          {!members.data && <option value={userId}>{tx('ja')}</option>}
         </SelectField>
         <div className="flex flex-col justify-end gap-2 pb-1">
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4" checked={!forUs} onChange={(e) => setValue('forUs', !e.target.checked)} />
-            Nie je pre nás (kúpené pre klienta / kolegu)
-          </label>
+            <input type="checkbox" className="size-4" checked={!forUs} onChange={(e) => setValue('forUs', !e.target.checked)} />{tx('Nie je pre nás (kúpené pre klienta / kolegu)')}</label>
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -277,40 +274,34 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
                 if (off) items.forEach((_, index) => setValue(`items.${index}.mode`, 'none'))
                 setValue('addToStock', !off)
               }}
-            />
-            Nepridávať nič do techniky
-          </label>
+            />{tx('Nepridávať nič do techniky')}</label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4" checked={!hasInvoice} onChange={(e) => setValue('hasInvoice', !e.target.checked)} />
-            Bez faktúry / bločku
-          </label>
+            <input type="checkbox" className="size-4" checked={!hasInvoice} onChange={(e) => setValue('hasInvoice', !e.target.checked)} />{tx('Bez faktúry / bločku')}</label>
         </div>
         {!forUs && (
-          <Field label="Pre koho" placeholder="napr. klient, Jano – vráti peniaze" className="sm:col-span-2" error={errors.forWhom?.message} {...register('forWhom')} />
+          <Field label={tx('Pre koho')} placeholder={tx('napr. klient, Jano – vráti peniaze')} className="sm:col-span-2" error={errors.forWhom?.message} {...register('forWhom')} />
         )}
-        {!forUs && <p className="text-xs text-muted-foreground sm:col-span-2">Nákup nie pre nás sa v štatistikách ráta zvlášť, nie do našich nákladov.</p>}
+        {!forUs && <p className="text-xs text-muted-foreground sm:col-span-2">{tx('Nákup nie pre nás sa v štatistikách ráta zvlášť, nie do našich nákladov.')}</p>}
       </fieldset>
 
       <div className="flex items-center gap-3">
         {photo ? (
-          <img src={photo.url} alt="Fotka nákupu" className="size-16 shrink-0 rounded-lg border object-cover" />
+          <img src={photo.url} alt={tx('Fotka nákupu')} className="size-16 shrink-0 rounded-lg border object-cover" />
         ) : (
           <span className="flex size-16 shrink-0 items-center justify-center rounded-lg border bg-muted">
             <ImageOff className="size-5 text-muted-foreground" aria-hidden />
           </span>
         )}
         <div className="flex flex-col items-start gap-1">
-          <span className="text-sm font-medium">Fotka (nepovinné)</span>
-          <span className="text-sm text-muted-foreground">Napr. tovar, inzerát alebo bloček.</span>
+          <span className="text-sm font-medium">{tx('Fotka (nepovinné)')}</span>
+          <span className="text-sm text-muted-foreground">{tx('Napr. tovar, inzerát alebo bloček.')}</span>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => photoInput.current?.click()}>
               <Camera className="size-4" aria-hidden />
-              {photo ? 'Zmeniť' : 'Pridať fotku'}
+              {photo ? tx('Zmeniť') : tx('Pridať fotku')}
             </Button>
             {photo && (
-              <Button variant="ghost" size="sm" onClick={() => choosePhoto(null)}>
-                Odobrať
-              </Button>
+              <Button variant="ghost" size="sm" onClick={() => choosePhoto(null)}>{tx('Odobrať')}</Button>
             )}
           </div>
         </div>
@@ -340,7 +331,7 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
         ))}
       </datalist>
 
-      <h2 className="mt-2 text-sm font-medium text-muted-foreground">Položky</h2>
+      <h2 className="mt-2 text-sm font-medium text-muted-foreground">{tx('Položky')}</h2>
       <ul className="flex flex-col gap-3">
         {fields.map((field, index) => {
           const itemErrors = errors.items?.[index]
@@ -353,14 +344,14 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
             <li key={field.id} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
               <div className="flex items-end gap-2">
                 <Field
-                  label="Názov *"
+                  label={tx('Názov *')}
                   className="flex-1"
                   error={itemErrors?.name?.message}
                   {...register(`items.${index}.name`)}
                 />
                 <Button
                   variant="ghost"
-                  aria-label={`Odstrániť položku ${index + 1}`}
+                  aria-label={tf('Odstrániť položku {0}', index + 1)}
                   disabled={fields.length === 1}
                   onClick={() => remove(index)}
                 >
@@ -369,7 +360,7 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <Field
-                  label="Počet *"
+                  label={tx('Počet *')}
                   type="number"
                   inputMode="numeric"
                   min={1}
@@ -378,7 +369,7 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
                   {...register(`items.${index}.quantity`, { valueAsNumber: true })}
                 />
                 <Field
-                  label="Cena za kus"
+                  label={tx('Cena za kus')}
                   type="number"
                   inputMode="decimal"
                   min={0}
@@ -387,15 +378,15 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
                   {...register(`items.${index}.unitPrice`, { valueAsNumber: true })}
                 />
                 <Field
-                  label="Kód tovaru"
+                  label={tx('Kód tovaru')}
                   autoComplete="off"
                   error={itemErrors?.articleNumber?.message}
                   {...register(`items.${index}.articleNumber`)}
                 />
                 <Field
-                  label="Kategória"
+                  label={tx('Kategória')}
                   list={categoryListId}
-                  placeholder="vyberte alebo nová"
+                  placeholder={tx('vyberte alebo nová')}
                   autoComplete="off"
                   error={itemErrors?.category?.message}
                   {...register(`items.${index}.category`)}
@@ -408,22 +399,17 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="-mt-1 inline-flex items-center gap-1 self-start text-sm text-accent hover:underline"
-                >
-                  Pozrieť tovar u dodávateľa
-                  <ExternalLink className="size-3.5" aria-hidden />
+                >{tx('Pozrieť tovar u dodávateľa')}<ExternalLink className="size-3.5" aria-hidden />
                 </a>
               )}
 
               {!addToStock ? null : consumable ? (
-                <p className="rounded-lg bg-muted p-3 text-sm">
-                  Kategória „{category!.name}“ je spotrebný materiál: nákup sa eviduje len v objednávkach, do techniky sa
-                  nepridáva.
-                </p>
+                <p className="rounded-lg bg-muted p-3 text-sm">{tx('Kategória „')}{category!.name}{tx('“ je spotrebný materiál: nákup sa eviduje len v objednávkach, do techniky sa nepridáva.')}</p>
               ) : (
-                <SelectField label="Čo s tým v technike" error={itemErrors?.mode?.message} {...register(`items.${index}.mode`)}>
+                <SelectField label={tx('Čo s tým v technike')} error={itemErrors?.mode?.message} {...register(`items.${index}.mode`)}>
                   {ITEM_MODES.map((value) => (
                     <option key={value} value={value}>
-                      {MODE_LABELS[value]}
+                      {tx(MODE_LABELS[value])}
                     </option>
                   ))}
                 </SelectField>
@@ -431,45 +417,43 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
 
               {(mode === 'existing' || mode === 'link') && (
                 <SelectField
-                  label={mode === 'link' ? 'Ktorá technika to je' : 'Ku ktorej technike pripočítať'}
+                  label={mode === 'link' ? tx('Ktorá technika to je') : tx('Ku ktorej technike pripočítať')}
                   error={itemErrors?.equipmentId?.message}
                   {...register(`items.${index}.equipmentId`)}
                 >
-                  <option value="">— vyberte —</option>
+                  <option value="">{tx('— vyberte —')}</option>
                   {equipment.map((piece) => (
                     <option key={piece.id} value={piece.id}>
-                      {piece.name} ({piece.quantity} ks{piece.trackUnits ? ', po kusoch' : ''})
+                      {piece.name} ({piece.quantity}{' '}{tx('ks')}{piece.trackUnits ? tx(', po kusoch') : ''})
                     </option>
                   ))}
                 </SelectField>
               )}
               {mode === 'link' && (
                 <Field
-                  label="Ktoré kusy (nepovinné)"
-                  placeholder="napr. 1-4 alebo 1, 2, 5"
+                  label={tx('Ktoré kusy (nepovinné)')}
+                  placeholder={tx('napr. 1-4 alebo 1, 2, 5')}
                   autoComplete="off"
                   error={itemErrors?.unitNumbers?.message}
                   {...register(`items.${index}.unitNumbers`)}
                 />
               )}
               {mode === 'link' && (
-                <p className="-mt-1 text-xs text-muted-foreground">
-                  Počet kusov v technike sa nezmení – nákup (faktúra) sa len priradí. Pri technike evidovanej po kusoch zadajte čísla kusov, ktorých sa faktúra týka.
-                </p>
+                <p className="-mt-1 text-xs text-muted-foreground">{tx('Počet kusov v technike sa nezmení – nákup (faktúra) sa len priradí. Pri technike evidovanej po kusoch zadajte čísla kusov, ktorých sa faktúra týka.')}</p>
               )}
 
               {(mode === 'separate' || mode === 'bulk') && (
                 <div className="grid gap-3 sm:grid-cols-[1fr_12rem]">
                   <Field
-                    label="Názov v technike"
-                    placeholder="rovnaký ako názov položky"
+                    label={tx('Názov v technike')}
+                    placeholder={tx('rovnaký ako názov položky')}
                     error={itemErrors?.equipmentName?.message}
                     {...register(`items.${index}.equipmentName`)}
                   />
-                  <SelectField label="Druh" {...register(`items.${index}.kind`)}>
+                  <SelectField label={tx('Druh')} {...register(`items.${index}.kind`)}>
                     {EQUIPMENT_KINDS.map((value) => (
                       <option key={value} value={value}>
-                        {KIND_LABELS[value]}
+                        {tx(KIND_LABELS[value])}
                       </option>
                     ))}
                   </SelectField>
@@ -488,27 +472,22 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="outline" onClick={() => append(EMPTY_ITEM)}>
-          <Plus className="size-4" aria-hidden />
-          Pridať položku
-        </Button>
-        <p className="text-lg font-semibold">Spolu: {formatMoney(orderTotal(items ?? []), currency)}</p>
+          <Plus className="size-4" aria-hidden />{tx('Pridať položku')}</Button>
+        <p className="text-lg font-semibold">{tx('Spolu:')}{' '}{formatMoney(orderTotal(items ?? []), currency)}</p>
       </div>
 
-      <TextareaField label="Poznámka" error={errors.note?.message} {...register('note')} />
+      <TextareaField label={tx('Poznámka')} error={errors.note?.message} {...register('note')} />
 
       {save.isError && (
-        <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo. {errorDetail(save.error) || 'Skontrolujte pripojenie a skúste to znova.'}
+        <p role="alert" className="text-sm text-destructive">{tx('Uloženie zlyhalo.')}{' '}{errorDetail(save.error) || tx('Skontrolujte pripojenie a skúste to znova.')}
         </p>
       )}
 
       <div className="flex gap-3">
         <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : 'Uložiť objednávku'}
+          {save.isPending ? tx('Ukladám…') : tx('Uložiť objednávku')}
         </Button>
-        <LinkButton to="/orders" variant="outline">
-          Zrušiť
-        </LinkButton>
+        <LinkButton to="/orders" variant="outline">{tx('Zrušiť')}</LinkButton>
       </div>
     </form>
   )
@@ -526,18 +505,18 @@ export function OrderFormPage() {
 
   let body
   if (!allowed) {
-    body = <ErrorBlock message="Objednávky môže zapisovať iba admin a skladník." />
+    body = <ErrorBlock message={tx('Objednávky môže zapisovať iba admin a skladník.')} />
   } else if (lookups.isPending || equipment.isPending) {
     body = <LoadingBlock />
   } else if (lookups.isError || equipment.isError) {
-    body = <ErrorBlock message="Údaje sa nepodarilo načítať." onRetry={() => void equipment.refetch()} />
+    body = <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void equipment.refetch()} />
   } else {
     body = <OrderForm companyId={company.companyId} equipment={equipment.data} categories={lookups.categories} />
   }
 
   return (
     <>
-      <PageHeader title="Nová objednávka" />
+      <PageHeader title={tx('Nová objednávka')} />
       {body}
     </>
   )

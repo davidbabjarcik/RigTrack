@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { parseUnitRanges, type Equipment } from '@/features/equipment/model'
 import { linkOrderItem } from './api'
+import { tx } from '@/lib/i18n'
 
 /** Dodatočné prepojenie riadku objednávky s technikou, ktorú už máme (napr. faktúra ku kusom #1–4). */
 export function LinkLineForm({ companyId, itemId, equipment }: { companyId: string; itemId: string; equipment: Equipment[] }) {
@@ -25,32 +26,25 @@ export function LinkLineForm({ companyId, itemId, equipment }: { companyId: stri
   if (!open) {
     return (
       <button type="button" className="mt-1 inline-flex items-center gap-1 text-sm text-accent hover:underline" onClick={() => setOpen(true)}>
-        <Link2 className="size-3.5" aria-hidden />
-        Prepojiť s technikou, ktorú už mám
-      </button>
+        <Link2 className="size-3.5" aria-hidden />{tx('Prepojiť s technikou, ktorú už mám')}</button>
     )
   }
   return (
     <div className="mt-2 flex flex-wrap items-end gap-2 rounded-lg border bg-background p-2 text-sm">
-      <select aria-label="Technika" className="h-9 min-w-48 flex-1 rounded-lg border bg-surface px-2" value={equipmentId} onChange={(event) => setEquipmentId(event.target.value)}>
-        <option value="">— ktorá technika —</option>
+      <select aria-label={tx('Technika')} className="h-9 min-w-48 flex-1 rounded-lg border bg-surface px-2" value={equipmentId} onChange={(event) => setEquipmentId(event.target.value)}>
+        <option value="">{tx('— ktorá technika —')}</option>
         {equipment.map((item) => (
           <option key={item.id} value={item.id}>
-            {item.name} ({item.quantity} ks)
-          </option>
+            {item.name} ({item.quantity}{' '}{tx('ks)')}</option>
         ))}
       </select>
       {piece?.trackUnits && (
-        <input aria-label="Ktoré kusy" placeholder="kusy, napr. 1-4" className="h-9 w-36 rounded-lg border bg-surface px-2" value={units} onChange={(event) => setUnits(event.target.value)} />
+        <input aria-label={tx('Ktoré kusy')} placeholder={tx('kusy, napr. 1-4')} className="h-9 w-36 rounded-lg border bg-surface px-2" value={units} onChange={(event) => setUnits(event.target.value)} />
       )}
-      <Button size="sm" disabled={!equipmentId || link.isPending} onClick={() => link.mutate()}>
-        Prepojiť
-      </Button>
-      <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
-        Zrušiť
-      </Button>
-      <p className="basis-full text-xs text-muted-foreground">Počet kusov v technike sa nezmení.</p>
-      {link.isError && <p className="basis-full text-destructive">Prepojenie sa nepodarilo. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>}
+      <Button size="sm" disabled={!equipmentId || link.isPending} onClick={() => link.mutate()}>{tx('Prepojiť')}</Button>
+      <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>{tx('Zrušiť')}</Button>
+      <p className="basis-full text-xs text-muted-foreground">{tx('Počet kusov v technike sa nezmení.')}</p>
+      {link.isError && <p className="basis-full text-destructive">{tx('Prepojenie sa nepodarilo. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>}
     </div>
   )
 }

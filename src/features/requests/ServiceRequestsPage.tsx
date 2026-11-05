@@ -26,6 +26,7 @@ import {
   type RequestStatus,
   type ServiceRequest,
 } from './api'
+import { tx } from '@/lib/i18n'
 
 const STATUS_CLASSES: Record<RequestStatus, string> = {
   open: 'bg-accent/15 text-accent',
@@ -58,48 +59,39 @@ function RequestCard({ request, equipmentName, vehicleName, canResolve, canDelet
         </span>
         {request.priority !== 'normal' && (
           <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', request.priority === 'high' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>
-            {REQUEST_PRIORITY_LABELS[request.priority]} priorita
-          </span>
+            {tx(REQUEST_PRIORITY_LABELS[request.priority])}{' '}{tx('priorita')}</span>
         )}
-        <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', STATUS_CLASSES[request.status])}>{REQUEST_STATUS_LABELS[request.status]}</span>
+        <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', STATUS_CLASSES[request.status])}>{tx(REQUEST_STATUS_LABELS[request.status])}</span>
       </div>
       {request.equipmentId && equipmentName && (
-        <Link to={`/equipment/${request.equipmentId}`} className="self-start text-sm text-accent hover:underline">
-          Otvoriť techniku
-        </Link>
+        <Link to={`/equipment/${request.equipmentId}`} className="self-start text-sm text-accent hover:underline">{tx('Otvoriť techniku')}</Link>
       )}
       {request.vehicleId && vehicleName && (
-        <Link to={`/vehicles/${request.vehicleId}`} className="self-start text-sm text-accent hover:underline">
-          Otvoriť auto
-        </Link>
+        <Link to={`/vehicles/${request.vehicleId}`} className="self-start text-sm text-accent hover:underline">{tx('Otvoriť auto')}</Link>
       )}
-      {request.description && <p className="text-sm whitespace-pre-wrap">{request.description}</p>}
+      {request.description && <p className="text-sm whitespace-pre-wrap">{tx(request.description)}</p>}
       {!canResolve && request.response && (
         <p className="rounded-lg bg-muted px-3 py-2 text-sm">
-          <span className="font-medium">Servis: </span>
+          <span className="font-medium">{tx('Servis:')}{' '}</span>
           {request.response}
         </p>
       )}
       {canResolve && (
         <div className="grid gap-2 sm:grid-cols-[12rem_1fr_auto] sm:items-end">
-          <SelectField label="Stav" value={request.status} disabled={update.isPending} onChange={(e) => update.mutate({ status: e.target.value as RequestStatus })}>
+          <SelectField label={tx('Stav')} value={request.status} disabled={update.isPending} onChange={(e) => update.mutate({ status: e.target.value as RequestStatus })}>
             {REQUEST_STATUSES.map((status) => (
               <option key={status} value={status}>
-                {REQUEST_STATUS_LABELS[status]}
+                {tx(REQUEST_STATUS_LABELS[status])}
               </option>
             ))}
           </SelectField>
-          <Field label="Odpoveď pre nahlasovateľa" placeholder="napr. vymenená kapsula, objednaný diel" maxLength={1000} value={response} onChange={(e) => setResponse(e.target.value)} />
-          <Button variant="outline" size="sm" disabled={response === request.response || update.isPending} onClick={() => update.mutate({ response: response.trim() })}>
-            Uložiť odpoveď
-          </Button>
+          <Field label={tx('Odpoveď pre nahlasovateľa')} placeholder={tx('napr. vymenená kapsula, objednaný diel')} maxLength={1000} value={response} onChange={(e) => setResponse(e.target.value)} />
+          <Button variant="outline" size="sm" disabled={response === request.response || update.isPending} onClick={() => update.mutate({ response: response.trim() })}>{tx('Uložiť odpoveď')}</Button>
         </div>
       )}
-      {request.resolvedAt && <p className="text-xs text-muted-foreground">Uzavreté {formatDateTime(request.resolvedAt)}</p>}
+      {request.resolvedAt && <p className="text-xs text-muted-foreground">{tx('Uzavreté')}{' '}{formatDateTime(request.resolvedAt)}</p>}
       {(update.isError || remove.isError) && (
-        <p role="alert" className="text-sm text-destructive">
-          Zmena sa nepodarila.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>
       )}
       {canDelete && (
         <Button
@@ -107,11 +99,9 @@ function RequestCard({ request, equipmentName, vehicleName, canResolve, canDelet
           size="sm"
           className="self-end"
           disabled={remove.isPending}
-          onClick={() => window.confirm('Zmazať žiadosť?') && remove.mutate()}
+          onClick={() => window.confirm(tx('Zmazať žiadosť?')) && remove.mutate()}
         >
-          <Trash2 className="size-4" aria-hidden />
-          Zmazať
-        </Button>
+          <Trash2 className="size-4" aria-hidden />{tx('Zmazať')}</Button>
       )}
     </li>
   )
@@ -140,45 +130,39 @@ export function ServiceRequestsPage() {
     <>
       <ServiceTabs />
       <PageHeader
-        title="Žiadosti o servis"
-        description={canResolve ? 'Nahlásené poruchy od celého tímu' : 'Vaše nahlásené poruchy a ako sa vybavili'}
+        title={tx('Žiadosti o servis')}
+        description={canResolve ? tx('Nahlásené poruchy od celého tímu') : tx('Vaše nahlásené poruchy a ako sa vybavili')}
         action={
           <LinkButton to="/service/requests/new">
-            <Plus className="size-4" aria-hidden />
-            Nahlásiť poruchu
-          </LinkButton>
+            <Plus className="size-4" aria-hidden />{tx('Nahlásiť poruchu')}</LinkButton>
         }
       />
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <SelectField label="Stav" className="w-52" value={status} onChange={(e) => setStatus(e.target.value as typeof status)}>
-          <option value="active">Otvorené ({active})</option>
+        <SelectField label={tx('Stav')} className="w-52" value={status} onChange={(e) => setStatus(e.target.value as typeof status)}>
+          <option value="active">{tx('Otvorené (')}{active})</option>
           {REQUEST_STATUSES.map((value) => (
             <option key={value} value={value}>
-              {REQUEST_STATUS_LABELS[value]}
+              {tx(REQUEST_STATUS_LABELS[value])}
             </option>
           ))}
-          <option value="">Všetky ({all.length})</option>
+          <option value="">{tx('Všetky (')}{all.length})</option>
         </SelectField>
         {canResolve && (
           <label className="flex items-center gap-2 pb-2 text-sm">
-            <input type="checkbox" className="size-4" checked={mine} onChange={(e) => setMine(e.target.checked)} />
-            Len moje
-          </label>
+            <input type="checkbox" className="size-4" checked={mine} onChange={(e) => setMine(e.target.checked)} />{tx('Len moje')}</label>
         )}
         {can(company, 'service.view') && (
-          <Link to="/service" className="pb-2 text-sm text-accent hover:underline">
-            Servisné záznamy →
-          </Link>
+          <Link to="/service" className="pb-2 text-sm text-accent hover:underline">{tx('Servisné záznamy →')}</Link>
         )}
       </div>
       {requests.isPending ? (
         <LoadingBlock />
       ) : requests.isError ? (
-        <ErrorBlock message="Žiadosti sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void requests.refetch()} />
+        <ErrorBlock message={tx('Žiadosti sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')} onRetry={() => void requests.refetch()} />
       ) : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center">
-          <p className="font-medium">{all.length === 0 ? 'Zatiaľ žiadne žiadosti' : 'Filtru nič nezodpovedá'}</p>
-          <p className="mt-1 text-sm text-muted-foreground">Keď sa niečo pokazí, nahláste to tlačidlom Nahlásiť poruchu – aj priamo z detailu techniky.</p>
+          <p className="font-medium">{all.length === 0 ? tx('Zatiaľ žiadne žiadosti') : tx('Filtru nič nezodpovedá')}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{tx('Keď sa niečo pokazí, nahláste to tlačidlom Nahlásiť poruchu – aj priamo z detailu techniky.')}</p>
         </div>
       ) : (
         <ul className="flex flex-col gap-3">

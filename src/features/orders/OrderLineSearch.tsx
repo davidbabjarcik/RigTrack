@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Field } from '@/components/ui/field'
 import { formatDate, formatMoney } from '@/lib/format'
 import { orderKeys, searchOrderLines } from './api'
+import { tx } from '@/lib/i18n'
 
 /** Hľadanie v položkách všetkých objednávok: kedy a za koľko sa daný tovar kupoval. */
 export function OrderLineSearch({ companyId }: { companyId: string }) {
@@ -19,23 +20,21 @@ export function OrderLineSearch({ companyId }: { companyId: string }) {
   return (
     <div className="mb-4">
       <Field
-        label="Hľadať v položkách objednávok"
+        label={tx('Hľadať v položkách objednávok')}
         hideLabel
         type="search"
-        placeholder="Hľadať tovar v objednávkach — názov alebo kód (napr. viazačky)"
+        placeholder={tx('Hľadať tovar v objednávkach — názov alebo kód (napr. viazačky)')}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
       {active && (
         <div className="mt-2 overflow-hidden rounded-xl border bg-surface">
           {lines.isPending ? (
-            <p className="p-4 text-sm text-muted-foreground">Hľadám…</p>
+            <p className="p-4 text-sm text-muted-foreground">{tx('Hľadám…')}</p>
           ) : lines.isError ? (
-            <p role="alert" className="p-4 text-sm text-destructive">
-              Hľadanie zlyhalo.
-            </p>
+            <p role="alert" className="p-4 text-sm text-destructive">{tx('Hľadanie zlyhalo.')}</p>
           ) : lines.data.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">Tento tovar sa v objednávkach nenašiel.</p>
+            <p className="p-4 text-sm text-muted-foreground">{tx('Tento tovar sa v objednávkach nenašiel.')}</p>
           ) : (
             <ul className="divide-y">
               {lines.data.map((line) => (
@@ -50,7 +49,7 @@ export function OrderLineSearch({ companyId }: { companyId: string }) {
                       </span>
                     </span>
                     <span className="shrink-0 text-right font-medium">
-                      {line.quantity} ks × {formatMoney(line.unitPrice, line.currency)}
+                      {line.quantity}{' '}{tx('ks ×')}{' '}{formatMoney(line.unitPrice, line.currency)}
                     </span>
                   </Link>
                 </li>

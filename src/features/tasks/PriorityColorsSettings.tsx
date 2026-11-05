@@ -1,5 +1,6 @@
 import { useUserPrefs } from '@/features/settings/userPrefs'
 import { DEFAULT_PRIORITY_COLORS, priorityColor, TASK_PRIORITIES, TASK_PRIORITY_LABELS } from './model'
+import { tx } from '@/lib/i18n'
 
 /** Nastavenia → Účet: farby priorít úloh (platia pre váš účet na každom zariadení). */
 export function PriorityColorsSettings() {
@@ -21,14 +22,12 @@ export function PriorityColorsSettings() {
                 update({ priorityColors: next })
               }}
             />
-            {TASK_PRIORITY_LABELS[priority]}
+            {tx(TASK_PRIORITY_LABELS[priority])}
           </label>
         ))}
       </div>
       {changed && (
-        <button type="button" className="self-start text-sm text-accent hover:underline" onClick={() => update({ priorityColors: {} })}>
-          Vrátiť predvolené (sivá, modrá, žltá, červená)
-        </button>
+        <button type="button" className="self-start text-sm text-accent hover:underline" onClick={() => update({ priorityColors: {} })}>{tx('Vrátiť predvolené (sivá, modrá, žltá, červená)')}</button>
       )}
     </div>
   )

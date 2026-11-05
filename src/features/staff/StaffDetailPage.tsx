@@ -27,6 +27,7 @@ import { SocialLinks } from './SocialLinks'
 import { StaffDevices, StaffOverview, StaffOwnGear, StaffPastEvents } from './StaffExtras'
 import { useStaff } from './useStaff'
 import { StaffDrives } from '@/features/drives/StaffDrives'
+import { tx, tf } from '@/lib/i18n'
 
 function Details({ companyId, person, canEdit }: { companyId: string; person: Person; canEdit: boolean }) {
   const queryClient = useQueryClient()
@@ -62,11 +63,11 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
 
   if (!canEdit) {
     const rows: [string, string][] = [
-      ['Pozícia', person.position],
+      [tx('Pozícia'), person.position],
       ['Narodeniny', person.birthDate ? formatDate(person.birthDate) : ''],
       ['Meniny', formatNameDay(person.nameDay)],
-      ['Vodičák', person.licences.join(', ')],
-      ['Poznámka', person.note],
+      [tx('Vodičák'), person.licences.join(', ')],
+      [tx('Poznámka'), person.note],
     ]
     return (
       <dl className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
@@ -80,51 +81,45 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
           ))}
         {person.skills && (
           <div>
-            <dt className="text-sm text-muted-foreground">Zručnosti</dt>
+            <dt className="text-sm text-muted-foreground">{tx('Zručnosti')}</dt>
             <dd className="mt-1">
               <SkillChips value={person.skills} />
             </dd>
           </div>
         )}
-        {rows.every(([, value]) => !value) && !person.skills && <p className="text-sm text-muted-foreground">Zatiaľ bez ďalších údajov.</p>}
+        {rows.every(([, value]) => !value) && !person.skills && <p className="text-sm text-muted-foreground">{tx('Zatiaľ bez ďalších údajov.')}</p>}
       </dl>
     )
   }
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
-      {!person.isMember && <Field label="Meno *" maxLength={120} value={fields.name} onChange={(event) => set({ name: event.target.value })} />}
+      {!person.isMember && <Field label={tx('Meno *')} maxLength={120} value={fields.name} onChange={(event) => set({ name: event.target.value })} />}
       {person.isMember && person.staffId && (
         <label className="flex items-start gap-2 rounded-lg border border-accent/40 bg-accent/10 p-3 text-sm">
           <input type="checkbox" className="mt-0.5 size-4" checked={fields.syncProfile ?? false} onChange={(event) => set({ syncProfile: event.target.checked })} />
-          <span>
-            Brať údaje z osobného profilu
-            <span className="block text-xs text-muted-foreground">
-              Telefón, e-mail, narodeniny, meniny, vodičák, zručnosti a sociálne siete si človek zadá raz pre všetky firmy (Vyberte firmu → Môj profil).
-              {fields.syncProfile ? ' Tu sa preto nedajú meniť – vypnite, ak ich chcete v tejto firme upraviť inak.' : ' Vypnuté: v tejto firme sa upravujú tu.'}
+          <span>{tx('Brať údaje z osobného profilu')}<span className="block text-xs text-muted-foreground">{tx('Telefón, e-mail, narodeniny, meniny, vodičák, zručnosti a sociálne siete si človek zadá raz pre všetky firmy (Vyberte firmu → Môj profil).')}{fields.syncProfile ? tx(' Tu sa preto nedajú meniť – vypnite, ak ich chcete v tejto firme upraviť inak.') : tx(' Vypnuté: v tejto firme sa upravujú tu.')}
             </span>
           </span>
         </label>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Pozícia" placeholder="napr. Osvetľovač, Zvukár, Stagehand" maxLength={80} value={fields.position} onChange={(event) => set({ position: event.target.value })} />
-        <Field label="Telefón" type="tel" maxLength={40} disabled={synced} value={fields.phone} onChange={(event) => set({ phone: event.target.value })} />
-        <Field label="E-mail na kontakt" type="email" maxLength={120} disabled={synced} value={fields.email} onChange={(event) => set({ email: event.target.value })} />
+        <Field label={tx('Pozícia')} placeholder={tx('napr. Osvetľovač, Zvukár, Stagehand')} maxLength={80} value={fields.position} onChange={(event) => set({ position: event.target.value })} />
+        <Field label={tx('Telefón')} type="tel" maxLength={40} disabled={synced} value={fields.phone} onChange={(event) => set({ phone: event.target.value })} />
+        <Field label={tx('E-mail na kontakt')} type="email" maxLength={120} disabled={synced} value={fields.email} onChange={(event) => set({ email: event.target.value })} />
         <label className="flex items-center gap-2 self-end pb-3 text-sm">
-          <input type="checkbox" className="size-4" checked={fields.active} onChange={(event) => set({ active: event.target.checked })} />
-          Aktívny v tíme
-        </label>
+          <input type="checkbox" className="size-4" checked={fields.active} onChange={(event) => set({ active: event.target.checked })} />{tx('Aktívny v tíme')}</label>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Dátum narodenia" type="date" disabled={synced} value={fields.birthDate ?? ''} onChange={(event) => set({ birthDate: event.target.value })} />
+        <Field label={tx('Dátum narodenia')} type="date" disabled={synced} value={fields.birthDate ?? ''} onChange={(event) => set({ birthDate: event.target.value })} />
         {synced ? (
-          <Field label="Meniny" disabled value={formatNameDay(fields.nameDay ?? '')} onChange={() => {}} />
+          <Field label={tx('Meniny')} disabled value={formatNameDay(fields.nameDay ?? '')} onChange={() => {}} />
         ) : (
           <NameDayField value={fields.nameDay ?? ''} onChange={(nameDay) => set({ nameDay })} />
         )}
       </div>
       <fieldset>
-        <legend className="mb-1 text-sm font-medium">Vodičský preukaz</legend>
+        <legend className="mb-1 text-sm font-medium">{tx('Vodičský preukaz')}</legend>
         <div className="flex flex-wrap gap-1.5">
           {LICENCES.map((licence) => {
             const on = (fields.licences ?? []).includes(licence)
@@ -144,15 +139,13 @@ function Details({ companyId, person, canEdit }: { companyId: string; person: Pe
         </div>
       </fieldset>
       <SkillsField value={fields.skills} disabled={synced} onChange={(skills) => set({ skills })} />
-      <TextareaField label="Poznámka" rows={2} maxLength={1000} value={fields.note} onChange={(event) => set({ note: event.target.value })} />
+      <TextareaField label={tx('Poznámka')} rows={2} maxLength={1000} value={fields.note} onChange={(event) => set({ note: event.target.value })} />
       {save.isError && (
-        <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Uloženie zlyhalo.')}</p>
       )}
-      {save.isSuccess && <p role="status" className="text-sm text-muted-foreground">Uložené.</p>}
+      {save.isSuccess && <p role="status" className="text-sm text-muted-foreground">{tx('Uložené.')}</p>}
       <Button type="submit" className="self-start" disabled={save.isPending || (!person.isMember && !fields.name.trim())}>
-        {save.isPending ? 'Ukladám…' : 'Uložiť'}
+        {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
       </Button>
     </form>
   )
@@ -179,9 +172,7 @@ export function StaffDetailPage() {
 
   const back = (
     <Link to="/staff" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="size-4" aria-hidden />
-      Zamestnanci
-    </Link>
+      <ArrowLeft className="size-4" aria-hidden />{tx('Zamestnanci')}</Link>
   )
   if (staff.isPending) return <LoadingBlock />
   const person = staff.people.find((candidate) => candidate.key === key || (candidate.memberId && `m-${candidate.memberId}` === key))
@@ -189,7 +180,7 @@ export function StaffDetailPage() {
     return (
       <>
         {back}
-        <ErrorBlock message="Tento človek v tíme nie je alebo k nemu nemáte prístup." />
+        <ErrorBlock message={tx('Tento človek v tíme nie je alebo k nemu nemáte prístup.')} />
       </>
     )
   }
@@ -220,7 +211,7 @@ export function StaffDetailPage() {
               onChanged={() => queryClient.invalidateQueries({ queryKey: staffKeys.list(companyId) })}
             />
           ) : (
-            canEdit && <p className="text-xs text-muted-foreground">Fotku pridáte po prvom uložení údajov.</p>
+            canEdit && <p className="text-xs text-muted-foreground">{tx('Fotku pridáte po prvom uložení údajov.')}</p>
           )}
         </div>
         <div className="min-w-0 flex-1">
@@ -253,12 +244,10 @@ export function StaffDetailPage() {
             size="sm"
             disabled={remove.isPending}
             onClick={() => {
-              if (window.confirm(`Odstrániť ${person.name} zo zoznamu?`)) remove.mutate(person.staffId!)
+              if (window.confirm(tf('Odstrániť {0} zo zoznamu?', person.name))) remove.mutate(person.staffId!)
             }}
           >
-            <Trash2 className="size-4" aria-hidden />
-            Odstrániť
-          </Button>
+            <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
         )}
       </header>
 
@@ -269,9 +258,9 @@ export function StaffDetailPage() {
       <Availability companyId={companyId} person={person} canEdit={canEdit} />
 
       {person.memberId && (
-        <CollapsibleSection id="staff.events" title="Najbližšie eventy">
+        <CollapsibleSection id="staff.events" title={tx('Najbližšie eventy')}>
           {assigned.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Zatiaľ nie je v posádke žiadneho nadchádzajúceho eventu.</p>
+            <p className="text-sm text-muted-foreground">{tx('Zatiaľ nie je v posádke žiadneho nadchádzajúceho eventu.')}</p>
           ) : (
             <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
               {assigned.map((event) => (

@@ -11,6 +11,7 @@ import { useVehicles } from '@/features/vehicles/useVehicles'
 import { can } from '@/lib/permissions'
 import { errorDetail } from '@/lib/supabase/errors'
 import { createRequest, REQUEST_PRIORITIES, REQUEST_PRIORITY_LABELS, requestKeys, type RequestPriority } from './api'
+import { tx } from '@/lib/i18n'
 
 const plain = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 
@@ -53,18 +54,18 @@ export function ServiceRequestFormPage() {
 
   return (
     <>
-      <PageHeader title="Nahlásiť poruchu" description="Žiadosť o servis – servis ju uvidí a dá vedieť, ako sa vybavila." />
+      <PageHeader title={tx('Nahlásiť poruchu')} description={tx('Žiadosť o servis – servis ju uvidí a dá vedieť, ako sa vybavila.')} />
       <form onSubmit={submit} className="flex flex-col gap-4">
         {canSeeVehicles && (vehicles.data ?? []).length > 0 && (
           <SelectField
-            label="Auto (ak ide o auto)"
+            label={tx('Auto (ak ide o auto)')}
             value={vehicleId}
             onChange={(e) => {
               setVehicleId(e.target.value)
               if (e.target.value) setEquipmentId('')
             }}
           >
-            <option value="">— nejde o auto —</option>
+            <option value="">{tx('— nejde o auto —')}</option>
             {(vehicles.data ?? []).map((vehicle) => (
               <option key={vehicle.id} value={vehicle.id}>
                 {[vehicle.plate, vehicle.model].filter(Boolean).join(' · ')}
@@ -74,17 +75,17 @@ export function ServiceRequestFormPage() {
         )}
         {canSeeEquipment && !vehicleId && (
           <fieldset className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
-            <legend className="px-1 text-sm font-medium text-muted-foreground">Ktorá technika (nepovinné)</legend>
-            {!chosen && <Field label="Hľadať techniku" type="search" placeholder="názov, výrobca, inventárne číslo" value={search} onChange={(e) => setSearch(e.target.value)} />}
+            <legend className="px-1 text-sm font-medium text-muted-foreground">{tx('Ktorá technika (nepovinné)')}</legend>
+            {!chosen && <Field label={tx('Hľadať techniku')} type="search" placeholder={tx('názov, výrobca, inventárne číslo')} value={search} onChange={(e) => setSearch(e.target.value)} />}
             <SelectField
-              label="Technika"
+              label={tx('Technika')}
               value={equipmentId}
               onChange={(e) => {
                 setEquipmentId(e.target.value)
                 setUnitId('')
               }}
             >
-              <option value="">— bez techniky / neviem —</option>
+              <option value="">{tx('— bez techniky / neviem —')}</option>
               {matches.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -93,8 +94,8 @@ export function ServiceRequestFormPage() {
               ))}
             </SelectField>
             {units.length > 0 && (
-              <SelectField label="Kus" value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-                <option value="">— neviem / všetky —</option>
+              <SelectField label={tx('Kus')} value={unitId} onChange={(e) => setUnitId(e.target.value)}>
+                <option value="">{tx('— neviem / všetky —')}</option>
                 {units.map((unit) => (
                   <option key={unit} value={unit}>
                     #{unit}
@@ -104,28 +105,25 @@ export function ServiceRequestFormPage() {
             )}
           </fieldset>
         )}
-        <Field label="Čo sa deje *" autoFocus placeholder={chosen ? 'napr. nesvieti, praská, nejde DMX' : 'napr. Shure ULX-D #3 – praská kapsula'} maxLength={160} value={title} onChange={(e) => setTitle(e.target.value)} />
-        <TextareaField label="Podrobnosti" placeholder="Kedy sa to stalo, na akej akcii, čo ste skúšali…" maxLength={2000} value={description} onChange={(e) => setDescription(e.target.value)} />
-        <SelectField label="Priorita" className="sm:w-64" value={priority} onChange={(e) => setPriority(e.target.value as RequestPriority)}>
+        <Field label={tx('Čo sa deje *')} autoFocus placeholder={chosen ? tx('napr. nesvieti, praská, nejde DMX') : tx('napr. Shure ULX-D #3 – praská kapsula')} maxLength={160} value={title} onChange={(e) => setTitle(e.target.value)} />
+        <TextareaField label={tx('Podrobnosti')} placeholder={tx('Kedy sa to stalo, na akej akcii, čo ste skúšali…')} maxLength={2000} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <SelectField label={tx('Priorita')} className="sm:w-64" value={priority} onChange={(e) => setPriority(e.target.value as RequestPriority)}>
           {REQUEST_PRIORITIES.map((value) => (
             <option key={value} value={value}>
-              {REQUEST_PRIORITY_LABELS[value]}
-              {value === 'high' && ' – treba na najbližšiu akciu'}
+              {tx(REQUEST_PRIORITY_LABELS[value])}
+              {value === 'high' && tx(' – treba na najbližšiu akciu')}
             </option>
           ))}
         </SelectField>
         {save.isError && (
-          <p role="alert" className="text-sm text-destructive">
-            Odoslanie zlyhalo. {errorDetail(save.error)}
+          <p role="alert" className="text-sm text-destructive">{tx('Odoslanie zlyhalo.')}{' '}{errorDetail(save.error)}
           </p>
         )}
         <div className="flex gap-3">
           <Button type="submit" disabled={!title.trim() || save.isPending}>
-            {save.isPending ? 'Odosielam…' : 'Odoslať žiadosť'}
+            {save.isPending ? 'Odosielam…' : tx('Odoslať žiadosť')}
           </Button>
-          <LinkButton to={chosen ? `/equipment/${chosen.id}` : vehicleId ? `/vehicles/${vehicleId}` : '/service/requests'} variant="outline">
-            Zrušiť
-          </LinkButton>
+          <LinkButton to={chosen ? `/equipment/${chosen.id}` : vehicleId ? `/vehicles/${vehicleId}` : '/service/requests'} variant="outline">{tx('Zrušiť')}</LinkButton>
         </div>
       </form>
     </>

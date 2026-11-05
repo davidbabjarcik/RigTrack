@@ -44,6 +44,7 @@ import {
   type StatsOrder,
   type StatWidgetId,
 } from './widgets'
+import { tx, tf } from '@/lib/i18n'
 
 function Tile({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
@@ -80,7 +81,7 @@ function Ranking({ title, rows, format, empty }: { title: string; rows: Ranked[]
           {rows.map((row) => (
             <li key={row.id}>
               <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="min-w-0 truncate">{row.label}</span>
+                <span className="min-w-0 truncate">{tx(row.label)}</span>
                 <span className="shrink-0 font-medium tabular-nums">{format(row.value)}</span>
               </div>
               <div className="mt-1 h-2 rounded-r bg-muted" aria-hidden>
@@ -99,10 +100,10 @@ function MoveButtons({ label, canUp, canDown, onMove }: { label: string; canUp: 
   const button = 'flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted disabled:opacity-30'
   return (
     <span className="flex shrink-0">
-      <button type="button" className={button} disabled={!canUp} aria-label={`Posunúť vyššie: ${label}`} onClick={() => onMove(-1)}>
+      <button type="button" className={button} disabled={!canUp} aria-label={tf('Posunúť vyššie: {0}', label)} onClick={() => onMove(-1)}>
         <ArrowUp className="size-4" aria-hidden />
       </button>
-      <button type="button" className={button} disabled={!canDown} aria-label={`Posunúť nižšie: ${label}`} onClick={() => onMove(1)}>
+      <button type="button" className={button} disabled={!canDown} aria-label={tf('Posunúť nižšie: {0}', label)} onClick={() => onMove(1)}>
         <ArrowDown className="size-4" aria-hidden />
       </button>
     </span>
@@ -110,7 +111,7 @@ function MoveButtons({ label, canUp, canDown, onMove }: { label: string; canUp: 
 }
 
 const count = (value: number) => String(value)
-const daysLabel = (value: number) => `${value} ${value === 1 ? 'deň' : value <= 4 ? 'dni' : 'dní'}`
+const daysLabel = (value: number) => `${value} ${value === 1 ? tx('deň') : value <= 4 ? 'dni' : tx('dní')}`
 const timesLabel = (value: number) => `${value}×`
 const money = (value: number) => formatMoney(value, 'EUR')
 
@@ -163,7 +164,7 @@ export function StatsPage() {
 
   if (sources.some((source) => source.isPending)) return <LoadingBlock />
   if (sources.some((source) => source.isError)) {
-    return <ErrorBlock message="Štatistiky sa nepodarilo načítať." onRetry={() => sources.forEach((source) => void source.refetch())} />
+    return <ErrorBlock message={tx('Štatistiky sa nepodarilo načítať.')} onRetry={() => sources.forEach((source) => void source.refetch())} />
   }
 
   const stats = buildStats(
@@ -178,7 +179,7 @@ export function StatsPage() {
     addDays(today, -365),
   )
 
-  const value = valueSummary(equipment.data ?? [], (item) => categories.find((category) => category.id === item.categoryId)?.name ?? 'Bez kategórie')
+  const value = valueSummary(equipment.data ?? [], (item) => categories.find((category) => category.id === item.categoryId)?.name ?? tx('Bez kategórie'))
 
   // Peniaze vo zvolenom roku.
   const allPayments = payments.data ?? []
@@ -196,7 +197,7 @@ export function StatsPage() {
   const byMember: Ranked[] = [...memberTotals]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
-    .map(([id, value]) => ({ id, label: memberName(members.data, id) || 'Bývalý člen', value: Math.round(value * 100) / 100 }))
+    .map(([id, value]) => ({ id, label: memberName(members.data, id) || tx('Bývalý člen'), value: Math.round(value * 100) / 100 }))
   const byMethod: Ranked[] = PAYMENT_METHODS.map((method) => ({
     id: method,
     label: METHOD_LABELS[method],
@@ -204,7 +205,7 @@ export function StatsPage() {
   })).filter((row) => row.value > 0)
   const period = year === 'all' ? 'spolu' : `v roku ${year}`
   const eventStart = new Map((events.data ?? []).map((event) => [event.id, event.startsOn]))
-  const personName = (userId: string) => memberName(members.data, userId) || 'Bývalý člen'
+  const personName = (userId: string) => memberName(members.data, userId) || tx('Bývalý člen')
   const hours = hoursByPerson(
     workLogs.data ?? [],
     year,
@@ -219,92 +220,92 @@ export function StatsPage() {
 
   // Jeden zápis pre každý widget zo zoznamu STAT_WIDGETS; chýbajúci by neprešiel kontrolou typov.
   const render: Record<StatWidgetId, ReactNode> = {
-    'money.income': <Tile label="Príjmy z akcií (s DPH)" value={money(incomeGross)} hint={`bez DPH ${money(incomeNet)} · ${period}`} />,
-    'money.payouts': <Tile label="Odmeny členom" value={money(payoutTotal)} hint={`vyplatené ${money(payoutPaid)} · ${period}`} />,
-    'money.balance': <Tile label="Zostáva po odmenách" value={money(Math.round((incomeNet - payoutTotal) * 100) / 100)} hint="príjmy bez DPH mínus odmeny" />,
-    'money.mine': <Tile label="Moje zárobky" value={money(sum(myPayments))} hint={`vyplatené ${money(sum(myPayments.filter((payment) => payment.paidAt)))} · ${period}`} />,
+    'money.income': <Tile label={tx('Príjmy z akcií (s DPH)')} value={money(incomeGross)} hint={`bez DPH ${money(incomeNet)} · ${period}`} />,
+    'money.payouts': <Tile label={tx('Odmeny členom')} value={money(payoutTotal)} hint={tf('vyplatené {0} · {1}', money(payoutPaid), period)} />,
+    'money.balance': <Tile label={tx('Zostáva po odmenách')} value={money(Math.round((incomeNet - payoutTotal) * 100) / 100)} hint={tx('príjmy bez DPH mínus odmeny')} />,
+    'money.mine': <Tile label={tx('Moje zárobky')} value={money(sum(myPayments))} hint={tf('vyplatené {0} · {1}', money(sum(myPayments.filter((payment) => payment.paidAt))), period)} />,
     'money.incomeByMonth': (
-      <Ranking title="Príjmy firmy podľa mesiacov (s DPH)" rows={byMonth(yearIncome.map((payment) => ({ date: payment.receivedOn, amount: bothBases(payment).gross ?? payment.amount })))} format={money} empty="Žiadne zapísané príjmy z akcií." />
+      <Ranking title={tx('Príjmy firmy podľa mesiacov (s DPH)')} rows={byMonth(yearIncome.map((payment) => ({ date: payment.receivedOn, amount: bothBases(payment).gross ?? payment.amount })))} format={money} empty={tx('Žiadne zapísané príjmy z akcií.')} />
     ),
-    'money.incomeByMethod': <DonutChart title="Príjmy podľa spôsobu platby" rows={byMethod} format={money} empty="Žiadne zapísané príjmy z akcií." />,
-    'money.payoutsByMember': <DonutChart title="Odmeny podľa členov" rows={byMember} format={money} empty="Žiadne zapísané odmeny." />,
-    'money.payoutsByRole': <DonutChart title="Odmeny podľa role na evente" rows={byRole(yearPayments, events.data ?? [])} format={money} empty="Žiadne zapísané odmeny." />,
-    'money.mineByRole': <DonutChart title="Moje zárobky podľa role" rows={byRole(myPayments, events.data ?? [])} format={money} empty="Zatiaľ nemáte zapísané žiadne odmeny." />,
-    'money.mineByMonth': <Ranking title="Moje najlepšie mesiace" rows={byMonth(amounts(myPayments))} format={money} empty="Zatiaľ nemáte zapísané žiadne odmeny." />,
+    'money.incomeByMethod': <DonutChart title={tx('Príjmy podľa spôsobu platby')} rows={byMethod} format={money} empty={tx('Žiadne zapísané príjmy z akcií.')} />,
+    'money.payoutsByMember': <DonutChart title={tx('Odmeny podľa členov')} rows={byMember} format={money} empty={tx('Žiadne zapísané odmeny.')} />,
+    'money.payoutsByRole': <DonutChart title={tx('Odmeny podľa role na evente')} rows={byRole(yearPayments, events.data ?? [])} format={money} empty={tx('Žiadne zapísané odmeny.')} />,
+    'money.mineByRole': <DonutChart title={tx('Moje zárobky podľa role')} rows={byRole(myPayments, events.data ?? [])} format={money} empty={tx('Zatiaľ nemáte zapísané žiadne odmeny.')} />,
+    'money.mineByMonth': <Ranking title={tx('Moje najlepšie mesiace')} rows={byMonth(amounts(myPayments))} format={money} empty={tx('Zatiaľ nemáte zapísané žiadne odmeny.')} />,
     'money.mineByYear': (
-      <Ranking title="Moje zárobky podľa rokov" rows={byYear(amounts(allPayments.filter((payment) => payment.memberId === userId)))} format={money} empty="Zatiaľ nemáte zapísané žiadne odmeny." />
+      <Ranking title={tx('Moje zárobky podľa rokov')} rows={byYear(amounts(allPayments.filter((payment) => payment.memberId === userId)))} format={money} empty={tx('Zatiaľ nemáte zapísané žiadne odmeny.')} />
     ),
-    'equipment.items': <Tile label="Položiek" value={String(stats.equipment.items)} hint={`${stats.equipment.pieces} kusov`} />,
+    'equipment.items': <Tile label={tx('Položiek')} value={String(stats.equipment.items)} hint={`${stats.equipment.pieces} kusov`} />,
     'equipment.availability': (
-      <Tile label="Dostupnosť" value={`${Math.round(stats.equipment.availability * 100)} %`} hint="kusov pripravených na výdaj" />
+      <Tile label={tx('Dostupnosť')} value={`${Math.round(stats.equipment.availability * 100)} %`} hint={tx('kusov pripravených na výdaj')} />
     ),
     'equipment.value': (
       <Tile
-        label="Hodnota techniky"
+        label={tx('Hodnota techniky')}
         value={money(value.total)}
-        hint={`podľa nákupných cien${value.unpriced > 0 ? ` · ${value.unpriced} položiek bez ceny` : ''}`}
+        hint={tf('podľa nákupných cien{0}', value.unpriced > 0 ? ` · ${value.unpriced} položiek bez ceny` : '')}
       />
     ),
     'equipment.valueByCategory': (
       <Ranking
-        title="Hodnota techniky podľa kategórií"
+        title={tx('Hodnota techniky podľa kategórií')}
         rows={value.groups.map((group) => ({ id: group.name, label: group.name, value: group.value }))}
         format={money}
-        empty="Technika zatiaľ nemá zadanú nákupnú cenu (Technika → Upraviť → Nákup)."
+        empty={tx('Technika zatiaľ nemá zadanú nákupnú cenu (Technika → Upraviť → Nákup).')}
       />
     ),
     'equipment.cableMeters': (
-      <Ranking title="Káble – metre podľa konektora" rows={cableMeters(equipment.data ?? [])} format={(value) => `${formatNumber(value)} m`} empty="Zatiaľ žiadne káble s dĺžkou." />
+      <Ranking title={tx('Káble – metre podľa konektora')} rows={cableMeters(equipment.data ?? [])} format={(value) => `${formatNumber(value)} m`} empty={tx('Zatiaľ žiadne káble s dĺžkou.')} />
     ),
-    'equipment.packed': <Tile label="Kusov v cases" value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} ks mimo cases`} />,
+    'equipment.packed': <Tile label={tx('Kusov v cases')} value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} ks mimo cases`} />,
     'loans.open': (
       <Tile
-        label="Otvorené výpožičky"
+        label={tx('Otvorené výpožičky')}
         value={String(stats.loans.open)}
-        hint={stats.loans.overdue > 0 ? `${stats.loans.overdue} po termíne` : 'žiadna po termíne'}
+        hint={stats.loans.overdue > 0 ? tf('{0} po termíne', stats.loans.overdue) : tx('žiadna po termíne')}
       />
     ),
-    'equipment.byStatus': <Ranking title="Technika podľa stavu" rows={stats.equipment.byStatus} format={count} empty="Zatiaľ žiadna technika." />,
+    'equipment.byStatus': <Ranking title={tx('Technika podľa stavu')} rows={stats.equipment.byStatus} format={count} empty={tx('Zatiaľ žiadna technika.')} />,
     'loans.mostLent': (
       <Ranking
-        title="Najviac požičiavaná technika (posledných 12 mesiacov)"
+        title={tx('Najviac požičiavaná technika (posledných 12 mesiacov)')}
         rows={stats.loans.mostLent}
         format={daysLabel}
-        empty="Zatiaľ sa nič nepožičalo."
+        empty={tx('Zatiaľ sa nič nepožičalo.')}
       />
     ),
-    'service.records': <Tile label="Servisné záznamy" value={String(stats.service.records)} hint={`${stats.service.open} rozpracovaných`} />,
-    'service.hours': <Tile label="Odpracované hodiny" value={`${formatNumber(stats.service.hours)} h`} />,
-    'service.cost': <Tile label="Servisné náklady" value={money(stats.service.cost)} />,
-    'service.byKind': <Ranking title="Záznamy podľa typu" rows={stats.service.byKind} format={count} empty="Zatiaľ žiadne servisné záznamy." />,
-    'service.costliest': <Ranking title="Najdrahšia technika na servis" rows={stats.service.costliest} format={money} empty="Žiadne zapísané náklady." />,
-    'vehicles.count': <Tile label="Aktívne vozidlá" value={String(stats.vehicles.count)} />,
-    'vehicles.due': <Tile label="Termíny na vybavenie" value={String(stats.vehicles.due)} hint="po termíne alebo do 30 dní" />,
+    'service.records': <Tile label={tx('Servisné záznamy')} value={String(stats.service.records)} hint={tf('{0} rozpracovaných', stats.service.open)} />,
+    'service.hours': <Tile label={tx('Odpracované hodiny')} value={`${formatNumber(stats.service.hours)} h`} />,
+    'service.cost': <Tile label={tx('Servisné náklady')} value={money(stats.service.cost)} />,
+    'service.byKind': <Ranking title={tx('Záznamy podľa typu')} rows={stats.service.byKind} format={count} empty={tx('Zatiaľ žiadne servisné záznamy.')} />,
+    'service.costliest': <Ranking title={tx('Najdrahšia technika na servis')} rows={stats.service.costliest} format={money} empty={tx('Žiadne zapísané náklady.')} />,
+    'vehicles.count': <Tile label={tx('Aktívne vozidlá')} value={String(stats.vehicles.count)} />,
+    'vehicles.due': <Tile label={tx('Termíny na vybavenie')} value={String(stats.vehicles.due)} hint={tx('po termíne alebo do 30 dní')} />,
     'people.hours': (
-      <Ranking title={`Odpracované hodiny ${period} (eventy, firma, doma)`} rows={hours} format={(value) => `${formatNumber(value)} h`} empty="Žiadne zapísané výkazy času." />
+      <Ranking title={tf('Odpracované hodiny {0} (eventy, firma, doma)', period)} rows={hours} format={(value) => `${formatNumber(value)} h`} empty={tx('Žiadne zapísané výkazy času.')} />
     ),
     'people.drives': (
       <Ranking
-        title={`Šoféri – najazdené km ${period}`}
+        title={tf('Šoféri – najazdené km {0}', period)}
         rows={driverRanking(drives.data ?? [], year, (drive) => (drive.memberId ? personName(drive.memberId) : drive.driverName.trim())).map((row) => ({ ...row, label: `${row.label} (${row.drives}×)` }))}
         format={(value) => `${formatNumber(value)} km`}
-        empty="Zatiaľ žiadne zapísané jazdy (detail eventu → Kto šoféroval)."
+        empty={tx('Zatiaľ žiadne zapísané jazdy (detail eventu → Kto šoféroval).')}
       />
     ),
     'people.cables': (
-      <Ranking title="Kto spravil najviac káblov" rows={cableMakers(equipment.data ?? [])} format={(value) => `${value} ks`} empty="Pri kábloch zatiaľ nie je zapísané, kto ich vyrobil (Technika → kábel → Kto kábel vyrobil)." />
+      <Ranking title={tx('Kto spravil najviac káblov')} rows={cableMakers(equipment.data ?? [])} format={(value) => `${value} ks`} empty={tx('Pri kábloch zatiaľ nie je zapísané, kto ich vyrobil (Technika → kábel → Kto kábel vyrobil).')} />
     ),
     'people.duties':
       dutyRankings.length === 0 ? (
-        <Ranking title="Kto čo robil najviac" rows={[]} format={count} empty="Činnosti si nastavíte v Nastaveniach → Pripomienky (nakladanie, kontrola hliníka…)." />
+        <Ranking title={tx('Kto čo robil najviac')} rows={[]} format={count} empty={tx('Činnosti si nastavíte v Nastaveniach → Pripomienky (nakladanie, kontrola hliníka…).')} />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {dutyRankings.map(({ type, rows }) => (
-            <Ranking key={type.id} title={`${type.name} – ${period}`} rows={rows} format={timesLabel} empty="Zatiaľ nikto." />
+            <Ranking key={type.id} title={`${type.name} – ${period}`} rows={rows} format={timesLabel} empty={tx('Zatiaľ nikto.')} />
           ))}
         </div>
       ),
-    'vehicles.costs': <Ranking title="Náklady na prevádzku podľa vozidla" rows={stats.vehicles.costs} format={money} empty="Žiadne zapísané náklady." />,
+    'vehicles.costs': <Ranking title={tx('Náklady na prevádzku podľa vozidla')} rows={stats.vehicles.costs} format={money} empty={tx('Žiadne zapísané náklady.')} />,
   }
   // Widgety, na ktoré člen nemá oprávnenie, sa ani neponúkajú.
   const allowed = STAT_WIDGETS.filter((widget) => !('needs' in widget) || widget.needs.every((permission) => can(company, permission)))
@@ -317,19 +318,17 @@ export function StatsPage() {
   return (
     <>
       <PageHeader
-        title="Štatistiky"
-        description="Prehľad z údajov, ktoré sú v aplikácii zapísané"
+        title={tx('Štatistiky')}
+        description={tx('Prehľad z údajov, ktoré sú v aplikácii zapísané')}
         action={
           <div className="flex flex-wrap justify-end gap-2">
             {can(company, 'report.view') && (
               <LinkButton to="/report" variant="outline">
-                <FileChartColumn className="size-4" aria-hidden />
-                Ročná správa
-              </LinkButton>
+                <FileChartColumn className="size-4" aria-hidden />{tx('Ročná správa')}</LinkButton>
             )}
             <Button variant="outline" onClick={() => setEditing(!editing)}>
               {editing ? <Check className="size-4" aria-hidden /> : <SlidersHorizontal className="size-4" aria-hidden />}
-              {editing ? 'Hotovo' : 'Upraviť'}
+              {editing ? 'Hotovo' : tx('Upraviť')}
             </Button>
           </div>
         }
@@ -338,27 +337,21 @@ export function StatsPage() {
       {editing && (
         <section aria-labelledby="stats-edit-heading" className="mb-8 rounded-xl border bg-surface p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 id="stats-edit-heading" className="font-medium">
-              Čo chcem vidieť
-            </h2>
+            <h2 id="stats-edit-heading" className="font-medium">{tx('Čo chcem vidieť')}</h2>
             <span className="flex gap-3">
               {hidden.length > 0 && (
-                <button type="button" className="text-sm text-accent hover:underline" onClick={showAll}>
-                  Zobraziť všetko
-                </button>
+                <button type="button" className="text-sm text-accent hover:underline" onClick={showAll}>{tx('Zobraziť všetko')}</button>
               )}
-              <button type="button" className="text-sm text-accent hover:underline" onClick={() => reorder(DEFAULT_ORDER)}>
-                Pôvodné poradie
-              </button>
+              <button type="button" className="text-sm text-accent hover:underline" onClick={() => reorder(DEFAULT_ORDER)}>{tx('Pôvodné poradie')}</button>
             </span>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {sections.map((section, sectionIndex) => (
               <fieldset key={section.id} className="rounded-lg border p-3">
                 <legend className="flex items-center gap-1 px-1 text-sm font-medium">
-                  {section.label}
+                  {tx(section.label)}
                   <MoveButtons
-                    label={section.label}
+                    label={tx(section.label)}
                     canUp={sectionIndex > 0}
                     canDown={sectionIndex < sections.length - 1}
                     onMove={(direction) => moveSection(section.id, direction)}
@@ -371,10 +364,10 @@ export function StatsPage() {
                       <div key={widget.id} className="flex items-start gap-1">
                         <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-2 py-1 text-sm">
                           <input type="checkbox" className="mt-0.5 size-4 shrink-0" checked={!hidden.includes(widget.id)} onChange={() => toggle(widget.id)} />
-                          {widget.label}
+                          {tx(widget.label)}
                         </label>
                         <MoveButtons
-                          label={widget.label}
+                          label={tx(widget.label)}
                           canUp={index > 0}
                           canDown={index < peers.length - 1}
                           onMove={(direction) => moveWidget(widget.id, direction, allowedIds)}
@@ -385,16 +378,14 @@ export function StatsPage() {
               </fieldset>
             ))}
           </div>
-          <p className="mt-3 text-sm text-muted-foreground">Šípkami zmeníte poradie sekcií aj štatistík v nich. Výber a poradie sa pamätajú v tomto prehliadači a platia len pre vás.</p>
+          <p className="mt-3 text-sm text-muted-foreground">{tx('Šípkami zmeníte poradie sekcií aj štatistík v nich. Výber a poradie sa pamätajú v tomto prehliadači a platia len pre vás.')}</p>
         </section>
       )}
 
       {shown.length === 0 && (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">Všetky štatistiky sú skryté</p>
-          <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={showAll}>
-            Zobraziť všetko
-          </button>
+          <p className="font-medium">{tx('Všetky štatistiky sú skryté')}</p>
+          <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={showAll}>{tx('Zobraziť všetko')}</button>
         </div>
       )}
 
@@ -403,15 +394,15 @@ export function StatsPage() {
         const rankings = shown.filter((widget) => widget.section === section.id && widget.kind !== 'tile')
         if (tiles.length + rankings.length === 0) return null
         return (
-          <Section key={section.id} title={section.label}>
+          <Section key={section.id} title={tx(section.label)}>
             {section.id === 'money' && (
-              <SelectField label="Rok" hideLabel className="mb-3 w-40" value={year} onChange={(event) => setYear(event.target.value)}>
+              <SelectField label={tx('Rok')} hideLabel className="mb-3 w-40" value={year} onChange={(event) => setYear(event.target.value)}>
                 {years.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
                 ))}
-                <option value="all">Všetky roky</option>
+                <option value="all">{tx('Všetky roky')}</option>
               </SelectField>
             )}
             {tiles.length > 0 && (

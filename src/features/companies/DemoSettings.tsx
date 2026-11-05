@@ -7,6 +7,7 @@ import { errorDetail } from '@/lib/supabase/errors'
 import { companyKeys } from './api'
 import { useCompany } from './company-context'
 import { createDemo, deleteDemo, demoKeys, fetchMyDemo, resetDemo } from './demo'
+import { tx } from '@/lib/i18n'
 
 /** Vlastná demo firma používateľa: založiť, otvoriť, vrátiť do pôvodného stavu, zmazať. */
 export function DemoSettings({ userId, realCompanies = 0 }: { userId: string; realCompanies?: number }) {
@@ -44,9 +45,7 @@ export function DemoSettings({ userId, realCompanies = 0 }: { userId: string; re
   if (!expanded && !demo.data && !failed && realCompanies >= 1)
     return (
       <button type="button" onClick={() => setExpanded(true)} className="inline-flex items-center justify-center gap-1.5 self-center text-xs text-muted-foreground hover:text-foreground">
-        <FlaskConical className="size-3.5" aria-hidden />
-        Vyskúšať demo firmu
-      </button>
+        <FlaskConical className="size-3.5" aria-hidden />{tx('Vyskúšať demo firmu')}</button>
     )
 
   return (
@@ -54,55 +53,45 @@ export function DemoSettings({ userId, realCompanies = 0 }: { userId: string; re
       <div className="flex items-start gap-3">
         <FlaskConical className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
         <div className="min-w-0 flex-1">
-          <p className="font-medium">Demo firma</p>
-          <p className="text-sm text-muted-foreground">
-            Vaša vlastná ukážková firma s vymyslenou technikou, cases, eventmi a výpožičkou. Môžete v nej skúšať čokoľvek; reset ju vráti
-            do pôvodného stavu. Vaše skutočné firmy to neovplyvní.
-          </p>
+          <p className="font-medium">{tx('Demo firma')}</p>
+          <p className="text-sm text-muted-foreground">{tx('Vaša vlastná ukážková firma s vymyslenou technikou, cases, eventmi a výpožičkou. Môžete v nej skúšať čokoľvek; reset ju vráti do pôvodného stavu. Vaše skutočné firmy to neovplyvní.')}</p>
         </div>
       </div>
       {failed && (
-        <p role="alert" className="mt-3 text-sm text-destructive">
-          Nepodarilo sa. {errorDetail(create.error ?? reset.error ?? remove.error ?? demo.error)}
-          <span className="block text-muted-foreground">
-            Ak to nepomôže ani o chvíľu, kontaktujte vývojára aplikácie.
-          </span>
+        <p role="alert" className="mt-3 text-sm text-destructive">{tx('Nepodarilo sa.')}{' '}{errorDetail(create.error ?? reset.error ?? remove.error ?? demo.error)}
+          <span className="block text-muted-foreground">{tx('Ak to nepomôže ani o chvíľu, kontaktujte vývojára aplikácie.')}</span>
         </p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
         {demo.data ? (
           <>
             {active?.companyId !== demo.data && (
-              <Button size="sm" disabled={busy} onClick={() => void open(demo.data!)}>
-                Otvoriť demo
-              </Button>
+              <Button size="sm" disabled={busy} onClick={() => void open(demo.data!)}>{tx('Otvoriť demo')}</Button>
             )}
             <Button
               variant="outline"
               size="sm"
               disabled={busy}
               onClick={() => {
-                if (window.confirm('Resetovať demo firmu? Všetko, čo ste v nej zmenili, sa stratí a nahradí ukážkovými dátami.')) reset.mutate()
+                if (window.confirm(tx('Resetovať demo firmu? Všetko, čo ste v nej zmenili, sa stratí a nahradí ukážkovými dátami.'))) reset.mutate()
               }}
             >
               <RotateCcw className="size-4" aria-hidden />
-              {reset.isPending ? 'Resetujem…' : 'Resetovať demo'}
+              {reset.isPending ? 'Resetujem…' : tx('Resetovať demo')}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               disabled={busy}
               onClick={() => {
-                if (window.confirm('Zmazať demo firmu aj so všetkým, čo v nej je?')) remove.mutate()
+                if (window.confirm(tx('Zmazať demo firmu aj so všetkým, čo v nej je?'))) remove.mutate()
               }}
             >
-              <Trash2 className="size-4" aria-hidden />
-              Zmazať demo
-            </Button>
+              <Trash2 className="size-4" aria-hidden />{tx('Zmazať demo')}</Button>
           </>
         ) : (
           <Button size="sm" disabled={busy || demo.isPending} onClick={() => create.mutate()}>
-            {create.isPending ? 'Zakladám…' : 'Vytvoriť demo firmu'}
+            {create.isPending ? tx('Zakladám…') : tx('Vytvoriť demo firmu')}
           </Button>
         )}
       </div>

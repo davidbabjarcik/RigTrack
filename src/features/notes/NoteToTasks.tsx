@@ -8,6 +8,7 @@ import { TASK_CATEGORIES } from '@/features/tasks/model'
 import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { noteLines, remainingBody } from './noteTasks'
+import { tx, tf } from '@/lib/i18n'
 
 type Note = { id: string; title: string; body: string; people: string[] }
 
@@ -55,7 +56,7 @@ export function NoteToTasks({ companyId, note, members, onDone, onCancel }: Prop
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-accent/40 bg-background p-3 text-sm">
-      <p className="font-medium">Previesť na úlohy ({picked.size} z {lines.length})</p>
+      <p className="font-medium">{tx('Previesť na úlohy (')}{picked.size} z {lines.length})</p>
       <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto">
         {lines.map((line, index) => (
           <li key={index}>
@@ -67,15 +68,11 @@ export function NoteToTasks({ companyId, note, members, onDone, onCancel }: Prop
         ))}
       </ul>
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className="text-xs text-accent hover:underline" onClick={() => setPicked(new Set(lines.map((_, index) => index)))}>
-          vybrať všetko
-        </button>
-        <button type="button" className="text-xs text-accent hover:underline" onClick={() => setPicked(new Set())}>
-          nič
-        </button>
+        <button type="button" className="text-xs text-accent hover:underline" onClick={() => setPicked(new Set(lines.map((_, index) => index)))}>{tx('vybrať všetko')}</button>
+        <button type="button" className="text-xs text-accent hover:underline" onClick={() => setPicked(new Set())}>{tx('nič')}</button>
       </div>
       <label className="flex flex-col gap-1">
-        <span className="text-muted-foreground">Kategória úloh</span>
+        <span className="text-muted-foreground">{tx('Kategória úloh')}</span>
         <input className="h-9 rounded-lg border bg-surface px-2" maxLength={60} list="note-task-categories" value={category} onChange={(e) => setCategory(e.target.value)} />
         <datalist id="note-task-categories">
           {TASK_CATEGORIES.map((value) => (
@@ -84,7 +81,7 @@ export function NoteToTasks({ companyId, note, members, onDone, onCancel }: Prop
         </datalist>
       </label>
       <div>
-        <span className="mb-1 block text-muted-foreground">Kto ich má urobiť</span>
+        <span className="mb-1 block text-muted-foreground">{tx('Kto ich má urobiť')}</span>
         <div className="flex flex-wrap gap-1.5">
           {members.map((member) => {
             const on = people.includes(member.userId)
@@ -102,20 +99,16 @@ export function NoteToTasks({ companyId, note, members, onDone, onCancel }: Prop
           })}
         </div>
       </div>
-      <p className="text-xs text-muted-foreground">Úlohy dostanú číslo podľa poradia (1., 2., 3. …), aby sa v Úlohách zoradili ako v poznámke.</p>
+      <p className="text-xs text-muted-foreground">{tx('Úlohy dostanú číslo podľa poradia (1., 2., 3. …), aby sa v Úlohách zoradili ako v poznámke.')}</p>
       <label className="flex items-center gap-2">
-        <input type="checkbox" className="size-4" checked={dropEmpty} onChange={(e) => setDropEmpty(e.target.checked)} />
-        Zmazať poznámku, keď v nej nič neostane
-      </label>
-      {convert.isError && <p className="text-destructive">Úlohy sa nepodarilo vytvoriť – možno nemáte oprávnenie na úlohy.</p>}
+        <input type="checkbox" className="size-4" checked={dropEmpty} onChange={(e) => setDropEmpty(e.target.checked)} />{tx('Zmazať poznámku, keď v nej nič neostane')}</label>
+      {convert.isError && <p className="text-destructive">{tx('Úlohy sa nepodarilo vytvoriť – možno nemáte oprávnenie na úlohy.')}</p>}
       <div className="flex flex-wrap gap-2">
         <Button size="sm" disabled={picked.size === 0 || convert.isPending} onClick={() => convert.mutate()}>
           <ListTodo className="size-4" aria-hidden />
-          {convert.isPending ? 'Vytváram…' : `Vytvoriť ${picked.size} úloh`}
+          {convert.isPending ? tx('Vytváram…') : tf('Vytvoriť {0} úloh', picked.size)}
         </Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}>
-          Zrušiť
-        </Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>{tx('Zrušiť')}</Button>
       </div>
     </div>
   )

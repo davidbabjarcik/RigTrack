@@ -20,6 +20,7 @@ import { useGearBusyElsewhere } from './elsewhere'
 import { PackagePicker } from '@/features/packages/PackagePicker'
 import { busyElsewhere, eventsSinceCheck, type CompanyEvent } from './model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { companyId: string; event: CompanyEvent; events: CompanyEvent[]; canEdit: boolean }
 
@@ -101,17 +102,15 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
   const grouped = groupByCase(event.equipment)
 
   return (
-    <CollapsibleSection id="event.equipment" title={<>Technika ({grouped.cases.length + grouped.single.length})</>} actions={
+    <CollapsibleSection id="event.equipment" title={<>{tx('Technika (')}{grouped.cases.length + grouped.single.length})</>} actions={
         <>
         {canEdit && (
           <div className="flex flex-wrap justify-end gap-2">
             <LinkButton to={`/events/${event.id}/import`} variant="outline" size="sm">
-              <FileUp className="size-4" aria-hidden />
-              Import z Capture
-            </LinkButton>
+              <FileUp className="size-4" aria-hidden />{tx('Import z Capture')}</LinkButton>
             <Button variant="outline" size="sm" onClick={() => setAdding(!adding)}>
               {!adding && <Plus className="size-4" aria-hidden />}
-              {adding ? 'Hotovo' : 'Pridať techniku'}
+              {adding ? 'Hotovo' : tx('Pridať techniku')}
             </Button>
           </div>
         )}
@@ -138,11 +137,9 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
       {equipment.isPending ? (
         <LoadingBlock />
       ) : equipment.isError ? (
-        <ErrorBlock message="Techniku sa nepodarilo načítať." onRetry={() => void equipment.refetch()} />
+        <ErrorBlock message={tx('Techniku sa nepodarilo načítať.')} onRetry={() => void equipment.refetch()} />
       ) : event.equipment.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface px-6 py-8 text-center text-sm text-muted-foreground">
-          Na event zatiaľ nie je naplánovaná žiadna technika.
-        </p>
+        <p className="rounded-xl border border-dashed bg-surface px-6 py-8 text-center text-sm text-muted-foreground">{tx('Na event zatiaľ nie je naplánovaná žiadna technika.')}</p>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {grouped.cases.map(({ caseId, content }) => {
@@ -163,9 +160,9 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                     <span className="block truncate font-medium">{name}</span>
                     <span className="block text-xs text-muted-foreground">{describeContent(content, nameOf)}</span>
                   </Link>
-                  <span className="shrink-0 font-medium">celý case</span>
+                  <span className="shrink-0 font-medium">{tx('celý case')}</span>
                   {canEdit && (
-                    <Button variant="ghost" size="sm" aria-label={`Odobrať z eventu case: ${name}`} disabled={busy} onClick={() => removeCase.mutate(caseId)}>
+                    <Button variant="ghost" size="sm" aria-label={tf('Odobrať z eventu case: {0}', name)} disabled={busy} onClick={() => removeCase.mutate(caseId)}>
                       <X className="size-4" aria-hidden />
                     </Button>
                   )}
@@ -180,11 +177,9 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                   <p className="mt-2 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
                     <ClipboardCheck className="size-4 shrink-0" aria-hidden />
                     {checkedOn === null
-                      ? 'Obsah tohto case ešte nikto neskontroloval.'
-                      : `Case nebol skontrolovaný od ${formatDate(checkedOn)}, odvtedy bol na ${sinceCheck} ${sinceCheck === 1 ? 'evente' : 'eventoch'}.`}{' '}
-                    <Link to={`/cases/${caseId}`} className="font-medium underline">
-                      Skontrolovať
-                    </Link>
+                      ? tx('Obsah tohto case ešte nikto neskontroloval.')
+                      : tf('Case nebol skontrolovaný od {0}, odvtedy bol na {1} {2}.', formatDate(checkedOn), sinceCheck, sinceCheck === 1 ? 'evente' : 'eventoch')}{' '}
+                    <Link to={`/cases/${caseId}`} className="font-medium underline">{tx('Skontrolovať')}</Link>
                   </p>
                 )}
               </li>
@@ -200,14 +195,12 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                   <PhotoThumb url={thumbs[piece?.photoPath ?? '']} />
                   <Link to={`/equipment/${item.equipmentId}`} className="min-w-0 flex-1 hover:underline">
                     <span className="block truncate font-medium">{piece?.name ?? 'Technika'}</span>
-                    <span className="block truncate text-sm text-muted-foreground">
-                      voľné {Math.max(free, 0)} z {piece?.quantity ?? 0} ks v tomto termíne
-                    </span>
+                    <span className="block truncate text-sm text-muted-foreground">{tx('voľné')}{' '}{Math.max(free, 0)} z {piece?.quantity ?? 0}{' '}{tx('ks v tomto termíne')}</span>
                   </Link>
                   {canEdit ? (
                     <>
                       <Field
-                        label={`Počet: ${piece?.name ?? 'technika'}`}
+                        label={tf('Počet: {0}', piece?.name ?? 'technika')}
                         hideLabel
                         type="number"
                         inputMode="numeric"
@@ -227,7 +220,7 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                       <Button
                         variant="ghost"
                         size="sm"
-                        aria-label={`Odobrať z eventu: ${piece?.name ?? 'technika'}`}
+                        aria-label={tf('Odobrať z eventu: {0}', piece?.name ?? 'technika')}
                         disabled={busy}
                         onClick={() => remove.mutate(item.equipmentId)}
                       >
@@ -235,7 +228,7 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                       </Button>
                     </>
                   ) : (
-                    <span className="shrink-0 font-medium">{item.quantity} ks</span>
+                    <span className="shrink-0 font-medium">{item.quantity}{' '}{tx('ks')}</span>
                   )}
                 </div>
                 {collision && (
@@ -247,8 +240,7 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                 {otherCompany(item.equipmentId) > 0 && (
                   <p className="mt-1 flex items-center gap-2 text-sm text-accent">
                     <TriangleAlert className="size-4 shrink-0" aria-hidden />
-                    {otherCompany(item.equipmentId)} ks tejto vlastnej techniky je v tomto termíne na evente inej firmy.
-                  </p>
+                    {otherCompany(item.equipmentId)}{' '}{tx('ks tejto vlastnej techniky je v tomto termíne na evente inej firmy.')}</p>
                 )}
               </li>
             )
@@ -257,16 +249,14 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
       )}
 
       {mutations.some((mutation) => mutation.isError) && (
-        <p role="alert" className="mt-2 text-sm text-destructive">
-          Zmena sa nepodarila.
-        </p>
+        <p role="alert" className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>
       )}
 
       {adding && (
         <div className="mt-4">
           <PackagePicker companyId={companyId} equipment={lendable} cases={cases.data ?? []} disabled={busy} onAdd={(additions) => addPackage.mutate(additions)} />
           <LoanPicker
-            title="Pridať techniku na event"
+            title={tx('Pridať techniku na event')}
             equipment={lendable}
             cases={cases.data ?? []}
             chosen={new Set(event.equipment.map((item) => item.equipmentId))}

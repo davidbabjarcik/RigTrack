@@ -8,6 +8,7 @@ import { companyKeys, createCompany } from './api'
 import { fetchSuggestedProfiles, saveSuggestedProfile, type SuggestedProfile } from './partnerCompany'
 import { useCompany } from './company-context'
 import { useCanCreateCompany } from './creation'
+import { tx } from '@/lib/i18n'
 
 export function CompanyCreatePage() {
   const { session } = useAuth()
@@ -41,22 +42,20 @@ export function CompanyCreatePage() {
   if (allowed.data === false) {
     return (
       <div className="rounded-2xl border bg-surface p-6 text-sm">
-        <h1 className="mb-2 text-xl font-semibold">Nová firma</h1>
-        <p className="text-muted-foreground">Novú firmu zakladá správca aplikácie. Na obrazovke „Vyberte firmu“ mu pošlite žiadosť – po schválení si ju tu založíte.</p>
-        <Link to="/company/select" className="mt-4 inline-block text-accent hover:underline">
-          Späť na Vyberte firmu
-        </Link>
+        <h1 className="mb-2 text-xl font-semibold">{tx('Nová firma')}</h1>
+        <p className="text-muted-foreground">{tx('Novú firmu zakladá správca aplikácie. Na obrazovke „Vyberte firmu“ mu pošlite žiadosť – po schválení si ju tu založíte.')}</p>
+        <Link to="/company/select" className="mt-4 inline-block text-accent hover:underline">{tx('Späť na Vyberte firmu')}</Link>
       </div>
     )
   }
 
   return (
     <div className="rounded-2xl border bg-surface p-6">
-      <h1 className="mb-1 text-xl font-semibold">Nová firma</h1>
-      <p className="mb-5 text-sm text-muted-foreground">Stanete sa jej adminom a môžete pozvať ďalších členov.</p>
+      <h1 className="mb-1 text-xl font-semibold">{tx('Nová firma')}</h1>
+      <p className="mb-5 text-sm text-muted-foreground">{tx('Stanete sa jej adminom a môžete pozvať ďalších členov.')}</p>
       {(suggestions.data ?? []).length > 0 && (
         <div className="mb-4 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
-          <p className="font-medium">Návrh z firiem, s ktorými spolupracujete:</p>
+          <p className="font-medium">{tx('Návrh z firiem, s ktorými spolupracujete:')}</p>
           <ul className="mt-2 flex flex-col gap-2">
             {suggestions.data!.map((item) => (
               <li key={`${item.name}-${item.ico}`} className="flex flex-wrap items-center justify-between gap-2">
@@ -72,7 +71,7 @@ export function CompanyCreatePage() {
                     setName(item.name)
                   }}
                 >
-                  {profile === item ? 'Použité' : 'Použiť'}
+                  {profile === item ? tx('Použité') : tx('Použiť')}
                 </Button>
               </li>
             ))}
@@ -81,26 +80,22 @@ export function CompanyCreatePage() {
       )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Field
-          label="Názov firmy"
+          label={tx('Názov firmy')}
           required
           maxLength={120}
           pattern=".*\S.*"
-          title="Zadajte názov firmy"
+          title={tx('Zadajte názov firmy')}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         {create.isError && (
-          <p role="alert" className="text-sm text-destructive">
-            Firmu sa nepodarilo vytvoriť. Skúste to znova.
-          </p>
+          <p role="alert" className="text-sm text-destructive">{tx('Firmu sa nepodarilo vytvoriť. Skúste to znova.')}</p>
         )}
         <Button type="submit" disabled={create.isPending}>
-          {create.isPending ? 'Vytváram…' : 'Vytvoriť firmu'}
+          {create.isPending ? tx('Vytváram…') : tx('Vytvoriť firmu')}
         </Button>
       </form>
-      <Link to="/company/select" className="mt-5 inline-block text-sm text-accent hover:underline">
-        Späť na výber firmy
-      </Link>
+      <Link to="/company/select" className="mt-5 inline-block text-sm text-accent hover:underline">{tx('Späť na výber firmy')}</Link>
     </div>
   )
 }

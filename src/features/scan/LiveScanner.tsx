@@ -2,6 +2,7 @@ import { Flashlight, FlashlightOff, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { QrScanButton } from '@/features/networks/QrScanButton'
+import { tx } from '@/lib/i18n'
 
 type Detector = { detect: (source: HTMLVideoElement) => Promise<{ rawValue: string }[]> }
 type DetectorClass = { new (options: { formats: string[] }): Detector; getSupportedFormats?: () => Promise<string[]> }
@@ -109,20 +110,18 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
           {torchAvailable && !failed && (
             <Button variant="outline" size="sm" aria-pressed={torch} className={torch ? 'bg-white text-black hover:bg-white/90' : 'bg-black text-white'} onClick={() => void toggleTorch()}>
               {torch ? <FlashlightOff className="size-4" aria-hidden /> : <Flashlight className="size-4" aria-hidden />}
-              {torch ? 'Vypnúť blesk' : 'Blesk'}
+              {torch ? tx('Vypnúť blesk') : 'Blesk'}
             </Button>
           )}
           <Button variant="outline" size="sm" className="bg-black text-white" onClick={onClose}>
-            <X className="size-4" aria-hidden />
-            Zavrieť
-          </Button>
+            <X className="size-4" aria-hidden />{tx('Zavrieť')}</Button>
         </div>
       </div>
       {failed ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
-          <p>Kamera sa nespustila (chýba povolenie alebo ju používa iná appka). QR kód môžete aj odfotiť:</p>
+          <p>{tx('Kamera sa nespustila (chýba povolenie alebo ju používa iná appka). QR kód môžete aj odfotiť:')}</p>
           <QrScanButton
-            label="Odfotiť QR kód"
+            label={tx('Odfotiť QR kód')}
             onText={(text) => {
               const result = handler.current(text)
               if (result) setMessage(result)
@@ -138,7 +137,7 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
         </div>
       )}
       <p className="min-h-14 p-4 text-center text-lg" aria-live="polite">
-        {message || 'Namierte kameru na QR kód na štítku.'}
+        {message || tx('Namierte kameru na QR kód na štítku.')}
       </p>
     </div>
   )

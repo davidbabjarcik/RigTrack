@@ -2,6 +2,7 @@ import { Eraser, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
+import { tx } from '@/lib/i18n'
 
 const WIDTH = 900
 const HEIGHT = 360
@@ -50,18 +51,16 @@ export function SignaturePad({ title, statement, defaultName, saving, error, onS
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">{title}</h2>
         <Button variant="ghost" size="sm" onClick={onClose}>
-          <X className="size-4" aria-hidden />
-          Zavrieť
-        </Button>
+          <X className="size-4" aria-hidden />{tx('Zavrieť')}</Button>
       </div>
       <p className="text-sm text-muted-foreground">{statement}</p>
-      <Field label="Meno podpisujúceho" maxLength={120} value={name} onChange={(event) => setName(event.target.value)} />
+      <Field label={tx('Meno podpisujúceho')} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} />
       <div className="relative">
         <canvas
           ref={canvas}
           width={WIDTH}
           height={HEIGHT}
-          aria-label="Plocha na podpis"
+          aria-label={tx('Plocha na podpis')}
           className="block w-full touch-none rounded-xl border-2 border-dashed bg-white"
           style={{ aspectRatio: `${WIDTH} / ${HEIGHT}` }}
           onPointerDown={(event) => {
@@ -82,16 +81,14 @@ export function SignaturePad({ title, statement, defaultName, saving, error, onS
           onPointerUp={() => (drawing.current = null)}
           onPointerCancel={() => (drawing.current = null)}
         />
-        {empty && <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-muted-foreground/60">Podpíšte sa sem prstom</p>}
+        {empty && <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-muted-foreground/60">{tx('Podpíšte sa sem prstom')}</p>}
       </div>
-      {error && <p className="text-sm text-destructive">Podpis sa nepodarilo uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>}
+      {error && <p className="text-sm text-destructive">{tx('Podpis sa nepodarilo uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>}
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={clear} disabled={empty || saving}>
-          <Eraser className="size-4" aria-hidden />
-          Vymazať
-        </Button>
+          <Eraser className="size-4" aria-hidden />{tx('Vymazať')}</Button>
         <Button disabled={empty || !name.trim() || saving} onClick={() => onSave(name, canvas.current!.toDataURL('image/png'))}>
-          {saving ? 'Ukladám…' : 'Uložiť podpis'}
+          {saving ? tx('Ukladám…') : tx('Uložiť podpis')}
         </Button>
       </div>
     </div>

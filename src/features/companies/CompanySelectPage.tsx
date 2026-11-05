@@ -22,6 +22,7 @@ import { MyStatsCard } from '@/features/profile/MyStatsCard'
 import { MyEquipmentEverywhere } from '@/features/profile/MyEquipmentEverywhere'
 import { ProfileForm } from '@/features/profile/ProfileForm'
 import { ProfilePhoto } from '@/features/profile/ProfilePhoto'
+import { tx, tf } from '@/lib/i18n'
 
 const VIEWS: { id: 'companies' | 'profile' | 'calendar' | 'equipment' | 'devices' | 'stats' | 'developer'; label: string; hint: string; icon: LucideIcon }[] = [
   { id: 'companies', label: 'Firmy', hint: '', icon: Building2 },
@@ -93,18 +94,15 @@ export function CompanySelectPage() {
         >
           <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />
           <span className="flex-1">
-            <span className="font-medium">Doplňte svoj profil</span> – meno a telefón stačí zadať raz, prenesú sa do všetkých vašich firiem.
-          </span>
+            <span className="font-medium">{tx('Doplňte svoj profil')}</span>{' '}{tx('– meno a telefón stačí zadať raz, prenesú sa do všetkých vašich firiem.')}</span>
         </button>
       )}
 
       {view === 'profile' && (
         <section aria-labelledby="profile-heading">
           <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
-            <ArrowLeft className="size-4" aria-hidden />
-            Späť na firmy
-          </button>
-          <h1 id="profile-heading" className="mb-3 text-2xl font-semibold">Môj profil</h1>
+            <ArrowLeft className="size-4" aria-hidden />{tx('Späť na firmy')}</button>
+          <h1 id="profile-heading" className="mb-3 text-2xl font-semibold">{tx('Môj profil')}</h1>
           <div className="grid items-start gap-4 md:grid-cols-[15rem_1fr]">
             <ProfilePhoto userId={user.id} memberships={memberships} />
             <ProfileForm userId={user.id} accountEmail={user.email ?? ''} />
@@ -114,40 +112,32 @@ export function CompanySelectPage() {
       {view === 'calendar' && (
         <section aria-labelledby="calendar-heading">
           <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
-            <ArrowLeft className="size-4" aria-hidden />
-            Späť na firmy
-          </button>
-          <h1 id="calendar-heading" className="mb-3 text-2xl font-semibold">Môj kalendár</h1>
+            <ArrowLeft className="size-4" aria-hidden />{tx('Späť na firmy')}</button>
+          <h1 id="calendar-heading" className="mb-3 text-2xl font-semibold">{tx('Môj kalendár')}</h1>
           <MyCalendar userId={user.id} memberships={memberships} />
         </section>
       )}
       {view === 'equipment' && (
         <section aria-labelledby="equipment-heading">
           <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
-            <ArrowLeft className="size-4" aria-hidden />
-            Späť na firmy
-          </button>
-          <h1 id="equipment-heading" className="mb-3 text-2xl font-semibold">Moja technika</h1>
+            <ArrowLeft className="size-4" aria-hidden />{tx('Späť na firmy')}</button>
+          <h1 id="equipment-heading" className="mb-3 text-2xl font-semibold">{tx('Moja technika')}</h1>
           <MyEquipmentEverywhere userId={user.id} memberships={memberships} />
         </section>
       )}
       {view === 'devices' && (
         <section aria-labelledby="devices-heading">
           <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
-            <ArrowLeft className="size-4" aria-hidden />
-            Späť na firmy
-          </button>
-          <h1 id="devices-heading" className="mb-3 text-2xl font-semibold">Moje zariadenia</h1>
+            <ArrowLeft className="size-4" aria-hidden />{tx('Späť na firmy')}</button>
+          <h1 id="devices-heading" className="mb-3 text-2xl font-semibold">{tx('Moje zariadenia')}</h1>
           <MyDevicesEverywhere userId={user.id} memberships={memberships} />
         </section>
       )}
       {view === 'stats' && (
         <section aria-labelledby="stats-heading">
           <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
-            <ArrowLeft className="size-4" aria-hidden />
-            Späť na firmy
-          </button>
-          <h1 id="stats-heading" className="mb-3 text-2xl font-semibold">Moje štatistiky</h1>
+            <ArrowLeft className="size-4" aria-hidden />{tx('Späť na firmy')}</button>
+          <h1 id="stats-heading" className="mb-3 text-2xl font-semibold">{tx('Moje štatistiky')}</h1>
           <MyStatsCard userId={user.id} memberships={memberships} />
         </section>
       )}
@@ -155,60 +145,47 @@ export function CompanySelectPage() {
       {view === 'developer' && (
         <section aria-labelledby="developer-heading">
           <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => chooseView('companies')}>
-            <ArrowLeft className="size-4" aria-hidden />
-            Späť na firmy
-          </button>
-          <h1 id="developer-heading" className="mb-3 text-2xl font-semibold">Vývojár</h1>
+            <ArrowLeft className="size-4" aria-hidden />{tx('Späť na firmy')}</button>
+          <h1 id="developer-heading" className="mb-3 text-2xl font-semibold">{tx('Vývojár')}</h1>
           <DeveloperPanel email={user.email ?? ''} />
         </section>
       )}
 
       {view === 'companies' && pending.length > 0 && (
         <section aria-labelledby="invitations-heading">
-          <h2 id="invitations-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-            Pozvánky
-          </h2>
+          <h2 id="invitations-heading" className="mb-2 text-sm font-medium text-muted-foreground">{tx('Pozvánky')}</h2>
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {pending.map((invitation) => (
               <li key={invitation.id} className="flex flex-col gap-3 p-4">
                 <div>
                   <p className="font-medium">{invitation.companyName}</p>
-                  <p className="text-sm text-muted-foreground">Rola: {ROLE_LABELS[invitation.role]}</p>
+                  <p className="text-sm text-muted-foreground">{tx('Rola:')}{' '}{tx(ROLE_LABELS[invitation.role])}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" disabled={accept.isPending} onClick={() => accept.mutate(invitation.id)}>
-                    Prijať
-                  </Button>
+                  <Button size="sm" disabled={accept.isPending} onClick={() => accept.mutate(invitation.id)}>{tx('Prijať')}</Button>
                   <Button
                     size="sm"
                     variant="outline"
                     disabled={decline.isPending}
                     onClick={() => decline.mutate(invitation.id)}
-                  >
-                    Odmietnuť
-                  </Button>
+                  >{tx('Odmietnuť')}</Button>
                 </div>
               </li>
             ))}
           </ul>
           {(accept.isError || decline.isError) && (
-            <p role="alert" className="mt-2 text-sm text-destructive">
-              Operácia zlyhala. Skúste to znova.
-            </p>
+            <p role="alert" className="mt-2 text-sm text-destructive">{tx('Operácia zlyhala. Skúste to znova.')}</p>
           )}
         </section>
       )}
 
       {view === 'companies' && (
       <section aria-labelledby="companies-heading">
-        <h1 id="companies-heading" className="mb-3 text-2xl font-semibold">
-          Vyberte firmu
-        </h1>
+        <h1 id="companies-heading" className="mb-3 text-2xl font-semibold">{tx('Vyberte firmu')}</h1>
         {loading ? (
-          <p className="text-sm text-muted-foreground">Načítavam…</p>
+          <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
         ) : memberships.length === 0 ? (
-          <p className="rounded-xl border border-dashed bg-surface p-6 text-center text-sm text-muted-foreground">
-            Zatiaľ nie ste členom žiadnej firmy. Vytvorte novú, alebo požiadajte admina vašej firmy o pozvánku na adresu{' '}
+          <p className="rounded-xl border border-dashed bg-surface p-6 text-center text-sm text-muted-foreground">{tx('Zatiaľ nie ste členom žiadnej firmy. Vytvorte novú, alebo požiadajte admina vašej firmy o pozvánku na adresu')}{' '}
             <span className="font-medium text-foreground">{user.email}</span>.
           </p>
         ) : (
@@ -234,10 +211,10 @@ export function CompanySelectPage() {
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-base font-medium">{membership.companyName}</span>
-                    <span className="block text-sm text-muted-foreground">{ROLE_LABELS[membership.role]}</span>
+                    <span className="block text-sm text-muted-foreground">{tx(ROLE_LABELS[membership.role])}</span>
                   </span>
                   {membership.companyId === active?.companyId ? (
-                    <Check className="size-5 text-accent" aria-label="Aktívna firma" />
+                    <Check className="size-5 text-accent" aria-label={tx('Aktívna firma')} />
                   ) : (
                     <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
                   )}
@@ -248,8 +225,8 @@ export function CompanySelectPage() {
                   type="button"
                   onClick={() => togglePin(membership.companyId)}
                   aria-pressed={pins.includes(membership.companyId)}
-                  aria-label={pins.includes(membership.companyId) ? `Odopnúť ${membership.companyName}` : `Pripnúť ${membership.companyName} hore`}
-                  title={pins.includes(membership.companyId) ? 'Odopnúť' : 'Pripnúť hore'}
+                  aria-label={pins.includes(membership.companyId) ? tf('Odopnúť {0}', membership.companyName) : tf('Pripnúť {0} hore', membership.companyName)}
+                  title={pins.includes(membership.companyId) ? tx('Odopnúť') : tx('Pripnúť hore')}
                   className={cn(
                     'absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1.5 hover:bg-muted',
                     pins.includes(membership.companyId) ? 'text-accent' : 'text-muted-foreground/60 hover:text-foreground',
@@ -266,8 +243,8 @@ export function CompanySelectPage() {
       )}
 
       {view === 'companies' && (
-        <nav aria-label="Môj účet">
-          <h2 className="mb-2 text-sm font-medium text-muted-foreground">Môj účet – platí vo všetkých firmách</h2>
+        <nav aria-label={tx('Môj účet')}>
+          <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Môj účet – platí vo všetkých firmách')}</h2>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
             {shown
               .filter((item) => item.id !== 'companies')
@@ -282,10 +259,10 @@ export function CompanySelectPage() {
                     <item.icon className="size-5" aria-hidden />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm font-medium">{item.label}</span>
-                    <span className="block text-xs text-muted-foreground">{item.hint}</span>
+                    <span className="block text-sm font-medium">{tx(item.label)}</span>
+                    <span className="block text-xs text-muted-foreground">{tx(item.hint)}</span>
                   </span>
-                  {item.id === 'profile' && incomplete && <span className="absolute top-2 right-2 size-2.5 rounded-full bg-accent" aria-label="nevyplnený" />}
+                  {item.id === 'profile' && incomplete && <span className="absolute top-2 right-2 size-2.5 rounded-full bg-accent" aria-label={tx('nevyplnený')} />}
                 </button>
               ))}
           </div>
@@ -295,9 +272,7 @@ export function CompanySelectPage() {
       {view === 'companies' && (
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <NewCompanyButton userId={user.id} />
-        <Button variant="ghost" className="sm:ml-auto" onClick={() => void getSupabase().auth.signOut()}>
-          Odhlásiť sa
-        </Button>
+        <Button variant="ghost" className="sm:ml-auto" onClick={() => void getSupabase().auth.signOut()}>{tx('Odhlásiť sa')}</Button>
         <div className="w-full">
           <DemoSettings userId={user.id} realCompanies={realCompanies} />
         </div>

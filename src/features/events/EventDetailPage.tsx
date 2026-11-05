@@ -36,6 +36,7 @@ import { EventStatusBadge } from './EventStatusBadge'
 import { describeTimes, POWER_LABELS, SETTING_LABELS } from './model'
 import { EventWeather } from './EventWeather'
 import { useEvents } from './useEvents'
+import { tx, tf } from '@/lib/i18n'
 
 export function EventDetailPage() {
   const { id = '' } = useParams()
@@ -57,19 +58,17 @@ export function EventDetailPage() {
 
   const back = (
     <Link to="/events" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="size-4" aria-hidden />
-      Eventy
-    </Link>
+      <ArrowLeft className="size-4" aria-hidden />{tx('Eventy')}</Link>
   )
 
   if (events.isPending) return <LoadingBlock />
-  if (events.isError) return <ErrorBlock message="Event sa nepodarilo načítať." onRetry={() => void events.refetch()} />
+  if (events.isError) return <ErrorBlock message={tx('Event sa nepodarilo načítať.')} onRetry={() => void events.refetch()} />
   const event = events.data.find((candidate) => candidate.id === id)
   if (!event) {
     return (
       <>
         {back}
-        <ErrorBlock message="Tento event neexistuje alebo k nemu nemáte prístup." />
+        <ErrorBlock message={tx('Tento event neexistuje alebo k nemu nemáte prístup.')} />
       </>
     )
   }
@@ -93,34 +92,22 @@ export function EventDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <LinkButton to={`/events/${id}/crew`} variant="outline" size="sm">
-            <CalendarClock className="size-4" aria-hidden />
-            Pre posádku
-          </LinkButton>
+            <CalendarClock className="size-4" aria-hidden />{tx('Pre posádku')}</LinkButton>
           <LinkButton to={`/events/${id}/pack`} variant="outline" size="sm">
-            <ListChecks className="size-4" aria-hidden />
-            Pack list
-          </LinkButton>
+            <ListChecks className="size-4" aria-hidden />{tx('Pack list')}</LinkButton>
           {canEdit && (
-            <LinkButton to={`/events/${id}/quote`} variant="outline" size="sm" title="Rýchla ponuka z techniky eventu podľa cenníka">
-              <Receipt className="size-4" aria-hidden />
-              Rýchla ponuka
-            </LinkButton>
+            <LinkButton to={`/events/${id}/quote`} variant="outline" size="sm" title={tx('Rýchla ponuka z techniky eventu podľa cenníka')}>
+              <Receipt className="size-4" aria-hidden />{tx('Rýchla ponuka')}</LinkButton>
           )}
           {can(company, 'offers.edit') && (
-            <LinkButton to={`/offers/new?event=${id}`} variant="outline" size="sm" title="Cenová ponuka s časťami, rozpočtom a vystavovateľom">
-              <FileText className="size-4" aria-hidden />
-              Cenová ponuka
-            </LinkButton>
+            <LinkButton to={`/offers/new?event=${id}`} variant="outline" size="sm" title={tx('Cenová ponuka s časťami, rozpočtom a vystavovateľom')}>
+              <FileText className="size-4" aria-hidden />{tx('Cenová ponuka')}</LinkButton>
           )}
           <LinkButton to={`/events/${id}/print`} variant="outline" size="sm">
-            <Printer className="size-4" aria-hidden />
-            Tlač / PDF
-          </LinkButton>
+            <Printer className="size-4" aria-hidden />{tx('Tlač / PDF')}</LinkButton>
           {canEdit && (
             <LinkButton to={`/events/${id}/edit`} variant="outline" size="sm">
-              <Pencil className="size-4" aria-hidden />
-              Upraviť
-            </LinkButton>
+              <Pencil className="size-4" aria-hidden />{tx('Upraviť')}</LinkButton>
           )}
           {can(company, 'events.delete') && (
             <Button
@@ -128,47 +115,43 @@ export function EventDetailPage() {
               size="sm"
               disabled={remove.isPending}
               onClick={() => {
-                if (window.confirm(`Naozaj odstrániť event „${event.name}“ aj s posádkou a dokumentmi?`)) remove.mutate()
+                if (window.confirm(tf('Naozaj odstrániť event „{0}“ aj s posádkou a dokumentmi?', event.name))) remove.mutate()
               }}
             >
-              <Trash2 className="size-4" aria-hidden />
-              Odstrániť
-            </Button>
+              <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
           )}
         </div>
       </header>
 
       {remove.isError && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
-          Event sa nepodarilo odstrániť.
-        </p>
+        <p role="alert" className="mb-4 text-sm text-destructive">{tx('Event sa nepodarilo odstrániť.')}</p>
       )}
 
       {(times || organizer.length > 0 || event.setting || event.power) && (
-        <CollapsibleSection id="event.details" title={organizer.length > 0 ? 'Miesto, elektrina a organizátor' : 'Miesto a elektrina'}>
+        <CollapsibleSection id="event.details" title={organizer.length > 0 ? tx('Miesto, elektrina a organizátor') : tx('Miesto a elektrina')}>
           <dl className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
             {event.setting && (
               <div>
-                <dt className="text-sm text-muted-foreground">Miesto</dt>
-                <dd className="font-medium">{SETTING_LABELS[event.setting]}</dd>
+                <dt className="text-sm text-muted-foreground">{tx('Miesto')}</dt>
+                <dd className="font-medium">{tx(SETTING_LABELS[event.setting])}</dd>
               </div>
             )}
             <div>
-              <dt className="text-sm text-muted-foreground">Elektrina</dt>
+              <dt className="text-sm text-muted-foreground">{tx('Elektrina')}</dt>
               <dd className={event.power ? 'font-medium' : 'font-medium text-amber-700 dark:text-amber-300'}>
-                {event.power ? `${event.powerCount && event.powerCount > 1 ? `${event.powerCount} × ` : ''}${POWER_LABELS[event.power]}` : 'Prípojka ešte nie je zistená'}
+                {event.power ? `${event.powerCount && event.powerCount > 1 ? `${event.powerCount} × ` : ''}${POWER_LABELS[event.power]}` : tx('Prípojka ešte nie je zistená')}
               </dd>
               {event.powerNote && <dd className="text-sm text-muted-foreground">{event.powerNote}</dd>}
             </div>
             {times && (
               <div>
-                <dt className="text-sm text-muted-foreground">Časy (prvý deň)</dt>
+                <dt className="text-sm text-muted-foreground">{tx('Časy (prvý deň)')}</dt>
                 <dd className="font-medium">{times}</dd>
               </div>
             )}
             {organizer.length > 0 && (
               <div className="min-w-0">
-                <dt className="text-sm text-muted-foreground">Organizátor</dt>
+                <dt className="text-sm text-muted-foreground">{tx('Organizátor')}</dt>
                 <dd className="font-medium break-words">{event.organizer || event.organizerPerson}</dd>
                 <dd className="flex flex-wrap gap-x-3 text-sm break-all">
                   {event.organizer && event.organizerPerson && <span>{event.organizerPerson}</span>}
@@ -188,7 +171,7 @@ export function EventDetailPage() {
                     contact={{
                       name: event.organizerPerson || event.organizer,
                       org: event.organizerPerson ? event.organizer : '',
-                      title: 'Organizátor',
+                      title: tx('Organizátor'),
                       phone: event.organizerPhone,
                       email: event.organizerEmail,
                       note: `Event: ${event.name}`,
@@ -204,12 +187,12 @@ export function EventDetailPage() {
       {(event.setting === 'outdoor' || event.setting === 'mixed') && <EventWeather event={event} />}
 
       {event.description && (
-        <CollapsibleSection id="event.description" title="Popis">
-          <p className="rounded-xl border bg-surface p-4 whitespace-pre-wrap">{event.description}</p>
+        <CollapsibleSection id="event.description" title={tx('Popis')}>
+          <p className="rounded-xl border bg-surface p-4 whitespace-pre-wrap">{tx(event.description)}</p>
         </CollapsibleSection>
       )}
       {event.note && (
-        <CollapsibleSection id="event.note" title="Interná poznámka">
+        <CollapsibleSection id="event.note" title={tx('Interná poznámka')}>
           <p className="rounded-xl border border-dashed bg-surface p-4 whitespace-pre-wrap">{event.note}</p>
         </CollapsibleSection>
       )}

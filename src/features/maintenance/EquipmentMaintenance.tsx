@@ -19,6 +19,7 @@ import {
   useMaintenanceRules,
   type MaintenanceDue,
 } from './api'
+import { tx } from '@/lib/i18n'
 
 type Props = {
   companyId: string
@@ -91,7 +92,7 @@ export function EquipmentMaintenance({ companyId, items, only = null }: Props) {
   if (shownRules.length === 0) return null
 
   const itemName = (id: string) => items.find((item) => item.id === id)?.name ?? ''
-  const label = (row: { equipmentId: string; unit: number | null }) => [items.length > 1 && itemName(row.equipmentId), row.unit !== null && `#${row.unit}`].filter(Boolean).join(' ') || 'celá položka'
+  const label = (row: { equipmentId: string; unit: number | null }) => [items.length > 1 && itemName(row.equipmentId), row.unit !== null && `#${row.unit}`].filter(Boolean).join(' ') || tx('celá položka')
   const history = (records.data ?? []).filter((record) => only === null || record.unit === null || record.unit === only)
 
   function handleSubmit(event: FormEvent) {
@@ -103,9 +104,7 @@ export function EquipmentMaintenance({ companyId, items, only = null }: Props) {
     <section aria-labelledby="maintenance-heading" className="mt-6 rounded-xl border bg-surface p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h2 id="maintenance-heading" className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <ShieldCheck className="size-4" aria-hidden />
-          Limity a revízie
-        </h2>
+          <ShieldCheck className="size-4" aria-hidden />{tx('Limity a revízie')}</h2>
         {canRecord && !open && (
           <Button
             size="sm"
@@ -114,9 +113,7 @@ export function EquipmentMaintenance({ companyId, items, only = null }: Props) {
               setTarget(shownRules[0].kind === 'hours' ? '' : '*')
               setOpen(true)
             }}
-          >
-            Zapísať výmenu / revíziu
-          </Button>
+          >{tx('Zapísať výmenu / revíziu')}</Button>
         )}
       </div>
 
@@ -143,7 +140,7 @@ export function EquipmentMaintenance({ companyId, items, only = null }: Props) {
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 border-t pt-4">
           <div className="grid gap-3 sm:grid-cols-3">
             <SelectField
-              label="Čo"
+              label={tx('Čo')}
               value={rule.id}
               onChange={(e) => {
                 const next = shownRules.find((item) => item.id === e.target.value)
@@ -157,55 +154,52 @@ export function EquipmentMaintenance({ companyId, items, only = null }: Props) {
                 </option>
               ))}
             </SelectField>
-            <SelectField label="Pre" required value={effectiveTarget} onChange={(e) => setTarget(e.target.value)}>
-              {singleTarget ? <option value="">— vyberte —</option> : <option value="*">Všetko zobrazené ({ruleRows.length})</option>}
+            <SelectField label={tx('Pre')} required value={effectiveTarget} onChange={(e) => setTarget(e.target.value)}>
+              {singleTarget ? <option value="">{tx('— vyberte —')}</option> : <option value="*">{tx('Všetko zobrazené (')}{ruleRows.length})</option>}
               {ruleRows.map((row) => (
                 <option key={`${row.equipmentId}|${row.unit}`} value={`${row.equipmentId}|${row.unit ?? ''}`}>
                   {label(row)}
                 </option>
               ))}
             </SelectField>
-            <Field label="Dátum" type="date" required max={today} value={doneOn} onChange={(e) => setDoneOn(e.target.value)} />
+            <Field label={tx('Dátum')} type="date" required max={today} value={doneOn} onChange={(e) => setDoneOn(e.target.value)} />
             {rule.kind === 'hours' ? (
-              <Field label="Stav počítadla pri výmene (h)" required inputMode="decimal" placeholder="0 ak sa vynulovalo" value={hours} onChange={(e) => setHours(e.target.value)} />
+              <Field label={tx('Stav počítadla pri výmene (h)')} required inputMode="decimal" placeholder={tx('0 ak sa vynulovalo')} value={hours} onChange={(e) => setHours(e.target.value)} />
             ) : (
-              <SelectField label="Výsledok" value={result} onChange={(e) => setResult(e.target.value as 'ok' | 'fail')}>
-                <option value="ok">Vyhovela</option>
-                <option value="fail">Nevyhovela (nepoužívať)</option>
+              <SelectField label={tx('Výsledok')} value={result} onChange={(e) => setResult(e.target.value as 'ok' | 'fail')}>
+                <option value="ok">{tx('Vyhovela')}</option>
+                <option value="fail">{tx('Nevyhovela (nepoužívať)')}</option>
               </SelectField>
             )}
-            <Field label="Poznámka" maxLength={500} className="sm:col-span-2" placeholder={rule.kind === 'hours' ? 'napr. nová lampa Osram' : 'napr. revízna správa č. …'} value={note} onChange={(e) => setNote(e.target.value)} />
+            <Field label={tx('Poznámka')} maxLength={500} className="sm:col-span-2" placeholder={rule.kind === 'hours' ? tx('napr. nová lampa Osram') : tx('napr. revízna správa č. …')} value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
           {add.isError && (
-            <p role="alert" className="text-sm text-destructive">
-              Nepodarilo sa zapísať. {errorDetail(add.error)}
+            <p role="alert" className="text-sm text-destructive">{tx('Nepodarilo sa zapísať.')}{' '}{errorDetail(add.error)}
             </p>
           )}
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={!valid || add.isPending}>
-              {add.isPending ? 'Zapisujem…' : 'Uložiť'}
+              {add.isPending ? 'Zapisujem…' : tx('Uložiť')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
-              Zrušiť
-            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>{tx('Zrušiť')}</Button>
           </div>
         </form>
       )}
 
       {history.length > 0 && (
         <details className="mt-4 border-t pt-3 text-sm">
-          <summary className="cursor-pointer text-muted-foreground">História výmen a revízií ({history.length})</summary>
+          <summary className="cursor-pointer text-muted-foreground">{tx('História výmen a revízií (')}{history.length})</summary>
           <ul className="mt-2 flex flex-col gap-2">
             {history.map((record) => (
               <li key={record.id} className="flex items-start gap-2">
                 <span className="min-w-0 flex-1">
-                  <span className="font-medium">{rules.find((item) => item.id === record.ruleId)?.name ?? 'Zmazané pravidlo'}</span> · {label(record)} · {formatDate(record.doneOn)}
+                  <span className="font-medium">{rules.find((item) => item.id === record.ruleId)?.name ?? tx('Zmazané pravidlo')}</span> · {label(record)} · {formatDate(record.doneOn)}
                   {record.hours !== null && ` · pri ${formatNumber(record.hours)} h`}
-                  {record.result === 'fail' && <span className="text-destructive"> · nevyhovela</span>} · {record.authorName || 'neznámy'}
+                  {record.result === 'fail' && <span className="text-destructive">{' '}{tx('· nevyhovela')}</span>} · {record.authorName || tx('neznámy')}
                   {record.note && <span className="block text-muted-foreground">{record.note}</span>}
                 </span>
                 {canDelete && (
-                  <Button size="sm" variant="ghost" className="size-7 p-0" aria-label="Zmazať zápis" disabled={remove.isPending} onClick={() => window.confirm('Zmazať tento zápis?') && remove.mutate(record.id)}>
+                  <Button size="sm" variant="ghost" className="size-7 p-0" aria-label={tx('Zmazať zápis')} disabled={remove.isPending} onClick={() => window.confirm(tx('Zmazať tento zápis?')) && remove.mutate(record.id)}>
                     <Trash2 className="size-3.5" aria-hidden />
                   </Button>
                 )}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { formatMoney } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { shareByMember, type Payment } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const COLORS = ['#38bdf8', '#a78bfa', '#34d399', '#fbbf24', '#fb7185', '#2dd4bf', '#f472b6', '#a3e635', '#94a3b8']
 const SCOPES = [
@@ -42,10 +43,8 @@ export function PayoutShareChart({ payments, nameOf }: Props) {
   return (
     <section className="mb-6" aria-labelledby="share-heading">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 id="share-heading" className="text-sm font-medium text-muted-foreground">
-          Kto koľko dostal
-        </h2>
-        <div className="flex gap-2" role="group" aria-label="Čo rátať">
+        <h2 id="share-heading" className="text-sm font-medium text-muted-foreground">{tx('Kto koľko dostal')}</h2>
+        <div className="flex gap-2" role="group" aria-label={tx('Čo rátať')}>
           {SCOPES.map((option) => (
             <button
               key={option.id}
@@ -57,7 +56,7 @@ export function PayoutShareChart({ payments, nameOf }: Props) {
                 scope === option.id ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
               )}
             >
-              {option.label}
+              {tx(option.label)}
             </button>
           ))}
         </div>
@@ -65,23 +64,21 @@ export function PayoutShareChart({ payments, nameOf }: Props) {
 
       {rows.length === 0 ? (
         <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
-          {scope === 'paid' ? 'Zatiaľ nebola vyplatená žiadna odmena.' : 'Zatiaľ nie je zapísaná žiadna odmena.'}
+          {scope === 'paid' ? tx('Zatiaľ nebola vyplatená žiadna odmena.') : tx('Zatiaľ nie je zapísaná žiadna odmena.')}
         </p>
       ) : (
         <div className="flex flex-col items-center gap-5 rounded-xl border bg-surface p-4 sm:flex-row sm:items-start">
-          <svg viewBox="0 0 100 100" className="w-44 shrink-0" role="img" aria-label={`Koláčový graf odmien, spolu ${money(total)}`}>
+          <svg viewBox="0 0 100 100" className="w-44 shrink-0" role="img" aria-label={tf('Koláčový graf odmien, spolu {0}', money(total))}>
             {rows.map((row, index) => {
               return (
                 <path key={row.memberId ?? 'rest'} d={slicePath(starts[index], starts[index] + row.share)} fill={COLORS[index % COLORS.length]} stroke="var(--surface, #ffffff)" strokeWidth={0.8}>
                   <title>
-                    {row.memberId ? nameOf(row.memberId) : 'Ostatní'}: {money(row.amount)} ({percent(row.share)})
+                    {row.memberId ? nameOf(row.memberId) : tx('Ostatní')}: {money(row.amount)} ({percent(row.share)})
                   </title>
                 </path>
               )
             })}
-            <text x="50" y="47" textAnchor="middle" fontSize="6" fill="currentColor" opacity={0.7}>
-              spolu
-            </text>
+            <text x="50" y="47" textAnchor="middle" fontSize="6" fill="currentColor" opacity={0.7}>{tx('spolu')}</text>
             <text x="50" y="57" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="currentColor">
               {money(total)}
             </text>
@@ -91,7 +88,7 @@ export function PayoutShareChart({ payments, nameOf }: Props) {
               <li key={row.memberId ?? 'rest'} className="flex items-center gap-2">
                 <span className="size-3 shrink-0 rounded-sm" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                 <span className="min-w-0 flex-1 truncate">
-                  {index + 1}. {row.memberId ? nameOf(row.memberId) : `Ostatní (${row.members})`}
+                  {index + 1}. {row.memberId ? nameOf(row.memberId) : tf('Ostatní ({0})', row.members)}
                 </span>
                 <span className="shrink-0 font-medium tabular-nums">{money(row.amount)}</span>
                 <span className="w-14 shrink-0 text-right text-muted-foreground tabular-nums">{percent(row.share)}</span>

@@ -15,6 +15,7 @@ import { useResponsibilities } from '@/features/responsibilities/api'
 import { buildNotifications, type Notification } from './model'
 import { bugKeys, fetchBugReports } from '@/features/bugs/api'
 import { openReports } from '@/features/bugs/model'
+import { tx, tf } from '@/lib/i18n'
 
 function NotificationList({ title, items }: { title: string; items: Notification[] }) {
   if (items.length === 0) return null
@@ -80,12 +81,12 @@ export function NotificationsPage() {
 
   return (
     <>
-      <PageHeader title="Upozornenia" description="Čo práve potrebuje vašu pozornosť" />
+      <PageHeader title={tx('Upozornenia')} description={tx('Čo práve potrebuje vašu pozornosť')} />
       {newBugs > 0 && (
         <Link to="/bugs" className="mb-4 flex items-center gap-3 rounded-xl border border-red-300 bg-red-50 p-4 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/40">
           <CircleAlert className="size-5 shrink-0 text-red-600" aria-hidden />
           <span className="flex-1 font-medium">
-            {newBugs === 1 ? '1 nové hlásenie chyby' : newBugs < 5 ? `${newBugs} nové hlásenia chýb` : `${newBugs} nových hlásení chýb`}
+            {newBugs === 1 ? tx('1 nové hlásenie chyby') : newBugs < 5 ? tf('{0} nové hlásenia chýb', newBugs) : tf('{0} nových hlásení chýb', newBugs)}
           </span>
           <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
         </Link>
@@ -93,16 +94,16 @@ export function NotificationsPage() {
       {sources.some((source) => source.isPending) ? (
         <LoadingBlock />
       ) : sources.some((source) => source.isError) ? (
-        <ErrorBlock message="Upozornenia sa nepodarilo načítať." onRetry={() => sources.forEach((source) => void source.refetch())} />
+        <ErrorBlock message={tx('Upozornenia sa nepodarilo načítať.')} onRetry={() => sources.forEach((source) => void source.refetch())} />
       ) : all.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">Všetko je vybavené</p>
-          <p className="mt-1 text-sm text-muted-foreground">Žiadne termíny nehoria a nič nechýba.</p>
+          <p className="font-medium">{tx('Všetko je vybavené')}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{tx('Žiadne termíny nehoria a nič nechýba.')}</p>
         </div>
       ) : (
         <>
-          <NotificationList title="Treba riešiť hneď" items={all.filter((item) => item.severity === 'urgent')} />
-          <NotificationList title="Blíži sa" items={all.filter((item) => item.severity === 'soon')} />
+          <NotificationList title={tx('Treba riešiť hneď')} items={all.filter((item) => item.severity === 'urgent')} />
+          <NotificationList title={tx('Blíži sa')} items={all.filter((item) => item.severity === 'soon')} />
         </>
       )}
     </>

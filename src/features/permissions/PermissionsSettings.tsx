@@ -15,6 +15,7 @@ import {
   type PermissionKey,
 } from './catalog'
 import { PermissionGroups } from './PermissionGroups'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { companyId: string; members: Member[] }
 
@@ -51,12 +52,10 @@ export function PermissionsSettings({ companyId, members }: Props) {
   const changedRoles = roles.length
   const exceptionsOf = (userId: string) => memberOverrides.filter((item) => item.userId === userId).length
 
-  if (overrides.isPending) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Načítavam oprávnenia…</p>
+  if (overrides.isPending) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Načítavam oprávnenia…')}</p>
   if (overrides.isError) {
     return (
-      <p role="alert" className="rounded-xl border bg-surface p-4 text-sm text-destructive">
-        Oprávnenia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
-      </p>
+      <p role="alert" className="rounded-xl border bg-surface p-4 text-sm text-destructive">{tx('Oprávnenia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
     )
   }
 
@@ -64,23 +63,21 @@ export function PermissionsSettings({ companyId, members }: Props) {
     <div className="flex flex-col gap-6">
       {groupsQuery.isSuccess && <PermissionGroups companyId={companyId} groups={groups} members={members} />}
       <div>
-        <p className="mb-3 text-sm text-muted-foreground">
-          Zaškrtnuté = rola to smie. Bodka označuje zmenu oproti predvolenému stavu ({changedRoles}). Admin smie vždy všetko a členov, pozvánky
-          a nastavenia firmy spravuje iba on.{groups.length > 0 && ' V stĺpcoch skupín zaškrtnite, čo skupina smie navyše k roli.'}
+        <p className="mb-3 text-sm text-muted-foreground">{tx('Zaškrtnuté = rola to smie. Bodka označuje zmenu oproti predvolenému stavu (')}{changedRoles}{tx('). Admin smie vždy všetko a členov, pozvánky a nastavenia firmy spravuje iba on.')}{groups.length > 0 && tx(' V stĺpcoch skupín zaškrtnite, čo skupina smie navyše k roli.')}
         </p>
-        <p className="mb-2 text-xs text-muted-foreground sm:hidden">Tabuľku posuňte prstom do strany – vidíte všetky roly.</p>
+        <p className="mb-2 text-xs text-muted-foreground sm:hidden">{tx('Tabuľku posuňte prstom do strany – vidíte všetky roly.')}</p>
         <div className="overflow-x-auto overscroll-x-contain rounded-xl border bg-surface">
           <table className="w-full border-collapse text-sm" style={{ minWidth: `${34 + groups.length * 6}rem` }}>
             <thead>
               <tr className="border-b text-left">
-                <th className="sticky left-0 z-10 bg-surface px-4 py-2 font-medium">Oprávnenie</th>
+                <th className="sticky left-0 z-10 bg-surface px-4 py-2 font-medium">{tx('Oprávnenie')}</th>
                 {CONFIGURABLE_ROLES.map((role) => (
                   <th key={role} className="w-24 px-2 py-2 text-center font-medium">
-                    {ROLE_LABELS[role]}
+                    {tx(ROLE_LABELS[role])}
                   </th>
                 ))}
                 {groups.map((group) => (
-                  <th key={group.id} className="w-24 border-l bg-accent/10 px-2 py-2 text-center font-medium" title="Skupina – smie navyše k roli">
+                  <th key={group.id} className="w-24 border-l bg-accent/10 px-2 py-2 text-center font-medium" title={tx('Skupina – smie navyše k roli')}>
                     {group.name}
                   </th>
                 ))}
@@ -88,10 +85,10 @@ export function PermissionsSettings({ companyId, members }: Props) {
             </thead>
             <tbody>
               {PERMISSION_GROUPS.map((group) => (
-                <PermissionGroupRows key={group.id} label={group.label} columns={CONFIGURABLE_ROLES.length + 1 + groups.length}>
+                <PermissionGroupRows key={group.id} label={tx(group.label)} columns={CONFIGURABLE_ROLES.length + 1 + groups.length}>
                   {group.permissions.map((permission) => (
                     <tr key={permission.key} className="border-b last:border-b-0">
-                      <td className="sticky left-0 z-10 max-w-40 bg-surface px-4 py-2">{permission.label}</td>
+                      <td className="sticky left-0 z-10 max-w-40 bg-surface px-4 py-2">{tx(permission.label)}</td>
                       {CONFIGURABLE_ROLES.map((role) => {
                         const allowed = roleAllowed(role, permission.key, roles)
                         const changed = allowed !== defaultAllowed(role, permission.key)
@@ -110,7 +107,7 @@ export function PermissionsSettings({ companyId, members }: Props) {
                                   setRole.mutate({ role, permission: permission.key, allowed: next === defaultAllowed(role, permission.key) ? null : next })
                                 }}
                               />
-                              {changed && <span className="absolute top-0 right-0 size-2 rounded-full bg-accent" title="Zmenené oproti predvolenému" />}
+                              {changed && <span className="absolute top-0 right-0 size-2 rounded-full bg-accent" title={tx('Zmenené oproti predvolenému')} />}
                             </label>
                           </td>
                         )
@@ -139,19 +136,17 @@ export function PermissionsSettings({ companyId, members }: Props) {
       </div>
 
       <div>
-        <h3 className="mb-1 font-medium">Výnimky pre jedného člena</h3>
-        <p className="mb-3 text-sm text-muted-foreground">
-          Výnimka platí len pre vybraného človeka a má prednosť pred nastavením jeho roly aj skupín.
-        </p>
+        <h3 className="mb-1 font-medium">{tx('Výnimky pre jedného člena')}</h3>
+        <p className="mb-3 text-sm text-muted-foreground">{tx('Výnimka platí len pre vybraného človeka a má prednosť pred nastavením jeho roly aj skupín.')}</p>
         {adjustable.length === 0 ? (
-          <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">Vo firme nie je nikto okrem adminov.</p>
+          <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Vo firme nie je nikto okrem adminov.')}</p>
         ) : (
-          <SelectField label="Člen" hideLabel className="mb-3 sm:w-80" value={memberId} onChange={(event) => setMemberId(event.target.value)}>
-            <option value="">— vyberte člena —</option>
+          <SelectField label={tx('Člen')} hideLabel className="mb-3 sm:w-80" value={memberId} onChange={(event) => setMemberId(event.target.value)}>
+            <option value="">{tx('— vyberte člena —')}</option>
             {adjustable.map((member) => (
               <option key={member.userId} value={member.userId}>
-                {member.fullName || member.email} ({ROLE_LABELS[member.role]}
-                {exceptionsOf(member.userId) > 0 && `, výnimiek: ${exceptionsOf(member.userId)}`})
+                {member.fullName || member.email} ({tx(ROLE_LABELS[member.role])}
+                {exceptionsOf(member.userId) > 0 && tf(', výnimiek: {0}', exceptionsOf(member.userId))})
               </option>
             ))}
           </SelectField>
@@ -161,13 +156,13 @@ export function PermissionsSettings({ companyId, members }: Props) {
             <table className="w-full min-w-[30rem] border-collapse text-sm">
               <tbody>
                 {PERMISSION_GROUPS.map((group) => (
-                  <PermissionGroupRows key={group.id} label={group.label} columns={2}>
+                  <PermissionGroupRows key={group.id} label={tx(group.label)} columns={2}>
                     {group.permissions.map((permission) => {
                       const byRole = groupAllows(selected.userId, permission.key, groups) || roleAllowed(selected.role, permission.key, roles)
                       const own = memberOverrides.find((item) => item.userId === selected.userId && item.permission === permission.key)
                       return (
                         <tr key={permission.key} className="border-b last:border-b-0">
-                          <td className="sticky left-0 z-10 max-w-40 bg-surface px-4 py-2">{permission.label}</td>
+                          <td className="sticky left-0 z-10 max-w-40 bg-surface px-4 py-2">{tx(permission.label)}</td>
                           <td className="w-56 px-2 py-1.5">
                             <select
                               aria-label={`${group.label}: ${permission.label}`}
@@ -185,11 +180,10 @@ export function PermissionsSettings({ companyId, members }: Props) {
                                 })
                               }
                             >
-                              <option value="role">
-                                Podľa roly{groups.some((team) => team.members.includes(selected.userId)) ? ' a skupín' : ''} ({byRole ? 'smie' : 'nesmie'})
+                              <option value="role">{tx('Podľa roly')}{groups.some((team) => team.members.includes(selected.userId)) ? tx(' a skupín') : ''} ({byRole ? 'smie' : 'nesmie'})
                               </option>
-                              <option value="allow">Povoliť</option>
-                              <option value="deny">Zakázať</option>
+                              <option value="allow">{tx('Povoliť')}</option>
+                              <option value="deny">{tx('Zakázať')}</option>
                             </select>
                           </td>
                         </tr>
@@ -204,9 +198,7 @@ export function PermissionsSettings({ companyId, members }: Props) {
       </div>
 
       {(setRole.isError || setMember.isError || setGroup.isError) && (
-        <p role="alert" className="text-sm text-destructive">
-          Zmenu sa nepodarilo uložiť.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Zmenu sa nepodarilo uložiť.')}</p>
       )}
     </div>
   )

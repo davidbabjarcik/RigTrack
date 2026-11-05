@@ -18,6 +18,7 @@ import {
   type ShoppingItem,
   type ShoppingList,
 } from './model'
+import { tx } from '@/lib/i18n'
 
 type Props = {
   companyId: string
@@ -81,18 +82,18 @@ export function ShoppingEditor({ companyId, item, defaultList, members, canDelet
       className="flex flex-col gap-3 rounded-xl border bg-surface p-4"
     >
       <div className="grid gap-3 sm:grid-cols-[1fr_12rem]">
-        <Field label="Názov *" autoFocus error={errors.name?.message} {...register('name')} />
-        <SelectField label="Zoznam" error={errors.list?.message} {...register('list')}>
+        <Field label={tx('Názov *')} autoFocus error={errors.name?.message} {...register('name')} />
+        <SelectField label={tx('Zoznam')} error={errors.list?.message} {...register('list')}>
           {SHOPPING_LISTS.map((value) => (
             <option key={value} value={value}>
-              {SHOPPING_LIST_LABELS[value]}
+              {tx(SHOPPING_LIST_LABELS[value])}
             </option>
           ))}
         </SelectField>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Field
-          label="Počet"
+          label={tx('Počet')}
           type="number"
           inputMode="numeric"
           min={1}
@@ -101,7 +102,7 @@ export function ShoppingEditor({ companyId, item, defaultList, members, canDelet
           {...register('quantity', { valueAsNumber: true })}
         />
         <Field
-          label={concrete ? 'Cena za kus (€)' : 'Odhad ceny za kus (€)'}
+          label={concrete ? tx('Cena za kus (€)') : tx('Odhad ceny za kus (€)')}
           type="number"
           inputMode="decimal"
           min={0}
@@ -109,60 +110,56 @@ export function ShoppingEditor({ companyId, item, defaultList, members, canDelet
           error={errors.unitPrice?.message}
           {...register('unitPrice', asOptionalNumber)}
         />
-        <SelectField label="Priorita" error={errors.priority?.message} {...register('priority')}>
+        <SelectField label={tx('Priorita')} error={errors.priority?.message} {...register('priority')}>
           {PRIORITIES.map((value) => (
             <option key={value} value={value}>
-              {PRIORITY_LABELS[value]}
+              {tx(PRIORITY_LABELS[value])}
             </option>
           ))}
         </SelectField>
-        <Field label="Dodávateľ" error={errors.supplier?.message} {...register('supplier')} />
+        <Field label={tx('Dodávateľ')} error={errors.supplier?.message} {...register('supplier')} />
       </div>
       <Field
-        label="Odkaz na produkt alebo ponuku"
+        label={tx('Odkaz na produkt alebo ponuku')}
         type="url"
-        placeholder="https://"
+        placeholder={tx('https://')}
         error={errors.url?.message}
         {...register('url')}
       />
 
       {concrete && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <SelectField label="Stav" error={errors.status?.message} {...register('status')}>
+          <SelectField label={tx('Stav')} error={errors.status?.message} {...register('status')}>
             {SHOPPING_STATUSES.map((value) => (
               <option key={value} value={value}>
-                {SHOPPING_STATUS_LABELS[value]}
+                {tx(SHOPPING_STATUS_LABELS[value])}
               </option>
             ))}
           </SelectField>
-          <Field label="Kúpiť do" type="date" error={errors.dueOn?.message} {...register('dueOn')} />
-          <SelectField label="Kto to vybaví" error={errors.assigneeId?.message} {...register('assigneeId')}>
-            <option value="">— nikto konkrétny —</option>
+          <Field label={tx('Kúpiť do')} type="date" error={errors.dueOn?.message} {...register('dueOn')} />
+          <SelectField label={tx('Kto to vybaví')} error={errors.assigneeId?.message} {...register('assigneeId')}>
+            <option value="">{tx('— nikto konkrétny —')}</option>
             {members.map((member) => (
               <option key={member.userId} value={member.userId}>
                 {member.fullName || member.email}
               </option>
             ))}
           </SelectField>
-          <Field label="Číslo objednávky / faktúry" error={errors.orderNumber?.message} {...register('orderNumber')} />
+          <Field label={tx('Číslo objednávky / faktúry')} error={errors.orderNumber?.message} {...register('orderNumber')} />
         </div>
       )}
 
-      <TextareaField label="Poznámka" rows={2} error={errors.note?.message} {...register('note')} />
+      <TextareaField label={tx('Poznámka')} rows={2} error={errors.note?.message} {...register('note')} />
 
       {(save.isError || remove.isError) && (
-        <p role="alert" className="text-sm text-destructive">
-          Zmena sa nepodarila. Skúste to znova.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Zmena sa nepodarila. Skúste to znova.')}</p>
       )}
 
       <div className="flex flex-wrap gap-2">
         <Button type="submit" size="sm" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : 'Uložiť'}
+          {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" size="sm" onClick={onClose}>{tx('Zrušiť')}</Button>
         {item && canDelete && (
           <Button
             variant="destructive"
@@ -170,12 +167,10 @@ export function ShoppingEditor({ companyId, item, defaultList, members, canDelet
             className="ml-auto"
             disabled={remove.isPending}
             onClick={() => {
-              if (window.confirm('Odstrániť túto položku?')) remove.mutate()
+              if (window.confirm(tx('Odstrániť túto položku?'))) remove.mutate()
             }}
           >
-            <Trash2 className="size-4" aria-hidden />
-            Odstrániť
-          </Button>
+            <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
         )}
       </div>
     </form>

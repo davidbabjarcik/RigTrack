@@ -16,6 +16,7 @@ import { MonthlyReport } from './MonthlyReport'
 import { attendanceEnabled, formatDistance, formatMinutes, isoToLocal, PAUSE_LABELS, timeOf, workedMinutes } from './model'
 import { WorkCard } from './WorkCard'
 import { correctSession, deleteSession, fetchSessions, WORK_PLACE_LABELS, workKeys, type WorkSession } from './workApi'
+import { tx } from '@/lib/i18n'
 
 const PERIODS = [
   { days: 7, label: '7 dní' },
@@ -45,12 +46,12 @@ export function AttendancePage() {
   })
   const remove = useMutation({ mutationFn: deleteSession, onSettled: refresh })
 
-  const header = <PageHeader title="Dochádzka" description="Práca na firme a doma (dochádzka na eventoch je pri evente)" />
+  const header = <PageHeader title={tx('Dochádzka')} description={tx('Práca na firme a doma (dochádzka na eventoch je pri evente)')} />
   if (sessions.isPending) return <>{header}<LoadingBlock /></>
-  if (sessions.isError) return <>{header}<ErrorBlock message="Dochádzku sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." /></>
+  if (sessions.isError) return <>{header}<ErrorBlock message={tx('Dochádzku sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')} /></>
 
   const all = sessions.data.filter((item) => !person || item.userId === person)
-  const nameOf = (id: string) => memberName(members.data, id) || 'Bývalý člen'
+  const nameOf = (id: string) => memberName(members.data, id) || tx('Bývalý člen')
   const people = [...new Set(sessions.data.map((item) => item.userId))]
   // Súčty po ľuďoch za obdobie.
   const totals = new Map<string, number>()
@@ -79,12 +80,12 @@ export function AttendancePage() {
             onClick={() => setDays(period.days)}
             className={cn('h-9 rounded-lg border px-3 text-sm font-medium', days === period.days ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
           >
-            {period.label}
+            {tx(period.label)}
           </button>
         ))}
         {manager && people.length > 1 && (
-          <select aria-label="Človek" className="h-9 rounded-lg border bg-surface px-2 text-sm" value={person} onChange={(event) => setPerson(event.target.value)}>
-            <option value="">Všetci</option>
+          <select aria-label={tx('Človek')} className="h-9 rounded-lg border bg-surface px-2 text-sm" value={person} onChange={(event) => setPerson(event.target.value)}>
+            <option value="">{tx('Všetci')}</option>
             {people.map((id) => (
               <option key={id} value={id}>
                 {nameOf(id)}
@@ -106,8 +107,7 @@ export function AttendancePage() {
       )}
 
       {all.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">
-          V tomto období žiadna práca mimo eventov.{!attendanceEnabled() && ' Dochádzku podľa polohy si zapnete v Nastaveniach → Účet → Dochádzka.'}
+        <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">{tx('V tomto období žiadna práca mimo eventov.')}{!attendanceEnabled() && tx(' Dochádzku podľa polohy si zapnete v Nastaveniach → Účet → Dochádzka.')}
         </p>
       ) : (
         <div className="flex flex-col gap-4">
@@ -121,7 +121,7 @@ export function AttendancePage() {
                       <span className="min-w-0 flex-1">
                         <span className="block font-medium">
                           {manager ? `${nameOf(item.userId)} · ` : ''}
-                          {WORK_PLACE_LABELS[item.place]} · {timeOf(item.startedAt)} – {item.endedAt ? timeOf(item.endedAt) : 'pracuje'} · {formatMinutes(workedMinutes(item, now))}
+                          {tx(WORK_PLACE_LABELS[item.place])} · {timeOf(item.startedAt)} – {item.endedAt ? timeOf(item.endedAt) : 'pracuje'} · {formatMinutes(workedMinutes(item, now))}
                         </span>
                         <span className="block text-muted-foreground">
                           {[
@@ -137,15 +137,15 @@ export function AttendancePage() {
                       </span>
                       {manager && (
                         <>
-                          <Button variant="ghost" size="sm" aria-label="Opraviť časy" onClick={() => setEditing(editing === item.id ? null : item.id)}>
+                          <Button variant="ghost" size="sm" aria-label={tx('Opraviť časy')} onClick={() => setEditing(editing === item.id ? null : item.id)}>
                             <Pencil className="size-4" aria-hidden />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            aria-label="Zmazať záznam"
+                            aria-label={tx('Zmazať záznam')}
                             disabled={remove.isPending}
-                            onClick={() => window.confirm('Zmazať záznam dochádzky?') && remove.mutate(item.id)}
+                            onClick={() => window.confirm(tx('Zmazať záznam dochádzky?')) && remove.mutate(item.id)}
                           >
                             <Trash2 className="size-4" aria-hidden />
                           </Button>
@@ -162,7 +162,7 @@ export function AttendancePage() {
           ))}
         </div>
       )}
-      {(correct.isError || remove.isError) && <p className="mt-3 text-sm text-destructive">Zmenu sa nepodarilo uložiť.</p>}
+      {(correct.isError || remove.isError) && <p className="mt-3 text-sm text-destructive">{tx('Zmenu sa nepodarilo uložiť.')}</p>}
     </>
   )
 }

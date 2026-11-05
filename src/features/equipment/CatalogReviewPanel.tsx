@@ -15,6 +15,7 @@ import {
   type CatalogReviewItem,
 } from './catalog'
 import { describeAttributes, KIND_LABELS, type EquipmentKind } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const input = 'h-9 w-full rounded-lg border bg-background px-2 text-sm'
 
@@ -25,11 +26,11 @@ const input = 'h-9 w-full rounded-lg border bg-background px-2 text-sm'
 export function CatalogReviewPanel() {
   const queue = useQuery({ queryKey: catalogKeys.review, queryFn: fetchReviewQueue, retry: false })
   if (queue.isPending) return <LoadingBlock />
-  if (queue.isError) return <ErrorBlock message="Návrhy sa nepodarilo načítať – je spustená migrácia 0146?" onRetry={() => void queue.refetch()} />
+  if (queue.isError) return <ErrorBlock message={tx('Návrhy sa nepodarilo načítať – je spustená migrácia 0146?')} onRetry={() => void queue.refetch()} />
   return (
     <div className="flex flex-col gap-6">
       {queue.data.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">Žiadne návrhy na overenie.</p>
+        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Žiadne návrhy na overenie.')}</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {queue.data.map((item) => (
@@ -57,41 +58,31 @@ function ReviewRow({ item }: { item: CatalogReviewItem }) {
   return (
     <li className="rounded-xl border bg-surface p-4">
       <div className="grid gap-2 sm:grid-cols-[10rem_1fr_1fr]">
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          Druh
-          <select className={input} value={kind} onChange={(event) => setKind(event.target.value as EquipmentKind)}>
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">{tx('Druh')}<select className={input} value={kind} onChange={(event) => setKind(event.target.value as EquipmentKind)}>
             {CATALOG_KINDS.map((value) => (
               <option key={value} value={value}>
-                {KIND_LABELS[value]}
+                {tx(KIND_LABELS[value])}
               </option>
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          Značka
-          <input className={input} value={manufacturer} maxLength={80} onChange={(event) => setManufacturer(event.target.value)} />
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">{tx('Značka')}<input className={input} value={manufacturer} maxLength={80} onChange={(event) => setManufacturer(event.target.value)} />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          Model
-          <input className={input} value={model} maxLength={80} onChange={(event) => setModel(event.target.value)} />
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">{tx('Model')}<input className={input} value={model} maxLength={80} onChange={(event) => setModel(event.target.value)} />
         </label>
       </div>
       <p className="mt-2 text-sm">
-        <span className="text-muted-foreground">Názov vo firme:</span> {item.name || '—'} · {item.companies === 1 ? '1 firma' : `${item.companies} firmy`} · {new Date(item.submittedAt).toLocaleDateString('sk-SK')}
+        <span className="text-muted-foreground">{tx('Názov vo firme:')}</span> {item.name || '—'} · {item.companies === 1 ? tx('1 firma') : `${item.companies} firmy`} · {new Date(item.submittedAt).toLocaleDateString('sk-SK')}
       </p>
-      <p className="mt-1 text-sm text-muted-foreground">{details || 'Bez technických údajov – schválením pribudne len značka a model.'}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{details || tx('Bez technických údajov – schválením pribudne len značka a model.')}</p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button size="sm" disabled={busy || !manufacturer.trim()} onClick={() => approve.mutate()}>
-          <Check className="size-4" aria-hidden />
-          Schváliť do katalógu
-        </Button>
-        <input className={`${input} max-w-64`} placeholder="Dôvod zamietnutia (nepovinné)" maxLength={300} value={note} onChange={(event) => setNote(event.target.value)} />
+          <Check className="size-4" aria-hidden />{tx('Schváliť do katalógu')}</Button>
+        <input className={`${input} max-w-64`} placeholder={tx('Dôvod zamietnutia (nepovinné)')} maxLength={300} value={note} onChange={(event) => setNote(event.target.value)} />
         <Button size="sm" variant="outline" disabled={busy} onClick={() => reject.mutate()}>
-          <X className="size-4" aria-hidden />
-          Zamietnuť
-        </Button>
+          <X className="size-4" aria-hidden />{tx('Zamietnuť')}</Button>
       </div>
-      {(approve.isError || reject.isError) && <p className="mt-2 text-sm text-destructive">Nepodarilo sa uložiť.</p>}
+      {(approve.isError || reject.isError) && <p className="mt-2 text-sm text-destructive">{tx('Nepodarilo sa uložiť.')}</p>}
     </li>
   )
 }
@@ -108,13 +99,13 @@ function CatalogList() {
 
   return (
     <section>
-      <h3 className="mb-2 text-sm font-medium">Katalóg ({all.length} modelov)</h3>
-      <input className={`${input} mb-2 max-w-md`} placeholder="Hľadať značku alebo model…" value={search} onChange={(event) => setSearch(event.target.value)} />
+      <h3 className="mb-2 text-sm font-medium">{tx('Katalóg (')}{all.length}{' '}{tx('modelov)')}</h3>
+      <input className={`${input} mb-2 max-w-md`} placeholder={tx('Hľadať značku alebo model…')} value={search} onChange={(event) => setSearch(event.target.value)} />
       {shown.length > 0 && (
         <ul className="divide-y rounded-xl border bg-surface">
           {shown.map((entry) => (
             <li key={entry.id} className="flex items-center gap-3 px-3 py-2 text-sm">
-              <span className="w-24 shrink-0 text-muted-foreground">{KIND_LABELS[entry.kind]}</span>
+              <span className="w-24 shrink-0 text-muted-foreground">{tx(KIND_LABELS[entry.kind])}</span>
               <span className="min-w-0 flex-1 truncate">
                 <span className="font-medium">{entry.manufacturer}</span> {entry.model}
               </span>
@@ -122,9 +113,9 @@ function CatalogList() {
                 size="sm"
                 variant="ghost"
                 className="size-8 p-0"
-                aria-label={`Zmazať ${entry.manufacturer} ${entry.model}`}
+                aria-label={tf('Zmazať {0} {1}', entry.manufacturer, entry.model)}
                 disabled={remove.isPending}
-                onClick={() => window.confirm(`Zmazať z katalógu ${entry.manufacturer} ${entry.model}? Technika firiem ostane.`) && remove.mutate(entry.id)}
+                onClick={() => window.confirm(tf('Zmazať z katalógu {0} {1}? Technika firiem ostane.', entry.manufacturer, entry.model)) && remove.mutate(entry.id)}
               >
                 <Trash2 className="size-4" aria-hidden />
               </Button>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import type { Equipment, Lookup } from '@/features/equipment/model'
 import { describeMatcher, fetchRules, loadDismissed, reminders, ruleKeys, saveDismissed, type Line, type Matcher } from './rules'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = {
   companyId: string
@@ -55,13 +56,11 @@ export function EventReminders({ companyId, lines, where, storageKey, equipment,
               }}
             >
               <Plus className="size-4" aria-hidden />
-              {rule.need.type === 'equipment' ? (missing > 1 ? `Pridať ${missing} ks` : 'Pridať') : rule.need.type === 'case' ? 'Pridať case' : 'Vybrať'}
+              {rule.need.type === 'equipment' ? (missing > 1 ? tf('Pridať {0} ks', missing) : tx('Pridať')) : rule.need.type === 'case' ? tx('Pridať case') : tx('Vybrať')}
             </Button>
           )}
           <Button variant="ghost" size="sm" onClick={() => dismiss(rule.id)}>
-            <X className="size-4" aria-hidden />
-            Netreba
-          </Button>
+            <X className="size-4" aria-hidden />{tx('Netreba')}</Button>
         </li>
       ))}
     </ul>

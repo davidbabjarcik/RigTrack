@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { formatDate } from '@/lib/format'
 import { fetchSharedEvents, linkKeys, setPartnerPart } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 const DAY_KINDS: Record<string, string> = { build: 'stavba', show: 'event', teardown: 'balenie', travel: 'cesta', rest: 'voľno' }
 
@@ -20,7 +21,7 @@ export function SharedEventsSection({ companyId, canEdit }: { companyId: string;
   if (!events.data || events.data.length === 0) return null
 
   return (
-    <CollapsibleSection id="events.shared" title={`Spoločné eventy od prepojených firiem (${events.data.length})`}>
+    <CollapsibleSection id="events.shared" title={tf('Spoločné eventy od prepojených firiem ({0})', events.data.length)}>
       <ul className="flex flex-col gap-2">
         {events.data.map((event) => (
           <li key={event.eventId} className="flex flex-col gap-1.5 rounded-xl border bg-surface p-4 text-sm">
@@ -38,20 +39,18 @@ export function SharedEventsSection({ companyId, canEdit }: { companyId: string;
               </p>
             )}
             <p>
-              <span className="text-muted-foreground">{event.ownerName} dodá: </span>
+              <span className="text-muted-foreground">{event.ownerName}{' '}{tx('dodá:')}{' '}</span>
               {event.ownerPart || '—'}
             </p>
             {editing === event.eventId ? (
               <div className="flex flex-wrap items-end gap-2">
-                <Field label="My dodáme" className="flex-1" maxLength={1000} value={draft} onChange={(e) => setDraft(e.target.value)} />
-                <Button size="sm" disabled={save.isPending} onClick={() => save.mutate(event.eventId)}>
-                  Uložiť
-                </Button>
+                <Field label={tx('My dodáme')} className="flex-1" maxLength={1000} value={draft} onChange={(e) => setDraft(e.target.value)} />
+                <Button size="sm" disabled={save.isPending} onClick={() => save.mutate(event.eventId)}>{tx('Uložiť')}</Button>
               </div>
             ) : (
               <p>
-                <span className="text-muted-foreground">My dodáme: </span>
-                {event.partnerPart || <span className="text-muted-foreground">zatiaľ nič</span>}
+                <span className="text-muted-foreground">{tx('My dodáme:')}{' '}</span>
+                {event.partnerPart || <span className="text-muted-foreground">{tx('zatiaľ nič')}</span>}
                 {canEdit && (
                   <button
                     type="button"
@@ -60,9 +59,7 @@ export function SharedEventsSection({ companyId, canEdit }: { companyId: string;
                       setEditing(event.eventId)
                       setDraft(event.partnerPart)
                     }}
-                  >
-                    upraviť
-                  </button>
+                  >{tx('upraviť')}</button>
                 )}
               </p>
             )}

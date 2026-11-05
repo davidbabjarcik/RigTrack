@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { formatDate, todayIso } from '@/lib/format'
 import { isAwaitingIssue, isOverdue } from './model'
 import { useLoans } from './useLoans'
+import { tx } from '@/lib/i18n'
 
 /** Upozornenie na prehľade: nevrátená technika po termíne a rezervácie, ktoré už mali byť vydané. */
 export function LoanAlerts({ companyId }: { companyId: string }) {
@@ -15,15 +16,14 @@ export function LoanAlerts({ companyId }: { companyId: string }) {
   return (
     <section aria-labelledby="loan-alerts-heading" className="mb-6 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
       <h2 id="loan-alerts-heading" className="mb-2 flex items-center gap-2 font-medium">
-        <ArrowLeftRight className="size-5 text-destructive" aria-hidden />
-        Výpožičky na vybavenie ({overdue.length + waiting.length})
+        <ArrowLeftRight className="size-5 text-destructive" aria-hidden />{tx('Výpožičky na vybavenie (')}{overdue.length + waiting.length})
       </h2>
       <ul className="divide-y divide-destructive/20">
         {overdue.map((loan) => (
           <li key={loan.id}>
             <Link to={`/loans/${loan.id}`} className="flex items-center justify-between gap-4 py-2 hover:underline">
               <span className="min-w-0 truncate font-medium">{loan.borrower}</span>
-              <span className="shrink-0 text-sm text-destructive">nevrátené, malo sa vrátiť {formatDate(loan.endsOn)}</span>
+              <span className="shrink-0 text-sm text-destructive">{tx('nevrátené, malo sa vrátiť')}{' '}{formatDate(loan.endsOn)}</span>
             </Link>
           </li>
         ))}
@@ -31,7 +31,7 @@ export function LoanAlerts({ companyId }: { companyId: string }) {
           <li key={loan.id}>
             <Link to={`/loans/${loan.id}`} className="flex items-center justify-between gap-4 py-2 hover:underline">
               <span className="min-w-0 truncate font-medium">{loan.borrower}</span>
-              <span className="shrink-0 text-sm">rezervácia od {formatDate(loan.startsOn)} čaká na vydanie</span>
+              <span className="shrink-0 text-sm">{tx('rezervácia od')}{' '}{formatDate(loan.startsOn)}{' '}{tx('čaká na vydanie')}</span>
             </Link>
           </li>
         ))}

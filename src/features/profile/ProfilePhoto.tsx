@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import type { Membership } from '@/features/companies/company-context'
 import { clearMyPhoto, myPhotoKeys, setMyPhoto, useMyPhoto } from './photo'
+import { tx } from '@/lib/i18n'
 
 /** Moja fotka: nahrá sa do karty zamestnanca vo všetkých mojich firmách naraz. */
 export function ProfilePhoto({ userId, memberships }: { userId: string; memberships: Membership[] }) {
@@ -22,10 +23,10 @@ export function ProfilePhoto({ userId, memberships }: { userId: string; membersh
   return (
     <div className="flex flex-col items-center gap-3 rounded-xl border bg-surface p-4 text-center">
       <span className="flex size-32 items-center justify-center overflow-hidden rounded-full border bg-muted">
-        {photo.data?.url ? <img src={photo.data.url} alt="Moja fotka" className="size-full object-cover" /> : <UserRound className="size-12 text-muted-foreground" aria-hidden />}
+        {photo.data?.url ? <img src={photo.data.url} alt={tx('Moja fotka')} className="size-full object-cover" /> : <UserRound className="size-12 text-muted-foreground" aria-hidden />}
       </span>
       {cards.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Fotku pridáte, keď budete členom aspoň jednej firmy.</p>
+        <p className="text-xs text-muted-foreground">{tx('Fotku pridáte, keď budete členom aspoň jednej firmy.')}</p>
       ) : (
         <>
           <input
@@ -43,20 +44,20 @@ export function ProfilePhoto({ userId, memberships }: { userId: string; membersh
           <div className="flex flex-wrap justify-center gap-2">
             <Button size="sm" variant="outline" disabled={busy || photo.isPending} onClick={() => input.current?.click()}>
               <Camera className="size-4" aria-hidden />
-              {upload.isPending ? 'Nahrávam…' : photo.data?.path ? 'Zmeniť fotku' : 'Pridať fotku'}
+              {upload.isPending ? tx('Nahrávam…') : photo.data?.path ? tx('Zmeniť fotku') : tx('Pridať fotku')}
             </Button>
             {photo.data?.path && (
-              <Button size="sm" variant="ghost" aria-label="Odstrániť fotku" disabled={busy} onClick={() => window.confirm('Odstrániť fotku zo všetkých firiem?') && remove.mutate()}>
+              <Button size="sm" variant="ghost" aria-label={tx('Odstrániť fotku')} disabled={busy} onClick={() => window.confirm(tx('Odstrániť fotku zo všetkých firiem?')) && remove.mutate()}>
                 <Trash2 className="size-4" aria-hidden />
               </Button>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">Uloží sa do vašej karty vo všetkých firmách.</p>
-          {missing.length > 0 && <p className="text-xs text-accent">Vo firme {missing.map((card) => nameOf(card.companyId)).join(', ')} fotka chýba – nahrajte ju znova.</p>}
+          <p className="text-xs text-muted-foreground">{tx('Uloží sa do vašej karty vo všetkých firmách.')}</p>
+          {missing.length > 0 && <p className="text-xs text-accent">{tx('Vo firme')}{' '}{missing.map((card) => nameOf(card.companyId)).join(', ')}{' '}{tx('fotka chýba – nahrajte ju znova.')}</p>}
         </>
       )}
-      {failed.length > 0 && <p className="text-xs text-destructive">Nepodarilo sa nahrať do: {failed.map(nameOf).join(', ')}.</p>}
-      {(upload.isError || remove.isError) && <p className="text-xs text-destructive">Fotku sa nepodarilo uložiť.</p>}
+      {failed.length > 0 && <p className="text-xs text-destructive">{tx('Nepodarilo sa nahrať do:')}{' '}{failed.map(nameOf).join(', ')}.</p>}
+      {(upload.isError || remove.isError) && <p className="text-xs text-destructive">{tx('Fotku sa nepodarilo uložiť.')}</p>}
     </div>
   )
 }

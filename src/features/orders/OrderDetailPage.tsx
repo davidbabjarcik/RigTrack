@@ -17,6 +17,7 @@ import { SOURCE_LABELS, supplierProductUrl } from './model'
 import { OrderFlagsEditor } from './OrderFlagsEditor'
 import { OrderPhoto } from './OrderPhoto'
 import { SupplierBadge } from './SupplierBadge'
+import { tx, tf } from '@/lib/i18n'
 
 export function OrderDetailPage() {
   const { id = '' } = useParams()
@@ -63,19 +64,17 @@ export function OrderDetailPage() {
 
   const back = (
     <Link to="/orders" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="size-4" aria-hidden />
-      Objednávky
-    </Link>
+      <ArrowLeft className="size-4" aria-hidden />{tx('Objednávky')}</Link>
   )
 
-  if (!allowed) return <ErrorBlock message="Objednávky a nákupné ceny vidí iba admin a skladník." />
+  if (!allowed) return <ErrorBlock message={tx('Objednávky a nákupné ceny vidí iba admin a skladník.')} />
   if (order.isPending) return <LoadingBlock />
-  if (order.isError) return <ErrorBlock message="Objednávku sa nepodarilo načítať." onRetry={() => void order.refetch()} />
+  if (order.isError) return <ErrorBlock message={tx('Objednávku sa nepodarilo načítať.')} onRetry={() => void order.refetch()} />
   if (!order.data) {
     return (
       <>
         {back}
-        <ErrorBlock message="Táto objednávka neexistuje alebo k nej nemáte prístup." />
+        <ErrorBlock message={tx('Táto objednávka neexistuje alebo k nej nemáte prístup.')} />
       </>
     )
   }
@@ -110,20 +109,16 @@ export function OrderDetailPage() {
             size="sm"
             disabled={remove.isPending}
             onClick={() => {
-              const message = 'Naozaj odstrániť objednávku? Technika, ktorá z nej vznikla, ostane v evidencii aj s počtami kusov.'
+              const message = tx('Naozaj odstrániť objednávku? Technika, ktorá z nej vznikla, ostane v evidencii aj s počtami kusov.')
               if (window.confirm(message)) remove.mutate()
             }}
           >
-            <Trash2 className="size-4" aria-hidden />
-            Odstrániť
-          </Button>
+            <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
         )}
       </header>
 
       {remove.isError && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
-          Objednávku sa nepodarilo odstrániť.
-        </p>
+        <p role="alert" className="mb-4 text-sm text-destructive">{tx('Objednávku sa nepodarilo odstrániť.')}</p>
       )}
 
       <div className="mb-6">
@@ -142,8 +137,8 @@ export function OrderDetailPage() {
               <div className="min-w-0 flex-1">
                 <p className="font-medium break-words">{line.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {line.quantity} ks × {money(line.unitPrice)}
-                  {line.articleNumber && ` · kód ${line.articleNumber}`}
+                  {line.quantity}{' '}{tx('ks ×')}{' '}{money(line.unitPrice)}
+                  {line.articleNumber && tf(' · kód {0}', line.articleNumber)}
                   {supplierProductUrl(data.supplier, line.articleNumber) && (
                     <>
                       {' · '}
@@ -152,9 +147,7 @@ export function OrderDetailPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-accent hover:underline"
-                      >
-                        u dodávateľa
-                        <ExternalLink className="size-3.5" aria-hidden />
+                      >{tx('u dodávateľa')}<ExternalLink className="size-3.5" aria-hidden />
                       </a>
                     </>
                   )}
@@ -164,7 +157,7 @@ export function OrderDetailPage() {
             </div>
             {line.equipment.length > 0 && (
               <p className="mt-1 text-sm">
-                <span className="text-muted-foreground">V technike: </span>
+                <span className="text-muted-foreground">{tx('V technike:')}{' '}</span>
                 {line.equipment.map((link, index) => (
                   <span key={link.equipmentId}>
                     {index > 0 && ', '}
@@ -173,7 +166,7 @@ export function OrderDetailPage() {
                       {line.mode === 'link'
                         ? link.unitNumbers.length > 0
                           ? ` – kusy ${describeUnitIds(link.unitNumbers)}`
-                          : ' (prepojené)'
+                          : tx(' (prepojené)')
                         : line.equipment.length > 1
                           ? ` #${index + 1}`
                           : link.quantity > 1
@@ -183,10 +176,10 @@ export function OrderDetailPage() {
                     {line.mode === 'link' && can(company, 'orders.edit') && (
                       <button
                         type="button"
-                        aria-label={`Zrušiť prepojenie s ${equipmentName(link.equipmentId)}`}
+                        aria-label={tf('Zrušiť prepojenie s {0}', equipmentName(link.equipmentId))}
                         className="ml-1 inline-flex align-middle text-muted-foreground hover:text-foreground"
                         disabled={unlink.isPending}
-                        onClick={() => window.confirm('Zrušiť prepojenie? Technika ani objednávka sa nezmažú.') && unlink.mutate({ itemId: line.id, equipmentId: link.equipmentId })}
+                        onClick={() => window.confirm(tx('Zrušiť prepojenie? Technika ani objednávka sa nezmažú.')) && unlink.mutate({ itemId: line.id, equipmentId: link.equipmentId })}
                       >
                         <X className="size-3.5" aria-hidden />
                       </button>
@@ -201,7 +194,7 @@ export function OrderDetailPage() {
           </li>
         ))}
         <li className="flex items-center justify-between gap-4 bg-muted px-4 py-3 font-semibold">
-          <span>Spolu</span>
+          <span>{tx('Spolu')}</span>
           <span>{money(data.total)}</span>
         </li>
       </ul>

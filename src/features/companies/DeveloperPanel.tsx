@@ -7,6 +7,7 @@ import { CompanyRequestsAdmin } from './CompanyRequestsAdmin'
 import { DemoInvitesAdmin } from './DemoInvitesAdmin'
 import { DeveloperUsers } from './DeveloperUsers'
 import { MigrationStatus } from './MigrationStatus'
+import { tx } from '@/lib/i18n'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -20,25 +21,25 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function DeveloperPanel({ email }: { email: string }) {
   return (
     <>
-      <Section title="Chyby v appke">
+      <Section title={tx('Chyby v appke')}>
         <AppErrorsPanel />
       </Section>
-      <Section title="Databáza techniky – návrhy na overenie">
+      <Section title={tx('Databáza techniky – návrhy na overenie')}>
         <CatalogReviewPanel />
       </Section>
-      <Section title="Používatelia – účty, posledné prihlásenie, firmy a role">
+      <Section title={tx('Používatelia – účty, posledné prihlásenie, firmy a role')}>
         <DeveloperUsers />
       </Section>
-      <Section title="Pozvať len do dema">
+      <Section title={tx('Pozvať len do dema')}>
         <DemoInvitesAdmin />
       </Section>
-      <Section title="Žiadosti o novú firmu">
+      <Section title={tx('Žiadosti o novú firmu')}>
         <CompanyRequestsAdmin />
       </Section>
-      <Section title="Stav databázy">
+      <Section title={tx('Stav databázy')}>
         <MigrationStatus />
       </Section>
-      <Section title="Push upozornenia – nastavenie (raz pre appku)">
+      <Section title={tx('Push upozornenia – nastavenie (raz pre appku)')}>
         <PushSetupGuide email={email} />
       </Section>
     </>

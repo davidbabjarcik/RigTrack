@@ -3,6 +3,7 @@ import { useFormContext, useWatch } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { MAX_UNIVERSE, NODE_PROTOCOL_LABELS, NODE_PROTOCOLS, normalizePort, resizePorts, sameUniverse, sequentialUniverses, type NodePort, type NodeProtocol } from './dmxNode'
 import type { EquipmentFormValues } from './model'
+import { tx } from '@/lib/i18n'
 
 /**
  * Art-Net / sACN node: aktuálne zapnuté protokoly, počet výstupov a ktorú universe posiela každý port –
@@ -22,9 +23,9 @@ export function DmxNodeFields() {
 
   return (
     <fieldset className="flex flex-col gap-3 rounded-lg border p-3 sm:col-span-2">
-      <legend className="px-1 text-sm font-medium">Art-Net / sACN node</legend>
+      <legend className="px-1 text-sm font-medium">{tx('Art-Net / sACN node')}</legend>
       <div className="flex flex-wrap items-center gap-4">
-        <span className="text-sm text-muted-foreground">Aktuálne zapnuté:</span>
+        <span className="text-sm text-muted-foreground">{tx('Aktuálne zapnuté:')}</span>
         {NODE_PROTOCOLS.map((protocol) => (
           <label key={protocol} className="flex items-center gap-2 text-sm">
             <input
@@ -33,50 +34,40 @@ export function DmxNodeFields() {
               checked={protocols.includes(protocol)}
               onChange={(event) => setValue('nodeProtocols', event.target.checked ? [...protocols, protocol] : protocols.filter((value) => value !== protocol), { shouldDirty: true })}
             />
-            {NODE_PROTOCOL_LABELS[protocol]}
+            {tx(NODE_PROTOCOL_LABELS[protocol])}
           </label>
         ))}
-        <label className="ml-auto flex items-center gap-2 text-sm">
-          Výstupov (portov)
-          <input type="number" min={0} max={64} className="h-9 w-20 rounded-md border bg-background px-2" value={ports.length || ''} onChange={(event) => setPorts(resizePorts(ports, Number(event.target.value) || 0))} />
+        <label className="ml-auto flex items-center gap-2 text-sm">{tx('Výstupov (portov)')}<input type="number" min={0} max={64} className="h-9 w-20 rounded-md border bg-background px-2" value={ports.length || ''} onChange={(event) => setPorts(resizePorts(ports, Number(event.target.value) || 0))} />
         </label>
       </div>
       {ports.length > 0 && (
         <>
           <div className="flex flex-wrap items-end gap-2 text-sm">
             {active.length > 1 && (
-              <label className="flex flex-col gap-1">
-                Protokol
-                <select className="h-9 rounded-md border bg-background px-2" value={fillProtocol} onChange={(event) => setFillProtocol(event.target.value as NodeProtocol)}>
+              <label className="flex flex-col gap-1">{tx('Protokol')}<select className="h-9 rounded-md border bg-background px-2" value={fillProtocol} onChange={(event) => setFillProtocol(event.target.value as NodeProtocol)}>
                   {active.map((protocol) => (
                     <option key={protocol} value={protocol}>
-                      {NODE_PROTOCOL_LABELS[protocol]}
+                      {tx(NODE_PROTOCOL_LABELS[protocol])}
                     </option>
                   ))}
                 </select>
               </label>
             )}
-            <label className="flex flex-col gap-1">
-              Universe
-              <input type="number" min={0} max={MAX_UNIVERSE} placeholder="napr. 0 alebo 9" className="h-9 w-32 rounded-md border bg-background px-2" value={fill} onChange={(event) => setFill(event.target.value)} />
+            <label className="flex flex-col gap-1">{tx('Universe')}<input type="number" min={0} max={MAX_UNIVERSE} placeholder={tx('napr. 0 alebo 9')} className="h-9 w-32 rounded-md border bg-background px-2" value={fill} onChange={(event) => setFill(event.target.value)} />
             </label>
-            <Button variant="outline" size="sm" disabled={fill === ''} onClick={() => setPorts(sameUniverse(ports, active.length > 1 ? fillProtocol : active[0], Number(fill)))}>
-              Všetkým rovnaká
-            </Button>
-            <Button variant="outline" size="sm" disabled={fill === ''} onClick={() => setPorts(sequentialUniverses(ports, active.length > 1 ? fillProtocol : active[0], Number(fill)))}>
-              Za sebou od nej
-            </Button>
+            <Button variant="outline" size="sm" disabled={fill === ''} onClick={() => setPorts(sameUniverse(ports, active.length > 1 ? fillProtocol : active[0], Number(fill)))}>{tx('Všetkým rovnaká')}</Button>
+            <Button variant="outline" size="sm" disabled={fill === ''} onClick={() => setPorts(sequentialUniverses(ports, active.length > 1 ? fillProtocol : active[0], Number(fill)))}>{tx('Za sebou od nej')}</Button>
           </div>
           <div className={active.length > 1 ? 'grid grid-cols-[4rem_1fr_1fr] gap-x-2 text-xs text-muted-foreground' : 'grid grid-cols-[4rem_1fr] gap-x-2 text-xs text-muted-foreground'} aria-hidden>
             <span />
             {active.map((protocol) => (
-              <span key={protocol}>{NODE_PROTOCOL_LABELS[protocol]} universe</span>
+              <span key={protocol}>{tx(NODE_PROTOCOL_LABELS[protocol])}{' '}{tx('universe')}</span>
             ))}
           </div>
           <ul className="flex flex-col gap-2">
             {ports.map((item) => (
               <li key={item.port} className={active.length > 1 ? 'grid grid-cols-[4rem_1fr_1fr] items-center gap-2' : 'grid grid-cols-[4rem_1fr] items-center gap-2'}>
-                <span className="text-sm font-medium">Port {item.port}</span>
+                <span className="text-sm font-medium">{tx('Port')}{' '}{item.port}</span>
                 {active.map((protocol) => (
                   <input
                     key={protocol}
@@ -93,7 +84,7 @@ export function DmxNodeFields() {
               </li>
             ))}
           </ul>
-          <p className="text-xs text-muted-foreground">Rovnaká universe na viacerých portoch = node funguje ako splitter (napr. porty 1–4 = universe 0). Prázdne = protokol na porte nie je.</p>
+          <p className="text-xs text-muted-foreground">{tx('Rovnaká universe na viacerých portoch = node funguje ako splitter (napr. porty 1–4 = universe 0). Prázdne = protokol na porte nie je.')}</p>
         </>
       )}
     </fieldset>

@@ -7,6 +7,7 @@ import { useLoans } from '@/features/loans/useLoans'
 import { formatUnits } from '@/features/loans/model'
 import { formatDate } from '@/lib/format'
 import { usageHistory } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 // Zaujíma hlavne posledné použitie; staršie sa rozbalia na požiadanie.
 const SHOWN = 3
@@ -28,15 +29,13 @@ export function UsageHistory({ companyId, equipmentIds, caseId }: Props) {
   const visible = showAll ? entries : entries.slice(0, SHOWN)
 
   return (
-    <CollapsibleSection id="equipment.usage" title={<>Výpožičky a eventy ({entries.length})</>} className="mt-6">
+    <CollapsibleSection id="equipment.usage" title={<>{tx('Výpožičky a eventy (')}{entries.length})</>} className="mt-6">
       {loans.isPending || events.isPending ? (
-        <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Načítavam…</p>
+        <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Načítavam…')}</p>
       ) : loans.isError || events.isError ? (
-        <p className="rounded-xl border bg-surface p-4 text-sm text-destructive">Históriu použitia sa nepodarilo načítať.</p>
+        <p className="rounded-xl border bg-surface p-4 text-sm text-destructive">{tx('Históriu použitia sa nepodarilo načítať.')}</p>
       ) : entries.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
-          Zatiaľ nebolo na žiadnej výpožičke ani evente.
-        </p>
+        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Zatiaľ nebolo na žiadnej výpožičke ani evente.')}</p>
       ) : (
         <>
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
@@ -61,7 +60,7 @@ export function UsageHistory({ companyId, equipmentIds, caseId }: Props) {
           </ul>
           {entries.length > SHOWN && (
             <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => setShowAll(!showAll)}>
-              {showAll ? 'Zobraziť len posledné' : `Zobraziť všetky (${entries.length})`}
+              {showAll ? tx('Zobraziť len posledné') : tf('Zobraziť všetky ({0})', entries.length)}
             </button>
           )}
         </>

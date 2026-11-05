@@ -7,6 +7,7 @@ import { Field } from '@/components/ui/field'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { cn } from '@/lib/utils'
 import { addTaskTemplate, deleteTaskTemplate, fetchTaskTemplates, setTaskTemplateActive, taskKeys } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 /** Úlohy, ktoré sa po každom skončenom evente založia samé (napr. vyúčtovanie, fotky na soc. siete). */
 export function TaskTemplatesSection({ companyId, canEdit }: { companyId: string; canEdit: boolean }) {
@@ -38,10 +39,8 @@ export function TaskTemplatesSection({ companyId, canEdit }: { companyId: string
   }
 
   return (
-    <CollapsibleSection id="tasks.templates" title={`Úlohy po evente (${templates.data.length})`}>
-      <p className="mb-3 text-sm text-muted-foreground">
-        Po skončení každého eventu sa tieto úlohy založia samé, napr. „Vyúčtovanie“ alebo „Fotky na soc. siete“. Termín je počet dní po konci akcie.
-      </p>
+    <CollapsibleSection id="tasks.templates" title={tf('Úlohy po evente ({0})', templates.data.length)}>
+      <p className="mb-3 text-sm text-muted-foreground">{tx('Po skončení každého eventu sa tieto úlohy založia samé, napr. „Vyúčtovanie“ alebo „Fotky na soc. siete“. Termín je počet dní po konci akcie.')}</p>
       {templates.data.length > 0 && (
         <ul className="mb-3 divide-y overflow-hidden rounded-xl border bg-surface">
           {templates.data.map((template) => (
@@ -69,7 +68,7 @@ export function TaskTemplatesSection({ companyId, canEdit }: { companyId: string
                 </span>
               </label>
               {canEdit && (
-                <button type="button" aria-label={`Odstrániť ${template.title}`} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => remove.mutate(template.id)}>
+                <button type="button" aria-label={tf('Odstrániť {0}', template.title)} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => remove.mutate(template.id)}>
                   <X className="size-4" aria-hidden />
                 </button>
               )}
@@ -79,11 +78,11 @@ export function TaskTemplatesSection({ companyId, canEdit }: { companyId: string
       )}
       {canEdit && (
         <form onSubmit={submit} className="grid gap-2 rounded-xl border bg-surface p-4 sm:grid-cols-[1fr_10rem_7rem_auto] sm:items-end">
-          <Field label="Úloha" placeholder="napr. Vyúčtovanie" maxLength={160} value={title} onChange={(e) => setTitle(e.target.value)} />
-          <Field label="Kategória" maxLength={60} value={category} onChange={(e) => setCategory(e.target.value)} />
-          <Field label="Dní po evente" type="number" inputMode="numeric" min={0} max={60} value={Number.isNaN(days) ? '' : days} onChange={(e) => setDays(e.target.valueAsNumber)} />
+          <Field label={tx('Úloha')} placeholder={tx('napr. Vyúčtovanie')} maxLength={160} value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Field label={tx('Kategória')} maxLength={60} value={category} onChange={(e) => setCategory(e.target.value)} />
+          <Field label={tx('Dní po evente')} type="number" inputMode="numeric" min={0} max={60} value={Number.isNaN(days) ? '' : days} onChange={(e) => setDays(e.target.valueAsNumber)} />
           <div className="flex flex-wrap gap-2 sm:col-span-4">
-            <span className="w-full text-sm font-medium">Kto ju dostane (napr. soc media maker)</span>
+            <span className="w-full text-sm font-medium">{tx('Kto ju dostane (napr. soc media maker)')}</span>
             {(members.data ?? []).map((member) => {
               const on = assignees.includes(member.userId)
               return (
@@ -100,9 +99,7 @@ export function TaskTemplatesSection({ companyId, canEdit }: { companyId: string
             })}
           </div>
           <Button type="submit" size="sm" disabled={!title.trim() || add.isPending}>
-            <Plus className="size-4" aria-hidden />
-            Pridať
-          </Button>
+            <Plus className="size-4" aria-hidden />{tx('Pridať')}</Button>
         </form>
       )}
     </CollapsibleSection>

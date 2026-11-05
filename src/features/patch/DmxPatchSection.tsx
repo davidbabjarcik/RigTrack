@@ -10,6 +10,7 @@ import type { CompanyEvent } from '@/features/events/model'
 import { cn } from '@/lib/utils'
 import { addressesFromEquipment, dmxConflicts, dmxFromEquipment, EMPTY_DMX, fillAddresses, lastAddress, nextDmxAddress, type DmxFields, type DmxLine } from './dmx'
 import { deleteDmxLine, dmxKeys, saveDmxLine, savePatchTemplate, useDmxPatch, usePatchTemplates, writeDmxPatch } from './dmxApi'
+import { tx } from '@/lib/i18n'
 
 function DmxForm({ initial, lights, onSave, onCancel, onDelete, saving }: {
   initial: DmxFields
@@ -30,12 +31,12 @@ function DmxForm({ initial, lights, onSave, onCancel, onDelete, saving }: {
   }
   return (
     <form onSubmit={submit} className="grid grid-cols-2 gap-2 rounded-xl border bg-surface p-3 sm:grid-cols-6">
-      <Field label="Linka" maxLength={20} value={fields.universe} onChange={(e) => set({ universe: e.target.value })} />
-      <Field label="Adresa" type="number" inputMode="numeric" min={1} max={512} value={fields.address ?? ''} onChange={(e) => set({ address: num(e.target.value) })} />
-      <Field label="Kanálov" type="number" inputMode="numeric" min={1} max={512} value={fields.channels} onChange={(e) => set({ channels: num(e.target.value) ?? 1 })} />
-      <Field label="Názov" className="sm:col-span-3" placeholder="napr. Beam #3, Wash ľavý" maxLength={80} autoFocus value={fields.name} onChange={(e) => set({ name: e.target.value })} />
+      <Field label={tx('Linka')} maxLength={20} value={fields.universe} onChange={(e) => set({ universe: e.target.value })} />
+      <Field label={tx('Adresa')} type="number" inputMode="numeric" min={1} max={512} value={fields.address ?? ''} onChange={(e) => set({ address: num(e.target.value) })} />
+      <Field label={tx('Kanálov')} type="number" inputMode="numeric" min={1} max={512} value={fields.channels} onChange={(e) => set({ channels: num(e.target.value) ?? 1 })} />
+      <Field label={tx('Názov')} className="sm:col-span-3" placeholder={tx('napr. Beam #3, Wash ľavý')} maxLength={80} autoFocus value={fields.name} onChange={(e) => set({ name: e.target.value })} />
       <SelectField
-        label="Svetlo z techniky"
+        label={tx('Svetlo z techniky')}
         className="sm:col-span-3"
         value={fields.equipmentId ?? ''}
         onChange={(e) => {
@@ -44,7 +45,7 @@ function DmxForm({ initial, lights, onSave, onCancel, onDelete, saving }: {
           set({ equipmentId: e.target.value || null, ...(light && !fields.name ? { name: light.name } : {}), ...(mode ? { mode: mode.name || `${mode.channels} ch`, channels: mode.channels } : {}) })
         }}
       >
-        <option value="">— nepovinné —</option>
+        <option value="">{tx('— nepovinné —')}</option>
         {lights.map((light) => (
           <option key={light.id} value={light.id}>
             {light.name}
@@ -53,7 +54,7 @@ function DmxForm({ initial, lights, onSave, onCancel, onDelete, saving }: {
       </SelectField>
       {modes.length > 0 ? (
         <SelectField
-          label="Mód"
+          label={tx('Mód')}
           value={fields.mode}
           onChange={(e) => {
             const mode = modes.find((value) => (value.name || `${value.channels} ch`) === e.target.value)
@@ -63,27 +64,20 @@ function DmxForm({ initial, lights, onSave, onCancel, onDelete, saving }: {
           <option value="">—</option>
           {modes.map((mode) => (
             <option key={mode.name + mode.channels} value={mode.name || `${mode.channels} ch`}>
-              {mode.name || `${mode.channels} ch`} ({mode.channels} ch)
-            </option>
+              {mode.name || `${mode.channels} ch`} ({mode.channels}{' '}{tx('ch)')}</option>
           ))}
         </SelectField>
       ) : (
-        <Field label="Mód" maxLength={40} value={fields.mode} onChange={(e) => set({ mode: e.target.value })} />
+        <Field label={tx('Mód')} maxLength={40} value={fields.mode} onChange={(e) => set({ mode: e.target.value })} />
       )}
-      <Field label="Kus (#)" type="number" inputMode="numeric" min={1} value={fields.unit ?? ''} onChange={(e) => set({ unit: num(e.target.value, 100000) })} />
-      <Field label="Poznámka" className="col-span-2 sm:col-span-6" maxLength={200} value={fields.note} onChange={(e) => set({ note: e.target.value })} />
+      <Field label={tx('Kus (#)')} type="number" inputMode="numeric" min={1} value={fields.unit ?? ''} onChange={(e) => set({ unit: num(e.target.value, 100000) })} />
+      <Field label={tx('Poznámka')} className="col-span-2 sm:col-span-6" maxLength={200} value={fields.note} onChange={(e) => set({ note: e.target.value })} />
       <div className="col-span-2 flex flex-wrap gap-2 sm:col-span-6">
-        <Button type="submit" size="sm" disabled={saving}>
-          Uložiť
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onCancel}>
-          Zrušiť
-        </Button>
+        <Button type="submit" size="sm" disabled={saving}>{tx('Uložiť')}</Button>
+        <Button variant="ghost" size="sm" onClick={onCancel}>{tx('Zrušiť')}</Button>
         {onDelete && (
           <Button variant="ghost" size="sm" className="ml-auto" onClick={onDelete}>
-            <Trash2 className="size-4" aria-hidden />
-            Odstrániť
-          </Button>
+            <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
         )}
       </div>
     </form>
@@ -132,7 +126,7 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
       onDelete={line ? () => remove.mutate(line.id) : undefined}
     />
   )
-  const confirmReplace = () => lines.length === 0 || window.confirm('Nahradiť doterajší DMX patch list?')
+  const confirmReplace = () => lines.length === 0 || window.confirm(tx('Nahradiť doterajší DMX patch list?'))
 
   return (
     <CollapsibleSection
@@ -141,13 +135,11 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
       actions={
         lines.length > 0 && (
           <LinkButton to={`/events/${event.id}/dmx`} variant="outline" size="sm">
-            <Printer className="size-4" aria-hidden />
-            Tlačiť
-          </LinkButton>
+            <Printer className="size-4" aria-hidden />{tx('Tlačiť')}</LinkButton>
         )
       }
     >
-      {conflicts.size > 0 && <p className="mb-2 text-sm text-destructive">Niektoré adresy sa na tej istej linke prekrývajú alebo presahujú 512 (označené červenou).</p>}
+      {conflicts.size > 0 && <p className="mb-2 text-sm text-destructive">{tx('Niektoré adresy sa na tej istej linke prekrývajú alebo presahujú 512 (označené červenou).')}</p>}
       {lines.length > 0 && (
         <ul className="mb-3 divide-y overflow-hidden rounded-xl border bg-surface text-sm">
           {lines.map((line) =>
@@ -176,31 +168,25 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
       {canEdit && editing !== 'new' && (
         <div className="flex flex-wrap items-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setEditing('new')}>
-            <Plus className="size-4" aria-hidden />
-            Pridať svetlo
-          </Button>
+            <Plus className="size-4" aria-hidden />{tx('Pridať svetlo')}</Button>
           {fromEvent.length > 0 && (
             <Button variant="outline" size="sm" disabled={load.isPending} onClick={() => confirmReplace() && load.mutate({ lines: fillAddresses(fromEvent), replace: true })}>
-              <Lightbulb className="size-4" aria-hidden />
-              Zo svetiel eventu ({fromEvent.length})
+              <Lightbulb className="size-4" aria-hidden />{tx('Zo svetiel eventu (')}{fromEvent.length})
             </Button>
           )}
           {fromGear.changed > 0 && (
             <Button variant="outline" size="sm" disabled={load.isPending} onClick={() => load.mutate({ lines: fromGear.lines, replace: true })}>
-              <Lightbulb className="size-4" aria-hidden />
-              Prevziať adresy z techniky ({fromGear.changed})
+              <Lightbulb className="size-4" aria-hidden />{tx('Prevziať adresy z techniky (')}{fromGear.changed})
             </Button>
           )}
           {lines.some((line) => !line.address) && (
             <Button variant="outline" size="sm" disabled={load.isPending} onClick={() => load.mutate({ lines: fillAddresses(fromGear.lines), replace: true })}>
-              <Wand2 className="size-4" aria-hidden />
-              Doplniť chýbajúce adresy
-            </Button>
+              <Wand2 className="size-4" aria-hidden />{tx('Doplniť chýbajúce adresy')}</Button>
           )}
           {dmxTemplates.length > 0 && (
             <>
-              <SelectField label="Šablóna" hideLabel className="w-52" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
-                <option value="">Zo šablóny…</option>
+              <SelectField label={tx('Šablóna')} hideLabel className="w-52" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+                <option value="">{tx('Zo šablóny…')}</option>
                 {dmxTemplates.map((template) => (
                   <option key={template.id} value={template.id}>
                     {template.name} ({template.lines.length})
@@ -217,9 +203,7 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
                     if (template && confirmReplace()) load.mutate({ lines: template.lines as DmxFields[], replace: true })
                     setTemplateId('')
                   }}
-                >
-                  Načítať
-                </Button>
+                >{tx('Načítať')}</Button>
               )}
             </>
           )}
@@ -229,18 +213,16 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
               size="sm"
               disabled={saveTemplate.isPending}
               onClick={() => {
-                const name = window.prompt('Názov šablóny DMX patch listu:', event.name)
+                const name = window.prompt(tx('Názov šablóny DMX patch listu:'), event.name)
                 if (name?.trim()) saveTemplate.mutate(name.trim())
               }}
             >
-              <BookmarkPlus className="size-4" aria-hidden />
-              Uložiť ako šablónu
-            </Button>
+              <BookmarkPlus className="size-4" aria-hidden />{tx('Uložiť ako šablónu')}</Button>
           )}
         </div>
       )}
-      {saveTemplate.isSuccess && <p className="mt-2 text-sm text-muted-foreground">Šablóna je uložená (Patch listy).</p>}
-      {(save.isError || remove.isError || load.isError || saveTemplate.isError) && <p className="mt-2 text-sm text-destructive">Zmena sa nepodarila.</p>}
+      {saveTemplate.isSuccess && <p className="mt-2 text-sm text-muted-foreground">{tx('Šablóna je uložená (Patch listy).')}</p>}
+      {(save.isError || remove.isError || load.isError || saveTemplate.isError) && <p className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>}
     </CollapsibleSection>
   )
 }

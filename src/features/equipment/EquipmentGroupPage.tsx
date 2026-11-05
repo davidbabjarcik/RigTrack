@@ -18,6 +18,7 @@ import { PhotoThumb } from './PhotoThumb'
 import { uploadGroupPhoto } from './photo'
 import { usePhotoThumbs } from './usePhotoThumbs'
 import { cableBaseName, describeAttributes, makersText, groupSplitEquipment, STATUS_LABELS, unitIdsOf } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 /**
  * Prehľad rozdelenej techniky (napr. Beam 7R v 8 cases, alebo XLR vo všetkých dĺžkach):
@@ -84,17 +85,15 @@ export function EquipmentGroupPage() {
 
   const back = (
     <Link to="/equipment" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="size-4" aria-hidden />
-      Technika
-    </Link>
+      <ArrowLeft className="size-4" aria-hidden />{tx('Technika')}</Link>
   )
   if (list.isPending) return <LoadingBlock />
-  if (list.isError) return <ErrorBlock message="Techniku sa nepodarilo načítať." onRetry={() => void list.refetch()} />
+  if (list.isError) return <ErrorBlock message={tx('Techniku sa nepodarilo načítať.')} onRetry={() => void list.refetch()} />
   if (parts.length === 0) {
     return (
       <>
         {back}
-        <ErrorBlock message="Táto technika neexistuje alebo k nej nemáte prístup." />
+        <ErrorBlock message={tx('Táto technika neexistuje alebo k nej nemáte prístup.')} />
       </>
     )
   }
@@ -160,8 +159,8 @@ export function EquipmentGroupPage() {
             <button
               type="button"
               className="group relative shrink-0 rounded-lg"
-              title="Zmeniť fotku všetkým častiam (alebo vložte obrázok cez Ctrl+V)"
-              aria-label="Zmeniť fotku všetkým častiam"
+              title={tx('Zmeniť fotku všetkým častiam (alebo vložte obrázok cez Ctrl+V)')}
+              aria-label={tx('Zmeniť fotku všetkým častiam')}
               disabled={photo.isPending}
               onClick={() => fileInput.current?.click()}
             >
@@ -204,18 +203,17 @@ export function EquipmentGroupPage() {
           {can(company, 'equipment.edit') && (
             <LinkButton to={`/equipment/${main.id}/edit?group=${allIds}`} variant="outline" size="sm">
               <Pencil className="size-4" aria-hidden />
-              {cables ? 'Upraviť všetky dĺžky naraz' : 'Upraviť všetky naraz'}
+              {cables ? tx('Upraviť všetky dĺžky naraz') : tx('Upraviť všetky naraz')}
             </LinkButton>
           )}
           <LinkButton to={`/qr/equipment?ids=${allIds}`} variant="outline" size="sm">
-            <QrCode className="size-4" aria-hidden />
-            QR štítky všetkých{units.length > 0 && ` (${units.length})`}
+            <QrCode className="size-4" aria-hidden />{tx('QR štítky všetkých')}{units.length > 0 && ` (${units.length})`}
           </LinkButton>
           {isDmx && !dmxOpen && can(company, 'equipment.edit') && <GroupDmx companyId={companyId} parts={parts} caseName={caseName} open={false} onOpen={() => setDmxOpen(true)} onClose={() => {}} />}
           {canMerge && (
-            <Button variant="outline" size="sm" disabled={merge.isPending} onClick={() => window.confirm(`Spojiť ${freeParts.length} časti mimo case do jednej (${freePieces} ks)? História sa prenesie.`) && merge.mutate()}>
+            <Button variant="outline" size="sm" disabled={merge.isPending} onClick={() => window.confirm(tf('Spojiť {0} časti mimo case do jednej ({1} ks)? História sa prenesie.', freeParts.length, freePieces)) && merge.mutate()}>
               <Combine className="size-4" aria-hidden />
-              {merge.isPending ? 'Spájam…' : 'Spojiť časti mimo case'}
+              {merge.isPending ? tx('Spájam…') : tx('Spojiť časti mimo case')}
             </Button>
           )}
           {tracksHours && !hoursOpen && can(company, 'equipment.edit') && <GroupHours companyId={companyId} parts={parts} caseName={caseName} onOpen={() => setHoursOpen(true)} />}
@@ -228,8 +226,7 @@ export function EquipmentGroupPage() {
 
       {units.length > 0 && (
         <section aria-labelledby="units-heading" className="mb-6">
-          <h2 id="units-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-            Kusy ({units.length})
+          <h2 id="units-heading" className="mb-2 text-sm font-medium text-muted-foreground">{tx('Kusy (')}{units.length})
           </h2>
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {units.map(({ unit, part }) => (
@@ -245,13 +242,13 @@ export function EquipmentGroupPage() {
                     </Link>
                   ) : canMove ? (
                     <select
-                      aria-label={`Dať kus #${unit} do case`}
+                      aria-label={tf('Dať kus #{0} do case', unit)}
                       className="h-8 max-w-64 rounded-md border bg-background px-2 text-sm text-muted-foreground"
                       value=""
                       disabled={toCase.isPending}
                       onChange={(event) => event.target.value && toCase.mutate([{ caseId: event.target.value, keys: [`${part.id}:${unit}`] }])}
                     >
-                      <option value="">mimo case – dať do…</option>
+                      <option value="">{tx('mimo case – dať do…')}</option>
                       {caseOptions.map((box) => (
                         <option key={box.id} value={box.id}>
                           {caseTitle(box)}
@@ -259,38 +256,36 @@ export function EquipmentGroupPage() {
                       ))}
                     </select>
                   ) : (
-                    <span className="text-muted-foreground">mimo case</span>
+                    <span className="text-muted-foreground">{tx('mimo case')}</span>
                   )}
                 </span>
-                <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{STATUS_LABELS[part.status]}</span>
+                <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{tx(STATUS_LABELS[part.status])}</span>
               </li>
             ))}
           </ul>
           {canMove && fillPlan.length > 0 && (
             <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
-              <span className="min-w-0 flex-1">
-                Voľné kusy sa dajú rozložiť do sady <strong>{fillLabel}</strong> po {fillPer} ks ({fillPlan.reduce((sum, step) => sum + step.keys.length, 0)} ks).
-              </span>
+              <span className="min-w-0 flex-1">{tx('Voľné kusy sa dajú rozložiť do sady')}{' '}<strong>{fillLabel}</strong>{' '}{tx('po')}{' '}{fillPer}{' '}{tx('ks (')}{fillPlan.reduce((sum, step) => sum + step.keys.length, 0)}{' '}{tx('ks).')}</span>
               <Button size="sm" disabled={toCase.isPending} onClick={() => toCase.mutate(fillPlan)}>
                 <Package className="size-4" aria-hidden />
-                {toCase.isPending ? 'Presúvam…' : 'Rozložiť do sady'}
+                {toCase.isPending ? tx('Presúvam…') : tx('Rozložiť do sady')}
               </Button>
             </div>
           )}
-          {toCase.isError && <p className="mt-2 text-sm text-destructive">Presun do case sa nepodaril.</p>}
+          {toCase.isError && <p className="mt-2 text-sm text-destructive">{tx('Presun do case sa nepodaril.')}</p>}
         </section>
       )}
 
       <section aria-labelledby="parts-heading">
         <h2 id="parts-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-          {cables ? 'Dĺžky' : 'Časti'} ({parts.length})
+          {cables ? tx('Dĺžky') : tx('Časti')} ({parts.length})
         </h2>
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {shownParts.map((part) => (
             <li key={part.id}>
               <Link to={`/equipment/${part.id}`} className="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-muted">
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">{cables ? part.name : part.caseId ? caseName(part.caseId) || 'V case' : 'Mimo case'}</span>
+                  <span className="block truncate font-medium">{cables ? part.name : part.caseId ? caseName(part.caseId) || tx('V case') : tx('Mimo case')}</span>
                   <span className="block truncate text-sm text-muted-foreground">
                     {[
                       `${part.quantity} ks`,
@@ -302,7 +297,7 @@ export function EquipmentGroupPage() {
                       .join(' · ')}
                   </span>
                 </span>
-                <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{STATUS_LABELS[part.status]}</span>
+                <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{tx(STATUS_LABELS[part.status])}</span>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               </Link>
             </li>

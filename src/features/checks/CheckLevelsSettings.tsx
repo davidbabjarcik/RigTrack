@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { errorDetail } from '@/lib/supabase/errors'
 import { CHECK_LEVEL_LABELS, checkLevelKeys, saveCheckLevels, useCheckLevels, type CheckLevelDays } from './levels'
+import { tx, tf } from '@/lib/i18n'
 
 /** Nastavenia → Úrovne kontroly: po koľkých dňoch kontrolovať pri úrovni malá / stredná / veľká. */
 export function CheckLevelsSettings({ companyId }: { companyId: string }) {
@@ -20,15 +21,12 @@ export function CheckLevelsSettings({ companyId }: { companyId: string }) {
 
   return (
     <div className="rounded-xl border bg-surface p-4">
-      <p className="text-sm text-muted-foreground">
-        Platí pre <strong>cases a racky</strong> (ako často kontrolovať obsah) aj pre <strong>prevádzkové hodiny</strong> techniky (ako často odčítať).
-        Pri každom case či technike potom vyberiete úroveň. Úroveň „{CHECK_LEVEL_LABELS.none}“ sa nekontroluje.
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Platí pre')}{' '}<strong>{tx('cases a racky')}</strong>{' '}{tx('(ako často kontrolovať obsah) aj pre')}{' '}<strong>{tx('prevádzkové hodiny')}</strong>{' '}{tx('techniky (ako často odčítať). Pri každom case či technike potom vyberiete úroveň. Úroveň „')}{CHECK_LEVEL_LABELS.none}{tx('“ sa nekontroluje.')}</p>
       <div className="mt-3 grid grid-cols-3 gap-3">
         {(['low', 'normal', 'high'] as const).map((level) => (
           <Field
             key={level}
-            label={`${CHECK_LEVEL_LABELS[level]} – každých (dní)`}
+            label={tf('{0} – každých (dní)', CHECK_LEVEL_LABELS[level])}
             type="number"
             inputMode="numeric"
             min={1}
@@ -38,11 +36,9 @@ export function CheckLevelsSettings({ companyId }: { companyId: string }) {
           />
         ))}
       </div>
-      {query.isError && <p className="mt-2 text-sm text-destructive">Úrovne sa nedajú uložiť – táto časť databázy ešte nie je pripravená, kontaktujte vývojára aplikácie.</p>}
-      {save.isError && <p className="mt-2 text-sm text-destructive">Uloženie zlyhalo. {errorDetail(save.error)}</p>}
-      <Button className="mt-3" size="sm" disabled={!draft || !valid || save.isPending} onClick={() => save.mutate()}>
-        Uložiť
-      </Button>
+      {query.isError && <p className="mt-2 text-sm text-destructive">{tx('Úrovne sa nedajú uložiť – táto časť databázy ešte nie je pripravená, kontaktujte vývojára aplikácie.')}</p>}
+      {save.isError && <p className="mt-2 text-sm text-destructive">{tx('Uloženie zlyhalo.')}{' '}{errorDetail(save.error)}</p>}
+      <Button className="mt-3" size="sm" disabled={!draft || !valid || save.isPending} onClick={() => save.mutate()}>{tx('Uložiť')}</Button>
     </div>
   )
 }

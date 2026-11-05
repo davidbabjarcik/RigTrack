@@ -4,6 +4,7 @@ import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Button } from '@/components/ui/button'
 import { addContact, partnerKeys, savePartner, type Partner } from '@/features/partners/api'
 import { fetchLinkedPartners, linkKeys, type LinkedPartner } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 /** Kontakty, ktoré nám zdieľajú prepojené firmy; dajú sa skopírovať do nášho adresára. */
 export function LinkedPartnersSection({ companyId, own, canEdit }: { companyId: string; own: Partner[]; canEdit: boolean }) {
@@ -20,7 +21,7 @@ export function LinkedPartnersSection({ companyId, own, canEdit }: { companyId: 
   const have = (partner: LinkedPartner) => own.some((item) => item.name.trim().toLowerCase() === partner.name.trim().toLowerCase())
 
   return (
-    <CollapsibleSection id="partners.linked" title={`Od prepojených firiem (${linked.data.length})`}>
+    <CollapsibleSection id="partners.linked" title={tf('Od prepojených firiem ({0})', linked.data.length)}>
       <ul className="grid gap-3 lg:grid-cols-2">
         {linked.data.map((partner) => (
           <li key={partner.id} className="flex flex-col gap-2 rounded-xl border bg-surface p-4 text-sm">
@@ -32,12 +33,10 @@ export function LinkedPartnersSection({ companyId, own, canEdit }: { companyId: 
               </div>
               {canEdit &&
                 (have(partner) ? (
-                  <span className="text-xs text-muted-foreground">už máme</span>
+                  <span className="text-xs text-muted-foreground">{tx('už máme')}</span>
                 ) : (
                   <Button variant="outline" size="sm" disabled={copy.isPending} onClick={() => copy.mutate(partner)}>
-                    <Copy className="size-4" aria-hidden />
-                    K nám
-                  </Button>
+                    <Copy className="size-4" aria-hidden />{tx('K nám')}</Button>
                 ))}
             </div>
             {partner.contacts.length > 0 && (

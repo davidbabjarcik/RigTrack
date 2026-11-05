@@ -6,6 +6,7 @@ import { useCompanyProfile } from '@/features/companies/profile'
 import { cn } from '@/lib/utils'
 import { deleteIssuer, ISSUER_KIND_LABELS, offerKeys, saveIssuer, useIssuers, type Issuer, type IssuerKind } from './api'
 import { EMPTY_ISSUER, joinContact, splitContact, type OfferIssuer } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const KINDS: { kind: Exclude<IssuerKind, 'other'>; hint: string; placeholder: string }[] = [
   { kind: 'sro', hint: 'Firma vystavuje ponuky a faktúry ako s.r.o.', placeholder: 'napr. Firma s.r.o.' },
@@ -15,19 +16,19 @@ const KINDS: { kind: Exclude<IssuerKind, 'other'>; hint: string; placeholder: st
 /** Nastavenia → Firma: ako firma vystavuje ponuky – s.r.o., živnosť alebo oboje, každé so svojimi údajmi. */
 export function CompanyIssuersSettings({ companyId }: { companyId: string }) {
   const issuers = useIssuers(companyId)
-  if (issuers.isPending) return <p className="text-sm text-muted-foreground">Načítavam…</p>
-  if (issuers.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Táto časť zatiaľ nie je dostupná – treba spustiť migrácie 0096 a 0097.</p>
+  if (issuers.isPending) return <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
+  if (issuers.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Táto časť zatiaľ nie je dostupná – treba spustiť migrácie 0096 a 0097.')}</p>
   const others = issuers.data.filter((item) => item.kind === 'other')
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">Zaškrtnite, ako firma vystavuje ponuky. V cenovej ponuke potom vyberiete len z toho, čo je tu zapnuté.</p>
+      <p className="text-sm text-muted-foreground">{tx('Zaškrtnite, ako firma vystavuje ponuky. V cenovej ponuke potom vyberiete len z toho, čo je tu zapnuté.')}</p>
       <div className="grid gap-3 lg:grid-cols-2">
         {KINDS.map((item) => (
-          <IssuerCard key={item.kind} companyId={companyId} kind={item.kind} hint={item.hint} placeholder={item.placeholder} current={issuers.data.find((issuer) => issuer.kind === item.kind) ?? null} />
+          <IssuerCard key={item.kind} companyId={companyId} kind={item.kind} hint={tx(item.hint)} placeholder={item.placeholder} current={issuers.data.find((issuer) => issuer.kind === item.kind) ?? null} />
         ))}
       </div>
       {others.map((issuer) => (
-        <IssuerCard key={issuer.id} companyId={companyId} kind="other" hint="Iný vystavovateľ (zo starších ponúk)." placeholder="" current={issuer} />
+        <IssuerCard key={issuer.id} companyId={companyId} kind="other" hint={tx('Iný vystavovateľ (zo starších ponúk).')} placeholder="" current={issuer} />
       ))}
     </div>
   )
@@ -58,7 +59,7 @@ function IssuerCard({ companyId, kind, hint, placeholder, current }: { companyId
             : { ...EMPTY_ISSUER, vatPayer: kind !== 'zivnost' }),
       )
     } else if (current) {
-      if (window.confirm(`Vypnúť vystavovanie ako ${ISSUER_KIND_LABELS[kind]}? Staršie ponuky si údaje nechajú.`)) remove.mutate()
+      if (window.confirm(tf('Vypnúť vystavovanie ako {0}? Staršie ponuky si údaje nechajú.', ISSUER_KIND_LABELS[kind]))) remove.mutate()
     } else setEditing(false)
   }
   function submit(event: FormEvent) {
@@ -71,7 +72,7 @@ function IssuerCard({ companyId, kind, hint, placeholder, current }: { companyId
       <label className="flex items-start gap-2">
         <input type="checkbox" className="mt-1 size-4" checked={enabled} onChange={(e) => toggle(e.target.checked)} />
         <span>
-          <span className="block font-medium">{ISSUER_KIND_LABELS[kind]}</span>
+          <span className="block font-medium">{tx(ISSUER_KIND_LABELS[kind])}</span>
           <span className="block text-xs text-muted-foreground">{hint}</span>
         </span>
       </label>
@@ -79,33 +80,29 @@ function IssuerCard({ companyId, kind, hint, placeholder, current }: { companyId
         <div className="flex items-start justify-between gap-2 text-sm">
           <p className="whitespace-pre-line text-muted-foreground">
             <span className="font-medium text-foreground">{current.name}</span>
-            {[current.address, current.ico && `IČO ${current.ico}`, current.vatPayer ? 'platiteľ DPH' : 'neplatiteľ DPH'].filter(Boolean).map((line) => `\n${line}`)}
+            {[current.address, current.ico && tf('IČO {0}', current.ico), current.vatPayer ? tx('platiteľ DPH') : tx('neplatiteľ DPH')].filter(Boolean).map((line) => `\n${line}`)}
           </p>
-          <Button variant="outline" size="sm" onClick={() => edit(current)}>
-            Upraviť
-          </Button>
+          <Button variant="outline" size="sm" onClick={() => edit(current)}>{tx('Upraviť')}</Button>
         </div>
       )}
       {editing && (
         <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2">
-          <Field label="Názov / meno *" className="sm:col-span-2" placeholder={placeholder} maxLength={160} value={fields.name} onChange={(e) => set({ name: e.target.value })} />
-          <TextareaField label="Adresa / sídlo" className="sm:col-span-2" rows={2} maxLength={300} value={fields.address} onChange={(e) => set({ address: e.target.value })} />
-          <Field label="IČO" maxLength={20} value={fields.ico} onChange={(e) => set({ ico: e.target.value })} />
-          <Field label="DIČ" maxLength={20} value={fields.dic} onChange={(e) => set({ dic: e.target.value })} />
+          <Field label={tx('Názov / meno *')} className="sm:col-span-2" placeholder={placeholder} maxLength={160} value={fields.name} onChange={(e) => set({ name: e.target.value })} />
+          <TextareaField label={tx('Adresa / sídlo')} className="sm:col-span-2" rows={2} maxLength={300} value={fields.address} onChange={(e) => set({ address: e.target.value })} />
+          <Field label={tx('IČO')} maxLength={20} value={fields.ico} onChange={(e) => set({ ico: e.target.value })} />
+          <Field label={tx('DIČ')} maxLength={20} value={fields.dic} onChange={(e) => set({ dic: e.target.value })} />
           <label className="flex items-center gap-2 self-end pb-3 text-sm">
-            <input type="checkbox" className="size-4" checked={fields.vatPayer} onChange={(e) => set({ vatPayer: e.target.checked, ...(e.target.checked ? {} : { icDph: '' }) })} />
-            Platiteľ DPH
-          </label>
+            <input type="checkbox" className="size-4" checked={fields.vatPayer} onChange={(e) => set({ vatPayer: e.target.checked, ...(e.target.checked ? {} : { icDph: '' }) })} />{tx('Platiteľ DPH')}</label>
           {fields.vatPayer ? (
-            <Field label="IČ DPH" placeholder="napr. SK2020123456" maxLength={20} value={fields.icDph} onChange={(e) => set({ icDph: e.target.value })} />
+            <Field label={tx('IČ DPH')} placeholder={tx('napr. SK2020123456')} maxLength={20} value={fields.icDph} onChange={(e) => set({ icDph: e.target.value })} />
           ) : (
-            <p className="self-end pb-3 text-sm text-muted-foreground">Neplatiteľ DPH nemá IČ DPH.</p>
+            <p className="self-end pb-3 text-sm text-muted-foreground">{tx('Neplatiteľ DPH nemá IČ DPH.')}</p>
           )}
           <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
             {(['phone', 'email', 'web'] as const).map((key) => (
               <Field
                 key={key}
-                label={{ phone: 'Telefón', email: 'E-mail', web: 'Web' }[key]}
+                label={{ phone: tx('Telefón'), email: 'E-mail', web: 'Web' }[key]}
                 type={{ phone: 'tel', email: 'email', web: 'url' }[key]}
                 placeholder={{ phone: 'napr. +421 900 000 000', email: 'napr. info@firma.sk', web: 'napr. www.firma.sk' }[key]}
                 maxLength={100}
@@ -114,14 +111,10 @@ function IssuerCard({ companyId, kind, hint, placeholder, current }: { companyId
               />
             ))}
           </div>
-          {save.isError && <p className="text-sm text-destructive sm:col-span-2">Nepodarilo sa uložiť.</p>}
+          {save.isError && <p className="text-sm text-destructive sm:col-span-2">{tx('Nepodarilo sa uložiť.')}</p>}
           <div className="flex gap-2 sm:col-span-2">
-            <Button type="submit" size="sm" disabled={!fields.name.trim() || save.isPending}>
-              Uložiť
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
-              Zrušiť
-            </Button>
+            <Button type="submit" size="sm" disabled={!fields.name.trim() || save.isPending}>{tx('Uložiť')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>{tx('Zrušiť')}</Button>
           </div>
         </form>
       )}

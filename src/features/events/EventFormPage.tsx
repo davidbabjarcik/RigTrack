@@ -27,6 +27,7 @@ import {
   type EventFormValues,
 } from './model'
 import { useEvents } from './useEvents'
+import { tx } from '@/lib/i18n'
 
 type FormProps = { companyId: string; current: CompanyEvent | null; events: CompanyEvent[] }
 
@@ -112,7 +113,7 @@ function EventForm({ companyId, current, events }: FormProps) {
 
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
-      <Field label="Názov eventu *" autoFocus={!current} list="past-event-names" error={errors.name?.message} {...register('name')} />
+      <Field label={tx('Názov eventu *')} autoFocus={!current} list="past-event-names" error={errors.name?.message} {...register('name')} />
       <datalist id="past-event-names">
         {pastEventNames(events).map((past) => (
           <option key={past} value={past} />
@@ -120,64 +121,61 @@ function EventForm({ companyId, current, events }: FormProps) {
       </datalist>
       {previous && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
-          <span className="min-w-0">
-            Vyzerá to ako ďalší ročník akcie <strong>{previous.name}</strong> ({formatDate(previous.startsOn)}
-            {previous.venue && `, ${previous.venue}`}). Posádka vtedy: {previous.crew.length}, položiek techniky: {previous.equipment.length}.
+          <span className="min-w-0">{tx('Vyzerá to ako ďalší ročník akcie')}{' '}<strong>{previous.name}</strong> ({formatDate(previous.startsOn)}
+            {previous.venue && `, ${previous.venue}`}{tx('). Posádka vtedy:')}{' '}{previous.crew.length}{tx(', položiek techniky:')}{' '}{previous.equipment.length}.
           </span>
           {(previous.client || previous.venue || previous.note || previous.organizer || previous.description) && (
-            <Button variant="outline" size="sm" onClick={copyPrevious}>
-              Doplniť údaje z minula
-            </Button>
+            <Button variant="outline" size="sm" onClick={copyPrevious}>{tx('Doplniť údaje z minula')}</Button>
           )}
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Miesto" placeholder="napr. Dom kultúry" error={errors.venue?.message} {...register('venue')} />
-        <Field label="Od *" type="date" error={errors.startsOn?.message} {...register('startsOn')} />
-        <Field label="Do *" type="date" error={errors.endsOn?.message} {...register('endsOn')} />
-        <SelectField label="Stav" error={errors.status?.message} {...register('status')}>
+        <Field label={tx('Miesto')} placeholder={tx('napr. Dom kultúry')} error={errors.venue?.message} {...register('venue')} />
+        <Field label={tx('Od *')} type="date" error={errors.startsOn?.message} {...register('startsOn')} />
+        <Field label={tx('Do *')} type="date" error={errors.endsOn?.message} {...register('endsOn')} />
+        <SelectField label={tx('Stav')} error={errors.status?.message} {...register('status')}>
           {EVENT_STATUSES.map((status) => (
             <option key={status} value={status}>
-              {EVENT_STATUS_LABELS[status]}
+              {tx(EVENT_STATUS_LABELS[status])}
             </option>
           ))}
         </SelectField>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Príchod / stavba" type="time" error={errors.getInTime?.message} {...register('getInTime')} />
-        <Field label="Začiatok programu" type="time" error={errors.showTime?.message} {...register('showTime')} />
-        <Field label="Koniec programu" type="time" error={errors.showEndTime?.message} {...register('showEndTime')} />
+        <Field label={tx('Príchod / stavba')} type="time" error={errors.getInTime?.message} {...register('getInTime')} />
+        <Field label={tx('Začiatok programu')} type="time" error={errors.showTime?.message} {...register('showTime')} />
+        <Field label={tx('Koniec programu')} type="time" error={errors.showEndTime?.message} {...register('showEndTime')} />
       </div>
 
       <fieldset className="grid gap-4 rounded-xl border p-4 sm:grid-cols-2">
-        <legend className="px-1 text-sm font-medium">Miesto a elektrina</legend>
-        <SelectField label="Interiér / exteriér" error={errors.setting?.message} {...register('setting')}>
-          <option value="">— nezadané —</option>
+        <legend className="px-1 text-sm font-medium">{tx('Miesto a elektrina')}</legend>
+        <SelectField label={tx('Interiér / exteriér')} error={errors.setting?.message} {...register('setting')}>
+          <option value="">{tx('— nezadané —')}</option>
           {EVENT_SETTINGS.map((setting) => (
             <option key={setting} value={setting}>
-              {SETTING_LABELS[setting]}
+              {tx(SETTING_LABELS[setting])}
             </option>
           ))}
         </SelectField>
         {(setting === 'outdoor' || setting === 'mixed') && (
           <Field
-            label="Miesto pre počasie"
-            placeholder={venue ? `ak nie ${venue}` : 'napr. Mesto'}
+            label={tx('Miesto pre počasie')}
+            placeholder={venue ? `ak nie ${venue}` : tx('napr. Mesto')}
             maxLength={120}
             error={errors.weatherPlace?.message}
             {...register('weatherPlace')}
           />
         )}
-        <SelectField label="Elektrická prípojka" error={errors.power?.message} {...register('power')}>
-          <option value="">— ešte nevieme —</option>
+        <SelectField label={tx('Elektrická prípojka')} error={errors.power?.message} {...register('power')}>
+          <option value="">{tx('— ešte nevieme —')}</option>
           {POWER_TYPES.map((power) => (
             <option key={power} value={power}>
-              {POWER_LABELS[power]}
+              {tx(POWER_LABELS[power])}
             </option>
           ))}
         </SelectField>
         <Field
-          label="Počet prípojok"
+          label={tx('Počet prípojok')}
           type="number"
           min={1}
           max={50}
@@ -185,9 +183,9 @@ function EventForm({ companyId, current, events }: FormProps) {
           {...register('powerCount', { setValueAs: (value) => (value === '' || value == null ? null : Number(value)) })}
         />
         <Field
-          label="Poznámka k elektrine"
+          label={tx('Poznámka k elektrine')}
           className="sm:col-span-2"
-          placeholder="napr. 30 m od pódia, istič v kotolni, kontakt na elektrikára"
+          placeholder={tx('napr. 30 m od pódia, istič v kotolni, kontakt na elektrikára')}
           maxLength={200}
           error={errors.powerNote?.message}
           {...register('powerNote')}
@@ -204,30 +202,26 @@ function EventForm({ companyId, current, events }: FormProps) {
       />
 
       <TextareaField
-        label="Popis eventu"
-        placeholder="Program, pódium, prípojka elektriny, príjazd, parkovanie…"
+        label={tx('Popis eventu')}
+        placeholder={tx('Program, pódium, prípojka elektriny, príjazd, parkovanie…')}
         rows={6}
         error={errors.description?.message}
         {...register('description')}
       />
-      <TextareaField label="Interná poznámka" error={errors.note?.message} {...register('note')} />
+      <TextareaField label={tx('Interná poznámka')} error={errors.note?.message} {...register('note')} />
 
       {save.isError && (
-        <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo. Skúste to znova.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Uloženie zlyhalo. Skúste to znova.')}</p>
       )}
 
       <div className="flex gap-3">
         <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : 'Uložiť'}
+          {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
         </Button>
-        <LinkButton to={current ? `/events/${current.id}` : '/events'} variant="outline">
-          Zrušiť
-        </LinkButton>
+        <LinkButton to={current ? `/events/${current.id}` : '/events'} variant="outline">{tx('Zrušiť')}</LinkButton>
       </div>
       {!current && (
-        <p className="text-sm text-muted-foreground">Techniku, posádku, fotky a dokumenty (napr. rider) pridáte po uložení v detaile eventu.</p>
+        <p className="text-sm text-muted-foreground">{tx('Techniku, posádku, fotky a dokumenty (napr. rider) pridáte po uložení v detaile eventu.')}</p>
       )}
     </form>
   )
@@ -241,20 +235,20 @@ export function EventFormPage() {
 
   let body
   if (!can(company, 'events.edit')) {
-    body = <ErrorBlock message="Na úpravu eventov nemáte oprávnenie." />
+    body = <ErrorBlock message={tx('Na úpravu eventov nemáte oprávnenie.')} />
   } else if (events.isPending) {
     body = <LoadingBlock />
   } else if (events.isError) {
-    body = <ErrorBlock message="Údaje sa nepodarilo načítať." onRetry={() => void events.refetch()} />
+    body = <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void events.refetch()} />
   } else if (id && !current) {
-    body = <ErrorBlock message="Tento event neexistuje alebo k nemu nemáte prístup." />
+    body = <ErrorBlock message={tx('Tento event neexistuje alebo k nemu nemáte prístup.')} />
   } else {
     body = <EventForm key={id ?? 'new'} companyId={company.companyId} current={current ?? null} events={events.data} />
   }
 
   return (
     <>
-      <PageHeader title={id ? 'Úprava eventu' : 'Nový event'} />
+      <PageHeader title={id ? tx('Úprava eventu') : tx('Nový event')} />
       {body}
     </>
   )

@@ -3,6 +3,7 @@ import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { canPickContacts, pickPhoneContact } from '@/lib/contactPicker'
 import { parseVCards, type Contact } from '@/lib/vcard'
+import { tx } from '@/lib/i18n'
 
 /**
  * Vyplní človeka z kontaktov telefónu: na Androide (Chrome) otvorí zoznam kontaktov,
@@ -23,21 +24,21 @@ export function PhoneContactButton({ onPick }: { onPick: (contact: Contact) => v
       const contact = await pickPhoneContact()
       if (contact) onPick(contact)
     } catch {
-      setMessage('Kontakty telefónu sa nepodarilo otvoriť.')
+      setMessage(tx('Kontakty telefónu sa nepodarilo otvoriť.'))
     }
   }
 
   async function readFile(file: File) {
     const [contact] = parseVCards(await file.text())
     if (contact) onPick(contact)
-    else setMessage('V súbore nie je žiadny kontakt.')
+    else setMessage(tx('V súbore nie je žiadny kontakt.'))
   }
 
   return (
     <span className="flex flex-col items-start gap-1">
       <Button variant="outline" size="sm" onClick={() => void choose()}>
         <ContactIcon className="size-4" aria-hidden />
-        {picker ? 'Z telefónu' : 'Z kontaktu (.vcf)'}
+        {picker ? tx('Z telefónu') : tx('Z kontaktu (.vcf)')}
       </Button>
       <input
         ref={input}

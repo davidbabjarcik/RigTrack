@@ -1,6 +1,7 @@
 import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
 import { SectionTabs } from './SectionTabs'
+import { tx } from '@/lib/i18n'
 
 /** Objednávky | Wantlist – podľa oprávnení. */
 export function OrdersTabs() {
@@ -8,8 +9,8 @@ export function OrdersTabs() {
   return (
     <SectionTabs
       tabs={[
-        { to: '/orders', label: 'Objednávky', shown: !company || can(company, 'orders.view') },
-        { to: '/shopping', label: 'Wantlist', shown: !company || can(company, 'shopping.view') },
+        { to: '/orders', label: tx('Objednávky'), shown: !company || can(company, 'orders.view') },
+        { to: '/shopping', label: tx('Wantlist'), shown: !company || can(company, 'shopping.view') },
       ]}
     />
   )
@@ -22,9 +23,9 @@ export function ServiceTabs() {
   return (
     <SectionTabs
       tabs={[
-        { to: '/service', label: 'Záznamy', shown: service },
-        { to: '/service/requests', label: 'Žiadosti' },
-        { to: '/technicians', label: 'Technici', shown: service },
+        { to: '/service', label: tx('Záznamy'), shown: service },
+        { to: '/service/requests', label: tx('Žiadosti') },
+        { to: '/technicians', label: tx('Technici'), shown: service },
       ]}
     />
   )
@@ -36,11 +37,11 @@ export function CalculatorTabs() {
   return (
     <SectionTabs
       tabs={[
-        { to: '/calculators', label: 'Všetky' },
-        { to: '/stage', label: 'Pódium Nivtec', shown: !company || can(company, 'events.view') },
-        { to: '/delay', label: 'Delay' },
-        { to: '/led', label: 'LED' },
-        { to: '/dmx', label: 'DMX' },
+        { to: '/calculators', label: tx('Všetky') },
+        { to: '/stage', label: tx('Pódium Nivtec'), shown: !company || can(company, 'events.view') },
+        { to: '/delay', label: tx('Delay') },
+        { to: '/led', label: tx('LED') },
+        { to: '/dmx', label: tx('DMX') },
       ]}
     />
   )

@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { usePastedImage } from '@/lib/usePastedImage'
 import { Button } from '@/components/ui/button'
 import { fetchPhotoUrl, PHOTO_URL_STALE_MS } from './photo'
+import { tx } from '@/lib/i18n'
 
 type Props = {
   /** Kľúč dotazu vlastníka fotky; odkaz na obrázok sa ukladá pod ním. */
@@ -42,9 +43,7 @@ export function PhotoBlock({ queryKey, name, photoPath, canEdit, onUpload, onRem
         <img src={url.data} alt={`Fotka: ${name}`} className="mb-3 max-h-80 w-full rounded-xl border bg-surface object-contain" />
       )}
       {photoPath && url.isError && (
-        <p role="alert" className="mb-3 text-sm text-destructive">
-          Fotku sa nepodarilo načítať.
-        </p>
+        <p role="alert" className="mb-3 text-sm text-destructive">{tx('Fotku sa nepodarilo načítať.')}</p>
       )}
       {canEdit && (
         <div className="flex gap-2">
@@ -63,7 +62,7 @@ export function PhotoBlock({ queryKey, name, photoPath, canEdit, onUpload, onRem
           />
           <Button variant="outline" size="sm" disabled={busy} onClick={() => fileInput.current?.click()}>
             <Camera className="size-4" aria-hidden />
-            {upload.isPending ? 'Nahrávam…' : photoPath ? 'Zmeniť fotku' : 'Pridať fotku'}
+            {upload.isPending ? tx('Nahrávam…') : photoPath ? tx('Zmeniť fotku') : tx('Pridať fotku')}
           </Button>
           {photoPath && (
             <Button
@@ -71,24 +70,18 @@ export function PhotoBlock({ queryKey, name, photoPath, canEdit, onUpload, onRem
               size="sm"
               disabled={busy}
               onClick={() => {
-                if (window.confirm('Odstrániť fotku? Admin ju 30 dní vie obnoviť z koša.')) remove.mutate()
+                if (window.confirm(tx('Odstrániť fotku? Admin ju 30 dní vie obnoviť z koša.'))) remove.mutate()
               }}
             >
-              <Trash2 className="size-4" aria-hidden />
-              Odstrániť fotku
-            </Button>
+              <Trash2 className="size-4" aria-hidden />{tx('Odstrániť fotku')}</Button>
           )}
         </div>
       )}
       {canEdit && !photoPath && (
-        <p className="mt-2 text-sm text-muted-foreground">
-          Tip: skopírujte obrázok (pravý klik → Kopírovať obrázok) a tu stlačte Ctrl+V.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">{tx('Tip: skopírujte obrázok (pravý klik → Kopírovať obrázok) a tu stlačte Ctrl+V.')}</p>
       )}
       {(upload.isError || remove.isError) && (
-        <p role="alert" className="mt-2 text-sm text-destructive">
-          Fotku sa nepodarilo uložiť. Skúste iný obrázok.
-        </p>
+        <p role="alert" className="mt-2 text-sm text-destructive">{tx('Fotku sa nepodarilo uložiť. Skúste iný obrázok.')}</p>
       )}
     </div>
   )

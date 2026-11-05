@@ -11,6 +11,7 @@ import { drivingKm, routeUrl } from './geo'
 import type { CompanyEvent } from './model'
 import { dayKm, eventDates, STAY_LABELS, STAYS, totalKm, type Stay, type TravelDay } from './plan'
 import { deleteTravel, fetchPlace, fetchTravel, planKeys, savePlace, saveTravel } from './planApi'
+import { tx } from '@/lib/i18n'
 
 const weekday = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('sk-SK', { weekday: 'short', day: 'numeric', month: 'numeric' })
 
@@ -29,10 +30,10 @@ function TravelRow({ companyId, eventId, date, day, distanceKm, canEdit }: { com
       <li className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm">
         <span className="w-24 font-medium capitalize">{weekday(date)}</span>
         <span>
-          {day.vehicles} {day.vehicles === 1 ? 'auto' : day.vehicles < 5 ? 'autá' : 'áut'} × {day.roundTrips} {day.roundTrips === 1 ? 'otočka' : 'otočky'}
+          {day.vehicles} {day.vehicles === 1 ? 'auto' : day.vehicles < 5 ? tx('autá') : tx('áut')} × {day.roundTrips} {day.roundTrips === 1 ? tx('otočka') : tx('otočky')}
         </span>
-        <span>{STAY_LABELS[day.stay]}{day.stayPlace && ` (${day.stayPlace})`}</span>
-        <span className="ml-auto font-medium tabular-nums">{formatNumber(dayKm(distanceKm, day))} km</span>
+        <span>{tx(STAY_LABELS[day.stay])}{day.stayPlace && ` (${day.stayPlace})`}</span>
+        <span className="ml-auto font-medium tabular-nums">{formatNumber(dayKm(distanceKm, day))}{' '}{tx('km')}</span>
       </li>
     )
   }
@@ -41,39 +42,31 @@ function TravelRow({ companyId, eventId, date, day, distanceKm, canEdit }: { com
       <span className="w-24 shrink-0 font-medium capitalize">{weekday(date)}</span>
       <label className="flex items-center gap-1">
         <Car className="size-4 text-muted-foreground" aria-hidden />
-        <input aria-label="Počet áut" type="number" min={0} max={50} className="h-9 w-14 rounded-lg border bg-surface px-2" value={current.vehicles} onChange={(event) => setDraft({ ...current, vehicles: number(event.target.value, 50) })} />
-        áut
-      </label>
+        <input aria-label={tx('Počet áut')} type="number" min={0} max={50} className="h-9 w-14 rounded-lg border bg-surface px-2" value={current.vehicles} onChange={(event) => setDraft({ ...current, vehicles: number(event.target.value, 50) })} />{tx('áut')}</label>
       <label className="flex items-center gap-1">
         ×
-        <input aria-label="Otočky" type="number" min={0} max={20} className="h-9 w-14 rounded-lg border bg-surface px-2" value={current.roundTrips} onChange={(event) => setDraft({ ...current, roundTrips: number(event.target.value, 20) })} />
-        otočky
-      </label>
-      <select aria-label="Kde sa spalo" className="h-9 rounded-lg border bg-surface px-2" value={current.stay} onChange={(event) => setDraft({ ...current, stay: event.target.value as Stay })}>
+        <input aria-label={tx('Otočky')} type="number" min={0} max={20} className="h-9 w-14 rounded-lg border bg-surface px-2" value={current.roundTrips} onChange={(event) => setDraft({ ...current, roundTrips: number(event.target.value, 20) })} />{tx('otočky')}</label>
+      <select aria-label={tx('Kde sa spalo')} className="h-9 rounded-lg border bg-surface px-2" value={current.stay} onChange={(event) => setDraft({ ...current, stay: event.target.value as Stay })}>
         {STAYS.map((stay) => (
           <option key={stay} value={stay}>
-            {STAY_LABELS[stay]}
+            {tx(STAY_LABELS[stay])}
           </option>
         ))}
       </select>
       {current.stay === 'elsewhere' && (
-        <input aria-label="Kde" placeholder="kde (hotel, mesto)" className="h-9 w-40 rounded-lg border bg-surface px-2" maxLength={160} value={current.stayPlace} onChange={(event) => setDraft({ ...current, stayPlace: event.target.value })} />
+        <input aria-label={tx('Kde')} placeholder={tx('kde (hotel, mesto)')} className="h-9 w-40 rounded-lg border bg-surface px-2" maxLength={160} value={current.stayPlace} onChange={(event) => setDraft({ ...current, stayPlace: event.target.value })} />
       )}
       <label className="flex items-center gap-1">
         +
-        <input aria-label="Km navyše" type="number" min={0} step="0.1" className="h-9 w-20 rounded-lg border bg-surface px-2" value={current.extraKm} onChange={(event) => setDraft({ ...current, extraKm: Math.max(0, Number(event.target.value) || 0) })} />
-        km navyše
-      </label>
-      <span className="ml-auto font-medium tabular-nums">{formatNumber(dayKm(distanceKm, current))} km</span>
+        <input aria-label={tx('Km navyše')} type="number" min={0} step="0.1" className="h-9 w-20 rounded-lg border bg-surface px-2" value={current.extraKm} onChange={(event) => setDraft({ ...current, extraKm: Math.max(0, Number(event.target.value) || 0) })} />{tx('km navyše')}</label>
+      <span className="ml-auto font-medium tabular-nums">{formatNumber(dayKm(distanceKm, current))}{' '}{tx('km')}</span>
       {(draft || !day) && (
         <Button size="sm" variant={day ? 'default' : 'outline'} disabled={save.isPending} onClick={() => save.mutate()}>
-          {day ? 'Uložiť' : 'Zapísať'}
+          {day ? tx('Uložiť') : tx('Zapísať')}
         </Button>
       )}
       {day && !draft && (
-        <Button variant="ghost" size="sm" disabled={remove.isPending} onClick={() => remove.mutate()}>
-          Zmazať
-        </Button>
+        <Button variant="ghost" size="sm" disabled={remove.isPending} onClick={() => remove.mutate()}>{tx('Zmazať')}</Button>
       )}
     </li>
   )
@@ -99,14 +92,14 @@ export function EventTravelSection({ companyId, event, canEdit }: { companyId: s
   const compute = useMutation({
     mutationFn: async () => {
       const result = await drivingKm(profile.data!.warehouseAddress, (address ?? place.data!.address) || event.venue)
-      if ('missing' in result) throw new Error(result.missing === 'from' ? 'Adresu skladu som na mape nenašiel.' : 'Adresu akcie som na mape nenašiel – skúste ju napísať presnejšie (ulica, mesto).')
+      if ('missing' in result) throw new Error(result.missing === 'from' ? tx('Adresu skladu som na mape nenašiel.') : tx('Adresu akcie som na mape nenašiel – skúste ju napísať presnejšie (ulica, mesto).'))
       return result.km
     },
     onSuccess: (value) => {
       setProblem('')
       setKm(String(value))
     },
-    onError: (error) => setProblem(error instanceof Error && error.message.includes('nenašiel') ? error.message : 'Trasu sa nepodarilo vypočítať. Km môžete zadať ručne.'),
+    onError: (error) => setProblem(error instanceof Error && error.message.includes('nenašiel') ? error.message : tx('Trasu sa nepodarilo vypočítať. Km môžete zadať ručne.')),
   })
 
   if (place.isError || travel.isError) return null
@@ -123,23 +116,20 @@ export function EventTravelSection({ companyId, event, canEdit }: { companyId: s
     <CollapsibleSection id="event.travel" title={`Doprava${total > 0 ? ` (${formatNumber(total)} km)` : ''}`}>
       <div className="mb-3 flex flex-col gap-3 rounded-xl border bg-surface p-4">
         <div className="grid gap-3 sm:grid-cols-[1fr_10rem]">
-          <Field label="Adresa akcie (ulica, mesto)" placeholder={event.venue || 'napr. Hlavná 1, Košice'} disabled={!canEdit} value={currentAddress} onChange={(input) => setAddress(input.target.value)} />
-          <Field label="Km zo skladu (1 smer)" inputMode="decimal" disabled={!canEdit} value={currentKm} onChange={(input) => setKm(input.target.value)} />
+          <Field label={tx('Adresa akcie (ulica, mesto)')} placeholder={event.venue || tx('napr. Hlavná 1, Košice')} disabled={!canEdit} value={currentAddress} onChange={(input) => setAddress(input.target.value)} />
+          <Field label={tx('Km zo skladu (1 smer)')} inputMode="decimal" disabled={!canEdit} value={currentKm} onChange={(input) => setKm(input.target.value)} />
         </div>
-        <p className="text-sm text-muted-foreground">
-          Sklad: {warehouse || <Link to="/settings" className="text-accent hover:underline">nastavte adresu skladu v Nastaveniach</Link>}
+        <p className="text-sm text-muted-foreground">{tx('Sklad:')}{' '}{warehouse || <Link to="/settings" className="text-accent hover:underline">{tx('nastavte adresu skladu v Nastaveniach')}</Link>}
         </p>
         <div className="flex flex-wrap gap-2">
           {canEdit && (
             <Button variant="outline" size="sm" disabled={!warehouse || !target || compute.isPending} onClick={() => compute.mutate()}>
               <Route className="size-4" aria-hidden />
-              {compute.isPending ? 'Počítam…' : 'Vypočítať km z mapy'}
+              {compute.isPending ? tx('Počítam…') : tx('Vypočítať km z mapy')}
             </Button>
           )}
           {warehouse && target && (
-            <a href={routeUrl(warehouse, target)} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1 rounded-lg border bg-surface px-3 text-sm font-medium hover:bg-muted">
-              Trasa v Google Mapách
-              <ExternalLink className="size-3.5" aria-hidden />
+            <a href={routeUrl(warehouse, target)} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1 rounded-lg border bg-surface px-3 text-sm font-medium hover:bg-muted">{tx('Trasa v Google Mapách')}<ExternalLink className="size-3.5" aria-hidden />
             </a>
           )}
           {canEdit && dirty && (
@@ -147,22 +137,19 @@ export function EventTravelSection({ companyId, event, canEdit }: { companyId: s
               size="sm"
               disabled={savePlaceMutation.isPending}
               onClick={() => savePlaceMutation.mutate({ nextAddress: currentAddress, nextKm: currentKm.trim() === '' ? null : Math.max(0, Number(currentKm.replace(',', '.')) || 0) })}
-            >
-              Uložiť adresu a km
-            </Button>
+            >{tx('Uložiť adresu a km')}</Button>
           )}
         </div>
         {problem && <p className="text-sm text-destructive">{problem}</p>}
-        <p className="text-xs text-muted-foreground">Km z mapy: OpenStreetMap (adresa → poloha) a OSRM (trasa autom); posiela sa len adresa skladu a akcie.</p>
+        <p className="text-xs text-muted-foreground">{tx('Km z mapy: OpenStreetMap (adresa → poloha) a OSRM (trasa autom); posiela sa len adresa skladu a akcie.')}</p>
       </div>
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
         {eventDates(event.startsOn, event.endsOn).map((date) => (
           <TravelRow key={date} companyId={companyId} eventId={event.id} date={date} day={travel.data?.find((item) => item.date === date)} distanceKm={distance} canEdit={canEdit} />
         ))}
       </ul>
-      <p className="mt-2 text-sm">
-        Spolu: <span className="font-semibold tabular-nums">{formatNumber(total)} km</span>
-        <span className="text-muted-foreground"> – tam a späť × otočky × autá + km navyše (napr. po meste)</span>
+      <p className="mt-2 text-sm">{tx('Spolu:')}{' '}<span className="font-semibold tabular-nums">{formatNumber(total)}{' '}{tx('km')}</span>
+        <span className="text-muted-foreground">{' '}{tx('– tam a späť × otočky × autá + km navyše (napr. po meste)')}</span>
       </p>
     </CollapsibleSection>
   )

@@ -1,13 +1,14 @@
 import { Building2 } from 'lucide-react'
 import { describeAttributes, KIND_LABELS } from '@/features/equipment/model'
 import type { LinkedEquipment } from './api'
+import { tx } from '@/lib/i18n'
 
 /** Zoznam techniky prepojených firiem (len na čítanie – bez cien a detailov). */
 export function LinkedEquipmentList({ items }: { items: LinkedEquipment[] }) {
   if (items.length === 0) return null
   return (
     <section className="mt-6">
-      <h2 className="mb-2 text-sm font-medium text-muted-foreground">Technika prepojených firiem ({items.length})</h2>
+      <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Technika prepojených firiem (')}{items.length})</h2>
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
         {items.map((item) => (
           <li key={item.id} className="flex min-h-14 items-center gap-3 px-4 py-3">
@@ -19,7 +20,7 @@ export function LinkedEquipmentList({ items }: { items: LinkedEquipment[] }) {
               </span>
             </span>
             <span className="shrink-0 text-right text-sm">
-              <span className="block font-medium">{item.quantity} ks</span>
+              <span className="block font-medium">{item.quantity}{' '}{tx('ks')}</span>
               <span className="block text-xs text-muted-foreground">{item.companyName}</span>
             </span>
           </li>

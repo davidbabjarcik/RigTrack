@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { deleteLookup, renameLookup, setCategoryColor, setCategoryConsumable, type LookupTable } from './api'
 import { CATEGORY_COLORS, COLOR_CLASSES, COLOR_LABELS, suggestedColor, type CategoryColor } from './categoryColors'
 import type { Lookup } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = {
   companyId: string
@@ -37,7 +38,7 @@ export function LookupSettings({ companyId, table, items, noun }: Props) {
   const busy = rename.isPending || remove.isPending || consumable.isPending || color.isPending
 
   if (items.length === 0) {
-    return <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">Zatiaľ žiadne.</p>
+    return <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Zatiaľ žiadne.')}</p>
   }
 
   return (
@@ -51,7 +52,7 @@ export function LookupSettings({ companyId, table, items, noun }: Props) {
             <span className="min-w-0 flex-1 truncate font-medium">{item.name}</span>
             {table === 'equipment_categories' && (
               <select
-                aria-label={`Farba kategórie ${item.name}`}
+                aria-label={tf('Farba kategórie {0}', item.name)}
                 className="h-9 rounded-lg border bg-surface px-2 text-sm"
                 value={item.color ?? ''}
                 disabled={busy}
@@ -60,7 +61,7 @@ export function LookupSettings({ companyId, table, items, noun }: Props) {
                 <option value="">{autoLabel(item.name)}</option>
                 {CATEGORY_COLORS.map((option) => (
                   <option key={option} value={option}>
-                    {COLOR_LABELS[option]}
+                    {tx(COLOR_LABELS[option])}
                   </option>
                 ))}
               </select>
@@ -73,17 +74,15 @@ export function LookupSettings({ companyId, table, items, noun }: Props) {
                   checked={Boolean(item.consumable)}
                   disabled={busy}
                   onChange={(e) => consumable.mutate({ id: item.id, value: e.target.checked })}
-                />
-                spotrebný materiál
-              </label>
+                />{tx('spotrebný materiál')}</label>
             )}
             <Button
               variant="ghost"
               size="sm"
-              aria-label={`Premenovať: ${item.name}`}
+              aria-label={tf('Premenovať: {0}', item.name)}
               disabled={busy}
               onClick={() => {
-                const name = window.prompt(`Nový názov pre „${item.name}“`, item.name)?.trim()
+                const name = window.prompt(tf('Nový názov pre „{0}“', item.name), item.name)?.trim()
                 if (name && name !== item.name) rename.mutate({ id: item.id, name })
               }}
             >
@@ -92,10 +91,10 @@ export function LookupSettings({ companyId, table, items, noun }: Props) {
             <Button
               variant="ghost"
               size="sm"
-              aria-label={`Odstrániť: ${item.name}`}
+              aria-label={tf('Odstrániť: {0}', item.name)}
               disabled={busy}
               onClick={() => {
-                if (window.confirm(`Odstrániť ${noun} „${item.name}“? Technika ostane, len ju stratí.`)) remove.mutate(item.id)
+                if (window.confirm(tf('Odstrániť {0} „{1}“? Technika ostane, len ju stratí.', noun, item.name))) remove.mutate(item.id)
               }}
             >
               <Trash2 className="size-4" aria-hidden />
@@ -104,9 +103,7 @@ export function LookupSettings({ companyId, table, items, noun }: Props) {
         ))}
       </ul>
       {(rename.isError || remove.isError || consumable.isError || color.isError) && (
-        <p role="alert" className="mt-2 text-sm text-destructive">
-          Zmena sa nepodarila. Názov možno už existuje.
-        </p>
+        <p role="alert" className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila. Názov možno už existuje.')}</p>
       )}
     </>
   )

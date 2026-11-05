@@ -18,6 +18,7 @@ import { GuestDeviceForm } from './GuestDeviceForm'
 import { addressRows, matchesAddress, suggestFreeIp } from './model'
 import { WifiCard } from './WifiCard'
 import { WifiForm } from './WifiForm'
+import { tx, tf } from '@/lib/i18n'
 
 const TABS: { id: 'wifi' | 'ip' | 'mac'; label: string; icon: LucideIcon }[] = [
   { id: 'wifi', label: 'Wi-Fi siete', icon: Wifi },
@@ -57,7 +58,7 @@ export function NetworksPage() {
   const loginOf = (id: string) => logins.data?.find((login) => login.networkId === id)
   const owner = (userId: string) => {
     const person = staff.people.find((candidate) => candidate.memberId === userId)
-    return { name: person?.name ?? 'Bývalý člen', to: person ? `/staff/${person.key}` : null }
+    return { name: person?.name ?? tx('Bývalý člen'), to: person ? `/staff/${person.key}` : null }
   }
   const rows = addressRows(items, devices.data ?? [], allNetworks, owner, guests.data ?? [])
   const filtered = rows.filter((row) => matchesAddress(row, query) && (!networkFilter || (networkFilter === 'none' ? !row.networkId : row.networkId === networkFilter)))
@@ -82,26 +83,22 @@ export function NetworksPage() {
   return (
     <>
       <PageHeader
-        title="Siete"
-        description="Wi-Fi siete, routery a všetky IP / MAC adresy"
+        title={tx('Siete')}
+        description={tx('Wi-Fi siete, routery a všetky IP / MAC adresy')}
         action={
           !canEdit ? undefined : tab === 'wifi' ? (
             editing !== 'new' && !networks.isError ? (
               <Button onClick={() => setEditing('new')}>
-                <Plus className="size-4" aria-hidden />
-                Pridať Wi-Fi sieť
-              </Button>
+                <Plus className="size-4" aria-hidden />{tx('Pridať Wi-Fi sieť')}</Button>
             ) : undefined
           ) : guestEditing !== 'new' && !guests.isError ? (
             <Button onClick={() => setGuestEditing('new')}>
-              <UserRoundPlus className="size-4" aria-hidden />
-              Pridať hosťa
-            </Button>
+              <UserRoundPlus className="size-4" aria-hidden />{tx('Pridať hosťa')}</Button>
           ) : undefined
         }
       />
 
-      <div role="tablist" aria-label="Čo zobraziť" className="mb-4 flex flex-wrap gap-1.5">
+      <div role="tablist" aria-label={tx('Čo zobraziť')} className="mb-4 flex flex-wrap gap-1.5">
         {tabs.map((item) => {
           const count = item.id === 'wifi' ? allNetworks.length : item.id === 'ip' ? rows.filter((row) => row.ip || row.dhcp).length : rows.filter((row) => row.mac).length
           return (
@@ -117,7 +114,7 @@ export function NetworksPage() {
               )}
             >
               <item.icon className="size-4" aria-hidden />
-              {item.label}
+              {tx(item.label)}
               <span className="tabular-nums opacity-70">{count}</span>
             </button>
           )
@@ -127,13 +124,11 @@ export function NetworksPage() {
       {tab === 'wifi' && allNetworks.length > 0 && (
         <div className="mb-3 flex justify-end">
           <LinkButton to="/networks/qr" variant="outline" size="sm">
-            <Printer className="size-4" aria-hidden />
-            QR kódy sietí na tlač
-          </LinkButton>
+            <Printer className="size-4" aria-hidden />{tx('QR kódy sietí na tlač')}</LinkButton>
         </div>
       )}
       {tab === 'wifi' && (
-      <section aria-label="Wi-Fi siete">
+      <section aria-label={tx('Wi-Fi siete')}>
         {editing === 'new' && (
           <div className="mb-3">
             <WifiForm companyId={companyId} current={null} login={undefined} equipment={items} onDone={() => setEditing(null)} />
@@ -142,12 +137,10 @@ export function NetworksPage() {
         {networks.isPending ? (
           <LoadingBlock />
         ) : networks.isError ? (
-          <ErrorBlock message={`Siete sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie. ${errorDetail(networks.error)}`} onRetry={() => void networks.refetch()} />
+          <ErrorBlock message={tf('Siete sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie. {0}', errorDetail(networks.error))} onRetry={() => void networks.refetch()} />
         ) : allNetworks.length === 0 ? (
           editing !== 'new' && (
-            <p className="rounded-xl border border-dashed bg-surface p-6 text-center text-sm text-muted-foreground">
-              Zatiaľ žiadne Wi-Fi siete. Pridajte firemnú Wi-Fi alebo router k mixu – aj naskenovaním QR kódu.
-            </p>
+            <p className="rounded-xl border border-dashed bg-surface p-6 text-center text-sm text-muted-foreground">{tx('Zatiaľ žiadne Wi-Fi siete. Pridajte firemnú Wi-Fi alebo router k mixu – aj naskenovaním QR kódu.')}</p>
           )
         ) : (
           <ul className="grid gap-3 lg:grid-cols-2">
@@ -172,7 +165,7 @@ export function NetworksPage() {
       )}
 
       {tab !== 'wifi' && (
-      <section aria-label={tab === 'ip' ? 'IP tabuľka' : 'MAC adresy'}>
+      <section aria-label={tab === 'ip' ? tx('IP tabuľka') : tx('MAC adresy')}>
         {guestEditing && (guestEditing === 'new' || editedGuest) && (
           <GuestDeviceForm
             key={guestEditing}
@@ -185,60 +178,52 @@ export function NetworksPage() {
         )}
         {/* Na tlači: nadpis s firmou, sieťou a dátumom; ovládanie sa skryje. */}
         <h2 className="mb-3 hidden text-lg font-semibold print:block">
-          {tab === 'ip' ? 'IP tabuľka' : 'MAC adresy'} – {company.companyName}
+          {tab === 'ip' ? tx('IP tabuľka') : tx('MAC adresy')} – {company.companyName}
           {selected ? ` – ${selected.ssid}` : ''} · {new Date().toLocaleDateString('sk-SK')}
         </h2>
         <div className="mb-3 flex flex-wrap gap-2 print:hidden">
           <div className="relative min-w-56 flex-1">
             <Search className="pointer-events-none absolute top-3.5 left-3 size-4 text-muted-foreground" aria-hidden />
             <Field
-              label="Hľadať IP, MAC alebo zariadenie"
+              label={tx('Hľadať IP, MAC alebo zariadenie')}
               hideLabel
               type="search"
-              placeholder="napr. 192.168.1. alebo 4D:5E alebo pult"
+              placeholder={tx('napr. 192.168.1. alebo 4D:5E alebo pult')}
               autoComplete="off"
               className="[&_input]:pl-9"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>
-          <SelectField label="Sieť" hideLabel className="w-56" value={networkFilter} onChange={(event) => setNetworkFilter(event.target.value)}>
-            <option value="">Všetky siete</option>
+          <SelectField label={tx('Sieť')} hideLabel className="w-56" value={networkFilter} onChange={(event) => setNetworkFilter(event.target.value)}>
+            <option value="">{tx('Všetky siete')}</option>
             {allNetworks.map((network) => (
               <option key={network.id} value={network.id}>
                 {network.ssid}
               </option>
             ))}
-            <option value="none">Bez siete</option>
+            <option value="none">{tx('Bez siete')}</option>
           </SelectField>
           <LinkButton variant="outline" to={`/networks/print?tab=${tab}${networkFilter ? `&network=${networkFilter}` : ''}`}>
-            <Printer className="size-4" aria-hidden />
-            Tlačiť / PDF
-          </LinkButton>
+            <Printer className="size-4" aria-hidden />{tx('Tlačiť / PDF')}</LinkButton>
           {visibleEquipment.length > 0 && (
             <LinkButton variant="outline" to={tapeLink(visibleEquipment)}>
-              <Tag className="size-4" aria-hidden />
-              Štítky ({visibleEquipment.length})
+              <Tag className="size-4" aria-hidden />{tx('Štítky (')}{visibleEquipment.length})
             </LinkButton>
           )}
         </div>
         {freeIp && tab === 'ip' && (
-          <p className="mb-3 text-sm text-muted-foreground">
-            Najbližšia voľná IP v sieti {selected?.ssid}: <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-foreground">{freeIp}</code>
+          <p className="mb-3 text-sm text-muted-foreground">{tx('Najbližšia voľná IP v sieti')}{' '}{selected?.ssid}: <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-foreground">{freeIp}</code>
           </p>
         )}
         {conflicts > 0 && (
           <p role="alert" className="mb-3 flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
-            Niektoré IP adresy má v tej istej sieti viac zariadení ({conflicts}). Bili by sa – sú označené červenou.
-          </p>
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />{tx('Niektoré IP adresy má v tej istej sieti viac zariadení (')}{conflicts}{tx('). Bili by sa – sú označené červenou.')}</p>
         )}
         {equipment.isPending || devices.isPending ? (
           <LoadingBlock />
         ) : rows.length === 0 ? (
-          <p className="rounded-xl border border-dashed bg-surface px-6 py-10 text-center text-sm text-muted-foreground">
-            Zatiaľ žiadne adresy. IP a MAC sa zadávajú pri technike (časť Sieť), pri zariadeniach členov (Nastavenia → Účet) a pre hostí tlačidlom „Pridať hosťa“.
-          </p>
+          <p className="rounded-xl border border-dashed bg-surface px-6 py-10 text-center text-sm text-muted-foreground">{tx('Zatiaľ žiadne adresy. IP a MAC sa zadávajú pri technike (časť Sieť), pri zariadeniach členov (Nastavenia → Účet) a pre hostí tlačidlom „Pridať hosťa“.')}</p>
         ) : (
           <div className="overflow-x-auto rounded-xl border bg-surface print:overflow-visible print:border-0 print:bg-white print:text-black">
             <table className="w-full min-w-[40rem] text-sm print:min-w-0">
@@ -246,8 +231,8 @@ export function NetworksPage() {
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="px-4 py-2 font-medium">{tab === 'ip' ? 'IP' : 'MAC'}</th>
                   <th className="px-4 py-2 font-medium">{tab === 'ip' ? 'MAC' : 'IP'}</th>
-                  <th className="px-4 py-2 font-medium">Zariadenie</th>
-                  <th className="px-4 py-2 font-medium">Sieť</th>
+                  <th className="px-4 py-2 font-medium">{tx('Zariadenie')}</th>
+                  <th className="px-4 py-2 font-medium">{tx('Sieť')}</th>
                   <th className="w-10 print:hidden" />
                 </tr>
               </thead>
@@ -256,14 +241,14 @@ export function NetworksPage() {
                   const Icon = row.source === 'equipment' ? Speaker : row.source === 'guest' ? UserRoundPlus : Laptop
                   const ipCell = (
                     <td className={cn('px-4 py-2 font-mono whitespace-nowrap', row.duplicateIp && 'font-semibold text-destructive', tab === 'mac' && 'text-muted-foreground')}>
-                      {row.ip ? `${row.ip}${row.prefix ? `/${row.prefix}` : ''}` : row.dhcp ? <span className="font-sans text-muted-foreground">DHCP</span> : '—'}
+                      {row.ip ? `${row.ip}${row.prefix ? `/${row.prefix}` : ''}` : row.dhcp ? <span className="font-sans text-muted-foreground">{tx('DHCP')}</span> : '—'}
                     </td>
                   )
                   const macCell = (
                     <td className={cn('px-4 py-2 font-mono whitespace-nowrap', row.duplicateMac && 'font-semibold text-destructive', tab === 'ip' && 'text-muted-foreground')}>
                       {row.mac || '—'}
                       {row.mac && row.iface && (
-                        <span className="ml-2 rounded bg-muted px-1.5 py-0.5 font-sans text-xs text-muted-foreground" title={row.iface === 'lan' ? 'MAC ethernetovej (LAN) karty' : 'MAC Wi-Fi karty'}>
+                        <span className="ml-2 rounded bg-muted px-1.5 py-0.5 font-sans text-xs text-muted-foreground" title={row.iface === 'lan' ? tx('MAC ethernetovej (LAN) karty') : tx('MAC Wi-Fi karty')}>
                           {row.iface === 'lan' ? 'LAN' : 'Wi-Fi'}
                         </span>
                       )}
@@ -284,7 +269,7 @@ export function NetworksPage() {
                       )}
                       <td className="px-4 py-2">
                         <span className="flex items-start gap-2">
-                          <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-label={row.source === 'equipment' ? 'Technika' : row.source === 'guest' ? 'Hosť' : 'Zariadenie člena'} />
+                          <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-label={row.source === 'equipment' ? 'Technika' : row.source === 'guest' ? tx('Hosť') : tx('Zariadenie člena')} />
                           <span>
                             {row.guestId ? (
                               <button type="button" className="text-left font-medium hover:underline" onClick={() => setGuestEditing(row.guestId!)}>
@@ -304,7 +289,7 @@ export function NetworksPage() {
                       <td className="px-4 py-2 text-muted-foreground">{networkName(row.networkId) ?? '—'}</td>
                       <td className="px-2 py-2 print:hidden">
                         {equipmentIdOf(row) && (
-                          <Link to={tapeLink([equipmentIdOf(row)!])} className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Štítok: ${row.name}`} title="Štítok s IP / MAC">
+                          <Link to={tapeLink([equipmentIdOf(row)!])} className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={tf('Štítok: {0}', row.name)} title={tx('Štítok s IP / MAC')}>
                             <Tag className="size-4" aria-hidden />
                           </Link>
                         )}
@@ -314,12 +299,10 @@ export function NetworksPage() {
                 })}
               </tbody>
             </table>
-            {visible.length === 0 && <p className="px-4 py-6 text-center text-sm text-muted-foreground">Nič sa nenašlo.</p>}
+            {visible.length === 0 && <p className="px-4 py-6 text-center text-sm text-muted-foreground">{tx('Nič sa nenašlo.')}</p>}
           </div>
         )}
-        <p className="mt-2 text-xs text-muted-foreground print:hidden">
-          Ikona reproduktora = technika firmy, notebook = zariadenie člena, osoba s plusom = hosť. Zariadenia členov vidí admin a skladník (ostatní len svoje).
-        </p>
+        <p className="mt-2 text-xs text-muted-foreground print:hidden">{tx('Ikona reproduktora = technika firmy, notebook = zariadenie člena, osoba s plusom = hosť. Zariadenia členov vidí admin a skladník (ostatní len svoje).')}</p>
       </section>
       )}
     </>

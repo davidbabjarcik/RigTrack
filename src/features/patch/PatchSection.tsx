@@ -26,6 +26,7 @@ import {
   type PatchLine,
   type PatchSource,
 } from './model'
+import { tx } from '@/lib/i18n'
 
 /** Ktorá technika sa ponúkne pri zdroji: mikrofóny, bezdrôtové systémy, DI boxy (keď typ nie je zadaný, všetok zvuk). */
 function equipmentFor(source: PatchSource, items: Equipment[]) {
@@ -65,30 +66,30 @@ function LineForm({ initial, equipment, capsules, onSave, onCancel, onDelete, sa
   const num = (value: string) => (value === '' ? null : Math.max(1, Math.min(512, Math.round(Number(value)))))
   return (
     <form onSubmit={submit} className="grid grid-cols-2 gap-2 rounded-xl border bg-surface p-3 sm:grid-cols-6">
-      <Field label="Kanál" type="number" inputMode="numeric" min={1} max={512} value={fields.channel} onChange={(e) => set({ channel: num(e.target.value) ?? 1 })} />
-      <Field label="Čo ide na kanál" className="sm:col-span-2" placeholder="napr. Kick In, Spev 1" maxLength={80} autoFocus value={fields.name} onChange={(e) => set({ name: e.target.value })} />
-      <Field label="Stagebox" placeholder="SB1" maxLength={40} value={fields.stagebox} onChange={(e) => set({ stagebox: e.target.value })} />
-      <Field label="Vstup" type="number" inputMode="numeric" min={1} value={fields.stageboxInput ?? ''} onChange={(e) => set({ stageboxInput: num(e.target.value) })} />
-      <SelectField label="Zdroj" value={fields.source} onChange={(e) => set({ source: e.target.value as PatchSource, equipmentId: null, capsuleId: null })}>
+      <Field label={tx('Kanál')} type="number" inputMode="numeric" min={1} max={512} value={fields.channel} onChange={(e) => set({ channel: num(e.target.value) ?? 1 })} />
+      <Field label={tx('Čo ide na kanál')} className="sm:col-span-2" placeholder={tx('napr. Kick In, Spev 1')} maxLength={80} autoFocus value={fields.name} onChange={(e) => set({ name: e.target.value })} />
+      <Field label={tx('Stagebox')} placeholder={tx('SB1')} maxLength={40} value={fields.stagebox} onChange={(e) => set({ stagebox: e.target.value })} />
+      <Field label={tx('Vstup')} type="number" inputMode="numeric" min={1} value={fields.stageboxInput ?? ''} onChange={(e) => set({ stageboxInput: num(e.target.value) })} />
+      <SelectField label={tx('Zdroj')} value={fields.source} onChange={(e) => set({ source: e.target.value as PatchSource, equipmentId: null, capsuleId: null })}>
         {PATCH_SOURCES.map((source) => (
           <option key={source} value={source}>
-            {PATCH_SOURCE_LABELS[source]}
+            {tx(PATCH_SOURCE_LABELS[source])}
           </option>
         ))}
       </SelectField>
       {fields.source === 'port' ? (
-        <SelectField label="Konektor" value={fields.connector} onChange={(e) => set({ connector: e.target.value as PatchFields['connector'] })}>
-          <option value="">— vyberte —</option>
+        <SelectField label={tx('Konektor')} value={fields.connector} onChange={(e) => set({ connector: e.target.value as PatchFields['connector'] })}>
+          <option value="">{tx('— vyberte —')}</option>
           {CONNECTORS.map((connector) => (
             <option key={connector} value={connector}>
-              {CONNECTOR_LABELS[connector]}
+              {tx(CONNECTOR_LABELS[connector])}
             </option>
           ))}
         </SelectField>
       ) : (
         fields.source !== 'other' && (
           <SelectField
-            label={fields.source === 'wireless' ? 'Bezdrôtový systém' : fields.source === 'di' ? 'DI box' : 'Mikrofón'}
+            label={fields.source === 'wireless' ? tx('Bezdrôtový systém') : fields.source === 'di' ? tx('DI box') : tx('Mikrofón')}
             className="sm:col-span-2"
             value={fields.equipmentId ?? ''}
             onChange={(e) => {
@@ -97,7 +98,7 @@ function LineForm({ initial, equipment, capsules, onSave, onCancel, onDelete, sa
               set({ equipmentId: e.target.value || null, ...(item?.attributes.micType === 'condenser' ? { phantom: true } : {}) })
             }}
           >
-            <option value="">— z techniky (nepovinné) —</option>
+            <option value="">{tx('— z techniky (nepovinné) —')}</option>
             {options.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
@@ -107,8 +108,8 @@ function LineForm({ initial, equipment, capsules, onSave, onCancel, onDelete, sa
         )
       )}
       {fields.source === 'wireless' && (
-        <SelectField label="Kapsula" value={fields.capsuleId ?? ''} onChange={(e) => set({ capsuleId: e.target.value || null })}>
-          <option value="">— bez kapsuly —</option>
+        <SelectField label={tx('Kapsula')} value={fields.capsuleId ?? ''} onChange={(e) => set({ capsuleId: e.target.value || null })}>
+          <option value="">{tx('— bez kapsuly —')}</option>
           {[...capsules]
             .sort((a, b) => Number(fitting.includes(b.id)) - Number(fitting.includes(a.id)))
             .map((capsule) => (
@@ -119,31 +120,23 @@ function LineForm({ initial, equipment, capsules, onSave, onCancel, onDelete, sa
             ))}
         </SelectField>
       )}
-      <SelectField label="Stojan" value={fields.stand} onChange={(e) => set({ stand: e.target.value as PatchFields['stand'] })}>
+      <SelectField label={tx('Stojan')} value={fields.stand} onChange={(e) => set({ stand: e.target.value as PatchFields['stand'] })}>
         <option value="">—</option>
         {STANDS.map((stand) => (
           <option key={stand} value={stand}>
-            {STAND_LABELS[stand]}
+            {tx(STAND_LABELS[stand])}
           </option>
         ))}
       </SelectField>
       <label className="flex items-end gap-2 pb-3 text-sm">
-        <input type="checkbox" className="size-4" checked={fields.phantom} onChange={(e) => set({ phantom: e.target.checked })} />
-        Phantom 48 V
-      </label>
-      <Field label="Poznámka" className="col-span-2 sm:col-span-3" maxLength={200} value={fields.note} onChange={(e) => set({ note: e.target.value })} />
+        <input type="checkbox" className="size-4" checked={fields.phantom} onChange={(e) => set({ phantom: e.target.checked })} />{tx('Phantom 48 V')}</label>
+      <Field label={tx('Poznámka')} className="col-span-2 sm:col-span-3" maxLength={200} value={fields.note} onChange={(e) => set({ note: e.target.value })} />
       <div className="col-span-2 flex flex-wrap gap-2 sm:col-span-6">
-        <Button type="submit" size="sm" disabled={saving}>
-          Uložiť
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onCancel}>
-          Zrušiť
-        </Button>
+        <Button type="submit" size="sm" disabled={saving}>{tx('Uložiť')}</Button>
+        <Button variant="ghost" size="sm" onClick={onCancel}>{tx('Zrušiť')}</Button>
         {onDelete && (
           <Button variant="ghost" size="sm" className="ml-auto" onClick={onDelete}>
-            <Trash2 className="size-4" aria-hidden />
-            Odstrániť
-          </Button>
+            <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
         )}
       </div>
     </form>
@@ -210,13 +203,11 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
       actions={
         lines.length > 0 && (
           <LinkButton to={`/events/${event.id}/patch`} variant="outline" size="sm">
-            <Printer className="size-4" aria-hidden />
-            Tlačiť
-          </LinkButton>
+            <Printer className="size-4" aria-hidden />{tx('Tlačiť')}</LinkButton>
         )
       }
     >
-      {duplicates.size > 0 && <p className="mb-2 text-sm text-destructive">Kanál {[...duplicates].join(', ')} je v patch liste viackrát.</p>}
+      {duplicates.size > 0 && <p className="mb-2 text-sm text-destructive">{tx('Kanál')}{' '}{[...duplicates].join(', ')}{' '}{tx('je v patch liste viackrát.')}</p>}
       {lines.length > 0 && (
         <ul className="mb-3 divide-y overflow-hidden rounded-xl border bg-surface text-sm">
           {lines.map((line) =>
@@ -250,13 +241,11 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
       {canEdit && editing !== 'new' && (
         <div className="flex flex-wrap items-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setEditing('new')}>
-            <Plus className="size-4" aria-hidden />
-            Pridať kanál
-          </Button>
+            <Plus className="size-4" aria-hidden />{tx('Pridať kanál')}</Button>
           {(templates.data ?? []).some((template) => template.kind === 'sound') && (
             <>
-              <SelectField label="Šablóna" hideLabel className="w-52" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
-                <option value="">Zo šablóny…</option>
+              <SelectField label={tx('Šablóna')} hideLabel className="w-52" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+                <option value="">{tx('Zo šablóny…')}</option>
                 {(templates.data ?? [])
                   .filter((template) => template.kind === 'sound')
                   .map((template) => (
@@ -272,11 +261,9 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
                   disabled={fromTemplate.isPending}
                   onClick={() => {
                     const template = templates.data?.find((item) => item.id === templateId)
-                    if (template && (lines.length === 0 || window.confirm('Nahradiť doterajší patch list šablónou?'))) fromTemplate.mutate(template.lines as PatchFields[])
+                    if (template && (lines.length === 0 || window.confirm(tx('Nahradiť doterajší patch list šablónou?')))) fromTemplate.mutate(template.lines as PatchFields[])
                   }}
-                >
-                  Načítať
-                </Button>
+                >{tx('Načítať')}</Button>
               )}
             </>
           )}
@@ -286,18 +273,16 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
               size="sm"
               disabled={saveTemplate.isPending}
               onClick={() => {
-                const name = window.prompt('Názov šablóny patch listu (napr. Kapela – základ):', event.name)
+                const name = window.prompt(tx('Názov šablóny patch listu (napr. Kapela – základ):'), event.name)
                 if (name?.trim()) saveTemplate.mutate(name.trim())
               }}
             >
-              <BookmarkPlus className="size-4" aria-hidden />
-              Uložiť ako šablónu
-            </Button>
+              <BookmarkPlus className="size-4" aria-hidden />{tx('Uložiť ako šablónu')}</Button>
           )}
           {otherEvents.length > 0 && (
             <>
-              <SelectField label="Načítať z eventu" hideLabel className="w-56" value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)}>
-                <option value="">Načítať patch z eventu…</option>
+              <SelectField label={tx('Načítať z eventu')} hideLabel className="w-56" value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)}>
+                <option value="">{tx('Načítať patch z eventu…')}</option>
                 {otherEvents.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.name} ({formatDate(item.startsOn)})
@@ -309,18 +294,16 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
                   variant="outline"
                   size="sm"
                   disabled={copy.isPending}
-                  onClick={() => (lines.length === 0 || window.confirm('Nahradiť doterajší patch list patch listom z vybraného eventu?')) && copy.mutate()}
+                  onClick={() => (lines.length === 0 || window.confirm(tx('Nahradiť doterajší patch list patch listom z vybraného eventu?'))) && copy.mutate()}
                 >
-                  <Copy className="size-4" aria-hidden />
-                  Načítať
-                </Button>
+                  <Copy className="size-4" aria-hidden />{tx('Načítať')}</Button>
               )}
             </>
           )}
         </div>
       )}
-      {saveTemplate.isSuccess && <p className="mt-2 text-sm text-muted-foreground">Šablóna je uložená (Patch listy).</p>}
-      {(save.isError || remove.isError || copy.isError || fromTemplate.isError || saveTemplate.isError) && <p className="mt-2 text-sm text-destructive">Zmena sa nepodarila.</p>}
+      {saveTemplate.isSuccess && <p className="mt-2 text-sm text-muted-foreground">{tx('Šablóna je uložená (Patch listy).')}</p>}
+      {(save.isError || remove.isError || copy.isError || fromTemplate.isError || saveTemplate.isError) && <p className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>}
     </CollapsibleSection>
   )
 }

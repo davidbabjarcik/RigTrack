@@ -3,6 +3,7 @@ import { errorDetail } from '@/lib/supabase/errors'
 import { CATEGORY_COLORS, COLOR_CLASSES, COLOR_LABELS, DEFAULT_KIND_COLORS } from './categoryColors'
 import { kindColorKeys, saveKindColor, useKindColors, type KindColor } from './kindColors'
 import { EQUIPMENT_KINDS, KIND_LABELS, type EquipmentKind } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 /**
  * Nastavenia → Zoznamy: farba pruhu v zozname techniky podľa druhu (Svetlo, Zvuk…). Platí pre techniku bez kategórie
@@ -18,14 +19,12 @@ export function KindColorsSettings({ companyId, canEdit }: { companyId: string; 
   const current = colors.data ?? {}
   const label = (kind: EquipmentKind) => {
     const fallback = DEFAULT_KIND_COLORS[kind]
-    return fallback ? `Predvolená (${COLOR_LABELS[fallback].toLowerCase()})` : 'Predvolená (bez farby)'
+    return fallback ? tf('Predvolená ({0})', COLOR_LABELS[fallback].toLowerCase()) : tx('Predvolená (bez farby)')
   }
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm text-muted-foreground">
-        Farebný pruh pri technike v zozname. Ak má technika kategóriu s farbou, platí farba kategórie; inak táto farba podľa druhu.
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Farebný pruh pri technike v zozname. Ak má technika kategóriu s farbou, platí farba kategórie; inak táto farba podľa druhu.')}</p>
       <ul className="grid gap-2 rounded-xl border bg-surface p-3 sm:grid-cols-2">
         {EQUIPMENT_KINDS.map((kind) => {
           const value = current[kind]
@@ -33,7 +32,7 @@ export function KindColorsSettings({ companyId, canEdit }: { companyId: string; 
           return (
             <li key={kind} className="flex items-center gap-2">
               <span className={`h-6 w-1.5 shrink-0 rounded-full ${shown ? COLOR_CLASSES[shown] : 'bg-transparent ring-1 ring-border'}`} aria-hidden />
-              <span className="min-w-0 flex-1 truncate text-sm font-medium">{KIND_LABELS[kind]}</span>
+              <span className="min-w-0 flex-1 truncate text-sm font-medium">{tx(KIND_LABELS[kind])}</span>
               <select
                 aria-label={`Farba druhu ${KIND_LABELS[kind]}`}
                 className="h-9 rounded-lg border bg-surface px-2 text-sm"
@@ -44,10 +43,10 @@ export function KindColorsSettings({ companyId, canEdit }: { companyId: string; 
                 <option value="">{label(kind)}</option>
                 {CATEGORY_COLORS.map((option) => (
                   <option key={option} value={option}>
-                    {COLOR_LABELS[option]}
+                    {tx(COLOR_LABELS[option])}
                   </option>
                 ))}
-                <option value="none">Bez farby</option>
+                <option value="none">{tx('Bez farby')}</option>
               </select>
             </li>
           )
@@ -55,7 +54,7 @@ export function KindColorsSettings({ companyId, canEdit }: { companyId: string; 
       </ul>
       {save.isError && (
         <p className="text-sm text-destructive">
-          {/kind_colors/.test(String(save.error?.message ?? '')) ? 'Farby druhov ešte databáza nepozná – spustite v Supabase supabase/update-all.sql (migrácia 0115).' : `Nepodarilo sa uložiť. ${errorDetail(save.error)}`}
+          {/kind_colors/.test(String(save.error?.message ?? '')) ? tx('Farby druhov ešte databáza nepozná – spustite v Supabase supabase/update-all.sql (migrácia 0115).') : tf('Nepodarilo sa uložiť. {0}', errorDetail(save.error))}
         </p>
       )}
     </div>

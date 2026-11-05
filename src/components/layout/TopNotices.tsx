@@ -17,6 +17,7 @@ import { formatDateTime, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { yearReportYear } from '@/features/report/model'
 import { APP_VERSION } from '@/lib/version'
+import { tx } from '@/lib/i18n'
 
 /** Novinky vo firme (nový event, priradenie do posádky) s tlačidlom „prečítané“. */
 function NewsBell({ companyId, userId }: { companyId: string; userId: string }) {
@@ -33,13 +34,10 @@ function NewsBell({ companyId, userId }: { companyId: string; userId: string }) 
       <div className="flex flex-wrap items-center gap-2">
         <Bell className="size-4 shrink-0 text-sky-700 dark:text-sky-300" aria-hidden />
         <button type="button" className="flex-1 text-left font-medium" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {news.unread.length === 1 ? '1 novinka' : news.unread.length < 5 ? `${news.unread.length} novinky` : `${news.unread.length} noviniek`} vo firme
-          <span className="font-normal text-muted-foreground"> – {open ? 'skryť' : 'ukázať'}</span>
+          {news.unread.length === 1 ? tx('1 novinka') : news.unread.length < 5 ? `${news.unread.length} novinky` : `${news.unread.length} noviniek`}{' '}{tx('vo firme')}<span className="font-normal text-muted-foreground"> – {open ? tx('skryť') : tx('ukázať')}</span>
         </button>
         <Button variant="outline" size="sm" disabled={read.isPending} onClick={() => read.mutate()}>
-          <CheckCheck className="size-4" aria-hidden />
-          Prečítané
-        </Button>
+          <CheckCheck className="size-4" aria-hidden />{tx('Prečítané')}</Button>
       </div>
       {open && (
         <ul className="mt-2 flex flex-col gap-1">
@@ -103,12 +101,10 @@ function YearReportNotice() {
     <div role="status" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
       <FileChartColumn className="size-5 shrink-0 text-accent" aria-hidden />
       <span className="flex-1">
-        <span className="font-medium">Ročná správa {year} je pripravená.</span>{' '}
-        <Link to={`/report?year=${year}`} className="text-accent hover:underline" onClick={close}>
-          Pozrieť
-        </Link>
+        <span className="font-medium">{tx('Ročná správa')}{' '}{year}{' '}{tx('je pripravená.')}</span>{' '}
+        <Link to={`/report?year=${year}`} className="text-accent hover:underline" onClick={close}>{tx('Pozrieť')}</Link>
       </span>
-      <button type="button" aria-label="Zavrieť" className="rounded p-1 text-muted-foreground hover:bg-accent/20" onClick={close}>
+      <button type="button" aria-label={tx('Zavrieť')} className="rounded p-1 text-muted-foreground hover:bg-accent/20" onClick={close}>
         <X className="size-4" aria-hidden />
       </button>
     </div>
@@ -132,12 +128,10 @@ function UpdateNotice() {
     <div role="status" className="flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm dark:border-emerald-900 dark:bg-emerald-950/40">
       <Sparkles className="size-5 shrink-0 text-emerald-600" aria-hidden />
       <span className="flex-1">
-        <span className="font-medium">RigTrack má novú verziu {APP_VERSION}.</span>{' '}
-        <Link to="/changelog" className="text-accent hover:underline" onClick={close}>
-          Pozrite, čo je nové
-        </Link>
+        <span className="font-medium">{tx('RigTrack má novú verziu')}{' '}{APP_VERSION}.</span>{' '}
+        <Link to="/changelog" className="text-accent hover:underline" onClick={close}>{tx('Pozrite, čo je nové')}</Link>
       </span>
-      <button type="button" aria-label="Zavrieť" className="rounded p-1 text-muted-foreground hover:bg-emerald-100 dark:hover:bg-emerald-900/40" onClick={close}>
+      <button type="button" aria-label={tx('Zavrieť')} className="rounded p-1 text-muted-foreground hover:bg-emerald-100 dark:hover:bg-emerald-900/40" onClick={close}>
         <X className="size-4" aria-hidden />
       </button>
     </div>
@@ -191,8 +185,7 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
         <Link to="/company/select?view=profile" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
           <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />
           <span className="flex-1">
-            <span className="font-medium">Doplňte svoj profil</span> – meno, telefón a ďalšie údaje zadáte raz pre všetky firmy.
-          </span>
+            <span className="font-medium">{tx('Doplňte svoj profil')}</span>{' '}{tx('– meno, telefón a ďalšie údaje zadáte raz pre všetky firmy.')}</span>
         </Link>
       )}
       {/* Kartu zamestnanca vyplní profil; výzva len keď profil (migrácia) nie je k dispozícii. */}
@@ -200,18 +193,16 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
         <Link to="/welcome" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm hover:bg-accent/20">
           <UserRoundPen className="size-5 shrink-0 text-accent" aria-hidden />
           <span className="flex-1">
-            <span className="font-medium">Doplňte svoje údaje</span> – telefón, e-mail, fotka a pozícia. Zapíšu sa do vašej karty zamestnanca.
-          </span>
+            <span className="font-medium">{tx('Doplňte svoje údaje')}</span>{' '}{tx('– telefón, e-mail, fotka a pozícia. Zapíšu sa do vašej karty zamestnanca.')}</span>
         </Link>
       )}
       {fromProfile.length > 0 && !onWelcome && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
           <Smartphone className="size-5 shrink-0 text-accent" aria-hidden />
           <span className="min-w-0 flex-1">
-            <span className="font-medium">Vaše zariadenia z profilu</span> ({fromProfile.map((device) => device.name || DEVICE_KIND_LABELS[device.kind]).join(', ')}) v tejto firme ešte nie sú.
-          </span>
+            <span className="font-medium">{tx('Vaše zariadenia z profilu')}</span> ({fromProfile.map((device) => device.name || DEVICE_KIND_LABELS[device.kind]).join(', ')}{tx(') v tejto firme ešte nie sú.')}</span>
           <Button size="sm" disabled={copyDevices.isPending} onClick={() => copyDevices.mutate()}>
-            {copyDevices.isPending ? 'Pridávam…' : 'Pridať aj sem'}
+            {copyDevices.isPending ? tx('Pridávam…') : tx('Pridať aj sem')}
           </Button>
         </div>
       )}
@@ -223,9 +214,7 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
         >
           <Smartphone className="size-5 shrink-0 text-destructive" aria-hidden />
           <span className="flex-1">
-            <span className="font-medium text-destructive">Chýbajú vaše zariadenia:</span> {missing.map((kind) => DEVICE_KIND_LABELS[kind]).join(', ')}. Zapíšte ich s MAC adresou
-            v Nastaveniach → Účet. Ak niektoré nemáte, výnimku vám dá admin.
-          </span>
+            <span className="font-medium text-destructive">{tx('Chýbajú vaše zariadenia:')}</span> {missing.map((kind) => DEVICE_KIND_LABELS[kind]).join(', ')}{tx('. Zapíšte ich s MAC adresou v Nastaveniach → Účet. Ak niektoré nemáte, výnimku vám dá admin.')}</span>
         </Link>
       )}
       {celebrations.length > 0 && !hiddenCelebrations && (
@@ -235,19 +224,17 @@ function Notices({ companyId, userId }: { companyId: string; userId: string }) {
             {celebrations.map((item) => (
               <li key={`${item.kind}-${item.person.key}-${item.date}`}>
                 {item.person.memberId === userId && item.date === today ? (
-                  <span className="font-medium">Všetko najlepšie {item.kind === 'birthday' ? 'k narodeninám' : 'k meninám'}! 🎉</span>
+                  <span className="font-medium">{tx('Všetko najlepšie')}{' '}{item.kind === 'birthday' ? tx('k narodeninám') : tx('k meninám')}! 🎉</span>
                 ) : (
                   <>
                     {describeCelebration(item, today)} –{' '}
-                    <Link to={`/staff/${item.person.key}`} className="text-accent hover:underline">
-                      zablahoželajte
-                    </Link>
+                    <Link to={`/staff/${item.person.key}`} className="text-accent hover:underline">{tx('zablahoželajte')}</Link>
                   </>
                 )}
               </li>
             ))}
           </ul>
-          <button type="button" aria-label="Skryť" className="rounded p-1 text-muted-foreground hover:bg-pink-100 dark:hover:bg-pink-900/40" onClick={() => setHiddenCelebrations(true)}>
+          <button type="button" aria-label={tx('Skryť')} className="rounded p-1 text-muted-foreground hover:bg-pink-100 dark:hover:bg-pink-900/40" onClick={() => setHiddenCelebrations(true)}>
             <X className="size-4" aria-hidden />
           </button>
         </div>

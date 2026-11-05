@@ -3,6 +3,7 @@ import { Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/format'
 import { creationKeys, decideCompanyRequest, fetchPendingRequests } from './creation'
+import { tx } from '@/lib/i18n'
 
 /** Vývojár: žiadosti o založenie novej firmy – schváliť (povolí zakladanie) alebo zamietnuť. */
 export function CompanyRequestsAdmin() {
@@ -13,14 +14,12 @@ export function CompanyRequestsAdmin() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: creationKeys.pending }),
   })
 
-  if (pending.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Žiadosti zatiaľ nie sú dostupné – treba spustiť migráciu 0094.</p>
+  if (pending.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Žiadosti zatiaľ nie sú dostupné – treba spustiť migráciu 0094.')}</p>
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm text-muted-foreground">
-        Novú firmu smie založiť len vývojár alebo človek, ktorému to povolíte. Schválením žiadosti mu založenie povolíte a príde mu upozornenie.
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Novú firmu smie založiť len vývojár alebo človek, ktorému to povolíte. Schválením žiadosti mu založenie povolíte a príde mu upozornenie.')}</p>
       {(pending.data ?? []).length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-4 text-center text-sm text-muted-foreground">Žiadne čakajúce žiadosti.</p>
+        <p className="rounded-xl border border-dashed bg-surface p-4 text-center text-sm text-muted-foreground">{tx('Žiadne čakajúce žiadosti.')}</p>
       ) : (
         <ul className="divide-y rounded-xl border bg-surface">
           {pending.data!.map((request) => (
@@ -33,18 +32,14 @@ export function CompanyRequestsAdmin() {
                 {request.note && <span className="block">{request.note}</span>}
               </span>
               <Button size="sm" disabled={decide.isPending} onClick={() => decide.mutate({ id: request.id, approve: true })}>
-                <Check className="size-4" aria-hidden />
-                Schváliť
-              </Button>
+                <Check className="size-4" aria-hidden />{tx('Schváliť')}</Button>
               <Button size="sm" variant="ghost" disabled={decide.isPending} onClick={() => decide.mutate({ id: request.id, approve: false })}>
-                <X className="size-4" aria-hidden />
-                Zamietnuť
-              </Button>
+                <X className="size-4" aria-hidden />{tx('Zamietnuť')}</Button>
             </li>
           ))}
         </ul>
       )}
-      {decide.isError && <p className="text-sm text-destructive">Nepodarilo sa.</p>}
+      {decide.isError && <p className="text-sm text-destructive">{tx('Nepodarilo sa.')}</p>}
     </div>
   )
 }

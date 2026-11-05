@@ -2,6 +2,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { FIXED_PINNED, NAV_ITEMS, PINNED_COUNT } from '@/lib/navigation'
 import { usePinnedNav } from '@/lib/usePinnedNav'
+import { tx, tf } from '@/lib/i18n'
 
 export function CustomizeMenuPage() {
   const { pinned, setPinned, reset } = usePinnedNav()
@@ -16,12 +17,10 @@ export function CustomizeMenuPage() {
   return (
     <>
       <PageHeader
-        title="Prispôsobiť lištu"
-        description={`Prvý je vždy ${fixed.label}, k nemu vyberte ${PINNED_COUNT} moduly. Nastavenie platí len na tomto zariadení.`}
+        title={tx('Prispôsobiť lištu')}
+        description={tf('Prvý je vždy {0}, k nemu vyberte {1} moduly. Nastavenie platí len na tomto zariadení.', fixed.label, PINNED_COUNT)}
         action={
-          <Button variant="outline" size="sm" onClick={reset}>
-            Obnoviť
-          </Button>
+          <Button variant="outline" size="sm" onClick={reset}>{tx('Obnoviť')}</Button>
         }
       />
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
@@ -31,7 +30,7 @@ export function CustomizeMenuPage() {
             <li key={item.id}>
               <label className="flex min-h-14 cursor-pointer items-center gap-3 px-4 hover:bg-muted">
                 <item.icon className="size-5 text-muted-foreground" aria-hidden />
-                <span className="flex-1 font-medium">{item.label}</span>
+                <span className="flex-1 font-medium">{tx(item.label)}</span>
                 <input
                   type="checkbox"
                   className="size-5 accent-(--accent)"

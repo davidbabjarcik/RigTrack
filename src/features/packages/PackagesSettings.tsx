@@ -8,6 +8,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import type { Equipment } from '@/features/equipment/model'
 import { deletePackage, fetchPackages, packageKeys, savePackage } from './api'
 import { describePackage, PACKAGE_CATEGORIES, packageSchema, type EquipmentPackage, type PackageValues } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const EMPTY: PackageValues = { name: '', category: '', note: '', items: [], cases: [] }
 
@@ -41,8 +42,8 @@ function PackageForm({
   return (
     <div className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Názov *" placeholder="napr. Malý zvukový balík" maxLength={120} value={values.name} onChange={(event) => set({ name: event.target.value })} />
-        <Field label="Kategória" list={categoryList} placeholder="napr. Zvuk" maxLength={60} value={values.category} onChange={(event) => set({ category: event.target.value })} />
+        <Field label={tx('Názov *')} placeholder={tx('napr. Malý zvukový balík')} maxLength={120} value={values.name} onChange={(event) => set({ name: event.target.value })} />
+        <Field label={tx('Kategória')} list={categoryList} placeholder={tx('napr. Zvuk')} maxLength={60} value={values.category} onChange={(event) => set({ category: event.target.value })} />
         <datalist id={categoryList}>
           {PACKAGE_CATEGORIES.map((category) => (
             <option key={category} value={category} />
@@ -51,48 +52,45 @@ function PackageForm({
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium">Celé cases</legend>
+        <legend className="mb-1 text-sm font-medium">{tx('Celé cases')}</legend>
         {values.cases.map((caseId, index) => (
           <div key={index} className="flex items-end gap-2">
-            <SelectField label="Case" hideLabel className="flex-1" value={caseId} onChange={(event) => set({ cases: values.cases.map((id, i) => (i === index ? event.target.value : id)) })}>
-              <option value="">— vyberte case —</option>
+            <SelectField label={tx('Case')} hideLabel className="flex-1" value={caseId} onChange={(event) => set({ cases: values.cases.map((id, i) => (i === index ? event.target.value : id)) })}>
+              <option value="">{tx('— vyberte case —')}</option>
               {cases.map((box) => (
                 <option key={box.id} value={box.id}>
                   {box.name}
                 </option>
               ))}
             </SelectField>
-            <Button variant="ghost" aria-label={`Odobrať case ${index + 1}`} onClick={() => set({ cases: values.cases.filter((_, i) => i !== index) })}>
+            <Button variant="ghost" aria-label={tf('Odobrať case {0}', index + 1)} onClick={() => set({ cases: values.cases.filter((_, i) => i !== index) })}>
               <Trash2 className="size-4" aria-hidden />
             </Button>
           </div>
         ))}
         <Button variant="outline" size="sm" className="self-start" onClick={() => set({ cases: [...values.cases, ''] })}>
-          <Plus className="size-4" aria-hidden />
-          Pridať case
-        </Button>
+          <Plus className="size-4" aria-hidden />{tx('Pridať case')}</Button>
       </fieldset>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium">Technika</legend>
+        <legend className="mb-1 text-sm font-medium">{tx('Technika')}</legend>
         {values.items.map((item, index) => (
           <div key={index} className="flex items-end gap-2">
             <SelectField
-              label="Technika"
+              label={tx('Technika')}
               hideLabel
               className="flex-1"
               value={item.equipmentId}
               onChange={(event) => set({ items: values.items.map((other, i) => (i === index ? { ...other, equipmentId: event.target.value } : other)) })}
             >
-              <option value="">— vyberte techniku —</option>
+              <option value="">{tx('— vyberte techniku —')}</option>
               {equipment.map((piece) => (
                 <option key={piece.id} value={piece.id}>
-                  {piece.name} ({piece.quantity} ks)
-                </option>
+                  {piece.name} ({piece.quantity}{' '}{tx('ks)')}</option>
               ))}
             </SelectField>
             <Field
-              label="Počet"
+              label={tx('Počet')}
               hideLabel
               type="number"
               min={1}
@@ -102,32 +100,28 @@ function PackageForm({
                 set({ items: values.items.map((other, i) => (i === index ? { ...other, quantity: event.target.value === '' ? Number.NaN : Number(event.target.value) } : other)) })
               }
             />
-            <Button variant="ghost" aria-label={`Odobrať techniku ${index + 1}`} onClick={() => set({ items: values.items.filter((_, i) => i !== index) })}>
+            <Button variant="ghost" aria-label={tf('Odobrať techniku {0}', index + 1)} onClick={() => set({ items: values.items.filter((_, i) => i !== index) })}>
               <Trash2 className="size-4" aria-hidden />
             </Button>
           </div>
         ))}
         <Button variant="outline" size="sm" className="self-start" onClick={() => set({ items: [...values.items, { equipmentId: '', quantity: 1 }] })}>
-          <Plus className="size-4" aria-hidden />
-          Pridať techniku
-        </Button>
+          <Plus className="size-4" aria-hidden />{tx('Pridať techniku')}</Button>
       </fieldset>
 
-      <TextareaField label="Poznámka" rows={2} maxLength={500} value={values.note} onChange={(event) => set({ note: event.target.value })} />
+      <TextareaField label={tx('Poznámka')} rows={2} maxLength={500} value={values.note} onChange={(event) => set({ note: event.target.value })} />
 
-      {!parsed.success && values.name.trim() !== '' && <p className="text-sm text-destructive">Pri každom riadku vyberte techniku alebo case a zadajte počet.</p>}
+      {!parsed.success && values.name.trim() !== '' && <p className="text-sm text-destructive">{tx('Pri každom riadku vyberte techniku alebo case a zadajte počet.')}</p>}
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">
-          {duplicate ? 'Balík s týmto názvom už existuje.' : 'Uloženie zlyhalo. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.'}
+          {duplicate ? tx('Balík s týmto názvom už existuje.') : tx('Uloženie zlyhalo. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}
         </p>
       )}
       <div className="flex gap-2">
         <Button disabled={!parsed.success || values.items.length + values.cases.length === 0 || save.isPending} onClick={() => save.mutate()}>
-          {save.isPending ? 'Ukladám…' : 'Uložiť balík'}
+          {save.isPending ? tx('Ukladám…') : tx('Uložiť balík')}
         </Button>
-        <Button variant="ghost" onClick={onDone}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" onClick={onDone}>{tx('Zrušiť')}</Button>
       </div>
     </div>
   )
@@ -145,8 +139,8 @@ export function PackagesSettings({ companyId }: { companyId: string }) {
     onSettled: () => queryClient.invalidateQueries({ queryKey: packageKeys.list(companyId) }),
   })
 
-  if (packages.isError) return <p className="text-sm text-destructive">Balíky sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
-  if (!packages.data || !equipment.data || !cases.data) return <p className="text-sm text-muted-foreground">Načítavam…</p>
+  if (packages.isError) return <p className="text-sm text-destructive">{tx('Balíky sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
+  if (!packages.data || !equipment.data || !cases.data) return <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
   const lendable = [...equipment.data].filter((item) => item.status !== 'retired').sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   const caseList = [...cases.data].sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   const form = (initial: EquipmentPackage | null) => (
@@ -155,9 +149,7 @@ export function PackagesSettings({ companyId }: { companyId: string }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">
-        Balík je vopred poskladaná sada techniky a cases, napr. „Malý zvukový balík“. Pri evente alebo výpožičke ho pridáte jedným klikom.
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Balík je vopred poskladaná sada techniky a cases, napr. „Malý zvukový balík“. Pri evente alebo výpožičke ho pridáte jedným klikom.')}</p>
       {packages.data.length > 0 && (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {packages.data.map((pkg) =>
@@ -175,16 +167,16 @@ export function PackagesSettings({ companyId }: { companyId: string }) {
                   </span>
                   <span className="block truncate text-sm text-muted-foreground">{describePackage(pkg, equipment.data, cases.data)}</span>
                 </span>
-                <Button variant="ghost" size="sm" aria-label={`Upraviť balík ${pkg.name}`} onClick={() => setEditing(pkg.id)}>
+                <Button variant="ghost" size="sm" aria-label={tf('Upraviť balík {0}', pkg.name)} onClick={() => setEditing(pkg.id)}>
                   <Pencil className="size-4" aria-hidden />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  aria-label={`Zmazať balík ${pkg.name}`}
+                  aria-label={tf('Zmazať balík {0}', pkg.name)}
                   disabled={remove.isPending}
                   onClick={() => {
-                    if (window.confirm(`Zmazať balík „${pkg.name}“? Technika ostane, zmaže sa len balík.`)) remove.mutate(pkg.id)
+                    if (window.confirm(tf('Zmazať balík „{0}“? Technika ostane, zmaže sa len balík.', pkg.name))) remove.mutate(pkg.id)
                   }}
                 >
                   <Trash2 className="size-4" aria-hidden />
@@ -198,9 +190,7 @@ export function PackagesSettings({ companyId }: { companyId: string }) {
         form(null)
       ) : (
         <Button variant="outline" className="self-start" onClick={() => setEditing('new')}>
-          <Plus className="size-4" aria-hidden />
-          Nový balík
-        </Button>
+          <Plus className="size-4" aria-hidden />{tx('Nový balík')}</Button>
       )}
     </div>
   )

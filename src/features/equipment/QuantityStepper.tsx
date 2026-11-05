@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { equipmentKeys, setEquipmentQuantity } from './api'
+import { tx } from '@/lib/i18n'
 
 type Props = { companyId: string; equipmentId: string; quantity: number; canEdit: boolean }
 
@@ -21,7 +22,7 @@ export function QuantityStepper({ companyId, equipmentId, quantity, canEdit }: P
       <Button
         variant="outline"
         size="sm"
-        aria-label="Ubrať kus"
+        aria-label={tx('Ubrať kus')}
         disabled={change.isPending || quantity <= 0}
         onClick={() => change.mutate(quantity - 1)}
       >
@@ -33,7 +34,7 @@ export function QuantityStepper({ companyId, equipmentId, quantity, canEdit }: P
       <Button
         variant="outline"
         size="sm"
-        aria-label="Pridať kus"
+        aria-label={tx('Pridať kus')}
         disabled={change.isPending}
         onClick={() => change.mutate(quantity + 1)}
       >

@@ -4,6 +4,7 @@ import { LinkButton } from '@/components/ui/button'
 import { sortServiceRecords } from './model'
 import { ServiceRecordRow } from './ServiceRecordRow'
 import { useServiceRecords } from './useServiceRecords'
+import { tx } from '@/lib/i18n'
 
 type Props = { companyId: string; equipmentId: string; canEdit: boolean }
 
@@ -14,13 +15,11 @@ export function EquipmentServiceHistory({ companyId, equipmentId, canEdit }: Pro
   if (mine.length === 0 && !canEdit) return null
 
   return (
-    <CollapsibleSection id="equipment.service" title={<>Servis ({mine.length})</>} className="mt-6" actions={
+    <CollapsibleSection id="equipment.service" title={<>{tx('Servis (')}{mine.length})</>} className="mt-6" actions={
         <>
         {canEdit && (
           <LinkButton to={`/service/new?equipment=${equipmentId}`} variant="outline" size="sm">
-            <Plus className="size-4" aria-hidden />
-            Nový záznam
-          </LinkButton>
+            <Plus className="size-4" aria-hidden />{tx('Nový záznam')}</LinkButton>
         )}
         </>
       }>

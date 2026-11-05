@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/format'
 import { appErrorKeys, deleteAppErrors, fetchAppErrors, groupAppErrors, resolveAppErrors, SOURCE_LABELS, type AppErrorGroup } from './appErrors'
+import { tx, tf } from '@/lib/i18n'
 
 /** Vývojár: chyby, ktoré appka zachytila sama (spadnutá stránka, neošetrená chyba) – zoskupené, s počtom ľudí a verziami. */
 export function AppErrorsPanel() {
@@ -15,9 +16,9 @@ export function AppErrorsPanel() {
   const resolve = useMutation({ mutationFn: ({ ids, resolved }: { ids: string[]; resolved: boolean }) => resolveAppErrors(ids, resolved), onSettled: refresh })
   const remove = useMutation({ mutationFn: deleteAppErrors, onSettled: refresh })
 
-  if (errors.isPending) return <p className="text-sm text-muted-foreground">Načítavam…</p>
+  if (errors.isPending) return <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
   if (errors.isError)
-    return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Zoznam chýb zatiaľ nie je dostupný – treba spustiť migráciu 0127 (supabase/update-all.sql).</p>
+    return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Zoznam chýb zatiaľ nie je dostupný – treba spustiť migráciu 0127 (supabase/update-all.sql).')}</p>
 
   const groups = groupAppErrors(errors.data)
   const openGroups = groups.filter((group) => !group.resolved)
@@ -28,15 +29,10 @@ export function AppErrorsPanel() {
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <p className="flex-1 text-muted-foreground">
-          {openGroups.length === 0 ? 'Žiadne nevyriešené chyby.' : `${openGroups.length} nevyriešených chýb`} Appka ich ukladá sama, keď niekomu spadne stránka alebo nastane neošetrená chyba.
-        </p>
+          {openGroups.length === 0 ? tx('Žiadne nevyriešené chyby.') : tf('{0} nevyriešených chýb', openGroups.length)}{' '}{tx('Appka ich ukladá sama, keď niekomu spadne stránka alebo nastane neošetrená chyba.')}</p>
         <label className="flex items-center gap-2">
-          <input type="checkbox" checked={showResolved} onChange={(event) => setShowResolved(event.target.checked)} />
-          Aj vyriešené
-        </label>
-        <Button size="sm" variant="outline" onClick={() => void errors.refetch()}>
-          Obnoviť
-        </Button>
+          <input type="checkbox" checked={showResolved} onChange={(event) => setShowResolved(event.target.checked)} />{tx('Aj vyriešené')}</label>
+        <Button size="sm" variant="outline" onClick={() => void errors.refetch()}>{tx('Obnoviť')}</Button>
       </div>
       {shown.length > 0 && (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface text-sm">
@@ -48,15 +44,13 @@ export function AppErrorsPanel() {
               busy={busy}
               onToggle={() => setOpen(open === group.ids[0] ? null : group.ids[0])}
               onResolve={() => resolve.mutate({ ids: group.ids, resolved: !group.resolved })}
-              onDelete={() => window.confirm('Zmazať túto chybu zo zoznamu?') && remove.mutate(group.ids)}
+              onDelete={() => window.confirm(tx('Zmazať túto chybu zo zoznamu?')) && remove.mutate(group.ids)}
             />
           ))}
         </ul>
       )}
       {(resolve.isError || remove.isError) && (
-        <p role="alert" className="text-sm text-destructive">
-          Zmenu sa nepodarilo uložiť.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Zmenu sa nepodarilo uložiť.')}</p>
       )}
     </div>
   )
@@ -73,31 +67,31 @@ function ErrorRow({ group, expanded, busy, onToggle, onResolve, onDelete }: RowP
           <span className="min-w-0">
             <span className="block font-medium break-words">{group.message}</span>
             <span className="block text-muted-foreground">
-              {SOURCE_LABELS[group.source]} · {group.total}× · {group.users.length} {group.users.length === 1 ? 'človek' : group.users.length < 5 ? 'ľudia' : 'ľudí'} · naposledy{' '}
-              {formatDateTime(group.lastAt)} · verzia {group.versions.join(', ') || '?'}
+              {tx(SOURCE_LABELS[group.source])} · {group.total}× · {group.users.length} {group.users.length === 1 ? tx('človek') : group.users.length < 5 ? tx('ľudia') : tx('ľudí')}{' '}{tx('· naposledy')}{' '}
+              {formatDateTime(group.lastAt)}{' '}{tx('· verzia')}{' '}{group.versions.join(', ') || '?'}
             </span>
           </span>
         </button>
         <Button size="sm" variant="outline" disabled={busy} onClick={onResolve}>
           {group.resolved ? <RotateCcw className="size-4" aria-hidden /> : <Check className="size-4" aria-hidden />}
-          {group.resolved ? 'Otvoriť' : 'Vyriešené'}
+          {group.resolved ? tx('Otvoriť') : tx('Vyriešené')}
         </Button>
-        <Button size="sm" variant="ghost" className="size-8 p-0" aria-label="Zmazať chybu" disabled={busy} onClick={onDelete}>
+        <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={tx('Zmazať chybu')} disabled={busy} onClick={onDelete}>
           <Trash2 className="size-4" aria-hidden />
         </Button>
       </div>
       {expanded && (
         <div className="flex flex-col gap-2 border-t bg-muted/30 px-3 py-3">
           <p>
-            <span className="text-muted-foreground">Kto: </span>
+            <span className="text-muted-foreground">{tx('Kto:')}{' '}</span>
             {group.users.join(', ')}
           </p>
           <p>
-            <span className="text-muted-foreground">Stránky: </span>
+            <span className="text-muted-foreground">{tx('Stránky:')}{' '}</span>
             {group.pages.join(', ') || '–'}
           </p>
           <p>
-            <span className="text-muted-foreground">Prvýkrát: </span>
+            <span className="text-muted-foreground">{tx('Prvýkrát:')}{' '}</span>
             {formatDateTime(group.firstAt)}
           </p>
           {group.stack && <pre className="max-h-64 overflow-auto rounded-lg border bg-background p-2 text-xs whitespace-pre-wrap">{group.stack}</pre>}

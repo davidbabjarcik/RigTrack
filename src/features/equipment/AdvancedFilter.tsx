@@ -17,6 +17,7 @@ import {
   type Equipment,
   type EquipmentFilter,
 } from './model'
+import { tx } from '@/lib/i18n'
 
 type Props = {
   filter: EquipmentFilter
@@ -43,93 +44,89 @@ export function AdvancedFilter({ filter, onChange, items, owners, linkedCompanie
     <div className="sm:col-span-2 lg:col-span-4">
       {/* Na mobile vedľa seba rovnako veľké. */}
       <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap">
-        <SelectField label="Triediť" hideLabel className="sm:w-56" value={filter.sort ?? 'name'} onChange={(e) => onChange({ sort: e.target.value as EquipmentFilter['sort'] })}>
+        <SelectField label={tx('Triediť')} hideLabel className="sm:w-56" value={filter.sort ?? 'name'} onChange={(e) => onChange({ sort: e.target.value as EquipmentFilter['sort'] })}>
           {EQUIPMENT_SORTS.map((sort) => (
             <option key={sort} value={sort}>
-              {SORT_LABELS[sort]}
+              {tx(SORT_LABELS[sort])}
             </option>
           ))}
         </SelectField>
         <Button variant="outline" aria-expanded={open} onClick={() => setOpen(!open)}>
-          <SlidersHorizontal className="size-4" aria-hidden />
-          Viac filtrov{count > 0 && ` (${count})`}
+          <SlidersHorizontal className="size-4" aria-hidden />{tx('Viac filtrov')}{count > 0 && ` (${count})`}
         </Button>
         {count > 0 && (
           <button
             type="button"
             className="col-span-2 px-2 py-2 text-left text-sm text-accent hover:underline"
             onClick={() => onChange({ company: '', status: '', categoryId: '', locationId: '', caseId: '', kind: '', audioType: '', owner: '', manufacturer: '', attention: '', capture: '', purchasedYear: '', withNetwork: false, withLinks: false })}
-          >
-            Zrušiť filtre
-          </button>
+          >{tx('Zrušiť filtre')}</button>
         )}
       </div>
       {open && (
         <div className="mt-3 grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
           {linkedCompanies.length > 0 && (
-            <SelectField label="Firma" value={filter.company ?? ''} onChange={(e) => onChange({ company: e.target.value })}>
-              <option value="">Len naša technika</option>
-              <option value="all">Naša aj prepojených firiem</option>
+            <SelectField label={tx('Firma')} value={filter.company ?? ''} onChange={(e) => onChange({ company: e.target.value })}>
+              <option value="">{tx('Len naša technika')}</option>
+              <option value="all">{tx('Naša aj prepojených firiem')}</option>
               {linkedCompanies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  Len {company.name}
+                <option key={company.id} value={company.id}>{tx('Len')}{' '}{company.name}
                 </option>
               ))}
             </SelectField>
           )}
           {children}
-          <SelectField label="Druh" value={filter.kind ?? ''} onChange={(e) => onChange({ kind: e.target.value as EquipmentFilter['kind'] })}>
-            <option value="">Všetky druhy</option>
+          <SelectField label={tx('Druh')} value={filter.kind ?? ''} onChange={(e) => onChange({ kind: e.target.value as EquipmentFilter['kind'] })}>
+            <option value="">{tx('Všetky druhy')}</option>
             {EQUIPMENT_KINDS.map((kind) => (
               <option key={kind} value={kind}>
-                {KIND_LABELS[kind]}
+                {tx(KIND_LABELS[kind])}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Typ zvuku" value={filter.audioType ?? ''} onChange={(e) => onChange({ audioType: e.target.value as EquipmentFilter['audioType'] })}>
-            <option value="">Všetky typy</option>
+          <SelectField label={tx('Typ zvuku')} value={filter.audioType ?? ''} onChange={(e) => onChange({ audioType: e.target.value as EquipmentFilter['audioType'] })}>
+            <option value="">{tx('Všetky typy')}</option>
             {AUDIO_TYPES.map((type) => (
               <option key={type} value={type}>
-                {AUDIO_TYPE_LABELS[type]}
+                {tx(AUDIO_TYPE_LABELS[type])}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Vlastník" value={filter.owner ?? ''} onChange={(e) => onChange({ owner: e.target.value })}>
-            <option value="">Všetci</option>
-            <option value={COMPANY_OWNER}>Firemná technika</option>
+          <SelectField label={tx('Vlastník')} value={filter.owner ?? ''} onChange={(e) => onChange({ owner: e.target.value })}>
+            <option value="">{tx('Všetci')}</option>
+            <option value={COMPANY_OWNER}>{tx('Firemná technika')}</option>
             {ownerOptions.map((owner) => (
               <option key={owner.staffId} value={owner.staffId}>
                 {owner.name}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Výrobca" value={filter.manufacturer ?? ''} onChange={(e) => onChange({ manufacturer: e.target.value })}>
-            <option value="">Všetci výrobcovia</option>
+          <SelectField label={tx('Výrobca')} value={filter.manufacturer ?? ''} onChange={(e) => onChange({ manufacturer: e.target.value })}>
+            <option value="">{tx('Všetci výrobcovia')}</option>
             {manufacturers.map((name) => (
               <option key={name} value={name}>
                 {name}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Upozornenie" value={filter.attention ?? ''} onChange={(e) => onChange({ attention: e.target.value as EquipmentFilter['attention'] })}>
-            <option value="">Bez ohľadu</option>
-            <option value="service">Servis po termíne / do 30 dní</option>
-            <option value="restock">Treba dokúpiť</option>
-            <option value="hours">Odčítať prevádzkové hodiny</option>
+          <SelectField label={tx('Upozornenie')} value={filter.attention ?? ''} onChange={(e) => onChange({ attention: e.target.value as EquipmentFilter['attention'] })}>
+            <option value="">{tx('Bez ohľadu')}</option>
+            <option value="service">{tx('Servis po termíne / do 30 dní')}</option>
+            <option value="restock">{tx('Treba dokúpiť')}</option>
+            <option value="hours">{tx('Odčítať prevádzkové hodiny')}</option>
           </SelectField>
           {hasLights && (
-            <SelectField label="Svetlá – sedí s Capture" value={filter.capture ?? ''} onChange={(e) => onChange({ capture: e.target.value as EquipmentFilter['capture'] })}>
-              <option value="">Bez ohľadu</option>
+            <SelectField label={tx('Svetlá – sedí s Capture')} value={filter.capture ?? ''} onChange={(e) => onChange({ capture: e.target.value as EquipmentFilter['capture'] })}>
+              <option value="">{tx('Bez ohľadu')}</option>
               {CAPTURE_MATCHES.map((match) => (
                 <option key={match} value={match}>
-                  {CAPTURE_MATCH_LABELS[match]}
+                  {tx(CAPTURE_MATCH_LABELS[match])}
                 </option>
               ))}
-              <option value="unset">Nezistené</option>
+              <option value="unset">{tx('Nezistené')}</option>
             </SelectField>
           )}
-          <SelectField label="Rok nákupu" value={filter.purchasedYear ?? ''} onChange={(e) => onChange({ purchasedYear: e.target.value })}>
-            <option value="">Všetky roky</option>
+          <SelectField label={tx('Rok nákupu')} value={filter.purchasedYear ?? ''} onChange={(e) => onChange({ purchasedYear: e.target.value })}>
+            <option value="">{tx('Všetky roky')}</option>
             {years.map((year) => (
               <option key={year} value={year}>
                 {year}
@@ -138,13 +135,9 @@ export function AdvancedFilter({ filter, onChange, items, owners, linkedCompanie
           </SelectField>
           <div className="flex flex-col justify-end gap-2 pb-1">
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" className="size-4" checked={Boolean(filter.withNetwork)} onChange={(e) => onChange({ withNetwork: e.target.checked })} />
-              Má IP / MAC adresu
-            </label>
+              <input type="checkbox" className="size-4" checked={Boolean(filter.withNetwork)} onChange={(e) => onChange({ withNetwork: e.target.checked })} />{tx('Má IP / MAC adresu')}</label>
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" className="size-4" checked={Boolean(filter.withLinks)} onChange={(e) => onChange({ withLinks: e.target.checked })} />
-              Má odkazy (návod, fixtúra)
-            </label>
+              <input type="checkbox" className="size-4" checked={Boolean(filter.withLinks)} onChange={(e) => onChange({ withLinks: e.target.checked })} />{tx('Má odkazy (návod, fixtúra)')}</label>
           </div>
         </div>
       )}

@@ -3,6 +3,7 @@ import type { Membership } from '@/features/companies/company-context'
 import { formatMoney, todayIso } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { statsByCompany, summarize, useMyStats, type MyStatsFilter, type Ranked } from './myStats'
+import { tx, tf } from '@/lib/i18n'
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'máj', 'jún', 'júl', 'aug', 'sep', 'okt', 'nov', 'dec']
 const MONTH_NAMES = ['január', 'február', 'marec', 'apríl', 'máj', 'jún', 'júl', 'august', 'september', 'október', 'november', 'december']
@@ -23,8 +24,8 @@ export function MyStatsCard({ userId, memberships }: { userId: string; membershi
   const thisYear = todayIso().slice(0, 4)
   const [filter, setFilter] = useState<MyStatsFilter>({ companyId: '', year: thisYear, month: '' })
   const [metric, setMetric] = useState<Metric>('events')
-  if (stats.isPending) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Načítavam…</p>
-  if (stats.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Štatistiky sa nepodarilo načítať.</p>
+  if (stats.isPending) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Načítavam…')}</p>
+  if (stats.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Štatistiky sa nepodarilo načítať.')}</p>
 
   const data = stats.data
   const summary = summarize(data, filter)
@@ -40,51 +41,50 @@ export function MyStatsCard({ userId, memberships }: { userId: string; membershi
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-surface p-3">
-        <select aria-label="Firma" className={selectClass} value={filter.companyId} onChange={(e) => set({ companyId: e.target.value })}>
-          <option value="">Všetky firmy</option>
+        <select aria-label={tx('Firma')} className={selectClass} value={filter.companyId} onChange={(e) => set({ companyId: e.target.value })}>
+          <option value="">{tx('Všetky firmy')}</option>
           {memberships.map((item) => (
             <option key={item.companyId} value={item.companyId}>
               {item.companyName}
             </option>
           ))}
         </select>
-        <select aria-label="Rok" className={selectClass} value={filter.year} onChange={(e) => set({ year: e.target.value, month: e.target.value ? filter.month : '' })}>
+        <select aria-label={tx('Rok')} className={selectClass} value={filter.year} onChange={(e) => set({ year: e.target.value, month: e.target.value ? filter.month : '' })}>
           {years.map((value) => (
             <option key={value} value={value}>
               {value}
             </option>
           ))}
-          <option value="">Všetky roky</option>
+          <option value="">{tx('Všetky roky')}</option>
         </select>
-        <select aria-label="Mesiac" className={selectClass} disabled={!filter.year} value={filter.month} onChange={(e) => set({ month: e.target.value })}>
-          <option value="">Celý rok</option>
+        <select aria-label={tx('Mesiac')} className={selectClass} disabled={!filter.year} value={filter.month} onChange={(e) => set({ month: e.target.value })}>
+          <option value="">{tx('Celý rok')}</option>
           {MONTH_NAMES.map((name, index) => (
             <option key={name} value={String(index + 1).padStart(2, '0')}>
               {name}
             </option>
           ))}
         </select>
-        <p className="ml-auto text-xs text-muted-foreground">Len vaše údaje – eventy, dochádzka, jazdy a odmeny.</p>
+        <p className="ml-auto text-xs text-muted-foreground">{tx('Len vaše údaje – eventy, dochádzka, jazdy a odmeny.')}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tile label="Akcie" value={String(summary.events)} hint={`${summary.days} ${summary.days === 1 ? 'deň' : summary.days >= 2 && summary.days <= 4 ? 'dni' : 'dní'} na akciách`} />
+        <Tile label={tx('Akcie')} value={String(summary.events)} hint={tf('{0} {1} na akciách', summary.days, summary.days === 1 ? tx('deň') : summary.days >= 2 && summary.days <= 4 ? 'dni' : tx('dní'))} />
         <Tile
-          label="Odpracované"
+          label={tx('Odpracované')}
           value={`${decimal(hoursTotal)} h`}
-          hint={[summary.hoursEvent && `eventy ${decimal(summary.hoursEvent)} h`, summary.hoursCompany && `firma ${decimal(summary.hoursCompany)} h`, summary.hoursHome && `doma ${decimal(summary.hoursHome)} h`].filter(Boolean).join(' · ') || 'bez záznamov'}
+          hint={[summary.hoursEvent && `eventy ${decimal(summary.hoursEvent)} h`, summary.hoursCompany && `firma ${decimal(summary.hoursCompany)} h`, summary.hoursHome && `doma ${decimal(summary.hoursHome)} h`].filter(Boolean).join(' · ') || tx('bez záznamov')}
         />
-        <Tile label="Odmeny" value={money(summary.earned)} hint={summary.events > 0 ? `≈ ${money(summary.perEvent)} na akciu` : '—'} />
-        <Tile label="Jazdy" value={`${decimal(summary.km)} km`} hint={`${summary.drives} ${summary.drives === 1 ? 'jazda' : summary.drives >= 2 && summary.drives <= 4 ? 'jazdy' : 'jázd'} za volantom`} />
+        <Tile label={tx('Odmeny')} value={money(summary.earned)} hint={summary.events > 0 ? `≈ ${money(summary.perEvent)} na akciu` : '—'} />
+        <Tile label={tx('Jazdy')} value={`${decimal(summary.km)} km`} hint={`${summary.drives} ${summary.drives === 1 ? 'jazda' : summary.drives >= 2 && summary.drives <= 4 ? 'jazdy' : tx('jázd')} za volantom`} />
       </div>
 
       {summary.months.length > 0 && !filter.month && (
         <section className="rounded-xl border bg-surface p-4" aria-labelledby="months-heading">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 id="months-heading" className="font-medium">
-              Po mesiacoch {filter.year}
+            <h3 id="months-heading" className="font-medium">{tx('Po mesiacoch')}{' '}{filter.year}
             </h3>
-            <div role="tablist" aria-label="Čo ukázať" className="flex gap-1 rounded-lg bg-muted p-1">
+            <div role="tablist" aria-label={tx('Čo ukázať')} className="flex gap-1 rounded-lg bg-muted p-1">
               {METRICS.map((item) => (
                 <button
                   key={item.id}
@@ -94,7 +94,7 @@ export function MyStatsCard({ userId, memberships }: { userId: string; membershi
                   onClick={() => setMetric(item.id)}
                   className={cn('rounded-md px-3 py-1 text-xs font-medium', metric === item.id ? 'bg-surface text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
                 >
-                  {item.label}
+                  {tx(item.label)}
                 </button>
               ))}
             </div>
@@ -108,24 +108,23 @@ export function MyStatsCard({ userId, memberships }: { userId: string; membershi
       )}
 
       <div className="grid gap-3 md:grid-cols-3">
-        <TopList title="Čo som robil" empty="Žiadne činnosti" items={summary.duties} unit="×" />
-        <TopList title="Najčastejší klienti" empty="Bez klientov" items={summary.clients} unit="akcií" />
-        <TopList title="Najčastejšie miesta" empty="Bez miest" items={summary.venues} unit="akcií" />
+        <TopList title={tx('Čo som robil')} empty={tx('Žiadne činnosti')} items={summary.duties} unit="×" />
+        <TopList title={tx('Najčastejší klienti')} empty={tx('Bez klientov')} items={summary.clients} unit={tx('akcií')} />
+        <TopList title={tx('Najčastejšie miesta')} empty={tx('Bez miest')} items={summary.venues} unit={tx('akcií')} />
       </div>
 
       <section className="rounded-xl border bg-surface p-4" aria-labelledby="by-company-heading">
-        <h3 id="by-company-heading" className="mb-2 font-medium">
-          Po firmách – {periodLabel}
+        <h3 id="by-company-heading" className="mb-2 font-medium">{tx('Po firmách –')}{' '}{periodLabel}
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[30rem] border-collapse text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
-                <th className="py-2 pr-2 font-medium">Firma</th>
-                <th className="px-2 py-2 text-right font-medium">Akcie</th>
-                <th className="px-2 py-2 text-right font-medium">Odmeny</th>
-                <th className="px-2 py-2 text-right font-medium">Hodiny</th>
-                <th className="py-2 pl-2 text-right font-medium">Celkovo akcií / odmeny</th>
+                <th className="py-2 pr-2 font-medium">{tx('Firma')}</th>
+                <th className="px-2 py-2 text-right font-medium">{tx('Akcie')}</th>
+                <th className="px-2 py-2 text-right font-medium">{tx('Odmeny')}</th>
+                <th className="px-2 py-2 text-right font-medium">{tx('Hodiny')}</th>
+                <th className="py-2 pl-2 text-right font-medium">{tx('Celkovo akcií / odmeny')}</th>
               </tr>
             </thead>
             <tbody>
@@ -143,7 +142,7 @@ export function MyStatsCard({ userId, memberships }: { userId: string; membershi
             </tbody>
           </table>
         </div>
-        {summary.declined > 0 && <p className="mt-2 text-xs text-muted-foreground">Odmietnuté pozvánky v tomto období: {summary.declined}.</p>}
+        {summary.declined > 0 && <p className="mt-2 text-xs text-muted-foreground">{tx('Odmietnuté pozvánky v tomto období:')}{' '}{summary.declined}.</p>}
       </section>
     </div>
   )
@@ -200,7 +199,7 @@ function TopList({ title, items, empty, unit }: { title: string; items: Ranked[]
           {items.map((item) => (
             <li key={item.label}>
               <div className="flex justify-between gap-2">
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{tx(item.label)}</span>
                 <span className="shrink-0 text-muted-foreground tabular-nums">
                   {item.value} {unit}
                 </span>

@@ -8,6 +8,7 @@ import { memberName, useMembers } from '@/features/companies/useMembers'
 import { EQUIPMENT_KINDS, KIND_LABELS } from '@/features/equipment/model'
 import { cn } from '@/lib/utils'
 import { deleteResponsibility, responsibilityKeys, saveResponsibility, useResponsibilities, type Responsibility, type ResponsibilityFields } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 const EMPTY: ResponsibilityFields = { name: '', kinds: [], caseIds: [], memberIds: [], hoursEveryDays: null, checkEveryDays: null, note: '' }
 const toggle = (list: string[], value: string) => (list.includes(value) ? list.filter((item) => item !== value) : [...list, value])
@@ -38,7 +39,7 @@ export function ResponsibilitiesSettings({ companyId }: { companyId: string }) {
     if (fields.name.trim()) save.mutate()
   }
 
-  if (list.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Zodpovednosti zatiaľ nie sú dostupné – treba spustiť migráciu 0089.</p>
+  if (list.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Zodpovednosti zatiaľ nie sú dostupné – treba spustiť migráciu 0089.')}</p>
 
   const foundCases = (cases.data ?? [])
     .filter((item) => !fields.caseIds.includes(item.id) && caseSearch.trim() && item.name.toLowerCase().includes(caseSearch.trim().toLowerCase()))
@@ -46,10 +47,7 @@ export function ResponsibilitiesSettings({ companyId }: { companyId: string }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">
-        Kto za čo zodpovedá – napr. svetlá, zvuk alebo konkrétne case. Zodpovedný vidí na Prehľade, čo treba urobiť (odčítať prevádzkové hodiny, skontrolovať
-        case), a raz denne mu príde upozornenie. Pri case a technike je vidno, kto za ňu zodpovedá.
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Kto za čo zodpovedá – napr. svetlá, zvuk alebo konkrétne case. Zodpovedný vidí na Prehľade, čo treba urobiť (odčítať prevádzkové hodiny, skontrolovať case), a raz denne mu príde upozornenie. Pri case a technike je vidno, kto za ňu zodpovedá.')}</p>
       {(list.data ?? []).length > 0 && (
         <ul className="divide-y rounded-xl border bg-surface">
           {list.data!.map((item) => (
@@ -58,16 +56,16 @@ export function ResponsibilitiesSettings({ companyId }: { companyId: string }) {
               <div className="min-w-0 flex-1 text-sm">
                 <p className="font-medium">{item.name}</p>
                 <p className="text-muted-foreground">
-                  {[...item.kinds.map((kind) => KIND_LABELS[kind as keyof typeof KIND_LABELS] ?? kind), ...item.caseIds.map(caseName)].join(', ') || 'bez rozsahu'}
+                  {[...item.kinds.map((kind) => KIND_LABELS[kind as keyof typeof KIND_LABELS] ?? kind), ...item.caseIds.map(caseName)].join(', ') || tx('bez rozsahu')}
                 </p>
                 <p className="text-muted-foreground">
-                  {item.memberIds.map((id) => memberName(members.data, id) || 'bývalý člen').join(', ') || 'nikto'}
+                  {item.memberIds.map((id) => memberName(members.data, id) || tx('bývalý člen')).join(', ') || 'nikto'}
                 </p>
               </div>
-              <Button variant="ghost" size="sm" aria-label={`Upraviť ${item.name}`} onClick={() => open(item)}>
+              <Button variant="ghost" size="sm" aria-label={tf('Upraviť {0}', item.name)} onClick={() => open(item)}>
                 <Pencil className="size-4" aria-hidden />
               </Button>
-              <Button variant="ghost" size="sm" aria-label={`Zmazať ${item.name}`} disabled={remove.isPending} onClick={() => window.confirm(`Zmazať zodpovednosť „${item.name}“?`) && remove.mutate(item.id)}>
+              <Button variant="ghost" size="sm" aria-label={tf('Zmazať {0}', item.name)} disabled={remove.isPending} onClick={() => window.confirm(tf('Zmazať zodpovednosť „{0}“?', item.name)) && remove.mutate(item.id)}>
                 <Trash2 className="size-4" aria-hidden />
               </Button>
             </li>
@@ -77,27 +75,27 @@ export function ResponsibilitiesSettings({ companyId }: { companyId: string }) {
 
       {editing ? (
         <form onSubmit={submit} className="flex flex-col gap-4 rounded-xl border bg-surface p-4">
-          <Field label="Názov *" placeholder="napr. Svetlá, Zvuk, Case LED" maxLength={80} autoFocus value={fields.name} onChange={(event) => set({ name: event.target.value })} />
+          <Field label={tx('Názov *')} placeholder={tx('napr. Svetlá, Zvuk, Case LED')} maxLength={80} autoFocus value={fields.name} onChange={(event) => set({ name: event.target.value })} />
           <fieldset>
-            <legend className="mb-1 text-sm font-medium">Za akú techniku (druh)</legend>
+            <legend className="mb-1 text-sm font-medium">{tx('Za akú techniku (druh)')}</legend>
             <div className="flex flex-wrap gap-1.5">
               {EQUIPMENT_KINDS.map((kind) => (
                 <button key={kind} type="button" aria-pressed={fields.kinds.includes(kind)} className={chip(fields.kinds.includes(kind))} onClick={() => set({ kinds: toggle(fields.kinds, kind) })}>
-                  {KIND_LABELS[kind]}
+                  {tx(KIND_LABELS[kind])}
                 </button>
               ))}
             </div>
           </fieldset>
           <fieldset>
-            <legend className="mb-1 text-sm font-medium">Alebo / aj konkrétne case a racky</legend>
+            <legend className="mb-1 text-sm font-medium">{tx('Alebo / aj konkrétne case a racky')}</legend>
             <div className="mb-2 flex flex-wrap gap-1.5">
               {fields.caseIds.map((id) => (
-                <button key={id} type="button" className={chip(true)} aria-label={`Odobrať ${caseName(id)}`} onClick={() => set({ caseIds: toggle(fields.caseIds, id) })}>
+                <button key={id} type="button" className={chip(true)} aria-label={tf('Odobrať {0}', caseName(id))} onClick={() => set({ caseIds: toggle(fields.caseIds, id) })}>
                   {caseName(id)} ×
                 </button>
               ))}
             </div>
-            <Field label="Pridať case" hideLabel placeholder="Hľadať case podľa názvu…" value={caseSearch} onChange={(event) => setCaseSearch(event.target.value)} />
+            <Field label={tx('Pridať case')} hideLabel placeholder={tx('Hľadať case podľa názvu…')} value={caseSearch} onChange={(event) => setCaseSearch(event.target.value)} />
             {foundCases.length > 0 && (
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {foundCases.map((item) => (
@@ -109,7 +107,7 @@ export function ResponsibilitiesSettings({ companyId }: { companyId: string }) {
             )}
           </fieldset>
           <fieldset>
-            <legend className="mb-1 text-sm font-medium">Kto zodpovedá</legend>
+            <legend className="mb-1 text-sm font-medium">{tx('Kto zodpovedá')}</legend>
             <div className="flex flex-wrap gap-1.5">
               {(members.data ?? []).map((member) => (
                 <button
@@ -124,26 +122,17 @@ export function ResponsibilitiesSettings({ companyId }: { companyId: string }) {
               ))}
             </div>
           </fieldset>
-          <p className="text-xs text-muted-foreground">
-            Zodpovedným appka pripomenie odčítať prevádzkové hodiny a skontrolovať cases podľa Úrovní kontroly (Nastavenia → Pripomienky) –
-            pri technike je úroveň hodín, pri case úroveň kontroly.
-          </p>
-          <Field label="Poznámka" maxLength={500} value={fields.note} onChange={(event) => set({ note: event.target.value })} />
-          {save.isError && <p className="text-sm text-destructive">Nepodarilo sa uložiť.</p>}
+          <p className="text-xs text-muted-foreground">{tx('Zodpovedným appka pripomenie odčítať prevádzkové hodiny a skontrolovať cases podľa Úrovní kontroly (Nastavenia → Pripomienky) – pri technike je úroveň hodín, pri case úroveň kontroly.')}</p>
+          <Field label={tx('Poznámka')} maxLength={500} value={fields.note} onChange={(event) => set({ note: event.target.value })} />
+          {save.isError && <p className="text-sm text-destructive">{tx('Nepodarilo sa uložiť.')}</p>}
           <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={!fields.name.trim() || save.isPending}>
-              Uložiť
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>
-              Zrušiť
-            </Button>
+            <Button type="submit" size="sm" disabled={!fields.name.trim() || save.isPending}>{tx('Uložiť')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>{tx('Zrušiť')}</Button>
           </div>
         </form>
       ) : (
         <Button variant="outline" size="sm" className="self-start" onClick={() => open(null)}>
-          <Plus className="size-4" aria-hidden />
-          Pridať zodpovednosť
-        </Button>
+          <Plus className="size-4" aria-hidden />{tx('Pridať zodpovednosť')}</Button>
       )}
     </div>
   )

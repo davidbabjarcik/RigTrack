@@ -19,6 +19,7 @@ import { isAdminRole } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 import type { Person } from './model'
 import { pastEventsOf, periods, personStats } from './stats'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { companyId: string; person: Person; events: CompanyEvent[]; userId: string }
 
@@ -28,11 +29,11 @@ export function StaffDevices({ companyId, person, userId }: Omit<Props, 'events'
   const canManage = can(company, 'staff.manage')
   if (!person.memberId || (!canManage && person.memberId !== userId)) return null
   return (
-    <CollapsibleSection id="staff.devices" title="Zariadenia (mobil, notebook, iPad)">
+    <CollapsibleSection id="staff.devices" title={tx('Zariadenia (mobil, notebook, iPad)')}>
       <div className="rounded-xl border bg-surface p-4">
-        <p className="text-sm text-muted-foreground">MAC a IP adresy pre Wi-Fi siete. Nie je to technika firmy.</p>
+        <p className="text-sm text-muted-foreground">{tx('MAC a IP adresy pre Wi-Fi siete. Nie je to technika firmy.')}</p>
         <RequiredDevices companyId={companyId} memberId={person.memberId} />
-        <DeviceList companyId={companyId} userId={person.memberId} canEdit empty="Zatiaľ žiadne zariadenia." />
+        <DeviceList companyId={companyId} userId={person.memberId} canEdit empty={tx('Zatiaľ žiadne zariadenia.')} />
       </div>
     </CollapsibleSection>
   )
@@ -59,11 +60,11 @@ function RequiredDevices({ companyId, memberId }: { companyId: string; memberId:
         return (
           <li key={kind} className={cn('flex items-center gap-2 rounded-lg border px-2 py-1', !has && !exempt && 'border-destructive/50 bg-destructive/10')}>
             <span>
-              {DEVICE_KIND_LABELS[kind]}: {has ? 'zapísané' : exempt ? 'výnimka' : <span className="text-destructive">chýba</span>}
+              {tx(DEVICE_KIND_LABELS[kind])}: {has ? tx('zapísané') : exempt ? tx('výnimka') : <span className="text-destructive">{tx('chýba')}</span>}
             </span>
             {isAdmin && !has && (
               <button type="button" className="text-xs text-accent hover:underline" disabled={toggle.isPending} onClick={() => toggle.mutate({ kind, exempt: !exempt })}>
-                {exempt ? 'zrušiť výnimku' : 'dať výnimku'}
+                {exempt ? tx('zrušiť výnimku') : tx('dať výnimku')}
               </button>
             )}
           </li>
@@ -85,26 +86,22 @@ export function StaffOwnGear({ companyId, person }: Pick<Props, 'companyId' | 'p
   return (
     <CollapsibleSection
       id="staff.gear"
-      title={`Vlastná technika (${items.length + boxes.length})`}
+      title={tf('Vlastná technika ({0})', items.length + boxes.length)}
       actions={
         can(company, 'equipment.edit') && (
           <>
             <LinkButton to={`/equipment/new?owner=${ownerKey}`} variant="outline" size="sm">
-              <Plus className="size-4" aria-hidden />
-              Technika
-            </LinkButton>
+              <Plus className="size-4" aria-hidden />{tx('Technika')}</LinkButton>
             {can(company, 'cases.edit') && (
               <LinkButton to={`/cases/new?owner=${ownerKey}`} variant="outline" size="sm">
-                <Plus className="size-4" aria-hidden />
-                Case / rack
-              </LinkButton>
+                <Plus className="size-4" aria-hidden />{tx('Case / rack')}</LinkButton>
             )}
           </>
         )
       }
     >
       {items.length + boxes.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">Nemá zapísanú vlastnú techniku.</p>
+        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Nemá zapísanú vlastnú techniku.')}</p>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {boxes.map((box) => (
@@ -120,7 +117,7 @@ export function StaffOwnGear({ companyId, person }: Pick<Props, 'companyId' | 'p
               <Link to={`/equipment/${item.id}`} className="flex items-center gap-3 px-4 py-2 hover:bg-muted">
                 <Speaker className="size-4 text-muted-foreground" aria-hidden />
                 <span className="min-w-0 flex-1 truncate font-medium">{item.name}</span>
-                {item.quantity !== 1 && <span className="text-sm text-muted-foreground">{item.quantity} ks</span>}
+                {item.quantity !== 1 && <span className="text-sm text-muted-foreground">{item.quantity}{' '}{tx('ks')}</span>}
               </Link>
             </li>
           ))}
@@ -136,9 +133,9 @@ export function StaffPastEvents({ person, events }: Pick<Props, 'person' | 'even
   const past = pastEventsOf(events, { memberId: person.memberId, name: person.name }, todayIso())
   const shown = all ? past : past.slice(0, 10)
   return (
-    <CollapsibleSection id="staff.past-events" title={`Minulé eventy (${past.length})`}>
+    <CollapsibleSection id="staff.past-events" title={tf('Minulé eventy ({0})', past.length)}>
       {past.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Zatiaľ nebol na žiadnom evente.</p>
+        <p className="text-sm text-muted-foreground">{tx('Zatiaľ nebol na žiadnom evente.')}</p>
       ) : (
         <>
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
@@ -159,7 +156,7 @@ export function StaffPastEvents({ person, events }: Pick<Props, 'person' | 'even
           </ul>
           {past.length > 10 && (
             <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => setAll(!all)}>
-              {all ? 'Ukázať menej' : `Ukázať všetky (${past.length})`}
+              {all ? tx('Ukázať menej') : tf('Ukázať všetky ({0})', past.length)}
             </button>
           )}
         </>
@@ -186,51 +183,51 @@ export function StaffOverview({ companyId, person, events, userId }: Props) {
   const share = stats.total > 0 ? Math.round((stats.attended.length / stats.total) * 100) : 0
 
   return (
-    <CollapsibleSection id="staff.overview" title="Prehľad">
+    <CollapsibleSection id="staff.overview" title={tx('Prehľad')}>
       <div className="rounded-xl border bg-surface p-4">
-        <SelectField label="Obdobie" className="mb-3 w-60" value={period.id} onChange={(event) => setPeriodId(event.target.value)}>
+        <SelectField label={tx('Obdobie')} className="mb-3 w-60" value={period.id} onChange={(event) => setPeriodId(event.target.value)}>
           {options.map((option) => (
             <option key={option.id} value={option.id}>
-              {option.label}
+              {tx(option.label)}
             </option>
           ))}
         </SelectField>
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-lg bg-muted/60 p-3">
-            <dt className="text-xs text-muted-foreground">Bol na eventoch</dt>
+            <dt className="text-xs text-muted-foreground">{tx('Bol na eventoch')}</dt>
             <dd className="text-2xl font-semibold tabular-nums">
               {stats.attended.length}
               <span className="text-sm font-normal text-muted-foreground"> / {stats.total}</span>
             </dd>
-            <dd className="text-xs text-muted-foreground">{share} % akcií firmy</dd>
+            <dd className="text-xs text-muted-foreground">{share}{' '}{tx('% akcií firmy')}</dd>
           </div>
           <div className="rounded-lg bg-muted/60 p-3">
-            <dt className="text-xs text-muted-foreground">Nebol</dt>
+            <dt className="text-xs text-muted-foreground">{tx('Nebol')}</dt>
             <dd className="text-2xl font-semibold tabular-nums">{stats.missed.length}</dd>
           </div>
           <div className="rounded-lg bg-muted/60 p-3">
-            <dt className="text-xs text-muted-foreground">Dní na akciách</dt>
+            <dt className="text-xs text-muted-foreground">{tx('Dní na akciách')}</dt>
             <dd className="text-2xl font-semibold tabular-nums">{stats.days}</dd>
           </div>
           {seesMoney && person.memberId && (
             <div className="rounded-lg bg-muted/60 p-3">
-              <dt className="text-xs text-muted-foreground">Zarobil</dt>
+              <dt className="text-xs text-muted-foreground">{tx('Zarobil')}</dt>
               <dd className="text-2xl font-semibold tabular-nums">{formatMoney(stats.earned, 'EUR')}</dd>
               <dd className="text-xs text-muted-foreground">
-                {[stats.advances > 0 && `zálohy ${formatMoney(stats.advances, 'EUR')}`, stats.unpaid > 0 && `nevyplatené ${formatMoney(stats.unpaid, 'EUR')}`].filter(Boolean).join(' · ') || 'všetko vyplatené'}
+                {[stats.advances > 0 && `zálohy ${formatMoney(stats.advances, 'EUR')}`, stats.unpaid > 0 && `nevyplatené ${formatMoney(stats.unpaid, 'EUR')}`].filter(Boolean).join(' · ') || tx('všetko vyplatené')}
               </dd>
             </div>
           )}
         </dl>
         {stats.roles.length > 0 && (
           <p className="mt-3 text-sm">
-            <span className="text-muted-foreground">Role: </span>
+            <span className="text-muted-foreground">{tx('Role:')}{' '}</span>
             {stats.roles.map((role) => `${role.role} ${role.count}×`).join(' · ')}
           </p>
         )}
         {stats.missed.length > 0 && (
           <details className="mt-3 text-sm">
-            <summary className="cursor-pointer text-accent">Eventy, kde nebol ({stats.missed.length})</summary>
+            <summary className="cursor-pointer text-accent">{tx('Eventy, kde nebol (')}{stats.missed.length})</summary>
             <ul className="mt-2 flex flex-col gap-1">
               {stats.missed.map((event) => (
                 <li key={event.id}>

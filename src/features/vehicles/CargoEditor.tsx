@@ -4,6 +4,7 @@ import { RectEditor } from '@/components/plan/RectEditor'
 import { Button } from '@/components/ui/button'
 import { obstacleFill, obstacleLetter } from '@/features/loading/fills'
 import type { CargoObstacle } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 // Nová prekážka dostane túto výšku; pohľad zhora ju nakresliť nedovolí, upraví sa v poli.
 const NEW_HEIGHT = 30
@@ -30,11 +31,10 @@ export function CargoEditor({ length, width, obstacles, onChange, onAdd, onRemov
   return (
     <div>
       <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-        <span>← dvere</span>
+        <span>{tx('← dvere')}</span>
         <span>
-          {length} × {width} cm, pohľad zhora, ľavá stena hore
-        </span>
-        <span>kabína →</span>
+          {length} × {width}{' '}{tx('cm, pohľad zhora, ľavá stena hore')}</span>
+        <span>{tx('kabína →')}</span>
       </div>
       <RectEditor
         length={length}
@@ -47,17 +47,15 @@ export function CargoEditor({ length, width, obstacles, onChange, onAdd, onRemov
         onAdd={(rect) => onAdd({ label: '', height: NEW_HEIGHT, ...rect })}
         fillOf={obstacleFill}
         labelOf={obstacleLetter}
-        describe={(rect) => `${rect.length} × ${rect.width} cm · ${rect.x} cm od kabíny, ${rect.y} cm od ľavej steny`}
-        ariaLabel="Nákres nákladného priestoru; prekážky sa dajú zadať aj číslami v poliach formulára"
+        describe={(rect) => tf('{0} × {1} cm · {2} cm od kabíny, {3} cm od ľavej steny', rect.length, rect.width, rect.x, rect.y)}
+        ariaLabel={tx('Nákres nákladného priestoru; prekážky sa dajú zadať aj číslami v poliach formulára')}
         // Na celej obrazovke sa nákres zmestí na výšku a ostane miesto na ovládanie pod ním.
         className="max-h-[calc(100dvh-13rem)]"
         footer={
           chosen && selected !== null ? (
             <>
-              <span>
-                Vybraná prekážka {obstacleLetter(selected)}
-                {chosen.label && `: ${chosen.label}`} · {finite(chosen.length)} × {finite(chosen.width)} cm
-              </span>
+              <span>{tx('Vybraná prekážka')}{' '}{obstacleLetter(selected)}
+                {chosen.label && `: ${chosen.label}`} · {finite(chosen.length)} × {finite(chosen.width)}{' '}{tx('cm')}</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -66,14 +64,10 @@ export function CargoEditor({ length, width, obstacles, onChange, onAdd, onRemov
                   setSelected(null)
                 }}
               >
-                <Trash2 className="size-4" aria-hidden />
-                Odstrániť
-              </Button>
+                <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
             </>
           ) : (
-            <span className="text-muted-foreground">
-              Ťahaním po prázdnom mieste nakreslíte prekážku. Kliknutím ju vyberiete, ťahaním posuniete, za roh zmeníte veľkosť.
-            </span>
+            <span className="text-muted-foreground">{tx('Ťahaním po prázdnom mieste nakreslíte prekážku. Kliknutím ju vyberiete, ťahaním posuniete, za roh zmeníte veľkosť.')}</span>
           )
         }
       />

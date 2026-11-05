@@ -18,6 +18,7 @@ import { addPackUnit, fetchPackChecks, packKeys, packUnitKeys, setPackCheck, use
 import { caseTitle } from '@/features/cases/model'
 import { enqueue, enqueueUnit, isNetworkError, mergeChecks, readQueue, readSnapshot, readUnitQueue, writeQueue, writeSnapshot, writeUnitQueue, type PendingTick, type PendingUnit } from './offline'
 import { checkOf, packProgress, packRows, type PackRow } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const PHASE_LABELS: Record<PackPhase, string> = { out: 'Nakladanie', back: 'Návrat' }
 
@@ -122,8 +123,8 @@ export function PackPage() {
   const snapshot = !event || checks.isError ? readSnapshot(id) : null
 
   if (!snapshot && (events.isPending || checks.isPending)) return <LoadingBlock />
-  if (!snapshot && !event) return <ErrorBlock message="Event sa nenašiel." />
-  if (!snapshot && checks.isError) return <ErrorBlock message="Pack list sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." />
+  if (!snapshot && !event) return <ErrorBlock message={tx('Event sa nenašiel.')} />
+  if (!snapshot && checks.isError) return <ErrorBlock message={tx('Pack list sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')} />
 
   const eventName = event?.name ?? snapshot!.eventName
   const startsOn = event?.startsOn ?? snapshot!.startsOn
@@ -139,7 +140,7 @@ export function PackPage() {
         <ArrowLeft className="size-4" aria-hidden />
         {eventName}
       </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">Pack list</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{tx('Pack list')}</h1>
       <p className="mb-4 text-sm text-muted-foreground">
         {eventName} · {formatDate(startsOn)}
       </p>
@@ -148,15 +149,14 @@ export function PackPage() {
           <CloudOff className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
           <span>
             {snapshot && `Bez spojenia – pack list z ${new Date(snapshot.savedAt).toLocaleString('sk-SK', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}. `}
-            {queue.length > 0 && `Čaká na odoslanie: ${queue.length}. Odošle sa samo, keď bude signál.`}
+            {queue.length > 0 && tf('Čaká na odoslanie: {0}. Odošle sa samo, keď bude signál.', queue.length)}
           </span>
         </p>
       )}
 
       {canTick && rows.length > 0 && (
         <Button variant="outline" className="mb-3 w-full" onClick={() => setScanning(true)}>
-          <ScanLine className="size-4" aria-hidden />
-          Skenovať QR štítky ({PHASE_LABELS[phase].toLowerCase()})
+          <ScanLine className="size-4" aria-hidden />{tx('Skenovať QR štítky (')}{PHASE_LABELS[phase].toLowerCase()})
         </Button>
       )}
       {scanning && (
@@ -165,7 +165,7 @@ export function PackPage() {
           onClose={() => setScanning(false)}
           onResult={(text) => {
             const target = parseQr(text)
-            if (!target) return 'Tento QR kód nie je z RigTracku.'
+            if (!target) return tx('Tento QR kód nie je z RigTracku.')
             const row = rows.find((candidate) => (target.kind === 'case' ? candidate.caseId : candidate.equipmentId) === target.id)
             const piece = target.kind === 'equipment' ? equipment.data?.find((item) => item.id === target.id) : undefined
             // Kus v case, ktorý je v pack liste ako celý case: stačí naskenovať case.
@@ -176,13 +176,13 @@ export function PackPage() {
             // QR jedného kusu (#7): zapíše sa kus; keď sú všetky kusy položky, položka sa odškrtne.
             if (row && target.unit && row.equipmentId) {
               const done = unitsOf(row.equipmentId, phase)
-              if (done.has(target.unit)) return `✓ ${row.name} #${target.unit} už je naskenovaný (${done.size}/${row.quantity}).`
+              if (done.has(target.unit)) return tf('✓ {0} #{1} už je naskenovaný ({2}/{3}).', row.name, target.unit, done.size, row.quantity)
               done.add(target.unit)
               setUnitQueue(enqueueUnit(readUnitQueue(id), { equipmentId: row.equipmentId, unit: target.unit, phase }))
               void flush()
               if (done.size >= row.quantity && !checkOf(row, all, phase)) {
                 tick(row, true)
-                return `✓ ${row.name} #${target.unit} – všetkých ${row.quantity} ks, odškrtnuté`
+                return tf('✓ {0} #{1} – všetkých {2} ks, odškrtnuté', row.name, target.unit, row.quantity)
               }
               return `✓ ${row.name} #${target.unit} (${done.size}/${row.quantity})`
             }
@@ -190,16 +190,16 @@ export function PackPage() {
               const name = target.kind === 'case' ? cases.data?.find((item) => item.id === target.id)?.name : equipment.data?.find((item) => item.id === target.id)?.name
               return `✗ ${name ?? 'Toto'} nie je v pack liste eventu.`
             }
-            if (checkOf(row, all, phase)) return `✓ ${row.name} už je odškrtnuté.`
+            if (checkOf(row, all, phase)) return tf('✓ {0} už je odškrtnuté.', row.name)
             tick(row, true)
             // Vrátený case: obsah (napr. káblovku) treba ešte spočítať – svieti v Kontrolách, kým sa neskontroluje.
-            if (phase === 'back' && row.caseId) return `✓ ${row.name} vrátený – spočítajte a skontrolujte obsah`
+            if (phase === 'back' && row.caseId) return tf('✓ {0} vrátený – spočítajte a skontrolujte obsah', row.name)
             return `✓ ${row.name}`
           }}
         />
       )}
 
-      <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl border bg-surface p-1" role="group" aria-label="Fáza">
+      <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl border bg-surface p-1" role="group" aria-label={tx('Fáza')}>
         {(['out', 'back'] as const).map((value) => {
           const { done, total } = packProgress(rows, all, value)
           return (
@@ -210,7 +210,7 @@ export function PackPage() {
               onClick={() => setPhase(value)}
               className={cn('rounded-lg px-3 py-2 text-sm font-medium', phase === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted')}
             >
-              {PHASE_LABELS[value]} {done}/{total}
+              {tx(PHASE_LABELS[value])} {done}/{total}
             </button>
           )
         })}
@@ -222,12 +222,12 @@ export function PackPage() {
 
       {phase === 'back' && missingBack.length > 0 && (
         <p role="status" className="mb-4 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
-          <span className="font-medium">Ešte sa nevrátilo ({missingBack.length}):</span> {missingBack.map((row) => row.name).join(', ')}
+          <span className="font-medium">{tx('Ešte sa nevrátilo (')}{missingBack.length}):</span> {missingBack.map((row) => row.name).join(', ')}
         </p>
       )}
 
       {rows.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">Na evente zatiaľ nie je žiadna technika.</p>
+        <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">{tx('Na evente zatiaľ nie je žiadna technika.')}</p>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {rows.map((row) => {
@@ -265,8 +265,7 @@ export function PackPage() {
                           <span className="block">{row.contents.filter((item) => !item.accessory).map((item) => `${item.name} ${item.quantity} ks`).join(' · ')}</span>
                         )}
                         {row.contents.some((item) => item.accessory) && (
-                          <span className="block text-muted-foreground">
-                            príslušenstvo: {row.contents.filter((item) => item.accessory).map((item) => `${item.name} ${item.quantity} ks`).join(' · ')}
+                          <span className="block text-muted-foreground">{tx('príslušenstvo:')}{' '}{row.contents.filter((item) => item.accessory).map((item) => `${item.name} ${item.quantity} ks`).join(' · ')}
                           </span>
                         )}
                       </span>
@@ -278,8 +277,8 @@ export function PackPage() {
           })}
         </ul>
       )}
-      {!canTick && <p className="mt-3 text-sm text-muted-foreground">Odškrtávať môže posádka eventu a kto upravuje eventy.</p>}
-      {failed && <p className="mt-3 text-sm text-destructive">Niektorú zmenu databáza neprijala – skontrolujte odškrtnutia.</p>}
+      {!canTick && <p className="mt-3 text-sm text-muted-foreground">{tx('Odškrtávať môže posádka eventu a kto upravuje eventy.')}</p>}
+      {failed && <p className="mt-3 text-sm text-destructive">{tx('Niektorú zmenu databáza neprijala – skontrolujte odškrtnutia.')}</p>}
     </>
   )
 }

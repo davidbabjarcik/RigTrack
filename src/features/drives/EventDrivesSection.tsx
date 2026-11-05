@@ -13,6 +13,7 @@ import { fetchPlace, planKeys } from '@/features/events/planApi'
 import { useVehicles } from '@/features/vehicles/useVehicles'
 import { addDrive, driveKeys, removeDrive, useEventDrives } from './api'
 import { DIRECTION_LABELS, DIRECTIONS, suggestedKm, type Direction, type Drive } from './model'
+import { tx } from '@/lib/i18n'
 
 const EXTERNAL = 'external'
 const weekday = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('sk-SK', { weekday: 'short', day: 'numeric', month: 'numeric' })
@@ -55,14 +56,14 @@ export function EventDrivesSection({ companyId, event, canEdit }: Props) {
   const list = drives.data ?? []
   if (!canEdit && !crew && list.length === 0) return null
   const totalKm = list.reduce((sum, drive) => sum + (drive.km ?? 0), 0)
-  const driverOf = (drive: Drive) => (drive.memberId ? memberName(members.data, drive.memberId) || 'Bývalý člen' : drive.driverName)
+  const driverOf = (drive: Drive) => (drive.memberId ? memberName(members.data, drive.memberId) || tx('Bývalý člen') : drive.driverName)
   const plateOf = (id: string | null) => (id ? vehicles.data?.find((vehicle) => vehicle.id === id)?.plate : undefined)
   const current = form ?? empty
   const valid = Boolean(current.date) && (current.who === EXTERNAL ? current.name.trim() !== '' : current.who !== '')
   const km = suggestedKm(place.data?.distanceKm ?? null, current.direction)
 
   return (
-    <CollapsibleSection id="event.drives" title={<>Kto šoféroval ({list.length}{totalKm > 0 ? ` · ${formatNumber(totalKm)} km` : ''})</>}>
+    <CollapsibleSection id="event.drives" title={<>{tx('Kto šoféroval (')}{list.length}{totalKm > 0 ? ` · ${formatNumber(totalKm)} km` : ''})</>}>
       {list.length > 0 && (
         <ul className="mb-3 divide-y overflow-hidden rounded-xl border bg-surface text-sm">
           {list.map((drive) => (
@@ -75,9 +76,9 @@ export function EventDrivesSection({ companyId, event, canEdit }: Props) {
                   {[plateOf(drive.vehicleId), DIRECTION_LABELS[drive.direction], drive.route].filter(Boolean).join(' · ')}
                 </span>
               </span>
-              {drive.km !== null && <span className="tabular-nums">{formatNumber(drive.km)} km</span>}
+              {drive.km !== null && <span className="tabular-nums">{formatNumber(drive.km)}{' '}{tx('km')}</span>}
               {(canEdit || drive.memberId === userId) && (
-                <Button variant="ghost" size="sm" aria-label="Zmazať jazdu" disabled={remove.isPending} onClick={() => remove.mutate(drive.id)}>
+                <Button variant="ghost" size="sm" aria-label={tx('Zmazať jazdu')} disabled={remove.isPending} onClick={() => remove.mutate(drive.id)}>
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
               )}
@@ -89,7 +90,7 @@ export function EventDrivesSection({ companyId, event, canEdit }: Props) {
       {(canEdit || crew) &&
         (form ? (
           <div className="flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-3 text-sm">
-            <select aria-label="Deň" className="h-9 rounded-lg border bg-background px-2" value={current.date} onChange={(e) => setForm({ ...current, date: e.target.value })}>
+            <select aria-label={tx('Deň')} className="h-9 rounded-lg border bg-background px-2" value={current.date} onChange={(e) => setForm({ ...current, date: e.target.value })}>
               {dates.map((date) => (
                 <option key={date} value={date}>
                   {weekday(date)}
@@ -97,23 +98,23 @@ export function EventDrivesSection({ companyId, event, canEdit }: Props) {
               ))}
             </select>
             {canEdit ? (
-              <select aria-label="Šofér" className="h-9 rounded-lg border bg-background px-2" value={current.who} onChange={(e) => setForm({ ...current, who: e.target.value })}>
-                <option value="">— šofér —</option>
+              <select aria-label={tx('Šofér')} className="h-9 rounded-lg border bg-background px-2" value={current.who} onChange={(e) => setForm({ ...current, who: e.target.value })}>
+                <option value="">{tx('— šofér —')}</option>
                 {(members.data ?? []).map((member) => (
                   <option key={member.userId} value={member.userId}>
                     {member.fullName || member.email}
                   </option>
                 ))}
-                <option value={EXTERNAL}>Externista (napísať meno)</option>
+                <option value={EXTERNAL}>{tx('Externista (napísať meno)')}</option>
               </select>
             ) : (
-              <span className="self-center">Ja</span>
+              <span className="self-center">{tx('Ja')}</span>
             )}
             {current.who === EXTERNAL && (
-              <input aria-label="Meno šoféra" placeholder="meno" maxLength={80} className="h-9 w-36 rounded-lg border bg-background px-2" value={current.name} onChange={(e) => setForm({ ...current, name: e.target.value })} />
+              <input aria-label={tx('Meno šoféra')} placeholder={tx('meno')} maxLength={80} className="h-9 w-36 rounded-lg border bg-background px-2" value={current.name} onChange={(e) => setForm({ ...current, name: e.target.value })} />
             )}
-            <select aria-label="Auto" className="h-9 rounded-lg border bg-background px-2" value={current.vehicleId} onChange={(e) => setForm({ ...current, vehicleId: e.target.value })}>
-              <option value="">— auto —</option>
+            <select aria-label={tx('Auto')} className="h-9 rounded-lg border bg-background px-2" value={current.vehicleId} onChange={(e) => setForm({ ...current, vehicleId: e.target.value })}>
+              <option value="">{tx('— auto —')}</option>
               {(vehicles.data ?? [])
                 .filter((vehicle) => vehicle.status !== 'retired')
                 .map((vehicle) => (
@@ -123,39 +124,33 @@ export function EventDrivesSection({ companyId, event, canEdit }: Props) {
                   </option>
                 ))}
             </select>
-            <select aria-label="Smer" className="h-9 rounded-lg border bg-background px-2" value={current.direction} onChange={(e) => setForm({ ...current, direction: e.target.value as Direction })}>
+            <select aria-label={tx('Smer')} className="h-9 rounded-lg border bg-background px-2" value={current.direction} onChange={(e) => setForm({ ...current, direction: e.target.value as Direction })}>
               {DIRECTIONS.map((direction) => (
                 <option key={direction} value={direction}>
-                  {DIRECTION_LABELS[direction]}
+                  {tx(DIRECTION_LABELS[direction])}
                 </option>
               ))}
             </select>
             <label className="flex items-center gap-1">
               <input
-                aria-label="Kilometre"
+                aria-label={tx('Kilometre')}
                 inputMode="decimal"
                 placeholder={km !== null ? String(km) : 'km'}
                 className="h-9 w-20 rounded-lg border bg-background px-2"
                 value={current.km}
                 onChange={(e) => setForm({ ...current, km: e.target.value })}
-              />
-              km
-            </label>
-            <Button size="sm" disabled={!valid || add.isPending} onClick={() => add.mutate(current)}>
-              Zapísať
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setForm(null)}>
-              Zrušiť
-            </Button>
-            {km !== null && <p className="basis-full text-xs text-muted-foreground">Prázdne km = podľa vzdialenosti zo skladu ({formatNumber(km)} km).</p>}
+              />{tx('km')}</label>
+            <Button size="sm" disabled={!valid || add.isPending} onClick={() => add.mutate(current)}>{tx('Zapísať')}</Button>
+            <Button size="sm" variant="ghost" onClick={() => setForm(null)}>{tx('Zrušiť')}</Button>
+            {km !== null && <p className="basis-full text-xs text-muted-foreground">{tx('Prázdne km = podľa vzdialenosti zo skladu (')}{formatNumber(km)}{' '}{tx('km).')}</p>}
           </div>
         ) : (
           <Button variant="outline" size="sm" onClick={() => setForm(empty)}>
             <Plus className="size-4" aria-hidden />
-            {canEdit ? 'Pridať jazdu' : 'Šoféroval(a) som'}
+            {canEdit ? tx('Pridať jazdu') : tx('Šoféroval(a) som')}
           </Button>
         ))}
-      {(add.isError || remove.isError) && <p className="mt-2 text-sm text-destructive">Zmena sa nepodarila.</p>}
+      {(add.isError || remove.isError) && <p className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>}
     </CollapsibleSection>
   )
 }

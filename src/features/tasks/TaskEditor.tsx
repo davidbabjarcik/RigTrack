@@ -9,6 +9,7 @@ import type { Member } from '@/features/companies/api'
 import { deleteTask, saveTask, taskKeys } from './api'
 import { cn } from '@/lib/utils'
 import { assigneesOf, TASK_PRIORITIES, TASK_PRIORITY_LABELS, TASK_CATEGORIES, TASK_STATUS_LABELS, TASK_STATUSES, taskSchema, type Task, type TaskFormValues } from './model'
+import { tx } from '@/lib/i18n'
 
 type Props = {
   companyId: string
@@ -69,9 +70,9 @@ export function TaskEditor({ companyId, task, members, defaultAssigneeId, canDel
       noValidate
       className="flex flex-col gap-3 rounded-xl border bg-surface p-4"
     >
-      <Field label="Čo treba spraviť *" autoFocus error={errors.title?.message} {...register('title')} />
+      <Field label={tx('Čo treba spraviť *')} autoFocus error={errors.title?.message} {...register('title')} />
       <fieldset>
-        <legend className="mb-1.5 text-sm font-medium">Kto (aj viac ľudí)</legend>
+        <legend className="mb-1.5 text-sm font-medium">{tx('Kto (aj viac ľudí)')}</legend>
         <div className="flex flex-wrap gap-2">
           {members.map((member) => {
             const on = chosen.includes(member.userId)
@@ -91,43 +92,39 @@ export function TaskEditor({ companyId, task, members, defaultAssigneeId, canDel
         {errors.assigneeIds?.message && <p className="mt-1 text-sm text-destructive">{errors.assigneeIds.message}</p>}
       </fieldset>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Field label="Kategória" list={categoryList} placeholder="napr. Web, Soc. siete" autoComplete="off" error={errors.category?.message} {...register('category')} />
+        <Field label={tx('Kategória')} list={categoryList} placeholder={tx('napr. Web, Soc. siete')} autoComplete="off" error={errors.category?.message} {...register('category')} />
         <datalist id={categoryList}>
           {TASK_CATEGORIES.map((category) => (
             <option key={category} value={category} />
           ))}
         </datalist>
-        <SelectField label="Priorita" error={errors.priority?.message} {...register('priority')}>
+        <SelectField label={tx('Priorita')} error={errors.priority?.message} {...register('priority')}>
           {TASK_PRIORITIES.map((value) => (
             <option key={value} value={value}>
-              {TASK_PRIORITY_LABELS[value]}
+              {tx(TASK_PRIORITY_LABELS[value])}
             </option>
           ))}
         </SelectField>
-        <Field label="Termín" type="date" error={errors.dueOn?.message} {...register('dueOn')} />
-        <SelectField label="Stav" error={errors.status?.message} {...register('status')}>
+        <Field label={tx('Termín')} type="date" error={errors.dueOn?.message} {...register('dueOn')} />
+        <SelectField label={tx('Stav')} error={errors.status?.message} {...register('status')}>
           {TASK_STATUSES.map((value) => (
             <option key={value} value={value}>
-              {TASK_STATUS_LABELS[value]}
+              {tx(TASK_STATUS_LABELS[value])}
             </option>
           ))}
         </SelectField>
       </div>
-      <TextareaField label="Poznámka" rows={2} error={errors.note?.message} {...register('note')} />
+      <TextareaField label={tx('Poznámka')} rows={2} error={errors.note?.message} {...register('note')} />
 
       {(save.isError || remove.isError) && (
-        <p role="alert" className="text-sm text-destructive">
-          Zmena sa nepodarila. Skúste to znova.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Zmena sa nepodarila. Skúste to znova.')}</p>
       )}
 
       <div className="flex flex-wrap gap-2">
         <Button type="submit" size="sm" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : 'Uložiť'}
+          {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" size="sm" onClick={onClose}>{tx('Zrušiť')}</Button>
         {task && canDelete && (
           <Button
             variant="destructive"
@@ -135,12 +132,10 @@ export function TaskEditor({ companyId, task, members, defaultAssigneeId, canDel
             className="ml-auto"
             disabled={remove.isPending}
             onClick={() => {
-              if (window.confirm('Odstrániť túto úlohu?')) remove.mutate()
+              if (window.confirm(tx('Odstrániť túto úlohu?'))) remove.mutate()
             }}
           >
-            <Trash2 className="size-4" aria-hidden />
-            Odstrániť
-          </Button>
+            <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
         )}
       </div>
     </form>

@@ -11,7 +11,7 @@ import { SideWidgets } from '@/features/dashboard/SideWidgets'
 import { GlobalSearch } from '@/features/search/GlobalSearch'
 import { VehicleDeadlineAlerts } from '@/features/vehicles/VehicleDeadlineAlerts'
 import { visibleNavItems } from '@/lib/navigation'
-import { useLang, useT } from '@/lib/i18n'
+import { tx, useLang, useT } from '@/lib/i18n'
 import { isAdminRole } from '@/lib/roles'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
 
@@ -41,10 +41,9 @@ export function DashboardPage() {
 
       {!isSupabaseConfigured && (
         <div role="status" className="mb-6 rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
-          <p className="font-medium">Databáza zatiaľ nie je pripojená</p>
-          <p className="mt-1 text-muted-foreground">
-            Doplňte <code>VITE_SUPABASE_URL</code> a <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> do súboru{' '}
-            <code>.env.local</code>.
+          <p className="font-medium">{tx('Databáza zatiaľ nie je pripojená')}</p>
+          <p className="mt-1 text-muted-foreground">{tx('Doplňte')}{' '}<code>{tx('VITE_SUPABASE_URL')}</code> a <code>{tx('VITE_SUPABASE_PUBLISHABLE_KEY')}</code>{' '}{tx('do súboru')}{' '}
+            <code>{tx('.env.local')}</code>.
           </p>
         </div>
       )}
@@ -75,8 +74,8 @@ export function DashboardPage() {
                   className="flex h-full flex-col gap-2 rounded-xl border bg-surface p-4 transition-colors hover:bg-muted"
                 >
                   <item.icon className="size-6 text-accent" aria-hidden />
-                  <span className="font-medium">{item.label}</span>
-                  <span className="text-xs text-muted-foreground">{item.description}</span>
+                  <span className="font-medium">{tx(item.label)}</span>
+                  <span className="text-xs text-muted-foreground">{tx(item.description)}</span>
                 </Link>
               </li>
             ))}

@@ -1,5 +1,6 @@
 import { ImageOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { tx } from '@/lib/i18n'
 
 type Props = {
   /** Adresa náhľadu; bez nej sa zobrazí značka „bez fotky“. */
@@ -21,7 +22,7 @@ export function PhotoThumb({ url, className }: Props) {
         // Dekoratívny obrázok: názov techniky stojí hneď vedľa.
         <img src={url} alt="" loading="lazy" decoding="async" className="size-full object-contain" />
       ) : (
-        <ImageOff className="size-5 text-muted-foreground/60" aria-label="Bez fotky" />
+        <ImageOff className="size-5 text-muted-foreground/60" aria-label={tx('Bez fotky')} />
       )}
     </span>
   )

@@ -8,6 +8,7 @@ import { formatMoney, todayIso } from '@/lib/format'
 import { fetchEventLogs, monthlyKeys, monthlyRows, monthRange, rewardNote, saveRate, useRates, type MonthRow, type Rate } from './monthly'
 import { formatMinutes, timeOf, workedMinutes } from './model'
 import { fetchSessions, WORK_PLACE_LABELS, workKeys } from './workApi'
+import { tx } from '@/lib/i18n'
 
 const MONTH_NAMES = ['január', 'február', 'marec', 'apríl', 'máj', 'jún', 'júl', 'august', 'september', 'október', 'november', 'december']
 
@@ -43,7 +44,7 @@ export function MonthlyReport({ companyId }: { companyId: string }) {
 
   const monthSessions = (sessions.data ?? []).filter((item) => item.startedAt.slice(0, 10) < to)
   const rows = monthlyRows(monthSessions, logs.data ?? [], rates.data ?? [], now).sort((a, b) => memberName(members.data, a.memberId).localeCompare(memberName(members.data, b.memberId), 'sk'))
-  const nameOf = (id: string) => memberName(members.data, id) || 'Bývalý člen'
+  const nameOf = (id: string) => memberName(members.data, id) || tx('Bývalý člen')
   const written = (row: MonthRow) => (payments.data ?? []).some((payment) => payment.memberId === row.memberId && payment.note === rewardNote(month, row))
   const label = `${MONTH_NAMES[Number(month.slice(5)) - 1]} ${month.slice(0, 4)}`
 
@@ -51,7 +52,7 @@ export function MonthlyReport({ companyId }: { companyId: string }) {
     const { default: writeXlsxFile } = await import('write-excel-file/browser')
     const bold = (value: string) => ({ value, fontWeight: 'bold' as const })
     const summary = [
-      [bold('Meno'), bold('Firma (h)'), bold('Doma (h)'), bold('Eventy (h)'), bold('Spolu (h)'), bold('Navrhovaná odmena (€)')],
+      [bold('Meno'), bold('Firma (h)'), bold('Doma (h)'), bold('Eventy (h)'), bold('Spolu (h)'), bold(tx('Navrhovaná odmena (€)'))],
       ...rows.map((row) => [
         { value: nameOf(row.memberId) },
         { value: Math.round((row.companyMinutes / 60) * 100) / 100 },
@@ -62,7 +63,7 @@ export function MonthlyReport({ companyId }: { companyId: string }) {
       ]),
     ]
     const records = [
-      [bold('Meno'), bold('Dátum'), bold('Kde'), bold('Od'), bold('Do'), bold('Prestávky (min)'), bold('Hodiny')],
+      [bold('Meno'), bold(tx('Dátum')), bold('Kde'), bold('Od'), bold('Do'), bold(tx('Prestávky (min)')), bold('Hodiny')],
       ...monthSessions.map((item) => [
         { value: nameOf(item.userId) },
         { value: item.startedAt.slice(0, 10) },
@@ -83,8 +84,8 @@ export function MonthlyReport({ companyId }: { companyId: string }) {
       ]),
     ]
     await writeXlsxFile([
-      { sheet: 'Súhrn', data: summary, columns: [{ width: 24 }, { width: 10 }, { width: 10 }, { width: 10 }, { width: 10 }, { width: 22 }], stickyRowsCount: 1 },
-      { sheet: 'Záznamy', data: records, columns: [{ width: 24 }, { width: 12 }, { width: 28 }, { width: 8 }, { width: 8 }, { width: 14 }, { width: 10 }], stickyRowsCount: 1 },
+      { sheet: tx('Súhrn'), data: summary, columns: [{ width: 24 }, { width: 10 }, { width: 10 }, { width: 10 }, { width: 10 }, { width: 22 }], stickyRowsCount: 1 },
+      { sheet: tx('Záznamy'), data: records, columns: [{ width: 24 }, { width: 12 }, { width: 28 }, { width: 8 }, { width: 8 }, { width: 14 }, { width: 10 }], stickyRowsCount: 1 },
     ] as never).toFile(`dochadzka-${month}.xlsx`)
   }
 
@@ -108,38 +109,34 @@ export function MonthlyReport({ companyId }: { companyId: string }) {
   return (
     <section className="mb-6 rounded-xl border bg-surface p-4" aria-labelledby="monthly-heading">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 id="monthly-heading" className="font-medium">
-          Mesačný výkaz
-        </h2>
+        <h2 id="monthly-heading" className="font-medium">{tx('Mesačný výkaz')}</h2>
         <div className="flex flex-wrap gap-2">
-          <select aria-label="Mesiac" className="h-9 rounded-lg border bg-background px-2 text-sm" value={month} onChange={(event) => setMonth(event.target.value)}>
+          <select aria-label={tx('Mesiac')} className="h-9 rounded-lg border bg-background px-2 text-sm" value={month} onChange={(event) => setMonth(event.target.value)}>
             {months.map((value) => (
               <option key={value} value={value}>
-                {MONTH_NAMES[Number(value.slice(5)) - 1]} {value.slice(0, 4)}
+                {tx(MONTH_NAMES[Number(value.slice(5)) - 1])} {value.slice(0, 4)}
               </option>
             ))}
           </select>
           <Button variant="outline" size="sm" disabled={rows.length === 0} onClick={() => void exportExcel()}>
-            <FileSpreadsheet className="size-4" aria-hidden />
-            Export do Excelu
-          </Button>
+            <FileSpreadsheet className="size-4" aria-hidden />{tx('Export do Excelu')}</Button>
         </div>
       </div>
       {sessions.isPending || logs.isPending ? (
-        <p className="text-sm text-muted-foreground">Načítavam…</p>
+        <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">V mesiaci {label} nie je žiadna dochádzka.</p>
+        <p className="text-sm text-muted-foreground">{tx('V mesiaci')}{' '}{label}{' '}{tx('nie je žiadna dochádzka.')}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[46rem] text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
-                <th className="py-2 pr-2 font-medium">Meno</th>
-                <th className="px-2 py-2 text-right font-medium">Firma</th>
-                <th className="px-2 py-2 text-right font-medium">Doma</th>
-                <th className="px-2 py-2 text-right font-medium">Eventy</th>
-                <th className="px-2 py-2 text-center font-medium">Sadzby €/h (firma · doma · event)</th>
-                <th className="px-2 py-2 text-right font-medium">Odmena</th>
+                <th className="py-2 pr-2 font-medium">{tx('Meno')}</th>
+                <th className="px-2 py-2 text-right font-medium">{tx('Firma')}</th>
+                <th className="px-2 py-2 text-right font-medium">{tx('Doma')}</th>
+                <th className="px-2 py-2 text-right font-medium">{tx('Eventy')}</th>
+                <th className="px-2 py-2 text-center font-medium">{tx('Sadzby €/h (firma · doma · event)')}</th>
+                <th className="px-2 py-2 text-right font-medium">{tx('Odmena')}</th>
                 <th className="py-2 pl-2" />
               </tr>
             </thead>
@@ -152,22 +149,19 @@ export function MonthlyReport({ companyId }: { companyId: string }) {
                   <td className="px-2 py-2 text-right tabular-nums">{hours(row.eventMinutes)} h</td>
                   <td className="px-2 py-2">
                     <span className="flex justify-center gap-1">
-                      {rateInput(row, 'companyRate', 'Sadzba na firme')}
-                      {rateInput(row, 'homeRate', 'Sadzba doma')}
-                      {rateInput(row, 'eventRate', 'Sadzba na evente')}
+                      {rateInput(row, 'companyRate', tx('Sadzba na firme'))}
+                      {rateInput(row, 'homeRate', tx('Sadzba doma'))}
+                      {rateInput(row, 'eventRate', tx('Sadzba na evente'))}
                     </span>
                   </td>
                   <td className="px-2 py-2 text-right font-medium tabular-nums">{row.amount === null ? '—' : formatMoney(row.amount, 'EUR')}</td>
                   <td className="py-2 pl-2 text-right">
                     {written(row) ? (
                       <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-                        <Check className="size-3.5" aria-hidden />v Odmenách
-                      </span>
+                        <Check className="size-3.5" aria-hidden />{tx('v Odmenách')}</span>
                     ) : (
                       <Button size="sm" variant="outline" disabled={!row.amount || reward.isPending} onClick={() => reward.mutate(row)}>
-                        <HandCoins className="size-4" aria-hidden />
-                        Zapísať do Odmien
-                      </Button>
+                        <HandCoins className="size-4" aria-hidden />{tx('Zapísať do Odmien')}</Button>
                     )}
                   </td>
                 </tr>
@@ -176,11 +170,10 @@ export function MonthlyReport({ companyId }: { companyId: string }) {
           </table>
         </div>
       )}
-      <p className="mt-2 text-xs text-muted-foreground">
-        Hodiny: práca na firme a doma (táto stránka) a výkazy z eventov za {label}. Odmena = hodiny × sadzba; sadzbu vidí len admin a daný človek. Spolu{' '}
+      <p className="mt-2 text-xs text-muted-foreground">{tx('Hodiny: práca na firme a doma (táto stránka) a výkazy z eventov za')}{' '}{label}{tx('. Odmena = hodiny × sadzba; sadzbu vidí len admin a daný človek. Spolu')}{' '}
         {formatMinutes(rows.reduce((sum, row) => sum + row.companyMinutes + row.homeMinutes + row.eventMinutes, 0))}.
       </p>
-      {(save.isError || reward.isError || rates.isError) && <p className="mt-2 text-sm text-destructive">Nepodarilo sa – táto časť databázy ešte nemusí byť pripravená (migrácia 0092).</p>}
+      {(save.isError || reward.isError || rates.isError) && <p className="mt-2 text-sm text-destructive">{tx('Nepodarilo sa – táto časť databázy ešte nemusí byť pripravená (migrácia 0092).')}</p>}
     </section>
   )
 }

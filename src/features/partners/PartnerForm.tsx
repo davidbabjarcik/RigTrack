@@ -10,6 +10,7 @@ import { companyKeys } from '@/features/companies/api'
 import { createPartnerCompany } from '@/features/companies/partnerCompany'
 import { cn } from '@/lib/utils'
 import { deletePartner, findRigTrackCompanies, linkPartnerCompany, partnerKeys, savePartner, type Partner, type PartnerFields } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 type AppChoice = 'none' | 'linked' | 'found'
 const CHOICES: { id: AppChoice; label: string; hint: string }[] = [
@@ -75,26 +76,26 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
   return (
     <form onSubmit={submit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Názov firmy / skupiny *" placeholder="ako firmu voláte" autoFocus maxLength={160} value={fields.name} onChange={(event) => set({ name: event.target.value })} onBlur={search} />
-        <Field label="Obchodné meno" placeholder="napr. Firma s.r.o." maxLength={160} value={fields.legalName} onChange={(event) => set({ legalName: event.target.value })} onBlur={search} />
-        <Field label="IČO" maxLength={20} value={fields.ico} onChange={(event) => set({ ico: event.target.value })} onBlur={search} />
-        <Field label="DIČ" maxLength={20} value={fields.dic} onChange={(event) => set({ dic: event.target.value })} />
+        <Field label={tx('Názov firmy / skupiny *')} placeholder={tx('ako firmu voláte')} autoFocus maxLength={160} value={fields.name} onChange={(event) => set({ name: event.target.value })} onBlur={search} />
+        <Field label={tx('Obchodné meno')} placeholder={tx('napr. Firma s.r.o.')} maxLength={160} value={fields.legalName} onChange={(event) => set({ legalName: event.target.value })} onBlur={search} />
+        <Field label={tx('IČO')} maxLength={20} value={fields.ico} onChange={(event) => set({ ico: event.target.value })} onBlur={search} />
+        <Field label={tx('DIČ')} maxLength={20} value={fields.dic} onChange={(event) => set({ dic: event.target.value })} />
         <VatPayerField value={fields.icDph ?? ''} onChange={(icDph) => set({ icDph })} />
-        <SelectField label="Právna forma" value={fields.legalForm ?? ''} onChange={(event) => set({ legalForm: event.target.value })}>
-          <option value="">— nezadané —</option>
+        <SelectField label={tx('Právna forma')} value={fields.legalForm ?? ''} onChange={(event) => set({ legalForm: event.target.value })}>
+          <option value="">{tx('— nezadané —')}</option>
           {LEGAL_FORMS.map((form) => (
             <option key={form} value={form}>
-              {LEGAL_FORM_LABELS[form]}
+              {tx(LEGAL_FORM_LABELS[form])}
             </option>
           ))}
         </SelectField>
-        <Field label={statutoryLabel(fields.legalForm)} placeholder="hlavná osoba (meno)" maxLength={120} value={fields.ceo} onChange={(event) => set({ ceo: event.target.value })} />
-        <Field label="Adresa" className="sm:col-span-2" placeholder="napr. Ulica 1, Mesto" maxLength={200} value={fields.address} onChange={(event) => set({ address: event.target.value })} />
+        <Field label={statutoryLabel(fields.legalForm)} placeholder={tx('hlavná osoba (meno)')} maxLength={120} value={fields.ceo} onChange={(event) => set({ ceo: event.target.value })} />
+        <Field label={tx('Adresa')} className="sm:col-span-2" placeholder={tx('napr. Ulica 1, Mesto')} maxLength={200} value={fields.address} onChange={(event) => set({ address: event.target.value })} />
       </div>
 
       {linkable && (
         <fieldset className="rounded-lg border p-3">
-          <legend className="px-1 text-sm font-medium">RigTrack</legend>
+          <legend className="px-1 text-sm font-medium">{tx('RigTrack')}</legend>
           <div role="radiogroup" className="flex flex-wrap gap-1 rounded-lg bg-muted p-1 sm:inline-flex">
             {CHOICES.map((item) => (
               <button
@@ -108,27 +109,23 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
                 }}
                 className={cn('rounded-md px-3 py-1.5 text-sm font-medium', choice === item.id ? 'bg-surface text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
               >
-                {item.label}
+                {tx(item.label)}
               </button>
             ))}
           </div>
-          {CHOICES.find((item) => item.id === choice)?.hint && <p className="mt-2 text-xs text-muted-foreground">{CHOICES.find((item) => item.id === choice)!.hint}</p>}
+          {CHOICES.find((item) => item.id === choice)?.hint && <p className="mt-2 text-xs text-muted-foreground">{tx(CHOICES.find((item) => item.id === choice)!.hint)}</p>}
 
           {choice === 'none' && matches.length > 0 && (
             <p className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 p-2 text-sm">
-              <Building className="size-4 text-accent" aria-hidden />
-              Firma „{matches[0].name}“ už v RigTracku je.
-              <Button size="sm" variant="outline" onClick={() => (setChoice('linked'), setPicked(matches[0].id))}>
-                Prepojiť
-              </Button>
+              <Building className="size-4 text-accent" aria-hidden />{tx('Firma „')}{matches[0].name}{tx('“ už v RigTracku je.')}<Button size="sm" variant="outline" onClick={() => (setChoice('linked'), setPicked(matches[0].id))}>{tx('Prepojiť')}</Button>
             </p>
           )}
 
           {choice === 'linked' && (
             <div className="mt-2 flex flex-col gap-2">
-              {current?.linkedCompanyId && picked === current.linkedCompanyId && <p className="text-sm text-muted-foreground">Prepojené s ich firmou v RigTracku.</p>}
+              {current?.linkedCompanyId && picked === current.linkedCompanyId && <p className="text-sm text-muted-foreground">{tx('Prepojené s ich firmou v RigTracku.')}</p>}
               {found.isFetching ? (
-                <p className="text-sm text-muted-foreground">Hľadám…</p>
+                <p className="text-sm text-muted-foreground">{tx('Hľadám…')}</p>
               ) : matches.length > 0 ? (
                 <ul className="flex flex-col gap-1">
                   {matches.map((company) => (
@@ -144,29 +141,25 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
               ) : (
                 !current?.linkedCompanyId && (
                   <p className="text-sm text-muted-foreground">
-                    {lookup.ico || lookup.name ? 'V RigTracku sme firmu s týmto IČO ani názvom nenašli. Doplňte IČO, alebo im ju založte.' : 'Zadajte názov alebo IČO a stlačte Hľadať.'}
+                    {lookup.ico || lookup.name ? tx('V RigTracku sme firmu s týmto IČO ani názvom nenašli. Doplňte IČO, alebo im ju založte.') : tx('Zadajte názov alebo IČO a stlačte Hľadať.')}
                   </p>
                 )
               )}
               <Button size="sm" variant="outline" className="self-start" onClick={search}>
-                <Search className="size-4" aria-hidden />
-                Hľadať v RigTracku
-              </Button>
+                <Search className="size-4" aria-hidden />{tx('Hľadať v RigTracku')}</Button>
             </div>
           )}
-          {choice === 'found' && current?.linkedCompanyId && <p className="mt-2 text-sm text-muted-foreground">Už sú prepojení s firmou v RigTracku.</p>}
+          {choice === 'found' && current?.linkedCompanyId && <p className="mt-2 text-sm text-muted-foreground">{tx('Už sú prepojení s firmou v RigTracku.')}</p>}
         </fieldset>
       )}
 
-      <TextareaField label="Poznámka" rows={2} maxLength={1000} value={fields.note} onChange={(event) => set({ note: event.target.value })} />
-      {(save.isError || remove.isError) && <p className="text-sm text-destructive">Nepodarilo sa uložiť. Táto časť databázy ešte nemusí byť pripravená – kontaktujte vývojára aplikácie.</p>}
+      <TextareaField label={tx('Poznámka')} rows={2} maxLength={1000} value={fields.note} onChange={(event) => set({ note: event.target.value })} />
+      {(save.isError || remove.isError) && <p className="text-sm text-destructive">{tx('Nepodarilo sa uložiť. Táto časť databázy ešte nemusí byť pripravená – kontaktujte vývojára aplikácie.')}</p>}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" size="sm" disabled={!fields.name.trim() || save.isPending || (choice === 'linked' && !picked && !current?.linkedCompanyId)}>
-          {current ? 'Uložiť' : 'Pridať firmu'}
+          {current ? tx('Uložiť') : tx('Pridať firmu')}
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => onDone()}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" size="sm" onClick={() => onDone()}>{tx('Zrušiť')}</Button>
         {current && (
           <Button
             variant="destructive"
@@ -174,12 +167,10 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
             className="ml-auto"
             disabled={remove.isPending}
             onClick={() => {
-              if (window.confirm(`Odstrániť ${current.name} aj s kontaktmi?`)) remove.mutate()
+              if (window.confirm(tf('Odstrániť {0} aj s kontaktmi?', current.name))) remove.mutate()
             }}
           >
-            <Trash2 className="size-4" aria-hidden />
-            Odstrániť
-          </Button>
+            <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
         )}
       </div>
     </form>

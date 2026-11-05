@@ -1,11 +1,12 @@
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '@/lib/theme'
 import { cn } from '@/lib/utils'
+import { tx } from '@/lib/i18n'
 
 /** Prepínač svetlého a tmavého režimu. Ukazuje ikonu režimu, do ktorého prepne. */
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, toggle } = useTheme()
-  const label = theme === 'dark' ? 'Prepnúť na svetlý režim' : 'Prepnúť na tmavý režim'
+  const label = theme === 'dark' ? tx('Prepnúť na svetlý režim') : tx('Prepnúť na tmavý režim')
   const Icon = theme === 'dark' ? Sun : Moon
   return (
     <button

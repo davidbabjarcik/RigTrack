@@ -7,6 +7,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { addTodoFromField, taskKeys } from './api'
 import { cleanLabel, DATE_KEYWORD, PRINT_DATE_KEYWORD, hasKeyword, printTargetFromPath, printTitle, pushKey, stripKeyword, todoTitle, type KeywordKind } from './todoKeyword'
 import { addToPrintQueue, printKeys, useCompanyPrefs } from '@/features/print/api'
+import { tx } from '@/lib/i18n'
 
 type Field = HTMLInputElement | HTMLTextAreaElement
 const SKIPPED = new Set(['password', 'checkbox', 'radio', 'file', 'submit', 'button', 'range', 'color', 'hidden'])
@@ -90,12 +91,12 @@ function Watcher({ userId }: { userId: string }) {
         if (field instanceof HTMLInputElement && DATE_TYPES.has(field.type)) setNativeValue(field, '')
         else if (hasKeyword(field.value)) setNativeValue(field, stripKeyword(field.value))
       }, 0)
-      addTodoFromField(companyId, me, title, link, { category: kind === 'print' ? 'Tlač' : undefined, assignees })
+      addTodoFromField(companyId, me, title, link, { category: kind === 'print' ? tx('Tlač') : undefined, assignees })
         .then(() => {
           setToast({ ok: true, text: title })
           void queryClient.invalidateQueries({ queryKey: taskKeys.list(companyId) })
         })
-        .catch(() => setToast({ ok: false, text: 'Úlohu sa nepodarilo pridať – možno nemáte oprávnenie pridávať úlohy.' }))
+        .catch(() => setToast({ ok: false, text: tx('Úlohu sa nepodarilo pridať – možno nemáte oprávnenie pridávať úlohy.') }))
     }
     document.addEventListener('keydown', onKey, true)
     document.addEventListener('change', onDate, true)
@@ -117,19 +118,16 @@ function Watcher({ userId }: { userId: string }) {
       {toast.ok && <CheckCircle2 className="size-5 shrink-0 text-emerald-500" aria-hidden />}
       <span className="min-w-0 flex-1">
         {toast.ok ? (
-          <>
-            Pridané do úloh{toast.text.startsWith('Vytlačiť') ? ' a do tlače' : ''}: <span className="font-medium">{toast.text}</span>
+          <>{tx('Pridané do úloh')}{toast.text.startsWith('Vytlačiť') ? tx(' a do tlače') : ''}: <span className="font-medium">{toast.text}</span>
           </>
         ) : (
           <span className="text-destructive">{toast.text}</span>
         )}
       </span>
       {toast.ok && (
-        <Link to="/todos" className="shrink-0 font-medium text-accent hover:underline">
-          Úlohy
-        </Link>
+        <Link to="/todos" className="shrink-0 font-medium text-accent hover:underline">{tx('Úlohy')}</Link>
       )}
-      <button type="button" aria-label="Zavrieť" className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => setToast(null)}>
+      <button type="button" aria-label={tx('Zavrieť')} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => setToast(null)}>
         <X className="size-4" aria-hidden />
       </button>
     </div>

@@ -35,6 +35,7 @@ import {
 } from './model'
 import { OfferActions } from './OfferActions'
 import { PartEditor } from './PartEditor'
+import { tx, tf } from '@/lib/i18n'
 
 const money = (value: number) => formatMoney(value, 'EUR')
 
@@ -52,7 +53,7 @@ export function OfferEditorPage() {
   const members = useMembers(companyId)
 
   if (id !== 'new' && offer.isPending) return <LoadingBlock />
-  if (id !== 'new' && (offer.isError || !offer.data)) return <ErrorBlock message="Ponuka sa nenašla alebo k nej nemáte prístup." />
+  if (id !== 'new' && (offer.isError || !offer.data)) return <ErrorBlock message={tx('Ponuka sa nenašla alebo k nej nemáte prístup.')} />
   if (events.isPending || issuers.isPending) return <LoadingBlock />
 
   let initial: OfferFields
@@ -154,58 +155,48 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link to="/offers" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" aria-hidden />
-          Cenové ponuky
-        </Link>
+          <ArrowLeft className="size-4" aria-hidden />{tx('Cenové ponuky')}</Link>
         <div className="flex flex-wrap gap-2">
           {id && can(company, 'offers.delete') && (
-            <Button variant="ghost" size="sm" disabled={remove.isPending} onClick={() => window.confirm('Zmazať túto cenovú ponuku?') && remove.mutate()}>
-              <Trash2 className="size-4" aria-hidden />
-              Zmazať
-            </Button>
+            <Button variant="ghost" size="sm" disabled={remove.isPending} onClick={() => window.confirm(tx('Zmazať túto cenovú ponuku?')) && remove.mutate()}>
+              <Trash2 className="size-4" aria-hidden />{tx('Zmazať')}</Button>
           )}
           {id && (
             <LinkButton to={`/offers/${id}/print`} variant="outline" size="sm">
-              <Printer className="size-4" aria-hidden />
-              Náhľad a tlač / PDF
-            </LinkButton>
+              <Printer className="size-4" aria-hidden />{tx('Náhľad a tlač / PDF')}</LinkButton>
           )}
           {canEdit && (
             <Button size="sm" disabled={save.isPending || (!dirty && Boolean(id))} onClick={() => save.mutate()}>
               <Save className="size-4" aria-hidden />
-              {save.isPending ? 'Ukladám…' : 'Uložiť'}
+              {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
             </Button>
           )}
         </div>
       </div>
-      <h1 className="text-2xl font-semibold tracking-tight">{id ? `Cenová ponuka ${draft.number}` : 'Nová cenová ponuka'}</h1>
-      {save.isError && <p className="text-sm text-destructive">Ponuku sa nepodarilo uložiť. Táto časť databázy ešte nemusí byť pripravená (migrácia 0096).</p>}
+      <h1 className="text-2xl font-semibold tracking-tight">{id ? tf('Cenová ponuka {0}', draft.number) : tx('Nová cenová ponuka')}</h1>
+      {save.isError && <p className="text-sm text-destructive">{tx('Ponuku sa nepodarilo uložiť. Táto časť databázy ešte nemusí byť pripravená (migrácia 0096).')}</p>}
 
       {id && <OfferActions companyId={companyId} id={id} draft={draft} canEdit={canEdit} />}
 
       {/* Rozpočet a súčet – stále na očiach pri skladaní. */}
       <div className="sticky top-0 z-10 flex flex-col gap-2 rounded-xl border bg-surface/95 p-3 backdrop-blur">
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span>
-            Súčet častí: <span className="font-semibold tabular-nums">{money(sum)}</span>
+          <span>{tx('Súčet častí:')}{' '}<span className="font-semibold tabular-nums">{money(sum)}</span>
           </span>
           {draft.totalOverride !== null && (
-            <span>
-              Celková (zvýhodnená): <span className="font-semibold tabular-nums">{money(total)}</span>
+            <span>{tx('Celková (zvýhodnená):')}{' '}<span className="font-semibold tabular-nums">{money(total)}</span>
             </span>
           )}
           {remaining !== null && (
             <span className={cn('font-medium', remaining < 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400')}>
-              {remaining < 0 ? `Nad rozpočet o ${money(-remaining)}` : `Ostáva ${money(remaining)} z ${money(draft.budget!)}`}
+              {remaining < 0 ? tf('Nad rozpočet o {0}', money(-remaining)) : tf('Ostáva {0} z {1}', money(remaining), money(draft.budget!))}
             </span>
           )}
-          <label className="ml-auto flex items-center gap-2">
-            Max. rozpočet (€)
-            <input
+          <label className="ml-auto flex items-center gap-2">{tx('Max. rozpočet (€)')}<input
               type="number"
               min={0}
               step="10"
-              placeholder="bez limitu"
+              placeholder={tx('bez limitu')}
               className="h-8 w-28 rounded-md border bg-background px-2 text-right"
               value={draft.budget ?? ''}
               onChange={(e) => set({ budget: e.target.value === '' ? null : Math.max(0, Number(e.target.value)) })}
@@ -221,17 +212,17 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
 
       <fieldset disabled={!canEdit} className="flex flex-col gap-4">
         <section className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Číslo ponuky" maxLength={40} value={draft.number} onChange={(e) => set({ number: e.target.value })} />
-          <Field label="Dátum vystavenia" type="date" value={draft.issuedOn} onChange={(e) => set({ issuedOn: e.target.value })} />
-          <SelectField label="Stav" value={draft.status} onChange={(e) => set({ status: e.target.value as OfferStatus })}>
+          <Field label={tx('Číslo ponuky')} maxLength={40} value={draft.number} onChange={(e) => set({ number: e.target.value })} />
+          <Field label={tx('Dátum vystavenia')} type="date" value={draft.issuedOn} onChange={(e) => set({ issuedOn: e.target.value })} />
+          <SelectField label={tx('Stav')} value={draft.status} onChange={(e) => set({ status: e.target.value as OfferStatus })}>
             {Object.entries(OFFER_STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Event (nepovinné)" value={draft.eventId ?? ''} onChange={(e) => set({ eventId: e.target.value || null })}>
-            <option value="">— bez eventu —</option>
+          <SelectField label={tx('Event (nepovinné)')} value={draft.eventId ?? ''} onChange={(e) => set({ eventId: e.target.value || null })}>
+            <option value="">{tx('— bez eventu —')}</option>
             {(events.data ?? [])
               .slice()
               .sort((a, b) => b.startsOn.localeCompare(a.startsOn))
@@ -241,16 +232,16 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
                 </option>
               ))}
           </SelectField>
-          <Field label="Podujatie" className="sm:col-span-2" maxLength={200} value={draft.title} onChange={(e) => set({ title: e.target.value })} />
-          <Field label="Miesto dodania" maxLength={200} value={draft.place} onChange={(e) => set({ place: e.target.value })} />
-          <Field label="Termín dodania" maxLength={200} placeholder="napr. 12. 6. 2026" value={draft.serviceDates} onChange={(e) => set({ serviceDates: e.target.value })} />
+          <Field label={tx('Podujatie')} className="sm:col-span-2" maxLength={200} value={draft.title} onChange={(e) => set({ title: e.target.value })} />
+          <Field label={tx('Miesto dodania')} maxLength={200} value={draft.place} onChange={(e) => set({ place: e.target.value })} />
+          <Field label={tx('Termín dodania')} maxLength={200} placeholder={tx('napr. 12. 6. 2026')} value={draft.serviceDates} onChange={(e) => set({ serviceDates: e.target.value })} />
         </section>
 
         <div className="grid gap-4 lg:grid-cols-2">
           <section className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
-            <h2 className="font-medium">Vystavuje</h2>
+            <h2 className="font-medium">{tx('Vystavuje')}</h2>
             {(issuers.data ?? []).length > 0 ? (
-              <div role="radiogroup" aria-label="Vystavovateľ" className="flex flex-wrap gap-1 rounded-lg bg-muted p-1 sm:self-start">
+              <div role="radiogroup" aria-label={tx('Vystavovateľ')} className="flex flex-wrap gap-1 rounded-lg bg-muted p-1 sm:self-start">
                 {issuers.data!.map((issuer) => (
                   <button
                     key={issuer.id}
@@ -268,41 +259,38 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">
-                Použijú sa Údaje o firme. Či firma vystavuje ako s.r.o. alebo živnosť, nastavíte v{' '}
-                <Link to="/settings" className="text-accent hover:underline">
-                  Nastavenia → Firma
-                </Link>
+              <p className="text-xs text-muted-foreground">{tx('Použijú sa Údaje o firme. Či firma vystavuje ako s.r.o. alebo živnosť, nastavíte v')}{' '}
+                <Link to="/settings" className="text-accent hover:underline">{tx('Nastavenia → Firma')}</Link>
                 .
               </p>
             )}
             <p className="text-sm whitespace-pre-line">
               <span className="font-medium">{draft.issuer.name || '—'}</span>
-              {[draft.issuer.address, draft.issuer.ico && `IČO ${draft.issuer.ico}`, draft.issuer.dic && `DIČ ${draft.issuer.dic}`, draft.issuer.vatPayer && draft.issuer.icDph && `IČ DPH ${draft.issuer.icDph}`, draft.issuer.vatPayer ? '' : 'neplatiteľ DPH', draft.issuer.contact]
+              {[draft.issuer.address, draft.issuer.ico && tf('IČO {0}', draft.issuer.ico), draft.issuer.dic && tf('DIČ {0}', draft.issuer.dic), draft.issuer.vatPayer && draft.issuer.icDph && tf('IČ DPH {0}', draft.issuer.icDph), draft.issuer.vatPayer ? '' : tx('neplatiteľ DPH'), draft.issuer.contact]
                 .filter(Boolean)
                 .map((line) => `\n${line}`)}
             </p>
             <details className="text-sm">
-              <summary className="cursor-pointer text-muted-foreground">Upraviť údaje len v tejto ponuke</summary>
+              <summary className="cursor-pointer text-muted-foreground">{tx('Upraviť údaje len v tejto ponuke')}</summary>
               <div className="mt-2 flex flex-col gap-2">
-                <Field label="Názov" maxLength={160} value={draft.issuer.name} onChange={(e) => set({ issuer: { ...draft.issuer, name: e.target.value } })} />
-                <TextareaField label="Adresa" rows={2} maxLength={300} value={draft.issuer.address} onChange={(e) => set({ issuer: { ...draft.issuer, address: e.target.value } })} />
+                <Field label={tx('Názov')} maxLength={160} value={draft.issuer.name} onChange={(e) => set({ issuer: { ...draft.issuer, name: e.target.value } })} />
+                <TextareaField label={tx('Adresa')} rows={2} maxLength={300} value={draft.issuer.address} onChange={(e) => set({ issuer: { ...draft.issuer, address: e.target.value } })} />
                 <div className="grid gap-2 sm:grid-cols-3">
-                  <Field label="IČO" maxLength={20} value={draft.issuer.ico} onChange={(e) => set({ issuer: { ...draft.issuer, ico: e.target.value } })} />
-                  <Field label="DIČ" maxLength={20} value={draft.issuer.dic} onChange={(e) => set({ issuer: { ...draft.issuer, dic: e.target.value } })} />
-                  {draft.issuer.vatPayer && <Field label="IČ DPH" maxLength={20} value={draft.issuer.icDph} onChange={(e) => set({ issuer: { ...draft.issuer, icDph: e.target.value } })} />}
+                  <Field label={tx('IČO')} maxLength={20} value={draft.issuer.ico} onChange={(e) => set({ issuer: { ...draft.issuer, ico: e.target.value } })} />
+                  <Field label={tx('DIČ')} maxLength={20} value={draft.issuer.dic} onChange={(e) => set({ issuer: { ...draft.issuer, dic: e.target.value } })} />
+                  {draft.issuer.vatPayer && <Field label={tx('IČ DPH')} maxLength={20} value={draft.issuer.icDph} onChange={(e) => set({ issuer: { ...draft.issuer, icDph: e.target.value } })} />}
                 </div>
-                <TextareaField label="Kontakt" rows={2} maxLength={300} value={draft.issuer.contact} onChange={(e) => set({ issuer: { ...draft.issuer, contact: e.target.value } })} />
+                <TextareaField label={tx('Kontakt')} rows={2} maxLength={300} value={draft.issuer.contact} onChange={(e) => set({ issuer: { ...draft.issuer, contact: e.target.value } })} />
               </div>
             </details>
           </section>
 
           <section className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="font-medium">Ponuka pre</h2>
+              <h2 className="font-medium">{tx('Ponuka pre')}</h2>
               {(partners.data ?? []).length > 0 && (
                 <select
-                  aria-label="Vybrať z Firiem a kontaktov"
+                  aria-label={tx('Vybrať z Firiem a kontaktov')}
                   className="h-9 rounded-lg border bg-background px-2 text-sm"
                   value=""
                   onChange={(e) => {
@@ -322,7 +310,7 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
                     })
                   }}
                 >
-                  <option value="">Z Firiem a kontaktov…</option>
+                  <option value="">{tx('Z Firiem a kontaktov…')}</option>
                   {partners.data!.map((partner) => (
                     <option key={partner.id} value={partner.id}>
                       {partner.name}
@@ -331,34 +319,34 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
                 </select>
               )}
             </div>
-            <Field label="Názov / meno" maxLength={160} value={draft.client.name} onChange={(e) => set({ client: { ...draft.client, name: e.target.value } })} />
-            <TextareaField label="Adresa" rows={2} maxLength={300} value={draft.client.address} onChange={(e) => set({ client: { ...draft.client, address: e.target.value } })} />
+            <Field label={tx('Názov / meno')} maxLength={160} value={draft.client.name} onChange={(e) => set({ client: { ...draft.client, name: e.target.value } })} />
+            <TextareaField label={tx('Adresa')} rows={2} maxLength={300} value={draft.client.address} onChange={(e) => set({ client: { ...draft.client, address: e.target.value } })} />
             <div className="grid gap-2 sm:grid-cols-2">
-              <Field label="IČO" maxLength={20} value={draft.client.ico} onChange={(e) => set({ client: { ...draft.client, ico: e.target.value } })} />
-              <Field label="DIČ" maxLength={20} value={draft.client.dic} onChange={(e) => set({ client: { ...draft.client, dic: e.target.value } })} />
-              <SelectField label="Právna forma" value={draft.client.legalForm ?? ''} onChange={(e) => set({ client: { ...draft.client, legalForm: e.target.value } })}>
-                <option value="">— nezadané —</option>
+              <Field label={tx('IČO')} maxLength={20} value={draft.client.ico} onChange={(e) => set({ client: { ...draft.client, ico: e.target.value } })} />
+              <Field label={tx('DIČ')} maxLength={20} value={draft.client.dic} onChange={(e) => set({ client: { ...draft.client, dic: e.target.value } })} />
+              <SelectField label={tx('Právna forma')} value={draft.client.legalForm ?? ''} onChange={(e) => set({ client: { ...draft.client, legalForm: e.target.value } })}>
+                <option value="">{tx('— nezadané —')}</option>
                 {LEGAL_FORMS.map((form) => (
                   <option key={form} value={form}>
-                    {LEGAL_FORM_LABELS[form]}
+                    {tx(LEGAL_FORM_LABELS[form])}
                   </option>
                 ))}
               </SelectField>
               <Field label={statutoryLabel(draft.client.legalForm)} maxLength={120} value={draft.client.statutory ?? ''} onChange={(e) => set({ client: { ...draft.client, statutory: e.target.value } })} />
             </div>
-            <Field label="Kontaktná osoba" maxLength={200} value={draft.client.contact} onChange={(e) => set({ client: { ...draft.client, contact: e.target.value } })} />
+            <Field label={tx('Kontaktná osoba')} maxLength={200} value={draft.client.contact} onChange={(e) => set({ client: { ...draft.client, contact: e.target.value } })} />
             {draft.client.name.trim() && !knownClient && (
               <Button variant="outline" size="sm" className="self-start" disabled={addPartner.isPending} onClick={() => addPartner.mutate()}>
                 <UserPlus className="size-4" aria-hidden />
-                {addPartner.isPending ? 'Ukladám…' : 'Uložiť do Firiem a kontaktov'}
+                {addPartner.isPending ? tx('Ukladám…') : tx('Uložiť do Firiem a kontaktov')}
               </Button>
             )}
-            {addPartner.isSuccess && <p className="text-xs text-muted-foreground">Uložené do Firiem a kontaktov.</p>}
+            {addPartner.isSuccess && <p className="text-xs text-muted-foreground">{tx('Uložené do Firiem a kontaktov.')}</p>}
           </section>
         </div>
 
         <section className="flex flex-col gap-3">
-          <h2 className="font-medium">Časti ponuky</h2>
+          <h2 className="font-medium">{tx('Časti ponuky')}</h2>
           {draft.sections.map((part, index) => (
             <PartEditor
               key={part.id}
@@ -376,12 +364,10 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
           ))}
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setSections([...draft.sections, emptyPart()])}>
-              <Plus className="size-4" aria-hidden />
-              Pridať časť
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Pridať časť')}</Button>
             {(templates.data ?? []).length > 0 && (
               <select
-                aria-label="Pridať časť zo šablóny"
+                aria-label={tx('Pridať časť zo šablóny')}
                 className="h-9 rounded-lg border bg-background px-2 text-sm"
                 value=""
                 onChange={(e) => {
@@ -390,7 +376,7 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
                   if (template) setSections([...draft.sections, normalizePart({ ...template.part, id: undefined, parts: template.part.parts.map((child) => ({ ...child, id: undefined as never })) })])
                 }}
               >
-                <option value="">Pridať zo šablóny…</option>
+                <option value="">{tx('Pridať zo šablóny…')}</option>
                 {templates.data!.map((template) => (
                   <option key={template.id} value={template.id}>
                     {template.title}
@@ -398,30 +384,30 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
                 ))}
               </select>
             )}
-            {keepTemplate.isSuccess && <span className="text-xs text-muted-foreground">Uložené ako šablóna.</span>}
+            {keepTemplate.isSuccess && <span className="text-xs text-muted-foreground">{tx('Uložené ako šablóna.')}</span>}
           </div>
         </section>
 
         <section className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
-          <SelectField label="DPH" value={draft.vatMode} onChange={(e) => set({ vatMode: e.target.value as VatMode })}>
+          <SelectField label={tx('DPH')} value={draft.vatMode} onChange={(e) => set({ vatMode: e.target.value as VatMode })}>
             {Object.entries(VAT_MODE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
             ))}
           </SelectField>
-          <Field label="Sadzba DPH %" type="number" min={0} max={100} disabled={draft.vatMode === 'none'} value={draft.vatPct} onChange={(e) => set({ vatPct: Math.min(100, Math.max(0, Number(e.target.value) || 0)) })} />
+          <Field label={tx('Sadzba DPH %')} type="number" min={0} max={100} disabled={draft.vatMode === 'none'} value={draft.vatPct} onChange={(e) => set({ vatPct: Math.min(100, Math.max(0, Number(e.target.value) || 0)) })} />
           <Field
-            label="Celková cena – zvýhodnená (€)"
+            label={tx('Celková cena – zvýhodnená (€)')}
             type="number"
             min={0}
             step="0.01"
-            placeholder={`súčet ${money(sum)}`}
+            placeholder={tf('súčet {0}', money(sum))}
             value={draft.totalOverride ?? ''}
             onChange={(e) => set({ totalOverride: e.target.value === '' ? null : Math.max(0, Number(e.target.value)) })}
           />
           <div className="flex flex-col gap-1">
-            <Field label="Vyhotovil" maxLength={120} value={draft.authorName} onChange={(e) => set({ authorName: e.target.value })} />
+            <Field label={tx('Vyhotovil')} maxLength={120} value={draft.authorName} onChange={(e) => set({ authorName: e.target.value })} />
             <div className="flex flex-wrap gap-1">
               {authors.map((name) => (
                 <button
@@ -436,17 +422,17 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
             </div>
           </div>
           <TextareaField
-            label="Poznámky na konci ponuky"
+            label={tx('Poznámky na konci ponuky')}
             className="sm:col-span-2 lg:col-span-4"
             rows={3}
             maxLength={3000}
-            placeholder="napr. platnosť ponuky, podmienky, kontakt pre individuálnu ponuku"
+            placeholder={tx('napr. platnosť ponuky, podmienky, kontakt pre individuálnu ponuku')}
             value={draft.notes}
             onChange={(e) => set({ notes: e.target.value })}
           />
         </section>
       </fieldset>
-      {dirty && canEdit && <p className="text-sm text-accent">Máte neuložené zmeny.</p>}
+      {dirty && canEdit && <p className="text-sm text-accent">{tx('Máte neuložené zmeny.')}</p>}
     </div>
   )
 }

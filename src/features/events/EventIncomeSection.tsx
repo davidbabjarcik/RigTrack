@@ -20,6 +20,7 @@ import {
   type PaymentMethod,
   type VatBasis,
 } from './income'
+import { tx, tf } from '@/lib/i18n'
 
 const eur = (amount: number) => formatMoney(amount, 'EUR')
 
@@ -69,38 +70,36 @@ export function EventIncomeSection({ companyId, eventId }: { companyId: string; 
   const invoicers = [...new Set([company.companyName, ...list.map((payment) => payment.invoicedBy).filter(Boolean)])]
 
   return (
-    <CollapsibleSection id="event.income" title="Príjmy z akcie" actions={
+    <CollapsibleSection id="event.income" title={tx('Príjmy z akcie')} actions={
         <>
         <Button variant="outline" size="sm" onClick={() => setOpen(!open)}>
           {!open && <Plus className="size-4" aria-hidden />}
-          {open ? 'Zavrieť' : 'Zapísať príjem'}
+          {open ? tx('Zavrieť') : tx('Zapísať príjem')}
         </Button>
         </>
       }>
 
       {payments.isError && (
-        <p role="alert" className="mb-2 text-sm text-destructive">
-          Príjmy sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
-        </p>
+        <p role="alert" className="mb-2 text-sm text-destructive">{tx('Príjmy sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
       )}
 
       {open && (
         <form onSubmit={submit} className="mb-3 grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-3">
-          <Field label="Suma (€) *" inputMode="decimal" autoFocus value={form.amount} onChange={(e) => set({ amount: e.target.value })} />
-          <SelectField label="Spôsob" value={form.method} onChange={(e) => set({ method: e.target.value as PaymentMethod })}>
+          <Field label={tx('Suma (€) *')} inputMode="decimal" autoFocus value={form.amount} onChange={(e) => set({ amount: e.target.value })} />
+          <SelectField label={tx('Spôsob')} value={form.method} onChange={(e) => set({ method: e.target.value as PaymentMethod })}>
             {PAYMENT_METHODS.map((method) => (
               <option key={method} value={method}>
-                {METHOD_LABELS[method]}
+                {tx(METHOD_LABELS[method])}
               </option>
             ))}
           </SelectField>
-          <Field label="Dátum *" type="date" value={form.receivedOn} onChange={(e) => set({ receivedOn: e.target.value })} />
+          <Field label={tx('Dátum *')} type="date" value={form.receivedOn} onChange={(e) => set({ receivedOn: e.target.value })} />
           {form.method === 'invoice' && (
             <>
               <Field
-                label="Faktúra cez firmu"
+                label={tx('Faktúra cez firmu')}
                 list={invoicedListId}
-                placeholder="napr. skratka alebo celý názov firmy"
+                placeholder={tx('napr. skratka alebo celý názov firmy')}
                 maxLength={120}
                 value={form.invoicedBy}
                 onChange={(e) => set({ invoicedBy: e.target.value })}
@@ -112,19 +111,17 @@ export function EventIncomeSection({ companyId, eventId }: { companyId: string; 
               </datalist>
             </>
           )}
-          <SelectField label="Suma je" value={form.vat} onChange={(e) => set({ vat: e.target.value as VatBasis })}>
-            <option value="with">s DPH</option>
-            <option value="without">bez DPH</option>
+          <SelectField label={tx('Suma je')} value={form.vat} onChange={(e) => set({ vat: e.target.value as VatBasis })}>
+            <option value="with">{tx('s DPH')}</option>
+            <option value="without">{tx('bez DPH')}</option>
           </SelectField>
-          <Field label="Sadzba DPH (%)" inputMode="decimal" placeholder="prázdne = neviem" value={form.vatRate} onChange={(e) => set({ vatRate: e.target.value })} />
-          <Field label="Poznámka" className="sm:col-span-3" maxLength={300} value={form.note} onChange={(e) => set({ note: e.target.value })} />
+          <Field label={tx('Sadzba DPH (%)')} inputMode="decimal" placeholder={tx('prázdne = neviem')} value={form.vatRate} onChange={(e) => set({ vatRate: e.target.value })} />
+          <Field label={tx('Poznámka')} className="sm:col-span-3" maxLength={300} value={form.note} onChange={(e) => set({ note: e.target.value })} />
           {add.isError && (
-            <p role="alert" className="text-sm text-destructive sm:col-span-3">
-              Uloženie zlyhalo.
-            </p>
+            <p role="alert" className="text-sm text-destructive sm:col-span-3">{tx('Uloženie zlyhalo.')}</p>
           )}
           <Button type="submit" className="justify-self-start" disabled={!valid || add.isPending}>
-            {add.isPending ? 'Ukladám…' : 'Uložiť príjem'}
+            {add.isPending ? tx('Ukladám…') : tx('Uložiť príjem')}
           </Button>
         </form>
       )}
@@ -139,10 +136,10 @@ export function EventIncomeSection({ companyId, eventId }: { companyId: string; 
                 <li key={payment.id} className="flex items-center gap-3 px-4 py-3">
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium">
-                      {eur(payment.amount)} {VAT_LABELS[payment.vat]}
+                      {eur(payment.amount)} {tx(VAT_LABELS[payment.vat])}
                       {other !== null && (
                         <span className="ml-1 text-sm font-normal text-muted-foreground">
-                          ({eur(other)} {VAT_LABELS[payment.vat === 'with' ? 'without' : 'with']})
+                          ({eur(other)} {tx(VAT_LABELS[payment.vat === 'with' ? 'without' : 'with'])})
                         </span>
                       )}
                     </span>
@@ -160,10 +157,10 @@ export function EventIncomeSection({ companyId, eventId }: { companyId: string; 
                   <Button
                     variant="ghost"
                     size="sm"
-                    aria-label={`Zmazať príjem ${eur(payment.amount)}`}
+                    aria-label={tf('Zmazať príjem {0}', eur(payment.amount))}
                     disabled={remove.isPending}
                     onClick={() => {
-                      if (window.confirm(`Zmazať príjem ${eur(payment.amount)}?`)) remove.mutate(payment.id)
+                      if (window.confirm(tf('Zmazať príjem {0}?', eur(payment.amount)))) remove.mutate(payment.id)
                     }}
                   >
                     <Trash2 className="size-4" aria-hidden />
@@ -175,24 +172,24 @@ export function EventIncomeSection({ companyId, eventId }: { companyId: string; 
           <dl className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm">
             {PAYMENT_METHODS.filter((method) => totals.byMethod[method] > 0).map((method) => (
               <div key={method} className="flex gap-1">
-                <dt className="text-muted-foreground">{METHOD_LABELS[method]}:</dt>
+                <dt className="text-muted-foreground">{tx(METHOD_LABELS[method])}:</dt>
                 <dd className="font-medium">{eur(totals.byMethod[method])}</dd>
               </div>
             ))}
             <div className="flex gap-1">
-              <dt className="text-muted-foreground">Spolu s DPH:</dt>
+              <dt className="text-muted-foreground">{tx('Spolu s DPH:')}</dt>
               <dd className="font-semibold">{eur(totals.gross)}</dd>
             </div>
             <div className="flex gap-1">
-              <dt className="text-muted-foreground">bez DPH:</dt>
+              <dt className="text-muted-foreground">{tx('bez DPH:')}</dt>
               <dd className="font-semibold">{eur(totals.net)}</dd>
             </div>
           </dl>
-          {!totals.complete && <p className="mt-1 text-xs text-muted-foreground">Pri platbách bez sadzby DPH sa suma ráta rovnaká s DPH aj bez DPH.</p>}
+          {!totals.complete && <p className="mt-1 text-xs text-muted-foreground">{tx('Pri platbách bez sadzby DPH sa suma ráta rovnaká s DPH aj bez DPH.')}</p>}
         </>
       ) : (
         !payments.isPending &&
-        !open && <p className="rounded-xl border border-dashed bg-surface px-6 py-6 text-center text-sm text-muted-foreground">Zatiaľ nič zapísané.</p>
+        !open && <p className="rounded-xl border border-dashed bg-surface px-6 py-6 text-center text-sm text-muted-foreground">{tx('Zatiaľ nič zapísané.')}</p>
       )}
     </CollapsibleSection>
   )

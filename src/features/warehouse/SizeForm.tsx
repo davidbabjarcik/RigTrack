@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { saveWarehouse, warehouseKeys } from './api'
 import type { Warehouse } from './model'
+import { tx } from '@/lib/i18n'
 
 /** Rozmery skladu v metroch (na stránke Sklad aj v Nastaveniach → Sklad). */
 export function SizeForm({ companyId, current, onDone }: { companyId: string; current: Warehouse | null; onDone: () => void }) {
@@ -27,18 +28,14 @@ export function SizeForm({ companyId, current, onDone }: { companyId: string; cu
 
   return (
     <form onSubmit={submit} className="mb-6 flex flex-wrap items-end gap-3 rounded-xl border bg-surface p-4">
-      <Field label="Dĺžka skladu (m)" inputMode="decimal" className="w-40" value={length} onChange={(e) => setLength(e.target.value)} />
-      <Field label="Šírka skladu (m)" inputMode="decimal" className="w-40" value={width} onChange={(e) => setWidth(e.target.value)} />
+      <Field label={tx('Dĺžka skladu (m)')} inputMode="decimal" className="w-40" value={length} onChange={(e) => setLength(e.target.value)} />
+      <Field label={tx('Šírka skladu (m)')} inputMode="decimal" className="w-40" value={width} onChange={(e) => setWidth(e.target.value)} />
       <Button type="submit" disabled={!valid || save.isPending}>
-        {save.isPending ? 'Ukladám…' : 'Uložiť rozmery'}
+        {save.isPending ? tx('Ukladám…') : tx('Uložiť rozmery')}
       </Button>
-      <p className="basis-full text-sm text-muted-foreground">
-        Stačí približne – plán je pomôcka na orientáciu. Dĺžka je na pláne vodorovne, šírka zvislo; najmenej 1 m.
-      </p>
+      <p className="basis-full text-sm text-muted-foreground">{tx('Stačí približne – plán je pomôcka na orientáciu. Dĺžka je na pláne vodorovne, šírka zvislo; najmenej 1 m.')}</p>
       {save.isError && (
-        <p role="alert" className="basis-full text-sm text-destructive">
-          Rozmery sa nepodarilo uložiť.
-        </p>
+        <p role="alert" className="basis-full text-sm text-destructive">{tx('Rozmery sa nepodarilo uložiť.')}</p>
       )}
     </form>
   )

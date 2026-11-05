@@ -6,6 +6,7 @@ import { fetchAudit } from '@/features/audit/api'
 import { ACTION_LABELS, describeChanges } from '@/features/audit/model'
 import { INCIDENT_KIND_LABELS, SEVERITY_LABELS, useIncidents } from '@/features/incidents/api'
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format'
+import { tx, tf } from '@/lib/i18n'
 
 const SHOWN = 5
 
@@ -28,7 +29,7 @@ export function ItemHistory({ companyId, equipmentId, withChanges }: { companyId
       at: entry.createdAt,
       when: formatDateTime(entry.createdAt),
       title: `${entry.actorName || 'Niekto'} ${ACTION_LABELS[entry.action]}`,
-      detail: entry.action === 'update' ? describeChanges(entry.changed) : entry.action === 'insert' ? 'založenie v evidencii' : '',
+      detail: entry.action === 'update' ? describeChanges(entry.changed) : entry.action === 'insert' ? tx('založenie v evidencii') : '',
     })),
     ...(incidents.data ?? [])
       .filter((incident) => incident.equipmentId === equipmentId)
@@ -46,11 +47,11 @@ export function ItemHistory({ companyId, equipmentId, withChanges }: { companyId
   const loading = (withChanges && changes.isPending) || incidents.isPending
 
   return (
-    <CollapsibleSection id="equipment.history" title={<>História zmien a škody ({entries.length})</>} className="mt-6">
+    <CollapsibleSection id="equipment.history" title={<>{tx('História zmien a škody (')}{entries.length})</>} className="mt-6">
       {loading ? (
-        <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Načítavam…</p>
+        <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Načítavam…')}</p>
       ) : entries.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">Zatiaľ žiadne zmeny ani škody.</p>
+        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Zatiaľ žiadne zmeny ani škody.')}</p>
       ) : (
         <>
           <ol className="divide-y overflow-hidden rounded-xl border bg-surface text-sm">
@@ -77,7 +78,7 @@ export function ItemHistory({ companyId, equipmentId, withChanges }: { companyId
           </ol>
           {entries.length > SHOWN && (
             <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => setShowAll(!showAll)}>
-              {showAll ? 'Zobraziť len posledné' : `Zobraziť všetky (${entries.length})`}
+              {showAll ? tx('Zobraziť len posledné') : tf('Zobraziť všetky ({0})', entries.length)}
             </button>
           )}
         </>

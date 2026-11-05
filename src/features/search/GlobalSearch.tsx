@@ -15,7 +15,7 @@ import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { formatDate } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { useLang, useT } from '@/lib/i18n'
+import { tx, useLang, useT } from '@/lib/i18n'
 import { searchAll } from './searchAll'
 
 /** Prehľad hore: Hľadať všade (technika, cases, eventy, firmy, kontakty, úlohy, poznámky, sklad) a Skenovať QR. */
@@ -143,7 +143,7 @@ function Results({ company, query, onPick }: { company: Membership; query: strin
       ) : (
         groups.map((group) => (
           <section key={group.kind} className="mb-1 last:mb-0">
-            <h3 className="px-2 pt-1.5 pb-1 text-xs font-medium text-muted-foreground uppercase">{group.label}</h3>
+            <h3 className="px-2 pt-1.5 pb-1 text-xs font-medium text-muted-foreground uppercase">{tx(group.label)}</h3>
             <ul>
               {group.hits.map((hit) => (
                 <li key={hit.id}>

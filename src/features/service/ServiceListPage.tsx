@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { serviceTotals, sortServiceRecords } from './model'
 import { ServiceRecordRow } from './ServiceRecordRow'
 import { useServiceRecords } from './useServiceRecords'
+import { tx, tf } from '@/lib/i18n'
 
 export function ServiceListPage() {
   const company = useCompany().active!
@@ -35,32 +36,28 @@ export function ServiceListPage() {
     <>
       <ServiceTabs />
       <PageHeader
-        title="Servis"
+        title={tx('Servis')}
         description={
           all.length > 0
-            ? `Spolu ${formatNumber(totals.hours)} h práce · ${formatMoney(totals.cost, 'EUR')} nákladov`
-            : 'Opravy, kontroly a údržba techniky'
+            ? tf('Spolu {0} h práce · {1} nákladov', formatNumber(totals.hours), formatMoney(totals.cost, 'EUR'))
+            : tx('Opravy, kontroly a údržba techniky')
         }
         action={
           <div className="flex flex-wrap justify-end gap-2">
             <LinkButton to="/service/requests" variant="outline">
-              <MessageSquareWarning className="size-4" aria-hidden />
-              Žiadosti
-            </LinkButton>
+              <MessageSquareWarning className="size-4" aria-hidden />{tx('Žiadosti')}</LinkButton>
             {canEdit && (
               <LinkButton to="/service/new">
-                <Plus className="size-4" aria-hidden />
-                Nový
-              </LinkButton>
+                <Plus className="size-4" aria-hidden />{tx('Nový')}</LinkButton>
             )}
           </div>
         }
       />
 
-      <div className="mb-4 flex gap-2" role="group" aria-label="Filter záznamov">
+      <div className="mb-4 flex gap-2" role="group" aria-label={tx('Filter záznamov')}>
         {[
-          { done: false, label: `Rozpracované (${open.length})` },
-          { done: true, label: `Všetky (${all.length})` },
+          { done: false, label: tf('Rozpracované ({0})', open.length) },
+          { done: true, label: tf('Všetky ({0})', all.length) },
         ].map((option) => (
           <button
             key={option.label}
@@ -72,7 +69,7 @@ export function ServiceListPage() {
               showDone === option.done ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
             )}
           >
-            {option.label}
+            {tx(option.label)}
           </button>
         ))}
       </div>
@@ -80,11 +77,11 @@ export function ServiceListPage() {
       {records.isPending ? (
         <LoadingBlock />
       ) : records.isError ? (
-        <ErrorBlock message="Servisné záznamy sa nepodarilo načítať." onRetry={() => void records.refetch()} />
+        <ErrorBlock message={tx('Servisné záznamy sa nepodarilo načítať.')} onRetry={() => void records.refetch()} />
       ) : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">{all.length === 0 ? 'Zatiaľ tu nie je žiadny servisný záznam' : 'Nič rozpracované'}</p>
-          {canEdit && all.length === 0 && <p className="mt-1 text-sm text-muted-foreground">Začnite tlačidlom Nový.</p>}
+          <p className="font-medium">{all.length === 0 ? tx('Zatiaľ tu nie je žiadny servisný záznam') : tx('Nič rozpracované')}</p>
+          {canEdit && all.length === 0 && <p className="mt-1 text-sm text-muted-foreground">{tx('Začnite tlačidlom Nový.')}</p>}
         </div>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">

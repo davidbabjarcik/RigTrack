@@ -18,6 +18,7 @@ import { can } from '@/lib/permissions'
 import { useEvents } from '@/features/events/useEvents'
 import { lastReturns, returnedUnchecked, stillOut, useRecentPackMarks } from '@/features/pack/returns'
 import { useCheckLevels } from './levels'
+import { tx, tf } from '@/lib/i18n'
 
 /** Case je moja starosť, keď zaň (alebo za techniku v ňom) zodpovedám; ak nezodpovedá nikto, je to starosť všetkých. */
 function caseConcernsMe(item: Case, inside: Equipment[], responsibilities: Responsibility[], userId: string) {
@@ -33,7 +34,7 @@ function Section({ icon, title, count, children }: { icon: ReactNode; title: str
         {icon}
         {title} ({count})
       </h2>
-      {count === 0 ? <p className="rounded-xl border border-dashed bg-surface px-4 py-6 text-center text-sm text-muted-foreground">Nič – všetko je v poriadku.</p> : <ul className="divide-y overflow-hidden rounded-xl border bg-surface">{children}</ul>}
+      {count === 0 ? <p className="rounded-xl border border-dashed bg-surface px-4 py-6 text-center text-sm text-muted-foreground">{tx('Nič – všetko je v poriadku.')}</p> : <ul className="divide-y overflow-hidden rounded-xl border bg-surface">{children}</ul>}
     </section>
   )
 }
@@ -73,7 +74,7 @@ export function ChecksPage() {
   const [now] = useState(() => Date.now())
 
   if (cases.isPending || equipment.isPending) return <LoadingBlock />
-  if (cases.isError || equipment.isError) return <ErrorBlock message="Údaje sa nepodarilo načítať." onRetry={() => void Promise.all([cases.refetch(), equipment.refetch()])} />
+  if (cases.isError || equipment.isError) return <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void Promise.all([cases.refetch(), equipment.refetch()])} />
 
   const gear = (equipment.data ?? []).filter((item) => item.status !== 'retired')
   const mine = (item: Equipment) => !onlyMine || concernsMe(item, responsibilities, userId)
@@ -110,30 +111,28 @@ export function ChecksPage() {
 
   return (
     <>
-      <PageHeader title="Kontroly" description="Čo treba skontrolovať, odčítať a dať do servisu" />
+      <PageHeader title={tx('Kontroly')} description={tx('Čo treba skontrolovať, odčítať a dať do servisu')} />
       <label className={canSeeAll ? 'mb-4 flex items-center gap-2 text-sm' : 'hidden'}>
-        <input type="checkbox" className="size-4" checked={onlyMine} onChange={(event) => setOnlyMine(event.target.checked)} />
-        Len to, za čo zodpovedám
-        {!someoneResponsible && <span className="text-muted-foreground">(zodpovednosti nie sú nastavené – vidíte všetko)</span>}
+        <input type="checkbox" className="size-4" checked={onlyMine} onChange={(event) => setOnlyMine(event.target.checked)} />{tx('Len to, za čo zodpovedám')}{!someoneResponsible && <span className="text-muted-foreground">{tx('(zodpovednosti nie sú nastavené – vidíte všetko)')}</span>}
       </label>
 
       {returnedCases.length > 0 && (
-        <Section icon={<PackageCheck className="size-5 text-accent" aria-hidden />} title="Vrátené z eventu – spočítať obsah" count={returnedCases.length}>
+        <Section icon={<PackageCheck className="size-5 text-accent" aria-hidden />} title={tx('Vrátené z eventu – spočítať obsah')} count={returnedCases.length}>
           {returnedCases.map((item) => {
             const back = returns.get(item.id)!
             const event = events.data?.find((candidate) => candidate.id === back.eventId)
-            return <Row key={item.id} to={`/cases/${item.id}`} title={caseTitle(item)} detail={`Vrátený ${formatDate(back.checkedAt.slice(0, 10))}${event ? ` z ${event.name}` : ''} – obsah ešte nikto neskontroloval`} late />
+            return <Row key={item.id} to={`/cases/${item.id}`} title={caseTitle(item)} detail={tf('Vrátený {0}{1} – obsah ešte nikto neskontroloval', formatDate(back.checkedAt.slice(0, 10)), event ? ` z ${event.name}` : '')} late />
           })}
         </Section>
       )}
 
       {outside.length > 0 && (
-        <Section icon={<Truck className="size-5 text-accent" aria-hidden />} title="Ešte vonku – event skončil, nevrátené" count={outside.reduce((total, group) => total + group.items.length, 0)}>
+        <Section icon={<Truck className="size-5 text-accent" aria-hidden />} title={tx('Ešte vonku – event skončil, nevrátené')} count={outside.reduce((total, group) => total + group.items.length, 0)}>
           {outside.map(({ event, items }) => (
             <Row
               key={event.id}
               to={`/events/${event.id}/pack`}
-              title={`${event.name} (skončil ${formatDate(event.endsOn)})`}
+              title={tf('{0} (skončil {1})', event.name, formatDate(event.endsOn))}
               detail={items
                 .map((mark) => (mark.caseId ? (cases.data.find((item) => item.id === mark.caseId) ? caseTitle(cases.data.find((item) => item.id === mark.caseId)!) : 'case') : (gear.find((item) => item.id === mark.equipmentId)?.name ?? 'technika')))
                 .join(', ')}
@@ -143,13 +142,13 @@ export function ChecksPage() {
         </Section>
       )}
 
-      <Section icon={<ClipboardCheck className="size-5 text-accent" aria-hidden />} title="Cases a racky na kontrolu" count={dueCases.length}>
+      <Section icon={<ClipboardCheck className="size-5 text-accent" aria-hidden />} title={tx('Cases a racky na kontrolu')} count={dueCases.length}>
         {dueCases.map((item) => (
-          <Row key={item.id} to={`/cases/${item.id}`} title={caseTitle(item)} detail={item.lastCheck ? `Naposledy ${formatDate(item.lastCheck.checkedAt.slice(0, 10))} · ${item.lastCheck.checkedByName || 'neznámy'}` : 'Zatiaľ nekontrolované'} late />
+          <Row key={item.id} to={`/cases/${item.id}`} title={caseTitle(item)} detail={item.lastCheck ? `Naposledy ${formatDate(item.lastCheck.checkedAt.slice(0, 10))} · ${item.lastCheck.checkedByName || tx('neznámy')}` : tx('Zatiaľ nekontrolované')} late />
         ))}
       </Section>
 
-      <Section icon={<Gauge className="size-5 text-accent" aria-hidden />} title="Odčítať prevádzkové hodiny" count={hours.length}>
+      <Section icon={<Gauge className="size-5 text-accent" aria-hidden />} title={tx('Odčítať prevádzkové hodiny')} count={hours.length}>
         {hours.map((group) => {
           const states = group.items.map((item) => hoursState(item, today, checkDays).state)
           const late = states.some((state) => state === 'overdue' || state === 'unknown')
@@ -165,15 +164,15 @@ export function ChecksPage() {
         })}
       </Section>
 
-      <Section icon={<Wrench className="size-5 text-accent" aria-hidden />} title="Servis" count={service.length}>
+      <Section icon={<Wrench className="size-5 text-accent" aria-hidden />} title={tx('Servis')} count={service.length}>
         {service.map((group) => {
           const late = group.items.some((item) => serviceState(item, today).state === 'overdue')
-          return <Row key={group.key} to={linkOf(group.items)} title={nameOf(group.items)} detail={late ? 'servis po termíne' : 'servis do 30 dní'} late={late} />
+          return <Row key={group.key} to={linkOf(group.items)} title={nameOf(group.items)} detail={late ? tx('servis po termíne') : tx('servis do 30 dní')} late={late} />
         })}
       </Section>
 
       {rules.length > 0 && (
-        <Section icon={<ShieldCheck className="size-5 text-accent" aria-hidden />} title="Limity a revízie" count={limitRows.length}>
+        <Section icon={<ShieldCheck className="size-5 text-accent" aria-hidden />} title={tx('Limity a revízie')} count={limitRows.length}>
           {limitRows.map(({ rows, item, rule, worst }) => (
             <Row
               key={`${rule.id}|${item.id}`}

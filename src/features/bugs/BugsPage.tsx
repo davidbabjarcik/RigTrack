@@ -13,6 +13,7 @@ import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { bugKeys, deleteBugReport, fetchBugReports, fetchIsDeveloper, screenshotUrl, updateBugReport } from './api'
 import { BUG_STATUS_LABELS, BUG_STATUSES, sortReports, type BugReport, type BugStatus } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const TONES: Record<BugStatus, string> = {
   new: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200',
@@ -41,54 +42,52 @@ function ReportItem({ report, canManage, canDelete, companyName }: { report: Bug
             {[report.reporterName, companyName, formatDateTime(report.createdAt), report.appVersion && `v${report.appVersion}`].filter(Boolean).join(' · ')}
           </span>
         </span>
-        <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium', TONES[report.status])}>{BUG_STATUS_LABELS[report.status]}</span>
+        <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium', TONES[report.status])}>{tx(BUG_STATUS_LABELS[report.status])}</span>
         <ChevronDown className={cn('size-4 shrink-0 text-muted-foreground transition-transform', open && 'rotate-180')} aria-hidden />
       </button>
       {open && (
         <div className="flex flex-col gap-3 border-t p-4 text-sm">
-          {report.description && <p className="whitespace-pre-wrap">{report.description}</p>}
+          {report.description && <p className="whitespace-pre-wrap">{tx(report.description)}</p>}
           <dl className="grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
             {report.pageUrl && (
               <div>
-                <dt className="inline">Stránka: </dt>
+                <dt className="inline">{tx('Stránka:')}{' '}</dt>
                 <dd className="inline break-all">{report.pageUrl}</dd>
               </div>
             )}
             <div className="sm:col-span-2">
-              <dt className="inline">Prehliadač: </dt>
+              <dt className="inline">{tx('Prehliadač:')}{' '}</dt>
               <dd className="inline break-all">{report.userAgent}</dd>
             </div>
             <div>
-              <dt className="inline">E-mail: </dt>
-              <dd className="inline">{report.notifiedAt ? `odoslaný ${formatDateTime(report.notifiedAt)}` : 'neodoslaný'}</dd>
+              <dt className="inline">{tx('E-mail:')}{' '}</dt>
+              <dd className="inline">{report.notifiedAt ? tf('odoslaný {0}', formatDateTime(report.notifiedAt)) : tx('neodoslaný')}</dd>
             </div>
           </dl>
           {report.screenshotPath && canManage && (
             <Button variant="outline" size="sm" className="self-start" disabled={shot.isPending} onClick={() => shot.mutate()}>
-              <Image className="size-4" aria-hidden />
-              Otvoriť screenshot
-              <ExternalLink className="size-3.5" aria-hidden />
+              <Image className="size-4" aria-hidden />{tx('Otvoriť screenshot')}<ExternalLink className="size-3.5" aria-hidden />
             </Button>
           )}
           {!canManage && report.response && (
             <p className="rounded-lg bg-muted p-3">
-              <span className="font-medium">Odpoveď: </span>
+              <span className="font-medium">{tx('Odpoveď:')}{' '}</span>
               {report.response}
             </p>
           )}
           {canManage && (
             <div className="flex flex-col gap-2 rounded-lg border p-3">
-              <SelectField label="Stav" className="w-56" value={status} onChange={(event) => setStatus(event.target.value as BugStatus)}>
+              <SelectField label={tx('Stav')} className="w-56" value={status} onChange={(event) => setStatus(event.target.value as BugStatus)}>
                 {BUG_STATUSES.map((option) => (
                   <option key={option} value={option}>
-                    {BUG_STATUS_LABELS[option]}
+                    {tx(BUG_STATUS_LABELS[option])}
                   </option>
                 ))}
               </SelectField>
-              <TextareaField label="Odpoveď pre autora (nepovinné)" rows={2} maxLength={2000} value={response} onChange={(event) => setResponse(event.target.value)} />
+              <TextareaField label={tx('Odpoveď pre autora (nepovinné)')} rows={2} maxLength={2000} value={response} onChange={(event) => setResponse(event.target.value)} />
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" disabled={save.isPending || (status === report.status && response === report.response)} onClick={() => save.mutate()}>
-                  {save.isPending ? 'Ukladám…' : 'Uložiť'}
+                  {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
                 </Button>
                 {canDelete && (
                   <Button
@@ -96,15 +95,13 @@ function ReportItem({ report, canManage, canDelete, companyName }: { report: Bug
                     size="sm"
                     disabled={remove.isPending}
                     onClick={() => {
-                      if (window.confirm('Zmazať hlásenie natrvalo?')) remove.mutate()
+                      if (window.confirm(tx('Zmazať hlásenie natrvalo?'))) remove.mutate()
                     }}
                   >
-                    <Trash2 className="size-4" aria-hidden />
-                    Zmazať
-                  </Button>
+                    <Trash2 className="size-4" aria-hidden />{tx('Zmazať')}</Button>
                 )}
               </div>
-              {(save.isError || remove.isError) && <p className="text-destructive">Zmena sa nepodarila.</p>}
+              {(save.isError || remove.isError) && <p className="text-destructive">{tx('Zmena sa nepodarila.')}</p>}
             </div>
           )}
         </div>
@@ -124,7 +121,7 @@ export function BugsPage() {
   const [filter, setFilter] = useState<BugStatus | 'open' | ''>('open')
 
   if (reports.isPending) return <LoadingBlock />
-  if (reports.isError) return <ErrorBlock message="Hlásenia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void reports.refetch()} />
+  if (reports.isError) return <ErrorBlock message={tx('Hlásenia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')} onRetry={() => void reports.refetch()} />
 
   const isDeveloper = developer.data === true
   const canManage = (report: BugReport) => isDeveloper || (report.companyId !== null && company.memberships.some((m) => m.companyId === report.companyId && isAdminRole(m.role)))
@@ -137,26 +134,24 @@ export function BugsPage() {
   return (
     <>
       <PageHeader
-        title="Hlásenia chýb"
-        description={isDeveloper ? 'Ste vývojár: vidíte hlásenia zo všetkých firiem.' : counts > 0 ? `${counts} nových od ostatných` : undefined}
+        title={tx('Hlásenia chýb')}
+        description={isDeveloper ? tx('Ste vývojár: vidíte hlásenia zo všetkých firiem.') : counts > 0 ? tf('{0} nových od ostatných', counts) : undefined}
         action={
           <LinkButton to={`/bugs/new?from=${encodeURIComponent(location.pathname)}`}>
-            <Plus className="size-4" aria-hidden />
-            Nahlásiť chybu
-          </LinkButton>
+            <Plus className="size-4" aria-hidden />{tx('Nahlásiť chybu')}</LinkButton>
         }
       />
-      <SelectField label="Zobraziť" hideLabel className="mb-4 w-56" value={filter} onChange={(event) => setFilter(event.target.value as BugStatus | 'open' | '')}>
-        <option value="open">Nové a riešené</option>
+      <SelectField label={tx('Zobraziť')} hideLabel className="mb-4 w-56" value={filter} onChange={(event) => setFilter(event.target.value as BugStatus | 'open' | '')}>
+        <option value="open">{tx('Nové a riešené')}</option>
         {BUG_STATUSES.map((status) => (
           <option key={status} value={status}>
-            {BUG_STATUS_LABELS[status]}
+            {tx(BUG_STATUS_LABELS[status])}
           </option>
         ))}
-        <option value="">Všetky</option>
+        <option value="">{tx('Všetky')}</option>
       </SelectField>
       {visible.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">Žiadne hlásenia.</p>
+        <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">{tx('Žiadne hlásenia.')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {visible.map((report) => (

@@ -4,6 +4,7 @@ import { SelectField } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
 import { metres, palletTypesOf, rackLengthCm, type Spot, type Warehouse } from './model'
 import { BUILDING, buildSpot, CHOICE_LABELS, PLACES, selectionKind, type AddSelection, type Choice } from './planAdd'
+import { tx } from '@/lib/i18n'
 
 type Props = {
   warehouse: Warehouse
@@ -33,50 +34,45 @@ export function PlanAddBar({ warehouse, spots, busy, selection, onSelection, onA
 
   return (
     <div className="mb-3 flex flex-col gap-3 rounded-xl border bg-surface p-3">
-      <div className="flex flex-wrap items-center gap-1.5" role="radiogroup" aria-label="Čo pridať">
-        <span className="mr-1 text-sm font-medium">Pridať:</span>
+      <div className="flex flex-wrap items-center gap-1.5" role="radiogroup" aria-label={tx('Čo pridať')}>
+        <span className="mr-1 text-sm font-medium">{tx('Pridať:')}</span>
         {PLACES.map((value) => (
-          <ChoiceButton key={value} active={selection.choice === value} label={CHOICE_LABELS[value]} onClick={() => setChoice(value)} />
+          <ChoiceButton key={value} active={selection.choice === value} label={tx(CHOICE_LABELS[value])} onClick={() => setChoice(value)} />
         ))}
         <span className="mx-2 h-5 w-px bg-border" aria-hidden />
-        <span className="mr-1 text-sm text-muted-foreground">Stavba:</span>
+        <span className="mr-1 text-sm text-muted-foreground">{tx('Stavba:')}</span>
         {BUILDING.map((value) => (
-          <ChoiceButton key={value} active={selection.choice === value} label={CHOICE_LABELS[value]} onClick={() => setChoice(value)} />
+          <ChoiceButton key={value} active={selection.choice === value} label={tx(CHOICE_LABELS[value])} onClick={() => setChoice(value)} />
         ))}
         <LinkButton to="/settings?tab=warehouse" variant="outline" size="sm" className="ml-auto">
-          <Settings2 className="size-4" aria-hidden />
-          Nastavenia skladu
-        </LinkButton>
+          <Settings2 className="size-4" aria-hidden />{tx('Nastavenia skladu')}</LinkButton>
       </div>
       <div className="flex flex-wrap items-end gap-2">
         {kind === 'rack' && rackTypes.length > 0 && (
-          <SelectField label="Typ regálu" className="min-w-56" value={pickedRack?.id ?? ''} onChange={(e) => set({ rackType: e.target.value })}>
+          <SelectField label={tx('Typ regálu')} className="min-w-56" value={pickedRack?.id ?? ''} onChange={(e) => set({ rackType: e.target.value })}>
             {rackTypes.map((type) => (
               <option key={type.id} value={type.id}>
-                {type.name} ({metres(rackLengthCm(type.bays))} × {type.depthCm} cm)
-              </option>
+                {type.name} ({metres(rackLengthCm(type.bays))} × {type.depthCm}{' '}{tx('cm)')}</option>
             ))}
           </SelectField>
         )}
-        {kind === 'rack' && rackTypes.length === 0 && <p className="text-sm text-muted-foreground">Typy regálov (polia, police, palety) si nastavíte v Nastaveniach skladu.</p>}
+        {kind === 'rack' && rackTypes.length === 0 && <p className="text-sm text-muted-foreground">{tx('Typy regálov (polia, police, palety) si nastavíte v Nastaveniach skladu.')}</p>}
         {kind === 'pallet' && palletTypes.length > 0 && (
-          <SelectField label="Typ palety" className="min-w-56" value={pickedPallet?.id ?? ''} onChange={(e) => set({ palletType: e.target.value })}>
+          <SelectField label={tx('Typ palety')} className="min-w-56" value={pickedPallet?.id ?? ''} onChange={(e) => set({ palletType: e.target.value })}>
             {palletTypes.map((type) => (
               <option key={type.id} value={type.id}>
-                {type.name} ({type.length} × {type.width} cm)
-              </option>
+                {type.name} ({type.length} × {type.width}{' '}{tx('cm)')}</option>
             ))}
           </SelectField>
         )}
-        {kind === 'pallet' && palletTypes.length === 0 && <p className="text-sm text-muted-foreground">Typy paliet si nastavíte v Nastaveniach skladu.</p>}
-        {selection.choice === 'place' && <p className="text-sm text-muted-foreground">Na miesto dáte cases aj hliník (stohy trussov).</p>}
-        {(kind === 'door' || kind === 'window') && <p className="text-sm text-muted-foreground">Ide na stenu skladu; natiahnuť sa dá len pozdĺž steny.</p>}
-        {kind === 'room' && <p className="text-sm text-muted-foreground">Miestnosť (napr. kancelária, dielňa) – v pláne len na orientáciu.</p>}
+        {kind === 'pallet' && palletTypes.length === 0 && <p className="text-sm text-muted-foreground">{tx('Typy paliet si nastavíte v Nastaveniach skladu.')}</p>}
+        {selection.choice === 'place' && <p className="text-sm text-muted-foreground">{tx('Na miesto dáte cases aj hliník (stohy trussov).')}</p>}
+        {(kind === 'door' || kind === 'window') && <p className="text-sm text-muted-foreground">{tx('Ide na stenu skladu; natiahnuť sa dá len pozdĺž steny.')}</p>}
+        {kind === 'room' && <p className="text-sm text-muted-foreground">{tx('Miestnosť (napr. kancelária, dielňa) – v pláne len na orientáciu.')}</p>}
         <Button disabled={busy || (kind === 'pallet' && !pickedPallet)} onClick={add}>
-          <Plus className="size-4" aria-hidden />
-          Pridať {CHOICE_LABELS[selection.choice].toLowerCase()}
+          <Plus className="size-4" aria-hidden />{tx('Pridať')}{' '}{CHOICE_LABELS[selection.choice].toLowerCase()}
         </Button>
-        <p className="w-full text-xs text-muted-foreground">Tlačidlom sa pridá doprostred, alebo to ťahaním po prázdnom mieste plánu nakreslite.</p>
+        <p className="w-full text-xs text-muted-foreground">{tx('Tlačidlom sa pridá doprostred, alebo to ťahaním po prázdnom mieste plánu nakreslite.')}</p>
       </div>
     </div>
   )

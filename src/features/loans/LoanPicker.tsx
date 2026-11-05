@@ -6,6 +6,7 @@ import type { Case } from '@/features/cases/model'
 import { filterEquipment, type Equipment } from '@/features/equipment/model'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { cn } from '@/lib/utils'
+import { tx, tf } from '@/lib/i18n'
 
 // Pri veľkom sklade nemá zmysel vykresliť tisíce riadkov; používateľ zúži výber hľadaním.
 const DEVICE_LIMIT = 30
@@ -32,7 +33,7 @@ type Props = {
  * dá sa vziať celý case, alebo ho rozkliknúť a vybrať z neho jednotlivé kusy. Zariadenia sú
  * celý sklad v jednom zozname bez ohľadu na to, v ktorom case ležia.
  */
-export function LoanPicker({ title = 'Pridať techniku', equipment, cases, chosen, chosenCases, thumbs, freeOf, disabled, onAdd, onAddCase }: Props) {
+export function LoanPicker({ title = tx('Pridať techniku'), equipment, cases, chosen, chosenCases, thumbs, freeOf, disabled, onAdd, onAddCase }: Props) {
   const [tab, setTab] = useState<'cases' | 'devices'>('cases')
   const [search, setSearch] = useState('')
   const [open, setOpen] = useState<string[]>([])
@@ -49,13 +50,11 @@ export function LoanPicker({ title = 'Pridať techniku', equipment, cases, chose
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium">{item.name}</span>
           <span className={free > 0 ? 'block truncate text-sm text-muted-foreground' : 'block truncate text-sm text-destructive'}>
-            {free > 0 ? `voľné ${free} z ${item.quantity} ks` : 'v tomto termíne obsadené'}
+            {free > 0 ? tf('voľné {0} z {1} ks', free, item.quantity) : tx('v tomto termíne obsadené')}
             {detail && ` · ${detail}`}
           </span>
         </span>
-        <Button variant="outline" size="sm" disabled={disabled || free <= 0} onClick={() => onAdd(item)}>
-          Pridať
-        </Button>
+        <Button variant="outline" size="sm" disabled={disabled || free <= 0} onClick={() => onAdd(item)}>{tx('Pridať')}</Button>
       </li>
     )
   }
@@ -75,7 +74,7 @@ export function LoanPicker({ title = 'Pridať techniku', equipment, cases, chose
       <h2 id="loan-picker-heading" className="mb-3 font-medium">
         {title}
       </h2>
-      <div className="mb-3 flex gap-2" role="tablist" aria-label="Čo pridať">
+      <div className="mb-3 flex gap-2" role="tablist" aria-label={tx('Čo pridať')}>
         {(
           [
             { id: 'cases', label: `Cases (${cases.length})` },
@@ -93,35 +92,33 @@ export function LoanPicker({ title = 'Pridať techniku', equipment, cases, chose
               tab === option.id ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
             )}
           >
-            {option.label}
+            {tx(option.label)}
           </button>
         ))}
       </div>
       <Field
-        label="Hľadať"
+        label={tx('Hľadať')}
         hideLabel
         type="search"
-        placeholder={tab === 'cases' ? 'Hľadať case alebo to, čo v ňom je' : 'Názov, výrobca, sériové alebo inventárne číslo'}
+        placeholder={tab === 'cases' ? tx('Hľadať case alebo to, čo v ňom je') : tx('Názov, výrobca, sériové alebo inventárne číslo')}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
 
       {tab === 'devices' ? (
         devices.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">{searching ? 'Hľadaniu nič nezodpovedá.' : 'Žiadna ďalšia technika.'}</p>
+          <p className="mt-3 text-sm text-muted-foreground">{searching ? tx('Hľadaniu nič nezodpovedá.') : tx('Žiadna ďalšia technika.')}</p>
         ) : (
           <>
-            <ul className="mt-3 divide-y">{devices.slice(0, DEVICE_LIMIT).map((item) => row(item, caseName(item.caseId) ?? 'mimo cases'))}</ul>
+            <ul className="mt-3 divide-y">{devices.slice(0, DEVICE_LIMIT).map((item) => row(item, caseName(item.caseId) ?? tx('mimo cases')))}</ul>
             {devices.length > DEVICE_LIMIT && (
-              <p className="mt-3 text-sm text-muted-foreground">
-                Zobrazených prvých {DEVICE_LIMIT} z {devices.length}. Spresnite hľadanie.
-              </p>
+              <p className="mt-3 text-sm text-muted-foreground">{tx('Zobrazených prvých')}{' '}{DEVICE_LIMIT} z {devices.length}{tx('. Spresnite hľadanie.')}</p>
             )}
           </>
         )
       ) : folders.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">
-          {searching ? 'Hľadaniu nezodpovedá žiadny case.' : 'Žiadny case s technikou. Jednotlivé kusy nájdete v záložke Zariadenia.'}
+          {searching ? tx('Hľadaniu nezodpovedá žiadny case.') : tx('Žiadny case s technikou. Jednotlivé kusy nájdete v záložke Zariadenia.')}
         </p>
       ) : (
         <ul className="mt-3 divide-y">
@@ -146,22 +143,20 @@ export function LoanPicker({ title = 'Pridať techniku', equipment, cases, chose
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{folder.name}</span>
                       <span className="block truncate text-sm text-muted-foreground">
-                        {folder.content.length} {folder.content.length === 1 ? 'položka' : folder.content.length < 5 ? 'položky' : 'položiek'}
-                        {!whole && !allFree && ' · časť je v tomto termíne obsadená'}
+                        {folder.content.length} {folder.content.length === 1 ? tx('položka') : folder.content.length < 5 ? tx('položky') : tx('položiek')}
+                        {!whole && !allFree && tx(' · časť je v tomto termíne obsadená')}
                       </span>
                     </span>
                   </button>
                   {whole ? (
-                    <span className="shrink-0 px-2 text-sm text-muted-foreground">pridaný celý</span>
+                    <span className="shrink-0 px-2 text-sm text-muted-foreground">{tx('pridaný celý')}</span>
                   ) : (
-                    <Button variant="outline" size="sm" disabled={disabled || !allFree} onClick={() => onAddCase(folder.id)}>
-                      Celý case
-                    </Button>
+                    <Button variant="outline" size="sm" disabled={disabled || !allFree} onClick={() => onAddCase(folder.id)}>{tx('Celý case')}</Button>
                   )}
                 </div>
                 {isOpen &&
                   (left.length === 0 ? (
-                    <p className="py-2 pl-7 text-sm text-muted-foreground">Všetko z tohto case už je pridané.</p>
+                    <p className="py-2 pl-7 text-sm text-muted-foreground">{tx('Všetko z tohto case už je pridané.')}</p>
                   ) : (
                     <ul className="divide-y pl-7">{left.map((item) => row(item))}</ul>
                   ))}

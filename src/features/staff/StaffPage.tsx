@@ -18,14 +18,15 @@ import { SkillChips } from './SkillsField'
 import { matchesPerson, unavailableOn, upcomingEvents, type Person, type Unavailability } from './model'
 import { useStaff } from './useStaff'
 import type { CompanyEvent } from '@/features/events/model'
+import { tx, tf } from '@/lib/i18n'
 
 /** Stav na dnes: nemôže / na evente / voľný. */
 function todayStatus(person: Person, periods: Unavailability[], events: CompanyEvent[], today: string) {
   const away = unavailableOn(periods, person.staffId, today)
-  if (away) return { tone: 'away', text: `Nemôže do ${formatDate(away.endsOn)}${away.note ? ` · ${away.note}` : ''}` }
+  if (away) return { tone: 'away', text: tf('Nemôže do {0}{1}', formatDate(away.endsOn), away.note ? ` · ${away.note}` : '') }
   const event = upcomingEvents(events, person.memberId, today).find((item) => item.startsOn <= today)
   if (event) return { tone: 'busy', text: `Dnes na evente ${event.name}` }
-  return { tone: 'free', text: 'Dnes voľný' }
+  return { tone: 'free', text: tx('Dnes voľný') }
 }
 
 const TONES: Record<string, string> = {
@@ -57,9 +58,9 @@ export function StaffPage() {
     },
   })
 
-  if (!can(company, 'staff.view')) return <ErrorBlock message="Na zoznam zamestnancov nemáte oprávnenie." />
+  if (!can(company, 'staff.view')) return <ErrorBlock message={tx('Na zoznam zamestnancov nemáte oprávnenie.')} />
   if (staff.isPending) return <LoadingBlock />
-  if (staff.isError) return <ErrorBlock message="Zamestnancov sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void staff.refetch()} />
+  if (staff.isError) return <ErrorBlock message={tx('Zamestnancov sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')} onRetry={() => void staff.refetch()} />
 
   const today = todayIso()
   const visible = staff.people.filter((person) => matchesPerson(person, search))
@@ -70,15 +71,15 @@ export function StaffPage() {
 
   return (
     <>
-      <PageHeader title="Zamestnanci" description={`${staff.people.filter((person) => person.active).length} ľudí v tíme`} />
+      <PageHeader title={tx('Zamestnanci')} description={tf('{0} ľudí v tíme', staff.people.filter((person) => person.active).length)} />
 
       <div className="relative mb-4">
         <Search className="pointer-events-none absolute top-3.5 left-3 size-4 text-muted-foreground" aria-hidden />
         <Field
-          label="Hľadať"
+          label={tx('Hľadať')}
           hideLabel
           type="search"
-          placeholder="Meno, pozícia, zručnosť, telefón"
+          placeholder={tx('Meno, pozícia, zručnosť, telefón')}
           className="[&_input]:pl-9"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -112,23 +113,21 @@ export function StaffPage() {
           )
         })}
       </ul>
-      {visible.length === 0 && <p className="rounded-xl border border-dashed bg-surface p-6 text-center text-sm text-muted-foreground">Nikto nezodpovedá hľadaniu.</p>}
+      {visible.length === 0 && <p className="rounded-xl border border-dashed bg-surface p-6 text-center text-sm text-muted-foreground">{tx('Nikto nezodpovedá hľadaniu.')}</p>}
 
       {canManage && (
         <form onSubmit={submit} className="mt-6 flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-4">
           <Field
-            label="Pridať brigádnika (bez účtu)"
+            label={tx('Pridať brigádnika (bez účtu)')}
             className="min-w-56 flex-1"
-            placeholder="Meno a priezvisko"
+            placeholder={tx('Meno a priezvisko')}
             maxLength={120}
             value={newName}
             onChange={(event) => setNewName(event.target.value)}
           />
           <Button type="submit" disabled={!newName.trim() || addPartTimer.isPending}>
-            <Plus className="size-4" aria-hidden />
-            Pridať
-          </Button>
-          <p className="w-full text-xs text-muted-foreground">Členovia s účtom sa zobrazujú sami; pozývajú sa v Nastaveniach → Členovia.</p>
+            <Plus className="size-4" aria-hidden />{tx('Pridať')}</Button>
+          <p className="w-full text-xs text-muted-foreground">{tx('Členovia s účtom sa zobrazujú sami; pozývajú sa v Nastaveniach → Členovia.')}</p>
         </form>
       )}
     </>

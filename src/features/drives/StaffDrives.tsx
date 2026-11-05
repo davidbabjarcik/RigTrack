@@ -6,6 +6,7 @@ import { useVehicles } from '@/features/vehicles/useVehicles'
 import { formatDate } from '@/lib/format'
 import { useAllDrives } from './api'
 import { DIRECTION_LABELS } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 /** Na karte zamestnanca: kde a kedy šoféroval (člen podľa účtu, brigádnik podľa mena). */
 export function StaffDrives({ companyId, person, events }: { companyId: string; person: { memberId: string | null; name: string }; events: CompanyEvent[] }) {
@@ -20,7 +21,7 @@ export function StaffDrives({ companyId, person, events }: { companyId: string; 
   const plateOf = (id: string | null) => (id ? vehicles.data?.find((vehicle) => vehicle.id === id)?.plate : undefined)
 
   return (
-    <CollapsibleSection id="staff.drives" title={`Šoféroval (${mine.length}× · ${formatNumber(Math.round(km * 10) / 10)} km)`}>
+    <CollapsibleSection id="staff.drives" title={tf('Šoféroval ({0}× · {1} km)', mine.length, formatNumber(Math.round(km * 10) / 10))}>
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface text-sm">
         {mine.slice(0, 30).map((drive) => {
           const event = eventOf(drive.eventId)
@@ -31,7 +32,7 @@ export function StaffDrives({ companyId, person, events }: { companyId: string; 
                   <span className="block truncate font-medium">{event?.name ?? 'Event'}</span>
                   <span className="block truncate text-muted-foreground">{[formatDate(drive.date), plateOf(drive.vehicleId), DIRECTION_LABELS[drive.direction], drive.route].filter(Boolean).join(' · ')}</span>
                 </span>
-                {drive.km !== null && <span className="shrink-0 tabular-nums">{formatNumber(drive.km)} km</span>}
+                {drive.km !== null && <span className="shrink-0 tabular-nums">{formatNumber(drive.km)}{' '}{tx('km')}</span>}
               </Link>
             </li>
           )

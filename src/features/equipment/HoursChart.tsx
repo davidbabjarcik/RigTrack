@@ -1,5 +1,6 @@
 import type { HourReading } from './api'
 import { formatNumber } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const WIDTH = 600
 const HEIGHT = 180
@@ -25,7 +26,7 @@ export function HoursChart({ readings }: { readings: HourReading[] }) {
 
   return (
     <figure className="mt-4 border-t pt-3">
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="h-auto w-full" role="img" aria-label={`Graf prevádzkových hodín od ${formatNumber(first.hours)} h po ${formatNumber(last.hours)} h`}>
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="h-auto w-full" role="img" aria-label={tf('Graf prevádzkových hodín od {0} h po {1} h', formatNumber(first.hours), formatNumber(last.hours))}>
         {[low, (low + maxH) / 2, maxH].map((value) => (
           <g key={value}>
             <line x1={PAD.left} x2={WIDTH - PAD.right} y1={y(value)} y2={y(value)} className="stroke-border" strokeDasharray="3 3" />
@@ -48,8 +49,7 @@ export function HoursChart({ readings }: { readings: HourReading[] }) {
         </text>
       </svg>
       <figcaption className="text-sm text-muted-foreground">
-        +{formatNumber(Math.round((last.hours - first.hours) * 10) / 10)} h za {Math.round(days)} dní
-        {perMonth !== null && ` · priemerne ${formatNumber(Math.round(perMonth * 10) / 10)} h mesačne`}
+        +{formatNumber(Math.round((last.hours - first.hours) * 10) / 10)}{' '}{tx('h za')}{' '}{Math.round(days)}{' '}{tx('dní')}{perMonth !== null && tf(' · priemerne {0} h mesačne', formatNumber(Math.round(perMonth * 10) / 10))}
       </figcaption>
     </figure>
   )

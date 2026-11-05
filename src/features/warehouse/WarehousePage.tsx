@@ -52,6 +52,7 @@ import { DevNotice } from '@/components/feedback/DevNotice'
 import { PlanAddBar } from './PlanAddBar'
 import { buildSpot, DEFAULT_ADD, type AddSelection } from './planAdd'
 import { SizeForm } from './SizeForm'
+import { tx, tf } from '@/lib/i18n'
 
 export function WarehousePage() {
   const company = useCompany().active!
@@ -108,7 +109,7 @@ export function WarehousePage() {
 
   if (plan.isPending || casesQuery.isPending) return <LoadingBlock />
   if (plan.isError || casesQuery.isError) {
-    return <ErrorBlock message="Plán skladu sa nepodarilo načítať." onRetry={() => void Promise.all([plan.refetch(), casesQuery.refetch()])} />
+    return <ErrorBlock message={tx('Plán skladu sa nepodarilo načítať.')} onRetry={() => void Promise.all([plan.refetch(), casesQuery.refetch()])} />
   }
   // Pole regála, v ktorom case leží (0124).
   const cases = {
@@ -145,7 +146,7 @@ export function WarehousePage() {
   const spotOf = (id: string | null) => spots.find((spot) => spot.id === id)
   const where = (item: { spotId: string | null; spotLevel: number | null; spotBay?: number | null }) => {
     const spot = spotOf(item.spotId)
-    return spot ? describeSpot(spot, item.spotLevel, item.spotBay) : 'nemá miesto v sklade'
+    return spot ? describeSpot(spot, item.spotLevel, item.spotBay) : tx('nemá miesto v sklade')
   }
   // Kam uložiť: pri regáli s poliami vybraná polica (a paleta), bez nej prvá polica, kde je miesto; inak poschodie z výberu.
   const placeTarget = (spot: Spot, item: PlacedCase) => {
@@ -161,12 +162,12 @@ export function WarehousePage() {
   /** Naskenovaný štítok: ukáže, kde leží (case, technika v case, miesto), alebo ho uloží na vybrané miesto. */
   const onScan = (text: string): string | void => {
     const target = parseQr(text)
-    if (!target) return 'Tento QR kód nie je z RigTracku.'
+    if (!target) return tx('Tento QR kód nie je z RigTracku.')
     if (scanning === 'place' && selected) {
-      if (target.kind !== 'case') return 'Na miesto sa ukladajú cases – naskenujte štítok case.'
+      if (target.kind !== 'case') return tx('Na miesto sa ukladajú cases – naskenujte štítok case.')
       const item = cases.data.find((candidate) => candidate.id === target.id)
       if (!item) return '✗ Tento case v evidencii nie je.'
-      if (item.spotId === selected.id) return `✓ ${item.name} už tu je.`
+      if (item.spotId === selected.id) return tf('✓ {0} už tu je.', item.name)
       const into = placeTarget(selected, item)
       place.mutate({ caseId: item.id, spotId: selected.id, ...into })
       return `✓ ${item.name} → ${describeSpot(selected, into.level, into.bay)}${into.pallet ? `, paleta ${into.pallet}` : ''}`
@@ -175,7 +176,7 @@ export function WarehousePage() {
     setSearch('')
     if (target.kind === 'spot') {
       const spot = spotOf(target.id)
-      setFound(spot ? null : { text: 'Toto miesto už v pláne skladu nie je.' })
+      setFound(spot ? null : { text: tx('Toto miesto už v pláne skladu nie je.') })
       if (spot) select(spot.id)
       return
     }
@@ -186,40 +187,36 @@ export function WarehousePage() {
       return void setFound({ text: `${item.name}: ${where(cases.data.find((candidate) => candidate.id === item.id)!)}`, to: `/cases/${item.id}` })
     }
     const piece = equipment.data?.find((candidate) => candidate.id === target.id)
-    if (!piece) return void setFound({ text: 'Táto technika v evidencii nie je.' })
+    if (!piece) return void setFound({ text: tx('Táto technika v evidencii nie je.') })
     const inCase = cases.data.find((candidate) => candidate.id === piece.caseId)
     if (inCase) {
       if (inCase.spotId) select(inCase.spotId)
       return void setFound({ text: `${piece.name} je v case ${caseTitle(inCase)}: ${where(inCase)}`, to: `/equipment/${piece.id}` })
     }
     const location = locations.find((candidate) => candidate.id === piece.locationId)?.name
-    setFound({ text: `${piece.name} nie je v žiadnom case${location ? ` – umiestnenie: ${location}` : ''}.`, to: `/equipment/${piece.id}` })
+    setFound({ text: tf('{0} nie je v žiadnom case{1}.', piece.name, location ? ` – umiestnenie: ${location}` : ''), to: `/equipment/${piece.id}` })
   }
 
   return (
     <>
       <PageHeader
-        title="Sklad"
-        description={warehouse ? `Plán ${metres(warehouse.lengthCm)} × ${metres(warehouse.widthCm)}, pohľad zhora` : 'Kde ktorý case leží'}
+        title={tx('Sklad')}
+        description={warehouse ? tf('Plán {0} × {1}, pohľad zhora', metres(warehouse.lengthCm), metres(warehouse.widthCm)) : tx('Kde ktorý case leží')}
         action={
           warehouse && (
             <div className="flex flex-wrap gap-2">
               {!editing && (
                 <Button variant="outline" onClick={() => setScanning('find')}>
-                  <ScanLine className="size-4" aria-hidden />
-                  Skenovať
-                </Button>
+                  <ScanLine className="size-4" aria-hidden />{tx('Skenovať')}</Button>
               )}
               {canPlan && spots.length > 0 && (
                 <LinkButton to="/qr/spots" variant="outline">
-                  <QrCode className="size-4" aria-hidden />
-                  QR štítky miest
-                </LinkButton>
+                  <QrCode className="size-4" aria-hidden />{tx('QR štítky miest')}</LinkButton>
               )}
               {canPlan && (
                 <Button variant="outline" onClick={() => setEditing(!editing)}>
                   {editing ? <Check className="size-4" aria-hidden /> : <Pencil className="size-4" aria-hidden />}
-                  {editing ? 'Hotovo' : 'Upraviť plán'}
+                  {editing ? 'Hotovo' : tx('Upraviť plán')}
                 </Button>
               )}
             </div>
@@ -229,7 +226,7 @@ export function WarehousePage() {
       <DevNotice className="mb-4" />
       {scanning && (
         <LiveScanner
-          title={scanning === 'place' && selected ? `Uložiť na ${selected.name}` : 'Kde to je?'}
+          title={scanning === 'place' && selected ? tf('Uložiť na {0}', selected.name) : tx('Kde to je?')}
           onClose={() => setScanning(null)}
           onResult={onScan}
         />
@@ -241,13 +238,11 @@ export function WarehousePage() {
             {found.to && (
               <>
                 {' '}
-                <Link to={found.to} className="font-medium text-accent hover:underline">
-                  Detail
-                </Link>
+                <Link to={found.to} className="font-medium text-accent hover:underline">{tx('Detail')}</Link>
               </>
             )}
           </span>
-          <button type="button" aria-label="Zavrieť" className="text-muted-foreground hover:text-foreground" onClick={() => setFound(null)}>
+          <button type="button" aria-label={tx('Zavrieť')} className="text-muted-foreground hover:text-foreground" onClick={() => setFound(null)}>
             <X className="size-4" aria-hidden />
           </button>
         </p>
@@ -257,9 +252,7 @@ export function WarehousePage() {
         (canPlan ? (
           <SizeForm companyId={companyId} current={null} onDone={() => setEditing(true)} />
         ) : (
-          <p className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center text-sm text-muted-foreground">
-            Plán skladu ešte nikto nenakreslil.
-          </p>
+          <p className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center text-sm text-muted-foreground">{tx('Plán skladu ešte nikto nenakreslil.')}</p>
         ))}
 
       {warehouse && editing && (
@@ -285,26 +278,21 @@ export function WarehousePage() {
             }}
             fillOf={(index) => (editorSpots[index].kind === 'pallet' ? palletTone(editorSpots[index], warehouse).fill : spotColor(editorSpots[index].kind, warehouse))}
             labelOf={(index) => editorSpots[index].name}
-            describe={(rect) => `${metres(rect.length)} × ${metres(rect.width)} · ${metres(rect.x)} zľava, ${metres(rect.y)} zhora`}
-            ariaLabel="Editor plánu skladu"
+            describe={(rect) => tf('{0} × {1} · {2} zľava, {3} zhora', metres(rect.length), metres(rect.width), metres(rect.x), metres(rect.y))}
+            ariaLabel={tx('Editor plánu skladu')}
             className="max-h-[70dvh]"
             footer={
-              <span className="text-muted-foreground">
-                Hore vyberte, čo pridať, alebo ťahaním po prázdnom mieste nakreslite regál. Kliknutím miesto vyberiete, ťahaním posuniete, za
-                roh zmeníte veľkosť. Mriežka má štvorce po 1 m.
-              </span>
+              <span className="text-muted-foreground">{tx('Hore vyberte, čo pridať, alebo ťahaním po prázdnom mieste nakreslite regál. Kliknutím miesto vyberiete, ťahaním posuniete, za roh zmeníte veľkosť. Mriežka má štvorce po 1 m.')}</span>
             }
           />
           {selected && (
             <div key={selected.id} className="mt-3 grid items-end gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-4">
               <div className="flex flex-wrap gap-2 sm:col-span-4">
                 <Button variant="outline" size="sm" disabled={change.isPending} onClick={() => change.mutate({ id: selected.id, fields: rotated(selected, warehouse) })}>
-                  <RotateCw className="size-4" aria-hidden />
-                  Otočiť o 90°
-                </Button>
+                  <RotateCw className="size-4" aria-hidden />{tx('Otočiť o 90°')}</Button>
                 {selected.kind === 'pallet' && (
                   <select
-                    aria-label="Typ palety"
+                    aria-label={tx('Typ palety')}
                     className="h-9 rounded-lg border bg-surface px-2 text-sm"
                     value=""
                     onChange={(event) => {
@@ -316,17 +304,16 @@ export function WarehousePage() {
                       change.mutate({ id: selected.id, fields: { material: type.material, ...(horizontal ? { length: long, width: short } : { length: short, width: long }) } })
                     }}
                   >
-                    <option value="">{palletName(selected, palletTypesOf(warehouse))} – zmeniť typ…</option>
+                    <option value="">{palletName(selected, palletTypesOf(warehouse))}{' '}{tx('– zmeniť typ…')}</option>
                     {palletTypesOf(warehouse).map((type) => (
                       <option key={type.id} value={type.id}>
-                        {type.name} ({type.length} × {type.width} cm)
-                      </option>
+                        {type.name} ({type.length} × {type.width}{' '}{tx('cm)')}</option>
                     ))}
                   </select>
                 )}
                 {selected.kind === 'rack' && (warehouse.rackTypes ?? []).length > 0 && (
                   <select
-                    aria-label="Nastaviť typ regálu"
+                    aria-label={tx('Nastaviť typ regálu')}
                     className="h-9 rounded-lg border bg-surface px-2 text-sm"
                     value=""
                     onChange={(event) => {
@@ -345,7 +332,7 @@ export function WarehousePage() {
                       })
                     }}
                   >
-                    <option value="">Nastaviť podľa typu…</option>
+                    <option value="">{tx('Nastaviť podľa typu…')}</option>
                     {warehouse.rackTypes!.map((type) => (
                       <option key={type.id} value={type.id}>
                         {type.name}
@@ -355,7 +342,7 @@ export function WarehousePage() {
                 )}
               </div>
               <Field
-                label="Názov miesta"
+                label={tx('Názov miesta')}
                 defaultValue={selected.name}
                 maxLength={60}
                 onBlur={(event) => {
@@ -366,12 +353,12 @@ export function WarehousePage() {
               />
               {selected.kind === 'rack' && (selected.bays?.length ?? 0) === 0 && (
                 <Field
-                  label="Výška poschodia (cm)"
+                  label={tx('Výška poschodia (cm)')}
                   type="number"
                   inputMode="numeric"
                   min={5}
                   max={1000}
-                  placeholder="napr. 120"
+                  placeholder={tx('napr. 120')}
                   defaultValue={selected.levelHeightCm ?? ''}
                   onBlur={(event) => {
                     const value = event.target.value.trim() === '' ? null : Math.round(Number(event.target.value))
@@ -384,7 +371,7 @@ export function WarehousePage() {
                 (['length', 'width'] as const).map((side) => (
                   <Field
                     key={`${side}-${selected[side]}`}
-                    label={side === 'length' ? 'Dĺžka (m)' : 'Šírka (m)'}
+                    label={side === 'length' ? tx('Dĺžka (m)') : tx('Šírka (m)')}
                     inputMode="decimal"
                     defaultValue={String(selected[side] / 100).replace('.', ',')}
                     onBlur={(event) => {
@@ -403,10 +390,10 @@ export function WarehousePage() {
                   />
                 ))}
               <Field
-                label="Poznámka"
+                label={tx('Poznámka')}
                 className="sm:col-span-2"
                 maxLength={300}
-                placeholder={isStructure(selected.kind) ? 'napr. nosný stĺp, brána 3 m' : 'napr. ťažké dole, káble hore'}
+                placeholder={isStructure(selected.kind) ? tx('napr. nosný stĺp, brána 3 m') : tx('napr. ťažké dole, káble hore')}
                 defaultValue={selected.note ?? ''}
                 onBlur={(event) => {
                   const note = event.target.value.trim()
@@ -418,13 +405,11 @@ export function WarehousePage() {
                 disabled={remove.isPending}
                 onClick={() => {
                   const count = bySpot.get(selected.id)?.length ?? 0
-                  const warning = count > 0 ? ` Cases, ktoré na ňom ležia (${count}), ostanú bez miesta.` : ''
-                  if (window.confirm(`Odstrániť miesto „${selected.name}“?${warning}`)) remove.mutate(selected.id)
+                  const warning = count > 0 ? tf(' Cases, ktoré na ňom ležia ({0}), ostanú bez miesta.', count) : ''
+                  if (window.confirm(tf('Odstrániť miesto „{0}“?{1}', selected.name, warning))) remove.mutate(selected.id)
                 }}
               >
-                <Trash2 className="size-4" aria-hidden />
-                Odstrániť miesto
-              </Button>
+                <Trash2 className="size-4" aria-hidden />{tx('Odstrániť miesto')}</Button>
             </div>
           )}
         </>
@@ -435,10 +420,10 @@ export function WarehousePage() {
           <div className="relative mb-3">
             <Search className="pointer-events-none absolute top-3.5 left-3 size-4 text-muted-foreground" aria-hidden />
             <Field
-              label="Nájsť case"
+              label={tx('Nájsť case')}
               hideLabel
               type="search"
-              placeholder="Nájsť case – názov alebo číslo (aj staré)"
+              placeholder={tx('Nájsť case – názov alebo číslo (aj staré)')}
               className="[&_input]:pl-9"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -446,7 +431,7 @@ export function WarehousePage() {
           </div>
           {search.trim() !== '' && (
             <ul className="mb-3 divide-y overflow-hidden rounded-xl border bg-surface">
-              {hits.length === 0 && <li className="px-4 py-3 text-sm text-muted-foreground">Taký case v evidencii nie je.</li>}
+              {hits.length === 0 && <li className="px-4 py-3 text-sm text-muted-foreground">{tx('Taký case v evidencii nie je.')}</li>}
               {hits.slice(0, 8).map((item) => {
                 const spot = spotOf(item.spotId)
                 return (
@@ -459,7 +444,7 @@ export function WarehousePage() {
                     >
                       <span className="min-w-0 truncate font-medium">
                         {item.name}
-                        {[item.inventoryNumber, item.labelNumber && `č. ${item.labelNumber}`, item.oldNumbers && `staré: ${item.oldNumbers}`].filter(Boolean).length > 0 && (
+                        {[item.inventoryNumber, item.labelNumber && tf('č. {0}', item.labelNumber), item.oldNumbers && tf('staré: {0}', item.oldNumbers)].filter(Boolean).length > 0 && (
                           <span className="font-normal text-muted-foreground">
                             {' · '}
                             {[item.inventoryNumber, item.labelNumber && `č. ${item.labelNumber}`, item.oldNumbers && `staré: ${item.oldNumbers}`].filter(Boolean).join(' · ')}
@@ -467,7 +452,7 @@ export function WarehousePage() {
                         )}
                       </span>
                       <span className={spot ? 'shrink-0 text-sm text-accent' : 'shrink-0 text-sm text-muted-foreground'}>
-                        {spot ? describeSpot(spot, item.spotLevel, item.spotBay) : 'nemá miesto'}
+                        {spot ? describeSpot(spot, item.spotLevel, item.spotBay) : tx('nemá miesto')}
                       </span>
                     </button>
                   </li>
@@ -482,15 +467,11 @@ export function WarehousePage() {
             <div className="min-w-0">
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <Button variant="outline" size="sm" onClick={backToPlan}>
-                  <ArrowLeft className="size-4" aria-hidden />
-                  Pôdorys skladu
-                </Button>
+                  <ArrowLeft className="size-4" aria-hidden />{tx('Pôdorys skladu')}</Button>
                 <span className="flex-1 truncate font-medium">{selected.name}</span>
                 {canPlan && !editingBays && (
                   <Button variant="outline" size="sm" onClick={() => setEditingBays(true)}>
-                    <LayoutGrid className="size-4" aria-hidden />
-                    Upraviť polia a police
-                  </Button>
+                    <LayoutGrid className="size-4" aria-hidden />{tx('Upraviť polia a police')}</Button>
                 )}
               </div>
               <RackFront
@@ -501,7 +482,7 @@ export function WarehousePage() {
                 highlighted={new Set(hits.map((item) => item.id))}
                 onSelect={setCell}
               />
-              <p className="mt-2 text-sm text-muted-foreground">Kliknite na policu alebo paletu – uvidíte, čo na nej je, a môžete tam uložiť case. Bez zvolenej palety sa cases poskladajú na palety samy. Prerušovaná škatuľa = case bez rozmerov.</p>
+              <p className="mt-2 text-sm text-muted-foreground">{tx('Kliknite na policu alebo paletu – uvidíte, čo na nej je, a môžete tam uložiť case. Bez zvolenej palety sa cases poskladajú na palety samy. Prerušovaná škatuľa = case bez rozmerov.')}</p>
             </div>
           )}
           {front && selected && editingBays && (
@@ -537,20 +518,19 @@ export function WarehousePage() {
           />
           )}
           {!front && (
-          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Legenda">
+          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label={tx('Legenda')}>
             {SPOT_KINDS.filter((kind) => kind === 'rack' || kind === 'pallet' || kind === 'zone' || spots.some((spot) => spot.kind === kind)).map((kind) => (
               <li key={kind} className="flex items-center gap-1.5">
                 <span className={cn('size-3 rounded-sm', kind === 'zone' && 'border border-dashed')} style={{ backgroundColor: kind === 'zone' ? 'transparent' : spotColor(kind, warehouse), borderColor: spotColor(kind, warehouse) }} />
-                {SPOT_KIND_LABELS[kind]}
+                {tx(SPOT_KIND_LABELS[kind])}
               </li>
             ))}
-            <li className="text-muted-foreground">pásik pri regáli = obsadenosť · štvorec mriežky = 1 m · klik na regál = pohľad spredu</li>
+            <li className="text-muted-foreground">{tx('pásik pri regáli = obsadenosť · štvorec mriežky = 1 m · klik na regál = pohľad spredu')}</li>
           </ul>
           )}
 
           {spots.length === 0 && (
-            <p className="mt-4 rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
-              Plán je zatiaľ prázdny.{canPlan && ' Tlačidlom Upraviť plán doň nakreslíte regály, palety a zóny.'}
+            <p className="mt-4 rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Plán je zatiaľ prázdny.')}{canPlan && tx(' Tlačidlom Upraviť plán doň nakreslíte regály, palety a zóny.')}
             </p>
           )}
 
@@ -565,12 +545,12 @@ export function WarehousePage() {
                     {selected.kind === 'pallet'
                       ? `Paleta · ${palletName(selected, palletTypesOf(warehouse))}`
                       : `${SPOT_KIND_LABELS[selected.kind]} · ${metres(selected.length)} × ${metres(selected.width)}`}
-                    {selected.levels > 1 && ` · poschodí: ${selected.levels}`}
-                    {selected.levelHeightCm && ` · poschodie ${selected.levelHeightCm} cm na výšku`}
+                    {selected.levels > 1 && tf(' · poschodí: {0}', selected.levels)}
+                    {selected.levelHeightCm && tf(' · poschodie {0} cm na výšku', selected.levelHeightCm)}
                   </p>
                   {selected.note && <p className="mt-1 text-sm">{selected.note}</p>}
                 </div>
-                <Button variant="ghost" size="sm" aria-label="Zavrieť" onClick={() => select(null)}>
+                <Button variant="ghost" size="sm" aria-label={tx('Zavrieť')} onClick={() => select(null)}>
                   <X className="size-4" aria-hidden />
                 </Button>
               </div>
@@ -580,24 +560,17 @@ export function WarehousePage() {
                   {selected.id === trussSpotId ? (
                     <>
                       <span className="flex-1">
-                        <span className="font-medium">Hliník</span> · {trussStacks} {trussStacks === 1 ? 'stoh' : trussStacks > 1 && trussStacks < 5 ? 'stohy' : 'stohov'} trussov
-                      </span>
-                      <LinkButton to="/warehouse/truss" size="sm" variant="outline">
-                        Otvoriť hliník
-                      </LinkButton>
+                        <span className="font-medium">{tx('Hliník')}</span> · {trussStacks} {trussStacks === 1 ? 'stoh' : trussStacks > 1 && trussStacks < 5 ? 'stohy' : 'stohov'}{' '}{tx('trussov')}</span>
+                      <LinkButton to="/warehouse/truss" size="sm" variant="outline">{tx('Otvoriť hliník')}</LinkButton>
                       {canPlan && selected.kind === 'zone' && (
-                        <Button size="sm" variant="ghost" disabled={moveTruss.isPending} onClick={() => moveTruss.mutate(null)}>
-                          Hliník tu nie je
-                        </Button>
+                        <Button size="sm" variant="ghost" disabled={moveTruss.isPending} onClick={() => moveTruss.mutate(null)}>{tx('Hliník tu nie je')}</Button>
                       )}
                     </>
                   ) : (
                     canPlan && (
                       <>
-                        <span className="flex-1 text-muted-foreground">Leží tu aj hliník (stohy trussov)?</span>
-                        <Button size="sm" variant="outline" disabled={moveTruss.isPending} onClick={() => moveTruss.mutate(selected.id)}>
-                          Hliník je na tomto mieste
-                        </Button>
+                        <span className="flex-1 text-muted-foreground">{tx('Leží tu aj hliník (stohy trussov)?')}</span>
+                        <Button size="sm" variant="outline" disabled={moveTruss.isPending} onClick={() => moveTruss.mutate(selected.id)}>{tx('Hliník je na tomto mieste')}</Button>
                       </>
                     )
                   )}
@@ -618,12 +591,11 @@ export function WarehousePage() {
                         const onPallet = cell?.bay === bayNo && cell.level === levelNo ? cell.pallet : null
                         return (
                           <div key={`${bayNo}-${levelNo}`}>
-                            <h3 className="mb-1 text-sm font-medium">
-                              Pole {bayNo}, {levelNo}. polica{onPallet ? `, paleta ${onPallet}` : ''}{' '}
-                              <span className="font-normal text-muted-foreground">· {level.heightCm} cm na výšku · {currentBay.widthCm} cm</span>
+                            <h3 className="mb-1 text-sm font-medium">{tx('Pole')}{' '}{bayNo}, {levelNo}{tx('. polica')}{onPallet ? `, paleta ${onPallet}` : ''}{' '}
+                              <span className="font-normal text-muted-foreground">· {level.heightCm}{' '}{tx('cm na výšku ·')}{' '}{currentBay.widthCm}{' '}{tx('cm')}</span>
                             </h3>
                             <p className={cn('mb-1 text-xs', layout.notFit.length > 0 ? 'text-destructive' : 'text-muted-foreground')}>
-                              {layout.notFit.length > 0 ? `nezmestí sa: ${layout.notFit.map((item) => item.name).join(', ')}` : `voľné spredu ${layout.freeCm} cm`}
+                              {layout.notFit.length > 0 ? tf('nezmestí sa: {0}', layout.notFit.map((item) => item.name).join(', ')) : tf('voľné spredu {0} cm', layout.freeCm)}
                               {level.pallets ? ` · ${level.pallets} palety` : ` · zmestia sa ${usage.palletFit} palety + ${usage.palletRest} cm`}
                               {usage.unknown > 0 && ` · ${usage.unknown} bez rozmerov`}
                             </p>
@@ -641,19 +613,19 @@ export function WarehousePage() {
                         )
                       }),
                   )}
-                  {!cell && (bySpot.get(selected.id)?.length ?? 0) === 0 && <p className="text-sm text-muted-foreground">Regál je prázdny. Kliknite na policu v pohľade spredu.</p>}
+                  {!cell && (bySpot.get(selected.id)?.length ?? 0) === 0 && <p className="text-sm text-muted-foreground">{tx('Regál je prázdny. Kliknite na policu v pohľade spredu.')}</p>}
                 </div>
               ) : isStructure(selected.kind) ? (
-                <p className="text-sm text-muted-foreground">Stavebný prvok – na pláne len na orientáciu, cases sa naň neukladajú.</p>
+                <p className="text-sm text-muted-foreground">{tx('Stavebný prvok – na pláne len na orientáciu, cases sa naň neukladajú.')}</p>
               ) : (bySpot.get(selected.id)?.length ?? 0) === 0 ? (
-                <p className="text-sm text-muted-foreground">Na tomto mieste zatiaľ nič neleží{selected.kind !== 'zone' && ` – voľných ${metres(Math.sqrt(selected.length * selected.width)).replace(' m', '')} m strany, ${String(Math.round((selected.length * selected.width) / 1000) / 10).replace('.', ',')} m² na poschodie`}.</p>
+                <p className="text-sm text-muted-foreground">{tx('Na tomto mieste zatiaľ nič neleží')}{selected.kind !== 'zone' && tf(' – voľných {0} m strany, {1} m² na poschodie', metres(Math.sqrt(selected.length * selected.width)).replace(' m', ''), String(Math.round((selected.length * selected.width) / 1000) / 10).replace('.', ','))}.</p>
               ) : (
                 <div className="flex flex-col gap-3">
                   {byLevel(selected, bySpot.get(selected.id) ?? []).map((group) => (
                     <div key={group.level ?? 'none'}>
                       {(selected.levels > 1 || group.level === null) && (
                         <h3 className="mb-1 text-sm font-medium text-muted-foreground">
-                          {group.level ? `${group.level}. poschodie` : selected.levels > 1 ? 'Bez poschodia' : ''}
+                          {group.level ? `${group.level}. poschodie` : selected.levels > 1 ? tx('Bez poschodia') : ''}
                         </h3>
                       )}
                       {/* Koľko plochy poschodia zaberajú cases (z ich rozmerov) a čo sa nezmestí na výšku. */}
@@ -664,16 +636,15 @@ export function WarehousePage() {
                             <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
                               <div className={cn('h-full rounded-full', usage.percent > 100 ? 'bg-destructive' : usage.percent > 85 ? 'bg-accent' : 'bg-emerald-500')} style={{ width: `${Math.min(100, usage.percent)}%` }} />
                             </div>
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              obsadené {usage.percent} % plochy · voľné asi {String(Math.round(usage.freeM2 * 10) / 10).replace('.', ',')} m²
+                            <p className="mt-0.5 text-xs text-muted-foreground">{tx('obsadené')}{' '}{usage.percent}{' '}{tx('% plochy · voľné asi')}{' '}{String(Math.round(usage.freeM2 * 10) / 10).replace('.', ',')} m²
                               {usage.unknown > 0 && ` · ${usage.unknown} bez rozmerov`}
                             </p>
-                            {usage.tooTall.length > 0 && <p className="text-xs text-destructive">Na výšku sa nezmestí: {usage.tooTall.map((item) => item.name).join(', ')}</p>}
+                            {usage.tooTall.length > 0 && <p className="text-xs text-destructive">{tx('Na výšku sa nezmestí:')}{' '}{usage.tooTall.map((item) => item.name).join(', ')}</p>}
                           </div>
                         )
                       })()}
                       {group.cases.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">prázdne</p>
+                        <p className="text-sm text-muted-foreground">{tx('prázdne')}</p>
                       ) : (
                         <ul className="divide-y rounded-lg border">
                           {group.cases.map((item) => (
@@ -685,7 +656,7 @@ export function WarehousePage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  aria-label={`Vybrať z miesta: ${item.name}`}
+                                  aria-label={tf('Vybrať z miesta: {0}', item.name)}
                                   disabled={place.isPending}
                                   onClick={() => place.mutate({ caseId: item.id, spotId: null, level: null })}
                                 >
@@ -712,8 +683,8 @@ export function WarehousePage() {
                     setAddCaseId('')
                   }}
                 >
-                  <SelectField label="Uložiť sem case" className="min-w-56 flex-1" value={addCaseId} onChange={(e) => setAddCaseId(e.target.value)}>
-                    <option value="">— vyberte case —</option>
+                  <SelectField label={tx('Uložiť sem case')} className="min-w-56 flex-1" value={addCaseId} onChange={(e) => setAddCaseId(e.target.value)}>
+                    <option value="">{tx('— vyberte case —')}</option>
                     {cases.data
                       .filter((item) => item.spotId !== selected.id)
                       .map((item) => {
@@ -728,7 +699,7 @@ export function WarehousePage() {
                   </SelectField>
                   {selected.kind === 'rack' && multiBay && (
                     <SelectField
-                      label="Polica"
+                      label={tx('Polica')}
                       className="w-44"
                       value={cell ? `${cell.bay}-${cell.level}` : ''}
                       onChange={(e) => {
@@ -736,33 +707,30 @@ export function WarehousePage() {
                         setCell(e.target.value ? { bay, level } : null)
                       }}
                     >
-                      <option value="">automaticky (kde je miesto)</option>
+                      <option value="">{tx('automaticky (kde je miesto)')}</option>
                       {bays.flatMap((bay, bayIndex) =>
                         bay.levels.map((_, levelIndex) => (
-                          <option key={`${bayIndex}-${levelIndex}`} value={`${bayIndex + 1}-${levelIndex + 1}`}>
-                            Pole {bayIndex + 1}, {levelIndex + 1}. polica
-                          </option>
+                          <option key={`${bayIndex}-${levelIndex}`} value={`${bayIndex + 1}-${levelIndex + 1}`}>{tx('Pole')}{' '}{bayIndex + 1}, {levelIndex + 1}{tx('. polica')}</option>
                         )),
                       )}
                     </SelectField>
                   )}
                   {selected.kind === 'rack' && multiBay && (cellLevel?.pallets ?? 0) > 0 && (
                     <SelectField
-                      label="Paleta"
+                      label={tx('Paleta')}
                       className="w-40"
                       value={cell?.pallet ? String(cell.pallet) : ''}
                       onChange={(e) => cell && setCell({ bay: cell.bay, level: cell.level, pallet: e.target.value ? Number(e.target.value) : null })}
                     >
-                      <option value="">automaticky</option>
+                      <option value="">{tx('automaticky')}</option>
                       {Array.from({ length: cellLevel!.pallets! }, (_, index) => (
-                        <option key={index} value={index + 1}>
-                          paleta {index + 1}
+                        <option key={index} value={index + 1}>{tx('paleta')}{' '}{index + 1}
                         </option>
                       ))}
                     </SelectField>
                   )}
                   {selected.levels > 1 && !(selected.kind === 'rack' && multiBay) && (
-                    <SelectField label="Poschodie" className="w-28" value={Math.min(addLevel, selected.levels)} onChange={(e) => setAddLevel(Number(e.target.value))}>
+                    <SelectField label={tx('Poschodie')} className="w-28" value={Math.min(addLevel, selected.levels)} onChange={(e) => setAddLevel(Number(e.target.value))}>
                       {Array.from({ length: selected.levels }, (_, index) => index + 1).map((level) => (
                         <option key={level} value={level}>
                           {level}.
@@ -770,13 +738,9 @@ export function WarehousePage() {
                       ))}
                     </SelectField>
                   )}
-                  <Button type="submit" disabled={!addCaseId || place.isPending}>
-                    Uložiť sem
-                  </Button>
+                  <Button type="submit" disabled={!addCaseId || place.isPending}>{tx('Uložiť sem')}</Button>
                   <Button variant="outline" onClick={() => setScanning('place')}>
-                    <ScanLine className="size-4" aria-hidden />
-                    Uložiť sem skenovaním
-                  </Button>
+                    <ScanLine className="size-4" aria-hidden />{tx('Uložiť sem skenovaním')}</Button>
                 </form>
               )}
             </section>
@@ -785,8 +749,7 @@ export function WarehousePage() {
 
           {unplaced.length > 0 && (
             <section className="mt-5" aria-labelledby="unplaced-heading">
-              <h2 id="unplaced-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-                Cases bez miesta ({unplaced.length})
+              <h2 id="unplaced-heading" className="mb-2 text-sm font-medium text-muted-foreground">{tx('Cases bez miesta (')}{unplaced.length})
               </h2>
               <p className="rounded-xl border bg-surface p-4 text-sm">
                 {unplaced.map((item, index) => (
@@ -804,9 +767,7 @@ export function WarehousePage() {
       )}
 
       {mutations.some((mutation) => mutation.isError) && (
-        <p role="alert" className="mt-3 text-sm text-destructive">
-          Zmenu sa nepodarilo uložiť.
-        </p>
+        <p role="alert" className="mt-3 text-sm text-destructive">{tx('Zmenu sa nepodarilo uložiť.')}</p>
       )}
     </>
   )

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { caseTitle, groupCases, type Case } from '@/features/cases/model'
 import { equipmentKeys, mergeEquipment, splitEquipmentIntoCase } from './api'
 import type { Equipment } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = {
   companyId: string
@@ -72,22 +73,16 @@ export function GroupToCases({ companyId, parts, cases, ids }: Props) {
   if (!open) {
     return (
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <Package className="size-4" aria-hidden />
-        Dať do viacerých cases
-      </Button>
+        <Package className="size-4" aria-hidden />{tx('Dať do viacerých cases')}</Button>
     )
   }
 
   return (
     <section className="mt-3 w-full rounded-xl border bg-surface p-4" aria-labelledby="to-cases-heading">
-      <h2 id="to-cases-heading" className="font-semibold">
-        Dať do viacerých cases
-      </h2>
-      <p className="mb-3 text-sm text-muted-foreground">Mimo case je {free} ks. Zaškrtnite cases a koľko kusov dať do každého.</p>
+      <h2 id="to-cases-heading" className="font-semibold">{tx('Dať do viacerých cases')}</h2>
+      <p className="mb-3 text-sm text-muted-foreground">{tx('Mimo case je')}{' '}{free}{' '}{tx('ks. Zaškrtnite cases a koľko kusov dať do každého.')}</p>
       <div className="mb-3 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          Do každého case (ks)
-          <input
+        <label className="flex flex-col gap-1 text-sm">{tx('Do každého case (ks)')}<input
             type="number"
             min={1}
             max={free}
@@ -97,16 +92,10 @@ export function GroupToCases({ companyId, parts, cases, ids }: Props) {
             onChange={(event) => setCount(Math.max(1, Math.min(free, Math.round(Number(event.target.value) || 1))))}
           />
         </label>
-        <label className="flex min-w-48 flex-1 flex-col gap-1 text-sm">
-          Hľadať case
-          <input className="h-10 rounded-lg border bg-background px-3" placeholder="napr. K10" value={search} onChange={(event) => setSearch(event.target.value)} />
+        <label className="flex min-w-48 flex-1 flex-col gap-1 text-sm">{tx('Hľadať case')}<input className="h-10 rounded-lg border bg-background px-3" placeholder={tx('napr. K10')} value={search} onChange={(event) => setSearch(event.target.value)} />
         </label>
-        <Button size="sm" variant="ghost" onClick={() => setPicked(shown.filter((box) => countIn(box.id) === 0).map((box) => box.id))}>
-          Vybrať zobrazené bez tejto techniky
-        </Button>
-        <Button size="sm" variant="ghost" onClick={() => setPicked([])}>
-          Zrušiť výber
-        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setPicked(shown.filter((box) => countIn(box.id) === 0).map((box) => box.id))}>{tx('Vybrať zobrazené bez tejto techniky')}</Button>
+        <Button size="sm" variant="ghost" onClick={() => setPicked([])}>{tx('Zrušiť výber')}</Button>
       </div>
       <ul className="mb-3 max-h-72 divide-y overflow-y-auto rounded-lg border">
         {shown.map((box) => (
@@ -114,23 +103,21 @@ export function GroupToCases({ companyId, parts, cases, ids }: Props) {
             <label className="flex min-h-11 cursor-pointer items-center gap-3 px-3 py-2 hover:bg-muted">
               <input type="checkbox" className="size-4" checked={picked.includes(box.id)} onChange={() => toggle(box.id)} />
               <span className="min-w-0 flex-1 truncate">{caseTitle(box)}</span>
-              {countIn(box.id) > 0 && <span className="shrink-0 text-xs text-muted-foreground">už {countIn(box.id)} ks</span>}
+              {countIn(box.id) > 0 && <span className="shrink-0 text-xs text-muted-foreground">{tx('už')}{' '}{countIn(box.id)}{' '}{tx('ks')}</span>}
             </label>
           </li>
         ))}
-        {shown.length === 0 && <li className="px-3 py-2 text-sm text-muted-foreground">Žiadny case sa nenašiel.</li>}
+        {shown.length === 0 && <li className="px-3 py-2 text-sm text-muted-foreground">{tx('Žiadny case sa nenašiel.')}</li>}
       </ul>
       <div className="flex flex-wrap items-center gap-2">
         <Button disabled={picked.length === 0 || total > free || move.isPending} onClick={() => move.mutate({ caseIds: picked, each: count })}>
           <Package className="size-4" aria-hidden />
-          {move.isPending ? 'Presúvam…' : `Dať do ${picked.length} cases (spolu ${total} ks)`}
+          {move.isPending ? tx('Presúvam…') : tf('Dať do {0} cases (spolu {1} ks)', picked.length, total)}
         </Button>
-        <Button variant="ghost" onClick={() => setOpen(false)}>
-          Zavrieť
-        </Button>
-        {total > free && <span className="text-sm text-destructive">Mimo case je len {free} ks – vyberte menej cases alebo menší počet.</span>}
+        <Button variant="ghost" onClick={() => setOpen(false)}>{tx('Zavrieť')}</Button>
+        {total > free && <span className="text-sm text-destructive">{tx('Mimo case je len')}{' '}{free}{' '}{tx('ks – vyberte menej cases alebo menší počet.')}</span>}
       </div>
-      {move.isError && <p className="mt-2 text-sm text-destructive">Presun do cases sa nepodaril{move.error instanceof Error ? `: ${move.error.message}` : ''}.</p>}
+      {move.isError && <p className="mt-2 text-sm text-destructive">{tx('Presun do cases sa nepodaril')}{move.error instanceof Error ? `: ${move.error.message}` : ''}.</p>}
     </section>
   )
 }

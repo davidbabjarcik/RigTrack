@@ -33,6 +33,7 @@ import {
   type AgendaSources,
   type EntryKind,
 } from './model'
+import { tx } from '@/lib/i18n'
 
 const ICONS: Record<EntryKind, LucideIcon> = {
   event: Ticket,
@@ -66,7 +67,7 @@ function EntryRow({ entry, showDate }: { entry: AgendaEntry; showDate?: boolean 
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{entry.title}</span>
         <span className="block truncate text-sm text-muted-foreground">
-          {ENTRY_KIND_LABELS[entry.kind]} · {entry.detail}
+          {tx(ENTRY_KIND_LABELS[entry.kind])} · {entry.detail}
         </span>
       </span>
       {showDate && <span className="shrink-0 text-sm text-destructive">{formatDate(entry.date)}</span>}
@@ -124,32 +125,30 @@ export function CalendarPage() {
   return (
     <>
       <PageHeader
-        title="Kalendár"
-        description="Termíny zo všetkých častí aplikácie na jednom mieste"
+        title={tx('Kalendár')}
+        description={tx('Termíny zo všetkých častí aplikácie na jednom mieste')}
         action={
           <Button
             variant="outline"
             disabled={events.isPending || loans.isPending}
-            title="Stiahne eventy a výpožičky (od minulého mesiaca) ako .ics – otvoríte ho v telefóne, Google Kalendári alebo Outlooku"
+            title={tx('Stiahne eventy a výpožičky (od minulého mesiaca) ako .ics – otvoríte ho v telefóne, Google Kalendári alebo Outlooku')}
             onClick={() => downloadIcs(`rigtrack-kalendar-${today}`, calendarExport(data.events, data.loans, addDays(today, -30)))}
           >
-            <CalendarPlus className="size-4" aria-hidden />
-            Export do kalendára
-          </Button>
+            <CalendarPlus className="size-4" aria-hidden />{tx('Export do kalendára')}</Button>
         }
       />
 
       {me && (
         <div className="mb-5">
-          <Availability companyId={companyId} person={me} canEdit title="Kedy nemôžem" />
+          <Availability companyId={companyId} person={me} canEdit title={tx('Kedy nemôžem')} />
         </div>
       )}
 
-      <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Zobrazenie">
+      <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label={tx('Zobrazenie')}>
         {(
           [
-            { id: 'list', label: 'Zoznam', icon: List },
-            { id: 'grid', label: 'Mriežka', icon: CalendarDays },
+            { id: 'list', label: tx('Zoznam'), icon: List },
+            { id: 'grid', label: tx('Mriežka'), icon: CalendarDays },
           ] as const
         ).map((option) => (
           <button
@@ -163,11 +162,11 @@ export function CalendarPage() {
             )}
           >
             <option.icon className="size-4" aria-hidden />
-            {option.label}
+            {tx(option.label)}
           </button>
         ))}
       </div>
-      <div className={cn('mb-3 flex flex-wrap gap-2', view === 'grid' && 'hidden')} role="group" aria-label="Obdobie">
+      <div className={cn('mb-3 flex flex-wrap gap-2', view === 'grid' && 'hidden')} role="group" aria-label={tx('Obdobie')}>
         {WINDOWS.map((option) => (
           <button
             key={option.days}
@@ -179,11 +178,11 @@ export function CalendarPage() {
               days === option.days ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
             )}
           >
-            {option.label}
+            {tx(option.label)}
           </button>
         ))}
       </div>
-      <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="Čo zobraziť">
+      <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label={tx('Čo zobraziť')}>
         {ENTRY_KINDS.map((kind) => {
           const Icon = ICONS[kind]
           const shown = !hidden.includes(kind)
@@ -199,7 +198,7 @@ export function CalendarPage() {
               )}
             >
               <Icon className="size-4" aria-hidden />
-              {ENTRY_KIND_LABELS[kind]}
+              {tx(ENTRY_KIND_LABELS[kind])}
             </button>
           )
         })}
@@ -208,20 +207,19 @@ export function CalendarPage() {
       {sources.some((source) => source.isPending) ? (
         <LoadingBlock />
       ) : sources.some((source) => source.isError) ? (
-        <ErrorBlock message="Termíny sa nepodarilo načítať." onRetry={() => sources.forEach((source) => void source.refetch())} />
+        <ErrorBlock message={tx('Termíny sa nepodarilo načítať.')} onRetry={() => sources.forEach((source) => void source.refetch())} />
       ) : view === 'grid' ? (
         <CalendarGrid month={month} today={today} entries={gridEntries} onMonthChange={setMonth} renderEntry={(entry) => <EntryRow entry={entry} />} />
       ) : overdue.length === 0 && upcoming.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">V tomto období nie sú žiadne termíny</p>
-          {later > 0 && <p className="mt-1 text-sm text-muted-foreground">Neskôr ich je {later}; zvoľte dlhšie obdobie.</p>}
+          <p className="font-medium">{tx('V tomto období nie sú žiadne termíny')}</p>
+          {later > 0 && <p className="mt-1 text-sm text-muted-foreground">{tx('Neskôr ich je')}{' '}{later}{tx('; zvoľte dlhšie obdobie.')}</p>}
         </div>
       ) : (
         <div className="flex flex-col gap-5">
           {overdue.length > 0 && (
             <section aria-labelledby="overdue-heading">
-              <h2 id="overdue-heading" className="mb-2 text-sm font-medium text-destructive">
-                Po termíne ({overdue.length})
+              <h2 id="overdue-heading" className="mb-2 text-sm font-medium text-destructive">{tx('Po termíne (')}{overdue.length})
               </h2>
               <ul className="divide-y overflow-hidden rounded-xl border border-destructive/40 bg-surface">
                 {overdue.map((entry) => (
@@ -247,7 +245,7 @@ export function CalendarPage() {
               </ul>
             </section>
           ))}
-          {later > 0 && <p className="text-sm text-muted-foreground">Po tomto období je ešte {later} ďalších termínov.</p>}
+          {later > 0 && <p className="text-sm text-muted-foreground">{tx('Po tomto období je ešte')}{' '}{later}{' '}{tx('ďalších termínov.')}</p>}
         </div>
       )}
     </>

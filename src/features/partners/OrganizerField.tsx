@@ -3,6 +3,7 @@ import { PhoneContactButton } from '@/components/share/PhoneContactButton'
 import { Field, SelectField } from '@/components/ui/field'
 import type { EventFormValues } from '@/features/events/model'
 import type { Partner } from './api'
+import { tx } from '@/lib/i18n'
 
 export const NEW_ORGANIZER = 'new'
 
@@ -25,10 +26,10 @@ export function OrganizerField({ partners, value, onChange, register, setValue, 
   const chosen = partners?.find((partner) => partner.id === value)
   return (
     <fieldset className="grid gap-4 rounded-xl border p-4 sm:grid-cols-2">
-      <legend className="px-1 text-sm font-medium">Organizátor</legend>
+      <legend className="px-1 text-sm font-medium">{tx('Organizátor')}</legend>
       {partners && (
         <SelectField
-          label="Organizátor z Firmy a kontakty"
+          label={tx('Organizátor z Firmy a kontakty')}
           className="sm:col-span-2"
           value={value}
           onChange={(event) => {
@@ -43,14 +44,14 @@ export function OrganizerField({ partners, value, onChange, register, setValue, 
             setValue('organizerEmail', person?.email ?? '', { shouldDirty: true })
           }}
         >
-          <option value="">— bez organizátora —</option>
+          <option value="">{tx('— bez organizátora —')}</option>
           {partners.map((partner) => (
             <option key={partner.id} value={partner.id}>
               {partner.name}
               {partner.contacts.length > 0 && ` (${partner.contacts.map((contact) => contact.name).join(', ')})`}
             </option>
           ))}
-          <option value={NEW_ORGANIZER}>+ Nový organizátor…</option>
+          <option value={NEW_ORGANIZER}>{tx('+ Nový organizátor…')}</option>
         </SelectField>
       )}
       {chosen && (
@@ -72,11 +73,11 @@ export function OrganizerField({ partners, value, onChange, register, setValue, 
               }}
             />
           </div>
-          <Field label="Organizátor (firma / skupina)" placeholder="napr. mesto, agentúra alebo klub" error={errors.organizer?.message} {...register('organizer')} />
-          <Field label="Kontaktná osoba" placeholder="napr. Simeon" error={errors.organizerPerson?.message} {...register('organizerPerson')} />
-          <Field label="Telefón" type="tel" autoComplete="off" error={errors.organizerPhone?.message} {...register('organizerPhone')} />
-          <Field label="E-mail" type="email" autoComplete="off" error={errors.organizerEmail?.message} {...register('organizerEmail')} />
-          {partners && <p className="text-xs text-muted-foreground sm:col-span-2">Nový organizátor sa uloží do Firmy a kontakty; ďalších ľudí k nemu pridáte pri evente alebo tam.</p>}
+          <Field label={tx('Organizátor (firma / skupina)')} placeholder={tx('napr. mesto, agentúra alebo klub')} error={errors.organizer?.message} {...register('organizer')} />
+          <Field label={tx('Kontaktná osoba')} placeholder={tx('napr. Simeon')} error={errors.organizerPerson?.message} {...register('organizerPerson')} />
+          <Field label={tx('Telefón')} type="tel" autoComplete="off" error={errors.organizerPhone?.message} {...register('organizerPhone')} />
+          <Field label={tx('E-mail')} type="email" autoComplete="off" error={errors.organizerEmail?.message} {...register('organizerEmail')} />
+          {partners && <p className="text-xs text-muted-foreground sm:col-span-2">{tx('Nový organizátor sa uloží do Firmy a kontakty; ďalších ľudí k nemu pridáte pri evente alebo tam.')}</p>}
         </>
       )}
     </fieldset>

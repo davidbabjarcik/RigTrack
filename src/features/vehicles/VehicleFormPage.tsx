@@ -19,13 +19,14 @@ import { saveVehicle, vehicleKeys } from './api'
 import { CargoEditor } from './CargoEditor'
 import { DEADLINES, VEHICLE_STATUS_LABELS, VEHICLE_STATUSES, vehicleSchema, type CargoObstacle, type Vehicle, type VehicleFormValues } from './model'
 import { useVehicles } from './useVehicles'
+import { tx, tf } from '@/lib/i18n'
 
 /** Nákladný priestor z rozpísaného formulára; nedopísané čísla sa berú ako nula. */
 function previewSpace(length: number, width: number, obstacles: CargoObstacle[]): CargoSpace {
   const finite = (value: number) => (Number.isFinite(value) ? value : 0)
   return {
     id: 'preview',
-    name: 'Nákladný priestor',
+    name: tx('Nákladný priestor'),
     payloadKg: null,
     length,
     width,
@@ -83,7 +84,7 @@ function VehicleForm({ companyId, current }: { companyId: string; current: Vehic
       navigate(`/vehicles/${id}`, { replace: true })
     },
     onError: (error: { code?: string }) => {
-      if (error.code === '23505') setError('plate', { message: 'Vozidlo s týmto EČV už existuje' }, { shouldFocus: true })
+      if (error.code === '23505') setError('plate', { message: tx('Vozidlo s týmto EČV už existuje') }, { shouldFocus: true })
     },
   })
 
@@ -91,27 +92,27 @@ function VehicleForm({ companyId, current }: { companyId: string; current: Vehic
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label="EČV *"
+          label={tx('EČV *')}
           autoFocus={!current}
           autoCapitalize="characters"
           autoComplete="off"
-          placeholder="napr. SP123AB"
+          placeholder={tx('napr. SP123AB')}
           error={errors.plate?.message}
           {...register('plate')}
         />
-        <Field label="Značka a model" placeholder="napr. VW Crafter" error={errors.model?.message} {...register('model')} />
-        <Field label="VIN" autoComplete="off" autoCapitalize="characters" error={errors.vin?.message} {...register('vin')} />
-        <SelectField label="Stav" error={errors.status?.message} {...register('status')}>
+        <Field label={tx('Značka a model')} placeholder={tx('napr. VW Crafter')} error={errors.model?.message} {...register('model')} />
+        <Field label={tx('VIN')} autoComplete="off" autoCapitalize="characters" error={errors.vin?.message} {...register('vin')} />
+        <SelectField label={tx('Stav')} error={errors.status?.message} {...register('status')}>
           {VEHICLE_STATUSES.map((status) => (
             <option key={status} value={status}>
-              {VEHICLE_STATUS_LABELS[status]}
+              {tx(VEHICLE_STATUS_LABELS[status])}
             </option>
           ))}
         </SelectField>
-        <Field label="Vodič / komu je pridelené" error={errors.driver?.message} {...register('driver')} />
-        <TechnicianSelect companyId={companyId} kind="vehicles" label="Stály servis" current={current?.technicianId} {...register('technicianId')} />
+        <Field label={tx('Vodič / komu je pridelené')} error={errors.driver?.message} {...register('driver')} />
+        <TechnicianSelect companyId={companyId} kind="vehicles" label={tx('Stály servis')} current={current?.technicianId} {...register('technicianId')} />
         <Field
-          label="Stav tachometra (km)"
+          label={tx('Stav tachometra (km)')}
           type="number"
           inputMode="numeric"
           min={0}
@@ -122,34 +123,27 @@ function VehicleForm({ companyId, current }: { companyId: string; current: Vehic
       </div>
 
       <fieldset className="rounded-xl border bg-surface p-4">
-        <legend className="px-1 text-sm font-medium text-muted-foreground">Platnosť do</legend>
+        <legend className="px-1 text-sm font-medium text-muted-foreground">{tx('Platnosť do')}</legend>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {DEADLINES.map(({ key, label }) => (
             <Field key={key} label={label} type="date" error={errors[key]?.message} {...register(key)} />
           ))}
         </div>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Vyplňte len to, čo sa vozidla týka. Termín sa začne pripomínať 30 dní vopred na Prehľade.
-        </p>
+        <p className="mt-3 text-sm text-muted-foreground">{tx('Vyplňte len to, čo sa vozidla týka. Termín sa začne pripomínať 30 dní vopred na Prehľade.')}</p>
       </fieldset>
 
       <fieldset className="rounded-xl border bg-surface p-4">
-        <legend className="px-1 text-sm font-medium text-muted-foreground">Nákladný priestor (nepovinné)</legend>
+        <legend className="px-1 text-sm font-medium text-muted-foreground">{tx('Nákladný priestor (nepovinné)')}</legend>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Nosnosť (kg)" {...side} error={errors.payloadKg?.message} {...register('payloadKg', asOptionalNumber)} />
-          <Field label="Dĺžka (cm)" {...side} error={errors.cargoLengthCm?.message} {...register('cargoLengthCm', asOptionalNumber)} />
-          <Field label="Šírka (cm)" {...side} error={errors.cargoWidthCm?.message} {...register('cargoWidthCm', asOptionalNumber)} />
-          <Field label="Výška (cm)" {...side} error={errors.cargoHeightCm?.message} {...register('cargoHeightCm', asOptionalNumber)} />
+          <Field label={tx('Nosnosť (kg)')} {...side} error={errors.payloadKg?.message} {...register('payloadKg', asOptionalNumber)} />
+          <Field label={tx('Dĺžka (cm)')} {...side} error={errors.cargoLengthCm?.message} {...register('cargoLengthCm', asOptionalNumber)} />
+          <Field label={tx('Šírka (cm)')} {...side} error={errors.cargoWidthCm?.message} {...register('cargoWidthCm', asOptionalNumber)} />
+          <Field label={tx('Výška (cm)')} {...side} error={errors.cargoHeightCm?.message} {...register('cargoHeightCm', asOptionalNumber)} />
         </div>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Vnútorné rozmery, kam sa naozaj dá nakladať. Podľa nich a podľa rozmerov cases sa pri evente navrhne nakladanie a počet vozidiel.
-        </p>
+        <p className="mt-3 text-sm text-muted-foreground">{tx('Vnútorné rozmery, kam sa naozaj dá nakladať. Podľa nich a podľa rozmerov cases sa pri evente navrhne nakladanie a počet vozidiel.')}</p>
 
-        <h3 className="mt-5 mb-1 text-sm font-medium">Kam sa nakladať nedá</h3>
-        <p className="mb-3 text-sm text-muted-foreground">
-          Podbehy kolies, prepážka, rezerva. Kliknutím na nákres otvoríte grafický editor na celú obrazovku, alebo ich zadajte číslami nižšie; oboje je to isté. Ľavá stena je tá,
-          ktorú máte po ľavej ruke pri pohľade od zadných dverí dopredu. Výšku prekážky (predvolene 30 cm) upravte v poliach.
-        </p>
+        <h3 className="mt-5 mb-1 text-sm font-medium">{tx('Kam sa nakladať nedá')}</h3>
+        <p className="mb-3 text-sm text-muted-foreground">{tx('Podbehy kolies, prepážka, rezerva. Kliknutím na nákres otvoríte grafický editor na celú obrazovku, alebo ich zadajte číslami nižšie; oboje je to isté. Ľavá stena je tá, ktorú máte po ľavej ruke pri pohľade od zadných dverí dopredu. Výšku prekážky (predvolene 30 cm) upravte v poliach.')}</p>
         {cargoLength && cargoWidth && cargoLength > 0 && cargoWidth > 0 ? (
           <>
             <button
@@ -159,26 +153,22 @@ function VehicleForm({ companyId, current }: { companyId: string; current: Vehic
             >
               <LoadDiagram space={previewSpace(cargoLength, cargoWidth, drawn ?? [])} />
               <span className="mt-1 flex items-center gap-1.5 text-sm font-medium text-accent">
-                <Maximize2 className="size-4" aria-hidden />
-                Otvoriť grafický editor
-              </span>
+                <Maximize2 className="size-4" aria-hidden />{tx('Otvoriť grafický editor')}</span>
             </button>
             {drawing && (
               <div
                 role="dialog"
                 aria-modal="true"
-                aria-label="Grafický editor nákladného priestoru"
+                aria-label={tx('Grafický editor nákladného priestoru')}
                 className="fixed inset-0 z-50 flex flex-col gap-3 overflow-y-auto bg-background p-4"
                 onKeyDown={(event) => {
                   if (event.key === 'Escape') setDrawing(false)
                 }}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-semibold">Kam sa nakladať nedá</h3>
+                  <h3 className="text-lg font-semibold">{tx('Kam sa nakladať nedá')}</h3>
                   <Button autoFocus onClick={() => setDrawing(false)}>
-                    <Check className="size-4" aria-hidden />
-                    Hotovo
-                  </Button>
+                    <Check className="size-4" aria-hidden />{tx('Hotovo')}</Button>
                 </div>
                 <CargoEditor
                   length={cargoLength}
@@ -188,16 +178,12 @@ function VehicleForm({ companyId, current }: { companyId: string; current: Vehic
                   onAdd={(obstacle) => obstacles.append(obstacle)}
                   onRemove={(index) => obstacles.remove(index)}
                 />
-                <p className="text-sm text-muted-foreground">
-                  Zmeny sa prenesú do formulára; do databázy sa zapíšu až tlačidlom Uložiť. Výšku a názov prekážky doplníte v poliach formulára.
-                </p>
+                <p className="text-sm text-muted-foreground">{tx('Zmeny sa prenesú do formulára; do databázy sa zapíšu až tlačidlom Uložiť. Výšku a názov prekážky doplníte v poliach formulára.')}</p>
               </div>
             )}
           </>
         ) : (
-          <p className="mb-4 rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-            Nákres sa zobrazí, keď vyplníte dĺžku a šírku nákladného priestoru.
-          </p>
+          <p className="mb-4 rounded-lg border border-dashed p-3 text-sm text-muted-foreground">{tx('Nákres sa zobrazí, keď vyplníte dĺžku a šírku nákladného priestoru.')}</p>
         )}
         {obstacles.fields.length > 0 && (
           <ul className="flex flex-col gap-3">
@@ -208,19 +194,19 @@ function VehicleForm({ companyId, current }: { companyId: string; current: Vehic
                 style={{ borderLeftColor: obstacleFill(index) }}
               >
                 <Field
-                  label={`${obstacleLetter(index)} – názov`}
-                  placeholder="napr. ľavý podbeh"
+                  label={tf('{0} – názov', obstacleLetter(index))}
+                  placeholder={tx('napr. ľavý podbeh')}
                   className="col-span-2 sm:col-span-4 lg:col-span-1"
                   error={errors.cargoObstacles?.[index]?.label?.message}
                   {...register(`cargoObstacles.${index}.label`)}
                 />
                 {(
                   [
-                    ['x', 'Od kabíny'],
-                    ['y', 'Od ľavej steny'],
-                    ['length', 'Dĺžka'],
-                    ['width', 'Šírka'],
-                    ['height', 'Výška'],
+                    ['x', tx('Od kabíny')],
+                    ['y', tx('Od ľavej steny')],
+                    ['length', tx('Dĺžka')],
+                    ['width', tx('Šírka')],
+                    ['height', tx('Výška')],
                   ] as const
                 ).map(([key, label]) => (
                   <Field
@@ -231,7 +217,7 @@ function VehicleForm({ companyId, current }: { companyId: string; current: Vehic
                     {...register(`cargoObstacles.${index}.${key}`, { valueAsNumber: true })}
                   />
                 ))}
-                <Button variant="ghost" aria-label={`Odobrať prekážku ${obstacleLetter(index)}`} onClick={() => obstacles.remove(index)}>
+                <Button variant="ghost" aria-label={tf('Odobrať prekážku {0}', obstacleLetter(index))} onClick={() => obstacles.remove(index)}>
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
               </li>
@@ -249,26 +235,20 @@ function VehicleForm({ companyId, current }: { companyId: string; current: Vehic
           className="mt-3"
           onClick={() => obstacles.append({ label: '', x: 0, y: 0, length: 0, width: 0, height: 0 })}
         >
-          <Plus className="size-4" aria-hidden />
-          Pridať prekážku
-        </Button>
+          <Plus className="size-4" aria-hidden />{tx('Pridať prekážku')}</Button>
       </fieldset>
 
-      <TextareaField label="Poznámka" error={errors.note?.message} {...register('note')} />
+      <TextareaField label={tx('Poznámka')} error={errors.note?.message} {...register('note')} />
 
       {save.isError && !errors.plate && (
-        <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo. Skúste to znova.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Uloženie zlyhalo. Skúste to znova.')}</p>
       )}
 
       <div className="flex gap-3">
         <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : 'Uložiť'}
+          {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
         </Button>
-        <LinkButton to={current ? `/vehicles/${current.id}` : '/vehicles'} variant="outline">
-          Zrušiť
-        </LinkButton>
+        <LinkButton to={current ? `/vehicles/${current.id}` : '/vehicles'} variant="outline">{tx('Zrušiť')}</LinkButton>
       </div>
     </form>
   )
@@ -282,20 +262,20 @@ export function VehicleFormPage() {
 
   let body
   if (!can(company, 'vehicles.edit')) {
-    body = <ErrorBlock message="Vozidlá môže upravovať iba admin a skladník." />
+    body = <ErrorBlock message={tx('Vozidlá môže upravovať iba admin a skladník.')} />
   } else if (vehicles.isPending) {
     body = <LoadingBlock />
   } else if (vehicles.isError) {
-    body = <ErrorBlock message="Údaje sa nepodarilo načítať." onRetry={() => void vehicles.refetch()} />
+    body = <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void vehicles.refetch()} />
   } else if (id && !current) {
-    body = <ErrorBlock message="Toto vozidlo neexistuje alebo k nemu nemáte prístup." />
+    body = <ErrorBlock message={tx('Toto vozidlo neexistuje alebo k nemu nemáte prístup.')} />
   } else {
     body = <VehicleForm key={id ?? 'new'} companyId={company.companyId} current={current ?? null} />
   }
 
   return (
     <>
-      <PageHeader title={id ? 'Úprava vozidla' : 'Nové vozidlo'} />
+      <PageHeader title={id ? tx('Úprava vozidla') : tx('Nové vozidlo')} />
       {body}
     </>
   )

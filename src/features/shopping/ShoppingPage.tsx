@@ -28,6 +28,7 @@ import { CompactPhoto } from '@/features/equipment/CompactPhoto'
 import { discardPhotoFile, trashPhoto } from '@/features/equipment/photo'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 import { safeUrl } from '@/lib/safeUrl'
+import { tx, tf } from '@/lib/i18n'
 
 const NEXT_STATUS: Partial<Record<ShoppingStatus, { status: ShoppingStatus; label: string }>> = {
   planned: { status: 'ordered', label: 'Objednané' },
@@ -77,20 +78,18 @@ export function ShoppingPage() {
     <>
       <OrdersTabs />
       <PageHeader
-        title="Wantlist"
-        description={pending.length > 0 ? `Odhad spolu: ${formatMoney(shoppingTotal(pending), 'EUR')}` : 'Čo treba kúpiť a čo chceme časom'}
+        title={tx('Wantlist')}
+        description={pending.length > 0 ? `Odhad spolu: ${formatMoney(shoppingTotal(pending), 'EUR')}` : tx('Čo treba kúpiť a čo chceme časom')}
         action={
           canEdit &&
           editing !== 'new' && (
             <Button onClick={() => setEditing('new')}>
-              <Plus className="size-4" aria-hidden />
-              Pridať
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Pridať')}</Button>
           )
         }
       />
 
-      <div className="mb-4 flex gap-2" role="group" aria-label="Zoznam">
+      <div className="mb-4 flex gap-2" role="group" aria-label={tx('Zoznam')}>
         {SHOPPING_LISTS.map((value) => (
           <button
             key={value}
@@ -105,7 +104,7 @@ export function ShoppingPage() {
               list === value ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
             )}
           >
-            {SHOPPING_LIST_LABELS[value]} ({count(value)})
+            {tx(SHOPPING_LIST_LABELS[value])} ({count(value)})
           </button>
         ))}
       </div>
@@ -118,16 +117,16 @@ export function ShoppingPage() {
       {items.isPending ? (
         <LoadingBlock />
       ) : items.isError ? (
-        <ErrorBlock message="Zoznam sa nepodarilo načítať." onRetry={() => void items.refetch()} />
+        <ErrorBlock message={tx('Zoznam sa nepodarilo načítať.')} onRetry={() => void items.refetch()} />
       ) : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
           <p className="font-medium">
-            {list === 'buy' ? 'Nič konkrétne na nákup' : 'Zoznam želaní je prázdny'}
+            {list === 'buy' ? tx('Nič konkrétne na nákup') : tx('Zoznam želaní je prázdny')}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {list === 'buy'
-              ? 'Sem patria konkrétne položky s cenou, dodávateľom a termínom.'
-              : 'Sem patrí technika, ktorú chcete kúpiť časom, s odhadom ceny a prioritou.'}
+              ? tx('Sem patria konkrétne položky s cenou, dodávateľom a termínom.')
+              : tx('Sem patrí technika, ktorú chcete kúpiť časom, s odhadom ceny a prioritou.')}
           </p>
         </div>
       ) : (
@@ -138,10 +137,10 @@ export function ShoppingPage() {
             const meta = [
               item.supplier,
               item.list === 'buy' && SHOPPING_STATUS_LABELS[item.status],
-              item.priority === 'high' && 'vysoká priorita',
+              item.priority === 'high' && tx('vysoká priorita'),
               item.dueOn && `do ${formatDate(item.dueOn)}`,
               memberName(members.data, item.assigneeId),
-              item.orderNumber && `č. ${item.orderNumber}`,
+              item.orderNumber && tf('č. {0}', item.orderNumber),
             ].filter(Boolean)
             return (
               <li key={item.id} className="rounded-xl border bg-surface px-4 py-3">
@@ -173,8 +172,7 @@ export function ShoppingPage() {
                       {formatMoney(item.unitPrice * item.quantity, 'EUR')}
                       {item.quantity > 1 && (
                         <span className="block text-sm font-normal text-muted-foreground">
-                          {formatMoney(item.unitPrice, 'EUR')} / ks
-                        </span>
+                          {formatMoney(item.unitPrice, 'EUR')}{' '}{tx('/ ks')}</span>
                       )}
                     </p>
                   )}
@@ -186,9 +184,7 @@ export function ShoppingPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
-                    >
-                      Otvoriť odkaz
-                      <ExternalLink className="size-3.5" aria-hidden />
+                    >{tx('Otvoriť odkaz')}<ExternalLink className="size-3.5" aria-hidden />
                     </a>
                   )}
                   {canEdit && (
@@ -199,9 +195,7 @@ export function ShoppingPage() {
                           size="sm"
                           disabled={patch.isPending}
                           onClick={() => patch.mutate({ id: item.id, change: { list: 'buy' } })}
-                        >
-                          Presunúť do „Kúpiť“
-                        </Button>
+                        >{tx('Presunúť do „Kúpiť“')}</Button>
                       )}
                       {item.list === 'buy' && next && (
                         <Button
@@ -210,10 +204,10 @@ export function ShoppingPage() {
                           disabled={patch.isPending}
                           onClick={() => patch.mutate({ id: item.id, change: { status: next.status } })}
                         >
-                          {next.label}
+                          {tx(next.label)}
                         </Button>
                       )}
-                      <Button variant="ghost" size="sm" aria-label={`Upraviť: ${item.name}`} onClick={() => setEditing(item.id)}>
+                      <Button variant="ghost" size="sm" aria-label={tf('Upraviť: {0}', item.name)} onClick={() => setEditing(item.id)}>
                         <Pencil className="size-4" aria-hidden />
                       </Button>
                     </span>
@@ -226,9 +220,7 @@ export function ShoppingPage() {
       )}
 
       {patch.isError && (
-        <p role="alert" className="mt-2 text-sm text-destructive">
-          Zmena sa nepodarila.
-        </p>
+        <p role="alert" className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>
       )}
     </>
   )

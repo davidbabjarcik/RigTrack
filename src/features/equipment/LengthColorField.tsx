@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { cableTypeLabel, resolveCableType, PRESET_COLORS, cableTypesSupported, findCableColor, type CableColor } from './cableColors'
 import { HexColorInput } from './HexColorInput'
 import { formatNumber } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 export type ColorEdit = { name: string; color: string }
 
@@ -35,17 +36,16 @@ export function LengthColorField({ lengthM, connector, existing, edit, onEdit, c
   // Pre ktoré káble farba platí: farba patrí dĺžke (a typu kábla), nie jednému káblu.
   const meters = `${formatNumber(lengthM)} m`
   const scope = !cableTypesSupported()
-    ? `Farba platí pre všetky káble dlhé ${meters}. Rôzne farby pre XLR, powerCON a 230 V pôjdu po aktualizácii databázy (supabase/update-all.sql).`
+    ? tf('Farba platí pre všetky káble dlhé {0}. Rôzne farby pre XLR, powerCON a 230 V pôjdu po aktualizácii databázy (supabase/update-all.sql).', meters)
     : type && saved && !saved.cableType
-      ? `Teraz je spoločná farba všetkých káblov ${meters}. Zmena sa uloží len pre ${cableTypeLabel(type)} – ostatné káble ostanú so spoločnou.`
+      ? tf('Teraz je spoločná farba všetkých káblov {0}. Zmena sa uloží len pre {1} – ostatné káble ostanú so spoločnou.', meters, cableTypeLabel(type))
       : type
-        ? `Platí pre všetky káble ${cableTypeLabel(type)} dlhé ${meters}. Spoločné farby: Nastavenia → Zoznamy → Farby dĺžok káblov.`
-        : `Platí pre všetky káble dlhé ${meters} (Nastavenia → Zoznamy → Farby dĺžok káblov).`
+        ? tf('Platí pre všetky káble {0} dlhé {1}. Spoločné farby: Nastavenia → Zoznamy → Farby dĺžok káblov.', cableTypeLabel(type), meters)
+        : tf('Platí pre všetky káble dlhé {0} (Nastavenia → Zoznamy → Farby dĺžok káblov).', meters)
 
   if (!shown) {
     return canEdit ? (
-      <Button variant="outline" size="sm" className="self-start" onClick={() => onEdit(PRESET_COLORS.find((color) => color.lengthM === lengthM) ?? { name: '', color: DEFAULT_COLOR })}>
-        Nastaviť farbu pre {length}
+      <Button variant="outline" size="sm" className="self-start" onClick={() => onEdit(PRESET_COLORS.find((color) => color.lengthM === lengthM) ?? { name: '', color: DEFAULT_COLOR })}>{tx('Nastaviť farbu pre')}{' '}{length}
       </Button>
     ) : null
   }
@@ -53,8 +53,7 @@ export function LengthColorField({ lengthM, connector, existing, edit, onEdit, c
   if (!canEdit) {
     return (
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="size-5 rounded border" style={{ backgroundColor: shown.color }} aria-hidden />
-        Farba dĺžky {length}: {shown.name || <span className="font-mono uppercase">{shown.color}</span>}
+        <span className="size-5 rounded border" style={{ backgroundColor: shown.color }} aria-hidden />{tx('Farba dĺžky')}{' '}{length}: {shown.name || <span className="font-mono uppercase">{shown.color}</span>}
       </p>
     )
   }
@@ -62,19 +61,16 @@ export function LengthColorField({ lengthM, connector, existing, edit, onEdit, c
   return (
     <div className="flex flex-wrap items-end gap-3">
       <div className="flex flex-col gap-1.5">
-        <label htmlFor={colorId} className="text-sm font-medium">
-          Farba pre {length}
+        <label htmlFor={colorId} className="text-sm font-medium">{tx('Farba pre')}{' '}{length}
         </label>
         <HexColorInput id={colorId} value={shown.color} onChange={(color) => onEdit({ name: shown.name, color })} />
       </div>
       <div className="flex min-w-32 flex-1 flex-col gap-1.5">
-        <label htmlFor={nameId} className="text-sm font-medium">
-          Názov farby (na hárku s obsahom case)
-        </label>
+        <label htmlFor={nameId} className="text-sm font-medium">{tx('Názov farby (na hárku s obsahom case)')}</label>
         <input
           id={nameId}
           className="h-11 w-full rounded-lg border bg-surface px-3 text-base placeholder:text-muted-foreground"
-          placeholder="napr. zelená"
+          placeholder={tx('napr. zelená')}
           maxLength={40}
           value={shown.name}
           onChange={(e) => onEdit({ name: e.target.value, color: shown.color })}

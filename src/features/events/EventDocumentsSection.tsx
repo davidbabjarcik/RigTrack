@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/format'
 import { deleteEventDocument, eventDocumentUrl, eventKeys, fetchEventDocuments, uploadEventDocument } from './api'
 import { formatFileSize, MAX_DOCUMENT_BYTES, type EventDocument } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { companyId: string; eventId: string; canEdit: boolean }
 
@@ -36,7 +37,7 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
   if (!documents.data || documents.data.length === 0) return null
 
   return (
-    <CollapsibleSection id="event.documents" title={<>Dokumenty ({documents.data?.length ?? 0})</>} actions={
+    <CollapsibleSection id="event.documents" title={<>{tx('Dokumenty (')}{documents.data?.length ?? 0})</>} actions={
         <>
         {canEdit && (
           <>
@@ -56,7 +57,7 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
             />
             <Button variant="outline" size="sm" disabled={upload.isPending} onClick={() => fileInput.current?.click()}>
               <Upload className="size-4" aria-hidden />
-              {upload.isPending ? 'Nahrávam…' : 'Nahrať dokument'}
+              {upload.isPending ? tx('Nahrávam…') : tx('Nahrať dokument')}
             </Button>
           </>
         )}
@@ -64,14 +65,11 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
       }>
 
       {tooLarge && (
-        <p role="alert" className="mb-2 text-sm text-destructive">
-          Súbor je väčší ako {formatFileSize(MAX_DOCUMENT_BYTES)}.
+        <p role="alert" className="mb-2 text-sm text-destructive">{tx('Súbor je väčší ako')}{' '}{formatFileSize(MAX_DOCUMENT_BYTES)}.
         </p>
       )}
       {(upload.isError || remove.isError || download.isError || documents.isError) && (
-        <p role="alert" className="mb-2 text-sm text-destructive">
-          Operácia s dokumentom zlyhala. Povolené sú PDF, obrázky, Word, Excel a text.
-        </p>
+        <p role="alert" className="mb-2 text-sm text-destructive">{tx('Operácia s dokumentom zlyhala. Povolené sú PDF, obrázky, Word, Excel a text.')}</p>
       )}
 
       {documents.data && documents.data.length > 0 ? (
@@ -88,7 +86,7 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
               <Button
                 variant="ghost"
                 size="sm"
-                aria-label={`Stiahnuť: ${document.name}`}
+                aria-label={tf('Stiahnuť: {0}', document.name)}
                 disabled={download.isPending}
                 onClick={() => download.mutate(document)}
               >
@@ -98,10 +96,10 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  aria-label={`Odstrániť: ${document.name}`}
+                  aria-label={tf('Odstrániť: {0}', document.name)}
                   disabled={remove.isPending}
                   onClick={() => {
-                    if (window.confirm(`Odstrániť dokument „${document.name}“? Admin ho 30 dní vie obnoviť z koša.`)) remove.mutate(document)
+                    if (window.confirm(tf('Odstrániť dokument „{0}“? Admin ho 30 dní vie obnoviť z koša.', document.name))) remove.mutate(document)
                   }}
                 >
                   <Trash2 className="size-4" aria-hidden />
@@ -112,9 +110,7 @@ export function EventDocumentsSection({ companyId, eventId, canEdit }: Props) {
         </ul>
       ) : (
         !documents.isPending && (
-          <p className="rounded-xl border border-dashed bg-surface px-6 py-8 text-center text-sm text-muted-foreground">
-            Žiadne dokumenty. Sem patrí rider, stage plot, zmluva a podobne.
-          </p>
+          <p className="rounded-xl border border-dashed bg-surface px-6 py-8 text-center text-sm text-muted-foreground">{tx('Žiadne dokumenty. Sem patrí rider, stage plot, zmluva a podobne.')}</p>
         )
       )}
     </CollapsibleSection>

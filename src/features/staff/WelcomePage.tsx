@@ -10,6 +10,7 @@ import { useAuth } from '@/features/auth/auth-context'
 import { useCompany } from '@/features/companies/company-context'
 import { saveStaff, setStaffPhoto, staffKeys } from './api'
 import { useStaff } from './useStaff'
+import { tx } from '@/lib/i18n'
 
 /**
  * Úvodný dotazník po prvom prihlásení do firmy: telefón, e-mail, fotka, pozícia, narodeniny.
@@ -58,15 +59,15 @@ export function WelcomePage() {
 
   return (
     <>
-      <PageHeader title={`Vitajte vo firme ${company.companyName}`} description="Doplňte pár údajov o sebe. Uvidia ich kolegovia v Zamestnancoch." />
+      <PageHeader title={`Vitajte vo firme ${company.companyName}`} description={tx('Doplňte pár údajov o sebe. Uvidia ich kolegovia v Zamestnancoch.')} />
       <form onSubmit={submit} className="flex max-w-xl flex-col gap-4 rounded-xl border bg-surface p-4">
         <div className="flex items-center gap-4">
           <span className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted">
-            {photo ? <img src={URL.createObjectURL(photo)} alt="Vaša fotka" className="size-full object-cover" /> : <Camera className="size-6 text-muted-foreground" aria-hidden />}
+            {photo ? <img src={URL.createObjectURL(photo)} alt={tx('Vaša fotka')} className="size-full object-cover" /> : <Camera className="size-6 text-muted-foreground" aria-hidden />}
           </span>
           <Button variant="outline" size="sm" onClick={() => input.current?.click()}>
             <Camera className="size-4" aria-hidden />
-            {photo ? 'Zmeniť fotku' : 'Pridať fotku'}
+            {photo ? tx('Zmeniť fotku') : tx('Pridať fotku')}
           </Button>
           <input
             ref={input}
@@ -81,23 +82,19 @@ export function WelcomePage() {
             }}
           />
         </div>
-        <Field label="Telefón" type="tel" autoComplete="tel" maxLength={40} value={values.phone} onChange={(event) => set({ phone: event.target.value })} />
-        <Field label="E-mail na kontakt" type="email" autoComplete="email" maxLength={120} value={values.email} onChange={(event) => set({ email: event.target.value })} />
-        <Field label="Pozícia" placeholder="napr. Osvetľovač, Zvukár, Stagehand, Vodič" maxLength={80} value={values.position} onChange={(event) => set({ position: event.target.value })} />
-        <Field label="Dátum narodenia (nepovinné)" type="date" value={values.birthDate} onChange={(event) => set({ birthDate: event.target.value })} />
-        <p className="text-xs text-muted-foreground">Rolu v aplikácii (čo smiete) nastavuje admin firmy. Ďalšie údaje (meniny, vodičák, zariadenia) doplníte v Zamestnancoch.</p>
+        <Field label={tx('Telefón')} type="tel" autoComplete="tel" maxLength={40} value={values.phone} onChange={(event) => set({ phone: event.target.value })} />
+        <Field label={tx('E-mail na kontakt')} type="email" autoComplete="email" maxLength={120} value={values.email} onChange={(event) => set({ email: event.target.value })} />
+        <Field label={tx('Pozícia')} placeholder={tx('napr. Osvetľovač, Zvukár, Stagehand, Vodič')} maxLength={80} value={values.position} onChange={(event) => set({ position: event.target.value })} />
+        <Field label={tx('Dátum narodenia (nepovinné)')} type="date" value={values.birthDate} onChange={(event) => set({ birthDate: event.target.value })} />
+        <p className="text-xs text-muted-foreground">{tx('Rolu v aplikácii (čo smiete) nastavuje admin firmy. Ďalšie údaje (meniny, vodičák, zariadenia) doplníte v Zamestnancoch.')}</p>
         {save.isError && (
-          <p role="alert" className="text-sm text-destructive">
-            Uloženie zlyhalo. Ak to nepomôže ani o chvíľu, kontaktujte vývojára aplikácie.
-          </p>
+          <p role="alert" className="text-sm text-destructive">{tx('Uloženie zlyhalo. Ak to nepomôže ani o chvíľu, kontaktujte vývojára aplikácie.')}</p>
         )}
         <div className="flex flex-wrap gap-2">
           <Button type="submit" disabled={save.isPending}>
-            {save.isPending ? 'Ukladám…' : 'Uložiť a pokračovať'}
+            {save.isPending ? tx('Ukladám…') : tx('Uložiť a pokračovať')}
           </Button>
-          <Button variant="ghost" disabled={save.isPending} onClick={() => save.mutate(true)}>
-            Teraz nie
-          </Button>
+          <Button variant="ghost" disabled={save.isPending} onClick={() => save.mutate(true)}>{tx('Teraz nie')}</Button>
         </div>
       </form>
     </>

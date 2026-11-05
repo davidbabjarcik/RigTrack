@@ -1,6 +1,7 @@
 import { ScanLine } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { tx } from '@/lib/i18n'
 
 /** Prečíta QR kód z obrázka (na mobile rovno z fotoaparátu). Vráti text, alebo null, keď QR nenájde. */
 async function readQr(file: File) {
@@ -17,16 +18,16 @@ async function readQr(file: File) {
 }
 
 /** Tlačidlo „Naskenovať QR kód“: odfotí alebo vyberie obrázok s QR kódom a vráti jeho text. */
-export function QrScanButton({ onText, label = 'Naskenovať QR kód' }: { onText: (text: string) => void; label?: string }) {
+export function QrScanButton({ onText, label = tx('Naskenovať QR kód') }: { onText: (text: string) => void; label?: string }) {
   const input = useRef<HTMLInputElement>(null)
   const [state, setState] = useState<'idle' | 'reading' | 'missing'>('idle')
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
       <Button variant="outline" size="sm" disabled={state === 'reading'} onClick={() => input.current?.click()}>
         <ScanLine className="size-4" aria-hidden />
-        {state === 'reading' ? 'Čítam QR…' : label}
+        {state === 'reading' ? tx('Čítam QR…') : label}
       </Button>
-      {state === 'missing' && <span className="text-sm text-destructive">QR kód som na obrázku nenašiel. Skúste ho odfotiť zblízka a ostro.</span>}
+      {state === 'missing' && <span className="text-sm text-destructive">{tx('QR kód som na obrázku nenašiel. Skúste ho odfotiť zblízka a ostro.')}</span>}
       <input
         ref={input}
         type="file"

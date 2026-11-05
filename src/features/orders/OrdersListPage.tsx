@@ -18,11 +18,12 @@ import { OrderLineSearch } from './OrderLineSearch'
 import { SupplierBadge } from './SupplierBadge'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
+import { tx, tf } from '@/lib/i18n'
 
 function itemsLabel(count: number) {
-  if (count === 1) return '1 položka'
-  if (count >= 2 && count <= 4) return `${count} položky`
-  return `${count} položiek`
+  if (count === 1) return tx('1 položka')
+  if (count >= 2 && count <= 4) return tf('{0} položky', count)
+  return tf('{0} položiek', count)
 }
 
 const FILTER_KEY = 'rigtrack.orders.filter'
@@ -71,8 +72,8 @@ export function OrdersListPage() {
   if (!allowed) {
     return (
       <>
-        <PageHeader title="Objednávky" />
-        <ErrorBlock message="Objednávky a nákupné ceny vidí iba admin a skladník." />
+        <PageHeader title={tx('Objednávky')} />
+        <ErrorBlock message={tx('Objednávky a nákupné ceny vidí iba admin a skladník.')} />
       </>
     )
   }
@@ -81,18 +82,14 @@ export function OrdersListPage() {
     <>
       <OrdersTabs />
       <PageHeader
-        title="Objednávky"
-        description="Nákupy techniky a ich položky"
+        title={tx('Objednávky')}
+        description={tx('Nákupy techniky a ich položky')}
         action={
           <div className="flex flex-wrap justify-end gap-2">
             <LinkButton to="/orders/stats" variant="outline">
-              <ChartColumn className="size-4" aria-hidden />
-              Štatistiky
-            </LinkButton>
+              <ChartColumn className="size-4" aria-hidden />{tx('Štatistiky')}</LinkButton>
             <LinkButton to="/orders/new">
-              <Plus className="size-4" aria-hidden />
-              Pridať
-            </LinkButton>
+              <Plus className="size-4" aria-hidden />{tx('Pridať')}</LinkButton>
           </div>
         }
       />
@@ -104,68 +101,65 @@ export function OrdersListPage() {
       {all.length > 0 && (
         <div className="mb-4 flex flex-col gap-3">
           <Field
-            label="Hľadať v objednávkach"
+            label={tx('Hľadať v objednávkach')}
             hideLabel
             type="search"
-            placeholder="Hľadať objednávku: dodávateľ, číslo, poznámka, pre koho"
+            placeholder={tx('Hľadať objednávku: dodávateľ, číslo, poznámka, pre koho')}
             value={filter.search}
             onChange={(e) => set({ search: e.target.value })}
           />
           <div className="flex flex-wrap items-end gap-2">
             <Button variant="outline" size="sm" aria-expanded={more} onClick={() => setMore(!more)}>
-              <SlidersHorizontal className="size-4" aria-hidden />
-              Filter{extra > 0 && ` (${extra})`}
+              <SlidersHorizontal className="size-4" aria-hidden />{tx('Filter')}{extra > 0 && ` (${extra})`}
             </Button>
-            <SelectField label="Triediť" hideLabel className="w-60" value={filter.sort} onChange={(e) => set({ sort: e.target.value as OrderFilter['sort'] })}>
+            <SelectField label={tx('Triediť')} hideLabel className="w-60" value={filter.sort} onChange={(e) => set({ sort: e.target.value as OrderFilter['sort'] })}>
               {ORDER_SORTS.map((sort) => (
                 <option key={sort} value={sort}>
-                  {ORDER_SORT_LABELS[sort]}
+                  {tx(ORDER_SORT_LABELS[sort])}
                 </option>
               ))}
             </SelectField>
           </div>
           {more && (
             <div className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
-              <SelectField label="Objednal" value={filter.orderedBy} onChange={(e) => set({ orderedBy: e.target.value })}>
-                <option value="">Ktokoľvek</option>
+              <SelectField label={tx('Objednal')} value={filter.orderedBy} onChange={(e) => set({ orderedBy: e.target.value })}>
+                <option value="">{tx('Ktokoľvek')}</option>
                 {orderers.map((id) => (
                   <option key={id} value={id}>
-                    {memberName(members.data, id) || 'bývalý člen'}
+                    {memberName(members.data, id) || tx('bývalý člen')}
                   </option>
                 ))}
               </SelectField>
-              <SelectField label="Pre koho" value={filter.forWhom} onChange={(e) => set({ forWhom: e.target.value as OrderFilter['forWhom'] })}>
-                <option value="">Všetky</option>
-                <option value="us">Pre nás</option>
-                <option value="others">Nie pre nás</option>
+              <SelectField label={tx('Pre koho')} value={filter.forWhom} onChange={(e) => set({ forWhom: e.target.value as OrderFilter['forWhom'] })}>
+                <option value="">{tx('Všetky')}</option>
+                <option value="us">{tx('Pre nás')}</option>
+                <option value="others">{tx('Nie pre nás')}</option>
               </SelectField>
-              <SelectField label="Zdroj" value={filter.source} onChange={(e) => set({ source: e.target.value as OrderFilter['source'] })}>
-                <option value="">Obchod aj bazár</option>
+              <SelectField label={tx('Zdroj')} value={filter.source} onChange={(e) => set({ source: e.target.value as OrderFilter['source'] })}>
+                <option value="">{tx('Obchod aj bazár')}</option>
                 <option value="shop">{SOURCE_LABELS.shop}</option>
                 <option value="marketplace">{SOURCE_LABELS.marketplace}</option>
               </SelectField>
-              <SelectField label="Rok" value={filter.year} onChange={(e) => set({ year: e.target.value })}>
-                <option value="">Všetky roky</option>
+              <SelectField label={tx('Rok')} value={filter.year} onChange={(e) => set({ year: e.target.value })}>
+                <option value="">{tx('Všetky roky')}</option>
                 {years.map((year) => (
                   <option key={year} value={year}>
                     {year}
                   </option>
                 ))}
               </SelectField>
-              <SelectField label="Iné" value={filter.flag} onChange={(e) => set({ flag: e.target.value as OrderFilter['flag'] })}>
-                <option value="">Bez ohľadu</option>
-                <option value="noInvoice">Bez faktúry</option>
-                <option value="noStock">Nepridané do techniky</option>
+              <SelectField label={tx('Iné')} value={filter.flag} onChange={(e) => set({ flag: e.target.value as OrderFilter['flag'] })}>
+                <option value="">{tx('Bez ohľadu')}</option>
+                <option value="noInvoice">{tx('Bez faktúry')}</option>
+                <option value="noStock">{tx('Nepridané do techniky')}</option>
               </SelectField>
             </div>
           )}
           <p className="text-sm text-muted-foreground">
-            {visible.length} z {all.length} · pre nás {formatTotals(sums.totals)}
-            {Object.keys(sums.forOthers).length > 0 && ` · nie pre nás ${formatTotals(sums.forOthers)}`}
+            {visible.length} z {all.length}{' '}{tx('· pre nás')}{' '}{formatTotals(sums.totals)}
+            {Object.keys(sums.forOthers).length > 0 && tf(' · nie pre nás {0}', formatTotals(sums.forOthers))}
             {filtered && (
-              <button type="button" className="ml-3 text-accent hover:underline" onClick={() => setFilter({ ...NO_ORDER_FILTER, sort: filter.sort })}>
-                Zrušiť filter
-              </button>
+              <button type="button" className="ml-3 text-accent hover:underline" onClick={() => setFilter({ ...NO_ORDER_FILTER, sort: filter.sort })}>{tx('Zrušiť filter')}</button>
             )}
           </p>
         </div>
@@ -174,15 +168,15 @@ export function OrdersListPage() {
       {orders.isPending ? (
         <LoadingBlock />
       ) : orders.isError ? (
-        <ErrorBlock message="Objednávky sa nepodarilo načítať." onRetry={() => void orders.refetch()} />
+        <ErrorBlock message={tx('Objednávky sa nepodarilo načítať.')} onRetry={() => void orders.refetch()} />
       ) : all.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">Zatiaľ tu nie je žiadna objednávka</p>
-          <p className="mt-1 text-sm text-muted-foreground">Začnite tlačidlom Pridať.</p>
+          <p className="font-medium">{tx('Zatiaľ tu nie je žiadna objednávka')}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{tx('Začnite tlačidlom Pridať.')}</p>
         </div>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
-          {visible.length === 0 && <li className="px-4 py-8 text-center text-sm text-muted-foreground">Filtru nič nezodpovedá.</li>}
+          {visible.length === 0 && <li className="px-4 py-8 text-center text-sm text-muted-foreground">{tx('Filtru nič nezodpovedá.')}</li>}
           {visible.map((order) => (
             <li key={order.id}>
               <Link to={`/orders/${order.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
@@ -202,12 +196,11 @@ export function OrdersListPage() {
                   {(order.forUs === false || order.addToStock === false || order.hasInvoice === false) && (
                     <span className="mt-1 flex flex-wrap gap-1">
                       {order.forUs === false && (
-                        <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent">
-                          nie pre nás{order.forWhom && `: ${order.forWhom}`}
+                        <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent">{tx('nie pre nás')}{order.forWhom && `: ${order.forWhom}`}
                         </span>
                       )}
-                      {order.addToStock === false && <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">nie do techniky</span>}
-                      {order.hasInvoice === false && <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">bez faktúry</span>}
+                      {order.addToStock === false && <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">{tx('nie do techniky')}</span>}
+                      {order.hasInvoice === false && <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">{tx('bez faktúry')}</span>}
                     </span>
                   )}
                 </span>

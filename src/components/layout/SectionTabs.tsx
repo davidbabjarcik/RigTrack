@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { tx } from '@/lib/i18n'
 
 export type SectionTab = { to: string; label: string; shown?: boolean; end?: boolean }
 
@@ -8,7 +9,7 @@ export function SectionTabs({ tabs }: { tabs: SectionTab[] }) {
   const shown = tabs.filter((tab) => tab.shown !== false)
   if (shown.length < 2) return null
   return (
-    <nav className="mb-4 flex gap-1 overflow-x-auto rounded-xl border bg-surface p-1 print:hidden" aria-label="Časti">
+    <nav className="mb-4 flex gap-1 overflow-x-auto rounded-xl border bg-surface p-1 print:hidden" aria-label={tx('Časti')}>
       {shown.map((tab) => (
         <NavLink
           key={tab.to}
@@ -18,7 +19,7 @@ export function SectionTabs({ tabs }: { tabs: SectionTab[] }) {
             cn('shrink-0 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap', isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')
           }
         >
-          {tab.label}
+          {tx(tab.label)}
         </NavLink>
       ))}
     </nav>

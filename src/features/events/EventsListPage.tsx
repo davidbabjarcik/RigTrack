@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import { EventStatusBadge } from './EventStatusBadge'
 import { isLive, sortEvents } from './model'
 import { useEvents } from './useEvents'
+import { tx, tf } from '@/lib/i18n'
 
 export function EventsListPage() {
   const company = useCompany().active!
@@ -27,22 +28,20 @@ export function EventsListPage() {
   return (
     <>
       <PageHeader
-        title="Eventy"
-        description="Akcie, technika na ne, posádka a dokumenty"
+        title={tx('Eventy')}
+        description={tx('Akcie, technika na ne, posádka a dokumenty')}
         action={
           canEdit && (
             <LinkButton to="/events/new">
-              <Plus className="size-4" aria-hidden />
-              Nový
-            </LinkButton>
+              <Plus className="size-4" aria-hidden />{tx('Nový')}</LinkButton>
           )
         }
       />
 
-      <div className="mb-4 flex gap-2" role="group" aria-label="Filter eventov">
+      <div className="mb-4 flex gap-2" role="group" aria-label={tx('Filter eventov')}>
         {[
-          { past: false, label: `Nadchádzajúce (${upcoming.length})` },
-          { past: true, label: `Všetky (${all.length})` },
+          { past: false, label: tf('Nadchádzajúce ({0})', upcoming.length) },
+          { past: true, label: tf('Všetky ({0})', all.length) },
         ].map((option) => (
           <button
             key={option.label}
@@ -54,7 +53,7 @@ export function EventsListPage() {
               showPast === option.past ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
             )}
           >
-            {option.label}
+            {tx(option.label)}
           </button>
         ))}
       </div>
@@ -62,11 +61,11 @@ export function EventsListPage() {
       {events.isPending ? (
         <LoadingBlock />
       ) : events.isError ? (
-        <ErrorBlock message="Eventy sa nepodarilo načítať." onRetry={() => void events.refetch()} />
+        <ErrorBlock message={tx('Eventy sa nepodarilo načítať.')} onRetry={() => void events.refetch()} />
       ) : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">{all.length === 0 ? 'Zatiaľ tu nie je žiadny event' : 'Žiadny nadchádzajúci event'}</p>
-          {canEdit && all.length === 0 && <p className="mt-1 text-sm text-muted-foreground">Začnite tlačidlom Nový.</p>}
+          <p className="font-medium">{all.length === 0 ? tx('Zatiaľ tu nie je žiadny event') : tx('Žiadny nadchádzajúci event')}</p>
+          {canEdit && all.length === 0 && <p className="mt-1 text-sm text-muted-foreground">{tx('Začnite tlačidlom Nový.')}</p>}
         </div>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">

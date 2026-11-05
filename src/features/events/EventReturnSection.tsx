@@ -15,6 +15,7 @@ import type { Membership } from '@/features/companies/company-context'
 import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import type { CompanyEvent } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const REPORT_LABELS: Record<'loss' | 'damage', string> = { loss: 'Strata', damage: 'Poškodené' }
 
@@ -88,14 +89,12 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
     <div id="vratenie">
       <CollapsibleSection
         id="event.return"
-        title="Vrátenie po evente"
-        summary={closed ? 'uzavreté' : missing.length > 0 ? `nevrátené ${missing.length}` : 'všetko vrátené'}
+        title={tx('Vrátenie po evente')}
+        summary={closed ? tx('uzavreté') : missing.length > 0 ? tf('nevrátené {0}', missing.length) : tx('všetko vrátené')}
         actions={
           !closed && (
             <LinkButton to={`/events/${event.id}/pack`} size="sm" variant="outline">
-              <ScanLine className="size-4" aria-hidden />
-              Návrat v balení
-            </LinkButton>
+              <ScanLine className="size-4" aria-hidden />{tx('Návrat v balení')}</LinkButton>
           )
         }
       >
@@ -103,29 +102,26 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
           {closed ? (
             <div className="flex flex-wrap items-start gap-3">
               <p className="min-w-0 flex-1 text-sm">
-                <Check className="mr-1 inline size-4 text-emerald-600" aria-hidden />
-                Vrátenie uzavrel{closed.closedByName ? ` ${closed.closedByName}` : 'i'} {formatDate(closed.closedAt.slice(0, 10))}.
+                <Check className="mr-1 inline size-4 text-emerald-600" aria-hidden />{tx('Vrátenie uzavrel')}{closed.closedByName ? ` ${closed.closedByName}` : 'i'} {formatDate(closed.closedAt.slice(0, 10))}.
                 {closed.missing.length > 0 ? (
-                  <span className="mt-1 block text-muted-foreground">Chýbalo ({closed.missing.length}): {closed.missing.join(', ')}</span>
+                  <span className="mt-1 block text-muted-foreground">{tx('Chýbalo (')}{closed.missing.length}): {closed.missing.join(', ')}</span>
                 ) : (
-                  <span className="mt-1 block text-muted-foreground">Všetko sa vrátilo.</span>
+                  <span className="mt-1 block text-muted-foreground">{tx('Všetko sa vrátilo.')}</span>
                 )}
               </p>
               {can(company, 'events.edit') && (
-                <Button size="sm" variant="ghost" disabled={reopen.isPending} onClick={() => reopen.mutate()}>
-                  Znova otvoriť
-                </Button>
+                <Button size="sm" variant="ghost" disabled={reopen.isPending} onClick={() => reopen.mutate()}>{tx('Znova otvoriť')}</Button>
               )}
             </div>
           ) : (
             <>
               {missing.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Všetko, čo sa naložilo, sa vrátilo.</p>
+                <p className="text-sm text-muted-foreground">{tx('Všetko, čo sa naložilo, sa vrátilo.')}</p>
               ) : (
                 <>
                   <p className="mb-2 text-sm">
-                    <span className="font-medium text-destructive">Nevrátilo sa ({missing.length})</span>
-                    <span className="text-muted-foreground"> – naložené pri odchode, pri návrate neodškrtnuté.</span>
+                    <span className="font-medium text-destructive">{tx('Nevrátilo sa (')}{missing.length})</span>
+                    <span className="text-muted-foreground">{' '}{tx('– naložené pri odchode, pri návrate neodškrtnuté.')}</span>
                   </p>
                   <ul className="divide-y rounded-lg border">
                     {missing.map((row) => {
@@ -139,22 +135,17 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
                                 {row.quantity > 1 ? `${row.quantity}× ` : ''}
                                 {row.name}
                               </Link>
-                              {row.caseId && <span className="text-sm text-muted-foreground"> · case</span>}
+                              {row.caseId && <span className="text-sm text-muted-foreground">{' '}{tx('· case')}</span>}
                             </span>
                             {done ? (
-                              <Link to="/incidents" className="text-sm text-accent hover:underline">
-                                nahlásené ({done.kind === 'loss' ? 'strata' : 'poškodené'})
+                              <Link to="/incidents" className="text-sm text-accent hover:underline">{tx('nahlásené (')}{done.kind === 'loss' ? 'strata' : tx('poškodené')})
                               </Link>
                             ) : (
                               <>
                                 <Button size="sm" variant={open && reporting.kind === 'loss' ? 'default' : 'outline'} onClick={() => setReporting(open && reporting.kind === 'loss' ? null : { key: row.key, kind: 'loss' })}>
-                                  <PackageX className="size-4" aria-hidden />
-                                  Strata
-                                </Button>
+                                  <PackageX className="size-4" aria-hidden />{tx('Strata')}</Button>
                                 <Button size="sm" variant={open && reporting.kind === 'damage' ? 'default' : 'outline'} onClick={() => setReporting(open && reporting.kind === 'damage' ? null : { key: row.key, kind: 'damage' })}>
-                                  <Wrench className="size-4" aria-hidden />
-                                  Poškodené
-                                </Button>
+                                  <Wrench className="size-4" aria-hidden />{tx('Poškodené')}</Button>
                               </>
                             )}
                           </div>
@@ -167,18 +158,18 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
                               }}
                             >
                               <label className="flex min-w-56 flex-1 flex-col gap-1 text-sm">
-                                {reporting.kind === 'loss' ? 'Čo sa stalo (nepovinné)' : 'Čo je poškodené (nepovinné)'}
+                                {reporting.kind === 'loss' ? tx('Čo sa stalo (nepovinné)') : tx('Čo je poškodené (nepovinné)')}
                                 <input
                                   className="h-10 rounded-lg border bg-background px-3"
                                   maxLength={500}
                                   autoFocus
-                                  placeholder={reporting.kind === 'loss' ? 'napr. ostal na stage, nikto ho nenašiel' : 'napr. zlomený konektor'}
+                                  placeholder={reporting.kind === 'loss' ? tx('napr. ostal na stage, nikto ho nenašiel') : tx('napr. zlomený konektor')}
                                   value={note}
                                   onChange={(changeEvent) => setNote(changeEvent.target.value)}
                                 />
                               </label>
                               <Button type="submit" size="sm" disabled={report.isPending}>
-                                {report.isPending ? 'Zapisujem…' : `Nahlásiť: ${REPORT_LABELS[reporting.kind].toLowerCase()}`}
+                                {report.isPending ? 'Zapisujem…' : tf('Nahlásiť: {0}', REPORT_LABELS[reporting.kind].toLowerCase())}
                               </Button>
                             </form>
                           )}
@@ -194,21 +185,19 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
                     size="sm"
                     disabled={close.isPending}
                     onClick={() => {
-                      if (missing.length > 0 && !window.confirm(`Ešte chýba ${missing.length} ${missing.length === 1 ? 'vec' : missing.length < 5 ? 'veci' : 'vecí'}. Uzavrieť vrátenie aj tak? Zoznam chýbajúcich sa uloží.`)) return
+                      if (missing.length > 0 && !window.confirm(tf('Ešte chýba {0} {1}. Uzavrieť vrátenie aj tak? Zoznam chýbajúcich sa uloží.', missing.length, missing.length === 1 ? 'vec' : missing.length < 5 ? 'veci' : 'vecí'))) return
                       close.mutate(missing.map((row) => `${row.quantity > 1 ? `${row.quantity}× ` : ''}${row.name}`))
                     }}
                   >
-                    <Check className="size-4" aria-hidden />
-                    Uzavrieť vrátenie
-                  </Button>
-                  <span className="text-xs text-muted-foreground">Po uzavretí event zmizne z „Ešte vonku“ na Prehľade.</span>
+                    <Check className="size-4" aria-hidden />{tx('Uzavrieť vrátenie')}</Button>
+                  <span className="text-xs text-muted-foreground">{tx('Po uzavretí event zmizne z „Ešte vonku“ na Prehľade.')}</span>
                 </div>
               )}
             </>
           )}
           {error && (
             <p role="alert" className="mt-2 text-sm text-destructive">
-              {error instanceof Error ? error.message : 'Nepodarilo sa uložiť.'}
+              {error instanceof Error ? error.message : tx('Nepodarilo sa uložiť.')}
             </p>
           )}
         </div>

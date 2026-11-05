@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { formatUnits, SERVICE_KIND_LABELS, SERVICE_STATUS_LABELS, type ServiceRecord } from './model'
+import { tx } from '@/lib/i18n'
 
 const STATUS_STYLES = {
   open: 'bg-red-500/15 text-red-700 dark:text-red-400',
@@ -36,7 +37,7 @@ export function ServiceRecordRow({ record, equipmentName }: Props) {
         {summary && <span className="block truncate text-sm">{summary}</span>}
       </span>
       <span className={cn('inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium', STATUS_STYLES[record.status])}>
-        {SERVICE_STATUS_LABELS[record.status]}
+        {tx(SERVICE_STATUS_LABELS[record.status])}
       </span>
       <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
     </Link>

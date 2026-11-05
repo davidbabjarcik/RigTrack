@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { useCompany } from '@/features/companies/company-context'
 import { FIXED_PINNED, visibleNavItems } from '@/lib/navigation'
 import { usePinnedNav } from '@/lib/usePinnedNav'
-import { useLang, useT } from '@/lib/i18n'
+import { tx, useLang, useT } from '@/lib/i18n'
 
 export function MorePage() {
   const { pinned } = usePinnedNav()
@@ -20,7 +20,7 @@ export function MorePage() {
           <li key={item.id}>
             <Link to={item.to} className="flex min-h-14 items-center gap-3 px-4 hover:bg-muted">
               <item.icon className="size-5 text-muted-foreground" aria-hidden />
-              <span className="flex-1 font-medium">{item.label}</span>
+              <span className="flex-1 font-medium">{tx(item.label)}</span>
               <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
             </Link>
           </li>

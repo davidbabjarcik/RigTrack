@@ -5,10 +5,11 @@ import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import functionCode from '../../../supabase/functions/send-push/index.ts?raw'
 import { generateVapidKeys, projectRef, type VapidKeys } from './vapid'
+import { tx } from '@/lib/i18n'
 
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? ''
 
-function CopyButton({ text, label = 'Kopírovať' }: { text: string; label?: string }) {
+function CopyButton({ text, label = tx('Kopírovať') }: { text: string; label?: string }) {
   const [done, setDone] = useState(false)
   return (
     <Button
@@ -22,7 +23,7 @@ function CopyButton({ text, label = 'Kopírovať' }: { text: string; label?: str
       }}
     >
       {done ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-      {done ? 'Skopírované' : label}
+      {done ? tx('Skopírované') : label}
     </Button>
   )
 }
@@ -104,88 +105,78 @@ export function PushSetupGuide({ email }: { email: string }) {
   }, [ref])
   const ready = Boolean(status && status.functionOk && status.hasPgNet && status.hasUrl && status.hasSecret)
 
-  if (!ref) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Sprievodca funguje len s projektom na supabase.co.</p>
+  if (!ref) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Sprievodca funguje len s projektom na supabase.co.')}</p>
 
-  if (!status && checking) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Kontrolujem nastavenie push upozornení…</p>
+  if (!status && checking) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Kontrolujem nastavenie push upozornení…')}</p>
   if (ready && !redo)
     return (
       <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-surface p-4">
         <Check className="size-5 text-emerald-600 dark:text-emerald-400" aria-hidden />
         <p className="flex-1 text-sm">
-          <span className="font-medium">Push upozornenia sú nastavené.</span> <span className="text-muted-foreground">Funkcia send-push beží a databáza je s ňou prepojená.</span>
+          <span className="font-medium">{tx('Push upozornenia sú nastavené.')}</span> <span className="text-muted-foreground">{tx('Funkcia send-push beží a databáza je s ňou prepojená.')}</span>
         </p>
         <Button size="sm" variant="outline" disabled={checking} onClick={() => void check()}>
-          <RefreshCw className={cn('size-4', checking && 'animate-spin')} aria-hidden />
-          Skontrolovať znova
-        </Button>
-        <Button size="sm" variant="ghost" onClick={() => setRedo(true)}>
-          Nastaviť znova (nové kľúče)
-        </Button>
+          <RefreshCw className={cn('size-4', checking && 'animate-spin')} aria-hidden />{tx('Skontrolovať znova')}</Button>
+        <Button size="sm" variant="ghost" onClick={() => setRedo(true)}>{tx('Nastaviť znova (nové kľúče)')}</Button>
       </div>
     )
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border bg-surface p-4">
-      <p className="text-sm text-muted-foreground">
-        Robí sa raz pre celú appku (všetky firmy). Treba byť prihlásený v Supabase a mať spustenú migráciu <code>0088</code>. Príkazový riadok netreba.
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Robí sa raz pre celú appku (všetky firmy). Treba byť prihlásený v Supabase a mať spustenú migráciu')}{' '}<code>0088</code>{tx('. Príkazový riadok netreba.')}</p>
       <ol className="flex flex-col gap-5">
-        <Step number={1} title="Vygeneruj kľúče">
-          <p>Kľúče vzniknú tu v prehliadači a nikam sa neukladajú – hneď ich vlož do Supabase (krok 2). Nikomu ich neposielaj.</p>
+        <Step number={1} title={tx('Vygeneruj kľúče')}>
+          <p>{tx('Kľúče vzniknú tu v prehliadači a nikam sa neukladajú – hneď ich vlož do Supabase (krok 2). Nikomu ich neposielaj.')}</p>
           <Button size="sm" className="self-start" onClick={() => void generateVapidKeys().then(setKeys)}>
             <KeyRound className="size-4" aria-hidden />
-            {keys ? 'Vygenerovať nové' : 'Vygenerovať kľúče'}
+            {keys ? tx('Vygenerovať nové') : tx('Vygenerovať kľúče')}
           </Button>
         </Step>
 
-        <Step number={2} title="Ulož ich do tajomstiev funkcií">
-          <DashboardLink href={`${dashboard}/functions/secrets`}>Otvoriť Edge Functions → Secrets</DashboardLink>
-          <p>Pridaj tieto 4 tajomstvá (Name a Value) a ulož.</p>
+        <Step number={2} title={tx('Ulož ich do tajomstiev funkcií')}>
+          <DashboardLink href={`${dashboard}/functions/secrets`}>{tx('Otvoriť Edge Functions → Secrets')}</DashboardLink>
+          <p>{tx('Pridaj tieto 4 tajomstvá (Name a Value) a ulož.')}</p>
           {keys ? (
             <ul className="flex flex-col gap-2">
               {secrets.map(([name, value]) => (
                 <li key={name} className="flex flex-wrap items-center gap-2 rounded-lg border p-2">
                   <code className="font-medium text-foreground">{name}</code>
                   <code className="min-w-0 flex-1 truncate text-xs">{name === 'VAPID_SUBJECT' ? value : '••••••••••••'}</code>
-                  <CopyButton text={name} label="Názov" />
-                  <CopyButton text={value} label="Hodnota" />
+                  <CopyButton text={name} label={tx('Názov')} />
+                  <CopyButton text={value} label={tx('Hodnota')} />
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="italic">Najprv krok 1.</p>
+            <p className="italic">{tx('Najprv krok 1.')}</p>
           )}
         </Step>
 
-        <Step number={3} title="Nasaď funkciu send-push">
-          <DashboardLink href={`${dashboard}/functions`}>Otvoriť Edge Functions</DashboardLink>
+        <Step number={3} title={tx('Nasaď funkciu send-push')}>
+          <DashboardLink href={`${dashboard}/functions`}>{tx('Otvoriť Edge Functions')}</DashboardLink>
           <p>
-            <strong className="text-foreground">Deploy a new function → Via Editor</strong>. Názov funkcie <code className="text-foreground">send-push</code>, ukážkový kód zmaž, vlož tento a daj{' '}
-            <strong className="text-foreground">Deploy</strong>.
+            <strong className="text-foreground">{tx('Deploy a new function → Via Editor')}</strong>{tx('. Názov funkcie')}{' '}<code className="text-foreground">{tx('send-push')}</code>{tx(', ukážkový kód zmaž, vlož tento a daj')}{' '}
+            <strong className="text-foreground">{tx('Deploy')}</strong>.
           </p>
-          <CopyButton text={functionCode} label="Kopírovať kód funkcie" />
-          <p>
-            Potom v detaile funkcie → <strong className="text-foreground">Details / Settings</strong> vypni <strong className="text-foreground">Verify JWT</strong> (overovanie JWT) a ulož.
-          </p>
+          <CopyButton text={functionCode} label={tx('Kopírovať kód funkcie')} />
+          <p>{tx('Potom v detaile funkcie →')}{' '}<strong className="text-foreground">{tx('Details / Settings')}</strong>{' '}{tx('vypni')}{' '}<strong className="text-foreground">{tx('Verify JWT')}</strong>{' '}{tx('(overovanie JWT) a ulož.')}</p>
         </Step>
 
-        <Step number={4} title="Prepoj databázu s funkciou">
-          <DashboardLink href={`${dashboard}/sql/new`}>Otvoriť SQL Editor</DashboardLink>
-          <p>Vlož a spusti (Run). Ak si si predtým robil Database Webhook pre notifications, zmaž ho – inak príde upozornenie dvakrát.</p>
-          {keys ? <CopyButton text={sql} label="Kopírovať SQL" /> : <p className="italic">Najprv krok 1 – SQL obsahuje tajomstvo z kroku 2.</p>}
+        <Step number={4} title={tx('Prepoj databázu s funkciou')}>
+          <DashboardLink href={`${dashboard}/sql/new`}>{tx('Otvoriť SQL Editor')}</DashboardLink>
+          <p>{tx('Vlož a spusti (Run). Ak si si predtým robil Database Webhook pre notifications, zmaž ho – inak príde upozornenie dvakrát.')}</p>
+          {keys ? <CopyButton text={sql} label={tx('Kopírovať SQL')} /> : <p className="italic">{tx('Najprv krok 1 – SQL obsahuje tajomstvo z kroku 2.')}</p>}
         </Step>
 
-        <Step number={5} title="Skontroluj">
+        <Step number={5} title={tx('Skontroluj')}>
           <Button size="sm" variant="outline" className="self-start" disabled={checking} onClick={() => void check()}>
-            <RefreshCw className={cn('size-4', checking && 'animate-spin')} aria-hidden />
-            Skontrolovať nastavenie
-          </Button>
+            <RefreshCw className={cn('size-4', checking && 'animate-spin')} aria-hidden />{tx('Skontrolovať nastavenie')}</Button>
           {status && (
             <ul className="flex flex-col gap-1">
               {[
-                [status.functionOk, 'Funkcia send-push beží a má kľúče (kroky 2 a 3)'],
-                [status.hasPgNet, 'Databáza vie volať funkciu (rozšírenie pg_net, migrácia 0088)'],
-                [status.hasUrl && status.hasSecret, 'Databáza pozná adresu funkcie a tajomstvo (krok 4)'],
+                [status.functionOk, tx('Funkcia send-push beží a má kľúče (kroky 2 a 3)')],
+                [status.hasPgNet, tx('Databáza vie volať funkciu (rozšírenie pg_net, migrácia 0088)')],
+                [status.hasUrl && status.hasSecret, tx('Databáza pozná adresu funkcie a tajomstvo (krok 4)')],
               ].map(([ok, text]) => (
                 <li key={String(text)} className={cn('flex items-center gap-2', ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive')}>
                   {ok ? <Check className="size-4" aria-hidden /> : <X className="size-4" aria-hidden />}
@@ -194,7 +185,7 @@ export function PushSetupGuide({ email }: { email: string }) {
               ))}
             </ul>
           )}
-          <p>Keď je všetko zelené: vyššie v „Upozornenia na mobil“ zapni upozornenia a pošli si skúšobné.</p>
+          <p>{tx('Keď je všetko zelené: vyššie v „Upozornenia na mobil“ zapni upozornenia a pošli si skúšobné.')}</p>
         </Step>
       </ol>
     </div>

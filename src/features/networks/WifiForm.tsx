@@ -11,6 +11,7 @@ import { can } from '@/lib/permissions'
 import { deleteNetwork, networkKeys, saveNetwork } from './api'
 import { parseWifiQr, SECURITY_LABELS, WIFI_SECURITIES, wifiSchema, type RouterLogin, type WifiFormValues, type WifiNetwork } from './model'
 import { QrScanButton } from './QrScanButton'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = {
   companyId: string
@@ -72,7 +73,7 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
     <form onSubmit={handleSubmit((values) => save.mutate(values))} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
       <div className="flex flex-wrap items-center gap-2">
         <QrScanButton
-          label="Načítať z QR kódu"
+          label={tx('Načítať z QR kódu')}
           onText={(text) => {
             const wifi = parseWifiQr(text)
             setScanError(!wifi)
@@ -83,41 +84,39 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
             setValue('hidden', wifi.hidden)
           }}
         />
-        {scanError && <span className="text-sm text-destructive">Toto nie je QR kód Wi-Fi siete.</span>}
+        {scanError && <span className="text-sm text-destructive">{tx('Toto nie je QR kód Wi-Fi siete.')}</span>}
       </div>
 
       <fieldset className="grid gap-3 sm:grid-cols-2">
-        <legend className="mb-1 text-sm font-medium">Wi-Fi</legend>
-        <Field label="Názov siete (SSID) *" autoComplete="off" error={errors.ssid?.message} {...register('ssid')} />
+        <legend className="mb-1 text-sm font-medium">{tx('Wi-Fi')}</legend>
+        <Field label={tx('Názov siete (SSID) *')} autoComplete="off" error={errors.ssid?.message} {...register('ssid')} />
         <Field
-          label="Heslo"
+          label={tx('Heslo')}
           autoComplete="off"
-          placeholder={current?.passwordHidden ? 'heslo nevidíte – prázdne = nemeniť' : undefined}
+          placeholder={current?.passwordHidden ? tx('heslo nevidíte – prázdne = nemeniť') : undefined}
           error={errors.password?.message}
           {...register('password')}
         />
-        <SelectField label="Zabezpečenie" error={errors.security?.message} {...register('security')}>
+        <SelectField label={tx('Zabezpečenie')} error={errors.security?.message} {...register('security')}>
           {WIFI_SECURITIES.map((security) => (
             <option key={security} value={security}>
-              {SECURITY_LABELS[security]}
+              {tx(SECURITY_LABELS[security])}
             </option>
           ))}
         </SelectField>
         <label className="flex items-center gap-2 self-end pb-3 text-sm">
-          <input type="checkbox" className="size-4" {...register('hidden')} />
-          Skrytá sieť (nevysiela názov)
-        </label>
+          <input type="checkbox" className="size-4" {...register('hidden')} />{tx('Skrytá sieť (nevysiela názov)')}</label>
       </fieldset>
 
       <fieldset className="grid gap-3 sm:grid-cols-2">
-        <legend className="mb-1 text-sm font-medium">Router a IP adresy</legend>
-        <Field label="Model routera" placeholder="napr. Ubiquiti UniFi U6, TP-Link Archer" error={errors.routerModel?.message} {...register('routerModel')} />
-        <SelectField label="Čia je sieť" {...register('scope')}>
-          <option value="equipment">K technike (router v racku, mix…)</option>
-          <option value="company">Sieť firmy (sídlo, kancelária, sklad)</option>
+        <legend className="mb-1 text-sm font-medium">{tx('Router a IP adresy')}</legend>
+        <Field label={tx('Model routera')} placeholder={tx('napr. Ubiquiti UniFi U6, TP-Link Archer')} error={errors.routerModel?.message} {...register('routerModel')} />
+        <SelectField label={tx('Čia je sieť')} {...register('scope')}>
+          <option value="equipment">{tx('K technike (router v racku, mix…)')}</option>
+          <option value="company">{tx('Sieť firmy (sídlo, kancelária, sklad)')}</option>
         </SelectField>
-        <SelectField label="Patrí k technike" className={scope === 'company' ? 'hidden' : undefined} error={errors.equipmentId?.message} {...register('equipmentId')}>
-          <option value="">— nie je priradená —</option>
+        <SelectField label={tx('Patrí k technike')} className={scope === 'company' ? 'hidden' : undefined} error={errors.equipmentId?.message} {...register('equipmentId')}>
+          <option value="">{tx('— nie je priradená —')}</option>
           {options.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
@@ -125,44 +124,38 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
             </option>
           ))}
         </SelectField>
-        <Field className={hideAddresses} label="IP rozsah" placeholder="192.168.1.0/24" autoComplete="off" error={errors.subnet?.message} {...register('subnet')} />
-        <Field className={hideAddresses} label="Gateway (router)" placeholder="192.168.1.1" autoComplete="off" inputMode="decimal" error={errors.routerIp?.message} {...register('routerIp')} />
-        <Field className={hideAddresses} label="IP správy routera" placeholder="ak je iná ako gateway" autoComplete="off" inputMode="decimal" error={errors.managementIp?.message} {...register('managementIp')} />
-        <Field label="Kde je" placeholder="napr. FOH rack, sklad, kancelária" error={errors.place?.message} {...register('place')} />
+        <Field className={hideAddresses} label={tx('IP rozsah')} placeholder="192.168.1.0/24" autoComplete="off" error={errors.subnet?.message} {...register('subnet')} />
+        <Field className={hideAddresses} label={tx('Gateway (router)')} placeholder="192.168.1.1" autoComplete="off" inputMode="decimal" error={errors.routerIp?.message} {...register('routerIp')} />
+        <Field className={hideAddresses} label={tx('IP správy routera')} placeholder={tx('ak je iná ako gateway')} autoComplete="off" inputMode="decimal" error={errors.managementIp?.message} {...register('managementIp')} />
+        <Field label={tx('Kde je')} placeholder={tx('napr. FOH rack, sklad, kancelária')} error={errors.place?.message} {...register('place')} />
         <label className="flex items-center gap-2 text-sm sm:col-span-2">
-          <input type="checkbox" className="size-4" {...register('dhcp')} />
-          DHCP zapnuté (router prideľuje adresy sám)
-        </label>
+          <input type="checkbox" className="size-4" {...register('dhcp')} />{tx('DHCP zapnuté (router prideľuje adresy sám)')}</label>
         {dhcp && (
           <>
-            <Field className={hideAddresses} label="DHCP od" placeholder="192.168.1.100" inputMode="decimal" autoComplete="off" error={errors.dhcpStart?.message} {...register('dhcpStart')} />
-            <Field className={hideAddresses} label="DHCP do" placeholder="192.168.1.199" inputMode="decimal" autoComplete="off" error={errors.dhcpEnd?.message} {...register('dhcpEnd')} />
-            <p className="text-xs text-muted-foreground sm:col-span-2">Pevné IP (mix, stagebox…) dávajte mimo tohto rozsahu, inak sa môžu biť.</p>
+            <Field className={hideAddresses} label={tx('DHCP od')} placeholder="192.168.1.100" inputMode="decimal" autoComplete="off" error={errors.dhcpStart?.message} {...register('dhcpStart')} />
+            <Field className={hideAddresses} label={tx('DHCP do')} placeholder="192.168.1.199" inputMode="decimal" autoComplete="off" error={errors.dhcpEnd?.message} {...register('dhcpEnd')} />
+            <p className="text-xs text-muted-foreground sm:col-span-2">{tx('Pevné IP (mix, stagebox…) dávajte mimo tohto rozsahu, inak sa môžu biť.')}</p>
           </>
         )}
       </fieldset>
 
       <fieldset className={canAdmin ? 'grid gap-3 sm:grid-cols-2' : 'hidden'}>
-        <legend className="mb-1 text-sm font-medium">Prihlásenie do správy routera</legend>
-        <Field label="Meno" autoComplete="off" error={errors.loginUser?.message} {...register('loginUser')} />
-        <Field label="Heslo" autoComplete="off" error={errors.loginPassword?.message} {...register('loginPassword')} />
-        <p className="text-xs text-muted-foreground sm:col-span-2">Kto vidí heslo Wi-Fi, IP a MAC adresy a prihlásenie do správy, nastaví admin v Nastaveniach → Oprávnenia → Siete.</p>
+        <legend className="mb-1 text-sm font-medium">{tx('Prihlásenie do správy routera')}</legend>
+        <Field label={tx('Meno')} autoComplete="off" error={errors.loginUser?.message} {...register('loginUser')} />
+        <Field label={tx('Heslo')} autoComplete="off" error={errors.loginPassword?.message} {...register('loginPassword')} />
+        <p className="text-xs text-muted-foreground sm:col-span-2">{tx('Kto vidí heslo Wi-Fi, IP a MAC adresy a prihlásenie do správy, nastaví admin v Nastaveniach → Oprávnenia → Siete.')}</p>
       </fieldset>
 
-      <TextareaField label="Poznámka" rows={2} error={errors.note?.message} {...register('note')} />
+      <TextareaField label={tx('Poznámka')} rows={2} error={errors.note?.message} {...register('note')} />
 
       {(save.isError || remove.isError) && (
-        <p role="alert" className="text-sm text-destructive">
-          Nepodarilo sa uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Nepodarilo sa uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
       )}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" size="sm" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : current ? 'Uložiť' : 'Pridať sieť'}
+          {save.isPending ? tx('Ukladám…') : current ? tx('Uložiť') : tx('Pridať sieť')}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onDone}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" size="sm" onClick={onDone}>{tx('Zrušiť')}</Button>
         {current && (
           <Button
             variant="destructive"
@@ -170,12 +163,10 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
             className="ml-auto"
             disabled={remove.isPending}
             onClick={() => {
-              if (window.confirm(`Odstrániť sieť ${current.ssid}?`)) remove.mutate()
+              if (window.confirm(tf('Odstrániť sieť {0}?', current.ssid))) remove.mutate()
             }}
           >
-            <Trash2 className="size-4" aria-hidden />
-            Odstrániť
-          </Button>
+            <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
         )}
       </div>
     </form>

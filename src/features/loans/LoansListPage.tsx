@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { LoanStatusBadge } from './LoanStatusBadge'
 import { isOpen, sortLoans } from './model'
 import { useLoans } from './useLoans'
+import { tx, tf } from '@/lib/i18n'
 
 function piecesLabel(count: number) {
   if (count === 1) return '1 kus'
@@ -32,22 +33,20 @@ export function LoansListPage() {
   return (
     <>
       <PageHeader
-        title="Výpožičky"
-        description="Rezervácie a vydaná technika"
+        title={tx('Výpožičky')}
+        description={tx('Rezervácie a vydaná technika')}
         action={
           canEdit && (
             <LinkButton to="/loans/new">
-              <Plus className="size-4" aria-hidden />
-              Nová
-            </LinkButton>
+              <Plus className="size-4" aria-hidden />{tx('Nová')}</LinkButton>
           )
         }
       />
 
-      <div className="mb-4 flex gap-2" role="group" aria-label="Filter výpožičiek">
+      <div className="mb-4 flex gap-2" role="group" aria-label={tx('Filter výpožičiek')}>
         {[
-          { closed: false, label: `Otvorené (${open.length})` },
-          { closed: true, label: `Všetky (${all.length})` },
+          { closed: false, label: tf('Otvorené ({0})', open.length) },
+          { closed: true, label: tf('Všetky ({0})', all.length) },
         ].map((option) => (
           <button
             key={option.label}
@@ -59,7 +58,7 @@ export function LoansListPage() {
               showClosed === option.closed ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
             )}
           >
-            {option.label}
+            {tx(option.label)}
           </button>
         ))}
       </div>
@@ -67,11 +66,11 @@ export function LoansListPage() {
       {loans.isPending ? (
         <LoadingBlock />
       ) : loans.isError ? (
-        <ErrorBlock message="Výpožičky sa nepodarilo načítať." onRetry={() => void loans.refetch()} />
+        <ErrorBlock message={tx('Výpožičky sa nepodarilo načítať.')} onRetry={() => void loans.refetch()} />
       ) : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">{all.length === 0 ? 'Zatiaľ tu nie je žiadna výpožička' : 'Žiadna otvorená výpožička'}</p>
-          {canEdit && all.length === 0 && <p className="mt-1 text-sm text-muted-foreground">Začnite tlačidlom Nová.</p>}
+          <p className="font-medium">{all.length === 0 ? tx('Zatiaľ tu nie je žiadna výpožička') : tx('Žiadna otvorená výpožička')}</p>
+          {canEdit && all.length === 0 && <p className="mt-1 text-sm text-muted-foreground">{tx('Začnite tlačidlom Nová.')}</p>}
         </div>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">

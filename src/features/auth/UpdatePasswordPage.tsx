@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from './auth-context'
+import { tx } from '@/lib/i18n'
 
 function UpdatePasswordForm() {
   const { session, loading } = useAuth()
@@ -19,10 +20,8 @@ function UpdatePasswordForm() {
   if (!session) {
     return (
       <div className="rounded-2xl border bg-surface p-6 text-center">
-        <p className="mb-4">Odkaz na obnovu hesla je neplatný alebo už vypršal.</p>
-        <Link to="/auth" className="font-medium text-accent hover:underline">
-          Späť na prihlásenie
-        </Link>
+        <p className="mb-4">{tx('Odkaz na obnovu hesla je neplatný alebo už vypršal.')}</p>
+        <Link to="/auth" className="font-medium text-accent hover:underline">{tx('Späť na prihlásenie')}</Link>
       </div>
     )
   }
@@ -33,16 +32,16 @@ function UpdatePasswordForm() {
     setError(null)
     const { error } = await getSupabase().auth.updateUser({ password })
     setBusy(false)
-    if (error) setError('Heslo sa nepodarilo zmeniť. Skúste iné alebo to zopakujte.')
+    if (error) setError(tx('Heslo sa nepodarilo zmeniť. Skúste iné alebo to zopakujte.'))
     else navigate('/', { replace: true })
   }
 
   return (
     <div className="rounded-2xl border bg-surface p-6">
-      <h1 className="mb-5 text-xl font-semibold">Nové heslo</h1>
+      <h1 className="mb-5 text-xl font-semibold">{tx('Nové heslo')}</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Field
-          label="Nové heslo"
+          label={tx('Nové heslo')}
           type="password"
           autoComplete="new-password"
           required
@@ -56,7 +55,7 @@ function UpdatePasswordForm() {
           </p>
         )}
         <Button type="submit" disabled={busy}>
-          {busy ? 'Čakajte…' : 'Uložiť heslo'}
+          {busy ? tx('Čakajte…') : tx('Uložiť heslo')}
         </Button>
       </form>
     </div>

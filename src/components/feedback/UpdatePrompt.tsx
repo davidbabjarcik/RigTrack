@@ -1,5 +1,6 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { Button } from '@/components/ui/button'
+import { tx } from '@/lib/i18n'
 
 export function UpdatePrompt() {
   const {
@@ -25,14 +26,10 @@ export function UpdatePrompt() {
       role="alert"
       className="fixed inset-x-4 bottom-24 z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-xl border bg-surface p-4 shadow-lg md:bottom-6"
     >
-      <p className="text-sm">Je dostupná nová verzia aplikácie.</p>
+      <p className="text-sm">{tx('Je dostupná nová verzia aplikácie.')}</p>
       <div className="flex shrink-0 gap-2">
-        <Button variant="ghost" size="sm" onClick={() => setNeedRefresh(false)}>
-          Neskôr
-        </Button>
-        <Button size="sm" onClick={() => updateServiceWorker(true)}>
-          Aktualizovať
-        </Button>
+        <Button variant="ghost" size="sm" onClick={() => setNeedRefresh(false)}>{tx('Neskôr')}</Button>
+        <Button size="sm" onClick={() => updateServiceWorker(true)}>{tx('Aktualizovať')}</Button>
       </div>
     </div>
   )

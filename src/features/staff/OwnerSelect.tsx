@@ -7,6 +7,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
 import { saveStaff } from './api'
 import { useStaff } from './useStaff'
+import { tx } from '@/lib/i18n'
 
 type Props = SelectHTMLAttributes<HTMLSelectElement> & { companyId: string; error?: string; ref?: Ref<HTMLSelectElement> }
 
@@ -30,8 +31,8 @@ export function OwnerSelect({ companyId, error, ref, onChange, ...props }: Props
   // Select sa zaregistruje do formulára až s načítanými možnosťami, inak by neukázal uloženú hodnotu.
   if (staff.isPending) {
     return (
-      <SelectField label="Vlastník" disabled>
-        <option>Načítavam…</option>
+      <SelectField label={tx('Vlastník')} disabled>
+        <option>{tx('Načítavam…')}</option>
       </SelectField>
     )
   }
@@ -60,7 +61,7 @@ export function OwnerSelect({ companyId, error, ref, onChange, ...props }: Props
   return (
     <div className="flex flex-col gap-2">
       <SelectField
-        label="Vlastník"
+        label={tx('Vlastník')}
         error={error}
         {...props}
         onChange={onChange}
@@ -70,10 +71,10 @@ export function OwnerSelect({ companyId, error, ref, onChange, ...props }: Props
           else if (ref) ref.current = node
         }}
       >
-        <option value="">Firma ({company.companyName})</option>
+        <option value="">{tx('Firma (')}{company.companyName})</option>
         {people.map((person) => (
           <option key={person.key} value={person.staffId ?? `m-${person.memberId}`}>
-            {person.name} (vlastná technika){person.isMember ? '' : ' – bez účtu'}
+            {person.name}{' '}{tx('(vlastná technika)')}{person.isMember ? '' : tx(' – bez účtu')}
           </option>
         ))}
       </SelectField>
@@ -81,26 +82,22 @@ export function OwnerSelect({ companyId, error, ref, onChange, ...props }: Props
         (adding ? (
           <div className="flex flex-wrap items-center gap-2">
             <input
-              aria-label="Meno človeka bez účtu"
-              placeholder="Meno a priezvisko"
+              aria-label={tx('Meno človeka bez účtu')}
+              placeholder={tx('Meno a priezvisko')}
               maxLength={120}
               className="h-9 min-w-48 flex-1 rounded-lg border bg-background px-2 text-sm"
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
             <Button size="sm" disabled={saving || !name.trim()} onClick={() => void addPerson()}>
-              {saving ? 'Pridávam…' : 'Pridať'}
+              {saving ? tx('Pridávam…') : tx('Pridať')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>
-              Zrušiť
-            </Button>
-            {failed && <span className="text-sm text-destructive">Nepodarilo sa pridať.</span>}
+            <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>{tx('Zrušiť')}</Button>
+            {failed && <span className="text-sm text-destructive">{tx('Nepodarilo sa pridať.')}</span>}
           </div>
         ) : (
           <button type="button" className="inline-flex items-center gap-1 self-start text-sm text-accent hover:underline" onClick={() => setAdding(true)}>
-            <UserPlus className="size-4" aria-hidden />
-            Nový človek bez účtu (napr. brigádnik)
-          </button>
+            <UserPlus className="size-4" aria-hidden />{tx('Nový človek bez účtu (napr. brigádnik)')}</button>
         ))}
     </div>
   )

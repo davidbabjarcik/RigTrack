@@ -7,6 +7,7 @@ import { formatDateTime } from '@/lib/format'
 import type { Loan } from './model'
 import { SignaturePad } from './SignaturePad'
 import { deleteSignature, saveSignature, SIGNATURE_LABELS, signatureKeys, signatureOf, useLoanSignatures, type SignaturePhase, type SignatureRole } from './signatures'
+import { tx } from '@/lib/i18n'
 
 const STATEMENTS: Record<SignaturePhase, Record<SignatureRole, string>> = {
   issue: {
@@ -38,14 +39,14 @@ export function LoanSignatures({ companyId, loan, myName, canEdit }: Props) {
   const count = signatures.data?.length ?? 0
 
   return (
-    <CollapsibleSection id="loan.signatures" title={<>Podpisy ({count})</>} className="mt-6">
+    <CollapsibleSection id="loan.signatures" title={<>{tx('Podpisy (')}{count})</>} className="mt-6">
       {signatures.isError ? (
-        <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Podpisy nie sú dostupné. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
+        <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Podpisy nie sú dostupné. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
       ) : (
         <div className="flex flex-col gap-4">
           {phases.map((phase) => (
             <div key={phase}>
-              <p className="mb-2 text-sm font-medium">{phase === 'issue' ? 'Odovzdanie' : 'Vrátenie'}</p>
+              <p className="mb-2 text-sm font-medium">{phase === 'issue' ? 'Odovzdanie' : tx('Vrátenie')}</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {(['borrower', 'lender'] as const).map((role) => {
                   const signature = signatureOf(signatures.data, phase, role)
@@ -64,9 +65,9 @@ export function LoanSignatures({ companyId, loan, myName, canEdit }: Props) {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                aria-label="Zmazať podpis"
+                                aria-label={tx('Zmazať podpis')}
                                 disabled={remove.isPending}
-                                onClick={() => window.confirm('Zmazať tento podpis?') && remove.mutate(signature.id)}
+                                onClick={() => window.confirm(tx('Zmazať tento podpis?')) && remove.mutate(signature.id)}
                               >
                                 <Trash2 className="size-4" aria-hidden />
                               </Button>
@@ -75,11 +76,9 @@ export function LoanSignatures({ companyId, loan, myName, canEdit }: Props) {
                         </>
                       ) : canEdit ? (
                         <Button variant="outline" className="mt-2 w-full" onClick={() => setOpen({ phase, role })}>
-                          <PenLine className="size-4" aria-hidden />
-                          Podpísať
-                        </Button>
+                          <PenLine className="size-4" aria-hidden />{tx('Podpísať')}</Button>
                       ) : (
-                        <p className="mt-2 text-sm text-muted-foreground">Zatiaľ nepodpísané.</p>
+                        <p className="mt-2 text-sm text-muted-foreground">{tx('Zatiaľ nepodpísané.')}</p>
                       )}
                     </div>
                   )
@@ -87,7 +86,7 @@ export function LoanSignatures({ companyId, loan, myName, canEdit }: Props) {
               </div>
             </div>
           ))}
-          <p className="text-xs text-muted-foreground">Mobil podajte klientovi, podpíše sa prstom. Podpisy sa vytlačia aj na zapožičacej listine (PDF).</p>
+          <p className="text-xs text-muted-foreground">{tx('Mobil podajte klientovi, podpíše sa prstom. Podpisy sa vytlačia aj na zapožičacej listine (PDF).')}</p>
         </div>
       )}
       {open && (

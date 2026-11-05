@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { isOverdue, LOAN_STATUS_LABELS, type Loan } from './model'
+import { tx } from '@/lib/i18n'
 
 const STYLES = {
   reserved: 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
@@ -15,7 +16,7 @@ export function LoanStatusBadge({ loan, today }: { loan: Pick<Loan, 'status' | '
     <span
       className={cn('inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium', STYLES[overdue ? 'overdue' : loan.status])}
     >
-      {overdue ? 'Nevrátené po termíne' : LOAN_STATUS_LABELS[loan.status]}
+      {overdue ? tx('Nevrátené po termíne') : LOAN_STATUS_LABELS[loan.status]}
     </span>
   )
 }

@@ -44,6 +44,7 @@ import { useEquipmentLookups } from './useEquipmentLookups'
 import { usePhotoThumbs } from './usePhotoThumbs'
 import { useKindColors } from './kindColors'
 import { useUserPrefs } from '@/features/settings/userPrefs'
+import { tx, tf } from '@/lib/i18n'
 
 const NO_FILTER: EquipmentFilter = { search: '', status: '', categoryId: '', locationId: '', caseId: '' }
 const FILTER_KEY = 'rigtrack.equipment.filter'
@@ -126,8 +127,8 @@ export function EquipmentListPage() {
       !sub && [item.manufacturer, item.model].filter(Boolean).join(' '),
       ...(sub ? [] : describeAttributes(item, { makers: false })),
       !sub && categoryName(item.categoryId),
-      ownerName(item.ownerStaffId) && `patrí: ${ownerName(item.ownerStaffId)}`,
-      item.inventoryNumber && `inv. č. ${item.inventoryNumber}`,
+      ownerName(item.ownerStaffId) && tf('patrí: {0}', ownerName(item.ownerStaffId)),
+      item.inventoryNumber && tf('inv. č. {0}', item.inventoryNumber),
       // Pri rozbalených častiach vždy aj 1 ks (napr. XLR 25 m · 1 ks).
       (sub || item.quantity !== 1) && `${item.quantity} ks`,
       // Rozdelená technika: ktoré kusy a v ktorom case sú.
@@ -144,19 +145,18 @@ export function EquipmentListPage() {
           {color && <span className={`absolute inset-y-0 left-0 w-1.5 ${COLOR_CLASSES[color]}`} aria-hidden />}
           {!sub && <PhotoThumb url={thumbs[item.photoPath]} />}
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-medium">{sub && !byLength ? (item.caseId ? caseLabel(item.caseId) || 'V case' : 'Mimo case') : item.name}</span>
+            <span className="block truncate font-medium">{sub && !byLength ? (item.caseId ? caseLabel(item.caseId) || tx('V case') : tx('Mimo case')) : item.name}</span>
             {details.length > 0 && <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>}
             {servicing > 0 && item.status !== 'in_service' && (
-              <span className="block text-sm text-sky-700 dark:text-sky-400">
-                V servise {unitsOut.has(item.id) ? `kus ${formatUnits(unitsOut.get(item.id)!)}` : `${servicing} z ${item.quantity} ks`}
+              <span className="block text-sm text-sky-700 dark:text-sky-400">{tx('V servise')}{' '}{unitsOut.has(item.id) ? `kus ${formatUnits(unitsOut.get(item.id)!)}` : `${servicing} z ${item.quantity} ks`}
               </span>
             )}
-            {needsRestock(item) && <span className="block text-sm text-destructive">Treba dokúpiť</span>}
+            {needsRestock(item) && <span className="block text-sm text-destructive">{tx('Treba dokúpiť')}</span>}
             {['overdue', 'unknown'].includes(hoursState(item, today, checkDays).state) && (
-              <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>
+              <span className="block text-sm text-accent">{tx('Odčítať prevádzkové hodiny')}</span>
             )}
-            {service === 'overdue' && <span className="block text-sm text-destructive">Servis po termíne</span>}
-            {service === 'soon' && <span className="block text-sm text-accent">Servis do 30 dní</span>}
+            {service === 'overdue' && <span className="block text-sm text-destructive">{tx('Servis po termíne')}</span>}
+            {service === 'soon' && <span className="block text-sm text-accent">{tx('Servis do 30 dní')}</span>}
           </span>
           <StatusBadge status={item.status} />
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -194,14 +194,14 @@ export function EquipmentListPage() {
             <span className="min-w-0 flex-1">
               <span className="block truncate font-medium">{cables ? cableBaseName(main.name) : main.name}</span>
               <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
-              {late && <span className="block text-sm text-accent">Odčítať prevádzkové hodiny</span>}
+              {late && <span className="block text-sm text-accent">{tx('Odčítať prevádzkové hodiny')}</span>}
             </span>
             <StatusBadge status={main.status} />
           </Link>
           <button
             type="button"
             aria-expanded={expanded}
-            aria-label={expanded ? 'Zbaliť časti' : 'Rozbaliť časti'}
+            aria-label={expanded ? tx('Zbaliť časti') : tx('Rozbaliť časti')}
             onClick={() => toggleGroup(group.key)}
             className="flex h-16 w-12 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
           >
@@ -222,20 +222,16 @@ export function EquipmentListPage() {
   return (
     <>
       <PageHeader
-        title="Technika"
-        description={list.data ? `${visible.length} z ${all.length} položiek` : undefined}
+        title={tx('Technika')}
+        description={list.data ? tf('{0} z {1} položiek', visible.length, all.length) : undefined}
         action={
           <div className="flex flex-wrap gap-2">
             <ScanButton />
             <LinkButton to="/equipment/poster" variant="outline">
-              <Presentation className="size-4" aria-hidden />
-              Plagát inventára
-            </LinkButton>
+              <Presentation className="size-4" aria-hidden />{tx('Plagát inventára')}</LinkButton>
             {canWrite && (
               <LinkButton to="/equipment/new">
-                <Plus className="size-4" aria-hidden />
-                Pridať
-              </LinkButton>
+                <Plus className="size-4" aria-hidden />{tx('Pridať')}</LinkButton>
             )}
           </div>
         }
@@ -245,10 +241,10 @@ export function EquipmentListPage() {
         <div className="relative sm:col-span-2 lg:col-span-4">
           <Search className="pointer-events-none absolute top-3.5 left-3 size-4 text-muted-foreground" aria-hidden />
           <Field
-            label="Hľadať"
+            label={tx('Hľadať')}
             hideLabel
             type="search"
-            placeholder="Názov, výrobca, sériové alebo inventárne číslo"
+            placeholder={tx('Názov, výrobca, sériové alebo inventárne číslo')}
             className="[&_input]:pl-9"
             value={filter.search}
             onChange={(e) => set({ search: e.target.value })}
@@ -261,33 +257,33 @@ export function EquipmentListPage() {
           owners={staff.people.filter((person) => person.staffId).map((person) => ({ staffId: person.staffId!, name: person.name }))}
           linkedCompanies={linkedCompanies}
         >
-          <SelectField label="Stav" value={filter.status} onChange={(e) => set({ status: e.target.value as EquipmentFilter['status'] })}>
-            <option value="">Všetky stavy</option>
+          <SelectField label={tx('Stav')} value={filter.status} onChange={(e) => set({ status: e.target.value as EquipmentFilter['status'] })}>
+            <option value="">{tx('Všetky stavy')}</option>
             {EQUIPMENT_STATUSES.map((status) => (
               <option key={status} value={status}>
-                {STATUS_LABELS[status]}
+                {tx(STATUS_LABELS[status])}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Kategória" value={filter.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>
-            <option value="">Všetky kategórie</option>
+          <SelectField label={tx('Kategória')} value={filter.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>
+            <option value="">{tx('Všetky kategórie')}</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Umiestnenie" value={filter.locationId} onChange={(e) => set({ locationId: e.target.value })}>
-            <option value="">Všetky umiestnenia</option>
+          <SelectField label={tx('Umiestnenie')} value={filter.locationId} onChange={(e) => set({ locationId: e.target.value })}>
+            <option value="">{tx('Všetky umiestnenia')}</option>
             {locations.map((location) => (
               <option key={location.id} value={location.id}>
                 {location.name}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Case" value={filter.caseId} onChange={(e) => set({ caseId: e.target.value })}>
-            <option value="">Všetky cases</option>
-            <option value={NO_CASE}>Mimo cases</option>
+          <SelectField label={tx('Case')} value={filter.caseId} onChange={(e) => set({ caseId: e.target.value })}>
+            <option value="">{tx('Všetky cases')}</option>
+            <option value={NO_CASE}>{tx('Mimo cases')}</option>
             {(cases.data ?? []).map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
@@ -300,18 +296,16 @@ export function EquipmentListPage() {
       {list.isPending ? (
         <LoadingBlock />
       ) : list.isError ? (
-        <ErrorBlock message="Techniku sa nepodarilo načítať." onRetry={() => void list.refetch()} />
+        <ErrorBlock message={tx('Techniku sa nepodarilo načítať.')} onRetry={() => void list.refetch()} />
       ) : all.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">Zatiaľ tu nie je žiadna technika</p>
-          {canWrite && <p className="mt-1 text-sm text-muted-foreground">Začnite tlačidlom Pridať.</p>}
+          <p className="font-medium">{tx('Zatiaľ tu nie je žiadna technika')}</p>
+          {canWrite && <p className="mt-1 text-sm text-muted-foreground">{tx('Začnite tlačidlom Pridať.')}</p>}
         </div>
       ) : ownHidden ? null : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center">
-          <p className="font-medium">Filtru nič nezodpovedá</p>
-          <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => setFilter(NO_FILTER)}>
-            Zrušiť filter
-          </button>
+          <p className="font-medium">{tx('Filtru nič nezodpovedá')}</p>
+          <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => setFilter(NO_FILTER)}>{tx('Zrušiť filter')}</button>
         </div>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">

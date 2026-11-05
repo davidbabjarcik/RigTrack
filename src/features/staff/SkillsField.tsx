@@ -3,11 +3,12 @@ import { useId, useState, type KeyboardEvent } from 'react'
 import { cn } from '@/lib/utils'
 
 import { joinSkills, parseSkills, SKILL_SUGGESTIONS } from './skills'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { value: string; onChange: (value: string) => void; disabled?: boolean; label?: string }
 
 /** Zručnosti ako štítky: napíšte a Enter (alebo vyberte z návrhov); krížik štítok odoberie. */
-export function SkillsField({ value, onChange, disabled = false, label = 'Zručnosti' }: Props) {
+export function SkillsField({ value, onChange, disabled = false, label = tx('Zručnosti') }: Props) {
   const id = useId()
   const [text, setText] = useState('')
   const skills = parseSkills(value)
@@ -36,7 +37,7 @@ export function SkillsField({ value, onChange, disabled = false, label = 'Zručn
           <span key={skill} className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground">
             {skill}
             {!disabled && (
-              <button type="button" aria-label={`Odobrať ${skill}`} onClick={() => remove(skill)} className="opacity-80 hover:opacity-100">
+              <button type="button" aria-label={tf('Odobrať {0}', skill)} onClick={() => remove(skill)} className="opacity-80 hover:opacity-100">
                 <X className="size-3.5" aria-hidden />
               </button>
             )}
@@ -45,9 +46,9 @@ export function SkillsField({ value, onChange, disabled = false, label = 'Zručn
         {!disabled && (
           <input
             id={id}
-            aria-label={`${label} – pridať`}
+            aria-label={tf('{0} – pridať', label)}
             className="h-8 min-w-40 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground"
-            placeholder={skills.length ? 'pridať ďalšiu…' : 'napr. Avolites, Crown, práca vo výškach'}
+            placeholder={skills.length ? tx('pridať ďalšiu…') : tx('napr. Avolites, Crown, práca vo výškach')}
             maxLength={60}
             value={text}
             onChange={(event) => setText(event.target.value)}

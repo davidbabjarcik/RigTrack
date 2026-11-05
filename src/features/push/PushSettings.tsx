@@ -3,6 +3,7 @@ import { Bell, BellOff, Send } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { currentSubscription, disablePush, enablePush, pushSupport, sendTestPush } from './push'
+import { tx } from '@/lib/i18n'
 
 const MESSAGES: Record<string, string> = {
   denied: 'Upozornenia sú v prehliadači zakázané. Povoľte ich v nastaveniach stránky (ikona zámku pri adrese) a skúste znova.',
@@ -19,42 +20,34 @@ export function PushSettings({ userId }: { userId: string }) {
   const toggle = useMutation({
     mutationFn: (on: boolean) => (on ? enablePush() : disablePush()),
     onMutate: () => setMessage(''),
-    onError: (error) => setMessage(MESSAGES[(error as Error).message] ?? 'Upozornenia sa nepodarilo zapnúť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.'),
+    onError: (error) => setMessage(MESSAGES[(error as Error).message] ?? tx('Upozornenia sa nepodarilo zapnúť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')),
     onSettled: refresh,
   })
   const test = useMutation({
     mutationFn: () => sendTestPush(userId),
-    onSuccess: () => setMessage('Skúšobné upozornenie je na ceste – o pár sekúnd by malo prísť.'),
-    onError: () => setMessage('Skúšobné upozornenie sa nepodarilo poslať.'),
+    onSuccess: () => setMessage(tx('Skúšobné upozornenie je na ceste – o pár sekúnd by malo prísť.')),
+    onError: () => setMessage(tx('Skúšobné upozornenie sa nepodarilo poslať.')),
   })
 
   if (support === 'ios-home-screen') {
     return (
-      <p className="rounded-xl border bg-surface p-4 text-sm">
-        Na iPhone a iPade fungujú upozornenia len z appky pridanej na plochu (iOS 16.4 a novší): v Safari ťuknite na Zdieľať → Pridať na plochu,
-        otvorte RigTrack z plochy a zapnite upozornenia tu.
-      </p>
+      <p className="rounded-xl border bg-surface p-4 text-sm">{tx('Na iPhone a iPade fungujú upozornenia len z appky pridanej na plochu (iOS 16.4 a novší): v Safari ťuknite na Zdieľať → Pridať na plochu, otvorte RigTrack z plochy a zapnite upozornenia tu.')}</p>
     )
   }
-  if (support === 'unsupported') return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Tento prehliadač upozornenia nepodporuje.</p>
+  if (support === 'unsupported') return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Tento prehliadač upozornenia nepodporuje.')}</p>
 
   const on = subscription.data === true
   return (
     <div className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
-      <p className="text-sm text-muted-foreground">
-        Upozornenie príde, keď vás niekto pridá do posádky eventu alebo vám priradí úlohu – aj keď appku práve nemáte otvorenú. Platí pre toto
-        zariadenie; na každom mobile ich zapnite zvlášť.
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Upozornenie príde, keď vás niekto pridá do posádky eventu alebo vám priradí úlohu – aj keď appku práve nemáte otvorenú. Platí pre toto zariadenie; na každom mobile ich zapnite zvlášť.')}</p>
       <div className="flex flex-wrap gap-2">
         <Button variant={on ? 'outline' : 'default'} disabled={toggle.isPending || subscription.isPending} onClick={() => toggle.mutate(!on)}>
           {on ? <BellOff className="size-4" aria-hidden /> : <Bell className="size-4" aria-hidden />}
-          {toggle.isPending ? 'Chvíľu…' : on ? 'Vypnúť upozornenia' : 'Zapnúť upozornenia'}
+          {toggle.isPending ? tx('Chvíľu…') : on ? tx('Vypnúť upozornenia') : tx('Zapnúť upozornenia')}
         </Button>
         {on && (
           <Button variant="outline" disabled={test.isPending} onClick={() => test.mutate()}>
-            <Send className="size-4" aria-hidden />
-            Poslať skúšobné
-          </Button>
+            <Send className="size-4" aria-hidden />{tx('Poslať skúšobné')}</Button>
         )}
       </div>
       {message && <p className="text-sm">{message}</p>}

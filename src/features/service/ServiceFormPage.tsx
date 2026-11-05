@@ -29,6 +29,7 @@ import {
   type ServiceRecord,
 } from './model'
 import { useServiceRecords } from './useServiceRecords'
+import { tx, tf } from '@/lib/i18n'
 
 type FormProps = {
   companyId: string
@@ -106,11 +107,11 @@ function ServiceForm({ companyId, current, equipment, records, presetEquipmentId
     <form
       onSubmit={handleSubmit((values) => {
         if (values.status !== 'done' && tracked && values.unitNumbers.length === 0) {
-          setError('unitNumbers', { message: 'Vyberte, ktoré kusy idú do servisu' })
+          setError('unitNumbers', { message: tx('Vyberte, ktoré kusy idú do servisu') })
           return
         }
         if (values.status !== 'done' && values.unitNumbers.length === 0 && values.quantity > Math.max(pieces, 1)) {
-          setError('quantity', { message: `Táto technika má iba ${pieces} ks` })
+          setError('quantity', { message: tf('Táto technika má iba {0} ks', pieces) })
           return
         }
         save.mutate(values)
@@ -120,14 +121,14 @@ function ServiceForm({ companyId, current, equipment, records, presetEquipmentId
     >
       {current ? (
         <p className="rounded-xl border bg-surface p-4">
-          <span className="text-sm text-muted-foreground">Technika: </span>
+          <span className="text-sm text-muted-foreground">{tx('Technika:')}{' '}</span>
           <Link to={`/equipment/${current.equipmentId}`} className="font-medium text-accent hover:underline">
             {equipment.find((item) => item.id === current.equipmentId)?.name ?? 'Technika'}
           </Link>
         </p>
       ) : (
         <SelectField
-          label="Technika *"
+          label={tx('Technika *')}
           error={errors.equipmentId?.message}
           {...register('equipmentId', {
             onChange: () => {
@@ -136,7 +137,7 @@ function ServiceForm({ companyId, current, equipment, records, presetEquipmentId
             },
           })}
         >
-          <option value="">— vyberte —</option>
+          <option value="">{tx('— vyberte —')}</option>
           {equipment.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
@@ -148,11 +149,11 @@ function ServiceForm({ companyId, current, equipment, records, presetEquipmentId
 
       {units.length > 0 ? (
         <UnitPicker
-          label={`Ktoré kusy (z ${pieces})`}
+          label={tf('Ktoré kusy (z {0})', pieces)}
           units={units}
           chosen={chosen}
           taken={busy}
-          takenHint="už sú v servise v inom zázname"
+          takenHint={tx('už sú v servise v inom zázname')}
           error={errors.unitNumbers?.message}
           onChange={(next) => {
             clearErrors('unitNumbers')
@@ -162,7 +163,7 @@ function ServiceForm({ companyId, current, equipment, records, presetEquipmentId
       ) : (
         pieces > 1 && (
           <Field
-            label={`Počet kusov v servise (z ${pieces})`}
+            label={tf('Počet kusov v servise (z {0})', pieces)}
             type="number"
             inputMode="numeric"
             min={1}
@@ -176,36 +177,33 @@ function ServiceForm({ companyId, current, equipment, records, presetEquipmentId
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <SelectField label="Typ servisu" error={errors.kind?.message} {...register('kind')}>
+        <SelectField label={tx('Typ servisu')} error={errors.kind?.message} {...register('kind')}>
           {SERVICE_KINDS.map((value) => (
             <option key={value} value={value}>
-              {SERVICE_KIND_LABELS[value]}
+              {tx(SERVICE_KIND_LABELS[value])}
             </option>
           ))}
         </SelectField>
-        <SelectField label="Stav" error={errors.status?.message} {...register('status')}>
+        <SelectField label={tx('Stav')} error={errors.status?.message} {...register('status')}>
           {SERVICE_STATUSES.map((value) => (
             <option key={value} value={value}>
-              {SERVICE_STATUS_LABELS[value]}
+              {tx(SERVICE_STATUS_LABELS[value])}
             </option>
           ))}
         </SelectField>
-        <Field label="Dátum" type="date" error={errors.happenedOn?.message} {...register('happenedOn')} />
+        <Field label={tx('Dátum')} type="date" error={errors.happenedOn?.message} {...register('happenedOn')} />
       </div>
-      <p className="-mt-2 text-sm text-muted-foreground">
-        Kým záznam nie je Hotové, zapísané kusy sú v servise. Stav „V servise“ dostane technika, až keď sú v servise všetky
-        jej kusy. Po dokončení sa dátum zapíše ako jej posledný servis.
-      </p>
+      <p className="-mt-2 text-sm text-muted-foreground">{tx('Kým záznam nie je Hotové, zapísané kusy sú v servise. Stav „V servise“ dostane technika, až keď sú v servise všetky jej kusy. Po dokončení sa dátum zapíše ako jej posledný servis.')}</p>
 
-      <TextareaField label="Popis problému" error={errors.problem?.message} {...register('problem')} />
-      <TextareaField label="Vykonané úkony" error={errors.workDone?.message} {...register('workDone')} />
+      <TextareaField label={tx('Popis problému')} error={errors.problem?.message} {...register('problem')} />
+      <TextareaField label={tx('Vykonané úkony')} error={errors.workDone?.message} {...register('workDone')} />
 
-      <TechnicianSelect companyId={companyId} kind="equipment" label="Externý servis / technik" current={current?.technicianId} {...register('technicianId')} />
+      <TechnicianSelect companyId={companyId} kind="equipment" label={tx('Externý servis / technik')} current={current?.technicianId} {...register('technicianId')} />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Kto robil (meno)" error={errors.technician?.message} {...register('technician')} />
+        <Field label={tx('Kto robil (meno)')} error={errors.technician?.message} {...register('technician')} />
         <Field
-          label="Čas práce (h)"
+          label={tx('Čas práce (h)')}
           type="number"
           inputMode="decimal"
           min={0}
@@ -214,7 +212,7 @@ function ServiceForm({ companyId, current, equipment, records, presetEquipmentId
           {...register('hours', asOptionalNumber)}
         />
         <Field
-          label="Náklady (€)"
+          label={tx('Náklady (€)')}
           type="number"
           inputMode="decimal"
           min={0}
@@ -225,30 +223,24 @@ function ServiceForm({ companyId, current, equipment, records, presetEquipmentId
       </div>
 
       {(save.isError || remove.isError) && (
-        <p role="alert" className="text-sm text-destructive">
-          Zmena sa nepodarila. Skúste to znova.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Zmena sa nepodarila. Skúste to znova.')}</p>
       )}
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Ukladám…' : 'Uložiť'}
+          {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
         </Button>
-        <LinkButton to={backTo} variant="outline">
-          Zrušiť
-        </LinkButton>
+        <LinkButton to={backTo} variant="outline">{tx('Zrušiť')}</LinkButton>
         {current && canDelete && (
           <Button
             variant="destructive"
             className="ml-auto"
             disabled={remove.isPending}
             onClick={() => {
-              if (window.confirm('Naozaj odstrániť tento servisný záznam?')) remove.mutate()
+              if (window.confirm(tx('Naozaj odstrániť tento servisný záznam?'))) remove.mutate()
             }}
           >
-            <Trash2 className="size-4" aria-hidden />
-            Odstrániť
-          </Button>
+            <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
         )}
       </div>
     </form>
@@ -270,13 +262,13 @@ export function ServiceFormPage() {
 
   let body
   if (!can(company, 'service.edit')) {
-    body = <ErrorBlock message="Na zápis servisu nemáte oprávnenie." />
+    body = <ErrorBlock message={tx('Na zápis servisu nemáte oprávnenie.')} />
   } else if (records.isPending || equipment.isPending) {
     body = <LoadingBlock />
   } else if (records.isError || equipment.isError) {
-    body = <ErrorBlock message="Údaje sa nepodarilo načítať." onRetry={() => void records.refetch()} />
+    body = <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void records.refetch()} />
   } else if (id && !current) {
-    body = <ErrorBlock message="Tento servisný záznam neexistuje alebo k nemu nemáte prístup." />
+    body = <ErrorBlock message={tx('Tento servisný záznam neexistuje alebo k nemu nemáte prístup.')} />
   } else {
     body = (
       <ServiceForm
@@ -294,7 +286,7 @@ export function ServiceFormPage() {
 
   return (
     <>
-      <PageHeader title={id ? 'Servisný záznam' : 'Nový servisný záznam'} />
+      <PageHeader title={id ? tx('Servisný záznam') : tx('Nový servisný záznam')} />
       {body}
       {current && (
         <div className="mt-8">
@@ -303,13 +295,13 @@ export function ServiceFormPage() {
             entity="service"
             entityId={current.id}
             canEdit={can(company, 'service.edit')}
-            title="Prílohy"
-            empty="Žiadne prílohy. Sem patria fotky poruchy, servisný protokol alebo faktúra."
+            title={tx('Prílohy')}
+            empty={tx('Žiadne prílohy. Sem patria fotky poruchy, servisný protokol alebo faktúra.')}
           />
         </div>
       )}
       {!id && can(company, 'service.edit') && (
-        <p className="mt-4 text-sm text-muted-foreground">Prílohy (fotky, PDF) pridáte po uložení záznamu.</p>
+        <p className="mt-4 text-sm text-muted-foreground">{tx('Prílohy (fotky, PDF) pridáte po uložení záznamu.')}</p>
       )}
     </>
   )

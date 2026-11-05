@@ -65,6 +65,7 @@ import { Group } from './FormGroup'
 import { AudioFields } from './AudioFields'
 import { LightingFields } from './LightingFields'
 import { VideoFields } from './VideoFields'
+import { tx, tf } from '@/lib/i18n'
 
 /** Prázdna technika na prevod údajov z katalógu do formulára (toFormValues). */
 const CATALOG_BASE = {
@@ -465,9 +466,9 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const [showNetwork, setShowNetwork] = useState(() => Boolean(equipment?.macAddress || equipment?.ipAddress || equipment?.attributes.ipDhcp))
   const [showService, setShowService] = useState(() => Boolean(equipment?.serviceIntervalMonths || equipment?.lastServiceOn))
 
-  const lengthTitle = (value: number | undefined) => (value !== undefined && Number.isFinite(value) && value > 0 ? `${String(value).replace('.', ',')} m` : 'Dĺžka bez zadania')
+  const lengthTitle = (value: number | undefined) => (value !== undefined && Number.isFinite(value) && value > 0 ? `${String(value).replace('.', ',')} m` : tx('Dĺžka bez zadania'))
   const makerRows = [
-    { key: 'main', title: multiLength || lengthM ? lengthTitle(lengthM) : 'Táto položka', quantity: Number.isFinite(quantity) ? quantity : 0, makers: mainMakers },
+    { key: 'main', title: multiLength || lengthM ? lengthTitle(lengthM) : tx('Táto položka'), quantity: Number.isFinite(quantity) ? quantity : 0, makers: mainMakers },
     ...(multiLength ? extraLengths.map((row, i) => ({ key: `x${i}`, title: lengthTitle(row.lengthM), quantity: Number.isFinite(row.quantity) ? row.quantity : 0, makers: row.makers ?? [] })) : []),
   ]
   const makersInvalid = kind === 'cable' && makerMode === 'split' && makerRows.some(makersOver)
@@ -518,7 +519,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
     },
     onError: (error: { code?: string; message?: string }) => {
       if (error.code === '23505' && error.message?.includes('inventory_number')) {
-        setError('inventoryNumber', { message: 'Toto inventárne číslo už má iná technika' }, { shouldFocus: true })
+        setError('inventoryNumber', { message: tx('Toto inventárne číslo už má iná technika') }, { shouldFocus: true })
       }
     },
   })
@@ -528,27 +529,19 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
       {!equipment && copyFrom && (
         <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
-          <strong>Kópia „{copyFrom.name}“.</strong> Upravte, čo treba, a uložte – vznikne nová technika (aj s fotkou). Sériové a
-          inventárne číslo, MAC, IP, case a čísla kusov sa nekopírujú.
-        </p>
+          <strong>{tx('Kópia „')}{copyFrom.name}“.</strong>{' '}{tx('Upravte, čo treba, a uložte – vznikne nová technika (aj s fotkou). Sériové a inventárne číslo, MAC, IP, case a čísla kusov sa nekopírujú.')}</p>
       )}
       {equipment && groupIds.length > 1 && equipment.kind === 'cable' && (
         <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
-          <strong>Úprava všetkých {groupIds.length} dĺžok naraz.</strong> Fotka, výrobca, konektor, kategória, poznámka a ďalšie
-          spoločné údaje sa po uložení prenesú do všetkých dĺžok. Názov s dĺžkou, dĺžka, kto kábel vyrobil, cena, počet kusov,
-          case a stav ostanú pri každej dĺžke vlastné. Ak tu zmeníte názov, ostatné dĺžky dostanú nový názov so svojou dĺžkou.
-        </p>
+          <strong>{tx('Úprava všetkých')}{' '}{groupIds.length}{' '}{tx('dĺžok naraz.')}</strong>{' '}{tx('Fotka, výrobca, konektor, kategória, poznámka a ďalšie spoločné údaje sa po uložení prenesú do všetkých dĺžok. Názov s dĺžkou, dĺžka, kto kábel vyrobil, cena, počet kusov, case a stav ostanú pri každej dĺžke vlastné. Ak tu zmeníte názov, ostatné dĺžky dostanú nový názov so svojou dĺžkou.')}</p>
       )}
       {equipment && groupIds.length > 1 && equipment.kind !== 'cable' && (
         <p role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
-          <strong>Úprava všetkých {groupIds.length} častí naraz.</strong> Názov, výrobca, model, kategória, parametre, poznámka, fotka a
-          ďalšie spoločné údaje sa po uložení prenesú do všetkých. Počet kusov, čísla kusov, case, sériové a inventárne čísla a stav
-          ostanú pri každej časti vlastné.
-        </p>
+          <strong>{tx('Úprava všetkých')}{' '}{groupIds.length}{' '}{tx('častí naraz.')}</strong>{' '}{tx('Názov, výrobca, model, kategória, parametre, poznámka, fotka a ďalšie spoločné údaje sa po uložení prenesú do všetkých. Počet kusov, čísla kusov, case, sériové a inventárne čísla a stav ostanú pri každej časti vlastné.')}</p>
       )}
       <div className="grid gap-4 sm:grid-cols-[12rem_1fr]">
         <SelectField
-          label="Druh"
+          label={tx('Druh')}
           error={errors.kind?.message}
           {...register('kind', {
             // Sada káblov a kapsule majú vlastné formuláre.
@@ -559,36 +552,71 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         >
           {EQUIPMENT_KINDS.map((value) => (
             <option key={value} value={value}>
-              {KIND_LABELS[value]}
+              {tx(KIND_LABELS[value])}
             </option>
           ))}
           {!equipment && (
-            <optgroup label="Iný formulár">
-              <option value="capsule">Kapsula k mikrofónu</option>
+            <optgroup label={tx('Iný formulár')}>
+              <option value="capsule">{tx('Kapsula k mikrofónu')}</option>
             </optgroup>
           )}
         </SelectField>
-        <Field label="Názov *" autoFocus={!equipment} error={errors.name?.message} {...register('name')} />
+        <Field label={tx('Názov *')} autoFocus={!equipment} error={errors.name?.message} {...register('name')} />
+      </div>
+
+      {/* Výrobca a model hneď pod druhom: model zo spoločnej databázy doplní údaje nižšie. */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {useCatalogPicker ? (
+          <CatalogPicker
+            key={kind}
+            kind={kind}
+            catalog={catalog}
+            manufacturer={manufacturerValue}
+            model={modelValue}
+            manufacturerError={errors.manufacturer?.message}
+            modelError={errors.model?.message}
+            onManufacturer={(value) => setValue('manufacturer', value, { shouldDirty: true })}
+            onModel={(value) => setValue('model', value, { shouldDirty: true })}
+            onPick={applyCatalog}
+          />
+        ) : (
+        <Field
+          label={kind === 'stage' ? tx('Výrobca / značka') : tx('Výrobca')}
+          list={kind === 'stage' ? stageBrandList : undefined}
+          placeholder={kind === 'stage' ? tx('napr. Nivtec originál') : undefined}
+          error={errors.manufacturer?.message}
+          {...register('manufacturer')}
+        />
+        )}
+        {!useCatalogPicker && <Field label={tx('Model')} error={errors.model?.message} {...register('model')} />}
+        {kind === 'stage' && (
+          <datalist id={stageBrandList}>
+            <option value="Nivtec originál" />
+            <option value="Nivtec kompatibilné" />
+            <option value="Bütec" />
+            <option value="Litec" />
+          </datalist>
+        )}
       </div>
 
       {kind === 'cable' && (
-        <Group title="Kábel">
-          <SelectField label="Typ" {...register('cableType')}>
-            <option value="cable">Kábel</option>
-            <option value="adapter">Redukcia</option>
-            <option value="di">DI box</option>
+        <Group title={tx('Kábel')}>
+          <SelectField label={tx('Typ')} {...register('cableType')}>
+            <option value="cable">{tx('Kábel')}</option>
+            <option value="adapter">{tx('Redukcia')}</option>
+            <option value="di">{tx('DI box')}</option>
           </SelectField>
           {cableType === 'di' && (
-            <SelectField label="DI box" {...register('powered')}>
+            <SelectField label={tx('DI box')} {...register('powered')}>
               <option value="">—</option>
-              <option value="active">Aktívny</option>
-              <option value="passive">Pasívny</option>
+              <option value="active">{tx('Aktívny')}</option>
+              <option value="passive">{tx('Pasívny')}</option>
             </SelectField>
           )}
           <Field
-            label="Konektor / typ"
+            label={tx('Konektor / typ')}
             list={connectorListId}
-            placeholder="napr. XLR alebo powerCON napájací"
+            placeholder={tx('napr. XLR alebo powerCON napájací')}
             autoComplete="off"
             error={errors.connector?.message}
             {...register('connector')}
@@ -600,9 +628,9 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           </datalist>
           {/* Variant toho istého typu (stereo, silent jack…): na hárku ostane v stĺpci typu, ale označený. */}
           <Field
-            label="Variant (nepovinné)"
+            label={tx('Variant (nepovinné)')}
             list={`${connectorListId}-variant`}
-            placeholder="napr. stereo, silent – prázdne = obyčajný"
+            placeholder={tx('napr. stereo, silent – prázdne = obyčajný')}
             autoComplete="off"
             maxLength={40}
             error={errors.cableVariant?.message}
@@ -617,26 +645,26 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
             // Nový kábel: jeden zoznam dĺžok – prvý riadok je táto položka, každý ďalší samostatná položka.
             <div className="sm:col-span-2">
               <div className="mb-1 grid grid-cols-[1fr_6rem_2.5rem] gap-2 text-sm font-medium">
-                <span>Dĺžka (m)</span>
-                <span>Kusov</span>
+                <span>{tx('Dĺžka (m)')}</span>
+                <span>{tx('Kusov')}</span>
                 <span />
               </div>
               <ul className="flex flex-col gap-2">
                 <li className="grid grid-cols-[1fr_6rem_2.5rem] items-start gap-2">
-                  <Field label="Dĺžka (m)" hideLabel type="number" inputMode="decimal" min={0} step="0.1" placeholder="napr. 5" error={errors.lengthM?.message} {...register('lengthM', asOptionalNumber)} />
-                  <Field label="Kusov" hideLabel type="number" inputMode="numeric" min={0} step={1} error={errors.quantity?.message} {...register('quantity', { valueAsNumber: true })} />
+                  <Field label={tx('Dĺžka (m)')} hideLabel type="number" inputMode="decimal" min={0} step="0.1" placeholder={tx('napr. 5')} error={errors.lengthM?.message} {...register('lengthM', asOptionalNumber)} />
+                  <Field label={tx('Kusov')} hideLabel type="number" inputMode="numeric" min={0} step={1} error={errors.quantity?.message} {...register('quantity', { valueAsNumber: true })} />
                   <span />
                 </li>
                 {extraLengths.map((row, index) => (
                   <li key={index} className="grid grid-cols-[1fr_6rem_2.5rem] items-start gap-2">
                     <Field
-                      label={`Dĺžka (m) – riadok ${index + 2}`}
+                      label={tf('Dĺžka (m) – riadok {0}', index + 2)}
                       hideLabel
                       type="number"
                       inputMode="decimal"
                       min={0}
                       step="0.1"
-                      placeholder="napr. 10"
+                      placeholder={tx('napr. 10')}
                       value={Number.isNaN(row.lengthM) ? '' : row.lengthM}
                       onChange={(e) => setExtraLengths(extraLengths.map((item, i) => (i === index ? { ...item, lengthM: e.target.valueAsNumber } : item)))}
                     />
@@ -649,23 +677,21 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
                       value={Number.isNaN(row.quantity) ? '' : row.quantity}
                       onChange={(e) => setExtraLengths(extraLengths.map((item, i) => (i === index ? { ...item, quantity: e.target.valueAsNumber } : item)))}
                     />
-                    <Button variant="ghost" className="h-11 px-0" aria-label={`Odobrať dĺžku ${index + 2}`} onClick={() => setExtraLengths(extraLengths.filter((_, i) => i !== index))}>
+                    <Button variant="ghost" className="h-11 px-0" aria-label={tf('Odobrať dĺžku {0}', index + 2)} onClick={() => setExtraLengths(extraLengths.filter((_, i) => i !== index))}>
                       <Trash2 className="size-4" aria-hidden />
                     </Button>
                   </li>
                 ))}
               </ul>
               <Button variant="outline" size="sm" className="mt-2" onClick={() => setExtraLengths([...extraLengths, { lengthM: Number.NaN, quantity: 1 }])}>
-                <Plus className="size-4" aria-hidden />
-                Pridať dĺžku
-              </Button>
+                <Plus className="size-4" aria-hidden />{tx('Pridať dĺžku')}</Button>
               {extraLengths.length > 0 && (
-                <p className="mt-1 text-xs text-muted-foreground">Každá dĺžka sa uloží ako samostatná položka, napr. „XLR kábel 5 m“, „XLR kábel 10 m“.</p>
+                <p className="mt-1 text-xs text-muted-foreground">{tx('Každá dĺžka sa uloží ako samostatná položka, napr. „XLR kábel 5 m“, „XLR kábel 10 m“.')}</p>
               )}
             </div>
           ) : (
             <Field
-              label="Dĺžka (m)"
+              label={tx('Dĺžka (m)')}
               type="number"
               inputMode="decimal"
               min={0}
@@ -701,28 +727,28 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
       )}
 
       {kind === 'truss' && (
-        <Group title="Hliník / truss">
-          <SelectField label="Typ" error={errors.trussType?.message} {...register('trussType')}>
-            <option value="">— nezadané —</option>
+        <Group title={tx('Hliník / truss')}>
+          <SelectField label={tx('Typ')} error={errors.trussType?.message} {...register('trussType')}>
+            <option value="">{tx('— nezadané —')}</option>
             {TRUSS_TYPES.map((type) => (
               <option key={type} value={type}>
-                {TRUSS_TYPE_LABELS[type]}
+                {tx(TRUSS_TYPE_LABELS[type])}
               </option>
             ))}
           </SelectField>
           {trussType?.startsWith('point') && (
-            <SelectField label="Tvar" {...register('trussShape')}>
-              <option value="">— nezadané —</option>
+            <SelectField label={tx('Tvar')} {...register('trussShape')}>
+              <option value="">{tx('— nezadané —')}</option>
               {TRUSS_SHAPES.map((shape) => (
                 <option key={shape} value={shape}>
-                  {TRUSS_SHAPE_LABELS[shape]}
+                  {tx(TRUSS_SHAPE_LABELS[shape])}
                 </option>
               ))}
             </SelectField>
           )}
           {isTrussSection(trussType) && (
             <Field
-              label="Dĺžka dielu (m)"
+              label={tx('Dĺžka dielu (m)')}
               type="number"
               inputMode="decimal"
               min={0}
@@ -735,12 +761,12 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
       )}
 
       {kind === 'it' && (
-        <Group title="IT">
-          <SelectField label="Typ" {...register('itType')}>
-            <option value="">— nezadané —</option>
+        <Group title={tx('IT')}>
+          <SelectField label={tx('Typ')} {...register('itType')}>
+            <option value="">{tx('— nezadané —')}</option>
             {IT_TYPES.map((type) => (
               <option key={type} value={type}>
-                {IT_TYPE_LABELS[type]}
+                {tx(IT_TYPE_LABELS[type])}
               </option>
             ))}
           </SelectField>
@@ -748,32 +774,32 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
       )}
 
       {kind === 'appliance' && (
-        <Group title="Spotrebič">
-          <SelectField label="Typ" {...register('applianceType')}>
-            <option value="">— nezadané —</option>
+        <Group title={tx('Spotrebič')}>
+          <SelectField label={tx('Typ')} {...register('applianceType')}>
+            <option value="">{tx('— nezadané —')}</option>
             {APPLIANCE_TYPES.map((type) => (
               <option key={type} value={type}>
-                {APPLIANCE_TYPE_LABELS[type]}
+                {tx(APPLIANCE_TYPE_LABELS[type])}
               </option>
             ))}
           </SelectField>
-          <Field label="Príkon (W)" type="number" inputMode="decimal" min={0} error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />
+          <Field label={tx('Príkon (W)')} type="number" inputMode="decimal" min={0} error={errors.powerW?.message} {...register('powerW', asOptionalNumber)} />
         </Group>
       )}
 
       {kind === 'stage' && (
-        <Group title="Pódium">
-          <SelectField label="Typ" {...register('stageType')}>
-            <option value="">— nezadané —</option>
+        <Group title={tx('Pódium')}>
+          <SelectField label={tx('Typ')} {...register('stageType')}>
+            <option value="">{tx('— nezadané —')}</option>
             {STAGE_TYPES.map((type) => (
               <option key={type} value={type}>
-                {STAGE_TYPE_LABELS[type]}
+                {tx(STAGE_TYPE_LABELS[type])}
               </option>
             ))}
           </SelectField>
           {stageType === 'deck' && (
             <>
-              <Field label="Veľkosť" placeholder="napr. 2 × 1 m" maxLength={40} {...register('stageSize')} />
+              <Field label={tx('Veľkosť')} placeholder={tx('napr. 2 × 1 m')} maxLength={40} {...register('stageSize')} />
             </>
           )}
         </Group>
@@ -782,26 +808,26 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
       {lighting && <LightingFields />}
 
       {kind === 'dj' && (
-        <Group title="DJ technika">
-          <SelectField label="Typ" error={errors.djType?.message} {...register('djType')}>
-            <option value="">— nezadané —</option>
+        <Group title={tx('DJ technika')}>
+          <SelectField label={tx('Typ')} error={errors.djType?.message} {...register('djType')}>
+            <option value="">{tx('— nezadané —')}</option>
             {DJ_TYPES.map((type) => (
               <option key={type} value={type}>
-                {DJ_TYPE_LABELS[type]}
+                {tx(DJ_TYPE_LABELS[type])}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Stav" {...register('condition')}>
-            <option value="">— nezadané —</option>
+          <SelectField label={tx('Stav')} {...register('condition')}>
+            <option value="">{tx('— nezadané —')}</option>
             {CONDITIONS.map((condition) => (
               <option key={condition} value={condition}>
-                {CONDITION_LABELS[condition]}
+                {tx(CONDITION_LABELS[condition])}
               </option>
             ))}
           </SelectField>
-          <Field label="Rok výroby" type="number" inputMode="numeric" min={1950} max={2100} placeholder="napr. 2021" error={errors.madeYear?.message} {...register('madeYear', asOptionalNumber)} />
-          <Field label="Krajina výroby" placeholder="napr. Japonsko, Čína" maxLength={60} {...register('madeIn')} />
-          <Field label="Farba" placeholder="napr. čierna, biela (limitovaná)" maxLength={40} {...register('color')} />
+          <Field label={tx('Rok výroby')} type="number" inputMode="numeric" min={1950} max={2100} placeholder={tx('napr. 2021')} error={errors.madeYear?.message} {...register('madeYear', asOptionalNumber)} />
+          <Field label={tx('Krajina výroby')} placeholder={tx('napr. Japonsko, Čína')} maxLength={60} {...register('madeIn')} />
+          <Field label={tx('Farba')} placeholder={tx('napr. čierna, biela (limitovaná)')} maxLength={40} {...register('color')} />
         </Group>
       )}
 
@@ -815,9 +841,9 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         {/* Kategória len keď ju firma používa (alebo ju technika už má); nové sa zakladajú v Nastaveniach → Zoznamy. */}
         {kind !== 'stage' && (categories.length > 0 || Boolean(categoryText)) && (
           <Field
-            label="Kategória"
+            label={tx('Kategória')}
             list={categoryListId}
-            placeholder="Vyberte alebo napíšte novú"
+            placeholder={tx('Vyberte alebo napíšte novú')}
             autoComplete="off"
             error={errors.category?.message}
             {...register('category')}
@@ -830,9 +856,9 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         </datalist>
 
         <Field
-          label="Umiestnenie"
+          label={tx('Umiestnenie')}
           list={locationListId}
-          placeholder="Vyberte alebo napíšte nové"
+          placeholder={tx('Vyberte alebo napíšte nové')}
           autoComplete="off"
           error={errors.location?.message}
           {...register('location')}
@@ -843,45 +869,14 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           ))}
         </datalist>
 
-        {useCatalogPicker ? (
-          <CatalogPicker
-            key={kind}
-            kind={kind}
-            catalog={catalog}
-            manufacturer={manufacturerValue}
-            model={modelValue}
-            manufacturerError={errors.manufacturer?.message}
-            modelError={errors.model?.message}
-            onManufacturer={(value) => setValue('manufacturer', value, { shouldDirty: true })}
-            onModel={(value) => setValue('model', value, { shouldDirty: true })}
-            onPick={applyCatalog}
-          />
-        ) : (
-        <Field
-          label={kind === 'stage' ? 'Výrobca / značka' : 'Výrobca'}
-          list={kind === 'stage' ? stageBrandList : undefined}
-          placeholder={kind === 'stage' ? 'napr. Nivtec originál' : undefined}
-          error={errors.manufacturer?.message}
-          {...register('manufacturer')}
-        />
-        )}
-        {kind === 'stage' && (
-          <datalist id={stageBrandList}>
-            <option value="Nivtec originál" />
-            <option value="Nivtec kompatibilné" />
-            <option value="Bütec" />
-            <option value="Litec" />
-          </datalist>
-        )}
-        <Field label="Váha kusu (kg)" type="number" inputMode="decimal" min={0} step="0.1" error={errors.weightKg?.message} {...register('weightKg', asOptionalNumber)} />
-        {!useCatalogPicker && <Field label="Model" error={errors.model?.message} {...register('model')} />}
+        <Field label={tx('Váha kusu (kg)')} type="number" inputMode="decimal" min={0} step="0.1" error={errors.weightKg?.message} {...register('weightKg', asOptionalNumber)} />
         {/* Pri evidencii po kusoch má každý kus svoje sériové a inventárne číslo (nižšie, Údaje po kusoch). */}
         {!simple && !trackUnits && !groupMode && (
-          <Field label="Sériové číslo" autoComplete="off" error={errors.serialNumber?.message} {...register('serialNumber')} />
+          <Field label={tx('Sériové číslo')} autoComplete="off" error={errors.serialNumber?.message} {...register('serialNumber')} />
         )}
         {!groupMode && (
           <Field
-            label={trackUnits ? 'Inventárne číslo položky (spoločné, nepovinné)' : 'Inventárne číslo'}
+            label={trackUnits ? tx('Inventárne číslo položky (spoločné, nepovinné)') : tx('Inventárne číslo')}
             autoComplete="off"
             error={errors.inventoryNumber?.message}
             {...register('inventoryNumber')}
@@ -889,15 +884,14 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         )}
         {groupMode && (
           <div className="rounded-lg border bg-muted/40 p-3 text-sm sm:col-span-2">
-            <p className="font-medium">
-              Spolu {groupPieces} ks v {groupIds.length} častiach{groupUnits.length > 0 && ` (${formatUnitList(groupUnits)})`}
+            <p className="font-medium">{tx('Spolu')}{' '}{groupPieces}{' '}{tx('ks v')}{' '}{groupIds.length}{' '}{tx('častiach')}{groupUnits.length > 0 && ` (${formatUnitList(groupUnits)})`}
             </p>
-            <p className="text-muted-foreground">Počet kusov, čísla kusov, sériové a inventárne čísla, stav a case sa menia pri každej časti zvlášť.</p>
+            <p className="text-muted-foreground">{tx('Počet kusov, čísla kusov, sériové a inventárne čísla, stav a case sa menia pri každej časti zvlášť.')}</p>
           </div>
         )}
         {!multiLength && !groupMode && (
           <Field
-            label="Počet kusov"
+            label={tx('Počet kusov')}
             type="number"
             inputMode="numeric"
             min={0}
@@ -907,33 +901,28 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           />
         )}
         <Field
-          label="Upozorniť, keď ostane (ks)"
+          label={tx('Upozorniť, keď ostane (ks)')}
           type="number"
           inputMode="numeric"
           min={0}
           step={1}
-          placeholder="nevyplnené = nesledovať"
+          placeholder={tx('nevyplnené = nesledovať')}
           error={errors.minQuantity?.message}
           {...register('minQuantity', asOptionalNumber)}
         />
         <Field
-          label="Cena prenájmu za kus a deň (€)"
+          label={tx('Cena prenájmu za kus a deň (€)')}
           type="number"
           inputMode="decimal"
           min={0}
           step="0.01"
-          placeholder="nevyplnené = bez ceny"
+          placeholder={tx('nevyplnené = bez ceny')}
           error={errors.rentalPrice?.message}
           {...register('rentalPrice', asOptionalNumber)}
         />
         <label className={groupMode ? 'hidden' : 'flex cursor-pointer items-start gap-3 sm:col-span-2'}>
           <input type="checkbox" className="mt-0.5 size-5 shrink-0" {...register('trackUnits')} />
-          <span>
-            Evidovať každý kus zvlášť
-            <span className="block text-sm text-muted-foreground">
-              Kusy dostanú čísla #1, #2… a každý má vlastnú históriu servisu a výpožičiek (svetlá, repráky). Pri hákoch či
-              gurtniach, kábloch či viazačoch nechajte vypnuté, tie sa rátajú len na počet.
-            </span>
+          <span>{tx('Evidovať každý kus zvlášť')}<span className="block text-sm text-muted-foreground">{tx('Kusy dostanú čísla #1, #2… a každý má vlastnú históriu servisu a výpožičiek (svetlá, repráky). Pri hákoch či gurtniach, kábloch či viazačoch nechajte vypnuté, tie sa rátajú len na počet.')}</span>
           </span>
         </label>
         {trackUnits && !groupMode && (
@@ -947,23 +936,20 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
             dmxModes={null}
           />
         )}
-        <SelectField label="Stav" className={groupMode ? 'hidden' : undefined} error={errors.status?.message} {...register('status')}>
+        <SelectField label={tx('Stav')} className={groupMode ? 'hidden' : undefined} error={errors.status?.message} {...register('status')}>
           {EQUIPMENT_STATUSES.map((status) => (
             <option key={status} value={status}>
-              {STATUS_LABELS[status]}
+              {tx(STATUS_LABELS[status])}
             </option>
           ))}
         </SelectField>
       </div>
-      <p className="-mt-2 text-sm text-muted-foreground">
-        Pri evidencii po kusoch zadajte počet kusov a údaje každého kusu vyplníte priamo pod tým. Pri spotrebnom materiáli
-        (kvapalina do hazera) nastavte, pri koľkých kusoch sa má objaviť v zozname „treba kúpiť“.
-      </p>
+      <p className="-mt-2 text-sm text-muted-foreground">{tx('Pri evidencii po kusoch zadajte počet kusov a údaje každého kusu vyplníte priamo pod tým. Pri spotrebnom materiáli (kvapalina do hazera) nastavte, pri koľkých kusoch sa má objaviť v zozname „treba kúpiť“.')}</p>
 
       <OwnerSelect companyId={companyId} error={errors.owner?.message} {...register('owner')} />
 
-      <SelectField label="Case" className={groupMode ? 'hidden' : undefined} error={errors.caseId?.message} {...register('caseId')}>
-        <option value="">— nie je v žiadnom case —</option>
+      <SelectField label={tx('Case')} className={groupMode ? 'hidden' : undefined} error={errors.caseId?.message} {...register('caseId')}>
+        <option value="">{tx('— nie je v žiadnom case —')}</option>
         {[...cases]
           .sort((a, b) => caseTitle(a).localeCompare(caseTitle(b), 'sk', { numeric: true }))
           .map((item) => (
@@ -975,14 +961,10 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
       {!caseValue && !groupMode && (
         <div className="-mt-2 flex flex-col gap-2">
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4" {...register('inCover')} />
-            Má vlastný obal (nie case) – napr. reprobox v obale
-          </label>
-          {inCover && <Field label="Aký obal (nepovinné)" placeholder="napr. obal na top, poťah na sub" maxLength={80} error={errors.coverNote?.message} {...register('coverNote')} />}
+            <input type="checkbox" className="size-4" {...register('inCover')} />{tx('Má vlastný obal (nie case) – napr. reprobox v obale')}</label>
+          {inCover && <Field label={tx('Aký obal (nepovinné)')} placeholder={tx('napr. obal na top, poťah na sub')} maxLength={80} error={errors.coverNote?.message} {...register('coverNote')} />}
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4" {...register('noCase')} />
-            Nepatrí do case ani racku (nehlásiť ako „mimo case“)
-          </label>
+            <input type="checkbox" className="size-4" {...register('noCase')} />{tx('Nepatrí do case ani racku (nehlásiť ako „mimo case“)')}</label>
         </div>
       )}
 
@@ -999,13 +981,11 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
                   setValue('ipPrefix', undefined)
                   setValue('ipDhcp', false)
                 }
-              }} />
-            Zariadenie je v sieti (má IP alebo MAC adresu)
-          </label>
+              }} />{tx('Zariadenie je v sieti (má IP alebo MAC adresu)')}</label>
           {showNetwork && (
-          <Group title="Sieť">
+          <Group title={tx('Sieť')}>
             <Field
-              label="MAC adresa"
+              label={tx('MAC adresa')}
               placeholder="00:1A:2B:3C:4D:5E"
               autoComplete="off"
               autoCapitalize="characters"
@@ -1013,7 +993,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
               {...register('macAddress')}
             />
             <Field
-              label="IP adresa"
+              label={tx('IP adresa')}
               placeholder="192.168.1.10"
               inputMode="decimal"
               autoComplete="off"
@@ -1021,7 +1001,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
               {...register('ipAddress')}
             />
             <Field
-              label="Prefix / maska"
+              label={tx('Prefix / maska')}
               placeholder="24 (= 255.255.255.0)"
               type="number"
               inputMode="numeric"
@@ -1031,9 +1011,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
               {...register('ipPrefix', asOptionalNumber)}
             />
             <label className="flex items-center gap-2 text-sm sm:col-span-2">
-              <input type="checkbox" className="size-4" {...register('ipDhcp')} />
-              IP prideľuje DHCP (bez pevnej adresy – pole IP nechajte prázdne)
-            </label>
+              <input type="checkbox" className="size-4" {...register('ipDhcp')} />{tx('IP prideľuje DHCP (bez pevnej adresy – pole IP nechajte prázdne)')}</label>
           </Group>
           )}
 
@@ -1045,65 +1023,56 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
                   setValue('serviceIntervalMonths', undefined)
                   setValue('lastServiceOn', '')
                 }
-              }} />
-            Pravidelný servis
-          </label>
+              }} />{tx('Pravidelný servis')}</label>
           {showService && (
-          <Group title="Servis">
+          <Group title={tx('Servis')}>
             <Field
-              label="Interval (mesiace)"
+              label={tx('Interval (mesiace)')}
               type="number"
               inputMode="numeric"
               min={1}
               step={1}
-              placeholder="napr. 12"
+              placeholder={tx('napr. 12')}
               error={errors.serviceIntervalMonths?.message}
               {...register('serviceIntervalMonths', asOptionalNumber)}
             />
-            <Field label="Posledný servis" type="date" error={errors.lastServiceOn?.message} {...register('lastServiceOn')} />
+            <Field label={tx('Posledný servis')} type="date" error={errors.lastServiceOn?.message} {...register('lastServiceOn')} />
           </Group>
           )}
 
-          <Group title="Prevádzkové hodiny (nepovinné)">
+          <Group title={tx('Prevádzkové hodiny (nepovinné)')}>
             <label className="flex items-center gap-2 text-sm font-medium sm:col-span-2">
-              <input type="checkbox" className="size-4" {...register('trackHours')} />
-              Sledovať prevádzkové hodiny (zosilňovače, svetlá s počítadlom)
-            </label>
+              <input type="checkbox" className="size-4" {...register('trackHours')} />{tx('Sledovať prevádzkové hodiny (zosilňovače, svetlá s počítadlom)')}</label>
             {trackHours && (
-              <SelectField label="Úroveň kontroly – ako často odčítať" {...register('hoursPriority')}>
+              <SelectField label={tx('Úroveň kontroly – ako často odčítať')} {...register('hoursPriority')}>
                 {CHECK_LEVELS.map((level) => (
                   <option key={level} value={level}>
-                    {CHECK_LEVEL_LABELS[level]}
-                    {levelDays(level, checkDays) !== null ? ` – každých ${levelDays(level, checkDays)} dní` : ' – len zapisovať, nepripomínať'}
+                    {tx(CHECK_LEVEL_LABELS[level])}
+                    {levelDays(level, checkDays) !== null ? tf(' – každých {0} dní', levelDays(level, checkDays)) : tx(' – len zapisovať, nepripomínať')}
                   </option>
                 ))}
               </SelectField>
             )}
-            <p className="self-end text-sm text-muted-foreground">
-              Stav počítadla zapíšete v detaile techniky, tam je aj graf. Dni pri úrovniach nastaví admin v Nastaveniach → Pripomienky.
-            </p>
+            <p className="self-end text-sm text-muted-foreground">{tx('Stav počítadla zapíšete v detaile techniky, tam je aj graf. Dni pri úrovniach nastaví admin v Nastaveniach → Pripomienky.')}</p>
           </Group>
         </>
       )}
 
       <PurchaseLinksFields control={control} register={register} errors={errors} perUnit={Boolean(trackUnits)} />
 
-      <TextareaField label="Poznámka" error={errors.note?.message} {...register('note')} />
+      <TextareaField label={tx('Poznámka')} error={errors.note?.message} {...register('note')} />
 
       {save.isError && !errors.inventoryNumber && (
-        <p role="alert" className="text-sm text-destructive">
-          Uloženie zlyhalo. {errorDetail(save.error) || 'Skontrolujte pripojenie a skúste to znova.'}
+        <p role="alert" className="text-sm text-destructive">{tx('Uloženie zlyhalo.')}{' '}{errorDetail(save.error) || tx('Skontrolujte pripojenie a skúste to znova.')}
         </p>
       )}
 
-      {makersInvalid && <p className="text-sm text-destructive">Pri niektorej dĺžke je výrobcov viac kusov, ako má kábel – opravte „Kto káble vyrobil“.</p>}
+      {makersInvalid && <p className="text-sm text-destructive">{tx('Pri niektorej dĺžke je výrobcov viac kusov, ako má kábel – opravte „Kto káble vyrobil“.')}</p>}
       <div className="flex gap-3">
         <Button type="submit" disabled={save.isPending || makersInvalid}>
-          {save.isPending ? 'Ukladám…' : 'Uložiť'}
+          {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
         </Button>
-        <LinkButton to={cancelTo} variant="outline">
-          Zrušiť
-        </LinkButton>
+        <LinkButton to={cancelTo} variant="outline">{tx('Zrušiť')}</LinkButton>
       </div>
     </form>
     </FormProvider>
@@ -1130,22 +1099,22 @@ export function EquipmentFormPage() {
     enabled: Boolean(copyId),
   })
 
-  const title = id ? 'Úprava techniky' : copyId ? 'Duplikovať techniku' : 'Nová technika'
+  const title = id ? tx('Úprava techniky') : copyId ? tx('Duplikovať techniku') : tx('Nová technika')
   let body
   if (!can(company, 'equipment.edit')) {
-    body = <ErrorBlock message="Na úpravu techniky nemáte oprávnenie." />
+    body = <ErrorBlock message={tx('Na úpravu techniky nemáte oprávnenie.')} />
   } else if (lookups.isPending || cases.isPending || (id && item.isPending) || (copyId && copy.isPending)) {
     body = <LoadingBlock />
   } else if (lookups.isError || cases.isError || item.isError) {
     const failed = item.error ?? cases.error ?? lookups.error
     body = (
       <ErrorBlock
-        message={`Údaje sa nepodarilo načítať${item.isError ? ' (technika)' : cases.isError ? ' (cases)' : ' (kategórie / umiestnenia)'}. ${errorDetail(failed)}`}
+        message={tf('Údaje sa nepodarilo načítať{0}. {1}', item.isError ? ' (technika)' : cases.isError ? ' (cases)' : ' (kategórie / umiestnenia)', errorDetail(failed))}
         onRetry={() => void Promise.all([item.refetch(), cases.refetch(), lookups.refetch()])}
       />
     )
   } else if (id && !item.data) {
-    body = <ErrorBlock message="Táto technika neexistuje alebo k nej nemáte prístup." />
+    body = <ErrorBlock message={tx('Táto technika neexistuje alebo k nej nemáte prístup.')} />
   } else {
     body = (
       <EquipmentForm

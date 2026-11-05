@@ -32,6 +32,7 @@ import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
 import { useEquipmentLookups } from './useEquipmentLookups'
 import { equipmentValue } from './value'
+import { tx, tf } from '@/lib/i18n'
 
 export function EquipmentDetailPage() {
   const { id = '' } = useParams()
@@ -62,18 +63,16 @@ export function EquipmentDetailPage() {
 
   const back = (
     <Link to="/equipment" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="size-4" aria-hidden />
-      Technika
-    </Link>
+      <ArrowLeft className="size-4" aria-hidden />{tx('Technika')}</Link>
   )
 
   if (item.isPending) return <LoadingBlock />
-  if (item.isError) return <ErrorBlock message="Techniku sa nepodarilo načítať." onRetry={() => void item.refetch()} />
+  if (item.isError) return <ErrorBlock message={tx('Techniku sa nepodarilo načítať.')} onRetry={() => void item.refetch()} />
   if (!item.data) {
     return (
       <>
         {back}
-        <ErrorBlock message="Táto technika neexistuje alebo k nej nemáte prístup." />
+        <ErrorBlock message={tx('Táto technika neexistuje alebo k nej nemáte prístup.')} />
       </>
     )
   }
@@ -91,12 +90,12 @@ export function EquipmentDetailPage() {
   const service = serviceState(equipment, todayIso())
   const serviceText: ReactNode =
     service.state === 'none' ? undefined : service.state === 'unknown' ? (
-      `každých ${equipment.serviceIntervalMonths} mes. · servis ešte nie je zapísaný`
+      tf('každých {0} mes. · servis ešte nie je zapísaný', equipment.serviceIntervalMonths)
     ) : (
       <span className={service.state === 'overdue' ? 'text-destructive' : service.state === 'soon' ? 'text-accent' : undefined}>
         {formatDate(service.dueOn)}
-        {service.state === 'overdue' && ' · po termíne'}
-        {service.state === 'soon' && ' · do 30 dní'}
+        {service.state === 'overdue' && tx(' · po termíne')}
+        {service.state === 'soon' && tx(' · do 30 dní')}
       </span>
     )
   // Káble a spotrebný materiál sa neservisujú a nemajú sieť.
@@ -105,10 +104,10 @@ export function EquipmentDetailPage() {
   const value = can(company, 'equipment.edit') ? equipmentValue(equipment) : null
   const rows: [string, ReactNode][] = [
     ['Druh', [KIND_LABELS[equipment.kind], ...describeAttributes(equipment)].join(' · ')],
-    ['Vlastník', equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
-    ['Kategória', categories.find((c) => c.id === equipment.categoryId)?.name],
-    ['Prijímač', equipment.attributes.wirelessRx],
-    ['Vysielače', wirelessTransmitters(equipment.attributes).map(transmitterLabel).join(', ') || undefined],
+    [tx('Vlastník'), equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
+    [tx('Kategória'), categories.find((c) => c.id === equipment.categoryId)?.name],
+    [tx('Prijímač'), equipment.attributes.wirelessRx],
+    [tx('Vysielače'), wirelessTransmitters(equipment.attributes).map(transmitterLabel).join(', ') || undefined],
     [
       'Kapsule',
       equipment.attributes.capsuleIds?.length
@@ -119,16 +118,16 @@ export function EquipmentDetailPage() {
             .join(', ') || undefined
         : undefined,
     ],
-    ['Príkon', equipment.attributes.powerW !== undefined && `${equipment.attributes.powerW} W`],
+    [tx('Príkon'), equipment.attributes.powerW !== undefined && `${equipment.attributes.powerW} W`],
     [
-      'DMX módy',
+      tx('DMX módy'),
       equipment.attributes.dmxModes?.length ? (
         <span key="dmx-modes" className="flex flex-col gap-1">
           {equipment.attributes.dmxModes.map((mode, index) =>
             channelMap(mode).length > 0 ? (
               <details key={index}>
                 <summary className="cursor-pointer">
-                  {mode.name} {mode.channels} ch <span className="text-sm font-normal text-accent">– rozpis kanálov</span>
+                  {mode.name} {mode.channels}{' '}{tx('ch')}{' '}<span className="text-sm font-normal text-accent">{tx('– rozpis kanálov')}</span>
                 </summary>
                 <ol className="mt-1 grid gap-x-6 text-sm font-normal sm:grid-cols-2">
                   {channelMap(mode).map(([channel, text]) => (
@@ -141,19 +140,18 @@ export function EquipmentDetailPage() {
               </details>
             ) : (
               <span key={index}>
-                {mode.name} {mode.channels} ch
-              </span>
+                {mode.name} {mode.channels}{' '}{tx('ch')}</span>
             ),
           )}
         </span>
       ) : undefined,
     ],
-    ['Kópia čoho', equipment.cloneOf],
+    [tx('Kópia čoho'), equipment.cloneOf],
     [
-      'Sedí s Capture',
+      tx('Sedí s Capture'),
       equipment.captureMatch && (
         <span key="capture" className={equipment.captureMatch === 'no' ? 'text-destructive' : equipment.captureMatch === 'partial' ? 'text-accent' : undefined}>
-          {CAPTURE_MATCH_LABELS[equipment.captureMatch]}
+          {tx(CAPTURE_MATCH_LABELS[equipment.captureMatch])}
           {equipment.captureNote && <span className="block text-sm font-normal text-muted-foreground">{equipment.captureNote}</span>}
         </span>
       ),
@@ -167,18 +165,18 @@ export function EquipmentDetailPage() {
         </Link>
       ),
     ],
-    ['Výstupy nodu', equipment.attributes.nodePorts?.length ? describePorts(equipment.attributes.nodePorts) : undefined],
-    ['Obal', !equipment.caseId && equipment.attributes.inCover ? equipment.attributes.coverNote || 'vlastný obal' : undefined],
+    [tx('Výstupy nodu'), equipment.attributes.nodePorts?.length ? describePorts(equipment.attributes.nodePorts) : undefined],
+    ['Obal', !equipment.caseId && equipment.attributes.inCover ? equipment.attributes.coverNote || tx('vlastný obal') : undefined],
     focusUnit !== null ? [
       'Kus',
       <span key="unit">
         #{focusUnit}
-        <span className="text-sm font-normal text-muted-foreground"> · v tejto časti spolu {equipment.quantity} ks</span>
+        <span className="text-sm font-normal text-muted-foreground">{' '}{tx('· v tejto časti spolu')}{' '}{equipment.quantity}{' '}{tx('ks')}</span>
       </span>,
     ] : [
-      'Počet kusov',
+      tx('Počet kusov'),
       <span key="quantity" className="inline-flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
-        {needsRestock(equipment) && <span className="text-sm font-normal text-destructive">treba dokúpiť</span>}
+        {needsRestock(equipment) && <span className="text-sm font-normal text-destructive">{tx('treba dokúpiť')}</span>}
         <QuantityStepper
           companyId={company.companyId}
           equipmentId={equipment.id}
@@ -191,23 +189,23 @@ export function EquipmentDetailPage() {
       'V servise',
       inService > 0 ? [unitsOut.length > 0 && `kus ${formatUnits(unitsOut)}`, `${inService} z ${equipment.quantity} ks`].filter(Boolean).join(' · ') : undefined,
     ],
-    ['Evidencia', focusUnit !== null ? undefined : equipment.quantity > 1 ? (equipment.trackUnits ? `po kusoch (${describeUnitIds(unitIdsOf(equipment))})` : 'len počet kusov') : undefined],
-    ['Cena prenájmu', equipment.rentalPrice !== null ? `${formatMoney(equipment.rentalPrice, 'EUR')} za kus a deň` : undefined],
-    ['Upozorniť pri počte', equipment.minQuantity !== null ? `${equipment.minQuantity} ks a menej` : undefined],
-    ['Výrobca', equipment.manufacturer],
+    ['Evidencia', focusUnit !== null ? undefined : equipment.quantity > 1 ? (equipment.trackUnits ? `po kusoch (${describeUnitIds(unitIdsOf(equipment))})` : tx('len počet kusov')) : undefined],
+    [tx('Cena prenájmu'), equipment.rentalPrice !== null ? tf('{0} za kus a deň', formatMoney(equipment.rentalPrice, 'EUR')) : undefined],
+    [tx('Upozorniť pri počte'), equipment.minQuantity !== null ? `${equipment.minQuantity} ks a menej` : undefined],
+    [tx('Výrobca'), equipment.manufacturer],
     ['Model', equipment.model],
-    ['Sériové číslo', equipment.serialNumber],
-    ['Inventárne číslo', equipment.inventoryNumber],
+    [tx('Sériové číslo'), equipment.serialNumber],
+    [tx('Inventárne číslo'), equipment.inventoryNumber],
     ['MAC adresa', equipment.macAddress],
     ['IP adresa', equipment.ipAddress && (equipment.attributes.ipPrefix ? `${equipment.ipAddress}/${equipment.attributes.ipPrefix}` : equipment.ipAddress)],
     [
-      equipment.attributes.lightSource === 'halogen' ? 'Žiarovka menená' : 'Výbojka menená',
+      equipment.attributes.lightSource === 'halogen' ? tx('Žiarovka menená') : tx('Výbojka menená'),
       equipment.attributes.lampChangedOn &&
         [formatDate(equipment.attributes.lampChangedOn), hoursSinceLamp(equipment) !== null && `odvtedy ${hoursSinceLamp(equipment)} h`].filter(Boolean).join(' · '),
     ],
-    ['Kúpené', equipment.purchasedOn && formatDate(equipment.purchasedOn)],
+    [tx('Kúpené'), equipment.purchasedOn && formatDate(equipment.purchasedOn)],
     [
-      'Kúpené po kusoch',
+      tx('Kúpené po kusoch'),
       (() => {
         // Kus: dátum nákupu a odkiaľ je kúpený („#1 14. 2. 2025 (Thomann)“).
         const purchases = equipment.unitPurchases ?? {}
@@ -222,13 +220,13 @@ export function EquipmentDetailPage() {
       })(),
     ],
     [
-      'Nákupná cena',
+      tx('Nákupná cena'),
       value !== null &&
         `${formatMoney(equipment.attributes.purchasePrice!, 'EUR')} za kus${equipment.quantity > 1 ? ` · spolu ${formatMoney(value, 'EUR')}` : ''}`,
     ],
-    ['Posledný servis', equipment.lastServiceOn && formatDate(equipment.lastServiceOn)],
-    ['Ďalší servis', serviceText],
-    ['Naposledy upravené', new Date(equipment.updatedAt).toLocaleString('sk-SK', { dateStyle: 'medium', timeStyle: 'short' })],
+    [tx('Posledný servis'), equipment.lastServiceOn && formatDate(equipment.lastServiceOn)],
+    [tx('Ďalší servis'), serviceText],
+    [tx('Naposledy upravené'), new Date(equipment.updatedAt).toLocaleString('sk-SK', { dateStyle: 'medium', timeStyle: 'short' })],
   ]
 
   return (
@@ -236,13 +234,10 @@ export function EquipmentDetailPage() {
       {back}
       {focusUnit !== null && (
         <p role="status" className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm">
-          <span>
-            Zobrazujete <strong>kus #{focusUnit}</strong>
-            {equipment.quantity > 1 && ` – v tejto časti sú ${equipment.quantity} ks (${unitIdsOf(equipment).map((value) => `#${value}`).join(', ')}), napr. spolu v jednom case`}.
+          <span>{tx('Zobrazujete')}{' '}<strong>{tx('kus #')}{focusUnit}</strong>
+            {equipment.quantity > 1 && tf(' – v tejto časti sú {0} ks ({1}), napr. spolu v jednom case', equipment.quantity, unitIdsOf(equipment).map((value) => `#${value}`).join(', '))}.
           </span>
-          <Link to={`/equipment/${equipment.id}`} className="font-medium text-accent hover:underline">
-            Zobraziť celú časť
-          </Link>
+          <Link to={`/equipment/${equipment.id}`} className="font-medium text-accent hover:underline">{tx('Zobraziť celú časť')}</Link>
         </p>
       )}
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
@@ -258,31 +253,21 @@ export function EquipmentDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <LinkButton to={`/service/requests/new?equipment=${equipment.id}`} variant="outline" size="sm">
-            <Wrench className="size-4" aria-hidden />
-            Nahlásiť poruchu
-          </LinkButton>
+            <Wrench className="size-4" aria-hidden />{tx('Nahlásiť poruchu')}</LinkButton>
           <LinkButton to={`/qr/equipment?ids=${equipment.id}`} variant="outline" size="sm">
-            <QrCode className="size-4" aria-hidden />
-            QR štítok
-          </LinkButton>
+            <QrCode className="size-4" aria-hidden />{tx('QR štítok')}</LinkButton>
           {can(company, 'equipment.edit') && (
             <LinkButton to={`/equipment/${equipment.id}/edit`} variant="outline" size="sm">
-              <Pencil className="size-4" aria-hidden />
-              Upraviť
-            </LinkButton>
+              <Pencil className="size-4" aria-hidden />{tx('Upraviť')}</LinkButton>
           )}
           {/* DMX adresy kusov (linka, adresa, mód) – len tu a pri „DMX všetkým“, nie vo formulári. */}
           {can(company, 'equipment.edit') && (equipment.kind === 'light' || Boolean(equipment.attributes.dmxModes?.length)) && !equipment.attributes.lightType?.startsWith('acc_') && (
             <Button variant="outline" size="sm" onClick={() => setDmxOpen(!dmxOpen)}>
-              <SlidersHorizontal className="size-4" aria-hidden />
-              DMX adresy
-            </Button>
+              <SlidersHorizontal className="size-4" aria-hidden />{tx('DMX adresy')}</Button>
           )}
           {can(company, 'equipment.edit') && (
             <LinkButton to={`/equipment/new?copy=${equipment.id}`} variant="outline" size="sm">
-              <Copy className="size-4" aria-hidden />
-              Duplikovať
-            </LinkButton>
+              <Copy className="size-4" aria-hidden />{tx('Duplikovať')}</LinkButton>
           )}
           {can(company, 'equipment.delete') && (
             <Button
@@ -290,12 +275,10 @@ export function EquipmentDetailPage() {
               size="sm"
               disabled={remove.isPending}
               onClick={() => {
-                if (window.confirm(`Presunúť „${equipment.name}“ do koša? Admin ju odtiaľ 30 dní vie obnoviť.`)) remove.mutate()
+                if (window.confirm(tf('Presunúť „{0}“ do koša? Admin ju odtiaľ 30 dní vie obnoviť.', equipment.name))) remove.mutate()
               }}
             >
-              <Trash2 className="size-4" aria-hidden />
-              Odstrániť
-            </Button>
+              <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
           )}
         </div>
       </header>
@@ -306,9 +289,7 @@ export function EquipmentDetailPage() {
       )}
 
       {remove.isError && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
-          Techniku sa nepodarilo odstrániť.
-        </p>
+        <p role="alert" className="mb-4 text-sm text-destructive">{tx('Techniku sa nepodarilo odstrániť.')}</p>
       )}
 
       <EquipmentPhoto
@@ -333,7 +314,7 @@ export function EquipmentDetailPage() {
 
       {(equipment.links?.length ?? 0) > 0 && (
         <section className="mt-6">
-          <h2 className="mb-2 text-sm font-medium text-muted-foreground">Odkazy</h2>
+          <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Odkazy')}</h2>
           <div className="rounded-xl border bg-surface p-4">
             <EquipmentLinks links={equipment.links ?? []} />
           </div>
@@ -356,7 +337,7 @@ export function EquipmentDetailPage() {
 
       {equipment.note && (
         <section className="mt-6">
-          <h2 className="mb-2 text-sm font-medium text-muted-foreground">Poznámka</h2>
+          <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Poznámka')}</h2>
           <p className="rounded-xl border bg-surface p-4 whitespace-pre-wrap">{equipment.note}</p>
         </section>
       )}

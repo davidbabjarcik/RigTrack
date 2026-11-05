@@ -8,6 +8,7 @@ import type { PermissionKey } from '@/features/permissions/catalog'
 import { can } from '@/lib/permissions'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
 import { FoundPage } from '@/features/scan/FoundPage'
+import { tx } from '@/lib/i18n'
 
 // Guardy sú iba UX. Dáta chráni RLS v databáze.
 
@@ -48,8 +49,8 @@ export function RequireCompany() {
   if (error) {
     return (
       <div role="alert" className="flex min-h-dvh flex-col items-center justify-center gap-4 px-4 text-center">
-        <p>Nepodarilo sa načítať vaše firmy. Skontrolujte pripojenie.</p>
-        <Button onClick={refetch}>Skúsiť znova</Button>
+        <p>{tx('Nepodarilo sa načítať vaše firmy. Skontrolujte pripojenie.')}</p>
+        <Button onClick={refetch}>{tx('Skúsiť znova')}</Button>
       </div>
     )
   }
@@ -63,8 +64,8 @@ export function RequirePermission({ permission, children }: { permission?: Permi
   if (!permission || !active || can(active, permission)) return children
   return (
     <div role="alert" className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-      <p className="font-medium">Na túto časť nemáte oprávnenie</p>
-      <p className="mt-1 text-sm text-muted-foreground">Ak ju potrebujete, požiadajte admina vašej firmy.</p>
+      <p className="font-medium">{tx('Na túto časť nemáte oprávnenie')}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{tx('Ak ju potrebujete, požiadajte admina vašej firmy.')}</p>
     </div>
   )
 }

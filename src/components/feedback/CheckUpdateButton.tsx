@@ -2,6 +2,7 @@ import { RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { tx } from '@/lib/i18n'
 
 type State = 'idle' | 'checking' | 'latest' | 'found' | 'offline' | 'error'
 const MESSAGES: Record<Exclude<State, 'idle' | 'checking'>, string> = {
@@ -36,7 +37,7 @@ export function CheckUpdateButton({ className }: { className?: string }) {
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
       <Button variant="outline" size="sm" disabled={state === 'checking'} onClick={() => void check()}>
         <RefreshCw className={cn('size-4', state === 'checking' && 'animate-spin')} aria-hidden />
-        {state === 'checking' ? 'Kontrolujem…' : 'Skontrolovať aktualizácie'}
+        {state === 'checking' ? 'Kontrolujem…' : tx('Skontrolovať aktualizácie')}
       </Button>
       {state !== 'idle' && state !== 'checking' && (
         <span role="status" className="text-sm text-muted-foreground">

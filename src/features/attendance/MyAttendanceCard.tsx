@@ -6,6 +6,7 @@ import type { CompanyEvent } from '@/features/events/model'
 import { checkIn, currentPosition, finish, setPause } from './api'
 import { distanceM, formatDistance, PLACE_KIND_LABELS, timeOf, type Attendance, type Meeting, type PauseKind } from './model'
 import { RunningCard } from './RunningCard'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { companyId: string; event: Pick<CompanyEvent, 'id' | 'name'>; meeting: Meeting | null; open: Attendance | null; showEvent?: boolean }
 
@@ -43,7 +44,7 @@ export function MyAttendanceCard({ companyId, event, meeting, open, showEvent }:
       {event.name}
     </Link>
   ) : (
-    <span className="font-medium">Moja dochádzka</span>
+    <span className="font-medium">{tx('Moja dochádzka')}</span>
   )
 
   if (open) {
@@ -53,7 +54,7 @@ export function MyAttendanceCard({ companyId, event, meeting, open, showEvent }:
         record={open}
         busy={busy}
         failed={failed}
-        confirm="Skončiť dochádzku? Zapíše sa do výkazu času."
+        confirm={tx('Skončiť dochádzku? Zapíše sa do výkazu času.')}
         onPause={(kind) => pause.mutate(kind)}
         onFinish={() => leave.mutate()}
       />
@@ -69,8 +70,7 @@ export function MyAttendanceCard({ companyId, event, meeting, open, showEvent }:
         <MapPin className="size-5 shrink-0 text-accent" aria-hidden />
         {title}
       </p>
-      <p className="mt-1 text-sm">
-        Stretávka <span className="font-semibold">{timeOf(meeting.meetAt)}</span> · {PLACE_KIND_LABELS[meeting.placeKind]}
+      <p className="mt-1 text-sm">{tx('Stretávka')}{' '}<span className="font-semibold">{timeOf(meeting.meetAt)}</span> · {tx(PLACE_KIND_LABELS[meeting.placeKind])}
         {meeting.address && (
           <>
             {' · '}
@@ -83,30 +83,26 @@ export function MyAttendanceCard({ companyId, event, meeting, open, showEvent }:
       {meeting.note && <p className="text-sm text-muted-foreground">{meeting.note}</p>}
       <p className="mt-2 text-sm" aria-live="polite">
         {!hasPoint
-          ? 'Miesto nemá polohu na mape – príchod sa neoverí polohou.'
+          ? tx('Miesto nemá polohu na mape – príchod sa neoverí polohou.')
           : where.state === 'locating'
-            ? 'Zisťujem polohu…'
+            ? tx('Zisťujem polohu…')
             : where.state === 'denied'
-              ? 'Polohu sa nepodarilo zistiť. Povoľte appke polohu v prehliadači a skúste znova.'
+              ? tx('Polohu sa nepodarilo zistiť. Povoľte appke polohu v prehliadači a skúste znova.')
               : where.state === 'found'
                 ? inside
                   ? `Si na mieste (${formatDistance(where.distance)}).`
-                  : `Si ${formatDistance(where.distance)} od miesta stretávky – „Som tu“ sa odomkne do ${formatDistance(meeting.radiusM)}.`
+                  : tf('Si {0} od miesta stretávky – „Som tu“ sa odomkne do {1}.', formatDistance(where.distance), formatDistance(meeting.radiusM))
                 : ''}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button disabled={busy || !canArrive} onClick={() => arrive.mutate()}>
-          <UserCheck className="size-4" aria-hidden />
-          Som tu
-        </Button>
+          <UserCheck className="size-4" aria-hidden />{tx('Som tu')}</Button>
         {hasPoint && where.state !== 'locating' && (
           <Button variant="outline" disabled={busy} onClick={() => void position.refetch()}>
-            <LocateFixed className="size-4" aria-hidden />
-            Zistiť polohu znova
-          </Button>
+            <LocateFixed className="size-4" aria-hidden />{tx('Zistiť polohu znova')}</Button>
         )}
       </div>
-      {failed && <p className="mt-2 text-sm text-destructive">Nepodarilo sa uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>}
+      {failed && <p className="mt-2 text-sm text-destructive">{tx('Nepodarilo sa uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>}
     </div>
   )
 }

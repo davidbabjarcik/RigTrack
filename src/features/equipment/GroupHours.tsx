@@ -6,6 +6,7 @@ import { Field, SelectField } from '@/components/ui/field'
 import { todayIso } from '@/lib/format'
 import { addHourReading, fetchHourCounters } from './api'
 import { unitIdsOf, type Equipment } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Row = { key: string; label: string; part: Equipment; unit: number | null }
 
@@ -55,29 +56,27 @@ export function GroupHours({ companyId, parts, caseName, open = false, onOpen, o
   if (!open) {
     return (
       <Button variant="outline" size="sm" onClick={onOpen}>
-        <Gauge className="size-4" aria-hidden />
-        Odčítať hodiny všetkým
-      </Button>
+        <Gauge className="size-4" aria-hidden />{tx('Odčítať hodiny všetkým')}</Button>
     )
   }
   return (
     <section aria-labelledby="group-hours-heading" className="mb-6 w-full rounded-xl border border-accent/40 bg-surface p-4">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <h2 id="group-hours-heading" className="font-medium">
-          {counter ? `Odčítať počítadlo ${counter}` : 'Odčítať prevádzkové hodiny'}
+          {counter ? tf('Odčítať počítadlo {0}', counter) : tx('Odčítať prevádzkové hodiny')}
         </h2>
-        <Field label="Dátum odčítania" type="date" className="w-44" value={readOn} onChange={(event) => setReadOn(event.target.value)} />
+        <Field label={tx('Dátum odčítania')} type="date" className="w-44" value={readOn} onChange={(event) => setReadOn(event.target.value)} />
       </div>
       <div className="mb-3 flex flex-wrap items-end gap-2">
-        <SelectField label="Počítadlo" className="sm:w-56" value={counter} onChange={(event) => setCounter(event.target.value)}>
-          <option value="">Prevádzkové hodiny</option>
+        <SelectField label={tx('Počítadlo')} className="sm:w-56" value={counter} onChange={(event) => setCounter(event.target.value)}>
+          <option value="">{tx('Prevádzkové hodiny')}</option>
           {counters.map((name) => (
             <option key={name} value={name}>
               {name}
             </option>
           ))}
         </SelectField>
-        <Field label="Nové počítadlo" hideLabel placeholder="+ nové počítadlo, napr. Výbojka" maxLength={40} className="sm:w-64" value={newCounter} onChange={(event) => setNewCounter(event.target.value)} />
+        <Field label={tx('Nové počítadlo')} hideLabel placeholder={tx('+ nové počítadlo, napr. Výbojka')} maxLength={40} className="sm:w-64" value={newCounter} onChange={(event) => setNewCounter(event.target.value)} />
         <Button
           variant="outline"
           size="sm"
@@ -87,25 +86,23 @@ export function GroupHours({ companyId, parts, caseName, open = false, onOpen, o
             setCounter(newCounter.trim())
             setNewCounter('')
           }}
-        >
-          Pridať počítadlo
-        </Button>
+        >{tx('Pridať počítadlo')}</Button>
       </div>
-      <p className="mb-3 text-sm text-muted-foreground">Vyplňte stav počítadla pri kusoch, ktoré ste odčítali; prázdne sa preskočia.</p>
+      <p className="mb-3 text-sm text-muted-foreground">{tx('Vyplňte stav počítadla pri kusoch, ktoré ste odčítali; prázdne sa preskočia.')}</p>
       <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((row) => (
           <li key={row.key} className="flex items-center gap-2">
             <span className="w-28 shrink-0 text-sm">
-              <span className="block font-medium">{row.label}</span>
-              <span className="block truncate text-xs text-muted-foreground">{row.part.caseId ? caseName(row.part.caseId) : 'mimo case'}</span>
+              <span className="block font-medium">{tx(row.label)}</span>
+              <span className="block truncate text-xs text-muted-foreground">{row.part.caseId ? caseName(row.part.caseId) : tx('mimo case')}</span>
             </span>
             <input
               type="number"
               inputMode="decimal"
               min={0}
               step="0.1"
-              aria-label={`Stav počítadla ${row.label}`}
-              placeholder="hodiny"
+              aria-label={tf('Stav počítadla {0}', row.label)}
+              placeholder={tx('hodiny')}
               className="h-10 min-w-0 flex-1 rounded-lg border bg-background px-3"
               value={values[row.key] ?? ''}
               onChange={(event) => setValues({ ...values, [row.key]: event.target.value })}
@@ -113,14 +110,12 @@ export function GroupHours({ companyId, parts, caseName, open = false, onOpen, o
           </li>
         ))}
       </ul>
-      {save.isError && <p className="mt-2 text-sm text-destructive">Niektoré odčítania sa nepodarilo uložiť.</p>}
+      {save.isError && <p className="mt-2 text-sm text-destructive">{tx('Niektoré odčítania sa nepodarilo uložiť.')}</p>}
       <div className="mt-4 flex gap-2">
         <Button disabled={filled.length === 0 || !readOn || save.isPending} onClick={() => save.mutate()}>
-          {save.isPending ? 'Ukladám…' : `Uložiť ${filled.length > 0 ? `(${filled.length})` : ''}`}
+          {save.isPending ? tx('Ukladám…') : tf('Uložiť {0}', filled.length > 0 ? `(${filled.length})` : '')}
         </Button>
-        <Button variant="ghost" onClick={onClose}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" onClick={onClose}>{tx('Zrušiť')}</Button>
       </div>
     </section>
   )

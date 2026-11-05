@@ -2,6 +2,7 @@ import { useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { type BoardColumn } from './board'
 import type { Task } from './model'
+import { tx } from '@/lib/i18n'
 
 type Props = {
   tasks: Task[]
@@ -51,7 +52,7 @@ export function TaskKanban({ tasks, columns, columnOf, onMove, renderCard }: Pro
           return (
             <section
               key={column.key || '-'}
-              aria-label={column.label}
+              aria-label={tx(column.label)}
               className={cn('flex min-h-32 flex-col gap-2 rounded-xl border bg-muted/40 p-2', over === column.key && 'ring-2 ring-accent')}
               onDragOver={(event) => {
                 if (!onMove) return
@@ -68,21 +69,19 @@ export function TaskKanban({ tasks, columns, columnOf, onMove, renderCard }: Pro
               <h2 className="flex items-center justify-between gap-2 px-2 pt-1 text-sm font-medium">
                 <span className="flex items-center gap-2">
                   {column.color && <span className="size-2.5 rounded-full" style={{ background: column.color }} aria-hidden />}
-                  {column.label}
+                  {tx(column.label)}
                 </span>
                 <span className="text-muted-foreground">{items.length}</span>
               </h2>
-              {items.length === 0 && <p className="px-2 py-4 text-center text-sm text-muted-foreground">{onMove ? 'Presuňte sem úlohu' : 'Nič'}</p>}
+              {items.length === 0 && <p className="px-2 py-4 text-center text-sm text-muted-foreground">{onMove ? tx('Presuňte sem úlohu') : tx('Nič')}</p>}
               {items.map((task) => (
                 <div key={task.id} draggable={Boolean(onMove)} onDragStart={(event) => event.dataTransfer.setData('text/task', task.id)} className={cn(onMove ? 'cursor-grab active:cursor-grabbing' : 'cursor-auto')}>
                   {renderCard(task)}
                   {onMove && (
-                    <label className="mt-1 flex items-center justify-end gap-1 text-xs text-muted-foreground lg:hidden">
-                      Presunúť do
-                      <select className="max-w-40 rounded border bg-surface px-1 py-0.5" value={columnOf(task)} onChange={(event) => onMove(task, event.target.value)}>
+                    <label className="mt-1 flex items-center justify-end gap-1 text-xs text-muted-foreground lg:hidden">{tx('Presunúť do')}<select className="max-w-40 rounded border bg-surface px-1 py-0.5" value={columnOf(task)} onChange={(event) => onMove(task, event.target.value)}>
                         {columns.map((value) => (
                           <option key={value.key || '-'} value={value.key}>
-                            {value.label}
+                            {tx(value.label)}
                           </option>
                         ))}
                       </select>

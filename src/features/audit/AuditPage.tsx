@@ -12,6 +12,7 @@ import { formatDateTime, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { fetchAudit, LIMIT } from './api'
 import { ACTION_LABELS, AUDIT_EXPORT_COLUMNS, auditExportRow, describeChanges, ENTITIES, entryLink, type AuditEntry } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 /** Celá história (nie len posledných 200) po stránkach a stiahnutie do Excelu. */
 async function exportAudit(companyId: string, entity: string) {
@@ -25,7 +26,7 @@ async function exportAudit(companyId: string, entity: string) {
   const name = entity ? ENTITIES[entity]?.label.replace(/\s+/g, '-') : 'vsetko'
   await downloadTable(
     `historia-zmien-${name}-${todayIso()}.xlsx`,
-    'História zmien',
+    tx('História zmien'),
     AUDIT_EXPORT_COLUMNS,
     entries.map((entry) => auditExportRow(entry, formatDateTime)),
   )
@@ -46,8 +47,8 @@ export function AuditPage() {
   if (!isAdmin) {
     return (
       <>
-        <PageHeader title="História zmien" />
-        <ErrorBlock message="Históriu zmien vidí iba admin." />
+        <PageHeader title={tx('História zmien')} />
+        <ErrorBlock message={tx('Históriu zmien vidí iba admin.')} />
       </>
     )
   }
@@ -55,26 +56,24 @@ export function AuditPage() {
   return (
     <>
       <PageHeader
-        title="História zmien"
-        description={`Kto, kedy a čo zmenil — posledných ${LIMIT} záznamov`}
+        title={tx('História zmien')}
+        description={tf('Kto, kedy a čo zmenil — posledných {0} záznamov', LIMIT)}
         action={
           <Button variant="outline" disabled={download.isPending} onClick={() => download.mutate()}>
             <FileSpreadsheet className="size-4" aria-hidden />
-            {download.isPending ? 'Pripravujem…' : 'Export do Excelu'}
+            {download.isPending ? 'Pripravujem…' : tx('Export do Excelu')}
           </Button>
         }
       />
       {download.isError && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
-          Export sa nepodaril.
-        </p>
+        <p role="alert" className="mb-4 text-sm text-destructive">{tx('Export sa nepodaril.')}</p>
       )}
 
-      <SelectField label="Čo zobraziť" hideLabel className="mb-4 sm:w-64" value={entity} onChange={(e) => setEntity(e.target.value)}>
-        <option value="">Všetko</option>
+      <SelectField label={tx('Čo zobraziť')} hideLabel className="mb-4 sm:w-64" value={entity} onChange={(e) => setEntity(e.target.value)}>
+        <option value="">{tx('Všetko')}</option>
         {Object.entries(ENTITIES).map(([table, info]) => (
           <option key={table} value={table}>
-            {info.label}
+            {tx(info.label)}
           </option>
         ))}
       </SelectField>
@@ -82,11 +81,9 @@ export function AuditPage() {
       {audit.isPending ? (
         <LoadingBlock />
       ) : audit.isError ? (
-        <ErrorBlock message="Históriu sa nepodarilo načítať." onRetry={() => void audit.refetch()} />
+        <ErrorBlock message={tx('Históriu sa nepodarilo načítať.')} onRetry={() => void audit.refetch()} />
       ) : audit.data.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center text-sm text-muted-foreground">
-          Zatiaľ žiadne zmeny. História sa začína písať od zapnutia tejto funkcie.
-        </p>
+        <p className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center text-sm text-muted-foreground">{tx('Zatiaľ žiadne zmeny. História sa začína písať od zapnutia tejto funkcie.')}</p>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {audit.data.map((entry) => {
@@ -95,7 +92,7 @@ export function AuditPage() {
             return (
               <li key={entry.id} className="px-4 py-3">
                 <p className="break-words">
-                  <span className="font-medium">{entry.actorName || 'Systém'}</span> {ACTION_LABELS[entry.action]}{' '}
+                  <span className="font-medium">{entry.actorName || tx('Systém')}</span> {tx(ACTION_LABELS[entry.action])}{' '}
                   {link ? (
                     <Link to={link} className="text-accent hover:underline">
                       {what}
@@ -106,7 +103,7 @@ export function AuditPage() {
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {formatDateTime(entry.createdAt)}
-                  {entry.changed.length > 0 && ` · zmenené: ${describeChanges(entry.changed)}`}
+                  {entry.changed.length > 0 && tf(' · zmenené: {0}', describeChanges(entry.changed))}
                 </p>
               </li>
             )

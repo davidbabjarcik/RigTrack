@@ -14,6 +14,7 @@ import { PartnerForm } from './PartnerForm'
 import { clientSummary, eventsLabel } from './history'
 import { useClientHistory } from './useClientHistory'
 import { LinkedPartnersSection } from '@/features/links/LinkedPartnersSection'
+import { tx } from '@/lib/i18n'
 
 const fold = (value: string) => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -35,7 +36,7 @@ export function PartnersPage() {
   const today = todayIso()
 
   if (partners.isPending) return <LoadingBlock />
-  if (partners.isError) return <ErrorBlock message="Firmy sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." onRetry={() => void partners.refetch()} />
+  if (partners.isError) return <ErrorBlock message={tx('Firmy sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')} onRetry={() => void partners.refetch()} />
   const summaries = new Map(partners.data.map((partner) => [partner.id, clientSummary(history.eventsOf(partner), today)]))
   const visible = partners.data
     .filter((partner) => matches(partner, query))
@@ -50,14 +51,12 @@ export function PartnersPage() {
   return (
     <>
       <PageHeader
-        title="Firmy a kontakty"
-        description="Organizátori, partneri a ľudia z nich"
+        title={tx('Firmy a kontakty')}
+        description={tx('Organizátori, partneri a ľudia z nich')}
         action={
           canEdit && editing !== 'new' ? (
             <Button onClick={() => setEditing('new')}>
-              <Plus className="size-4" aria-hidden />
-              Pridať firmu
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Pridať firmu')}</Button>
           ) : undefined
         }
       />
@@ -69,17 +68,17 @@ export function PartnersPage() {
       <div className="mb-4 flex flex-wrap gap-2">
         <div className="relative min-w-56 flex-1">
           <Search className="pointer-events-none absolute top-3.5 left-3 size-4 text-muted-foreground" aria-hidden />
-          <Field label="Hľadať" hideLabel type="search" placeholder="Firma, IČO, meno, telefón" className="[&_input]:pl-9" value={query} onChange={(event) => setQuery(event.target.value)} />
+          <Field label={tx('Hľadať')} hideLabel type="search" placeholder={tx('Firma, IČO, meno, telefón')} className="[&_input]:pl-9" value={query} onChange={(event) => setQuery(event.target.value)} />
         </div>
-        <SelectField label="Zoradiť" hideLabel className="sm:w-56" value={sort} onChange={(event) => setSort(event.target.value as typeof sort)}>
-          <option value="name">Podľa názvu</option>
-          <option value="count">Najviac akcií</option>
-          <option value="last">Naposledy na akcii</option>
+        <SelectField label={tx('Zoradiť')} hideLabel className="sm:w-56" value={sort} onChange={(event) => setSort(event.target.value as typeof sort)}>
+          <option value="name">{tx('Podľa názvu')}</option>
+          <option value="count">{tx('Najviac akcií')}</option>
+          <option value="last">{tx('Naposledy na akcii')}</option>
         </SelectField>
       </div>
       {visible.length === 0 ? (
         <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">
-          {partners.data.length === 0 ? 'Zatiaľ žiadne firmy. Pridajte organizátora (napr. obec, agentúru) a ľudí s číslami.' : 'Nikto nezodpovedá hľadaniu.'}
+          {partners.data.length === 0 ? tx('Zatiaľ žiadne firmy. Pridajte organizátora (napr. obec, agentúru) a ľudí s číslami.') : tx('Nikto nezodpovedá hľadaniu.')}
         </p>
       ) : (
         <ul className="grid gap-3 lg:grid-cols-2">
@@ -100,7 +99,7 @@ export function PartnersPage() {
                       title={summaries.get(partner.id)!.last ? `naposledy ${formatDate(summaries.get(partner.id)!.last!.startsOn)}` : undefined}
                     >
                       <History className="size-4" aria-hidden />
-                      {summaries.get(partner.id)!.count > 0 ? eventsLabel(summaries.get(partner.id)!.count) : 'História'}
+                      {summaries.get(partner.id)!.count > 0 ? eventsLabel(summaries.get(partner.id)!.count) : tx('História')}
                     </Link>
                   }
                 />

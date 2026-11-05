@@ -1,4 +1,5 @@
 import { obstacleFill, obstacleLetter } from './fills'
+import { tx } from '@/lib/i18n'
 
 type Props = { obstacles: { label: string; length: number; width: number; height: number }[] }
 
@@ -6,7 +7,7 @@ type Props = { obstacles: { label: string; length: number; width: number; height
 export function ObstacleLegend({ obstacles }: Props) {
   if (obstacles.length === 0) return null
   return (
-    <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Legenda prekážok">
+    <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label={tx('Legenda prekážok')}>
       {obstacles.map((obstacle, index) => (
         <li key={index} className="flex items-center gap-1.5">
           <span
@@ -16,11 +17,10 @@ export function ObstacleLegend({ obstacles }: Props) {
             {obstacleLetter(index)}
           </span>
           <span>
-            {obstacle.label || 'Prekážka'}
+            {obstacle.label || tx('Prekážka')}
             <span className="text-muted-foreground">
               {' '}
-              · {obstacle.length} × {obstacle.width} × {obstacle.height} cm
-            </span>
+              · {obstacle.length} × {obstacle.width} × {obstacle.height}{' '}{tx('cm')}</span>
           </span>
         </li>
       ))}

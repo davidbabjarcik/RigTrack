@@ -20,6 +20,7 @@ import { TaskKanban } from './TaskKanban'
 import { TaskTemplatesSection } from './TaskTemplatesSection'
 import { TaskEditor } from './TaskEditor'
 import { useTasks } from './useTasks'
+import { tx, tf } from '@/lib/i18n'
 
 const FILTER_KEY = 'rigtrack.tasks.filter'
 
@@ -143,27 +144,22 @@ export function TodosPage() {
             .join(' · ')}
           {task.dueOn && (
             <span className={isTaskOverdue(task, today) ? 'text-destructive' : undefined}>
-              {' '}
-              · do {formatDate(task.dueOn)}
-              {isTaskOverdue(task, today) && ' (po termíne)'}
+              {' '}{tx('· do')}{' '}{formatDate(task.dueOn)}
+              {isTaskOverdue(task, today) && tx(' (po termíne)')}
             </span>
           )}
         </p>
-        {isTaskStale(task, today) && <p className="text-sm text-accent">Visí viac ako mesiac</p>}
+        {isTaskStale(task, today) && <p className="text-sm text-accent">{tx('Visí viac ako mesiac')}</p>}
         {task.eventId && (
-          <Link to={`/events/${task.eventId}`} className="text-sm text-accent hover:underline">
-            Otvoriť event
-          </Link>
+          <Link to={`/events/${task.eventId}`} className="text-sm text-accent hover:underline">{tx('Otvoriť event')}</Link>
         )}
         {task.note && <p className={cn('mt-1 text-sm whitespace-pre-wrap', compact && 'line-clamp-3')}>{task.note}</p>}
         {task.link && (
-          <Link to={task.link} className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
-            Otvoriť a doplniť
-          </Link>
+          <Link to={task.link} className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">{tx('Otvoriť a doplniť')}</Link>
         )}
       </div>
       {canEdit && (
-        <Button variant="ghost" size="sm" aria-label={`Upraviť: ${task.title}`} onClick={() => setEditing(task.id)}>
+        <Button variant="ghost" size="sm" aria-label={tf('Upraviť: {0}', task.title)} onClick={() => setEditing(task.id)}>
           <Pencil className="size-4" aria-hidden />
         </Button>
       )}
@@ -173,15 +169,13 @@ export function TodosPage() {
   return (
     <>
       <PageHeader
-        title="Úlohy"
-        description="Čo treba spraviť a kto to má na starosti"
+        title={tx('Úlohy')}
+        description={tx('Čo treba spraviť a kto to má na starosti')}
         action={
           canEdit &&
           editing !== 'new' && (
             <Button onClick={() => setEditing('new')}>
-              <Plus className="size-4" aria-hidden />
-              Nová
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Nová')}</Button>
           )
         }
       />
@@ -190,11 +184,11 @@ export function TodosPage() {
 
       <div className="mb-4 flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-2" role="group" aria-label="Čie úlohy">
+          <div className="flex gap-2" role="group" aria-label={tx('Čie úlohy')}>
             {(
               [
                 ['mine', 'Moje'],
-                ['all', 'Všetky'],
+                ['all', tx('Všetky')],
               ] as const
             ).map(([value, label]) => (
               <button
@@ -214,16 +208,14 @@ export function TodosPage() {
               aria-pressed={filter.fill}
               onClick={() => set({ fill: !filter.fill })}
               className={cn('h-9 rounded-lg border px-3 text-sm font-medium', filter.fill ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
-            >
-              Doplniť ({fillCount})
+            >{tx('Doplniť (')}{fillCount})
             </button>
           )}
-          <Field label="Hľadať" hideLabel type="search" placeholder="Hľadať v úlohách" className="min-w-40 flex-1" value={filter.search} onChange={(e) => set({ search: e.target.value })} />
+          <Field label={tx('Hľadať')} hideLabel type="search" placeholder={tx('Hľadať v úlohách')} className="min-w-40 flex-1" value={filter.search} onChange={(e) => set({ search: e.target.value })} />
           <Button variant="outline" aria-expanded={more} onClick={() => setMore(!more)}>
-            <SlidersHorizontal className="size-4" aria-hidden />
-            Filter a triedenie{extra > 0 && ` (${extra})`}
+            <SlidersHorizontal className="size-4" aria-hidden />{tx('Filter a triedenie')}{extra > 0 && ` (${extra})`}
           </Button>
-          <div className="flex gap-1 rounded-lg border bg-surface p-1" role="group" aria-label="Zobrazenie">
+          <div className="flex gap-1 rounded-lg border bg-surface p-1" role="group" aria-label={tx('Zobrazenie')}>
             {(
               [
                 ['list', 'Zoznam', List],
@@ -244,8 +236,8 @@ export function TodosPage() {
           </div>
         </div>
         {view === 'kanban' && (
-          <div className="flex flex-wrap items-center gap-1 text-sm" role="group" aria-label="Stĺpce kanbanu podľa">
-            <span className="mr-1 text-muted-foreground">Stĺpce podľa:</span>
+          <div className="flex flex-wrap items-center gap-1 text-sm" role="group" aria-label={tx('Stĺpce kanbanu podľa')}>
+            <span className="mr-1 text-muted-foreground">{tx('Stĺpce podľa:')}</span>
             {(Object.keys(BOARD_BY_LABELS) as BoardBy[]).map((value) => (
               <button
                 key={value}
@@ -254,69 +246,65 @@ export function TodosPage() {
                 onClick={() => update({ tasksBoardBy: value })}
                 className={cn('h-8 rounded-lg border px-3 font-medium', boardBy === value ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
               >
-                {BOARD_BY_LABELS[value]}
+                {tx(BOARD_BY_LABELS[value])}
               </button>
             ))}
           </div>
         )}
         {more && (
           <div className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
-            <SelectField label="Triediť" value={sort} onChange={(e) => update({ tasksSort: e.target.value as TaskSort })}>
+            <SelectField label={tx('Triediť')} value={sort} onChange={(e) => update({ tasksSort: e.target.value as TaskSort })}>
               {(Object.keys(TASK_SORT_LABELS) as TaskSort[]).map((value) => (
                 <option key={value} value={value}>
-                  {TASK_SORT_LABELS[value]}
+                  {tx(TASK_SORT_LABELS[value])}
                 </option>
               ))}
             </SelectField>
-            <SelectField label="Stav" value={filter.status} onChange={(e) => set({ status: e.target.value as TaskFilter['status'] })}>
-              <option value="">Nehotové</option>
+            <SelectField label={tx('Stav')} value={filter.status} onChange={(e) => set({ status: e.target.value as TaskFilter['status'] })}>
+              <option value="">{tx('Nehotové')}</option>
               {TASK_STATUSES.map((value) => (
                 <option key={value} value={value}>
-                  {TASK_STATUS_LABELS[value]}
+                  {tx(TASK_STATUS_LABELS[value])}
                 </option>
               ))}
-              <option value="all">Všetky aj hotové</option>
+              <option value="all">{tx('Všetky aj hotové')}</option>
             </SelectField>
-            <SelectField label="Priorita" value={filter.priority} onChange={(e) => set({ priority: e.target.value })}>
-              <option value="">Každá</option>
+            <SelectField label={tx('Priorita')} value={filter.priority} onChange={(e) => set({ priority: e.target.value })}>
+              <option value="">{tx('Každá')}</option>
               {TASK_PRIORITIES.map((value) => (
                 <option key={value} value={value}>
-                  {TASK_PRIORITY_LABELS[value]}
+                  {tx(TASK_PRIORITY_LABELS[value])}
                 </option>
               ))}
             </SelectField>
-            <SelectField label="Kategória" value={filter.category} onChange={(e) => set({ category: e.target.value })}>
-              <option value="">Všetky</option>
+            <SelectField label={tx('Kategória')} value={filter.category} onChange={(e) => set({ category: e.target.value })}>
+              <option value="">{tx('Všetky')}</option>
               {categories.map((value) => (
                 <option key={value} value={value}>
                   {value}
                 </option>
               ))}
             </SelectField>
-            <SelectField label="Kto" value={filter.person} onChange={(e) => set({ person: e.target.value, ...(e.target.value ? { scope: 'all' as const } : {}) })}>
-              <option value="">Ktokoľvek</option>
+            <SelectField label={tx('Kto')} value={filter.person} onChange={(e) => set({ person: e.target.value, ...(e.target.value ? { scope: 'all' as const } : {}) })}>
+              <option value="">{tx('Ktokoľvek')}</option>
               {people.map((person) => (
                 <option key={person.id} value={person.id}>
                   {person.name}
                 </option>
               ))}
             </SelectField>
-            <SelectField label="Termín" value={filter.due} onChange={(e) => set({ due: e.target.value as TaskFilter['due'] })}>
-              <option value="">Kedykoľvek</option>
-              <option value="overdue">Po termíne</option>
-              <option value="today">Dnes</option>
-              <option value="week">Do 7 dní</option>
-              <option value="later">Neskôr</option>
-              <option value="none">Bez termínu</option>
+            <SelectField label={tx('Termín')} value={filter.due} onChange={(e) => set({ due: e.target.value as TaskFilter['due'] })}>
+              <option value="">{tx('Kedykoľvek')}</option>
+              <option value="overdue">{tx('Po termíne')}</option>
+              <option value="today">{tx('Dnes')}</option>
+              <option value="week">{tx('Do 7 dní')}</option>
+              <option value="later">{tx('Neskôr')}</option>
+              <option value="none">{tx('Bez termínu')}</option>
             </SelectField>
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" className="size-4" checked={filter.fill} onChange={(e) => set({ fill: e.target.checked })} />
-              Len „Doplniť“ (z @todo / 31121800)
-            </label>
+              <input type="checkbox" className="size-4" checked={filter.fill} onChange={(e) => set({ fill: e.target.checked })} />{tx('Len „Doplniť“ (z @todo / 31121800)')}</label>
             {extra > 0 && (
-              <button type="button" className="self-center text-left text-sm text-accent hover:underline" onClick={() => setFilter({ ...NO_TASK_FILTER, scope: filter.scope, search: filter.search })}>
-                Zrušiť filter
-              </button>
+              <button type="button" className="self-center text-left text-sm text-accent hover:underline" onClick={() => setFilter({ ...NO_TASK_FILTER, scope: filter.scope, search: filter.search })}>{tx('Zrušiť filter')}</button>
             )}
           </div>
         )}
@@ -324,26 +312,22 @@ export function TodosPage() {
 
       {stale.length > 0 && (
         <p role="status" className="mb-4 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm">
-          <strong>{stale.length === 1 ? '1 úloha visí' : `${stale.length} úlohy visia`} dlhšie ako mesiac.</strong> Dokončite ich, posuňte termín alebo ich zrušte.
-        </p>
+          <strong>{stale.length === 1 ? tx('1 úloha visí') : tf('{0} úlohy visia', stale.length)}{' '}{tx('dlhšie ako mesiac.')}</strong>{' '}{tx('Dokončite ich, posuňte termín alebo ich zrušte.')}</p>
       )}
       {(postEvent.data ?? 0) > 0 && (
-        <p role="status" className="mb-4 text-sm text-muted-foreground">
-          Po skončených eventoch pribudlo úloh: {postEvent.data}.
+        <p role="status" className="mb-4 text-sm text-muted-foreground">{tx('Po skončených eventoch pribudlo úloh:')}{' '}{postEvent.data}.
         </p>
       )}
 
       {tasks.isPending ? (
         <LoadingBlock />
       ) : tasks.isError ? (
-        <ErrorBlock message="Úlohy sa nepodarilo načítať." onRetry={() => void tasks.refetch()} />
+        <ErrorBlock message={tx('Úlohy sa nepodarilo načítať.')} onRetry={() => void tasks.refetch()} />
       ) : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">{extra > 0 || filter.search ? 'Filtru nič nezodpovedá' : filter.scope === 'mine' ? 'Nemáte žiadne otvorené úlohy' : 'Žiadne otvorené úlohy'}</p>
+          <p className="font-medium">{extra > 0 || filter.search ? tx('Filtru nič nezodpovedá') : filter.scope === 'mine' ? tx('Nemáte žiadne otvorené úlohy') : tx('Žiadne otvorené úlohy')}</p>
           {filter.scope === 'mine' && all.some((task) => task.status !== 'done') && (
-            <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => set({ scope: 'all' })}>
-              Zobraziť úlohy všetkých
-            </button>
+            <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => set({ scope: 'all' })}>{tx('Zobraziť úlohy všetkých')}</button>
           )}
         </div>
       ) : (
@@ -365,9 +349,7 @@ export function TodosPage() {
       )}
 
       {toggle.isError && (
-        <p role="alert" className="mt-2 text-sm text-destructive">
-          Zmena sa nepodarila.
-        </p>
+        <p role="alert" className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>
       )}
 
       <div className="mt-8">

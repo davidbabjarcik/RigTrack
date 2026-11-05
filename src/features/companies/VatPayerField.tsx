@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Field } from '@/components/ui/field'
+import { tx } from '@/lib/i18n'
 
 type Props = { value: string; onChange: (icDph: string) => void; disabled?: boolean }
 
@@ -18,13 +19,11 @@ export function VatPayerField({ value, onChange, disabled }: Props) {
             setPayer(event.target.checked)
             if (!event.target.checked) onChange('')
           }}
-        />
-        Platiteľ DPH
-      </label>
+        />{tx('Platiteľ DPH')}</label>
       {payer ? (
-        <Field label="IČ DPH" hideLabel placeholder="IČ DPH, napr. SK2020123456" maxLength={20} disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)} />
+        <Field label={tx('IČ DPH')} hideLabel placeholder={tx('IČ DPH, napr. SK2020123456')} maxLength={20} disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)} />
       ) : (
-        <p className="text-sm text-muted-foreground">Neplatiteľ DPH – bez IČ DPH.</p>
+        <p className="text-sm text-muted-foreground">{tx('Neplatiteľ DPH – bez IČ DPH.')}</p>
       )}
     </div>
   )

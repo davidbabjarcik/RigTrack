@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Mail, Phone, Globe, LogIn } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { getSupabase } from '@/lib/supabase/client'
+import { tx } from '@/lib/i18n'
 
 type Info = { enabled: boolean; name?: string; company?: string; phone?: string; email?: string; web?: string } | null
 
@@ -28,17 +29,15 @@ export function FoundPage({ kind, id, unit }: { kind: 'equipment' | 'case'; id: 
       <div className="w-full max-w-sm rounded-2xl border bg-surface p-6 text-center shadow-sm">
         <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="mx-auto mb-4 size-12 rounded-xl" />
         {info.isPending ? (
-          <p className="text-muted-foreground">Načítavam…</p>
+          <p className="text-muted-foreground">{tx('Načítavam…')}</p>
         ) : data?.enabled ? (
           <>
-            <p className="text-sm text-muted-foreground">Našli ste</p>
+            <p className="text-sm text-muted-foreground">{tx('Našli ste')}</p>
             <h1 className="mt-1 text-2xl font-semibold break-words">
               {data.name}
               {unit !== null && kind === 'equipment' && ` #${unit}`}
             </h1>
-            <p className="mt-2">
-              Patrí firme <strong>{data.company}</strong>. Ak to nie je na svojom mieste, ozvite sa, prosím:
-            </p>
+            <p className="mt-2">{tx('Patrí firme')}{' '}<strong>{data.company}</strong>{tx('. Ak to nie je na svojom mieste, ozvite sa, prosím:')}</p>
             <div className="mt-4 flex flex-col gap-2">
               {data.phone && (
                 <a href={`tel:${data.phone.replace(/\s+/g, '')}`} className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-medium text-primary-foreground">
@@ -62,8 +61,8 @@ export function FoundPage({ kind, id, unit }: { kind: 'equipment' | 'case'; id: 
           </>
         ) : (
           <>
-            <h1 className="text-xl font-semibold">Technika evidovaná v RigTracku</h1>
-            <p className="mt-2 text-muted-foreground">Podrobnosti vidia len ľudia z firmy, ktorej patrí. Prihláste sa, ak ste z nej.</p>
+            <h1 className="text-xl font-semibold">{tx('Technika evidovaná v RigTracku')}</h1>
+            <p className="mt-2 text-muted-foreground">{tx('Podrobnosti vidia len ľudia z firmy, ktorej patrí. Prihláste sa, ak ste z nej.')}</p>
           </>
         )}
         <Link
@@ -71,9 +70,7 @@ export function FoundPage({ kind, id, unit }: { kind: 'equipment' | 'case'; id: 
           state={{ from: location.pathname + location.search }}
           className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
         >
-          <LogIn className="size-4" aria-hidden />
-          Som z firmy – prihlásiť sa
-        </Link>
+          <LogIn className="size-4" aria-hidden />{tx('Som z firmy – prihlásiť sa')}</Link>
       </div>
     </div>
   )

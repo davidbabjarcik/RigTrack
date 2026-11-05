@@ -13,6 +13,7 @@ import { clientSummary } from './history'
 import { PartnerCard } from './PartnerCard'
 import { PartnerForm } from './PartnerForm'
 import { useClientHistory } from './useClientHistory'
+import { tx, tf } from '@/lib/i18n'
 
 function Tile({ label, value, hint }: { label: string; value: ReactNode; hint?: ReactNode }) {
   return (
@@ -38,13 +39,11 @@ export function PartnerDetailPage() {
 
   const back = (
     <Link to="/partners" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="size-4" aria-hidden />
-      Firmy a kontakty
-    </Link>
+      <ArrowLeft className="size-4" aria-hidden />{tx('Firmy a kontakty')}</Link>
   )
   if (partners.isPending || !history.ready) return <LoadingBlock />
   const partner = partners.data?.find((item) => item.id === id)
-  if (!partner) return <>{back}<ErrorBlock message="Táto firma neexistuje alebo k nej nemáte prístup." /></>
+  if (!partner) return <>{back}<ErrorBlock message={tx('Táto firma neexistuje alebo k nej nemáte prístup.')} /></>
 
   const items = history.eventsOf(partner)
   const summary = clientSummary(items, today)
@@ -62,22 +61,20 @@ export function PartnerDetailPage() {
       )}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile label="Akcií" value={summary.count} hint={summary.first ? `prvá ${formatDate(summary.first.startsOn)}` : undefined} />
-        <Tile label="Naposledy" value={summary.last ? formatDate(summary.last.startsOn) : '—'} hint={summary.last?.name} />
-        <Tile label="Najbližšie" value={summary.next ? formatDate(summary.next.startsOn) : '—'} hint={summary.next?.name} />
+        <Tile label={tx('Akcií')} value={summary.count} hint={summary.first ? tf('prvá {0}', formatDate(summary.first.startsOn)) : undefined} />
+        <Tile label={tx('Naposledy')} value={summary.last ? formatDate(summary.last.startsOn) : '—'} hint={summary.last?.name} />
+        <Tile label={tx('Najbližšie')} value={summary.next ? formatDate(summary.next.startsOn) : '—'} hint={summary.next?.name} />
         {history.seesIncome ? (
-          <Tile label="Tržby z akcií (s DPH)" value={money(summary.revenue)} hint={loans.length > 0 ? `+ výpožičky ${money(loanTotal)}` : undefined} />
+          <Tile label={tx('Tržby z akcií (s DPH)')} value={money(summary.revenue)} hint={loans.length > 0 ? tf('+ výpožičky {0}', money(loanTotal)) : undefined} />
         ) : (
-          <Tile label="Výpožičky" value={loans.length} />
+          <Tile label={tx('Výpožičky')} value={loans.length} />
         )}
       </div>
 
       <section className="mt-6">
-        <h2 className="mb-2 text-sm font-medium text-muted-foreground">Akcie ({items.length})</h2>
+        <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Akcie (')}{items.length})</h2>
         {items.length === 0 ? (
-          <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
-            Zatiaľ žiadne. Firmu priradíte v detaile eventu (Organizátori a firmy) alebo ako organizátora.
-          </p>
+          <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Zatiaľ žiadne. Firmu priradíte v detaile eventu (Organizátori a firmy) alebo ako organizátora.')}</p>
         ) : (
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {items.map(({ event, kind, revenue }) => (
@@ -98,9 +95,7 @@ export function PartnerDetailPage() {
                 <EventStatusBadge status={event.status} />
                 {canEdit && event.startsOn >= today && (
                   <Link to={`/events/${event.id}/quote`} className="inline-flex shrink-0 items-center gap-1 text-sm text-accent hover:underline" aria-label={`Ponuka: ${event.name}`}>
-                    <Receipt className="size-4" aria-hidden />
-                    Ponuka
-                  </Link>
+                    <Receipt className="size-4" aria-hidden />{tx('Ponuka')}</Link>
                 )}
               </li>
             ))}
@@ -110,7 +105,7 @@ export function PartnerDetailPage() {
 
       {can(company, 'loans.view') && loans.length > 0 && (
         <section className="mt-6">
-          <h2 className="mb-2 text-sm font-medium text-muted-foreground">Výpožičky ({loans.length})</h2>
+          <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Výpožičky (')}{loans.length})</h2>
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {loans.map((loan) => {
               const pricing = loanPricing(loan)

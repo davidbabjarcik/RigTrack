@@ -37,6 +37,7 @@ import {
 } from './model'
 import { PartIcon, type PartKind } from './PartIcon'
 import { DevNotice } from '@/components/feedback/DevNotice'
+import { tx, tf } from '@/lib/i18n'
 
 const PX = 44
 const GROUP_ICONS: Record<string, PartKind> = {
@@ -83,7 +84,7 @@ export function StageDrawing({ request, plan, mainId, showLegs = false }: { requ
     return { x: X(w), y: Y(item.positionM + item.widthM), width: length, height: along, horizontal: true }
   }
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full max-w-xl" role="img" aria-label={`Pôdorys pódia ${w} × ${d} m`}>
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full max-w-xl" role="img" aria-label={tf('Pôdorys pódia {0} × {1} m', w, d)}>
       {[...plan.decks, ...plan.catwalkDecks].map((deck, index) => {
         const x = X(deck.x) + 1.5
         const y = Y(deck.y + deck.d) + 1.5
@@ -188,13 +189,10 @@ export function StageDrawing({ request, plan, mainId, showLegs = false }: { requ
             strokeWidth={2.5}
             strokeDasharray={riser.wheels ? '5 3' : undefined}
           />
-          <text x={X(riser.xM + riser.widthM / 2)} y={Y(riser.yM + riser.depthM / 2) + 4} textAnchor="middle" className="fill-violet-700 text-[11px] font-semibold dark:fill-violet-200">
-            Rizer {riser.heightCm} cm
-          </text>
+          <text x={X(riser.xM + riser.widthM / 2)} y={Y(riser.yM + riser.depthM / 2) + 4} textAnchor="middle" className="fill-violet-700 text-[11px] font-semibold dark:fill-violet-200">{tx('Rizer')}{' '}{riser.heightCm}{' '}{tx('cm')}</text>
         </g>
       ))}
-      <text x={width / 2} y={height - 6} textAnchor="middle" className="fill-muted-foreground text-[11px]">
-        predná strana (publikum) · {w} m
+      <text x={width / 2} y={height - 6} textAnchor="middle" className="fill-muted-foreground text-[11px]">{tx('predná strana (publikum) ·')}{' '}{w} m
       </text>
       <text x={10} y={height / 2} textAnchor="middle" transform={`rotate(-90 10 ${height / 2})`} className="fill-muted-foreground text-[11px]">
         {d} m
@@ -218,7 +216,7 @@ function SideChoice({ label, sides, onChange }: { label: string; sides: Side[]; 
               onClick={() => onChange(on ? sides.filter((item) => item !== side) : [...sides, side])}
               className={cn('h-9 rounded-lg border px-3 text-sm font-medium', on ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
             >
-              {SIDE_LABELS[side]}
+              {tx(SIDE_LABELS[side])}
             </button>
           )
         })}
@@ -329,7 +327,7 @@ export function StagePage() {
   })
 
   if (config.isPending || equipment.isPending) return <LoadingBlock />
-  if (config.isError) return <ErrorBlock message="Nastavenie pódia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." />
+  if (config.isError) return <ErrorBlock message={tx('Nastavenie pódia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')} />
   if (!plan) return null
 
   const unassigned = plan.lines.some((line) => !line.equipmentId)
@@ -342,18 +340,14 @@ export function StagePage() {
     <>
       <CalculatorTabs />
       <PageHeader
-        title="Pódium"
-        description={`Kalkulačka pódia ${config.data.name}`}
+        title={tx('Pódium')}
+        description={tf('Kalkulačka pódia {0}', config.data.name)}
         action={
           <div className="flex flex-wrap gap-2 print:hidden">
             <Button variant="outline" onClick={() => window.print()}>
-              <Printer className="size-4" aria-hidden />
-              Tlačiť / PDF
-            </Button>
+              <Printer className="size-4" aria-hidden />{tx('Tlačiť / PDF')}</Button>
             {can(company, 'lookups.manage') && (
-              <LinkButton to="/settings?tab=stage" variant="outline">
-                Nastavenie Nivtec
-              </LinkButton>
+              <LinkButton to="/settings?tab=stage" variant="outline">{tx('Nastavenie Nivtec')}</LinkButton>
             )}
           </div>
         }
@@ -363,23 +357,22 @@ export function StagePage() {
       <div className="grid gap-6 lg:grid-cols-[22rem_1fr] print:block">
         <div className="flex flex-col gap-4 print:hidden">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Šírka (m)" type="number" min={1} max={MAX_STAGE_M} step={0.5} value={widthM} onChange={(event) => setWidth(Number(event.target.value))} />
-            <Field label="Hĺbka (m)" type="number" min={1} max={MAX_STAGE_M} step={0.5} value={depthM} onChange={(event) => setDepth(Number(event.target.value))} />
+            <Field label={tx('Šírka (m)')} type="number" min={1} max={MAX_STAGE_M} step={0.5} value={widthM} onChange={(event) => setWidth(Number(event.target.value))} />
+            <Field label={tx('Hĺbka (m)')} type="number" min={1} max={MAX_STAGE_M} step={0.5} value={depthM} onChange={(event) => setDepth(Number(event.target.value))} />
           </div>
           {heights.length > 0 ? (
-            <SelectField label="Výška pódia" value={heightCm} onChange={(event) => setHeight(Number(event.target.value))}>
+            <SelectField label={tx('Výška pódia')} value={heightCm} onChange={(event) => setHeight(Number(event.target.value))}>
               {heights.map((value) => (
                 <option key={value} value={value}>
-                  {value} cm
-                </option>
+                  {value}{' '}{tx('cm')}</option>
               ))}
             </SelectField>
           ) : (
-            <Field label="Výška pódia (cm)" type="number" min={1} value={heightCm} onChange={(event) => setHeight(Number(event.target.value))} />
+            <Field label={tx('Výška pódia (cm)')} type="number" min={1} value={heightCm} onChange={(event) => setHeight(Number(event.target.value))} />
           )}
           {config.data && fillerDecks(config.data).length > 0 && (
             <fieldset>
-              <legend className="mb-1.5 text-sm font-medium">Menšie dosky na doplnenie</legend>
+              <legend className="mb-1.5 text-sm font-medium">{tx('Menšie dosky na doplnenie')}</legend>
               <div className="flex flex-wrap gap-2">
                 {fillerDecks(config.data).map((deck) => {
                   const chosen = fillerIds === null || fillerIds.includes(deck.id)
@@ -400,45 +393,40 @@ export function StagePage() {
                   )
                 })}
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">Napr. pri šírke 5,5 m: len 2 × 0,5 m alebo len 1 × 0,5 m. Ďalšie rozmery pridáte v Nastaveniach → Nivtec.</p>
+              <p className="mt-1 text-xs text-muted-foreground">{tx('Napr. pri šírke 5,5 m: len 2 × 0,5 m alebo len 1 × 0,5 m. Ďalšie rozmery pridáte v Nastaveniach → Nivtec.')}</p>
             </fieldset>
           )}
-          <SelectField label="Otočenie dosiek" value={orientation} onChange={(event) => setOrientation(event.target.value as Orientation)}>
-            <option value="auto">Automaticky (najmenej dosiek 1 × 1)</option>
-            <option value="wide">Dlhšou stranou dopredu</option>
-            <option value="deep">Dlhšou stranou dozadu</option>
+          <SelectField label={tx('Otočenie dosiek')} value={orientation} onChange={(event) => setOrientation(event.target.value as Orientation)}>
+            <option value="auto">{tx('Automaticky (najmenej dosiek 1 × 1)')}</option>
+            <option value="wide">{tx('Dlhšou stranou dopredu')}</option>
+            <option value="deep">{tx('Dlhšou stranou dozadu')}</option>
           </SelectField>
 
           <label className="flex items-center gap-2 text-sm font-medium">
-            <input type="checkbox" className="size-4" checked={skirt} onChange={(event) => setSkirt(event.target.checked)} />
-            Chcem plachtu
-          </label>
-          {skirt && <SideChoice label="Plachta na stranách (lišty na ňu sa pridajú samy)" sides={skirtSides} onChange={setSkirtSides} />}
+            <input type="checkbox" className="size-4" checked={skirt} onChange={(event) => setSkirt(event.target.checked)} />{tx('Chcem plachtu')}</label>
+          {skirt && <SideChoice label={tx('Plachta na stranách (lišty na ňu sa pridajú samy)')} sides={skirtSides} onChange={setSkirtSides} />}
           <label className="flex items-center gap-2 text-sm font-medium">
-            <input type="checkbox" className="size-4" checked={railing} onChange={(event) => setRailing(event.target.checked)} />
-            Chcem zábradlie
-          </label>
-          {railing && <SideChoice label="Zábradlie na stranách" sides={railingSides} onChange={setRailingSides} />}
+            <input type="checkbox" className="size-4" checked={railing} onChange={(event) => setRailing(event.target.checked)} />{tx('Chcem zábradlie')}</label>
+          {railing && <SideChoice label={tx('Zábradlie na stranách')} sides={railingSides} onChange={setRailingSides} />}
 
           <fieldset className="flex flex-col gap-2 rounded-xl border p-3">
-            <legend className="px-1 text-sm font-medium">
-              Schody{stepDeck ? ` (stupne ${stepDeck.label || `${stepDeck.widthM} × ${stepDeck.depthM} m`})` : ''}
+            <legend className="px-1 text-sm font-medium">{tx('Schody')}{stepDeck ? ` (stupne ${stepDeck.label || `${stepDeck.widthM} × ${stepDeck.depthM} m`})` : ''}
             </legend>
             {stairs.map((item, index) => (
               <div key={index} className="grid grid-cols-[1fr_6rem_auto] items-end gap-2">
                 <SelectField
-                  label="Strana"
+                  label={tx('Strana')}
                   value={item.side}
                   onChange={(event) => setStairs(stairs.map((other, i) => (i === index ? { ...other, side: event.target.value as Side, positionM: 0 } : other)))}
                 >
                   {SIDES.map((side) => (
                     <option key={side} value={side}>
-                      {SIDE_LABELS[side]}
+                      {tx(SIDE_LABELS[side])}
                     </option>
                   ))}
                 </SelectField>
                 <Field
-                  label={item.side === 'front' || item.side === 'back' ? 'Od ľava (m)' : 'Od predu (m)'}
+                  label={item.side === 'front' || item.side === 'back' ? tx('Od ľava (m)') : tx('Od predu (m)')}
                   type="number"
                   min={0}
                   max={sideLength(item.side, request.widthM, request.depthM) - stepWidth}
@@ -446,32 +434,28 @@ export function StagePage() {
                   value={item.positionM}
                   onChange={(event) => setStairs(stairs.map((other, i) => (i === index ? { ...other, positionM: Number(event.target.value) || 0 } : other)))}
                 />
-                <Button variant="ghost" aria-label={`Odobrať schody ${index + 1}`} onClick={() => setStairs(stairs.filter((_, i) => i !== index))}>
+                <Button variant="ghost" aria-label={tf('Odobrať schody {0}', index + 1)} onClick={() => setStairs(stairs.filter((_, i) => i !== index))}>
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
               </div>
             ))}
             <Button variant="outline" size="sm" className="self-start" onClick={() => setStairs([...stairs, { side: 'front', positionM: 0 }])}>
-              <Plus className="size-4" aria-hidden />
-              Pridať schody
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Pridať schody')}</Button>
             {stairs.length > 0 && (
               <>
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" className="size-4" checked={stairsToTop} onChange={(event) => setStairsToTop(event.target.checked)} />
-                  Posledný stupeň na úrovni pódia (inak o 20 cm nižšie)
-                </label>
-                <SelectField label="Zábradlie na schodoch" value={stairsRailingSides} onChange={(event) => setStairsRailingSides(Number(event.target.value))}>
-                  <option value={0}>bez zábradlia</option>
-                  <option value={1}>z jednej strany</option>
-                  <option value={2}>z oboch strán</option>
+                  <input type="checkbox" className="size-4" checked={stairsToTop} onChange={(event) => setStairsToTop(event.target.checked)} />{tx('Posledný stupeň na úrovni pódia (inak o 20 cm nižšie)')}</label>
+                <SelectField label={tx('Zábradlie na schodoch')} value={stairsRailingSides} onChange={(event) => setStairsRailingSides(Number(event.target.value))}>
+                  <option value={0}>{tx('bez zábradlia')}</option>
+                  <option value={1}>{tx('z jednej strany')}</option>
+                  <option value={2}>{tx('z oboch strán')}</option>
                 </SelectField>
               </>
             )}
           </fieldset>
 
           <fieldset className="flex flex-col gap-2 rounded-xl border p-3">
-            <legend className="px-1 text-sm font-medium">Molo</legend>
+            <legend className="px-1 text-sm font-medium">{tx('Molo')}</legend>
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -480,71 +464,64 @@ export function StagePage() {
                 onChange={(event) =>
                   setCatwalk(event.target.checked ? { side: 'front', positionM: Math.max(0, Math.floor(request.widthM / 2) - 1), widthM: 2, lengthM: 4, skirt: false } : null)
                 }
-              />
-              Chcem molo (výbežok z pódia v rovnakej výške)
-            </label>
+              />{tx('Chcem molo (výbežok z pódia v rovnakej výške)')}</label>
             {catwalk && (
               <>
                 <div className="grid grid-cols-2 gap-2">
-                  <SelectField label="Strana" value={catwalk.side} onChange={(event) => setCatwalk({ ...catwalk, side: event.target.value as Side, positionM: 0 })}>
+                  <SelectField label={tx('Strana')} value={catwalk.side} onChange={(event) => setCatwalk({ ...catwalk, side: event.target.value as Side, positionM: 0 })}>
                     {SIDES.map((side) => (
                       <option key={side} value={side}>
-                        {SIDE_LABELS[side]}
+                        {tx(SIDE_LABELS[side])}
                       </option>
                     ))}
                   </SelectField>
                   <Field
-                    label={catwalk.side === 'front' || catwalk.side === 'back' ? 'Od ľava (m)' : 'Od predu (m)'}
+                    label={catwalk.side === 'front' || catwalk.side === 'back' ? tx('Od ľava (m)') : tx('Od predu (m)')}
                     type="number"
                     min={0}
                     step={0.5}
                     value={catwalk.positionM}
                     onChange={(event) => setCatwalk({ ...catwalk, positionM: Number(event.target.value) || 0 })}
                   />
-                  <Field label="Šírka (m)" type="number" min={0.5} step={0.5} value={catwalk.widthM} onChange={(event) => setCatwalk({ ...catwalk, widthM: halfMeters(event.target.value) })} />
-                  <Field label="Dĺžka (m)" type="number" min={0.5} step={0.5} value={catwalk.lengthM} onChange={(event) => setCatwalk({ ...catwalk, lengthM: halfMeters(event.target.value) })} />
+                  <Field label={tx('Šírka (m)')} type="number" min={0.5} step={0.5} value={catwalk.widthM} onChange={(event) => setCatwalk({ ...catwalk, widthM: halfMeters(event.target.value) })} />
+                  <Field label={tx('Dĺžka (m)')} type="number" min={0.5} step={0.5} value={catwalk.lengthM} onChange={(event) => setCatwalk({ ...catwalk, lengthM: halfMeters(event.target.value) })} />
                 </div>
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" className="size-4" checked={catwalk.skirt} onChange={(event) => setCatwalk({ ...catwalk, skirt: event.target.checked })} />
-                  Plachta okolo mola
-                </label>
+                  <input type="checkbox" className="size-4" checked={catwalk.skirt} onChange={(event) => setCatwalk({ ...catwalk, skirt: event.target.checked })} />{tx('Plachta okolo mola')}</label>
               </>
             )}
           </fieldset>
 
           <fieldset className="flex flex-col gap-2 rounded-xl border p-3">
-            <legend className="px-1 text-sm font-medium">Rizery</legend>
+            <legend className="px-1 text-sm font-medium">{tx('Rizery')}</legend>
             {risers.map((riser, index) => {
               const change = (patch: Partial<Riser>) => setRisers(risers.map((other, i) => (i === index ? { ...other, ...patch } : other)))
               return (
                 <div key={index} className="flex flex-col gap-2 rounded-lg border p-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Rizer {index + 1}</span>
-                    <Button variant="ghost" size="sm" aria-label={`Odobrať rizer ${index + 1}`} onClick={() => setRisers(risers.filter((_, i) => i !== index))}>
+                    <span className="text-sm font-medium">{tx('Rizer')}{' '}{index + 1}</span>
+                    <Button variant="ghost" size="sm" aria-label={tf('Odobrať rizer {0}', index + 1)} onClick={() => setRisers(risers.filter((_, i) => i !== index))}>
                       <Trash2 className="size-4" aria-hidden />
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="Šírka (m)" type="number" min={0.5} step={0.5} value={riser.widthM} onChange={(event) => change({ widthM: halfMeters(event.target.value) })} />
-                    <Field label="Hĺbka (m)" type="number" min={0.5} step={0.5} value={riser.depthM} onChange={(event) => change({ depthM: halfMeters(event.target.value) })} />
-                    <SelectField label="Výška" value={riser.heightCm} onChange={(event) => change({ heightCm: Number(event.target.value) })}>
+                    <Field label={tx('Šírka (m)')} type="number" min={0.5} step={0.5} value={riser.widthM} onChange={(event) => change({ widthM: halfMeters(event.target.value) })} />
+                    <Field label={tx('Hĺbka (m)')} type="number" min={0.5} step={0.5} value={riser.depthM} onChange={(event) => change({ depthM: halfMeters(event.target.value) })} />
+                    <SelectField label={tx('Výška')} value={riser.heightCm} onChange={(event) => change({ heightCm: Number(event.target.value) })}>
                       {(heights.length > 0 ? heights : [20, 40, 60]).map((value) => (
                         <option key={value} value={value}>
-                          {value} cm
-                        </option>
+                          {value}{' '}{tx('cm')}</option>
                       ))}
                     </SelectField>
-                    <SelectField label="Uloženie" value={riser.wheels ? 'wheels' : 'fixed'} onChange={(event) => change({ wheels: event.target.value === 'wheels' })}>
-                      <option value="fixed">Pevný na nohách</option>
-                      <option value="wheels">Na kolieskach</option>
+                    <SelectField label={tx('Uloženie')} value={riser.wheels ? 'wheels' : 'fixed'} onChange={(event) => change({ wheels: event.target.value === 'wheels' })}>
+                      <option value="fixed">{tx('Pevný na nohách')}</option>
+                      <option value="wheels">{tx('Na kolieskach')}</option>
                     </SelectField>
-                    <Field label="Od ľava (m)" type="number" min={0} step={0.5} value={riser.xM} onChange={(event) => change({ xM: Number(event.target.value) || 0 })} />
-                    <Field label="Od predu (m)" type="number" min={0} step={0.5} value={riser.yM} onChange={(event) => change({ yM: Number(event.target.value) || 0 })} />
+                    <Field label={tx('Od ľava (m)')} type="number" min={0} step={0.5} value={riser.xM} onChange={(event) => change({ xM: Number(event.target.value) || 0 })} />
+                    <Field label={tx('Od predu (m)')} type="number" min={0} step={0.5} value={riser.yM} onChange={(event) => change({ yM: Number(event.target.value) || 0 })} />
                   </div>
                   <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" className="size-4" checked={riser.skirt} onChange={(event) => change({ skirt: event.target.checked })} />
-                    Plachta okolo rizera
-                  </label>
+                    <input type="checkbox" className="size-4" checked={riser.skirt} onChange={(event) => change({ skirt: event.target.checked })} />{tx('Plachta okolo rizera')}</label>
                 </div>
               )
             })}
@@ -568,42 +545,40 @@ export function StagePage() {
               }
             >
               <Plus className="size-4" aria-hidden />
-              {risers.length === 0 ? 'Pridať rizer' : 'Pridať ďalší rizer'}
+              {risers.length === 0 ? tx('Pridať rizer') : tx('Pridať ďalší rizer')}
             </Button>
           </fieldset>
 
           {triangles.length > 0 && (
             <fieldset className="flex flex-col gap-2 rounded-xl border p-3">
-              <legend className="px-1 text-sm font-medium">Dosky navyše (trojuholníky a pod.)</legend>
+              <legend className="px-1 text-sm font-medium">{tx('Dosky navyše (trojuholníky a pod.)')}</legend>
               {extraDecks.map((extra, index) => (
                 <div key={index} className="grid grid-cols-[1fr_5rem_auto] items-end gap-2">
                   <SelectField
-                    label="Doska"
+                    label={tx('Doska')}
                     value={extra.deckId}
                     onChange={(event) => setExtraDecks(extraDecks.map((other, i) => (i === index ? { ...other, deckId: event.target.value } : other)))}
                   >
                     {triangles.map((deck) => (
                       <option key={deck.id} value={deck.id}>
-                        {deck.label}
+                        {tx(deck.label)}
                       </option>
                     ))}
                   </SelectField>
                   <Field
-                    label="Počet"
+                    label={tx('Počet')}
                     type="number"
                     min={1}
                     value={extra.count}
                     onChange={(event) => setExtraDecks(extraDecks.map((other, i) => (i === index ? { ...other, count: Math.max(0, Math.floor(Number(event.target.value) || 0)) } : other)))}
                   />
-                  <Button variant="ghost" aria-label={`Odobrať dosku navyše ${index + 1}`} onClick={() => setExtraDecks(extraDecks.filter((_, i) => i !== index))}>
+                  <Button variant="ghost" aria-label={tf('Odobrať dosku navyše {0}', index + 1)} onClick={() => setExtraDecks(extraDecks.filter((_, i) => i !== index))}>
                     <Trash2 className="size-4" aria-hidden />
                   </Button>
                 </div>
               ))}
               <Button variant="outline" size="sm" className="self-start" onClick={() => setExtraDecks([...extraDecks, { deckId: triangles[0].id, count: 1 }])}>
-                <Plus className="size-4" aria-hidden />
-                Pridať dosku navyše
-              </Button>
+                <Plus className="size-4" aria-hidden />{tx('Pridať dosku navyše')}</Button>
             </fieldset>
           )}
         </div>
@@ -611,22 +586,19 @@ export function StagePage() {
         <div className="flex min-w-0 flex-col gap-4">
           <div className="rounded-xl border bg-surface p-3">
             <label className="mb-2 flex items-center gap-2 text-sm print:hidden">
-              <input type="checkbox" className="size-4" checked={showLegs} onChange={(event) => setShowLegs(event.target.checked)} />
-              Ukázať poradie dosiek a nohy
-            </label>
+              <input type="checkbox" className="size-4" checked={showLegs} onChange={(event) => setShowLegs(event.target.checked)} />{tx('Ukázať poradie dosiek a nohy')}</label>
             <StageDrawing request={request} plan={plan} mainId={config.data.decks.find((item) => !item.triangle)?.id ?? ''} showLegs={showLegs} />
             <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span>
-                {request.widthM} × {request.depthM} m = {request.widthM * request.depthM} m², výška {heightCm} cm
-              </span>
-              <span className="text-yellow-700 dark:text-yellow-300">━ pero dosky</span>
-              <span className="text-emerald-600">● 1 – tu začať stavať{showLegs && ', ďalej podľa čísel'}</span>
-              {showLegs && <span className="text-blue-600">● noha</span>}
-              <span className="text-amber-700 dark:text-amber-300">■ menšia doska</span>
-              {plan.lathEdges.length > 0 && <span className="text-emerald-600">━ lišty</span>}
-              {plan.risers.length > 0 && <span className="text-violet-600 dark:text-violet-300">▭ rizer (prerušovane na kolieskach)</span>}
-              {plan.skirtMeters > 0 && <span className="text-rose-600">- - plachta {plan.skirtMeters} m</span>}
-              {plan.railingMeters > 0 && <span className="text-sky-700 dark:text-sky-300">━ zábradlie {plan.railingMeters} m</span>}
+                {request.widthM} × {request.depthM} m = {request.widthM * request.depthM}{' '}{tx('m², výška')}{' '}{heightCm}{' '}{tx('cm')}</span>
+              <span className="text-yellow-700 dark:text-yellow-300">{tx('━ pero dosky')}</span>
+              <span className="text-emerald-600">{tx('● 1 – tu začať stavať')}{showLegs && tx(', ďalej podľa čísel')}</span>
+              {showLegs && <span className="text-blue-600">{tx('● noha')}</span>}
+              <span className="text-amber-700 dark:text-amber-300">{tx('■ menšia doska')}</span>
+              {plan.lathEdges.length > 0 && <span className="text-emerald-600">{tx('━ lišty')}</span>}
+              {plan.risers.length > 0 && <span className="text-violet-600 dark:text-violet-300">{tx('▭ rizer (prerušovane na kolieskach)')}</span>}
+              {plan.skirtMeters > 0 && <span className="text-rose-600">{tx('- - plachta')}{' '}{plan.skirtMeters} m</span>}
+              {plan.railingMeters > 0 && <span className="text-sky-700 dark:text-sky-300">{tx('━ zábradlie')}{' '}{plan.railingMeters} m</span>}
             </p>
           </div>
 
@@ -641,9 +613,9 @@ export function StagePage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
-                  <th className="px-4 py-2 font-medium">Diel</th>
-                  <th className="px-4 py-2 text-right font-medium">Treba</th>
-                  <th className="px-4 py-2 text-right font-medium">Máme</th>
+                  <th className="px-4 py-2 font-medium">{tx('Diel')}</th>
+                  <th className="px-4 py-2 text-right font-medium">{tx('Treba')}</th>
+                  <th className="px-4 py-2 text-right font-medium">{tx('Máme')}</th>
                 </tr>
               </thead>
               {groups.map((group) => (
@@ -665,7 +637,7 @@ export function StagePage() {
                       return (
                         <tr key={line.key}>
                           <td className="px-4 py-2">
-                            <span className="font-medium">{line.label}</span>
+                            <span className="font-medium">{tx(line.label)}</span>
                             {item && (
                               <Link to={`/equipment/${item.id}`} className="block text-xs text-muted-foreground hover:underline">
                                 {item.name}
@@ -677,7 +649,7 @@ export function StagePage() {
                             {item ? (
                               <span className="inline-flex items-center gap-1">
                                 {item.quantity}
-                                {!short && <CheckCircle2 className="size-4 text-emerald-600" aria-label="stačí" />}
+                                {!short && <CheckCircle2 className="size-4 text-emerald-600" aria-label={tx('stačí')} />}
                               </span>
                             ) : (
                               <span className="text-muted-foreground">—</span>
@@ -691,16 +663,14 @@ export function StagePage() {
             </table>
           </div>
           {unassigned && (
-            <p className="text-sm text-muted-foreground">
-              Diely bez techniky sa len rátajú. Priraďte ich v Nastaveniach → Nivtec, potom ich kalkulačka skontroluje a pridá na event.
-            </p>
+            <p className="text-sm text-muted-foreground">{tx('Diely bez techniky sa len rátajú. Priraďte ich v Nastaveniach → Nivtec, potom ich kalkulačka skontroluje a pridá na event.')}</p>
           )}
 
           {can(company, 'events.edit') && (
             <div className="flex flex-col gap-3 rounded-xl border bg-surface p-4 print:hidden">
               <div className="flex flex-wrap items-end gap-3">
-                <SelectField label="Event" className="min-w-56 flex-1" value={eventId} onChange={(event) => setEventId(event.target.value)}>
-                  <option value="">— vyberte event —</option>
+                <SelectField label={tx('Event')} className="min-w-56 flex-1" value={eventId} onChange={(event) => setEventId(event.target.value)}>
+                  <option value="">{tx('— vyberte event —')}</option>
                   {upcoming.map((event) => (
                     <option key={event.id} value={event.id}>
                       {event.name} ({formatDate(event.startsOn)})
@@ -709,41 +679,33 @@ export function StagePage() {
                 </SelectField>
                 <Button variant="outline" disabled={!target || savePlan.isPending} onClick={() => savePlan.mutate()}>
                   <Save className="size-4" aria-hidden />
-                  {savePlan.isPending ? 'Ukladám…' : 'Uložiť plán k eventu'}
+                  {savePlan.isPending ? tx('Ukladám…') : tx('Uložiť plán k eventu')}
                 </Button>
                 {totals.size > 0 && (
                   <Button
                     disabled={!target || addToEvent.isPending}
                     onClick={() => {
-                      if (window.confirm(`Pridať diely pódia na event „${target!.name}“? Počty techniky, ktorá už na evente je, sa nastavia na vypočítané.`)) addToEvent.mutate()
+                      if (window.confirm(tf('Pridať diely pódia na event „{0}“? Počty techniky, ktorá už na evente je, sa nastavia na vypočítané.', target!.name))) addToEvent.mutate()
                     }}
                   >
-                    {addToEvent.isPending ? 'Pridávam…' : 'Pridať diely na event'}
+                    {addToEvent.isPending ? tx('Pridávam…') : tx('Pridať diely na event')}
                   </Button>
                 )}
               </div>
               {savedPlan.data && loadedFor !== eventId && (
-                <p className="flex flex-wrap items-center gap-2 text-sm">
-                  K eventu je uložený plán {savedPlan.data.request.widthM} × {savedPlan.data.request.depthM} m ({formatDate(savedPlan.data.updatedAt.slice(0, 10))}).
-                  <Button size="sm" variant="outline" onClick={() => applyPlan(savedPlan.data!.request)}>
-                    Načítať uložený plán
-                  </Button>
+                <p className="flex flex-wrap items-center gap-2 text-sm">{tx('K eventu je uložený plán')}{' '}{savedPlan.data.request.widthM} × {savedPlan.data.request.depthM} m ({formatDate(savedPlan.data.updatedAt.slice(0, 10))}).
+                  <Button size="sm" variant="outline" onClick={() => applyPlan(savedPlan.data!.request)}>{tx('Načítať uložený plán')}</Button>
                 </p>
               )}
-              {savePlan.isSuccess && <p role="status" className="text-sm text-muted-foreground">Plán je uložený k eventu – nájdete ho v detaile eventu.</p>}
-              {savePlan.isError && <p role="alert" className="text-sm text-destructive">Plán sa nepodarilo uložiť. Táto časť databázy ešte nemusí byť pripravená (migrácia 0095).</p>}
+              {savePlan.isSuccess && <p role="status" className="text-sm text-muted-foreground">{tx('Plán je uložený k eventu – nájdete ho v detaile eventu.')}</p>}
+              {savePlan.isError && <p role="alert" className="text-sm text-destructive">{tx('Plán sa nepodarilo uložiť. Táto časť databázy ešte nemusí byť pripravená (migrácia 0095).')}</p>}
               {addToEvent.isSuccess && target && (
-                <p role="status" className="text-sm">
-                  Pridané aj s plánom.{' '}
-                  <Link to={`/events/${target.id}`} className="font-medium text-accent hover:underline">
-                    Otvoriť event
-                  </Link>
+                <p role="status" className="text-sm">{tx('Pridané aj s plánom.')}{' '}
+                  <Link to={`/events/${target.id}`} className="font-medium text-accent hover:underline">{tx('Otvoriť event')}</Link>
                 </p>
               )}
               {addToEvent.isError && (
-                <p role="alert" className="text-sm text-destructive">
-                  Pridanie zlyhalo. Možno už nie je dosť voľných kusov v termíne eventu.
-                </p>
+                <p role="alert" className="text-sm text-destructive">{tx('Pridanie zlyhalo. Možno už nie je dosť voľných kusov v termíne eventu.')}</p>
               )}
             </div>
           )}

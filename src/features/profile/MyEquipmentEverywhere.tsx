@@ -16,6 +16,7 @@ import {
   useMyCases,
   useMyEquipment,
 } from './myEquipment'
+import { tx, tf } from '@/lib/i18n'
 
 const ALL = 'all'
 const EMPTY_ITEM = { name: '', kind: 'audio' as EquipmentKind, quantity: '1', manufacturer: '', model: '' }
@@ -79,43 +80,39 @@ export function MyEquipmentEverywhere({ userId, memberships }: { userId: string;
     <div className="grid items-start gap-4 lg:grid-cols-[3fr_2fr]">
       <section className="flex flex-col gap-3 rounded-xl border bg-surface p-4" aria-labelledby="my-gear-heading">
         <h2 id="my-gear-heading" className="flex items-center gap-2 font-medium">
-          <Speaker className="size-5 text-accent" aria-hidden />
-          Technika
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Technika, ktorá patrí vám. Vo firme je vedená ako vaša a dá sa dať na event. Pridajte ju aj do ďalšej firmy; zmeny pôvodnej položky sa do kópií prenesú samy.
-        </p>
+          <Speaker className="size-5 text-accent" aria-hidden />{tx('Technika')}</h2>
+        <p className="text-sm text-muted-foreground">{tx('Technika, ktorá patrí vám. Vo firme je vedená ako vaša a dá sa dať na event. Pridajte ju aj do ďalšej firmy; zmeny pôvodnej položky sa do kópií prenesú samy.')}</p>
 
         {memberships.length > 0 && (
           <form onSubmit={submitItem} className="grid gap-2 rounded-lg border border-dashed p-3 sm:grid-cols-2">
-            <Field label="Názov *" maxLength={120} placeholder="napr. Behringer X32" value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} />
-            <SelectField label="Druh" value={item.kind} onChange={(e) => setItem({ ...item, kind: e.target.value as EquipmentKind })}>
+            <Field label={tx('Názov *')} maxLength={120} placeholder={tx('napr. Behringer X32')} value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} />
+            <SelectField label={tx('Druh')} value={item.kind} onChange={(e) => setItem({ ...item, kind: e.target.value as EquipmentKind })}>
               {EQUIPMENT_KINDS.map((kind) => (
                 <option key={kind} value={kind}>
-                  {KIND_LABELS[kind]}
+                  {tx(KIND_LABELS[kind])}
                 </option>
               ))}
             </SelectField>
-            <Field label="Výrobca" maxLength={80} value={item.manufacturer} onChange={(e) => setItem({ ...item, manufacturer: e.target.value })} />
-            <Field label="Model" maxLength={80} value={item.model} onChange={(e) => setItem({ ...item, model: e.target.value })} />
-            <Field label="Počet" type="number" min={1} value={item.quantity} onChange={(e) => setItem({ ...item, quantity: e.target.value })} />
-            <SelectField label="Do firmy" value={itemTarget} onChange={(e) => setItemTarget(e.target.value)}>
-              {memberships.length > 1 && <option value={ALL}>Všetky moje firmy</option>}
+            <Field label={tx('Výrobca')} maxLength={80} value={item.manufacturer} onChange={(e) => setItem({ ...item, manufacturer: e.target.value })} />
+            <Field label={tx('Model')} maxLength={80} value={item.model} onChange={(e) => setItem({ ...item, model: e.target.value })} />
+            <Field label={tx('Počet')} type="number" min={1} value={item.quantity} onChange={(e) => setItem({ ...item, quantity: e.target.value })} />
+            <SelectField label={tx('Do firmy')} value={itemTarget} onChange={(e) => setItemTarget(e.target.value)}>
+              {memberships.length > 1 && <option value={ALL}>{tx('Všetky moje firmy')}</option>}
               {companyOptions}
             </SelectField>
             <Button type="submit" className="sm:col-span-2 sm:justify-self-start" disabled={busy || !item.name.trim()}>
               <Plus className="size-4" aria-hidden />
-              {addItem.isPending ? 'Pridávam…' : 'Pridať techniku'}
+              {addItem.isPending ? tx('Pridávam…') : tx('Pridať techniku')}
             </Button>
           </form>
         )}
 
         {gear.isPending ? (
-          <p className="text-sm text-muted-foreground">Načítavam…</p>
+          <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
         ) : gear.isError ? (
-          <p className="text-sm text-muted-foreground">Technika sa nepodarila načítať.</p>
+          <p className="text-sm text-muted-foreground">{tx('Technika sa nepodarila načítať.')}</p>
         ) : gear.data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Zatiaľ nemáte žiadnu vlastnú techniku.</p>
+          <p className="text-sm text-muted-foreground">{tx('Zatiaľ nemáte žiadnu vlastnú techniku.')}</p>
         ) : (
           <ul className="divide-y rounded-lg border text-sm">
             {gear.data.map(({ original, copies }) => {
@@ -125,19 +122,15 @@ export function MyEquipmentEverywhere({ userId, memberships }: { userId: string;
                 <li key={original.id} className="flex flex-col gap-2 px-3 py-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium">
-                      {original.name} <span className="font-normal text-muted-foreground">· {original.quantity} ks</span>
+                      {original.name} <span className="font-normal text-muted-foreground">· {original.quantity}{' '}{tx('ks')}</span>
                     </span>
                     <span className="flex gap-1">
                       {copies.length > 0 && (
-                        <Button size="sm" variant="ghost" title="Kópie sa aktualizujú samy; toto ich dorovná hneď" disabled={busy} onClick={() => sync.mutate(original.id)}>
-                          <RefreshCw className="size-4" aria-hidden />
-                          Dorovnať kópie
-                        </Button>
+                        <Button size="sm" variant="ghost" title={tx('Kópie sa aktualizujú samy; toto ich dorovná hneď')} disabled={busy} onClick={() => sync.mutate(original.id)}>
+                          <RefreshCw className="size-4" aria-hidden />{tx('Dorovnať kópie')}</Button>
                       )}
                       <Button size="sm" variant="ghost" onClick={() => open(original.companyId, `/equipment/${original.id}`)}>
-                        <ExternalLink className="size-4" aria-hidden />
-                        Upraviť
-                      </Button>
+                        <ExternalLink className="size-4" aria-hidden />{tx('Upraviť')}</Button>
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -147,10 +140,10 @@ export function MyEquipmentEverywhere({ userId, memberships }: { userId: string;
                         {nameOf(copy.companyId)}
                         <button
                           type="button"
-                          aria-label={`Odobrať z firmy ${nameOf(copy.companyId)}`}
+                          aria-label={tf('Odobrať z firmy {0}', nameOf(copy.companyId))}
                           className="text-muted-foreground hover:text-foreground"
                           disabled={busy}
-                          onClick={() => window.confirm(`Odobrať „${original.name}“ z firmy ${nameOf(copy.companyId)}?`) && unshare.mutate(copy.id)}
+                          onClick={() => window.confirm(tf('Odobrať „{0}“ z firmy {1}?', original.name, nameOf(copy.companyId))) && unshare.mutate(copy.id)}
                         >
                           <X className="size-3.5" aria-hidden />
                         </button>
@@ -178,30 +171,28 @@ export function MyEquipmentEverywhere({ userId, memberships }: { userId: string;
 
       <section className="flex flex-col gap-3 rounded-xl border bg-surface p-4" aria-labelledby="my-cases-heading">
         <h2 id="my-cases-heading" className="flex items-center gap-2 font-medium">
-          <Box className="size-5 text-accent" aria-hidden />
-          Case / racky
-        </h2>
-        <p className="text-sm text-muted-foreground">Vaše case a racky. Techniku do nich vložíte vo firme.</p>
+          <Box className="size-5 text-accent" aria-hidden />{tx('Case / racky')}</h2>
+        <p className="text-sm text-muted-foreground">{tx('Vaše case a racky. Techniku do nich vložíte vo firme.')}</p>
         {memberships.length > 0 && (
           <form onSubmit={submitCase} className="grid gap-2 rounded-lg border border-dashed p-3">
-            <Field label="Názov *" maxLength={120} placeholder="napr. Rack 6U – mikrofóny" value={caseName} onChange={(e) => setCaseName(e.target.value)} />
+            <Field label={tx('Názov *')} maxLength={120} placeholder={tx('napr. Rack 6U – mikrofóny')} value={caseName} onChange={(e) => setCaseName(e.target.value)} />
             {memberships.length > 1 && (
-              <SelectField label="Do firmy" value={caseTarget} onChange={(e) => setCaseTarget(e.target.value)}>
+              <SelectField label={tx('Do firmy')} value={caseTarget} onChange={(e) => setCaseTarget(e.target.value)}>
                 {companyOptions}
               </SelectField>
             )}
             <Button type="submit" className="justify-self-start" disabled={busy || !caseName.trim()}>
               <Plus className="size-4" aria-hidden />
-              {addCase.isPending ? 'Pridávam…' : 'Pridať case / rack'}
+              {addCase.isPending ? tx('Pridávam…') : tx('Pridať case / rack')}
             </Button>
           </form>
         )}
         {cases.isPending ? (
-          <p className="text-sm text-muted-foreground">Načítavam…</p>
+          <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
         ) : cases.isError ? (
-          <p className="text-sm text-muted-foreground">Case sa nepodarilo načítať.</p>
+          <p className="text-sm text-muted-foreground">{tx('Case sa nepodarilo načítať.')}</p>
         ) : cases.data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Zatiaľ nemáte žiadny vlastný case ani rack.</p>
+          <p className="text-sm text-muted-foreground">{tx('Zatiaľ nemáte žiadny vlastný case ani rack.')}</p>
         ) : (
           <ul className="divide-y rounded-lg border text-sm">
             {cases.data.map((c) => (
@@ -210,7 +201,7 @@ export function MyEquipmentEverywhere({ userId, memberships }: { userId: string;
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium">{c.name}</span>
                     <span className="block text-xs text-muted-foreground">
-                      {nameOf(c.companyId)} · {c.items} {c.items === 1 ? 'vec' : c.items >= 2 && c.items <= 4 ? 'veci' : 'vecí'}
+                      {nameOf(c.companyId)} · {c.items} {c.items === 1 ? 'vec' : c.items >= 2 && c.items <= 4 ? 'veci' : tx('vecí')}
                     </span>
                   </span>
                   <ExternalLink className="size-4 text-muted-foreground" aria-hidden />
@@ -222,7 +213,7 @@ export function MyEquipmentEverywhere({ userId, memberships }: { userId: string;
       </section>
 
       {(share.isError || sync.isError || unshare.isError || addItem.isError || addCase.isError) && (
-        <p className="text-sm text-destructive lg:col-span-2">Zmena sa nepodarila. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
+        <p className="text-sm text-destructive lg:col-span-2">{tx('Zmena sa nepodarila. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
       )}
     </div>
   )

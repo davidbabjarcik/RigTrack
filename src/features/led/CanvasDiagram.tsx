@@ -1,4 +1,5 @@
 import type { Placement } from './processor'
+import { tx, tf } from '@/lib/i18n'
 
 const COLORS = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#eab308', '#ef4444']
 
@@ -28,14 +29,13 @@ export function CanvasDiagram({ placements, canvases, inputW, inputH, walls }: {
                       strokeWidth={2}
                     />
                     <text x={(tiled ? 0 : place.x * scale) + 6} y={(tiled ? 0 : place.y * scale) + 16} fill="#ffffff" fontSize={12} fontFamily="sans-serif">
-                      {place.wall} {tiled ? `(časť ${canvas - place.canvas + 1}/${place.tilesX * place.tilesY})` : `${place.w}×${place.h}`}
+                      {place.wall} {tiled ? tf('(časť {0}/{1})', canvas - place.canvas + 1, place.tilesX * place.tilesY) : `${place.w}×${place.h}`}
                     </text>
                   </g>
                 )
               })}
             </svg>
-            <figcaption className="text-xs text-muted-foreground">
-              Vstup {canvas + 1} ({inputW}×{inputH})
+            <figcaption className="text-xs text-muted-foreground">{tx('Vstup')}{' '}{canvas + 1} ({inputW}×{inputH})
             </figcaption>
           </figure>
         )

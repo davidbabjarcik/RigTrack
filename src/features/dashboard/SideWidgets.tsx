@@ -24,6 +24,7 @@ import { unpackedEquipment } from '@/features/equipment/model'
 import { isFillTask } from '@/features/tasks/board'
 import { caseTitle } from '@/features/cases/model'
 import { useEventReturns, lastReturns, returnedUnchecked, stillOut, useRecentPackMarks } from '@/features/pack/returns'
+import { tx, tf } from '@/lib/i18n'
 
 const WEEKDAYS = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']
 
@@ -105,7 +106,7 @@ function MiniCalendar({ company }: { company: Membership }) {
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-muted-foreground">Do konca mesiaca nič naplánované.</p>
+        <p className="mt-3 text-sm text-muted-foreground">{tx('Do konca mesiaca nič naplánované.')}</p>
       )}
     </section>
   )
@@ -126,19 +127,17 @@ function OutsideWidget({ company }: { company: Membership }) {
     <section className="mb-6 rounded-xl border bg-surface p-4">
       <h2 className="mb-2 flex items-center gap-2 font-medium">
         <Truck className="size-5 text-accent" aria-hidden />
-        <Link to="/checks" className="hover:underline">
-          Ešte vonku a vrátené
-        </Link>
+        <Link to="/checks" className="hover:underline">{tx('Ešte vonku a vrátené')}</Link>
       </h2>
       {outside.length === 0 && toCheck.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Všetko je doma a skontrolované.</p>
+        <p className="text-sm text-muted-foreground">{tx('Všetko je doma a skontrolované.')}</p>
       ) : (
         <ul className="flex flex-col gap-1 text-sm">
           {outside.map(({ event, items }) => (
             <li key={event.id}>
               <Link to={`/events/${event.id}#vratenie`} className="flex gap-2 rounded-md px-1 py-0.5 text-destructive hover:bg-muted">
                 <span className="min-w-0 flex-1 truncate">{event.name}</span>
-                <span className="shrink-0">{items.length} nevrátené</span>
+                <span className="shrink-0">{items.length}{' '}{tx('nevrátené')}</span>
               </Link>
             </li>
           ))}
@@ -146,14 +145,13 @@ function OutsideWidget({ company }: { company: Membership }) {
             <li key={item.id}>
               <Link to={`/cases/${item.id}`} className="flex gap-2 rounded-md px-1 py-0.5 hover:bg-muted">
                 <span className="min-w-0 flex-1 truncate">{caseTitle(item)}</span>
-                <span className="shrink-0 text-accent">spočítať obsah</span>
+                <span className="shrink-0 text-accent">{tx('spočítať obsah')}</span>
               </Link>
             </li>
           ))}
           {toCheck.length > 5 && (
             <li>
-              <Link to="/checks" className="px-1 text-muted-foreground hover:underline">
-                a ďalšie ({toCheck.length - 5})
+              <Link to="/checks" className="px-1 text-muted-foreground hover:underline">{tx('a ďalšie (')}{toCheck.length - 5})
               </Link>
             </li>
           )}
@@ -201,15 +199,13 @@ function QuickStats({ company, tileIds }: { company: Membership; tileIds: StatTi
     <section aria-labelledby="quick-stats-heading" className="mb-6 rounded-xl border bg-surface p-4">
       <h2 id="quick-stats-heading" className="mb-2 flex items-center gap-2 font-medium">
         <BarChart3 className="size-5 text-accent" aria-hidden />
-        <Link to="/stats" className="hover:underline">
-          Štatistiky
-        </Link>
+        <Link to="/stats" className="hover:underline">{tx('Štatistiky')}</Link>
       </h2>
       <div className="grid grid-cols-2 gap-2">
         {tiles.map((tile) => (
           <Link key={tile.label} to={tile.to} className="rounded-lg border p-2 hover:bg-muted">
             <span className="block text-xl font-semibold">{tile.value}</span>
-            <span className="block text-xs text-muted-foreground">{tile.label}</span>
+            <span className="block text-xs text-muted-foreground">{tx(tile.label)}</span>
           </Link>
         ))}
       </div>
@@ -253,7 +249,7 @@ export function SideWidgets({ company, layout = 'desktop' }: { company: Membersh
     <>
       {editing ? (
         <section className="mb-6 rounded-xl border border-accent/40 bg-surface p-4">
-          <h2 className="mb-2 font-medium">Čo chcem vidieť {layout === 'mobile' ? 'na mobile' : 'na PC'}</h2>
+          <h2 className="mb-2 font-medium">{tx('Čo chcem vidieť')}{' '}{layout === 'mobile' ? tx('na mobile') : tx('na PC')}</h2>
           <ul className="flex flex-col gap-1">
             {order.map((id) => {
               const on = shown.includes(id)
@@ -265,10 +261,10 @@ export function SideWidgets({ company, layout = 'desktop' }: { company: Membersh
                   </label>
                   {on && (
                     <>
-                      <button type="button" aria-label={`Vyššie: ${WIDGETS[id]}`} className="rounded p-1 hover:bg-muted" onClick={() => move(id, -1)}>
+                      <button type="button" aria-label={tf('Vyššie: {0}', WIDGETS[id])} className="rounded p-1 hover:bg-muted" onClick={() => move(id, -1)}>
                         <ArrowUp className="size-4" aria-hidden />
                       </button>
-                      <button type="button" aria-label={`Nižšie: ${WIDGETS[id]}`} className="rounded p-1 hover:bg-muted" onClick={() => move(id, 1)}>
+                      <button type="button" aria-label={tf('Nižšie: {0}', WIDGETS[id])} className="rounded p-1 hover:bg-muted" onClick={() => move(id, 1)}>
                         <ArrowDown className="size-4" aria-hidden />
                       </button>
                     </>
@@ -279,7 +275,7 @@ export function SideWidgets({ company, layout = 'desktop' }: { company: Membersh
           </ul>
           {shown.includes('stats') && (
             <fieldset className="mt-3 border-t pt-3">
-              <legend className="mb-1 text-sm font-medium">V bloku Štatistiky</legend>
+              <legend className="mb-1 text-sm font-medium">{tx('V bloku Štatistiky')}</legend>
               <div className="grid gap-1 sm:grid-cols-2">
                 {(Object.keys(STAT_TILES) as StatTileId[]).map((id) => (
                   <label key={id} className="flex items-center gap-2 text-sm">
@@ -291,17 +287,13 @@ export function SideWidgets({ company, layout = 'desktop' }: { company: Membersh
             </fieldset>
           )}
           <button type="button" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline" onClick={() => setEditing(false)}>
-            <Check className="size-4" aria-hidden />
-            Hotovo
-          </button>
+            <Check className="size-4" aria-hidden />{tx('Hotovo')}</button>
         </section>
       ) : null}
       {shown.filter((id): id is WidgetId => id in WIDGETS).map(render)}
       {!editing && (
         <button type="button" className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" onClick={() => setEditing(true)}>
-          <Settings2 className="size-4" aria-hidden />
-          Upraviť tento stĺpec
-        </button>
+          <Settings2 className="size-4" aria-hidden />{tx('Upraviť tento stĺpec')}</button>
       )}
     </>
   )

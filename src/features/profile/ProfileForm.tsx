@@ -9,6 +9,7 @@ import { SkillsField } from '@/features/staff/SkillsField'
 import { SOCIAL_NETWORKS } from '@/features/staff/socials'
 import { cn } from '@/lib/utils'
 import { profileComplete, profileKeys, savePersonalProfile, usePersonalProfile, type PersonalProfile } from './api'
+import { tx } from '@/lib/i18n'
 
 /** Môj profil pre všetky firmy: zadám raz, do kariet zamestnanca vo firmách sa prepíše sám. */
 export function ProfileForm({ userId, accountEmail }: { userId: string; accountEmail: string }) {
@@ -34,8 +35,8 @@ export function ProfileForm({ userId, accountEmail }: { userId: string; accountE
     },
   })
 
-  if (profile.isPending) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Načítavam profil…</p>
-  if (profile.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Osobný profil zatiaľ nie je dostupný. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
+  if (profile.isPending) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Načítavam profil…')}</p>
+  if (profile.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Osobný profil zatiaľ nie je dostupný. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -45,19 +46,17 @@ export function ProfileForm({ userId, accountEmail }: { userId: string; accountE
   return (
     <form onSubmit={submit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
       <p className="flex items-start gap-2 text-sm text-muted-foreground">
-        <UserRound className="mt-0.5 size-4 shrink-0" aria-hidden />
-        Zadáte raz a platí vo všetkých firmách – do vašej karty zamestnanca sa prepíše samo. Adresu domov vidíte len vy a kto spravuje tím.
-      </p>
+        <UserRound className="mt-0.5 size-4 shrink-0" aria-hidden />{tx('Zadáte raz a platí vo všetkých firmách – do vašej karty zamestnanca sa prepíše samo. Adresu domov vidíte len vy a kto spravuje tím.')}</p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Meno a priezvisko *" maxLength={120} autoComplete="name" value={values.fullName} onChange={(e) => set({ fullName: e.target.value })} />
-        <Field label="Telefón *" type="tel" maxLength={40} autoComplete="tel" value={values.phone} onChange={(e) => set({ phone: e.target.value })} />
-        <Field label="E-mail na kontakt" type="email" maxLength={120} placeholder={accountEmail} value={values.email} onChange={(e) => set({ email: e.target.value })} />
-        <Field label="Dátum narodenia" type="date" value={values.birthDate} onChange={(e) => set({ birthDate: e.target.value })} />
+        <Field label={tx('Meno a priezvisko *')} maxLength={120} autoComplete="name" value={values.fullName} onChange={(e) => set({ fullName: e.target.value })} />
+        <Field label={tx('Telefón *')} type="tel" maxLength={40} autoComplete="tel" value={values.phone} onChange={(e) => set({ phone: e.target.value })} />
+        <Field label={tx('E-mail na kontakt')} type="email" maxLength={120} placeholder={accountEmail} value={values.email} onChange={(e) => set({ email: e.target.value })} />
+        <Field label={tx('Dátum narodenia')} type="date" value={values.birthDate} onChange={(e) => set({ birthDate: e.target.value })} />
         <NameDayField value={values.nameDay} onChange={(nameDay) => set({ nameDay })} />
-        <Field label="Adresa domov (pre prácu doma)" maxLength={200} autoComplete="street-address" placeholder="ulica, mesto" value={values.homeAddress} onChange={(e) => set({ homeAddress: e.target.value })} />
+        <Field label={tx('Adresa domov (pre prácu doma)')} maxLength={200} autoComplete="street-address" placeholder={tx('ulica, mesto')} value={values.homeAddress} onChange={(e) => set({ homeAddress: e.target.value })} />
       </div>
       <fieldset>
-        <legend className="mb-1 text-sm font-medium">Vodičský preukaz</legend>
+        <legend className="mb-1 text-sm font-medium">{tx('Vodičský preukaz')}</legend>
         <div className="flex flex-wrap gap-1.5">
           {LICENCES.map((licence) => {
             const on = values.licences.includes(licence)
@@ -75,27 +74,27 @@ export function ProfileForm({ userId, accountEmail }: { userId: string; accountE
           })}
         </div>
       </fieldset>
-      <SkillsField label="Zručnosti – čo viem ovládať" value={values.skills} onChange={(skills) => set({ skills })} />
+      <SkillsField label={tx('Zručnosti – čo viem ovládať')} value={values.skills} onChange={(skills) => set({ skills })} />
       <fieldset>
-        <legend className="mb-1 text-sm font-medium">Sociálne siete</legend>
+        <legend className="mb-1 text-sm font-medium">{tx('Sociálne siete')}</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {SOCIAL_NETWORKS.map((network) => (
             <Field
               key={network.key}
-              label={network.label}
+              label={tx(network.label)}
               maxLength={200}
-              placeholder={network.key === 'web' ? 'www.mojweb.sk' : 'meno alebo odkaz'}
+              placeholder={network.key === 'web' ? 'www.mojweb.sk' : tx('meno alebo odkaz')}
               value={values.socials[network.key] ?? ''}
               onChange={(e) => set({ socials: { ...values.socials, [network.key]: e.target.value } })}
             />
           ))}
         </div>
       </fieldset>
-      {notFound && <p className="text-sm text-accent">Adresu domov sa nepodarilo nájsť na mape – napíšte ju presnejšie (ulica, číslo, mesto).</p>}
-      {save.isError && <p role="alert" className="text-sm text-destructive">Profil sa nepodarilo uložiť.</p>}
-      {saved && !save.isPending && <p role="status" className="text-sm text-muted-foreground">Uložené – karty zamestnanca vo firmách sú aktualizované.</p>}
+      {notFound && <p className="text-sm text-accent">{tx('Adresu domov sa nepodarilo nájsť na mape – napíšte ju presnejšie (ulica, číslo, mesto).')}</p>}
+      {save.isError && <p role="alert" className="text-sm text-destructive">{tx('Profil sa nepodarilo uložiť.')}</p>}
+      {saved && !save.isPending && <p role="status" className="text-sm text-muted-foreground">{tx('Uložené – karty zamestnanca vo firmách sú aktualizované.')}</p>}
       <Button type="submit" className="self-start" disabled={save.isPending || !profileComplete(values) || draft === null}>
-        {save.isPending ? 'Ukladám…' : 'Uložiť profil'}
+        {save.isPending ? tx('Ukladám…') : tx('Uložiť profil')}
       </Button>
     </form>
   )

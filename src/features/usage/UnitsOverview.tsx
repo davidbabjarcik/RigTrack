@@ -8,6 +8,7 @@ import { useServiceRecords } from '@/features/service/useServiceRecords'
 import { formatDate, todayIso } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { unitSummaries } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const STATE_STYLES = {
   free: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
@@ -36,7 +37,7 @@ export function UnitsOverview({ companyId, equipment, showInvoices = false, only
   const units = unitSummaries(equipment.id, only !== null ? [only] : unitIdsOf(equipment), loans.data ?? [], records.data ?? [], todayIso())
 
   return (
-    <CollapsibleSection id="equipment.units" title={<>Kusy ({units.length})</>} className="mt-6">
+    <CollapsibleSection id="equipment.units" title={<>{tx('Kusy (')}{units.length})</>} className="mt-6">
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
         {units.map((unit) => (
           <li key={unit.unit} className="flex items-center gap-3 px-4 py-2.5">
@@ -45,38 +46,36 @@ export function UnitsOverview({ companyId, equipment, showInvoices = false, only
               {(() => {
                 const info = equipment.unitInfo?.[String(unit.unit)]
                 const bought = equipment.unitPurchases?.[String(unit.unit)]
-                const ids = [info?.inv && `inv. ${info.inv}`, info?.serial && `SN ${info.serial}`, bought && `kúpené ${formatDate(bought)}`, describeUnitDmx(info)].filter(Boolean)
+                const ids = [info?.inv && `inv. ${info.inv}`, info?.serial && `SN ${info.serial}`, bought && tf('kúpené {0}', formatDate(bought)), describeUnitDmx(info)].filter(Boolean)
                 return ids.length > 0 ? <span className="block truncate font-medium text-foreground">{ids.join(' · ')}</span> : null
               })()}
-              <span className="block truncate">
-                servis {unit.serviceCount}× · výpožičky {unit.loanCount}×
+              <span className="block truncate">{tx('servis')}{' '}{unit.serviceCount}{tx('× · výpožičky')}{' '}{unit.loanCount}×
                 {byUnit.length > 0 &&
                   (() => {
                     const purchase = invoiceOf(unit.unit)
                     return purchase ? (
                       <span className={purchase.hasInvoice ? 'text-emerald-700 dark:text-emerald-400' : 'text-accent'}>
                         {' · '}
-                        {purchase.hasInvoice ? 'faktúra' : 'nákup bez faktúry'} {purchase.supplier} {formatDate(purchase.orderedAt)}
+                        {purchase.hasInvoice ? tx('faktúra') : tx('nákup bez faktúry')} {purchase.supplier} {formatDate(purchase.orderedAt)}
                       </span>
                     ) : (
-                      <span className="text-accent"> · bez faktúry</span>
+                      <span className="text-accent">{' '}{tx('· bez faktúry')}</span>
                     )
                   })()}
               </span>
               {unit.current ? (
                 <Link to={unit.current.to} className="block truncate text-accent hover:underline">
-                  {unit.current.label}
+                  {tx(unit.current.label)}
                 </Link>
               ) : (
                 unit.lastLoan && (
-                  <Link to={`/loans/${unit.lastLoan.id}`} className="block truncate hover:underline">
-                    naposledy {unit.lastLoan.borrower}, {formatDate(unit.lastLoan.startsOn)}
+                  <Link to={`/loans/${unit.lastLoan.id}`} className="block truncate hover:underline">{tx('naposledy')}{' '}{unit.lastLoan.borrower}, {formatDate(unit.lastLoan.startsOn)}
                   </Link>
                 )
               )}
             </span>
             <span className={cn('inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium', STATE_STYLES[unit.state])}>
-              {STATE_LABELS[unit.state]}
+              {tx(STATE_LABELS[unit.state])}
             </span>
           </li>
         ))}

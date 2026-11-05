@@ -26,6 +26,7 @@ import {
   type EquipmentReport,
   type Match,
 } from './equipmentReport'
+import { tx } from '@/lib/i18n'
 
 /** Rozhodnutie pri riadku: technika (id), nová technika, nepridávať, alebo ešte nerozhodnuté. */
 const NEW = 'new'
@@ -92,22 +93,18 @@ function Review({ companyId, event, report, equipment, aliases }: { companyId: s
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-xl border bg-surface p-4 text-sm">
-        <p className="font-medium">{report.title || 'Equipment Report'}</p>
+        <p className="font-medium">{report.title || tx('Equipment Report')}</p>
         {report.subtitle && <p className="text-muted-foreground">{report.subtitle}</p>}
         <p className="mt-2">
-          {rows.length} položiek: <span className="text-emerald-700 dark:text-emerald-400">{count('known')} poznám</span>,{' '}
-          <span className="text-amber-700 dark:text-amber-300">{count('suggested')} návrh</span>,{' '}
-          <span className="text-destructive">{count('unknown')} nepoznám</span>. Skontrolujte priradenie a počty, až potom zapíšte.
-        </p>
+          {rows.length}{' '}{tx('položiek:')}{' '}<span className="text-emerald-700 dark:text-emerald-400">{count('known')}{' '}{tx('poznám')}</span>,{' '}
+          <span className="text-amber-700 dark:text-amber-300">{count('suggested')}{' '}{tx('návrh')}</span>,{' '}
+          <span className="text-destructive">{count('unknown')}{' '}{tx('nepoznám')}</span>{tx('. Skontrolujte priradenie a počty, až potom zapíšte.')}</p>
       </div>
 
       {undecided.length > 0 && (
         <div role="alert" className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
           <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
-          <span>
-            Tieto predmety nepoznám: <strong>{undecided.map((row) => row.name).join(', ')}</strong>. Priraďte ich k našej technike,
-            {canCreate ? ' pridajte ako novú techniku' : ''} alebo zvoľte „Nepridávať“.
-          </span>
+          <span>{tx('Tieto predmety nepoznám:')}{' '}<strong>{undecided.map((row) => row.name).join(', ')}</strong>{tx('. Priraďte ich k našej technike,')}{canCreate ? tx(' pridajte ako novú techniku') : ''}{' '}{tx('alebo zvoľte „Nepridávať“.')}</span>
         </div>
       )}
 
@@ -126,7 +123,7 @@ function Review({ companyId, event, report, equipment, aliases }: { companyId: s
           return (
             <li key={row.key} className={cn('flex flex-wrap items-end gap-3 border-l-4 px-4 py-3', tone)}>
               <Field
-                label="Počet"
+                label={tx('Počet')}
                 type="number"
                 min={0}
                 className="w-20"
@@ -137,20 +134,18 @@ function Review({ companyId, event, report, equipment, aliases }: { companyId: s
                 <p className="text-xs text-muted-foreground">{row.section}</p>
                 <p className="font-medium break-words">{row.name}</p>
                 {row.match.status === 'suggested' && row.decision === row.match.equipmentId && (
-                  <p className="text-xs text-amber-700 dark:text-amber-300">Návrh podľa podobného názvu – skontrolujte.</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">{tx('Návrh podľa podobného názvu – skontrolujte.')}</p>
                 )}
-                {row.decision === '' && <p className="text-xs text-destructive">Predmet nepoznám.</p>}
+                {row.decision === '' && <p className="text-xs text-destructive">{tx('Predmet nepoznám.')}</p>}
               </div>
-              <label className="flex min-w-56 flex-1 flex-col gap-1.5 text-sm font-medium">
-                Naša technika
-                <select
+              <label className="flex min-w-56 flex-1 flex-col gap-1.5 text-sm font-medium">{tx('Naša technika')}<select
                   className="h-11 w-full rounded-lg border bg-surface px-3 text-base"
                   value={row.decision}
                   onChange={(event) => update(row.key, { decision: event.target.value })}
                 >
-                  <option value="">— vyberte —</option>
-                  <option value={SKIP}>Nepridávať</option>
-                  {canCreate && <option value={NEW}>＋ Pridať ako novú techniku</option>}
+                  <option value="">{tx('— vyberte —')}</option>
+                  <option value={SKIP}>{tx('Nepridávať')}</option>
+                  {canCreate && <option value={NEW}>{tx('＋ Pridať ako novú techniku')}</option>}
                   {options.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name}
@@ -159,8 +154,7 @@ function Review({ companyId, event, report, equipment, aliases }: { companyId: s
                   ))}
                 </select>
                 {owned !== null && (
-                  <span className={cn('text-xs font-normal', owned < row.quantity ? 'text-destructive' : 'text-muted-foreground')}>
-                    máme {owned} ks{owned < row.quantity ? ' – málo' : ''}
+                  <span className={cn('text-xs font-normal', owned < row.quantity ? 'text-destructive' : 'text-muted-foreground')}>{tx('máme')}{' '}{owned}{' '}{tx('ks')}{owned < row.quantity ? tx(' – málo') : ''}
                   </span>
                 )}
               </label>
@@ -170,22 +164,16 @@ function Review({ companyId, event, report, equipment, aliases }: { companyId: s
       </ul>
 
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" className="size-4" checked={remember} onChange={(event) => setRemember(event.target.checked)} />
-        Zapamätať priradenia pre ďalší import
-      </label>
+        <input type="checkbox" className="size-4" checked={remember} onChange={(event) => setRemember(event.target.checked)} />{tx('Zapamätať priradenia pre ďalší import')}</label>
 
       {save.isError && (
-        <p role="alert" className="text-sm text-destructive">
-          Zápis sa nepodaril. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Zápis sa nepodaril. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
       )}
       <div className="flex flex-wrap gap-3">
         <Button disabled={undecided.length > 0 || save.isPending} onClick={() => save.mutate()}>
-          {save.isPending ? 'Zapisujem…' : 'Skontrolované – zapísať na event'}
+          {save.isPending ? 'Zapisujem…' : tx('Skontrolované – zapísať na event')}
         </Button>
-        <Link to={`/events/${event.id}`} className="inline-flex h-10 items-center px-3 text-sm text-muted-foreground hover:text-foreground">
-          Zrušiť
-        </Link>
+        <Link to={`/events/${event.id}`} className="inline-flex h-10 items-center px-3 text-sm text-muted-foreground hover:text-foreground">{tx('Zrušiť')}</Link>
       </div>
     </div>
   )
@@ -210,19 +198,17 @@ export function EventImportPage() {
   const event = events.data?.find((candidate) => candidate.id === id)
   const back = (
     <Link to={`/events/${id}`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="size-4" aria-hidden />
-      Event
-    </Link>
+      <ArrowLeft className="size-4" aria-hidden />{tx('Event')}</Link>
   )
 
-  if (!can(company, 'events.edit')) return <ErrorBlock message="Na úpravu eventov nemáte oprávnenie." />
+  if (!can(company, 'events.edit')) return <ErrorBlock message={tx('Na úpravu eventov nemáte oprávnenie.')} />
   if (events.isPending || equipment.isPending || aliases.isPending) return <LoadingBlock />
-  if (aliases.isError) return <ErrorBlock message="Import sa nepodarilo pripraviť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie." />
+  if (aliases.isError) return <ErrorBlock message={tx('Import sa nepodarilo pripraviť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')} />
   if (!event || !equipment.data) {
     return (
       <>
         {back}
-        <ErrorBlock message="Tento event neexistuje alebo k nemu nemáte prístup." />
+        <ErrorBlock message={tx('Tento event neexistuje alebo k nemu nemáte prístup.')} />
       </>
     )
   }
@@ -234,7 +220,7 @@ export function EventImportPage() {
   return (
     <>
       {back}
-      <PageHeader title="Import techniky" description={`${event.name} · ${formatDate(event.startsOn)}`} />
+      <PageHeader title={tx('Import techniky')} description={`${event.name} · ${formatDate(event.startsOn)}`} />
       {!report ? (
         <div
           onDragOver={(dragEvent: DragEvent) => {
@@ -262,15 +248,13 @@ export function EventImportPage() {
             }}
           />
           <FileUp className="mx-auto size-7 text-muted-foreground" aria-hidden />
-          <p className="mt-2 font-medium">Pretiahnite sem Equipment Report z Capture (HTML alebo PDF)</p>
-          <p className="mt-1 text-sm text-muted-foreground">Nič sa nezapíše, kým zoznam neskontrolujete. Súbor sa číta vo vašom prehliadači.</p>
+          <p className="mt-2 font-medium">{tx('Pretiahnite sem Equipment Report z Capture (HTML alebo PDF)')}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{tx('Nič sa nezapíše, kým zoznam neskontrolujete. Súbor sa číta vo vašom prehliadači.')}</p>
           <Button variant="outline" size="sm" className="mt-3" disabled={read.isPending} onClick={() => fileInput.current?.click()}>
-            {read.isPending ? 'Čítam…' : 'alebo vybrať súbor'}
+            {read.isPending ? tx('Čítam…') : tx('alebo vybrať súbor')}
           </Button>
           {(read.isError || (read.isSuccess && !report)) && (
-            <p role="alert" className="mt-3 text-sm text-destructive">
-              V súbore som nenašiel žiadnu techniku. Je to Equipment Report z Capture?
-            </p>
+            <p role="alert" className="mt-3 text-sm text-destructive">{tx('V súbore som nenašiel žiadnu techniku. Je to Equipment Report z Capture?')}</p>
           )}
         </div>
       ) : (

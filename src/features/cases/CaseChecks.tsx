@@ -7,6 +7,7 @@ import { useEvents } from '@/features/events/useEvents'
 import { lastReturns, returnedUnchecked, returnKeys, useRecentPackMarks } from '@/features/pack/returns'
 import { formatDateTime } from '@/lib/format'
 import { addCaseCheck, caseKeys, fetchCaseChecks } from './api'
+import { tx } from '@/lib/i18n'
 
 type Props = { companyId: string; caseId: string; canCheck: boolean }
 
@@ -48,75 +49,63 @@ export function CaseChecks({ companyId, caseId, canCheck }: Props) {
       {mustCheck && returned && (
         <p role="status" className="mb-3 flex items-start gap-2 rounded-lg bg-accent/10 p-3 text-sm">
           <PackageCheck className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
-          <span>
-            Vrátený z eventu{fromEvent ? ` ${fromEvent}` : ''} {formatDateTime(returned.checkedAt)}
-            {returned.checkedByName && ` (${returned.checkedByName})`} – <strong>spočítajte a skontrolujte obsah</strong>, potom kliknite na Skontrolované.
-          </span>
+          <span>{tx('Vrátený z eventu')}{fromEvent ? ` ${fromEvent}` : ''} {formatDateTime(returned.checkedAt)}
+            {returned.checkedByName && ` (${returned.checkedByName})`} – <strong>{tx('spočítajte a skontrolujte obsah')}</strong>{tx(', potom kliknite na Skontrolované.')}</span>
         </p>
       )}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 id="checks-heading" className="text-sm font-medium text-muted-foreground">
-            Posledná kontrola
-          </h2>
+          <h2 id="checks-heading" className="text-sm font-medium text-muted-foreground">{tx('Posledná kontrola')}</h2>
           {checks.isPending ? (
-            <p className="mt-1 text-sm text-muted-foreground">Načítavam…</p>
+            <p className="mt-1 text-sm text-muted-foreground">{tx('Načítavam…')}</p>
           ) : checks.isError ? (
-            <p role="alert" className="mt-1 text-sm text-destructive">
-              Kontroly sa nepodarilo načítať.
-            </p>
+            <p role="alert" className="mt-1 text-sm text-destructive">{tx('Kontroly sa nepodarilo načítať.')}</p>
           ) : last ? (
             <>
               <p className="mt-1 font-medium">
-                {formatDateTime(last.checkedAt)} · {last.checkedByName || 'neznámy'}
+                {formatDateTime(last.checkedAt)} · {last.checkedByName || tx('neznámy')}
               </p>
               {last.note && <p className="mt-1 text-sm whitespace-pre-wrap">{last.note}</p>}
             </>
           ) : (
-            <p className="mt-1 font-medium">Zatiaľ nekontrolované</p>
+            <p className="mt-1 font-medium">{tx('Zatiaľ nekontrolované')}</p>
           )}
         </div>
         {canCheck && !open && (
           <Button size="sm" onClick={() => setOpen(true)}>
-            <ClipboardCheck className="size-4" aria-hidden />
-            Skontrolované
-          </Button>
+            <ClipboardCheck className="size-4" aria-hidden />{tx('Skontrolované')}</Button>
         )}
       </div>
 
       {open && (
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 border-t pt-4">
           <Field
-            label="Poznámka ku kontrole (nepovinné)"
-            placeholder="napr. všetko je, alebo čo chýba"
+            label={tx('Poznámka ku kontrole (nepovinné)')}
+            placeholder={tx('napr. všetko je, alebo čo chýba')}
             maxLength={500}
             autoFocus
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
           {add.isError && (
-            <p role="alert" className="text-sm text-destructive">
-              Kontrolu sa nepodarilo zapísať.
-            </p>
+            <p role="alert" className="text-sm text-destructive">{tx('Kontrolu sa nepodarilo zapísať.')}</p>
           )}
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={add.isPending}>
-              {add.isPending ? 'Zapisujem…' : 'Potvrdiť kontrolu'}
+              {add.isPending ? 'Zapisujem…' : tx('Potvrdiť kontrolu')}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-              Zrušiť
-            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>{tx('Zrušiť')}</Button>
           </div>
         </form>
       )}
 
       {older.length > 0 && (
         <details className="mt-4 border-t pt-3 text-sm">
-          <summary className="cursor-pointer text-muted-foreground">Staršie kontroly ({older.length})</summary>
+          <summary className="cursor-pointer text-muted-foreground">{tx('Staršie kontroly (')}{older.length})</summary>
           <ul className="mt-2 flex flex-col gap-2">
             {older.map((check) => (
               <li key={check.checkedAt}>
-                <span className="font-medium">{formatDateTime(check.checkedAt)}</span> · {check.checkedByName || 'neznámy'}
+                <span className="font-medium">{formatDateTime(check.checkedAt)}</span> · {check.checkedByName || tx('neznámy')}
                 {check.note && <span className="block text-muted-foreground">{check.note}</span>}
               </li>
             ))}

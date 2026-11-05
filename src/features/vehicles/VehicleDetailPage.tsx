@@ -35,6 +35,7 @@ import {
 } from './model'
 import { useVehicles } from './useVehicles'
 import { VehiclePhoto } from './VehiclePhoto'
+import { tx, tf } from '@/lib/i18n'
 
 function RecordForm({ companyId, vehicleId, defaultTechnicianId, onDone }: { companyId: string; vehicleId: string; defaultTechnicianId: string; onDone: () => void }) {
   const queryClient = useQueryClient()
@@ -65,16 +66,16 @@ function RecordForm({ companyId, vehicleId, defaultTechnicianId, onDone }: { com
       className="mb-4 flex flex-col gap-3 rounded-xl border bg-surface p-4"
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <SelectField label="Druh záznamu" error={errors.kind?.message} {...register('kind')}>
+        <SelectField label={tx('Druh záznamu')} error={errors.kind?.message} {...register('kind')}>
           {RECORD_KINDS.map((value) => (
             <option key={value} value={value}>
-              {RECORD_KIND_LABELS[value]}
+              {tx(RECORD_KIND_LABELS[value])}
             </option>
           ))}
         </SelectField>
-        <Field label="Dátum" type="date" error={errors.happenedOn?.message} {...register('happenedOn')} />
+        <Field label={tx('Dátum')} type="date" error={errors.happenedOn?.message} {...register('happenedOn')} />
         <Field
-          label="Stav tachometra (km)"
+          label={tx('Stav tachometra (km)')}
           type="number"
           inputMode="numeric"
           min={0}
@@ -83,7 +84,7 @@ function RecordForm({ companyId, vehicleId, defaultTechnicianId, onDone }: { com
           {...register('odometerKm', asOptionalNumber)}
         />
         <Field
-          label="Cena (€)"
+          label={tx('Cena (€)')}
           type="number"
           inputMode="decimal"
           min={0}
@@ -93,7 +94,7 @@ function RecordForm({ companyId, vehicleId, defaultTechnicianId, onDone }: { com
         />
         {kind === 'fuel' && (
           <Field
-            label="Natankované (l)"
+            label={tx('Natankované (l)')}
             type="number"
             inputMode="decimal"
             min={0}
@@ -103,20 +104,16 @@ function RecordForm({ companyId, vehicleId, defaultTechnicianId, onDone }: { com
           />
         )}
       </div>
-      <Field label="Popis" placeholder="napr. čo sa robilo, kde" error={errors.description?.message} {...register('description')} />
-      {kind !== 'fuel' && <TechnicianSelect companyId={companyId} kind="vehicles" label="Kto robil (servis)" {...register('technicianId')} />}
+      <Field label={tx('Popis')} placeholder={tx('napr. čo sa robilo, kde')} error={errors.description?.message} {...register('description')} />
+      {kind !== 'fuel' && <TechnicianSelect companyId={companyId} kind="vehicles" label={tx('Kto robil (servis)')} {...register('technicianId')} />}
       {add.isError && (
-        <p role="alert" className="text-sm text-destructive">
-          Záznam sa nepodarilo uložiť.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Záznam sa nepodarilo uložiť.')}</p>
       )}
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={add.isPending}>
-          {add.isPending ? 'Ukladám…' : 'Uložiť záznam'}
+          {add.isPending ? tx('Ukladám…') : tx('Uložiť záznam')}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onDone}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" size="sm" onClick={onDone}>{tx('Zrušiť')}</Button>
       </div>
     </form>
   )
@@ -155,19 +152,17 @@ export function VehicleDetailPage() {
 
   const back = (
     <Link to="/vehicles" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="size-4" aria-hidden />
-      Vozidlá
-    </Link>
+      <ArrowLeft className="size-4" aria-hidden />{tx('Vozidlá')}</Link>
   )
 
   if (vehicles.isPending) return <LoadingBlock />
-  if (vehicles.isError) return <ErrorBlock message="Vozidlo sa nepodarilo načítať." onRetry={() => void vehicles.refetch()} />
+  if (vehicles.isError) return <ErrorBlock message={tx('Vozidlo sa nepodarilo načítať.')} onRetry={() => void vehicles.refetch()} />
   const vehicle = vehicles.data.find((candidate) => candidate.id === id)
   if (!vehicle) {
     return (
       <>
         {back}
-        <ErrorBlock message="Toto vozidlo neexistuje alebo k nemu nemáte prístup." />
+        <ErrorBlock message={tx('Toto vozidlo neexistuje alebo k nemu nemáte prístup.')} />
       </>
     )
   }
@@ -177,10 +172,10 @@ export function VehicleDetailPage() {
   const facts: [string, string][] = [
     ['Stav', VEHICLE_STATUS_LABELS[vehicle.status]],
     ['VIN', vehicle.vin],
-    ['Vodič', vehicle.driver],
+    [tx('Vodič'), vehicle.driver],
     ['Tachometer', vehicle.odometerKm !== null ? `${vehicle.odometerKm.toLocaleString('sk-SK')} km` : ''],
-    ['Priemerná spotreba', consumption !== null ? `${formatNumber(consumption)} l/100 km` : ''],
-    ['Náklady spolu', records.data && records.data.length > 0 ? formatMoney(totalCost(records.data), 'EUR') : ''],
+    [tx('Priemerná spotreba'), consumption !== null ? `${formatNumber(consumption)} l/100 km` : ''],
+    [tx('Náklady spolu'), records.data && records.data.length > 0 ? formatMoney(totalCost(records.data), 'EUR') : ''],
   ]
 
   const space = cargoSpaceOf(vehicle)
@@ -197,14 +192,10 @@ export function VehicleDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <LinkButton to={`/service/requests/new?vehicle=${id}`} variant="outline" size="sm">
-            <Wrench className="size-4" aria-hidden />
-            Nahlásiť poruchu
-          </LinkButton>
+            <Wrench className="size-4" aria-hidden />{tx('Nahlásiť poruchu')}</LinkButton>
           {can(company, 'vehicles.edit') && (
             <LinkButton to={`/vehicles/${id}/edit`} variant="outline" size="sm">
-              <Pencil className="size-4" aria-hidden />
-              Upraviť
-            </LinkButton>
+              <Pencil className="size-4" aria-hidden />{tx('Upraviť')}</LinkButton>
           )}
           {can(company, 'vehicles.delete') && (
             <Button
@@ -212,12 +203,10 @@ export function VehicleDetailPage() {
               size="sm"
               disabled={remove.isPending}
               onClick={() => {
-                if (window.confirm(`Naozaj odstrániť vozidlo ${vehicle.plate} aj so všetkými záznamami?`)) remove.mutate()
+                if (window.confirm(tf('Naozaj odstrániť vozidlo {0} aj so všetkými záznamami?', vehicle.plate))) remove.mutate()
               }}
             >
-              <Trash2 className="size-4" aria-hidden />
-              Odstrániť
-            </Button>
+              <Trash2 className="size-4" aria-hidden />{tx('Odstrániť')}</Button>
           )}
         </div>
       </header>
@@ -231,35 +220,30 @@ export function VehicleDetailPage() {
       />
 
       {space && (
-        <CollapsibleSection id="vehicle.cargo" title="Nákladný priestor">
+        <CollapsibleSection id="vehicle.cargo" title={tx('Nákladný priestor')}>
           <div className="rounded-xl border bg-surface p-4">
             <p className="mb-3 font-medium">
-              {space.length} × {space.width} × {space.height} cm
-              {vehicle.payloadKg !== null && ` · nosnosť ${vehicle.payloadKg} kg`}
-              {space.obstacles.length > 0 && ` · prekážok: ${space.obstacles.length}`}
+              {space.length} × {space.width} × {space.height}{' '}{tx('cm')}{vehicle.payloadKg !== null && tf(' · nosnosť {0} kg', vehicle.payloadKg)}
+              {space.obstacles.length > 0 && tf(' · prekážok: {0}', space.obstacles.length)}
             </p>
             <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-              <span>← dvere</span>
-              <span>kabína →</span>
+              <span>{tx('← dvere')}</span>
+              <span>{tx('kabína →')}</span>
             </div>
             <LoadDiagram space={space} />
             <ObstacleLegend obstacles={space.obstacles} />
-            <p className="mt-2 text-sm text-muted-foreground">Pohľad zhora, ľavá stena je hore; farebné šrafované plochy sú miesta, kam sa nakladať nedá.</p>
+            <p className="mt-2 text-sm text-muted-foreground">{tx('Pohľad zhora, ľavá stena je hore; farebné šrafované plochy sú miesta, kam sa nakladať nedá.')}</p>
           </div>
         </CollapsibleSection>
       )}
 
       {(remove.isError || removeRecord.isError) && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
-          Zmena sa nepodarila.
-        </p>
+        <p role="alert" className="mb-4 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>
       )}
 
-      <CollapsibleSection id="vehicle.deadlines" title="Termíny">
+      <CollapsibleSection id="vehicle.deadlines" title={tx('Termíny')}>
         {deadlines.length === 0 ? (
-          <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
-            Žiadne termíny nie sú zadané. Doplníte ich v úprave vozidla.
-          </p>
+          <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Žiadne termíny nie sú zadané. Doplníte ich v úprave vozidla.')}</p>
         ) : (
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {deadlines.map((deadline) => (
@@ -285,7 +269,7 @@ export function VehicleDetailPage() {
       {vehicle.note && <p className="mb-6 rounded-xl border bg-surface p-4 whitespace-pre-wrap">{vehicle.note}</p>}
 
       {garage && (
-        <CollapsibleSection id="vehicle.garage" title="Stály servis">
+        <CollapsibleSection id="vehicle.garage" title={tx('Stály servis')}>
           <TechnicianCard technician={garage} />
         </CollapsibleSection>
       )}
@@ -295,17 +279,15 @@ export function VehicleDetailPage() {
         entity="vehicle"
         entityId={id}
         canEdit={can(company, 'vehicles.edit')}
-        title="Dokumenty"
-        empty="Žiadne dokumenty. Sem patrí technický preukaz, poistné zmluvy a faktúry."
+        title={tx('Dokumenty')}
+        empty={tx('Žiadne dokumenty. Sem patrí technický preukaz, poistné zmluvy a faktúry.')}
       />
 
-      <CollapsibleSection id="vehicle.records" title="Záznamy o prevádzke" actions={
+      <CollapsibleSection id="vehicle.records" title={tx('Záznamy o prevádzke')} actions={
           <>
           {can(company, 'vehicles.log') && !adding && (
             <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
-              <Plus className="size-4" aria-hidden />
-              Pridať záznam
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Pridať záznam')}</Button>
           )}
           </>
         }>
@@ -315,11 +297,9 @@ export function VehicleDetailPage() {
         {records.isPending ? (
           <LoadingBlock />
         ) : records.isError ? (
-          <ErrorBlock message="Záznamy sa nepodarilo načítať." onRetry={() => void records.refetch()} />
+          <ErrorBlock message={tx('Záznamy sa nepodarilo načítať.')} onRetry={() => void records.refetch()} />
         ) : records.data.length === 0 ? (
-          <p className="rounded-xl border border-dashed bg-surface px-6 py-10 text-center text-sm text-muted-foreground">
-            Zatiaľ žiadne záznamy. Pridajte tankovanie, servis alebo opravu.
-          </p>
+          <p className="rounded-xl border border-dashed bg-surface px-6 py-10 text-center text-sm text-muted-foreground">{tx('Zatiaľ žiadne záznamy. Pridajte tankovanie, servis alebo opravu.')}</p>
         ) : (
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {records.data.map((record) => {
@@ -331,11 +311,11 @@ export function VehicleDetailPage() {
               return (
                 <li key={record.id} className="flex items-start gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium">{RECORD_KIND_LABELS[record.kind]}</p>
+                    <p className="font-medium">{tx(RECORD_KIND_LABELS[record.kind])}</p>
                     <p className="text-sm text-muted-foreground">{details.join(' · ')}</p>
-                    {record.description && <p className="mt-1 text-sm whitespace-pre-wrap">{record.description}</p>}
+                    {record.description && <p className="mt-1 text-sm whitespace-pre-wrap">{tx(record.description)}</p>}
                     {record.technicianId && technicianById.get(record.technicianId) && (
-                      <p className="mt-1 text-sm text-muted-foreground">Robil: {technicianLabel(technicianById.get(record.technicianId)!)}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{tx('Robil:')}{' '}{technicianLabel(technicianById.get(record.technicianId)!)}</p>
                     )}
                   </div>
                   {record.cost !== null && <p className="shrink-0 font-medium">{formatMoney(record.cost, 'EUR')}</p>}
@@ -343,10 +323,10 @@ export function VehicleDetailPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      aria-label={`Odstrániť záznam: ${RECORD_KIND_LABELS[record.kind]} ${formatDate(record.happenedOn)}`}
+                      aria-label={tf('Odstrániť záznam: {0} {1}', RECORD_KIND_LABELS[record.kind], formatDate(record.happenedOn))}
                       disabled={removeRecord.isPending}
                       onClick={() => {
-                        if (window.confirm('Odstrániť tento záznam?')) removeRecord.mutate(record.id)
+                        if (window.confirm(tx('Odstrániť tento záznam?'))) removeRecord.mutate(record.id)
                       }}
                     >
                       <Trash2 className="size-4" aria-hidden />

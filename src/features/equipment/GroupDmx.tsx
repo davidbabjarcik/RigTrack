@@ -6,6 +6,7 @@ import { Field } from '@/components/ui/field'
 import { saveUnitInfo } from './api'
 import { unitIdsOf, type Equipment, type UnitInfo } from './model'
 import { dipOn } from '@/features/labels/tape'
+import { tx, tf } from '@/lib/i18n'
 
 type Row = { unit: number; part: Equipment }
 type Values = { line: string; address: string; mode: string }
@@ -81,38 +82,29 @@ export function GroupDmx({ companyId, parts, caseName, open, onOpen, onClose }: 
   if (!open) {
     return (
       <Button variant="outline" size="sm" onClick={onOpen}>
-        <SlidersHorizontal className="size-4" aria-hidden />
-        DMX všetkým
-      </Button>
+        <SlidersHorizontal className="size-4" aria-hidden />{tx('DMX všetkým')}</Button>
     )
   }
   const overflow = rows.some(({ unit }) => Number(values[unit].address) + (channelsOf(values[unit].mode) || 1) - 1 > 512)
 
   return (
     <section aria-labelledby="group-dmx-heading" className="mb-6 w-full rounded-xl border border-accent/40 bg-surface p-4">
-      <h2 id="group-dmx-heading" className="mb-3 font-medium">
-        DMX všetkým kusom
-      </h2>
+      <h2 id="group-dmx-heading" className="mb-3 font-medium">{tx('DMX všetkým kusom')}</h2>
       <div className="mb-3 flex flex-wrap items-end gap-2 rounded-lg bg-muted/50 p-3">
-        <Field label="Linka všetkým" className="w-32" placeholder="napr. 1, A" onChange={(event) => setAll({ line: event.target.value })} />
+        <Field label={tx('Linka všetkým')} className="w-32" placeholder={tx('napr. 1, A')} onChange={(event) => setAll({ line: event.target.value })} />
         {modes.length > 0 && (
-          <label className="flex flex-col gap-1 text-sm font-medium">
-            Mód všetkým
-            <select className="h-10 rounded-lg border bg-background px-2 font-normal" defaultValue="" onChange={(event) => setAll({ mode: event.target.value })}>
+          <label className="flex flex-col gap-1 text-sm font-medium">{tx('Mód všetkým')}<select className="h-10 rounded-lg border bg-background px-2 font-normal" defaultValue="" onChange={(event) => setAll({ mode: event.target.value })}>
               <option value="">—</option>
               {modes.map((mode) => (
                 <option key={mode.name + mode.channels} value={mode.name || `${mode.channels} ch`}>
-                  {mode.name || `${mode.channels} ch`} ({mode.channels} ch)
-                </option>
+                  {mode.name || `${mode.channels} ch`} ({mode.channels}{' '}{tx('ch)')}</option>
               ))}
             </select>
           </label>
         )}
-        <Field label="Od adresy" type="number" inputMode="numeric" min={1} max={512} className="w-28" value={start} onChange={(event) => setStart(event.target.value)} />
+        <Field label={tx('Od adresy')} type="number" inputMode="numeric" min={1} max={512} className="w-28" value={start} onChange={(event) => setStart(event.target.value)} />
         <Button variant="outline" onClick={spread}>
-          <Wand2 className="size-4" aria-hidden />
-          Rozpočítať adresy
-        </Button>
+          <Wand2 className="size-4" aria-hidden />{tx('Rozpočítať adresy')}</Button>
       </div>
       <ul className="grid gap-2 lg:grid-cols-2">
         {rows.map(({ unit, part }) => (
@@ -120,17 +112,16 @@ export function GroupDmx({ companyId, parts, caseName, open, onOpen, onClose }: 
             <span className="text-sm">
               <span className="block font-medium">#{unit}</span>
               {part.attributes.dipSwitches && Number(values[unit].address) > 0 && (
-                <span className="block text-xs text-accent" title="Zapnuté DIP prepínače pre túto adresu">
-                  DIP {dipOn(Number(values[unit].address), part.attributes.dipSwitches)}
+                <span className="block text-xs text-accent" title={tx('Zapnuté DIP prepínače pre túto adresu')}>{tx('DIP')}{' '}{dipOn(Number(values[unit].address), part.attributes.dipSwitches)}
                 </span>
               )}
-              <span className="block truncate text-xs text-muted-foreground">{part.caseId ? caseName(part.caseId) : 'mimo case'}</span>
+              <span className="block truncate text-xs text-muted-foreground">{part.caseId ? caseName(part.caseId) : tx('mimo case')}</span>
             </span>
-            <input aria-label={`Linka #${unit}`} placeholder="linka" className="h-10 min-w-0 rounded-lg border bg-background px-2" value={values[unit].line} onChange={(event) => set(unit, { line: event.target.value })} />
-            <input aria-label={`Adresa #${unit}`} type="number" min={1} max={512} placeholder="adresa" className="h-10 min-w-0 rounded-lg border bg-background px-2" value={values[unit].address} onChange={(event) => set(unit, { address: event.target.value })} />
+            <input aria-label={`Linka #${unit}`} placeholder={tx('linka')} className="h-10 min-w-0 rounded-lg border bg-background px-2" value={values[unit].line} onChange={(event) => set(unit, { line: event.target.value })} />
+            <input aria-label={`Adresa #${unit}`} type="number" min={1} max={512} placeholder={tx('adresa')} className="h-10 min-w-0 rounded-lg border bg-background px-2" value={values[unit].address} onChange={(event) => set(unit, { address: event.target.value })} />
             {modes.length > 0 ? (
-              <select aria-label={`Mód #${unit}`} className="h-10 min-w-0 rounded-lg border bg-background px-1 text-sm" value={values[unit].mode} onChange={(event) => set(unit, { mode: event.target.value })}>
-                <option value="">mód</option>
+              <select aria-label={tf('Mód #{0}', unit)} className="h-10 min-w-0 rounded-lg border bg-background px-1 text-sm" value={values[unit].mode} onChange={(event) => set(unit, { mode: event.target.value })}>
+                <option value="">{tx('mód')}</option>
                 {modes.map((mode) => (
                   <option key={mode.name + mode.channels} value={mode.name || `${mode.channels} ch`}>
                     {mode.name || `${mode.channels} ch`}
@@ -138,20 +129,18 @@ export function GroupDmx({ companyId, parts, caseName, open, onOpen, onClose }: 
                 ))}
               </select>
             ) : (
-              <input aria-label={`Mód #${unit}`} placeholder="mód" className="h-10 min-w-0 rounded-lg border bg-background px-2" value={values[unit].mode} onChange={(event) => set(unit, { mode: event.target.value })} />
+              <input aria-label={tf('Mód #{0}', unit)} placeholder={tx('mód')} className="h-10 min-w-0 rounded-lg border bg-background px-2" value={values[unit].mode} onChange={(event) => set(unit, { mode: event.target.value })} />
             )}
           </li>
         ))}
       </ul>
-      {overflow && <p className="mt-2 text-sm text-destructive">Niektorý kus by presiahol adresu 512 – dajte ho na ďalšiu linku.</p>}
-      {save.isError && <p className="mt-2 text-sm text-destructive">Nepodarilo sa uložiť.</p>}
+      {overflow && <p className="mt-2 text-sm text-destructive">{tx('Niektorý kus by presiahol adresu 512 – dajte ho na ďalšiu linku.')}</p>}
+      {save.isError && <p className="mt-2 text-sm text-destructive">{tx('Nepodarilo sa uložiť.')}</p>}
       <div className="mt-4 flex gap-2">
         <Button disabled={save.isPending} onClick={() => save.mutate()}>
-          {save.isPending ? 'Ukladám…' : 'Uložiť'}
+          {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
         </Button>
-        <Button variant="ghost" onClick={onClose}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" onClick={onClose}>{tx('Zrušiť')}</Button>
       </div>
     </section>
   )

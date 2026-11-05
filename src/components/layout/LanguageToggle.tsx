@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '@/features/auth/auth-context'
 import { useUserPrefs } from '@/features/settings/userPrefs'
 import { setLang, useLang, type Lang } from '@/lib/i18n'
@@ -28,15 +28,21 @@ export function LanguageToggle({ className }: { className?: string }) {
  * Jazyk v účte: po prihlásení sa použije jazyk uložený v účte (na každom zariadení rovnaký), potom sa každá zmena
  * zapíše do účtu. Funguje aj bez súhlasu s funkčným úložiskom prehliadača.
  */
+// Mimo komponentu: po zmene jazyka sa obrazovky vykreslia nanovo a jazyk z účtu sa nesmie použiť druhý raz.
+let appliedFromAccount = false
+
 export function LanguageSync() {
   const lang = useLang()
   const signedIn = Boolean(useAuth().session)
   const { prefs, update, loaded } = useUserPrefs()
-  const applied = useRef(false)
   useEffect(() => {
-    if (!signedIn || !loaded) return
-    if (!applied.current) {
-      applied.current = true
+    if (!signedIn) {
+      appliedFromAccount = false
+      return
+    }
+    if (!loaded) return
+    if (!appliedFromAccount) {
+      appliedFromAccount = true
       if (prefs.language && prefs.language !== lang) {
         setLang(prefs.language)
         return

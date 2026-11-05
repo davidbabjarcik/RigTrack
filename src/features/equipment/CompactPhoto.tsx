@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { fetchPhotoUrl } from './photo'
 import { PhotoThumb } from './PhotoThumb'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = {
   name: string
@@ -32,14 +33,14 @@ export function CompactPhoto({ name, photoPath, thumbUrl, canEdit, onUpload, onR
   return (
     <div className="flex shrink-0 flex-col items-center gap-1">
       {photoPath ? (
-        <button type="button" aria-label={`Otvoriť fotku: ${name}`} onClick={() => open.mutate()} className="rounded-lg">
+        <button type="button" aria-label={tf('Otvoriť fotku: {0}', name)} onClick={() => open.mutate()} className="rounded-lg">
           <PhotoThumb url={thumbUrl} />
         </button>
       ) : (
         canEdit && (
           <button
             type="button"
-            aria-label={`Pridať fotku: ${name}`}
+            aria-label={tf('Pridať fotku: {0}', name)}
             disabled={busy}
             onClick={() => input.current?.click()}
             className="flex size-12 items-center justify-center rounded-lg border border-dashed text-muted-foreground hover:bg-muted"
@@ -50,24 +51,24 @@ export function CompactPhoto({ name, photoPath, thumbUrl, canEdit, onUpload, onR
       )}
       {canEdit && photoPath && (
         <div className="flex">
-          <Button variant="ghost" size="sm" className="h-6 px-1" aria-label={`Zmeniť fotku: ${name}`} disabled={busy} onClick={() => input.current?.click()}>
+          <Button variant="ghost" size="sm" className="h-6 px-1" aria-label={tf('Zmeniť fotku: {0}', name)} disabled={busy} onClick={() => input.current?.click()}>
             <Camera className="size-3.5" aria-hidden />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             className="h-6 px-1"
-            aria-label={`Odstrániť fotku: ${name}`}
+            aria-label={tf('Odstrániť fotku: {0}', name)}
             disabled={busy}
             onClick={() => {
-              if (window.confirm('Odstrániť fotku? Admin ju 30 dní vie obnoviť z koša.')) remove.mutate()
+              if (window.confirm(tx('Odstrániť fotku? Admin ju 30 dní vie obnoviť z koša.'))) remove.mutate()
             }}
           >
             <Trash2 className="size-3.5" aria-hidden />
           </Button>
         </div>
       )}
-      {(upload.isError || remove.isError) && <span className="text-xs text-destructive">Nepodarilo sa</span>}
+      {(upload.isError || remove.isError) && <span className="text-xs text-destructive">{tx('Nepodarilo sa')}</span>}
       <input
         ref={input}
         type="file"

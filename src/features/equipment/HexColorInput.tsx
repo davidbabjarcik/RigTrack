@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { parseHexColor } from './cableColors'
+import { tx } from '@/lib/i18n'
 
 type Props = { id: string; value: string; onChange: (color: string) => void }
 
@@ -12,7 +13,7 @@ export function HexColorInput({ id, value, onChange }: Props) {
     <div className="flex items-center gap-2">
       <input
         type="color"
-        aria-label="Vybrať farbu z palety"
+        aria-label={tx('Vybrať farbu z palety')}
         className="h-11 w-14 shrink-0 cursor-pointer rounded-lg border bg-surface p-1"
         value={value}
         onChange={(e) => {

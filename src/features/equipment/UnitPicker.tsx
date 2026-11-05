@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { tx } from '@/lib/i18n'
 
 type Props = {
   label: string
@@ -46,7 +47,7 @@ export function UnitPicker({ label, units, chosen, taken = [], takenHint, error,
         })}
       </div>
       {takenHint && units.some((unit) => taken.includes(unit) && !chosen.includes(unit)) && (
-        <p className="mt-1.5 text-sm text-muted-foreground">Vyblednuté kusy: {takenHint}.</p>
+        <p className="mt-1.5 text-sm text-muted-foreground">{tx('Vyblednuté kusy:')}{' '}{takenHint}.</p>
       )}
       {error && (
         <p role="alert" className="mt-1.5 text-sm text-destructive">

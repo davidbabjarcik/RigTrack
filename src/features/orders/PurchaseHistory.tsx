@@ -6,6 +6,7 @@ import { ExternalLink } from 'lucide-react'
 import { fetchPurchases, orderKeys } from './api'
 import { supplierProductUrl } from './model'
 import { describeUnitIds } from '@/features/equipment/model'
+import { tx } from '@/lib/i18n'
 
 /** Nákupy daného kusu techniky; najnovší je prvý. Bez nákupov sa sekcia nezobrazí. */
 export function PurchaseHistory({ companyId, equipmentId }: { companyId: string; equipmentId: string }) {
@@ -21,7 +22,7 @@ export function PurchaseHistory({ companyId, equipmentId }: { companyId: string;
     purchases.data.map((purchase) => supplierProductUrl(purchase.supplier, purchase.articleNumber)).find(Boolean) ?? null
 
   return (
-    <CollapsibleSection id="equipment.purchases" title="Nákupy" className="mt-6" actions={
+    <CollapsibleSection id="equipment.purchases" title={tx('Nákupy')} className="mt-6" actions={
       <>
         {productUrl && (
           <a
@@ -29,9 +30,7 @@ export function PurchaseHistory({ companyId, equipmentId }: { companyId: string;
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
-          >
-            Zobraziť u dodávateľa
-            <ExternalLink className="size-3.5" aria-hidden />
+          >{tx('Zobraziť u dodávateľa')}<ExternalLink className="size-3.5" aria-hidden />
           </a>
         )}
       </>
@@ -44,7 +43,7 @@ export function PurchaseHistory({ companyId, equipmentId }: { companyId: string;
                 <span className="block truncate font-medium">
                   {formatDate(purchase.orderedAt)}
                   {index === 0 && purchases.data.length > 1 && (
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">posledný</span>
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">{tx('posledný')}</span>
                   )}
                 </span>
                 <span className="block truncate text-sm text-muted-foreground">
@@ -52,16 +51,15 @@ export function PurchaseHistory({ companyId, equipmentId }: { companyId: string;
                     ? [`bazár ${purchase.supplier}`, purchase.seller].filter(Boolean).join(' · ')
                     : purchase.supplier}
                   {purchase.unitNumbers.length > 0 && ` · kusy ${describeUnitIds(purchase.unitNumbers)}`}
-                  {!purchase.hasInvoice && <span className="text-accent"> · bez faktúry</span>}
+                  {!purchase.hasInvoice && <span className="text-accent">{' '}{tx('· bez faktúry')}</span>}
                 </span>
               </span>
               <span className="shrink-0 text-right">
                 <span className="block font-medium">
-                  {purchase.quantity} ks × {formatMoney(purchase.unitPrice, purchase.currency)}
+                  {purchase.quantity}{' '}{tx('ks ×')}{' '}{formatMoney(purchase.unitPrice, purchase.currency)}
                 </span>
                 {purchase.quantity > 1 && (
-                  <span className="block text-sm text-muted-foreground">
-                    spolu {formatMoney(purchase.quantity * purchase.unitPrice, purchase.currency)}
+                  <span className="block text-sm text-muted-foreground">{tx('spolu')}{' '}{formatMoney(purchase.quantity * purchase.unitPrice, purchase.currency)}
                   </span>
                 )}
               </span>

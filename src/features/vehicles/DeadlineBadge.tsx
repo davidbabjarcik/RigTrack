@@ -1,6 +1,7 @@
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { describeDays, type Deadline } from './model'
+import { tx } from '@/lib/i18n'
 
 const STYLES = {
   expired: 'text-destructive',
@@ -12,7 +13,7 @@ const STYLES = {
 export function DeadlineLine({ deadline, className }: { deadline: Deadline; className?: string }) {
   return (
     <span className={cn(STYLES[deadline.state], className)}>
-      {deadline.label} · {formatDate(deadline.date)} · {describeDays(deadline.days)}
+      {tx(deadline.label)} · {formatDate(deadline.date)} · {describeDays(deadline.days)}
     </span>
   )
 }

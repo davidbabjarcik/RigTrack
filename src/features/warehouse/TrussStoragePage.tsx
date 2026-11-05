@@ -13,11 +13,12 @@ import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { fetchTrussLayout, saveTrussLayout, trussKeys } from './api'
 import { MAX_TRUSS_GRID, moveStack, pieceColor, pieceHeightCm, placedCounts, stackAt, stackHeightCm, withStack, type TrussLayout } from './truss'
+import { tx, tf } from '@/lib/i18n'
 
 type Cell = { col: number; row: number }
 
 /** Krátky popis dielu: „F34 3 m“, pri rohu tvar. */
-const pieceLabel = (piece: Equipment | undefined) => piece?.name ?? 'zmazaný diel'
+const pieceLabel = (piece: Equipment | undefined) => piece?.name ?? tx('zmazaný diel')
 
 /**
  * Sklad → Hliník: mriežka zhora (kde stojí ktorý stoh trussov) a pohľad spredu (diely nastojato na sebe,
@@ -47,7 +48,7 @@ export function TrussStoragePage() {
   })
 
   if (layoutQuery.isPending || equipment.isPending) return <LoadingBlock />
-  if (layoutQuery.isError || equipment.isError) return <ErrorBlock message="Hliník sa nepodarilo načítať." onRetry={() => void Promise.all([layoutQuery.refetch(), equipment.refetch()])} />
+  if (layoutQuery.isError || equipment.isError) return <ErrorBlock message={tx('Hliník sa nepodarilo načítať.')} onRetry={() => void Promise.all([layoutQuery.refetch(), equipment.refetch()])} />
 
   const { layout, ready } = layoutQuery.data
   const trusses = equipment.data.filter((item) => item.kind === 'truss' && item.status !== 'retired')
@@ -74,29 +75,25 @@ export function TrussStoragePage() {
   return (
     <>
       <PageHeader
-        title="Hliník v sklade"
-        description={`${layout.stacks.length} stohov · uložených ${totals.placed} z ${totals.all} kusov trussu`}
+        title={tx('Hliník v sklade')}
+        description={tf('{0} stohov · uložených {1} z {2} kusov trussu', layout.stacks.length, totals.placed, totals.all)}
         action={
           <Link to={layout.spotId ? `/warehouse?spot=${layout.spotId}` : '/warehouse'} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="size-4" aria-hidden />
-            Sklad
-          </Link>
+            <ArrowLeft className="size-4" aria-hidden />{tx('Sklad')}</Link>
         }
       />
       {!ready && (
-        <p className="mb-4 rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
-          Najprv zadajte rozmery skladu (Sklad alebo Nastavenia → Sklad). Ak už sú zadané, treba v Supabase spustiť migráciu 0130.
-        </p>
+        <p className="mb-4 rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Najprv zadajte rozmery skladu (Sklad alebo Nastavenia → Sklad). Ak už sú zadané, treba v Supabase spustiť migráciu 0130.')}</p>
       )}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)] lg:items-start">
         <div className="flex min-w-0 flex-col gap-4">
           <div>
-            <h2 className="mb-2 text-sm font-medium text-muted-foreground">Zhora – klik na políčko ukáže stoh{moving && ' · kliknite, kam stoh presunúť'}</h2>
+            <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Zhora – klik na políčko ukáže stoh')}{moving && tx(' · kliknite, kam stoh presunúť')}</h2>
             <TopView layout={layout} byId={byId} selected={selected} moving={moving} onClick={clickCell} />
           </div>
           <div>
-            <h2 className="mb-2 text-sm font-medium text-muted-foreground">Spredu – diely nastojato, zadné rady bledšie</h2>
+            <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Spredu – diely nastojato, zadné rady bledšie')}</h2>
             <FrontView layout={layout} byId={byId} selected={selected} onSelect={(cell) => setSelected(cell)} />
             <Legend trusses={trusses} />
           </div>
@@ -106,22 +103,21 @@ export function TrussStoragePage() {
           {selected && (
             <section className="rounded-xl border bg-surface p-4" aria-labelledby="stack-heading">
               <div className="mb-2 flex items-center gap-2">
-                <h2 id="stack-heading" className="flex-1 font-semibold">
-                  Stĺpec {selected.col + 1}, rad {selected.row + 1}
-                  {stack && <span className="ml-2 text-sm font-normal text-muted-foreground">{(stackHeightCm(stack, byId, layout.cellCm) / 100).toFixed(2).replace('.', ',')} m vysoký</span>}
+                <h2 id="stack-heading" className="flex-1 font-semibold">{tx('Stĺpec')}{' '}{selected.col + 1}{tx(', rad')}{' '}{selected.row + 1}
+                  {stack && <span className="ml-2 text-sm font-normal text-muted-foreground">{(stackHeightCm(stack, byId, layout.cellCm) / 100).toFixed(2).replace('.', ',')}{' '}{tx('m vysoký')}</span>}
                 </h2>
                 {canEdit && stack && (
                   <Button size="sm" variant={moving ? 'default' : 'outline'} onClick={() => setMoving(!moving)}>
                     <Move className="size-4" aria-hidden />
-                    {moving ? 'Kliknite na cieľ…' : 'Presunúť stoh'}
+                    {moving ? tx('Kliknite na cieľ…') : tx('Presunúť stoh')}
                   </Button>
                 )}
-                <Button size="sm" variant="ghost" className="size-8 p-0" aria-label="Zavrieť" onClick={() => setSelected(null)}>
+                <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={tx('Zavrieť')} onClick={() => setSelected(null)}>
                   <X className="size-4" aria-hidden />
                 </Button>
               </div>
               {!stack ? (
-                <p className="text-sm text-muted-foreground">Prázdne políčko.</p>
+                <p className="text-sm text-muted-foreground">{tx('Prázdne políčko.')}</p>
               ) : (
                 <ol className="divide-y rounded-lg border text-sm">
                   {[...stack.pieces.entries()].reverse().map(([index, id]) => (
@@ -129,18 +125,18 @@ export function TrussStoragePage() {
                       <span className="size-3 shrink-0 rounded-sm" style={{ background: pieceColor(byId.get(id)) }} aria-hidden />
                       <span className="min-w-0 flex-1 truncate">
                         {pieceLabel(byId.get(id))}
-                        {index === stack.pieces.length - 1 && <span className="ml-1 text-xs text-muted-foreground">(navrchu)</span>}
-                        {index === 0 && <span className="ml-1 text-xs text-muted-foreground">(dole)</span>}
+                        {index === stack.pieces.length - 1 && <span className="ml-1 text-xs text-muted-foreground">{tx('(navrchu)')}</span>}
+                        {index === 0 && <span className="ml-1 text-xs text-muted-foreground">{tx('(dole)')}</span>}
                       </span>
                       {canEdit && (
                         <>
-                          <Button size="sm" variant="ghost" className="size-7 p-0" aria-label="Vyššie" disabled={index === stack.pieces.length - 1} onClick={() => setPieces(swap(stack.pieces, index, index + 1))}>
+                          <Button size="sm" variant="ghost" className="size-7 p-0" aria-label={tx('Vyššie')} disabled={index === stack.pieces.length - 1} onClick={() => setPieces(swap(stack.pieces, index, index + 1))}>
                             <ArrowUp className="size-4" aria-hidden />
                           </Button>
-                          <Button size="sm" variant="ghost" className="size-7 p-0" aria-label="Nižšie" disabled={index === 0} onClick={() => setPieces(swap(stack.pieces, index, index - 1))}>
+                          <Button size="sm" variant="ghost" className="size-7 p-0" aria-label={tx('Nižšie')} disabled={index === 0} onClick={() => setPieces(swap(stack.pieces, index, index - 1))}>
                             <ArrowDown className="size-4" aria-hidden />
                           </Button>
-                          <Button size="sm" variant="ghost" className="size-7 p-0" aria-label={`Vybrať ${pieceLabel(byId.get(id))}`} onClick={() => setPieces(stack.pieces.filter((_, i) => i !== index))}>
+                          <Button size="sm" variant="ghost" className="size-7 p-0" aria-label={tf('Vybrať {0}', pieceLabel(byId.get(id)))} onClick={() => setPieces(stack.pieces.filter((_, i) => i !== index))}>
                             <X className="size-4" aria-hidden />
                           </Button>
                         </>
@@ -158,33 +154,27 @@ export function TrussStoragePage() {
                     setPieces([...(stack?.pieces ?? []), ...Array.from({ length: Math.max(1, Math.min(20, addCount)) }, () => adding)])
                   }}
                 >
-                  <SelectField label="Pridať navrch" className="min-w-52 flex-1" value={adding} onChange={(e) => setAdding(e.target.value)}>
-                    <option value="">— vyberte diel —</option>
+                  <SelectField label={tx('Pridať navrch')} className="min-w-52 flex-1" value={adding} onChange={(e) => setAdding(e.target.value)}>
+                    <option value="">{tx('— vyberte diel —')}</option>
                     {trusses.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.name} (voľných {Math.max(0, free(item))} z {item.quantity})
+                        {item.name}{' '}{tx('(voľných')}{' '}{Math.max(0, free(item))} z {item.quantity})
                       </option>
                     ))}
                   </SelectField>
-                  <label className="flex flex-col gap-1 text-sm">
-                    Kusov
-                    <input type="number" min={1} max={20} className="h-10 w-16 rounded-lg border bg-surface px-2 tabular-nums" value={addCount} onChange={(e) => setAddCount(Number(e.target.value))} />
+                  <label className="flex flex-col gap-1 text-sm">{tx('Kusov')}<input type="number" min={1} max={20} className="h-10 w-16 rounded-lg border bg-surface px-2 tabular-nums" value={addCount} onChange={(e) => setAddCount(Number(e.target.value))} />
                   </label>
                   <Button type="submit" disabled={!adding || save.isPending}>
-                    <Plus className="size-4" aria-hidden />
-                    Pridať
-                  </Button>
+                    <Plus className="size-4" aria-hidden />{tx('Pridať')}</Button>
                 </form>
               )}
             </section>
           )}
 
           <section className="rounded-xl border bg-surface p-4" aria-labelledby="truss-list-heading">
-            <h2 id="truss-list-heading" className="mb-2 font-semibold">
-              Trussy v technike
-            </h2>
+            <h2 id="truss-list-heading" className="mb-2 font-semibold">{tx('Trussy v technike')}</h2>
             {trusses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">V technike zatiaľ nie je žiadny truss (druh Stage – hliník / truss).</p>
+              <p className="text-sm text-muted-foreground">{tx('V technike zatiaľ nie je žiadny truss (druh Stage – hliník / truss).')}</p>
             ) : (
               <ul className="divide-y text-sm">
                 {trusses.map((item) => {
@@ -203,13 +193,13 @@ export function TrussStoragePage() {
                 })}
               </ul>
             )}
-            <p className="mt-2 text-xs text-muted-foreground">uložené v stohoch / spolu · červené = v stohoch je viac kusov, ako je v technike</p>
+            <p className="mt-2 text-xs text-muted-foreground">{tx('uložené v stohoch / spolu · červené = v stohoch je viac kusov, ako je v technike')}</p>
           </section>
 
           {canEdit && <GridSettings layout={layout} busy={save.isPending} onSave={change} />}
           {save.isError && (
             <p role="alert" className="text-sm text-destructive">
-              {save.error.message || 'Zmenu sa nepodarilo uložiť.'}
+              {save.error.message || tx('Zmenu sa nepodarilo uložiť.')}
             </p>
           )}
         </div>
@@ -232,16 +222,16 @@ function GridSettings({ layout, busy, onSave }: { layout: TrussLayout; busy: boo
       className="flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-4 text-sm"
       onSubmit={(event) => {
         event.preventDefault()
-        if (outside > 0 && !window.confirm(`${outside} stohov je mimo novej mriežky – zmiznú. Pokračovať?`)) return
+        if (outside > 0 && !window.confirm(tf('{0} stohov je mimo novej mriežky – zmiznú. Pokračovať?', outside))) return
         onSave({ ...layout, ...form, stacks: layout.stacks.filter((stack) => stack.col < form.cols && stack.row < form.rows) })
       }}
     >
-      <p className="w-full font-semibold">Miesto na hliník</p>
+      <p className="w-full font-semibold">{tx('Miesto na hliník')}</p>
       {(
         [
-          ['cols', 'Stĺpcov', 1, MAX_TRUSS_GRID],
+          ['cols', tx('Stĺpcov'), 1, MAX_TRUSS_GRID],
           ['rows', 'Radov', 1, MAX_TRUSS_GRID],
-          ['cellCm', 'Políčko (cm)', 20, 100],
+          ['cellCm', tx('Políčko (cm)'), 20, 100],
         ] as const
       ).map(([key, label, min, max]) => (
         <label key={key} className="flex flex-col gap-1">
@@ -249,10 +239,8 @@ function GridSettings({ layout, busy, onSave }: { layout: TrussLayout; busy: boo
           <input type="number" min={min} max={max} className="h-9 w-20 rounded-lg border bg-surface px-2 tabular-nums" value={form[key]} onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })} />
         </label>
       ))}
-      <Button type="submit" size="sm" disabled={busy}>
-        Uložiť
-      </Button>
-      <p className="w-full text-xs text-muted-foreground">Políčko = profil trussu s medzerou (napr. 29 cm profil → 35 cm). Spolu {((form.cols * form.cellCm) / 100).toFixed(1).replace('.', ',')} × {((form.rows * form.cellCm) / 100).toFixed(1).replace('.', ',')} m.</p>
+      <Button type="submit" size="sm" disabled={busy}>{tx('Uložiť')}</Button>
+      <p className="w-full text-xs text-muted-foreground">{tx('Políčko = profil trussu s medzerou (napr. 29 cm profil → 35 cm). Spolu')}{' '}{((form.cols * form.cellCm) / 100).toFixed(1).replace('.', ',')} × {((form.rows * form.cellCm) / 100).toFixed(1).replace('.', ',')} m.</p>
     </form>
   )
 }
@@ -265,7 +253,7 @@ function TopView({ layout, byId, selected, moving, onClick }: ViewProps & { movi
   const width = layout.cols * size
   const height = layout.rows * size
   return (
-    <svg viewBox={`-4 -4 ${width + 8} ${height + 8}`} className="block max-h-[420px] w-full rounded-xl border bg-[#0b0f17]" role="group" aria-label="Hliník zhora">
+    <svg viewBox={`-4 -4 ${width + 8} ${height + 8}`} className="block max-h-[420px] w-full rounded-xl border bg-[#0b0f17]" role="group" aria-label={tx('Hliník zhora')}>
       {Array.from({ length: layout.rows }, (_, row) =>
         Array.from({ length: layout.cols }, (_, col) => {
           const stack = stackAt(layout, col, row)
@@ -273,7 +261,7 @@ function TopView({ layout, byId, selected, moving, onClick }: ViewProps & { movi
           const top = stack ? byId.get(stack.pieces.at(-1)!) : undefined
           const color = stack ? pieceColor(top) : undefined
           return (
-            <g key={`${col}-${row}`} role="button" tabIndex={0} aria-label={`Stĺpec ${col + 1}, rad ${row + 1}${stack ? `: ${stack.pieces.length} ks` : ', prázdne'}`} className="cursor-pointer outline-none" onClick={() => onClick({ col, row })} onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && onClick({ col, row })}>
+            <g key={`${col}-${row}`} role="button" tabIndex={0} aria-label={tf('Stĺpec {0}, rad {1}{2}', col + 1, row + 1, stack ? `: ${stack.pieces.length} ks` : tx(', prázdne'))} className="cursor-pointer outline-none" onClick={() => onClick({ col, row })} onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && onClick({ col, row })}>
               <rect x={col * size} y={row * size} width={size} height={size} fill={active ? 'rgba(245,158,11,0.18)' : moving ? 'rgba(255,255,255,0.03)' : 'transparent'} stroke="#1f3b1f" strokeWidth={0.6} />
               {stack && (
                 <>
@@ -301,7 +289,7 @@ function FrontView({ layout, byId, selected, onSelect }: ViewProps & { onSelect:
   const pad = 20
   const ordered = [...layout.stacks].sort((a, b) => a.row - b.row)
   return (
-    <svg viewBox={`${-pad} ${-pad} ${width + pad * 2} ${tallest + pad * 2}`} className="block max-h-[460px] w-full rounded-xl border bg-[#0b0f17]" role="group" aria-label="Hliník spredu">
+    <svg viewBox={`${-pad} ${-pad} ${width + pad * 2} ${tallest + pad * 2}`} className="block max-h-[460px] w-full rounded-xl border bg-[#0b0f17]" role="group" aria-label={tx('Hliník spredu')}>
       {/* Metre na výšku. */}
       {Array.from({ length: Math.floor(tallest / 100) + 1 }, (_, m) => (
         <g key={m}>
@@ -354,12 +342,12 @@ function Legend({ trusses }: { trusses: Equipment[] }) {
   const entries = new Map<string, string>()
   for (const item of trusses) {
     const a = item.attributes
-    const label = a.trussType === 'accessory' ? 'príslušenstvo' : a.trussShape && a.trussShape !== 'straight' ? 'rohy, T, kríže' : a.lengthM !== undefined ? `${String(a.lengthM).replace('.', ',')} m` : 'iné'
+    const label = a.trussType === 'accessory' ? tx('príslušenstvo') : a.trussShape && a.trussShape !== 'straight' ? tx('rohy, T, kríže') : a.lengthM !== undefined ? `${String(a.lengthM).replace('.', ',')} m` : tx('iné')
     if (!entries.has(label)) entries.set(label, pieceColor(item))
   }
   if (entries.size === 0) return null
   return (
-    <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Legenda">
+    <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label={tx('Legenda')}>
       {[...entries].map(([label, color]) => (
         <li key={label} className="flex items-center gap-1.5">
           <span className="size-3 rounded-sm" style={{ background: color }} aria-hidden />

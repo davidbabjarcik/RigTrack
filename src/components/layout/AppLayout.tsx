@@ -14,7 +14,7 @@ import { ThemeToggle } from './ThemeToggle'
 import { FIXED_PINNED, visibleNavItems, type NavItem } from '@/lib/navigation'
 import { usePinnedNav } from '@/lib/usePinnedNav'
 import { cn } from '@/lib/utils'
-import { useLang, useT } from '@/lib/i18n'
+import { tx, useLang, useT } from '@/lib/i18n'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
 import { LanguageSync } from './LanguageToggle'
 
@@ -32,7 +32,7 @@ function SidebarLink({ item }: { item: Pick<NavItem, 'label' | 'to' | 'icon'> })
       }
     >
       <item.icon className="size-5" aria-hidden />
-      {item.label}
+      {tx(item.label)}
     </NavLink>
   )
 }
@@ -50,7 +50,7 @@ function TabLink({ item }: { item: Pick<NavItem, 'label' | 'to' | 'icon'> }) {
       }
     >
       <item.icon className="size-5" aria-hidden />
-      <span className="max-w-full truncate px-1">{item.label}</span>
+      <span className="max-w-full truncate px-1">{tx(item.label)}</span>
     </NavLink>
   )
 }
@@ -88,7 +88,7 @@ export function AppLayout() {
         <div className="flex h-16 items-center gap-2 px-5">
           <Link to="/" className="flex flex-1 items-center gap-2 rounded-lg" title={t('Na prehľad', 'To overview')}>
             <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8 rounded-lg" />
-            <span className="text-lg font-semibold tracking-tight">RigTrack</span>
+            <span className="text-lg font-semibold tracking-tight">{tx('RigTrack')}</span>
           </Link>
           <NotificationBell />
           <ThemeToggle className="-mr-2" />
@@ -116,7 +116,7 @@ export function AppLayout() {
         <header className="flex h-12 items-center gap-2 border-b bg-surface px-4 md:hidden print:hidden">
           <Link to="/" className="flex flex-1 items-center gap-2" title={t('Na prehľad', 'To overview')}>
             <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-6 rounded-md" />
-            <span className="font-semibold tracking-tight">RigTrack</span>
+            <span className="font-semibold tracking-tight">{tx('RigTrack')}</span>
           </Link>
           <NotificationBell />
           <ThemeToggle className="-mr-2" />

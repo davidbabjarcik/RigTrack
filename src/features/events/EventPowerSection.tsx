@@ -6,6 +6,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { cn } from '@/lib/utils'
 import { eventPhases, supplyOf } from './eventPower'
 import { POWER_LABELS, POWER_TYPES, type CompanyEvent, type PowerType } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const fmt = (value: number, digits = 1) => value.toLocaleString('sk-SK', { maximumFractionDigits: digits })
 
@@ -23,10 +24,10 @@ export function EventPowerSection({ companyId, event }: { companyId: string; eve
   const highest = Math.max(...plan.phases.map((phase) => phase.watts))
 
   return (
-    <CollapsibleSection id="event.power" title={`Elektrika – fázy (${fmt(plan.totalWatts / 1000)} kW)`}>
+    <CollapsibleSection id="event.power" title={tf('Elektrika – fázy ({0} kW)', fmt(plan.totalWatts / 1000))}>
       <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SelectField
-          label="Prípojka"
+          label={tx('Prípojka')}
           value={power}
           onChange={(e) => {
             const next = e.target.value as PowerType | ''
@@ -34,21 +35,21 @@ export function EventPowerSection({ companyId, event }: { companyId: string; eve
             setPhaseCount(supplyOf(next, event.powerCount)?.phases ?? 3)
           }}
         >
-          <option value="">— neuvedená —</option>
+          <option value="">{tx('— neuvedená —')}</option>
           {POWER_TYPES.map((type) => (
             <option key={type} value={type}>
-              {POWER_LABELS[type]}
+              {tx(POWER_LABELS[type])}
             </option>
           ))}
         </SelectField>
-        <SelectField label="Fázy" value={phaseCount} onChange={(e) => setPhaseCount(Number(e.target.value) as 1 | 2 | 3)}>
-          <option value={3}>3 fázy (L1–L3)</option>
-          <option value={2}>2 fázy</option>
-          <option value={1}>1 fáza</option>
+        <SelectField label={tx('Fázy')} value={phaseCount} onChange={(e) => setPhaseCount(Number(e.target.value) as 1 | 2 | 3)}>
+          <option value={3}>{tx('3 fázy (L1–L3)')}</option>
+          <option value={2}>{tx('2 fázy')}</option>
+          <option value={1}>{tx('1 fáza')}</option>
         </SelectField>
         {([0, 1, 2] as const).slice(0, phaseCount).map((index) => (
           <label key={index} className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium">Iné na L{index + 1} (kW)</span>
+            <span className="font-medium">{tx('Iné na L')}{index + 1}{' '}{tx('(kW)')}</span>
             <input
               type="number"
               inputMode="decimal"
@@ -74,26 +75,25 @@ export function EventPowerSection({ companyId, event }: { companyId: string; eve
               <span className="flex justify-between gap-3">
                 <span className="font-medium">L{phase.phase}</span>
                 <span className={cn(over && 'font-medium text-destructive')}>
-                  {fmt(phase.watts / 1000)} kW · {fmt(phase.amps)} A{supply && ` z ${supply.amps} A`}
+                  {fmt(phase.watts / 1000)}{' '}{tx('kW ·')}{' '}{fmt(phase.amps)} A{supply && ` z ${supply.amps} A`}
                 </span>
               </span>
               <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
                 <span className={cn('block h-full rounded-full', over ? 'bg-destructive' : 'bg-accent')} style={{ width: `${highest > 0 ? (phase.watts / highest) * 100 : 0}%` }} />
               </span>
-              <span className="mt-1 block text-muted-foreground">{phase.items.map((item) => `${item.count}× ${item.name}`).join(', ') || 'nič z techniky'}</span>
+              <span className="mt-1 block text-muted-foreground">{phase.items.map((item) => `${item.count}× ${item.name}`).join(', ') || tx('nič z techniky')}</span>
             </li>
           )
         })}
       </ul>
-      <p className="mt-2 text-sm">
-        Nevyváženosť: <span className={cn('font-medium', plan.imbalance > 20 && 'text-accent')}>{plan.imbalance} %</span>
-        {power && <span className="text-muted-foreground"> · prípojka: {POWER_LABELS[power]}{event.powerCount && event.powerCount > 1 ? ` × ${event.powerCount}` : ''}</span>}
-        {power !== event.power && <span className="text-accent"> (iná ako v evente)</span>}
+      <p className="mt-2 text-sm">{tx('Nevyváženosť:')}{' '}<span className={cn('font-medium', plan.imbalance > 20 && 'text-accent')}>{plan.imbalance} %</span>
+        {power && <span className="text-muted-foreground">{' '}{tx('· prípojka:')}{' '}{tx(POWER_LABELS[power])}{event.powerCount && event.powerCount > 1 ? ` × ${event.powerCount}` : ''}</span>}
+        {power !== event.power && <span className="text-accent">{' '}{tx('(iná ako v evente)')}</span>}
       </p>
       {plan.unknown.length > 0 && (
-        <p className="mt-2 text-sm text-muted-foreground">Bez zadaného výkonu (nerátajú sa): {plan.unknown.join(', ')}. Výkon doplňte v Technike.</p>
+        <p className="mt-2 text-sm text-muted-foreground">{tx('Bez zadaného výkonu (nerátajú sa):')}{' '}{plan.unknown.join(', ')}{tx('. Výkon doplňte v Technike.')}</p>
       )}
-      <p className="mt-1 text-xs text-muted-foreground">Ráta sa s maximálnym príkonom každého kusu techniky na evente.</p>
+      <p className="mt-1 text-xs text-muted-foreground">{tx('Ráta sa s maximálnym príkonom každého kusu techniky na evente.')}</p>
     </CollapsibleSection>
   )
 }

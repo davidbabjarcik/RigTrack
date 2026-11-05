@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { getSupabase } from '@/lib/supabase/client'
 import { SOCIAL_NETWORKS, socialUrl, type Socials } from './socials'
+import { tx } from '@/lib/i18n'
 
 const key = (companyId: string, staffId: string) => ['company', companyId, 'staff', staffId, 'socials'] as const
 
@@ -41,42 +42,36 @@ export function SocialLinks({ companyId, staffId, canEdit: mayEdit, fromProfile 
   return (
     <CollapsibleSection
       id="staff.socials"
-      title="Sociálne siete"
+      title={tx('Sociálne siete')}
       actions={
         canEdit &&
         !draft && (
           <Button variant="outline" size="sm" onClick={() => setDraft(socials.data)}>
-            <Pencil className="size-4" aria-hidden />
-            Upraviť
-          </Button>
+            <Pencil className="size-4" aria-hidden />{tx('Upraviť')}</Button>
         )
       }
     >
-      {fromProfile && <p className="mb-2 text-xs text-muted-foreground">Z osobného profilu – mení sa vo Vyberte firmu → Môj profil.</p>}
+      {fromProfile && <p className="mb-2 text-xs text-muted-foreground">{tx('Z osobného profilu – mení sa vo Vyberte firmu → Môj profil.')}</p>}
       {draft ? (
         <div className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
           {SOCIAL_NETWORKS.map((network) => (
             <Field
               key={network.key}
-              label={network.label}
-              placeholder={network.key === 'web' ? 'napr. mojafirma.sk' : 'meno alebo odkaz'}
+              label={tx(network.label)}
+              placeholder={network.key === 'web' ? tx('napr. mojafirma.sk') : tx('meno alebo odkaz')}
               maxLength={200}
               value={draft[network.key] ?? ''}
               onChange={(e) => setDraft({ ...draft, [network.key]: e.target.value })}
             />
           ))}
-          {save.isError && <p className="text-sm text-destructive sm:col-span-2">Nepodarilo sa uložiť.</p>}
+          {save.isError && <p className="text-sm text-destructive sm:col-span-2">{tx('Nepodarilo sa uložiť.')}</p>}
           <div className="flex gap-2 sm:col-span-2">
-            <Button size="sm" disabled={save.isPending} onClick={() => save.mutate(draft)}>
-              Uložiť
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setDraft(null)}>
-              Zrušiť
-            </Button>
+            <Button size="sm" disabled={save.isPending} onClick={() => save.mutate(draft)}>{tx('Uložiť')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => setDraft(null)}>{tx('Zrušiť')}</Button>
           </div>
         </div>
       ) : filled.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Zatiaľ nič – pridajte Instagram, Facebook, LinkedIn…</p>
+        <p className="text-sm text-muted-foreground">{tx('Zatiaľ nič – pridajte Instagram, Facebook, LinkedIn…')}</p>
       ) : (
         <ul className="flex flex-wrap gap-2">
           {filled.map((network) => (
@@ -88,7 +83,7 @@ export function SocialLinks({ companyId, staffId, canEdit: mayEdit, fromProfile 
                 className="inline-flex items-center gap-1.5 rounded-lg border bg-surface px-3 py-1.5 text-sm hover:bg-muted"
               >
                 <ExternalLink className="size-3.5" aria-hidden />
-                {network.label}: {socials.data[network.key]!.replace(/^https?:\/\/(www\.)?/i, '')}
+                {tx(network.label)}: {socials.data[network.key]!.replace(/^https?:\/\/(www\.)?/i, '')}
               </a>
             </li>
           ))}

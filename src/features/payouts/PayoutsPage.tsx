@@ -31,6 +31,7 @@ import {
   type Payment,
   type PaymentFormValues,
 } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const money = (amount: number) => formatMoney(amount, 'EUR')
 
@@ -83,8 +84,8 @@ function PaymentForm({ companyId, members, events, payments, onClose }: FormProp
       className="mb-6 flex flex-col gap-3 rounded-xl border bg-surface p-4"
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <SelectField label="Komu *" error={errors.memberId?.message} {...register('memberId', { onChange: suggest })}>
-          <option value="">— vyberte —</option>
+        <SelectField label={tx('Komu *')} error={errors.memberId?.message} {...register('memberId', { onChange: suggest })}>
+          <option value="">{tx('— vyberte —')}</option>
           {members.map((member) => (
             <option key={member.userId} value={member.userId}>
               {member.fullName || member.email}
@@ -92,7 +93,7 @@ function PaymentForm({ companyId, members, events, payments, onClose }: FormProp
           ))}
         </SelectField>
         <Field
-          label="Suma (€) *"
+          label={tx('Suma (€) *')}
           type="number"
           inputMode="decimal"
           min={0}
@@ -100,55 +101,46 @@ function PaymentForm({ companyId, members, events, payments, onClose }: FormProp
           error={errors.amount?.message}
           {...register('amount', { valueAsNumber: true })}
         />
-        <SelectField label="Druh" error={errors.kind?.message} {...register('kind')}>
+        <SelectField label={tx('Druh')} error={errors.kind?.message} {...register('kind')}>
           {PAYMENT_KINDS.map((kind) => (
             <option key={kind} value={kind}>
-              {PAYMENT_KIND_LABELS[kind]}
+              {tx(PAYMENT_KIND_LABELS[kind])}
             </option>
           ))}
         </SelectField>
-        <Field label="Dátum" type="date" error={errors.happenedOn?.message} {...register('happenedOn')} />
+        <Field label={tx('Dátum')} type="date" error={errors.happenedOn?.message} {...register('happenedOn')} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <SelectField label="Event (nepovinné)" error={errors.eventId?.message} {...register('eventId', { onChange: suggest })}>
-          <option value="">— bez eventu —</option>
+        <SelectField label={tx('Event (nepovinné)')} error={errors.eventId?.message} {...register('eventId', { onChange: suggest })}>
+          <option value="">{tx('— bez eventu —')}</option>
           {recentEvents.map((event) => (
             <option key={event.id} value={event.id}>
               {event.name} ({formatDate(event.startsOn)})
             </option>
           ))}
         </SelectField>
-        <Field label="Poznámka" error={errors.note?.message} {...register('note')} />
+        <Field label={tx('Poznámka')} error={errors.note?.message} {...register('note')} />
       </div>
       {before && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-          <span>
-            Minulý ročník ({before.event.name}, {formatDate(before.event.startsOn)}): <strong>{money(before.amount)}</strong>
+          <span>{tx('Minulý ročník (')}{before.event.name}, {formatDate(before.event.startsOn)}): <strong>{money(before.amount)}</strong>
           </span>
           {amount !== before.amount && (
-            <button type="button" className="font-medium text-accent hover:underline" onClick={() => setValue('amount', before.amount, { shouldDirty: true })}>
-              Použiť rovnakú sumu
-            </button>
+            <button type="button" className="font-medium text-accent hover:underline" onClick={() => setValue('amount', before.amount, { shouldDirty: true })}>{tx('Použiť rovnakú sumu')}</button>
           )}
         </div>
       )}
       {before && Number.isFinite(amount) && amount < before.amount && (
-        <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          Pozor: je to o {money(before.amount - amount)} menej než za minulý ročník. Ak je to zámer, môžete záznam uložiť.
-        </p>
+        <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">{tx('Pozor: je to o')}{' '}{money(before.amount - amount)}{' '}{tx('menej než za minulý ročník. Ak je to zámer, môžete záznam uložiť.')}</p>
       )}
       {add.isError && (
-        <p role="alert" className="text-sm text-destructive">
-          Odmenu sa nepodarilo zapísať.
-        </p>
+        <p role="alert" className="text-sm text-destructive">{tx('Odmenu sa nepodarilo zapísať.')}</p>
       )}
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={add.isPending}>
-          {add.isPending ? 'Ukladám…' : 'Zapísať odmenu'}
+          {add.isPending ? tx('Ukladám…') : tx('Zapísať odmenu')}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          Zrušiť
-        </Button>
+        <Button variant="ghost" size="sm" onClick={onClose}>{tx('Zrušiť')}</Button>
       </div>
     </form>
   )
@@ -195,15 +187,13 @@ export function PayoutsPage() {
   return (
     <>
       <PageHeader
-        title="Odmeny"
-        description={isAdmin ? 'Odmeny a zálohy členov firmy' : 'Vaše odmeny a zálohy'}
+        title={tx('Odmeny')}
+        description={isAdmin ? tx('Odmeny a zálohy členov firmy') : tx('Vaše odmeny a zálohy')}
         action={
           canManage &&
           !adding && (
             <Button onClick={() => setAdding(true)}>
-              <Plus className="size-4" aria-hidden />
-              Zapísať
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Zapísať')}</Button>
           )
         }
       />
@@ -221,11 +211,11 @@ export function PayoutsPage() {
       {payments.isPending ? (
         <LoadingBlock />
       ) : payments.isError ? (
-        <ErrorBlock message="Odmeny sa nepodarilo načítať." onRetry={() => void payments.refetch()} />
+        <ErrorBlock message={tx('Odmeny sa nepodarilo načítať.')} onRetry={() => void payments.refetch()} />
       ) : (
         <>
           {years.length > 1 && (
-            <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Rok">
+            <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label={tx('Rok')}>
               {['', ...years].map((option) => (
                 <button
                   key={option || 'all'}
@@ -238,23 +228,21 @@ export function PayoutsPage() {
                       : 'h-9 rounded-lg border bg-surface px-3 text-sm font-medium hover:bg-muted'
                   }
                 >
-                  {option || 'Všetky roky'}
+                  {option || tx('Všetky roky')}
                 </button>
               ))}
             </div>
           )}
           <div className="mb-6 grid grid-cols-2 gap-3">
-            <Tile label={isAdmin ? 'Treba vyplatiť' : 'Čaká na vyplatenie'} value={money(totals.unpaid)} />
-            <Tile label="Už vyplatené" value={money(totals.paid)} />
+            <Tile label={isAdmin ? tx('Treba vyplatiť') : tx('Čaká na vyplatenie')} value={money(totals.unpaid)} />
+            <Tile label={tx('Už vyplatené')} value={money(totals.paid)} />
           </div>
 
-          {isAdmin && !memberFilter && <PayoutShareChart payments={all} nameOf={(memberId) => memberName(members.data, memberId) || 'Bývalý člen'} />}
+          {isAdmin && !memberFilter && <PayoutShareChart payments={all} nameOf={(memberId) => memberName(members.data, memberId) || tx('Bývalý člen')} />}
 
           {isAdmin && owed.length > 0 && !memberFilter && (
             <section className="mb-6" aria-labelledby="owed-heading">
-              <h2 id="owed-heading" className="mb-2 text-sm font-medium text-muted-foreground">
-                Komu treba vyplatiť
-              </h2>
+              <h2 id="owed-heading" className="mb-2 text-sm font-medium text-muted-foreground">{tx('Komu treba vyplatiť')}</h2>
               <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
                 {owed.map((row) => (
                   <li key={row.memberId}>
@@ -263,7 +251,7 @@ export function PayoutsPage() {
                       onClick={() => setMemberFilter(row.memberId)}
                       className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left hover:bg-muted"
                     >
-                      <span className="min-w-0 truncate font-medium">{memberName(members.data, row.memberId) || 'Bývalý člen'}</span>
+                      <span className="min-w-0 truncate font-medium">{memberName(members.data, row.memberId) || tx('Bývalý člen')}</span>
                       <span className="shrink-0 font-medium tabular-nums">{money(row.unpaid)}</span>
                     </button>
                   </li>
@@ -273,8 +261,8 @@ export function PayoutsPage() {
           )}
 
           {isAdmin && (
-            <SelectField label="Člen" hideLabel className="mb-3 sm:w-64" value={memberFilter} onChange={(e) => setMemberFilter(e.target.value)}>
-              <option value="">Všetci členovia</option>
+            <SelectField label={tx('Člen')} hideLabel className="mb-3 sm:w-64" value={memberFilter} onChange={(e) => setMemberFilter(e.target.value)}>
+              <option value="">{tx('Všetci členovia')}</option>
               {(members.data ?? []).map((member) => (
                 <option key={member.userId} value={member.userId}>
                   {member.fullName || member.email}
@@ -285,7 +273,7 @@ export function PayoutsPage() {
 
           {visible.length === 0 ? (
             <p className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center text-sm text-muted-foreground">
-              {isAdmin ? 'Zatiaľ žiadne záznamy. Začnite tlačidlom Zapísať.' : 'Zatiaľ pre vás nie je zapísaná žiadna odmena.'}
+              {isAdmin ? tx('Zatiaľ žiadne záznamy. Začnite tlačidlom Zapísať.') : tx('Zatiaľ pre vás nie je zapísaná žiadna odmena.')}
             </p>
           ) : (
             <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
@@ -296,7 +284,7 @@ export function PayoutsPage() {
                     <div className="min-w-0 flex-1 basis-48">
                       <p className="truncate font-medium">
                         {isAdmin && payment.memberId !== userId
-                          ? memberName(members.data, payment.memberId) || 'Bývalý člen'
+                          ? memberName(members.data, payment.memberId) || tx('Bývalý člen')
                           : PAYMENT_KIND_LABELS[payment.kind]}
                       </p>
                       <p className="truncate text-sm text-muted-foreground">
@@ -320,7 +308,7 @@ export function PayoutsPage() {
                     <div className="shrink-0 text-right">
                       <p className="font-medium tabular-nums">{money(payment.amount)}</p>
                       <p className="text-sm text-muted-foreground">
-                        {payment.paidAt ? `vyplatené ${formatDate(payment.paidAt.slice(0, 10))}` : 'nevyplatené'}
+                        {payment.paidAt ? tf('vyplatené {0}', formatDate(payment.paidAt.slice(0, 10))) : tx('nevyplatené')}
                       </p>
                     </div>
                     {canManage && (
@@ -331,15 +319,15 @@ export function PayoutsPage() {
                           disabled={pay.isPending}
                           onClick={() => pay.mutate({ id: payment.id, paid: !payment.paidAt })}
                         >
-                          {payment.paidAt ? 'Vrátiť' : 'Vyplatené'}
+                          {payment.paidAt ? tx('Vrátiť') : tx('Vyplatené')}
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          aria-label="Odstrániť záznam"
+                          aria-label={tx('Odstrániť záznam')}
                           disabled={remove.isPending}
                           onClick={() => {
-                            if (window.confirm(`Odstrániť záznam na ${money(payment.amount)}?`)) remove.mutate(payment.id)
+                            if (window.confirm(tf('Odstrániť záznam na {0}?', money(payment.amount)))) remove.mutate(payment.id)
                           }}
                         >
                           <Trash2 className="size-4" aria-hidden />
@@ -353,9 +341,7 @@ export function PayoutsPage() {
           )}
 
           {(pay.isError || remove.isError) && (
-            <p role="alert" className="mt-2 text-sm text-destructive">
-              Zmena sa nepodarila.
-            </p>
+            <p role="alert" className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>
           )}
         </>
       )}

@@ -6,6 +6,7 @@ import { SelectField } from '@/components/ui/field'
 import type { Equipment } from '@/features/equipment/model'
 import { fetchPackages, packageKeys } from './api'
 import { describePackage, packageAdditions } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = {
   companyId: string
@@ -29,10 +30,10 @@ export function PackagePicker({ companyId, equipment, cases, disabled, onAdd }: 
   return (
     <div className="mb-3 rounded-xl border bg-surface p-3">
       <div className="flex flex-wrap items-end gap-2">
-        <SelectField label="Pridať balík" className="min-w-56 flex-1" value={chosen} onChange={(event) => setChosen(event.target.value)}>
-          <option value="">— vyberte balík —</option>
+        <SelectField label={tx('Pridať balík')} className="min-w-56 flex-1" value={chosen} onChange={(event) => setChosen(event.target.value)}>
+          <option value="">{tx('— vyberte balík —')}</option>
           {categories.map((category) => (
-            <optgroup key={category} label={category || 'Ostatné'}>
+            <optgroup key={category} label={category || tx('Ostatné')}>
               {list
                 .filter((item) => item.category === category)
                 .map((item) => (
@@ -51,14 +52,12 @@ export function PackagePicker({ companyId, equipment, cases, disabled, onAdd }: 
             setChosen('')
           }}
         >
-          <Package className="size-4" aria-hidden />
-          Pridať balík
-        </Button>
+          <Package className="size-4" aria-hidden />{tx('Pridať balík')}</Button>
       </div>
       {pkg && (
         <p className="mt-2 text-xs text-muted-foreground">
           {describePackage(pkg, equipment, cases)}
-          {additions && additions.skipped > 0 && ` · ${additions.skipped} položiek už neexistuje, preskočia sa`}
+          {additions && additions.skipped > 0 && tf(' · {0} položiek už neexistuje, preskočia sa', additions.skipped)}
           {pkg.note && ` · ${pkg.note}`}
         </p>
       )}

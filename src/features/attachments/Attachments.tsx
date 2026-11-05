@@ -14,6 +14,7 @@ import {
   type Attachment,
   type AttachmentEntity,
 } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = {
   companyId: string
@@ -66,7 +67,7 @@ export function Attachments({ companyId, entity, entityId, canEdit, title, empty
             />
             <Button variant="outline" size="sm" disabled={upload.isPending} onClick={() => fileInput.current?.click()}>
               <Upload className="size-4" aria-hidden />
-              {upload.isPending ? 'Nahrávam…' : 'Nahrať súbor'}
+              {upload.isPending ? tx('Nahrávam…') : tx('Nahrať súbor')}
             </Button>
           </>
         )
@@ -74,14 +75,11 @@ export function Attachments({ companyId, entity, entityId, canEdit, title, empty
     >
 
       {tooLarge && (
-        <p role="alert" className="mb-2 text-sm text-destructive">
-          Súbor je väčší ako {formatFileSize(MAX_DOCUMENT_BYTES)}.
+        <p role="alert" className="mb-2 text-sm text-destructive">{tx('Súbor je väčší ako')}{' '}{formatFileSize(MAX_DOCUMENT_BYTES)}.
         </p>
       )}
       {(upload.isError || remove.isError || download.isError || attachments.isError) && (
-        <p role="alert" className="mb-2 text-sm text-destructive">
-          Operácia so súborom zlyhala. Povolené sú PDF, obrázky, Word, Excel a text.
-        </p>
+        <p role="alert" className="mb-2 text-sm text-destructive">{tx('Operácia so súborom zlyhala. Povolené sú PDF, obrázky, Word, Excel a text.')}</p>
       )}
 
       {attachments.data && attachments.data.length > 0 ? (
@@ -98,7 +96,7 @@ export function Attachments({ companyId, entity, entityId, canEdit, title, empty
               <Button
                 variant="ghost"
                 size="sm"
-                aria-label={`Stiahnuť: ${attachment.name}`}
+                aria-label={tf('Stiahnuť: {0}', attachment.name)}
                 disabled={download.isPending}
                 onClick={() => download.mutate(attachment)}
               >
@@ -108,10 +106,10 @@ export function Attachments({ companyId, entity, entityId, canEdit, title, empty
                 <Button
                   variant="ghost"
                   size="sm"
-                  aria-label={`Odstrániť: ${attachment.name}`}
+                  aria-label={tf('Odstrániť: {0}', attachment.name)}
                   disabled={remove.isPending}
                   onClick={() => {
-                    if (window.confirm(`Odstrániť súbor „${attachment.name}“? Admin ho 30 dní vie obnoviť z koša.`)) remove.mutate(attachment)
+                    if (window.confirm(tf('Odstrániť súbor „{0}“? Admin ho 30 dní vie obnoviť z koša.', attachment.name))) remove.mutate(attachment)
                   }}
                 >
                   <Trash2 className="size-4" aria-hidden />

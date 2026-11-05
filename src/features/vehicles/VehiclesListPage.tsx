@@ -12,6 +12,7 @@ import { can } from '@/lib/permissions'
 import { fetchVehicles, vehicleKeys } from './api'
 import { DeadlineLine } from './DeadlineBadge'
 import { VEHICLE_STATUS_LABELS, vehicleDeadlines } from './model'
+import { tx } from '@/lib/i18n'
 
 export function VehiclesListPage() {
   const company = useCompany().active!
@@ -29,14 +30,12 @@ export function VehiclesListPage() {
   return (
     <>
       <PageHeader
-        title="Vozidlá"
-        description="Firemné autá a ich termíny"
+        title={tx('Vozidlá')}
+        description={tx('Firemné autá a ich termíny')}
         action={
           canManage && (
             <LinkButton to="/vehicles/new">
-              <Plus className="size-4" aria-hidden />
-              Pridať
-            </LinkButton>
+              <Plus className="size-4" aria-hidden />{tx('Pridať')}</LinkButton>
           )
         }
       />
@@ -44,11 +43,11 @@ export function VehiclesListPage() {
       {vehicles.isPending ? (
         <LoadingBlock />
       ) : vehicles.isError ? (
-        <ErrorBlock message="Vozidlá sa nepodarilo načítať." onRetry={() => void vehicles.refetch()} />
+        <ErrorBlock message={tx('Vozidlá sa nepodarilo načítať.')} onRetry={() => void vehicles.refetch()} />
       ) : vehicles.data.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-16 text-center">
-          <p className="font-medium">Zatiaľ tu nie je žiadne vozidlo</p>
-          {canManage && <p className="mt-1 text-sm text-muted-foreground">Začnite tlačidlom Pridať.</p>}
+          <p className="font-medium">{tx('Zatiaľ tu nie je žiadne vozidlo')}</p>
+          {canManage && <p className="mt-1 text-sm text-muted-foreground">{tx('Začnite tlačidlom Pridať.')}</p>}
         </div>
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
@@ -69,11 +68,11 @@ export function VehiclesListPage() {
                     {shown.map((deadline) => (
                       <DeadlineLine key={deadline.key} deadline={deadline} className="block truncate text-sm" />
                     ))}
-                    {deadlines.length === 0 && <span className="block text-sm text-muted-foreground">Bez zadaných termínov</span>}
+                    {deadlines.length === 0 && <span className="block text-sm text-muted-foreground">{tx('Bez zadaných termínov')}</span>}
                   </span>
                   {vehicle.status !== 'active' && (
                     <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                      {VEHICLE_STATUS_LABELS[vehicle.status]}
+                      {tx(VEHICLE_STATUS_LABELS[vehicle.status])}
                     </span>
                   )}
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />

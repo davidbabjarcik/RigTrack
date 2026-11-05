@@ -27,6 +27,7 @@ import {
 } from './model'
 import { CorrectForm } from './CorrectForm'
 import { MyAttendanceCard } from './MyAttendanceCard'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { companyId: string; event: CompanyEvent; canEdit: boolean }
 
@@ -87,8 +88,8 @@ export function EventAttendanceSection({ companyId, event, canEdit }: Props) {
 
   if (meetings.isError) {
     return canEdit ? (
-      <CollapsibleSection id="event.attendance" title="Stretávka a dochádzka">
-        <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>
+      <CollapsibleSection id="event.attendance" title={tx('Stretávka a dochádzka')}>
+        <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
       </CollapsibleSection>
     ) : null
   }
@@ -101,14 +102,14 @@ export function EventAttendanceSection({ companyId, event, canEdit }: Props) {
   if (!canEdit && list.length === 0 && !showMine) return null
 
   return (
-    <CollapsibleSection id="event.attendance" title={<>Stretávka a dochádzka ({list.length})</>}>
+    <CollapsibleSection id="event.attendance" title={<>{tx('Stretávka a dochádzka (')}{list.length})</>}>
       {showMine && (
         <div className="mb-3">
           <MyAttendanceCard companyId={companyId} event={event} meeting={meetingNow} open={myOpen} />
         </div>
       )}
       {crew && !enabled && list.length > 0 && (
-        <p className="mb-3 text-sm text-muted-foreground">Dochádzku podľa polohy si môžete zapnúť v Nastaveniach → Účet.</p>
+        <p className="mb-3 text-sm text-muted-foreground">{tx('Dochádzku podľa polohy si môžete zapnúť v Nastaveniach → Účet.')}</p>
       )}
 
       {list.length > 0 && (
@@ -117,14 +118,14 @@ export function EventAttendanceSection({ companyId, event, canEdit }: Props) {
             <li key={meeting.id} className="flex items-start gap-3 px-4 py-3">
               <span className="min-w-0 flex-1 text-sm">
                 <span className="block font-medium">
-                  {formatDate(isoToLocal(meeting.meetAt).date)} o {timeOf(meeting.meetAt)} · {PLACE_KIND_LABELS[meeting.placeKind]}
+                  {formatDate(isoToLocal(meeting.meetAt).date)} o {timeOf(meeting.meetAt)} · {tx(PLACE_KIND_LABELS[meeting.placeKind])}
                 </span>
                 <span className="block text-muted-foreground">
                   {[meeting.address, meeting.lat === null && meeting.address && 'bez polohy na mape', `polomer ${formatDistance(meeting.radiusM)}`, meeting.note].filter(Boolean).join(' · ')}
                 </span>
               </span>
               {canEdit && (
-                <Button variant="ghost" size="sm" aria-label="Zmazať stretávku" disabled={removeMeeting.isPending} onClick={() => window.confirm('Zmazať stretávku?') && removeMeeting.mutate(meeting.id)}>
+                <Button variant="ghost" size="sm" aria-label={tx('Zmazať stretávku')} disabled={removeMeeting.isPending} onClick={() => window.confirm(tx('Zmazať stretávku?')) && removeMeeting.mutate(meeting.id)}>
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
               )}
@@ -141,43 +142,43 @@ export function EventAttendanceSection({ companyId, event, canEdit }: Props) {
             if (form.date && form.time) add.mutate()
           }}
         >
-          <Field label="Dátum stretávky" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-          <Field label="Čas" type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
-          <SelectField label="Kde" value={form.placeKind} onChange={(e) => setForm({ ...form, placeKind: e.target.value as PlaceKind, address: '' })}>
+          <Field label={tx('Dátum stretávky')} type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+          <Field label={tx('Čas')} type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
+          <SelectField label={tx('Kde')} value={form.placeKind} onChange={(e) => setForm({ ...form, placeKind: e.target.value as PlaceKind, address: '' })}>
             {PLACE_KINDS.map((kind) => (
               <option key={kind} value={kind}>
-                {PLACE_KIND_LABELS[kind]}
+                {tx(PLACE_KIND_LABELS[kind])}
               </option>
             ))}
           </SelectField>
-          <Field label="Adresa" maxLength={200} placeholder="ulica, mesto" value={address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-          <Field label="Polomer (m)" type="number" inputMode="numeric" min={50} max={5000} value={form.radius} onChange={(e) => setForm({ ...form, radius: e.target.value })} />
-          <Field label="Poznámka (nepovinné)" maxLength={200} placeholder="napr. pri bráne č. 2" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          <Field label={tx('Adresa')} maxLength={200} placeholder={tx('ulica, mesto')} value={address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+          <Field label={tx('Polomer (m)')} type="number" inputMode="numeric" min={50} max={5000} value={form.radius} onChange={(e) => setForm({ ...form, radius: e.target.value })} />
+          <Field label={tx('Poznámka (nepovinné)')} maxLength={200} placeholder={tx('napr. pri bráne č. 2')} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
           <div className="sm:col-span-2">
             <Button type="submit" disabled={add.isPending || !form.date || !form.time || !address.trim()}>
-              {add.isPending ? 'Hľadám adresu na mape…' : 'Pridať stretávku'}
+              {add.isPending ? tx('Hľadám adresu na mape…') : tx('Pridať stretávku')}
             </Button>
-            {notFound && <p className="mt-2 text-sm text-accent">Adresu sa nepodarilo nájsť na mape – príchod sa nebude overovať polohou. Skúste ju napísať presnejšie (ulica, mesto).</p>}
-            {add.isError && <p className="mt-2 text-sm text-destructive">Stretávku sa nepodarilo uložiť.</p>}
+            {notFound && <p className="mt-2 text-sm text-accent">{tx('Adresu sa nepodarilo nájsť na mape – príchod sa nebude overovať polohou. Skúste ju napísať presnejšie (ulica, mesto).')}</p>}
+            {add.isError && <p className="mt-2 text-sm text-destructive">{tx('Stretávku sa nepodarilo uložiť.')}</p>}
           </div>
         </form>
       )}
 
       {canEdit && records.length > 0 && (
         <>
-          <h3 className="mb-2 text-sm font-medium text-muted-foreground">Dochádzka posádky</h3>
+          <h3 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Dochádzka posádky')}</h3>
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface text-sm">
             {records.map((item) => (
               <li key={item.id} className="px-4 py-3">
                 <div className="flex items-start gap-3">
                   <span className="min-w-0 flex-1">
-                    <span className="block font-medium">{memberName(members.data, item.userId) || 'člen'}</span>
+                    <span className="block font-medium">{memberName(members.data, item.userId) || tx('člen')}</span>
                     <span className="block text-muted-foreground">
                       {formatDate(isoToLocal(item.startedAt).date)} {timeOf(item.startedAt)} – {item.endedAt ? timeOf(item.endedAt) : 'pracuje'}
                       {' · '}
                       {formatMinutes(workedMinutes(item, now))}
-                      {item.breakMinutes > 0 && ` · prestávky ${item.breakMinutes} min`}
-                      {item.waitMinutes > 0 && ` · čakanie ${item.waitMinutes} min`}
+                      {item.breakMinutes > 0 && tf(' · prestávky {0} min', item.breakMinutes)}
+                      {item.waitMinutes > 0 && tf(' · čakanie {0} min', item.waitMinutes)}
                     </span>
                     <span className="block text-muted-foreground">
                       {[
@@ -189,15 +190,15 @@ export function EventAttendanceSection({ companyId, event, canEdit }: Props) {
                         .join(' · ')}
                     </span>
                   </span>
-                  <Button variant="ghost" size="sm" aria-label="Opraviť časy" onClick={() => setEditing(editing === item.id ? null : item.id)}>
+                  <Button variant="ghost" size="sm" aria-label={tx('Opraviť časy')} onClick={() => setEditing(editing === item.id ? null : item.id)}>
                     <Pencil className="size-4" aria-hidden />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    aria-label="Zmazať záznam dochádzky"
+                    aria-label={tx('Zmazať záznam dochádzky')}
                     disabled={removeAttendance.isPending}
-                    onClick={() => window.confirm('Zmazať záznam dochádzky? Zápis vo výkaze času ostane.') && removeAttendance.mutate(item.id)}
+                    onClick={() => window.confirm(tx('Zmazať záznam dochádzky? Zápis vo výkaze času ostane.')) && removeAttendance.mutate(item.id)}
                   >
                     <Trash2 className="size-4" aria-hidden />
                   </Button>
@@ -208,7 +209,7 @@ export function EventAttendanceSection({ companyId, event, canEdit }: Props) {
               </li>
             ))}
           </ul>
-          {correct.isError && <p className="mt-2 text-sm text-destructive">Opravu sa nepodarilo uložiť.</p>}
+          {correct.isError && <p className="mt-2 text-sm text-destructive">{tx('Opravu sa nepodarilo uložiť.')}</p>}
         </>
       )}
     </CollapsibleSection>

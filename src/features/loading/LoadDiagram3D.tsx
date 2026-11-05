@@ -1,6 +1,7 @@
 import { LOAD_FILLS, obstacleFill, obstacleLetter } from './fills'
 import { paintOrder, project, toView, VIEW_NAMES, type ViewBox3 } from './isometric'
 import type { CargoSpace, Placement } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { space: CargoSpace; placements: Placement[]; turns: number }
 
@@ -38,7 +39,7 @@ export function LoadDiagram3D({ space, placements, turns }: Props) {
   const font = (maxX - minX) / 26
 
   const solids = [
-    ...space.obstacles.map((obstacle, index) => ({ kind: 'obstacle' as const, label: obstacle.label || 'Prekážka', number: index, view: toView(obstacle, space.length, space.width, turns) })),
+    ...space.obstacles.map((obstacle, index) => ({ kind: 'obstacle' as const, label: obstacle.label || tx('Prekážka'), number: index, view: toView(obstacle, space.length, space.width, turns) })),
     ...placements.map((placement, index) => ({ kind: 'load' as const, label: placement.name, number: index + 1, view: toView(placement, space.length, space.width, turns) })),
   ]
   const order = paintOrder(solids.map((solid) => solid.view))
@@ -50,8 +51,8 @@ export function LoadDiagram3D({ space, placements, turns }: Props) {
   }
   const endOf = (x: number) => [at(x, 0, 0), at(x, space.width, 0), at(x, space.width, space.height), at(x, 0, space.height)]
   const ends = [
-    { label: 'KABÍNA', color: '#b45309', frame: endOf(0), far: turns % 4 === 0 || turns % 4 === 3 },
-    { label: 'DVERE', color: '#1d4ed8', frame: endOf(space.length), far: turns % 4 === 1 || turns % 4 === 2 },
+    { label: tx('KABÍNA'), color: '#b45309', frame: endOf(0), far: turns % 4 === 0 || turns % 4 === 3 },
+    { label: tx('DVERE'), color: '#1d4ed8', frame: endOf(space.length), far: turns % 4 === 1 || turns % 4 === 2 },
   ]
 
   return (
@@ -60,7 +61,7 @@ export function LoadDiagram3D({ space, placements, turns }: Props) {
       viewBox={`${minX - pad} ${minY - pad - font * 1.6} ${maxX - minX + pad * 2} ${maxY - minY + pad * 2 + font * 1.6}`}
       className="max-h-[70dvh] w-full rounded-lg border bg-white"
       role="img"
-      aria-label={`Priestorový nákres nakladania: ${space.name}, pohľad ${VIEW_NAMES[turns % 4]}`}
+      aria-label={tf('Priestorový nákres nakladania: {0}, pohľad {1}', space.name, VIEW_NAMES[turns % 4])}
     >
       {/* Podlaha a dve zadné steny; predné ostávajú otvorené, aby bolo vidno dnu. */}
       <polygon points={points([corner(0, 0, 0), corner(1, 0, 0), corner(1, 1, 0), corner(0, 1, 0)])} fill="#f5f5f5" stroke="#171717" strokeWidth={line * 1.5} />
@@ -81,7 +82,7 @@ export function LoadDiagram3D({ space, placements, turns }: Props) {
         const size = Math.min(font, solid.view.la * 0.45, solid.view.lb * 0.45)
         return (
           <g key={`${solid.kind}-${index}`} stroke="#171717" strokeWidth={line} strokeLinejoin="round">
-            <title>{solid.label}</title>
+            <title>{tx(solid.label)}</title>
             <polygon points={points(shape.sideA)} fill={fill} />
             <polygon points={points(shape.sideA)} fill="#000000" fillOpacity={0.18} stroke="none" />
             <polygon points={points(shape.sideB)} fill={fill} />
@@ -130,7 +131,7 @@ export function LoadDiagram3D({ space, placements, turns }: Props) {
               paintOrder="stroke"
               textAnchor="middle"
             >
-              {end.label}
+              {tx(end.label)}
             </text>
           </g>
         )

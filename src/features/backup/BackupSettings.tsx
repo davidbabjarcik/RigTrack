@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { SelectField } from '@/components/ui/field'
 import { BACKUP_FILES, downloadBackup, downloadRestoreReport, restoreBackup } from './backup'
+import { tx, tf } from '@/lib/i18n'
 
 /** Export celej firmy (ZIP) alebo jedného modulu (Excel), obnova zo zálohy a import techniky z Excelu. */
 export function BackupSettings({ companyId, companyName }: { companyId: string; companyName: string }) {
@@ -29,13 +30,11 @@ export function BackupSettings({ companyId, companyName }: { companyId: string; 
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-xl border bg-surface p-4">
-        <p className="font-medium">Export</p>
-        <p className="text-sm text-muted-foreground">
-          Všetko ako ZIP (jeden Excel na modul) alebo len jeden modul ako Excel. Fotky a dokumenty v ňom nie sú, len ich zoznam.
-        </p>
+        <p className="font-medium">{tx('Export')}</p>
+        <p className="text-sm text-muted-foreground">{tx('Všetko ako ZIP (jeden Excel na modul) alebo len jeden modul ako Excel. Fotky a dokumenty v ňom nie sú, len ich zoznam.')}</p>
         <div className="mt-3 flex flex-wrap items-end gap-2">
-          <SelectField label="Čo exportovať" className="w-64" value={module} onChange={(e) => setModule(e.target.value)}>
-            <option value="">Všetko (ZIP)</option>
+          <SelectField label={tx('Čo exportovať')} className="w-64" value={module} onChange={(e) => setModule(e.target.value)}>
+            <option value="">{tx('Všetko (ZIP)')}</option>
             {BACKUP_FILES.map((item) => (
               <option key={item.file} value={item.file}>
                 {item.file.replace(/\.xlsx$/, '')}
@@ -44,37 +43,30 @@ export function BackupSettings({ companyId, companyName }: { companyId: string; 
           </SelectField>
           <Button disabled={backup.isPending || restore.isPending} onClick={() => backup.mutate()}>
             <Archive className="size-4" aria-hidden />
-            {backup.isPending ? `Pripravujem${current ? ` ${current}` : ''}…` : module ? 'Stiahnuť Excel' : 'Stiahnuť všetko (ZIP)'}
+            {backup.isPending ? `Pripravujem${current ? ` ${current}` : ''}…` : module ? tx('Stiahnuť Excel') : tx('Stiahnuť všetko (ZIP)')}
           </Button>
         </div>
         {backup.isSuccess && (
-          <p role="status" className="mt-2 text-sm">
-            Hotovo{backup.data.files > 1 ? `: ${backup.data.files} súborov v ZIP` : ''}.
-            {backup.data.skipped.length > 0 && ` Niektoré tabuľky sa načítať nedali (${backup.data.skipped.length}).`}
+          <p role="status" className="mt-2 text-sm">{tx('Hotovo')}{backup.data.files > 1 ? tf(': {0} súborov v ZIP', backup.data.files) : ''}.
+            {backup.data.skipped.length > 0 && tf(' Niektoré tabuľky sa načítať nedali ({0}).', backup.data.skipped.length)}
           </p>
         )}
         {backup.isError && (
-          <p role="alert" className="mt-2 text-sm text-destructive">
-            Export sa nepodarilo pripraviť.
-          </p>
+          <p role="alert" className="mt-2 text-sm text-destructive">{tx('Export sa nepodarilo pripraviť.')}</p>
         )}
       </div>
 
       <div className="rounded-xl border bg-surface p-4">
-        <p className="font-medium">Import</p>
+        <p className="font-medium">{tx('Import')}</p>
         <p className="text-sm text-muted-foreground">
-          <strong>Obnova zo zálohy:</strong> nahrajte ZIP alebo jeden Excel z exportu tejto firmy. Doplnia sa záznamy, ktoré vo firme chýbajú (napr. omylom
-          zmazané); existujúce sa nezmenia.
-        </p>
+          <strong>{tx('Obnova zo zálohy:')}</strong>{' '}{tx('nahrajte ZIP alebo jeden Excel z exportu tejto firmy. Doplnia sa záznamy, ktoré vo firme chýbajú (napr. omylom zmazané); existujúce sa nezmenia.')}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button variant="outline" disabled={restore.isPending || backup.isPending} onClick={() => input.current?.click()}>
             <FileUp className="size-4" aria-hidden />
-            {restore.isPending ? `Obnovujem${current ? ` ${current}` : ''}…` : 'Obnoviť zo zálohy (ZIP / Excel)'}
+            {restore.isPending ? `Obnovujem${current ? ` ${current}` : ''}…` : tx('Obnoviť zo zálohy (ZIP / Excel)')}
           </Button>
           <Link to="/equipment/excel" className="inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium hover:bg-muted">
-            <FileSpreadsheet className="size-4" aria-hidden />
-            Technika z Excelu (import / export)
-          </Link>
+            <FileSpreadsheet className="size-4" aria-hidden />{tx('Technika z Excelu (import / export)')}</Link>
         </div>
         <input
           ref={input}
@@ -85,22 +77,19 @@ export function BackupSettings({ companyId, companyName }: { companyId: string; 
           onChange={(event) => {
             const file = event.target.files?.[0]
             event.target.value = ''
-            if (file && window.confirm(`Obnoviť chýbajúce záznamy zo súboru ${file.name}?`)) restore.mutate(file)
+            if (file && window.confirm(tf('Obnoviť chýbajúce záznamy zo súboru {0}?', file.name))) restore.mutate(file)
           }}
         />
         {restore.isSuccess && (
           <div role="status" className="mt-2 text-sm">
-            <p>
-              Hotovo: doplnených {added} záznamov{failed.length > 0 && `, ${failed.length} tabuliek sa nedalo obnoviť`}.{' '}
-              <button type="button" className="text-accent hover:underline" onClick={() => downloadRestoreReport(restore.data)}>
-                Stiahnuť podrobnosti
-              </button>
+            <p>{tx('Hotovo: doplnených')}{' '}{added}{' '}{tx('záznamov')}{failed.length > 0 && tf(', {0} tabuliek sa nedalo obnoviť', failed.length)}.{' '}
+              <button type="button" className="text-accent hover:underline" onClick={() => downloadRestoreReport(restore.data)}>{tx('Stiahnuť podrobnosti')}</button>
             </p>
             {failed.length > 0 && (
               <ul className="mt-1 list-disc pl-5 text-muted-foreground">
                 {failed.slice(0, 6).map((item) => (
                   <li key={item.table}>
-                    {item.label}: {item.error}
+                    {tx(item.label)}: {item.error}
                   </li>
                 ))}
               </ul>
@@ -109,7 +98,7 @@ export function BackupSettings({ companyId, companyName }: { companyId: string; 
         )}
         {restore.isError && (
           <p role="alert" className="mt-2 text-sm text-destructive">
-            {restore.error instanceof Error ? restore.error.message : 'Obnova zlyhala.'}
+            {restore.error instanceof Error ? restore.error.message : tx('Obnova zlyhala.')}
           </p>
         )}
       </div>

@@ -58,6 +58,7 @@ import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
 import { formatDateTime } from '@/lib/format'
+import { tx, tf } from '@/lib/i18n'
 
 /** Sekcia Nastavení – dá sa zbaliť; prehliadač si pamätá, čo máte zbalené. */
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -82,21 +83,21 @@ function useAccountStatus(company: Membership) {
 function AccountBadge({ status, invitation }: { status: AccountStatus | undefined; invitation?: boolean }) {
   if (!status) return null
   const [tone, text] = !status.hasAccount
-    ? ['bg-muted text-muted-foreground', 'ešte nemá účet']
+    ? ['bg-muted text-muted-foreground', tx('ešte nemá účet')]
     : !status.confirmed
-      ? ['bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200', 'účet bez potvrdeného e-mailu']
+      ? ['bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200', tx('účet bez potvrdeného e-mailu')]
       : invitation
-        ? ['bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200', 'má účet, pozvánku ešte neprijal']
+        ? ['bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200', tx('má účet, pozvánku ešte neprijal')]
         : status.lastSignInAt
           ? ['bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200', `naposledy ${formatDateTime(status.lastSignInAt)}`]
-          : ['bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200', 'má účet']
+          : ['bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200', tx('má účet')]
   return <span className={cn('inline-block rounded-full px-2 py-0.5 text-xs font-medium', tone)}>{text}</span>
 }
 
 function RoleOptions() {
   return ROLES.map((role) => (
     <option key={role} value={role}>
-      {ROLE_LABELS[role]}
+      {tx(ROLE_LABELS[role])}
     </option>
   ))
 }
@@ -130,12 +131,10 @@ function Members({ company, userId }: { company: Membership; userId: string }) {
     onSettled: refresh,
   })
 
-  if (members.isPending) return <p className="text-sm text-muted-foreground">Načítavam…</p>
+  if (members.isPending) return <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
   if (members.isError) {
     return (
-      <p role="alert" className="text-sm text-destructive">
-        Členov sa nepodarilo načítať.
-      </p>
+      <p role="alert" className="text-sm text-destructive">{tx('Členov sa nepodarilo načítať.')}</p>
     )
   }
 
@@ -147,7 +146,7 @@ function Members({ company, userId }: { company: Membership; userId: string }) {
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">
                 {member.fullName || member.email}
-                {member.userId === userId && <span className="text-muted-foreground"> (vy)</span>}
+                {member.userId === userId && <span className="text-muted-foreground">{' '}{tx('(vy)')}</span>}
               </p>
               {member.fullName && <p className="truncate text-sm text-muted-foreground">{member.email}</p>}
               <AccountBadge status={statusOf(member.email)} />
@@ -167,25 +166,23 @@ function Members({ company, userId }: { company: Membership; userId: string }) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  aria-label={`Odobrať: ${member.email}`}
+                  aria-label={tf('Odobrať: {0}', member.email)}
                   disabled={remove.isPending}
                   onClick={() => {
-                    if (window.confirm(`Odobrať ${member.email} z firmy?`)) remove.mutate(member.userId)
+                    if (window.confirm(tf('Odobrať {0} z firmy?', member.email))) remove.mutate(member.userId)
                   }}
                 >
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
               </>
             ) : (
-              <span className="text-sm text-muted-foreground">{ROLE_LABELS[member.role]}</span>
+              <span className="text-sm text-muted-foreground">{tx(ROLE_LABELS[member.role])}</span>
             )}
           </li>
         ))}
       </ul>
       {(changeRole.isError || remove.isError) && (
-        <p role="alert" className="mt-2 text-sm text-destructive">
-          Zmena sa nepodarila. Firma musí mať vždy aspoň jedného admina.
-        </p>
+        <p role="alert" className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila. Firma musí mať vždy aspoň jedného admina.')}</p>
       )}
     </>
   )
@@ -220,29 +217,22 @@ function Invitations({ company }: { company: Membership }) {
     <>
       <form onSubmit={handleSubmit} className="mb-3 flex flex-col gap-3 rounded-xl border bg-surface p-4 sm:flex-row sm:items-end">
         <Field
-          label="E-mail"
+          label={tx('E-mail')}
           type="email"
           required
           className="flex-1"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <SelectField label="Rola" className="sm:w-44" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+        <SelectField label={tx('Rola')} className="sm:w-44" value={role} onChange={(e) => setRole(e.target.value as Role)}>
           <RoleOptions />
         </SelectField>
-        <Button type="submit" disabled={invite.isPending}>
-          Pozvať
-        </Button>
+        <Button type="submit" disabled={invite.isPending}>{tx('Pozvať')}</Button>
       </form>
       {invite.isError && (
-        <p role="alert" className="mb-3 text-sm text-destructive">
-          Pozvánku sa nepodarilo vytvoriť. Možno už pre tento e-mail existuje.
-        </p>
+        <p role="alert" className="mb-3 text-sm text-destructive">{tx('Pozvánku sa nepodarilo vytvoriť. Možno už pre tento e-mail existuje.')}</p>
       )}
-      <p className="mb-3 text-sm text-muted-foreground">
-        Pozvánka sa neposiela e-mailom. Pozvaný ju uvidí po prihlásení do RigTracku účtom s touto adresou. Pri každej pozvánke vidíte,
-        či si človek už účet vytvoril.
-      </p>
+      <p className="mb-3 text-sm text-muted-foreground">{tx('Pozvánka sa neposiela e-mailom. Pozvaný ju uvidí po prihlásení do RigTracku účtom s touto adresou. Pri každej pozvánke vidíte, či si človek už účet vytvoril.')}</p>
       {invitations.data && invitations.data.length > 0 && (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
           {invitations.data.map((invitation) => (
@@ -251,11 +241,11 @@ function Invitations({ company }: { company: Membership }) {
                 <span className="block truncate">{invitation.email}</span>
                 <AccountBadge status={statusOf(invitation.email)} invitation />
               </span>
-              <span className="text-sm text-muted-foreground">{ROLE_LABELS[invitation.role]}</span>
+              <span className="text-sm text-muted-foreground">{tx(ROLE_LABELS[invitation.role])}</span>
               <Button
                 variant="ghost"
                 size="sm"
-                aria-label={`Zrušiť pozvánku: ${invitation.email}`}
+                aria-label={tf('Zrušiť pozvánku: {0}', invitation.email)}
                 disabled={cancel.isPending}
                 onClick={() => cancel.mutate(invitation.id)}
               >
@@ -273,30 +263,24 @@ function InventoryLookups({ companyId }: { companyId: string }) {
   const { categories, locations } = useEquipmentLookups(companyId)
   return (
     <>
-      <Section title="Kategórie techniky a ich farby">
-        <p className="mb-2 text-sm text-muted-foreground">
-          Farba kategórie je farebný pruh pri technike v zozname. Vyberte ju pri kategórii vpravo (Automaticky = podľa názvu).
-          Technika bez kategórie má farbu podľa druhu – nižšie v „Farby druhov techniky“.
-        </p>
-        <LookupSettings companyId={companyId} table="equipment_categories" items={categories} noun="kategóriu" />
-        <p className="mt-2 text-sm text-muted-foreground">
-          Tovar v kategórii označenej ako spotrebný materiál (viazačky, konektory…) sa pri objednávke nepridáva do techniky,
-          eviduje sa len jeho nákup a cena.
-        </p>
+      <Section title={tx('Kategórie techniky a ich farby')}>
+        <p className="mb-2 text-sm text-muted-foreground">{tx('Farba kategórie je farebný pruh pri technike v zozname. Vyberte ju pri kategórii vpravo (Automaticky = podľa názvu). Technika bez kategórie má farbu podľa druhu – nižšie v „Farby druhov techniky“.')}</p>
+        <LookupSettings companyId={companyId} table="equipment_categories" items={categories} noun={tx('kategóriu')} />
+        <p className="mt-2 text-sm text-muted-foreground">{tx('Tovar v kategórii označenej ako spotrebný materiál (viazačky, konektory…) sa pri objednávke nepridáva do techniky, eviduje sa len jeho nákup a cena.')}</p>
       </Section>
-      <Section title="Farby druhov techniky">
+      <Section title={tx('Farby druhov techniky')}>
         <KindColorsSettings companyId={companyId} canEdit />
       </Section>
-      <Section title="Umiestnenia">
-        <LookupSettings companyId={companyId} table="locations" items={locations} noun="umiestnenie" />
+      <Section title={tx('Umiestnenia')}>
+        <LookupSettings companyId={companyId} table="locations" items={locations} noun={tx('umiestnenie')} />
       </Section>
-      <Section title="Šablóny cases">
+      <Section title={tx('Šablóny cases')}>
         <CaseTemplateSettings companyId={companyId} />
       </Section>
-      <Section title="Tlač a kľúčové slová (@todo 31121800, @toprint 01001800)">
+      <Section title={tx('Tlač a kľúčové slová (@todo 31121800, @toprint 01001800)')}>
         <PrintSettings companyId={companyId} />
       </Section>
-      <Section title="Farby dĺžok káblov">
+      <Section title={tx('Farby dĺžok káblov')}>
         <CableColorsSettings companyId={companyId} />
       </Section>
     </>
@@ -311,16 +295,16 @@ export function SettingsPage() {
 
   const isAdmin = isAdminRole(company.role)
   const tabs = [
-    { id: 'company', label: 'Firma', shown: true },
-    { id: 'members', label: 'Členovia', shown: true },
-    { id: 'permissions', label: 'Oprávnenia', shown: isAdmin },
-    { id: 'lists', label: 'Zoznamy', shown: can(company, 'lookups.manage') },
-    { id: 'stage', label: 'Nivtec', shown: can(company, 'lookups.manage') },
-    { id: 'packages', label: 'Balíky', shown: can(company, 'lookups.manage') },
+    { id: 'company', label: tx('Firma'), shown: true },
+    { id: 'members', label: tx('Členovia'), shown: true },
+    { id: 'permissions', label: tx('Oprávnenia'), shown: isAdmin },
+    { id: 'lists', label: tx('Zoznamy'), shown: can(company, 'lookups.manage') },
+    { id: 'stage', label: tx('Nivtec'), shown: can(company, 'lookups.manage') },
+    { id: 'packages', label: tx('Balíky'), shown: can(company, 'lookups.manage') },
     // Pripomienky, úrovne kontroly a limity hodín / revízie sú spolu.
-    { id: 'reminders', label: 'Pripomienky a limity', shown: can(company, 'lookups.manage') || can(company, 'maintenance.manage') },
-    { id: 'warehouse', label: 'Sklad', shown: can(company, 'warehouse.manage') },
-    { id: 'account', label: 'Účet', shown: true },
+    { id: 'reminders', label: tx('Pripomienky a limity'), shown: can(company, 'lookups.manage') || can(company, 'maintenance.manage') },
+    { id: 'warehouse', label: tx('Sklad'), shown: can(company, 'warehouse.manage') },
+    { id: 'account', label: tx('Účet'), shown: true },
   ].filter((tab) => tab.shown)
   // Záložka je v adrese, aby sa na ňu dalo odkázať a aby ju prežilo obnovenie stránky.
   const [params, setParams] = useSearchParams()
@@ -330,9 +314,9 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Nastavenia" description="Firma, členovia a účet" />
+      <PageHeader title={tx('Nastavenia')} description={tx('Firma, členovia a účet')} />
 
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Časti nastavení">
+      <div className="mb-6 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label={tx('Časti nastavení')}>
         {tabs.map((item) => (
           <button
             key={item.id}
@@ -345,80 +329,78 @@ export function SettingsPage() {
               tab === item.id ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted',
             )}
           >
-            {item.label}
+            {tx(item.label)}
           </button>
         ))}
       </div>
 
       {tab === 'company' && (
         <>
-          <Section title="Firma">
+          <Section title={tx('Firma')}>
             <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
               <div className="min-w-0">
                 <p className="truncate font-medium">{company.companyName}</p>
-                <p className="text-sm text-muted-foreground">Vaša rola: {ROLE_LABELS[company.role]}</p>
+                <p className="text-sm text-muted-foreground">{tx('Vaša rola:')}{' '}{tx(ROLE_LABELS[company.role])}</p>
               </div>
-              <Link to="/company/select" className="shrink-0 text-sm font-medium text-accent hover:underline">
-                Zmeniť firmu
-              </Link>
+              <Link to="/company/select" className="shrink-0 text-sm font-medium text-accent hover:underline">{tx('Zmeniť firmu')}</Link>
             </div>
           </Section>
 
-          <Section title="Údaje o firme a sklad">
+          <Section title={tx('Údaje o firme a sklad')}>
             <CompanyProfileSettings companyId={company.companyId} canEdit={isAdmin} />
           </Section>
 
           {isAdmin && (
-            <Section title="Vystavovanie ponúk – s.r.o. / živnosť">
+            <Section title={tx('Vystavovanie ponúk – s.r.o. / živnosť')}>
               <CompanyIssuersSettings companyId={company.companyId} />
             </Section>
           )}
 
           {isAdmin && (
-            <Section title="Logo a štítky na cases">
+            <Section title={tx('Logo a štítky na cases')}>
               <BrandingSettings companyId={company.companyId} />
             </Section>
           )}
 
           {isAdmin && (
-            <Section title="Prepojené firmy">
+            <Section title={tx('Prepojené firmy')}>
               <LinksSettings companyId={company.companyId} />
             </Section>
           )}
 
 
           {isAdmin && (
-            <Section title="Import a export">
+            <Section title={tx('Import a export')}>
               <BackupSettings companyId={company.companyId} companyName={company.companyName} />
             </Section>
           )}
 
           {isAdmin && (
-            <Section title="Kôš">
+            <Section title={tx('Kôš')}>
               <Link to="/admin/recycle-bin" className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4 hover:bg-muted">
                 <span>
-                  <span className="block font-medium">Zmazané záznamy</span>
-                  <span className="block text-sm text-muted-foreground">Technika, cases, fotky a dokumenty sa dajú 30 dní obnoviť</span>
+                  <span className="block font-medium">{tx('Zmazané záznamy')}</span>
+                  <span className="block text-sm text-muted-foreground">{tx('Technika, cases, fotky a dokumenty sa dajú 30 dní obnoviť')}</span>
                 </span>
-                <span className="shrink-0 text-sm font-medium text-accent">Otvoriť</span>
+                <span className="shrink-0 text-sm font-medium text-accent">{tx('Otvoriť')}</span>
               </Link>
             </Section>
           )}
 
           {can(company, 'audit.view') && (
-            <Section title="História zmien">
+            <Section title={tx('História zmien')}>
               <Link to="/audit" className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4 hover:bg-muted">
                 <span>
-                  <span className="block font-medium">Kto, kedy a čo zmenil</span>
-                  <span className="block text-sm text-muted-foreground">Technika, cases, výpožičky, objednávky, vozidlá, servis a eventy</span>
+                  <span className="block font-medium">{tx('Kto, kedy a čo zmenil')}</span>
+                  <span className="block text-sm text-muted-foreground">{tx('Technika, cases, výpožičky, objednávky, vozidlá, servis a eventy')}</span>
                 </span>
-                <span className="shrink-0 text-sm font-medium text-accent">Otvoriť</span>
+                <span className="shrink-0 text-sm font-medium text-accent">{tx('Otvoriť')}</span>
               </Link>
             </Section>
           )}
 
           {isAdmin && (
-            <Section title="Nebezpečná zóna">
+            <Section title={tx('Nebezpečná zóna')}>
               <DeleteCompanySettings userId={user.id} />
             </Section>
           )}
@@ -427,11 +409,11 @@ export function SettingsPage() {
 
       {tab === 'members' && (
         <>
-          <Section title="Členovia">
+          <Section title={tx('Členovia')}>
             <Members company={company} userId={user.id} />
           </Section>
           {isAdmin && (
-            <Section title="Pozvánky">
+            <Section title={tx('Pozvánky')}>
               <Invitations company={company} />
             </Section>
           )}
@@ -439,12 +421,12 @@ export function SettingsPage() {
       )}
 
       {tab === 'permissions' && (
-        <Section title="Oprávnenia">
+        <Section title={tx('Oprávnenia')}>
           <PermissionsSection companyId={company.companyId} />
         </Section>
       )}
       {tab === 'permissions' && (
-        <Section title="Zodpovedné osoby">
+        <Section title={tx('Zodpovedné osoby')}>
           <ResponsibilitiesSettings companyId={company.companyId} />
         </Section>
       )}
@@ -452,105 +434,96 @@ export function SettingsPage() {
       {tab === 'lists' && <InventoryLookups companyId={company.companyId} />}
 
       {tab === 'packages' && (
-        <Section title="Balíky techniky">
+        <Section title={tx('Balíky techniky')}>
           <PackagesSettings companyId={company.companyId} />
         </Section>
       )}
 
       {tab === 'reminders' && can(company, 'lookups.manage') && (
-        <Section title="Pripomienky pri eventoch">
+        <Section title={tx('Pripomienky pri eventoch')}>
           <RulesSettings companyId={company.companyId} />
         </Section>
       )}
 
       {tab === 'reminders' && isAdmin && (
-        <Section title="Činnosti pred, počas a po evente (nakladanie, kontrola hliníka…)">
+        <Section title={tx('Činnosti pred, počas a po evente (nakladanie, kontrola hliníka…)')}>
           <DutySettings companyId={company.companyId} />
         </Section>
       )}
 
       {tab === 'reminders' && isAdmin && (
-        <Section title="Úrovne kontroly (cases, prevádzkové hodiny)">
+        <Section title={tx('Úrovne kontroly (cases, prevádzkové hodiny)')}>
           <CheckLevelsSettings companyId={company.companyId} />
         </Section>
       )}
 
       {tab === 'reminders' && can(company, 'maintenance.manage') && (
-        <Section title="Limity hodín a revízie">
+        <Section title={tx('Limity hodín a revízie')}>
           <MaintenanceSettings companyId={company.companyId} />
         </Section>
       )}
 
       {tab === 'warehouse' && (
-        <Section title="Sklad – rozmery, regály, police a palety">
+        <Section title={tx('Sklad – rozmery, regály, police a palety')}>
           <WarehouseSettings companyId={company.companyId} />
         </Section>
       )}
 
       {tab === 'stage' && (
-        <Section title="Pódium Nivtec">
+        <Section title={tx('Pódium Nivtec')}>
           <StageSettings companyId={company.companyId} />
         </Section>
       )}
 
       {tab === 'account' && (
         <>
-          <Section title="Jazyk / Language">
+          <Section title={tx('Jazyk / Language')}>
             <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-surface p-4">
               <LanguageToggle />
-              <p className="min-w-0 flex-1 text-sm text-muted-foreground">
-                Slovenčina alebo angličtina – uloží sa k účtu. Prekladáme postupne; čo ešte nie je preložené, ostáva po slovensky. Hárky na tlač
-                a štítky sú vždy po slovensky. / Slovak or English – saved to your account. Translation is in progress; untranslated parts stay in
-                Slovak.
-              </p>
+              <p className="min-w-0 flex-1 text-sm text-muted-foreground">{tx('Slovenčina alebo angličtina – uloží sa k účtu. Hárky na tlač a štítky sú vždy po slovensky.')}</p>
             </div>
           </Section>
-          <Section title="Účet">
+          <Section title={tx('Účet')}>
             <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
               <p className="min-w-0 truncate">{user.email}</p>
-              <Button variant="outline" size="sm" onClick={() => void getSupabase().auth.signOut()}>
-                Odhlásiť sa
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => void getSupabase().auth.signOut()}>{tx('Odhlásiť sa')}</Button>
             </div>
           </Section>
-          <Section title="Moje údaje (GDPR)">
+          <Section title={tx('Moje údaje (GDPR)')}>
             <MyDataSettings email={user.email ?? ''} />
           </Section>
-          <Section title="Farby priorít úloh">
+          <Section title={tx('Farby priorít úloh')}>
             <PriorityColorsSettings />
           </Section>
-          <Section title="Poradie techniky (moje zameranie)">
+          <Section title={tx('Poradie techniky (moje zameranie)')}>
             <KindOrderSettings />
           </Section>
-          <Section title="Upozornenia na mobil">
+          <Section title={tx('Upozornenia na mobil')}>
             <PushSettings userId={user.id} />
           </Section>
-          <Section title="Dochádzka">
+          <Section title={tx('Dochádzka')}>
             <AttendanceSettings companyId={company.companyId} />
           </Section>
           <Section title={`Moje zariadenia (${company.companyName})`}>
             <MyDevicesSettings companyId={company.companyId} userId={user.id} />
           </Section>
           {isAdminRole(company.role) && (
-            <Section title="E-mailové upozornenia">
+            <Section title={tx('E-mailové upozornenia')}>
               <EmailPrefs companyId={company.companyId} />
             </Section>
           )}
-          <Section title="Aplikácia na ploche">
+          <Section title={tx('Aplikácia na ploche')}>
             <InstallGuide />
           </Section>
-          <Section title="Demo">
+          <Section title={tx('Demo')}>
             <DemoSettings userId={user.id} />
           </Section>
-          <Section title="O aplikácii">
+          <Section title={tx('O aplikácii')}>
             <div className="flex flex-col gap-3 rounded-xl border bg-surface p-4 text-sm">
-              <p>
-                RigTrack <strong>verzia {APP_VERSION}</strong>
+              <p>{tx('RigTrack')}{' '}<strong>{tx('verzia')}{' '}{APP_VERSION}</strong>
               </p>
               <CheckUpdateButton />
-              <Link to="/help" className="text-accent hover:underline">
-                Návod a tipy – ako na veci, ktoré nie sú hneď vidieť
-              </Link>
+              <Link to="/help" className="text-accent hover:underline">{tx('Návod a tipy – ako na veci, ktoré nie sú hneď vidieť')}</Link>
             </div>
           </Section>
         </>

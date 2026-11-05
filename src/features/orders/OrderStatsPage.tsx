@@ -10,6 +10,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { fetchOrders, orderKeys } from './api'
 import { formatTotals, orderStats } from './model'
+import { tx } from '@/lib/i18n'
 
 const MONTHS = ['január', 'február', 'marec', 'apríl', 'máj', 'jún', 'júl', 'august', 'september', 'október', 'november', 'december']
 
@@ -40,45 +41,43 @@ export function OrderStatsPage() {
   return (
     <>
       <Link to="/orders" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" aria-hidden />
-        Objednávky
-      </Link>
+        <ArrowLeft className="size-4" aria-hidden />{tx('Objednávky')}</Link>
       <OrdersTabs />
-      <PageHeader title="Štatistiky objednávok" description="Nákupy pre nás; nákupy pre iných sa rátajú zvlášť." />
+      <PageHeader title={tx('Štatistiky objednávok')} description={tx('Nákupy pre nás; nákupy pre iných sa rátajú zvlášť.')} />
       {orders.isPending ? (
         <LoadingBlock />
       ) : orders.isError ? (
-        <ErrorBlock message="Objednávky sa nepodarilo načítať." onRetry={() => void orders.refetch()} />
+        <ErrorBlock message={tx('Objednávky sa nepodarilo načítať.')} onRetry={() => void orders.refetch()} />
       ) : (
         <div className="flex flex-col gap-6">
-          <SelectField label="Obdobie" className="w-48" value={year} onChange={(e) => setYear(e.target.value)}>
+          <SelectField label={tx('Obdobie')} className="w-48" value={year} onChange={(e) => setYear(e.target.value)}>
             {years.map((value) => (
               <option key={value} value={value}>
                 {value}
               </option>
             ))}
-            <option value="">Celé obdobie</option>
+            <option value="">{tx('Celé obdobie')}</option>
           </SelectField>
 
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border bg-surface p-4">
-              <p className="text-sm text-muted-foreground">Minuté pre nás</p>
+              <p className="text-sm text-muted-foreground">{tx('Minuté pre nás')}</p>
               <p className="mt-1 text-xl font-semibold">{formatTotals(stats.totals)}</p>
             </div>
             <div className="rounded-xl border bg-surface p-4">
-              <p className="text-sm text-muted-foreground">Objednávok</p>
+              <p className="text-sm text-muted-foreground">{tx('Objednávok')}</p>
               <p className="mt-1 text-xl font-semibold">{stats.count}</p>
             </div>
             <div className="rounded-xl border bg-surface p-4">
-              <p className="text-sm text-muted-foreground">Nákupy nie pre nás</p>
+              <p className="text-sm text-muted-foreground">{tx('Nákupy nie pre nás')}</p>
               <p className="mt-1 text-xl font-semibold">{formatTotals(stats.forOthers)}</p>
             </div>
           </div>
 
           <section>
-            <h2 className="mb-2 text-sm font-medium text-muted-foreground">Po mesiacoch</h2>
+            <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Po mesiacoch')}</h2>
             {stats.byMonth.length === 0 ? (
-              <p className="text-sm text-muted-foreground">V tomto období nič.</p>
+              <p className="text-sm text-muted-foreground">{tx('V tomto období nič.')}</p>
             ) : (
               <ul className="divide-y rounded-xl border bg-surface">
                 {stats.byMonth.map((row) => (
@@ -98,7 +97,7 @@ export function OrderStatsPage() {
 
           <div className="grid gap-6 lg:grid-cols-2">
             <section>
-              <h2 className="mb-2 text-sm font-medium text-muted-foreground">Dodávatelia</h2>
+              <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Dodávatelia')}</h2>
               <ul className="divide-y rounded-xl border bg-surface">
                 {stats.bySupplier.slice(0, 15).map((row) => (
                   <li key={row.name} className="px-4 py-2.5">
@@ -114,13 +113,13 @@ export function OrderStatsPage() {
               </ul>
             </section>
             <section>
-              <h2 className="mb-2 text-sm font-medium text-muted-foreground">Kto objednával</h2>
+              <h2 className="mb-2 text-sm font-medium text-muted-foreground">{tx('Kto objednával')}</h2>
               <ul className="divide-y rounded-xl border bg-surface">
                 {stats.byOrderer.map((row) => (
                   <li key={row.id ?? 'unknown'} className="px-4 py-2.5">
                     <span className="flex justify-between gap-3 text-sm">
                       <span className="min-w-0 truncate">
-                        {(row.id && memberName(members.data, row.id)) || 'neuvedené'} <span className="text-muted-foreground">· {row.count}×</span>
+                        {(row.id && memberName(members.data, row.id)) || tx('neuvedené')} <span className="text-muted-foreground">· {row.count}×</span>
                       </span>
                       <span className="shrink-0 font-medium">{formatTotals(row.totals)}</span>
                     </span>

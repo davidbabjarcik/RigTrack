@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import type { CompanyEvent } from './model'
 import { DAY_KIND_LABELS, DAY_KINDS, eventDates, onDay, type DayKind, type EventDay } from './plan'
 import { deleteDay, fetchCrewDays, planKeys, saveDay, setCrewDays, useEventDays } from './planApi'
+import { tx, tf } from '@/lib/i18n'
 
 const KIND_TONES: Record<DayKind, string> = {
   build: 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200',
@@ -58,23 +59,23 @@ function DayRow({
         {canEdit ? (
           <>
             <select
-              aria-label="Druh dňa"
+              aria-label={tx('Druh dňa')}
               className="h-9 rounded-lg border bg-surface px-2 text-sm"
               value={current.kind}
               onChange={(event) => setDraft({ ...current, kind: event.target.value as DayKind })}
             >
               {DAY_KINDS.map((kind) => (
                 <option key={kind} value={kind}>
-                  {DAY_KIND_LABELS[kind]}
+                  {tx(DAY_KIND_LABELS[kind])}
                 </option>
               ))}
             </select>
-            <input type="time" aria-label="Od" className="h-9 rounded-lg border bg-surface px-2 text-sm" value={current.startsAt} onChange={(event) => setDraft({ ...current, startsAt: event.target.value })} />
+            <input type="time" aria-label={tx('Od')} className="h-9 rounded-lg border bg-surface px-2 text-sm" value={current.startsAt} onChange={(event) => setDraft({ ...current, startsAt: event.target.value })} />
             <span className="text-muted-foreground">–</span>
-            <input type="time" aria-label="Do" className="h-9 rounded-lg border bg-surface px-2 text-sm" value={current.endsAt} onChange={(event) => setDraft({ ...current, endsAt: event.target.value })} />
+            <input type="time" aria-label={tx('Do')} className="h-9 rounded-lg border bg-surface px-2 text-sm" value={current.endsAt} onChange={(event) => setDraft({ ...current, endsAt: event.target.value })} />
             <input
-              aria-label="Poznámka k dňu"
-              placeholder="poznámka (napr. príchod kamióna)"
+              aria-label={tx('Poznámka k dňu')}
+              placeholder={tx('poznámka (napr. príchod kamióna)')}
               className="h-9 min-w-40 flex-1 rounded-lg border bg-surface px-2 text-sm"
               maxLength={300}
               value={current.note}
@@ -82,28 +83,26 @@ function DayRow({
             />
             {(draft || !day) && (
               <Button size="sm" disabled={save.isPending} onClick={() => save.mutate()}>
-                {day ? 'Uložiť' : 'Pridať deň'}
+                {day ? tx('Uložiť') : tx('Pridať deň')}
               </Button>
             )}
             {day && !draft && (
-              <Button variant="ghost" size="sm" disabled={remove.isPending} onClick={() => remove.mutate()}>
-                Odstrániť
-              </Button>
+              <Button variant="ghost" size="sm" disabled={remove.isPending} onClick={() => remove.mutate()}>{tx('Odstrániť')}</Button>
             )}
           </>
         ) : day ? (
           <>
-            <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', KIND_TONES[day.kind])}>{DAY_KIND_LABELS[day.kind]}</span>
+            <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', KIND_TONES[day.kind])}>{tx(DAY_KIND_LABELS[day.kind])}</span>
             {(day.startsAt || day.endsAt) && <span className="text-sm tabular-nums">{[day.startsAt, day.endsAt].filter(Boolean).join(' – ')}</span>}
             {day.note && <span className="text-sm text-muted-foreground">{day.note}</span>}
           </>
         ) : (
-          <span className="text-sm text-muted-foreground">bez programu</span>
+          <span className="text-sm text-muted-foreground">{tx('bez programu')}</span>
         )}
       </div>
       {crew.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pl-0 text-sm sm:pl-26">
-          <span className="text-xs text-muted-foreground">Ide:</span>
+          <span className="text-xs text-muted-foreground">{tx('Ide:')}</span>
           {crew.map((person) => {
             const days = crewDays[person.id] ?? []
             const on = onDay(days, date)
@@ -120,17 +119,17 @@ function DayRow({
                 }}
                 className={cn('rounded-full border px-2 py-0.5 text-xs', on ? 'bg-primary text-primary-foreground' : 'bg-surface text-muted-foreground line-through')}
               >
-                {person.label}
+                {tx(person.label)}
               </button>
             ) : (
               on && (
                 <span key={person.id} className="rounded-full bg-muted px-2 py-0.5 text-xs">
-                  {person.label}
+                  {tx(person.label)}
                 </span>
               )
             )
           })}
-          {!canEdit && going.length === 0 && <span className="text-xs text-muted-foreground">nikto</span>}
+          {!canEdit && going.length === 0 && <span className="text-xs text-muted-foreground">{tx('nikto')}</span>}
         </div>
       )}
     </li>
@@ -145,15 +144,15 @@ export function EventPlanSection({ companyId, event, canEdit }: { companyId: str
   const crewDays = useQuery({ queryKey: [...planKeys.days(companyId, event.id), 'crew'], queryFn: () => fetchCrewDays(companyId, event.id), retry: false })
   const dates = eventDates(event.startsOn, event.endsOn)
   if (days.isError) return null
-  const crew = event.crew.map((person) => ({ id: person.id, label: person.memberId ? memberName(members.data, person.memberId) || 'Bývalý člen' : person.name }))
+  const crew = event.crew.map((person) => ({ id: person.id, label: person.memberId ? memberName(members.data, person.memberId) || tx('Bývalý člen') : person.name }))
   return (
     <CollapsibleSection
       id="event.plan"
-      title={dates.length > 1 ? `Program po dňoch (${dates.length} ${dates.length < 5 ? 'dni' : 'dní'})` : 'Program'}
+      title={dates.length > 1 ? tf('Program po dňoch ({0} {1})', dates.length, dates.length < 5 ? 'dni' : tx('dní')) : 'Program'}
       actions={
         canEdit && (
           <Button variant={editing ? 'default' : 'outline'} size="sm" onClick={() => setEditing(!editing)}>
-            {editing ? 'Hotovo' : 'Upraviť program'}
+            {editing ? 'Hotovo' : tx('Upraviť program')}
           </Button>
         )
       }
@@ -173,7 +172,7 @@ export function EventPlanSection({ companyId, event, canEdit }: { companyId: str
           />
         ))}
       </ul>
-      {editing && <p className="mt-2 text-xs text-muted-foreground">Pri každom dni zvoľte druh (stavba, event, balenie…), časy a uložte. Kliknutím na meno určíte, či človek v ten deň ide (preškrtnutý = nejde).</p>}
+      {editing && <p className="mt-2 text-xs text-muted-foreground">{tx('Pri každom dni zvoľte druh (stavba, event, balenie…), časy a uložte. Kliknutím na meno určíte, či človek v ten deň ide (preškrtnutý = nejde).')}</p>}
     </CollapsibleSection>
   )
 }

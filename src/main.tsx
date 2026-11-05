@@ -8,6 +8,7 @@ import { CompanyProvider } from './features/companies/CompanyProvider'
 import { installErrorReporting } from './lib/errorReporting'
 import { installStorageGuard } from './lib/consent'
 import { ConsentBanner } from './components/consent/ConsentBanner'
+import { i18nReady, useLangKey } from './lib/i18n'
 import './lib/theme'
 import './styles/index.css'
 
@@ -17,15 +18,24 @@ installErrorReporting()
 
 const queryClient = new QueryClient()
 
-createRoot(document.getElementById('root')!).render(
+/** Pri zmene jazyka sa obrazovky vykreslia nanovo (texty zo slovníka sa čítajú pri vykreslení). */
+function Screens() {
+  return (
+    <div key={useLangKey()} className="contents">
+      <RouterProvider router={router} />
+      <ConsentBanner />
+    </div>
+  )
+}
+
+void i18nReady().finally(() => createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CompanyProvider>
-          <RouterProvider router={router} />
-          <ConsentBanner />
+          <Screens />
         </CompanyProvider>
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,
-)
+))

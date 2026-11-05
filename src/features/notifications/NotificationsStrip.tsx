@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { useResponsibilities } from '@/features/responsibilities/api'
 import { addTodoFromField, taskKeys } from '@/features/tasks/api'
 import { buildNotifications, type Notification } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 /** „16 ks“ pri zlúčenej technike (kusy, nie časti), inak „3×“. */
 const countLabel = (item: Notification) => (item.count && item.count > 1 ? (item.pieces ? `${item.pieces} ks` : `${item.count}×`) : '')
@@ -66,9 +67,9 @@ export function NotificationsStrip() {
       <button type="button" className="flex w-full items-center gap-2 text-left" aria-expanded={open} onClick={() => setOpen(!open)}>
         <Icon className={cn('size-4 shrink-0', urgent > 0 ? 'text-destructive' : 'text-accent')} aria-hidden />
         <span className="flex-1 font-medium">
-          {all.length === 1 ? '1 upozornenie' : all.length < 5 ? `${all.length} upozornenia` : `${all.length} upozornení`}
-          {urgent > 0 && <span className="text-destructive"> · {urgent} naliehavé</span>}
-          <span className="font-normal text-muted-foreground"> – {open ? 'skryť' : 'ukázať'}</span>
+          {all.length === 1 ? tx('1 upozornenie') : all.length < 5 ? `${all.length} upozornenia` : tf('{0} upozornení', all.length)}
+          {urgent > 0 && <span className="text-destructive"> · {urgent}{' '}{tx('naliehavé')}</span>}
+          <span className="font-normal text-muted-foreground"> – {open ? tx('skryť') : tx('ukázať')}</span>
         </span>
       </button>
       {open && (
@@ -88,13 +89,13 @@ export function NotificationsStrip() {
                 {canAddTask && !item.id.startsWith('task-') && !item.id.startsWith('invite-') && (
                   <button
                     type="button"
-                    title="Pridať do mojich úloh s vysokou prioritou"
+                    title={tx('Pridať do mojich úloh s vysokou prioritou')}
                     disabled={toTask.isPending || added.has(item.id)}
                     onClick={() => toTask.mutate(item)}
                     className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-accent hover:bg-accent/10 disabled:opacity-60"
                   >
                     {added.has(item.id) ? <Check className="size-3.5" aria-hidden /> : <ListPlus className="size-3.5" aria-hidden />}
-                    {added.has(item.id) ? 'V úlohách' : 'Do úloh'}
+                    {added.has(item.id) ? tx('V úlohách') : tx('Do úloh')}
                   </button>
                 )}
               </div>

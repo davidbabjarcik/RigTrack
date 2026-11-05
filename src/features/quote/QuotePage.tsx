@@ -14,6 +14,7 @@ import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { buildQuote, DEFAULT_QUOTE, type QuoteSettings } from './model'
 import { deleteQuote, QUOTE_STATUS_LABELS, quoteNumber, saveQuote, savedQuoteKeys, setQuoteStatus, useSavedQuotes, type QuoteDoc, type QuoteStatus } from './saved'
+import { tx, tf } from '@/lib/i18n'
 
 const PRINT_CSS = `
 @page { size: A4; margin: 14mm; @top-left { content: ""; } @top-center { content: ""; } @top-right { content: ""; } @bottom-left { content: ""; } @bottom-center { content: ""; } @bottom-right { content: ""; } }
@@ -53,20 +54,19 @@ function QuoteDocument({ doc, number }: { doc: QuoteDoc; number?: string }) {
     <>
       <header className="mb-6 flex flex-wrap justify-between gap-4 border-b border-neutral-400 pb-3">
         <div>
-          <h1 className="text-2xl font-bold">Cenová ponuka{number && ` č. ${number}`}</h1>
+          <h1 className="text-2xl font-bold">{tx('Cenová ponuka')}{number && tf(' č. {0}', number)}</h1>
           <p className="text-sm">
             {doc.eventName} · {doc.eventDates}
             {doc.venue && ` · ${doc.venue}`}
           </p>
-          {doc.client && <p className="text-sm">Pre: {doc.client}</p>}
+          {doc.client && <p className="text-sm">{tx('Pre:')}{' '}{doc.client}</p>}
         </div>
         <div className="text-right text-sm">
           <p className="font-semibold">{doc.firm.name}</p>
           {doc.firm.address && <p>{doc.firm.address}</p>}
           {doc.firm.ico && (
-            <p>
-              IČO {doc.firm.ico}
-              {doc.firm.dic && ` · DIČ ${doc.firm.dic}`}
+            <p>{tx('IČO')}{' '}{doc.firm.ico}
+              {doc.firm.dic && tf(' · DIČ {0}', doc.firm.dic)}
             </p>
           )}
           {doc.firm.contact && <p>{doc.firm.contact}</p>}
@@ -76,16 +76,16 @@ function QuoteDocument({ doc, number }: { doc: QuoteDoc; number?: string }) {
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b-2 border-black text-left">
-            <th className="py-1 pr-2">Položka</th>
-            <th className="py-1 pr-2">Množstvo</th>
-            <th className="py-1 pr-2 text-right">Cena/j.</th>
-            <th className="py-1 text-right">Spolu</th>
+            <th className="py-1 pr-2">{tx('Položka')}</th>
+            <th className="py-1 pr-2">{tx('Množstvo')}</th>
+            <th className="py-1 pr-2 text-right">{tx('Cena/j.')}</th>
+            <th className="py-1 text-right">{tx('Spolu')}</th>
           </tr>
         </thead>
         <tbody>
           {doc.lines.map((line) => (
             <tr key={line.label} className="border-b border-neutral-300">
-              <td className="py-1 pr-2">{line.label}</td>
+              <td className="py-1 pr-2">{tx(line.label)}</td>
               <td className="py-1 pr-2">{line.detail}</td>
               <td className="py-1 pr-2 text-right">{money(line.unitPrice)}</td>
               <td className="py-1 text-right">{money(line.total)}</td>
@@ -95,35 +95,33 @@ function QuoteDocument({ doc, number }: { doc: QuoteDoc; number?: string }) {
       </table>
       <dl className="mt-4 ml-auto flex w-full max-w-xs flex-col gap-1 text-sm">
         <div className="flex justify-between">
-          <dt>Medzisúčet</dt>
+          <dt>{tx('Medzisúčet')}</dt>
           <dd>{money(doc.subtotal)}</dd>
         </div>
         {doc.discount > 0 && (
           <div className="flex justify-between">
-            <dt>Zľava na techniku {doc.discountPct} %</dt>
+            <dt>{tx('Zľava na techniku')}{' '}{doc.discountPct} %</dt>
             <dd>−{money(doc.discount)}</dd>
           </div>
         )}
         {doc.withVat && (
           <>
             <div className="flex justify-between">
-              <dt>Základ</dt>
+              <dt>{tx('Základ')}</dt>
               <dd>{money(doc.base)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt>DPH {doc.vatPct} %</dt>
+              <dt>{tx('DPH')}{' '}{doc.vatPct} %</dt>
               <dd>{money(doc.vat)}</dd>
             </div>
           </>
         )}
         <div className="flex justify-between border-t-2 border-black pt-1 text-base font-bold">
-          <dt>Spolu{doc.withVat ? ' s DPH' : ''}</dt>
+          <dt>{tx('Spolu')}{doc.withVat ? tx(' s DPH') : ''}</dt>
           <dd>{money(doc.total)}</dd>
         </div>
       </dl>
-      <p className="mt-8 text-xs text-neutral-600">
-        Ponuka zo dňa {formatDate(doc.issuedOn)}, platná do {formatDate(doc.validUntil)}. Ceny prenájmu techniky sú za kus a deň.
-      </p>
+      <p className="mt-8 text-xs text-neutral-600">{tx('Ponuka zo dňa')}{' '}{formatDate(doc.issuedOn)}{tx(', platná do')}{' '}{formatDate(doc.validUntil)}{tx('. Ceny prenájmu techniky sú za kus a deň.')}</p>
     </>
   )
 }
@@ -158,7 +156,7 @@ export function QuotePage() {
 
   if (events.isPending || equipment.isPending) return <LoadingBlock />
   const event = events.data?.find((item) => item.id === id)
-  if (!event) return <ErrorBlock message="Event sa nenašiel." />
+  if (!event) return <ErrorBlock message={tx('Event sa nenašiel.')} />
   const days = eventDates(event.startsOn, event.endsOn).length
   const quote = buildQuote(event.equipment, equipment.data ?? [], days, place.data?.distanceKm ?? null, settings)
   const money = (value: number) => formatMoney(value, 'EUR')
@@ -197,26 +195,22 @@ export function QuotePage() {
       <div className="mb-6 flex flex-col gap-4 print:hidden">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link to={`/events/${id}`} className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-black">
-            <ArrowLeft className="size-4" aria-hidden />
-            Späť na event
-          </Link>
+            <ArrowLeft className="size-4" aria-hidden />{tx('Späť na event')}</Link>
           <div className="flex flex-wrap gap-2">
             {canEdit && !shown && saved.isSuccess && (
               <Button variant="outline" disabled={save.isPending || live.lines.length === 0} onClick={() => save.mutate(live)}>
                 <Save className="size-4" aria-hidden />
-                {save.isPending ? 'Ukladám…' : 'Uložiť ponuku'}
+                {save.isPending ? tx('Ukladám…') : tx('Uložiť ponuku')}
               </Button>
             )}
             <Button onClick={() => window.print()}>
-              <Printer className="size-4" aria-hidden />
-              Tlačiť / PDF
-            </Button>
+              <Printer className="size-4" aria-hidden />{tx('Tlačiť / PDF')}</Button>
           </div>
         </div>
 
         {saved.isSuccess && saved.data.length > 0 && (
           <div className="rounded-xl border p-3">
-            <p className="mb-2 text-sm font-medium">Uložené ponuky</p>
+            <p className="mb-2 text-sm font-medium">{tx('Uložené ponuky')}</p>
             <ul className="flex flex-col gap-1.5 text-sm">
               {saved.data.map((item) => (
                 <li key={item.id} className={`flex flex-wrap items-center gap-2 rounded-lg px-2 py-1.5 ${item.id === viewing ? 'bg-amber-100' : ''}`}>
@@ -237,19 +231,19 @@ export function QuotePage() {
                       ))}
                     </select>
                   ) : (
-                    <span>{QUOTE_STATUS_LABELS[item.status]}</span>
+                    <span>{tx(QUOTE_STATUS_LABELS[item.status])}</span>
                   )}
                   <span className="ml-auto flex gap-1">
                     <Button size="sm" variant="ghost" onClick={() => setViewing(item.id === viewing ? null : item.id)}>
                       <Eye className="size-4" aria-hidden />
-                      {item.id === viewing ? 'Späť na aktuálnu' : 'Zobraziť'}
+                      {item.id === viewing ? tx('Späť na aktuálnu') : tx('Zobraziť')}
                     </Button>
                     {canEdit && (
                       <Button
                         size="sm"
                         variant="ghost"
-                        aria-label={`Zmazať ponuku ${quoteNumber(item)}`}
-                        onClick={() => window.confirm(`Zmazať uloženú ponuku č. ${quoteNumber(item)}?`) && remove.mutate(item.id)}
+                        aria-label={tf('Zmazať ponuku {0}', quoteNumber(item))}
+                        onClick={() => window.confirm(tf('Zmazať uloženú ponuku č. {0}?', quoteNumber(item))) && remove.mutate(item.id)}
                       >
                         <Trash2 className="size-4" aria-hidden />
                       </Button>
@@ -262,30 +256,26 @@ export function QuotePage() {
         )}
 
         {shown ? (
-          <p className="rounded-lg bg-amber-100 p-2 text-sm">
-            Zobrazená je uložená ponuka č. {quoteNumber(shown)} z {formatDate(shown.createdAt.slice(0, 10))} – presne tak, ako bola uložená. Tlačí sa táto verzia.
-          </p>
+          <p className="rounded-lg bg-amber-100 p-2 text-sm">{tx('Zobrazená je uložená ponuka č.')}{' '}{quoteNumber(shown)} z {formatDate(shown.createdAt.slice(0, 10))}{' '}{tx('– presne tak, ako bola uložená. Tlačí sa táto verzia.')}</p>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 rounded-xl border p-3 sm:grid-cols-4">
-              <NumberInput label="Dni prenájmu" value={settings.rentalDays ?? days} step="1" onChange={(value) => set({ rentalDays: value })} />
-              <NumberInput label="Doprava €/km" value={settings.kmRate} onChange={(value) => set({ kmRate: value ?? 0 })} />
-              <NumberInput label="Ciest tam a späť" value={settings.trips} step="1" onChange={(value) => set({ trips: value ?? 0 })} />
-              <NumberInput label="Obsluha – ľudí" value={settings.crewCount} step="1" onChange={(value) => set({ crewCount: value ?? 0 })} />
-              <NumberInput label="Obsluha €/deň/osoba" value={settings.crewDayRate} onChange={(value) => set({ crewDayRate: value ?? 0 })} />
-              <NumberInput label="Zľava na techniku %" value={settings.discountPct} onChange={(value) => set({ discountPct: Math.min(100, value ?? 0) })} />
-              <NumberInput label="DPH %" value={settings.vatPct} onChange={(value) => set({ vatPct: value ?? 0 })} />
-              <NumberInput label="Platnosť (dní)" value={settings.validDays} step="1" onChange={(value) => set({ validDays: value ?? 14 })} />
+              <NumberInput label={tx('Dni prenájmu')} value={settings.rentalDays ?? days} step="1" onChange={(value) => set({ rentalDays: value })} />
+              <NumberInput label={tx('Doprava €/km')} value={settings.kmRate} onChange={(value) => set({ kmRate: value ?? 0 })} />
+              <NumberInput label={tx('Ciest tam a späť')} value={settings.trips} step="1" onChange={(value) => set({ trips: value ?? 0 })} />
+              <NumberInput label={tx('Obsluha – ľudí')} value={settings.crewCount} step="1" onChange={(value) => set({ crewCount: value ?? 0 })} />
+              <NumberInput label={tx('Obsluha €/deň/osoba')} value={settings.crewDayRate} onChange={(value) => set({ crewDayRate: value ?? 0 })} />
+              <NumberInput label={tx('Zľava na techniku %')} value={settings.discountPct} onChange={(value) => set({ discountPct: Math.min(100, value ?? 0) })} />
+              <NumberInput label={tx('DPH %')} value={settings.vatPct} onChange={(value) => set({ vatPct: value ?? 0 })} />
+              <NumberInput label={tx('Platnosť (dní)')} value={settings.validDays} step="1" onChange={(value) => set({ validDays: value ?? 14 })} />
               <label className="col-span-2 flex items-center gap-2 text-sm">
-                <input type="checkbox" className="size-4" checked={settings.withVat} onChange={(e) => set({ withVat: e.target.checked })} />
-                S DPH
-              </label>
+                <input type="checkbox" className="size-4" checked={settings.withVat} onChange={(e) => set({ withVat: e.target.checked })} />{tx('S DPH')}</label>
             </div>
-            {!place.data?.distanceKm && <p className="text-sm text-neutral-600">Doprava sa nepočíta – v evente chýbajú km zo skladu (sekcia Doprava).</p>}
-            {quote.unpriced.length > 0 && <p className="text-sm text-amber-700">Bez ceny prenájmu (nie sú v ponuke): {quote.unpriced.join(', ')}. Cenu doplníte v Technike.</p>}
+            {!place.data?.distanceKm && <p className="text-sm text-neutral-600">{tx('Doprava sa nepočíta – v evente chýbajú km zo skladu (sekcia Doprava).')}</p>}
+            {quote.unpriced.length > 0 && <p className="text-sm text-amber-700">{tx('Bez ceny prenájmu (nie sú v ponuke):')}{' '}{quote.unpriced.join(', ')}{tx('. Cenu doplníte v Technike.')}</p>}
           </>
         )}
-        {(save.isError || status.isError || remove.isError) && <p className="text-sm text-red-700">Nepodarilo sa uložiť. Táto časť databázy ešte nemusí byť pripravená (migrácia 0093).</p>}
+        {(save.isError || status.isError || remove.isError) && <p className="text-sm text-red-700">{tx('Nepodarilo sa uložiť. Táto časť databázy ešte nemusí byť pripravená (migrácia 0093).')}</p>}
       </div>
 
       {shown ? <QuoteDocument doc={shown.doc} number={quoteNumber(shown)} /> : <QuoteDocument doc={live} />}

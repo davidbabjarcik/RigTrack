@@ -7,6 +7,7 @@ import type { Member } from '@/features/companies/api'
 import { isAdminRole, ROLE_LABELS } from '@/lib/roles'
 import { addPermissionGroup, deletePermissionGroup, permissionKeys, renamePermissionGroup, setGroupMember } from './api'
 import type { PermissionGroup } from './catalog'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { companyId: string; groups: PermissionGroup[]; members: Member[] }
 
@@ -29,16 +30,13 @@ export function PermissionGroups({ companyId, groups, members }: Props) {
   const adjustable = members.filter((item) => !isAdminRole(item.role))
   const nameOf = (userId: string) => {
     const found = members.find((item) => item.userId === userId)
-    return found ? found.fullName || found.email : 'Bývalý člen'
+    return found ? found.fullName || found.email : tx('Bývalý člen')
   }
 
   return (
     <div>
-      <h3 className="mb-1 font-medium">Skupiny ľudí</h3>
-      <p className="mb-3 text-sm text-muted-foreground">
-        Napr. Zvukári, Šoféri alebo Vedúci akcií. Člen skupiny smie to, čo jeho rola, a navyše všetko, čo má skupina zaškrtnuté v tabuľke. Jeden
-        človek môže byť vo viacerých skupinách.
-      </p>
+      <h3 className="mb-1 font-medium">{tx('Skupiny ľudí')}</h3>
+      <p className="mb-3 text-sm text-muted-foreground">{tx('Napr. Zvukári, Šoféri alebo Vedúci akcií. Člen skupiny smie to, čo jeho rola, a navyše všetko, čo má skupina zaškrtnuté v tabuľke. Jeden človek môže byť vo viacerých skupinách.')}</p>
       {groups.length > 0 && (
         <ul className="mb-3 flex flex-col gap-3">
           {groups.map((group) => {
@@ -48,7 +46,7 @@ export function PermissionGroups({ companyId, groups, members }: Props) {
                 <div className="flex flex-wrap items-end gap-2">
                   <Field
                     key={group.name}
-                    label="Názov skupiny"
+                    label={tx('Názov skupiny')}
                     hideLabel
                     className="min-w-40 flex-1"
                     maxLength={40}
@@ -59,25 +57,25 @@ export function PermissionGroups({ companyId, groups, members }: Props) {
                       else event.target.value = group.name
                     }}
                   />
-                  <span className="text-sm text-muted-foreground">oprávnení: {group.permissions.length}</span>
+                  <span className="text-sm text-muted-foreground">{tx('oprávnení:')}{' '}{group.permissions.length}</span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    aria-label={`Zmazať skupinu ${group.name}`}
+                    aria-label={tf('Zmazať skupinu {0}', group.name)}
                     disabled={busy}
-                    onClick={() => window.confirm(`Zmazať skupinu „${group.name}“? Jej členovia prídu o oprávnenia, ktoré im dávala.`) && remove.mutate(group.id)}
+                    onClick={() => window.confirm(tf('Zmazať skupinu „{0}“? Jej členovia prídu o oprávnenia, ktoré im dávala.', group.name)) && remove.mutate(group.id)}
                   >
                     <Trash2 className="size-4" aria-hidden />
                   </Button>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  {group.members.length === 0 && <span className="text-sm text-muted-foreground">Zatiaľ nikto.</span>}
+                  {group.members.length === 0 && <span className="text-sm text-muted-foreground">{tx('Zatiaľ nikto.')}</span>}
                   {group.members.map((userId) => (
                     <span key={userId} className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-sm">
                       {nameOf(userId)}
                       <button
                         type="button"
-                        aria-label={`Odobrať zo skupiny: ${nameOf(userId)}`}
+                        aria-label={tf('Odobrať zo skupiny: {0}', nameOf(userId))}
                         className="text-muted-foreground hover:text-foreground"
                         disabled={busy}
                         onClick={() => member.mutate({ groupId: group.id, userId, add: false })}
@@ -88,7 +86,7 @@ export function PermissionGroups({ companyId, groups, members }: Props) {
                   ))}
                   {candidates.length > 0 && (
                     <select
-                      aria-label={`Pridať do skupiny ${group.name}`}
+                      aria-label={tf('Pridať do skupiny {0}', group.name)}
                       className="h-8 rounded-lg border bg-background px-2 text-sm"
                       value={adding[group.id] ?? ''}
                       disabled={busy}
@@ -98,10 +96,10 @@ export function PermissionGroups({ companyId, groups, members }: Props) {
                         if (userId) member.mutate({ groupId: group.id, userId, add: true })
                       }}
                     >
-                      <option value="">+ pridať člena</option>
+                      <option value="">{tx('+ pridať člena')}</option>
                       {candidates.map((item) => (
                         <option key={item.userId} value={item.userId}>
-                          {item.fullName || item.email} ({ROLE_LABELS[item.role]})
+                          {item.fullName || item.email} ({tx(ROLE_LABELS[item.role])})
                         </option>
                       ))}
                     </select>
@@ -119,14 +117,12 @@ export function PermissionGroups({ companyId, groups, members }: Props) {
           if (name.trim() && !exists) create.mutate()
         }}
       >
-        <Field label="Nová skupina" className="min-w-48 flex-1" maxLength={40} placeholder="napr. Šoféri" value={name} onChange={(event) => setName(event.target.value)} />
+        <Field label={tx('Nová skupina')} className="min-w-48 flex-1" maxLength={40} placeholder={tx('napr. Šoféri')} value={name} onChange={(event) => setName(event.target.value)} />
         <Button type="submit" disabled={busy || !name.trim() || exists}>
-          <Plus className="size-4" aria-hidden />
-          Vytvoriť
-        </Button>
+          <Plus className="size-4" aria-hidden />{tx('Vytvoriť')}</Button>
       </form>
-      {exists && <p className="mt-2 text-sm text-muted-foreground">Taká skupina už je.</p>}
-      {(create.isError || rename.isError || remove.isError || member.isError) && <p className="mt-2 text-sm text-destructive">Zmenu sa nepodarilo uložiť.</p>}
+      {exists && <p className="mt-2 text-sm text-muted-foreground">{tx('Taká skupina už je.')}</p>}
+      {(create.isError || rename.isError || remove.isError || member.isError) && <p className="mt-2 text-sm text-destructive">{tx('Zmenu sa nepodarilo uložiť.')}</p>}
     </div>
   )
 }

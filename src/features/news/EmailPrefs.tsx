@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchEmailNewEvent, prefsKey, saveEmailNewEvent } from './prefs'
+import { tx } from '@/lib/i18n'
 
 /** Admin / CEO: chcem e-mail, keď niekto pridá nový event. */
 export function EmailPrefs({ companyId }: { companyId: string }) {
@@ -20,11 +21,11 @@ export function EmailPrefs({ companyId }: { companyId: string }) {
           onChange={(event) => save.mutate(event.target.checked)}
         />
         <span>
-          <span className="block font-medium">E-mail pri novom evente</span>
-          <span className="block text-sm text-muted-foreground">Keď niekto vo firme pridá event, príde vám e-mail s termínom a odkazom.</span>
+          <span className="block font-medium">{tx('E-mail pri novom evente')}</span>
+          <span className="block text-sm text-muted-foreground">{tx('Keď niekto vo firme pridá event, príde vám e-mail s termínom a odkazom.')}</span>
         </span>
       </label>
-      {(pref.isError || save.isError) && <p className="mt-2 text-sm text-destructive">Nastavenie sa nepodarilo načítať alebo uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.</p>}
+      {(pref.isError || save.isError) && <p className="mt-2 text-sm text-destructive">{tx('Nastavenie sa nepodarilo načítať alebo uložiť. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>}
     </div>
   )
 }

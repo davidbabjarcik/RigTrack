@@ -5,6 +5,7 @@ import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { PHOTO_URL_STALE_MS } from '@/features/equipment/photo'
 import { deleteEventDocument, eventKeys, eventPhotoUrls, fetchEventDocuments, uploadEventPhoto } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { companyId: string; eventId: string; canEdit: boolean }
 
@@ -42,7 +43,7 @@ export function EventPhotosSection({ companyId, eventId, canEdit }: Props) {
   if (!canEdit && count === 0) return null
 
   return (
-    <CollapsibleSection id="event.photos" title={<>Fotky ({count})</>} actions={
+    <CollapsibleSection id="event.photos" title={<>{tx('Fotky (')}{count})</>} actions={
         <>
         {canEdit && (
           <>
@@ -61,7 +62,7 @@ export function EventPhotosSection({ companyId, eventId, canEdit }: Props) {
             />
             <Button variant="outline" size="sm" disabled={upload.isPending} onClick={() => fileInput.current?.click()}>
               <Camera className="size-4" aria-hidden />
-              {upload.isPending ? 'Nahrávam…' : 'Pridať fotky'}
+              {upload.isPending ? tx('Nahrávam…') : tx('Pridať fotky')}
             </Button>
           </>
         )}
@@ -69,9 +70,7 @@ export function EventPhotosSection({ companyId, eventId, canEdit }: Props) {
       }>
 
       {(upload.isError || remove.isError || photos.isError) && (
-        <p role="alert" className="mb-2 text-sm text-destructive">
-          Operácia s fotkou zlyhala. Skúste to znova.
-        </p>
+        <p role="alert" className="mb-2 text-sm text-destructive">{tx('Operácia s fotkou zlyhala. Skúste to znova.')}</p>
       )}
 
       {count > 0 ? (
@@ -81,7 +80,7 @@ export function EventPhotosSection({ companyId, eventId, canEdit }: Props) {
             return (
               <li key={photo.id} className="relative aspect-[4/3] overflow-hidden rounded-xl border bg-muted">
                 {url && (
-                  <a href={url} target="_blank" rel="noopener noreferrer" aria-label={`Otvoriť fotku ${photo.name}`}>
+                  <a href={url} target="_blank" rel="noopener noreferrer" aria-label={tf('Otvoriť fotku {0}', photo.name)}>
                     <img src={url} alt={photo.name} loading="lazy" className="size-full object-cover" />
                   </a>
                 )}
@@ -90,10 +89,10 @@ export function EventPhotosSection({ companyId, eventId, canEdit }: Props) {
                     variant="outline"
                     size="sm"
                     className="absolute top-1.5 right-1.5 bg-surface/90"
-                    aria-label={`Odstrániť fotku ${photo.name}`}
+                    aria-label={tf('Odstrániť fotku {0}', photo.name)}
                     disabled={remove.isPending}
                     onClick={() => {
-                      if (window.confirm('Odstrániť fotku? Admin ju 30 dní vie obnoviť z koša.')) remove.mutate(photo)
+                      if (window.confirm(tx('Odstrániť fotku? Admin ju 30 dní vie obnoviť z koša.'))) remove.mutate(photo)
                     }}
                   >
                     <Trash2 className="size-4" aria-hidden />
@@ -105,9 +104,7 @@ export function EventPhotosSection({ companyId, eventId, canEdit }: Props) {
         </ul>
       ) : (
         !photos.isPending && (
-          <p className="rounded-xl border border-dashed bg-surface px-6 py-8 text-center text-sm text-muted-foreground">
-            Žiadne fotky. Napríklad pódium, miesto alebo príjazd pre dodávku.
-          </p>
+          <p className="rounded-xl border border-dashed bg-surface px-6 py-8 text-center text-sm text-muted-foreground">{tx('Žiadne fotky. Napríklad pódium, miesto alebo príjazd pre dodávku.')}</p>
         )
       )}
     </CollapsibleSection>

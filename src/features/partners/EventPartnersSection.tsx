@@ -9,6 +9,7 @@ import type { CompanyEvent } from '@/features/events/model'
 import { fetchEventPartners, linkPartner, partnerKeys, setEventOrganizer, unlinkPartner, usePartners, type EventPartner } from './api'
 import { PartnerCard } from './PartnerCard'
 import { PartnerForm } from './PartnerForm'
+import { tx, tf } from '@/lib/i18n'
 
 const KIND_LABELS: Record<EventPartner['kind'], string> = { organizer: 'Organizátor', partner: 'Spolupracujúca firma' }
 
@@ -48,7 +49,7 @@ export function EventPartnersSection({ companyId, event, canEdit }: { companyId:
   const legacy = !rows.some((row) => row.kind === 'organizer') && event.organizer.trim() !== ''
 
   return (
-    <CollapsibleSection id="event.partners" title={`Organizátor a firmy (${rows.length})`}>
+    <CollapsibleSection id="event.partners" title={tf('Organizátor a firmy ({0})', rows.length)}>
       {rows.length > 0 && (
         <ul className="mb-3 flex flex-col gap-3">
           {rows.map((row) => (
@@ -59,12 +60,10 @@ export function EventPartnersSection({ companyId, event, canEdit }: { companyId:
                 canEdit={canEdit}
                 actions={
                   <>
-                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">{KIND_LABELS[row.kind]}</span>
-                    <Link to={`/partners/${row.partner!.id}`} className="shrink-0 text-sm text-accent hover:underline">
-                      História
-                    </Link>
+                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">{tx(KIND_LABELS[row.kind])}</span>
+                    <Link to={`/partners/${row.partner!.id}`} className="shrink-0 text-sm text-accent hover:underline">{tx('História')}</Link>
                     {canEdit && (
-                      <Button variant="ghost" size="sm" aria-label={`Odobrať ${row.partner!.name} z eventu`} disabled={unlink.isPending} onClick={() => unlink.mutate(row.partnerId)}>
+                      <Button variant="ghost" size="sm" aria-label={tf('Odobrať {0} z eventu', row.partner!.name)} disabled={unlink.isPending} onClick={() => unlink.mutate(row.partnerId)}>
                         <X className="size-4" aria-hidden />
                       </Button>
                     )}
@@ -78,23 +77,21 @@ export function EventPartnersSection({ companyId, event, canEdit }: { companyId:
       {legacy && (
         <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border bg-surface p-4 text-sm">
           <span className="min-w-0 flex-1">
-            <span className="text-muted-foreground">Organizátor: </span>
+            <span className="text-muted-foreground">{tx('Organizátor:')}{' '}</span>
             <span className="font-medium">{event.organizer}</span>
             {[event.organizerPerson, event.organizerPhone, event.organizerEmail].filter(Boolean).length > 0 && (
               <span className="text-muted-foreground"> · {[event.organizerPerson, event.organizerPhone, event.organizerEmail].filter(Boolean).join(', ')}</span>
             )}
           </span>
           {canEdit && (
-            <Button size="sm" variant="outline" disabled={saveLegacy.isPending} onClick={() => saveLegacy.mutate()}>
-              Uložiť do Firmy a kontakty
-            </Button>
+            <Button size="sm" variant="outline" disabled={saveLegacy.isPending} onClick={() => saveLegacy.mutate()}>{tx('Uložiť do Firmy a kontakty')}</Button>
           )}
         </div>
       )}
       {canEdit && !adding && !creating && (
         <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
           <Plus className="size-4" aria-hidden />
-          {rows.length === 0 && !legacy ? 'Pridať organizátora' : 'Pridať firmu'}
+          {rows.length === 0 && !legacy ? tx('Pridať organizátora') : tx('Pridať firmu')}
         </Button>
       )}
       {canEdit &&
@@ -111,8 +108,8 @@ export function EventPartnersSection({ companyId, event, canEdit }: { companyId:
           />
         ) : (
           <div className="flex flex-col gap-2 rounded-xl border bg-surface p-4 sm:flex-row sm:items-end">
-            <SelectField label="Firma z adresára" className="sm:flex-1" value={choice} onChange={(event) => setChoice(event.target.value)}>
-              <option value="">— vyberte —</option>
+            <SelectField label={tx('Firma z adresára')} className="sm:flex-1" value={choice} onChange={(event) => setChoice(event.target.value)}>
+              <option value="">{tx('— vyberte —')}</option>
               {available.map((partner) => (
                 <option key={partner.id} value={partner.id}>
                   {partner.name}
@@ -120,25 +117,17 @@ export function EventPartnersSection({ companyId, event, canEdit }: { companyId:
                 </option>
               ))}
             </SelectField>
-            <SelectField label="Ako" className="sm:w-52" value={kind} onChange={(event) => setKind(event.target.value as EventPartner['kind'])}>
-              <option value="organizer">Organizátor</option>
-              <option value="partner">Spolupracujúca firma</option>
+            <SelectField label={tx('Ako')} className="sm:w-52" value={kind} onChange={(event) => setKind(event.target.value as EventPartner['kind'])}>
+              <option value="organizer">{tx('Organizátor')}</option>
+              <option value="partner">{tx('Spolupracujúca firma')}</option>
             </SelectField>
-            <Button size="sm" disabled={!choice || link.isPending} onClick={() => link.mutate(choice)}>
-              Pridať k eventu
-            </Button>
+            <Button size="sm" disabled={!choice || link.isPending} onClick={() => link.mutate(choice)}>{tx('Pridať k eventu')}</Button>
             <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
-              <Plus className="size-4" aria-hidden />
-              Nová firma
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>
-              Zrušiť
-            </Button>
+              <Plus className="size-4" aria-hidden />{tx('Nová firma')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>{tx('Zrušiť')}</Button>
           </div>
         ))}
-      <p className="mt-2 text-xs text-muted-foreground">
-        Firmy a ich ľudí spravujete v <Link to="/partners" className="text-accent hover:underline">Firmy a kontakty</Link> – použijú sa aj na ďalšie akcie.
-      </p>
+      <p className="mt-2 text-xs text-muted-foreground">{tx('Firmy a ich ľudí spravujete v')}{' '}<Link to="/partners" className="text-accent hover:underline">{tx('Firmy a kontakty')}</Link>{' '}{tx('– použijú sa aj na ďalšie akcie.')}</p>
     </CollapsibleSection>
   )
 }

@@ -13,6 +13,7 @@ import { dmxConflicts, dmxFromAllEquipment, EMPTY_DMX, lastAddress, nextDmxAddre
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { deletePatchTemplate, dmxKeys, savePatchTemplate, usePatchTemplates, type PatchTemplate } from './dmxApi'
 import { EMPTY_LINE, PATCH_SOURCE_LABELS, PATCH_SOURCES, type PatchFields, type PatchSource } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Draft = { id: string | null; kind: 'sound' | 'dmx'; name: string; note: string; sound: PatchFields[]; dmx: DmxFields[] }
 
@@ -28,11 +29,11 @@ function SoundRows({ rows, onChange }: { rows: PatchFields[]; onChange: (rows: P
       <table className="w-full min-w-[40rem] text-sm">
         <thead>
           <tr className="text-left text-xs text-muted-foreground">
-            <th className="w-16 pb-1">Kanál</th>
-            <th className="pb-1">Čo</th>
-            <th className="w-24 pb-1">Stagebox</th>
-            <th className="w-20 pb-1">Vstup</th>
-            <th className="w-40 pb-1">Zdroj</th>
+            <th className="w-16 pb-1">{tx('Kanál')}</th>
+            <th className="pb-1">{tx('Čo')}</th>
+            <th className="w-24 pb-1">{tx('Stagebox')}</th>
+            <th className="w-20 pb-1">{tx('Vstup')}</th>
+            <th className="w-40 pb-1">{tx('Zdroj')}</th>
             <th className="w-14 pb-1">48V</th>
             <th className="w-10" />
           </tr>
@@ -41,31 +42,31 @@ function SoundRows({ rows, onChange }: { rows: PatchFields[]; onChange: (rows: P
           {rows.map((row, index) => (
             <tr key={index}>
               <td className="pr-1 pb-1">
-                <input aria-label="Kanál" type="number" min={1} max={512} className={cell} value={row.channel} onChange={(e) => set(index, { channel: Math.max(1, Number(e.target.value) || 1) })} />
+                <input aria-label={tx('Kanál')} type="number" min={1} max={512} className={cell} value={row.channel} onChange={(e) => set(index, { channel: Math.max(1, Number(e.target.value) || 1) })} />
               </td>
               <td className="pr-1 pb-1">
-                <input aria-label="Čo ide na kanál" maxLength={80} className={cell} value={row.name} onChange={(e) => set(index, { name: e.target.value })} />
+                <input aria-label={tx('Čo ide na kanál')} maxLength={80} className={cell} value={row.name} onChange={(e) => set(index, { name: e.target.value })} />
               </td>
               <td className="pr-1 pb-1">
-                <input aria-label="Stagebox" maxLength={40} className={cell} value={row.stagebox} onChange={(e) => set(index, { stagebox: e.target.value })} />
+                <input aria-label={tx('Stagebox')} maxLength={40} className={cell} value={row.stagebox} onChange={(e) => set(index, { stagebox: e.target.value })} />
               </td>
               <td className="pr-1 pb-1">
-                <input aria-label="Vstup" type="number" min={1} className={cell} value={row.stageboxInput ?? ''} onChange={(e) => set(index, { stageboxInput: e.target.value ? Number(e.target.value) : null })} />
+                <input aria-label={tx('Vstup')} type="number" min={1} className={cell} value={row.stageboxInput ?? ''} onChange={(e) => set(index, { stageboxInput: e.target.value ? Number(e.target.value) : null })} />
               </td>
               <td className="pr-1 pb-1">
-                <select aria-label="Zdroj" className={cell} value={row.source} onChange={(e) => set(index, { source: e.target.value as PatchSource })}>
+                <select aria-label={tx('Zdroj')} className={cell} value={row.source} onChange={(e) => set(index, { source: e.target.value as PatchSource })}>
                   {PATCH_SOURCES.map((source) => (
                     <option key={source} value={source}>
-                      {PATCH_SOURCE_LABELS[source]}
+                      {tx(PATCH_SOURCE_LABELS[source])}
                     </option>
                   ))}
                 </select>
               </td>
               <td className="pb-1 text-center">
-                <input aria-label="Phantom 48 V" type="checkbox" className="size-4" checked={row.phantom} onChange={(e) => set(index, { phantom: e.target.checked })} />
+                <input aria-label={tx('Phantom 48 V')} type="checkbox" className="size-4" checked={row.phantom} onChange={(e) => set(index, { phantom: e.target.checked })} />
               </td>
               <td className="pb-1">
-                <button type="button" aria-label="Odstrániť riadok" className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
+                <button type="button" aria-label={tx('Odstrániť riadok')} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
                   <X className="size-4" aria-hidden />
                 </button>
               </td>
@@ -74,9 +75,7 @@ function SoundRows({ rows, onChange }: { rows: PatchFields[]; onChange: (rows: P
         </tbody>
       </table>
       <Button variant="outline" size="sm" className="mt-2" onClick={() => onChange([...rows, { ...EMPTY_LINE, channel: Math.max(0, ...rows.map((row) => row.channel)) + 1, equipmentId: null, capsuleId: null }])}>
-        <Plus className="size-4" aria-hidden />
-        Kanál
-      </Button>
+        <Plus className="size-4" aria-hidden />{tx('Kanál')}</Button>
     </div>
   )
 }
@@ -89,11 +88,11 @@ function DmxRows({ rows, onChange }: { rows: DmxFields[]; onChange: (rows: DmxFi
       <table className="w-full min-w-[36rem] text-sm">
         <thead>
           <tr className="text-left text-xs text-muted-foreground">
-            <th className="w-20 pb-1">Linka</th>
-            <th className="w-24 pb-1">Adresa</th>
-            <th className="w-20 pb-1">Kanálov</th>
-            <th className="pb-1">Svetlo</th>
-            <th className="w-28 pb-1">Mód</th>
+            <th className="w-20 pb-1">{tx('Linka')}</th>
+            <th className="w-24 pb-1">{tx('Adresa')}</th>
+            <th className="w-20 pb-1">{tx('Kanálov')}</th>
+            <th className="pb-1">{tx('Svetlo')}</th>
+            <th className="w-28 pb-1">{tx('Mód')}</th>
             <th className="w-10" />
           </tr>
         </thead>
@@ -101,11 +100,11 @@ function DmxRows({ rows, onChange }: { rows: DmxFields[]; onChange: (rows: DmxFi
           {rows.map((row, index) => (
             <tr key={index}>
               <td className="pr-1 pb-1">
-                <input aria-label="Linka" maxLength={20} className={cell} value={row.universe} onChange={(e) => set(index, { universe: e.target.value })} />
+                <input aria-label={tx('Linka')} maxLength={20} className={cell} value={row.universe} onChange={(e) => set(index, { universe: e.target.value })} />
               </td>
               <td className="pr-1 pb-1">
                 <input
-                  aria-label="Adresa"
+                  aria-label={tx('Adresa')}
                   type="number"
                   min={1}
                   max={512}
@@ -116,16 +115,16 @@ function DmxRows({ rows, onChange }: { rows: DmxFields[]; onChange: (rows: DmxFi
                 />
               </td>
               <td className="pr-1 pb-1">
-                <input aria-label="Kanálov" type="number" min={1} max={512} className={cell} value={row.channels} onChange={(e) => set(index, { channels: Math.max(1, Number(e.target.value) || 1) })} />
+                <input aria-label={tx('Kanálov')} type="number" min={1} max={512} className={cell} value={row.channels} onChange={(e) => set(index, { channels: Math.max(1, Number(e.target.value) || 1) })} />
               </td>
               <td className="pr-1 pb-1">
-                <input aria-label="Svetlo" maxLength={80} className={cell} value={row.name} onChange={(e) => set(index, { name: e.target.value })} />
+                <input aria-label={tx('Svetlo')} maxLength={80} className={cell} value={row.name} onChange={(e) => set(index, { name: e.target.value })} />
               </td>
               <td className="pr-1 pb-1">
-                <input aria-label="Mód" maxLength={40} className={cell} value={row.mode} onChange={(e) => set(index, { mode: e.target.value })} />
+                <input aria-label={tx('Mód')} maxLength={40} className={cell} value={row.mode} onChange={(e) => set(index, { mode: e.target.value })} />
               </td>
               <td className="pb-1">
-                <button type="button" aria-label="Odstrániť riadok" className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
+                <button type="button" aria-label={tx('Odstrániť riadok')} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
                   <X className="size-4" aria-hidden />
                 </button>
               </td>
@@ -133,7 +132,7 @@ function DmxRows({ rows, onChange }: { rows: DmxFields[]; onChange: (rows: DmxFi
           ))}
         </tbody>
       </table>
-      {conflicts.size > 0 && <p className="mt-1 text-sm text-destructive">Červené adresy sa prekrývajú alebo presahujú 512.</p>}
+      {conflicts.size > 0 && <p className="mt-1 text-sm text-destructive">{tx('Červené adresy sa prekrývajú alebo presahujú 512.')}</p>}
       <Button
         variant="outline"
         size="sm"
@@ -144,9 +143,7 @@ function DmxRows({ rows, onChange }: { rows: DmxFields[]; onChange: (rows: DmxFi
           onChange([...rows, { ...EMPTY_DMX, universe, channels: last?.channels ?? 1, mode: last?.mode ?? '', address: nextDmxAddress(rows, universe) }])
         }}
       >
-        <Plus className="size-4" aria-hidden />
-        Svetlo
-      </Button>
+        <Plus className="size-4" aria-hidden />{tx('Svetlo')}</Button>
     </div>
   )
 }
@@ -191,27 +188,23 @@ export function PatchTemplatesPage() {
     })
 
   if (templates.isPending) return <LoadingBlock />
-  if (templates.isError) return <ErrorBlock message="Patch listy zatiaľ nie sú dostupné – treba spustiť migráciu 0104." />
+  if (templates.isError) return <ErrorBlock message={tx('Patch listy zatiaľ nie sú dostupné – treba spustiť migráciu 0104.')} />
 
   const list = (kind: 'sound' | 'dmx') => templates.data.filter((template) => template.kind === kind)
 
   return (
     <>
       <PageHeader
-        title="Patch listy"
-        description="Šablóny patch listov zvuku a DMX – pri evente ich načítate jedným klikom"
+        title={tx('Patch listy')}
+        description={tx('Šablóny patch listov zvuku a DMX – pri evente ich načítate jedným klikom')}
         action={
           canEdit &&
           !draft && (
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => create('sound')}>
-                <Cable className="size-4" aria-hidden />
-                Nový zvukový
-              </Button>
+                <Cable className="size-4" aria-hidden />{tx('Nový zvukový')}</Button>
               <Button variant="outline" onClick={() => create('dmx')}>
-                <Lightbulb className="size-4" aria-hidden />
-                Nový DMX
-              </Button>
+                <Lightbulb className="size-4" aria-hidden />{tx('Nový DMX')}</Button>
             </div>
           )
         }
@@ -219,25 +212,21 @@ export function PatchTemplatesPage() {
 
       {draft && (
         <section className="mb-6 flex flex-col gap-3 rounded-xl border border-accent/40 bg-surface p-4">
-          <h2 className="font-medium">{draft.kind === 'sound' ? 'Šablóna zvukového patch listu' : 'Šablóna DMX patch listu'}</h2>
+          <h2 className="font-medium">{draft.kind === 'sound' ? tx('Šablóna zvukového patch listu') : tx('Šablóna DMX patch listu')}</h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Názov *" placeholder={draft.kind === 'sound' ? 'napr. Kapela – základ' : 'napr. Stage – 8 beamov'} maxLength={80} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
-            <Field label="Poznámka" maxLength={300} value={draft.note} onChange={(e) => setDraft({ ...draft, note: e.target.value })} />
+            <Field label={tx('Názov *')} placeholder={draft.kind === 'sound' ? tx('napr. Kapela – základ') : tx('napr. Stage – 8 beamov')} maxLength={80} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+            <Field label={tx('Poznámka')} maxLength={300} value={draft.note} onChange={(e) => setDraft({ ...draft, note: e.target.value })} />
           </div>
           {draft.kind === 'sound' ? <SoundRows rows={draft.sound} onChange={(sound) => setDraft({ ...draft, sound })} /> : <DmxRows rows={draft.dmx} onChange={(dmx) => setDraft({ ...draft, dmx })} />}
-          {(save.isError || remove.isError) && <p className="text-sm text-destructive">Nepodarilo sa uložiť.</p>}
+          {(save.isError || remove.isError) && <p className="text-sm text-destructive">{tx('Nepodarilo sa uložiť.')}</p>}
           <div className="flex flex-wrap gap-2">
             <Button disabled={!draft.name.trim() || save.isPending} onClick={() => save.mutate(draft)}>
-              {save.isPending ? 'Ukladám…' : 'Uložiť šablónu'}
+              {save.isPending ? tx('Ukladám…') : tx('Uložiť šablónu')}
             </Button>
-            <Button variant="ghost" onClick={() => setDraft(null)}>
-              Zrušiť
-            </Button>
+            <Button variant="ghost" onClick={() => setDraft(null)}>{tx('Zrušiť')}</Button>
             {draft.id && (
-              <Button variant="ghost" className="ml-auto" disabled={remove.isPending} onClick={() => window.confirm(`Zmazať šablónu „${draft.name}“?`) && remove.mutate(draft.id!)}>
-                <Trash2 className="size-4" aria-hidden />
-                Zmazať
-              </Button>
+              <Button variant="ghost" className="ml-auto" disabled={remove.isPending} onClick={() => window.confirm(tf('Zmazať šablónu „{0}“?', draft.name)) && remove.mutate(draft.id!)}>
+                <Trash2 className="size-4" aria-hidden />{tx('Zmazať')}</Button>
             )}
           </div>
         </section>
@@ -250,9 +239,7 @@ export function PatchTemplatesPage() {
             {kind === 'sound' ? 'Zvuk' : 'DMX'} ({list(kind).length})
           </h2>
           {list(kind).length === 0 ? (
-            <p className="rounded-xl border border-dashed bg-surface px-4 py-6 text-center text-sm text-muted-foreground">
-              Zatiaľ žiadna šablóna. Vytvorte ju tu, alebo pri evente „Uložiť ako šablónu“.
-            </p>
+            <p className="rounded-xl border border-dashed bg-surface px-4 py-6 text-center text-sm text-muted-foreground">{tx('Zatiaľ žiadna šablóna. Vytvorte ju tu, alebo pri evente „Uložiť ako šablónu“.')}</p>
           ) : (
             <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
               {list(kind).map((template) => (
@@ -266,7 +253,7 @@ export function PatchTemplatesPage() {
                     </span>
                     {canEdit && <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
                   </button>
-                  <Link to={`/patch/${template.id}/print`} className="mr-3 inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Tlačiť ${template.name}`} title="Tlačiť / PDF">
+                  <Link to={`/patch/${template.id}/print`} className="mr-3 inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={tf('Tlačiť {0}', template.name)} title={tx('Tlačiť / PDF')}>
                     <Printer className="size-4" aria-hidden />
                   </Link>
                 </li>
@@ -277,15 +264,14 @@ export function PatchTemplatesPage() {
       ))}
       <section className="mb-6">
         <h2 className="mb-1 flex items-center gap-2 font-medium">
-          <Lightbulb className="size-5 text-accent" aria-hidden />
-          DMX adresy z techniky ({gearLines.length})
+          <Lightbulb className="size-5 text-accent" aria-hidden />{tx('DMX adresy z techniky (')}{gearLines.length})
         </h2>
-        <p className="mb-2 text-sm text-muted-foreground">Adresy zapísané pri kusoch svetiel (v technike cez „DMX všetkým“). Pri evente ich prevezmete tlačidlom „Zo svetiel eventu“.</p>
+        <p className="mb-2 text-sm text-muted-foreground">{tx('Adresy zapísané pri kusoch svetiel (v technike cez „DMX všetkým“). Pri evente ich prevezmete tlačidlom „Zo svetiel eventu“.')}</p>
         {gearLines.length === 0 ? (
-          <p className="rounded-xl border border-dashed bg-surface px-4 py-6 text-center text-sm text-muted-foreground">Zatiaľ žiadne – adresy sa zapisujú v technike pri svetle („DMX všetkým“).</p>
+          <p className="rounded-xl border border-dashed bg-surface px-4 py-6 text-center text-sm text-muted-foreground">{tx('Zatiaľ žiadne – adresy sa zapisujú v technike pri svetle („DMX všetkým“).')}</p>
         ) : (
           <>
-            {gearConflicts.size > 0 && <p className="mb-2 text-sm text-destructive">Niektoré adresy sa na tej istej linke prekrývajú (označené červenou).</p>}
+            {gearConflicts.size > 0 && <p className="mb-2 text-sm text-destructive">{tx('Niektoré adresy sa na tej istej linke prekrývajú (označené červenou).')}</p>}
             <ul className="divide-y overflow-hidden rounded-xl border bg-surface text-sm">
               {gearLines.map((line, index) => (
                 <li key={`${line.equipmentId}-${line.unit}`} className="flex items-center gap-3 px-3 py-2">
@@ -300,14 +286,12 @@ export function PatchTemplatesPage() {
             </ul>
             {canEdit && !draft && (
               <Button variant="outline" size="sm" className="mt-2" onClick={() => setDraft({ id: null, kind: 'dmx', name: 'Adresy z techniky', note: '', sound: [], dmx: gearLines })}>
-                <Plus className="size-4" aria-hidden />
-                Uložiť ako šablónu
-              </Button>
+                <Plus className="size-4" aria-hidden />{tx('Uložiť ako šablónu')}</Button>
             )}
           </>
         )}
       </section>
-      <p className="text-sm text-muted-foreground">Patch list konkrétneho eventu (zvuk aj DMX) je v detaile eventu; odtiaľ sa aj tlačí.</p>
+      <p className="text-sm text-muted-foreground">{tx('Patch list konkrétneho eventu (zvuk aj DMX) je v detaile eventu; odtiaľ sa aj tlačí.')}</p>
     </>
   )
 }

@@ -1,4 +1,5 @@
 import type { Ranked } from './model'
+import { tx } from '@/lib/i18n'
 
 const COLORS = ['#38bdf8', '#a78bfa', '#34d399', '#fbbf24', '#fb7185', '#2dd4bf', '#f472b6', '#a3e635', '#94a3b8']
 
@@ -33,13 +34,11 @@ export function DonutChart({ title, rows, format, empty }: { title: string; rows
             {rows.map((row, index) => (
               <path key={row.id} d={slicePath(starts[index], starts[index] + shares[index])} fill={COLORS[index % COLORS.length]} stroke="var(--surface, #ffffff)" strokeWidth={0.8}>
                 <title>
-                  {row.label}: {format(row.value)} ({percent(shares[index])})
+                  {tx(row.label)}: {format(row.value)} ({percent(shares[index])})
                 </title>
               </path>
             ))}
-            <text x="50" y="47" textAnchor="middle" fontSize="6" fill="currentColor" opacity={0.7}>
-              spolu
-            </text>
+            <text x="50" y="47" textAnchor="middle" fontSize="6" fill="currentColor" opacity={0.7}>{tx('spolu')}</text>
             <text x="50" y="57" textAnchor="middle" fontSize="8" fontWeight="700" fill="currentColor">
               {format(total)}
             </text>
@@ -48,7 +47,7 @@ export function DonutChart({ title, rows, format, empty }: { title: string; rows
             {rows.map((row, index) => (
               <li key={row.id} className="flex items-center gap-2">
                 <span className="size-3 shrink-0 rounded-sm" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                <span className="min-w-0 flex-1 truncate">{row.label}</span>
+                <span className="min-w-0 flex-1 truncate">{tx(row.label)}</span>
                 <span className="shrink-0 font-medium tabular-nums">{format(row.value)}</span>
                 <span className="w-14 shrink-0 text-right text-muted-foreground tabular-nums">{percent(shares[index])}</span>
               </li>

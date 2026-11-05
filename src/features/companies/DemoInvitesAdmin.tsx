@@ -6,6 +6,7 @@ import { formatDate } from '@/lib/format'
 import { getSupabase } from '@/lib/supabase/client'
 import { errorDetail } from '@/lib/supabase/errors'
 import { cn } from '@/lib/utils'
+import { tx, tf } from '@/lib/i18n'
 
 type DemoInvite = { email: string; note: string; invited_at: string; registered?: boolean; last_sign_in_at?: string | null; demo_created_at?: string | null }
 const key = ['demo-invitations'] as const
@@ -23,9 +24,9 @@ async function fetchDemoInvites(): Promise<DemoInvite[]> {
 /** „Založil demo 27. 10.“, „Zaregistrovaný, demo ešte nie“ alebo „Ešte sa nezaregistroval“. */
 function inviteState(invite: DemoInvite): { text: string; tone: 'ok' | 'wait' | 'none' } | null {
   if (invite.registered === undefined) return null
-  if (invite.demo_created_at) return { text: `Založil demo ${formatDate(invite.demo_created_at.slice(0, 10))}`, tone: 'ok' }
-  if (invite.registered) return { text: 'Zaregistrovaný, demo ešte nezaložil', tone: 'wait' }
-  return { text: 'Ešte sa nezaregistroval', tone: 'none' }
+  if (invite.demo_created_at) return { text: tf('Založil demo {0}', formatDate(invite.demo_created_at.slice(0, 10))), tone: 'ok' }
+  if (invite.registered) return { text: tx('Zaregistrovaný, demo ešte nezaložil'), tone: 'wait' }
+  return { text: tx('Ešte sa nezaregistroval'), tone: 'none' }
 }
 
 /** Vývojár: pozvať človeka len do dema – smie sa zaregistrovať, ale nedostane prístup do žiadnej firmy. */
@@ -54,13 +55,11 @@ export function DemoInvitesAdmin() {
     onSettled: refresh,
   })
 
-  if (invites.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Pozvánky do dema zatiaľ nie sú dostupné – treba spustiť migráciu 0111 (supabase/update-all.sql).</p>
+  if (invites.isError) return <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Pozvánky do dema zatiaľ nie sú dostupné – treba spustiť migráciu 0111 (supabase/update-all.sql).')}</p>
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">
-        Pozvaný sa zaregistruje týmto e-mailom, ale neuvidí žiadnu firmu – po prihlásení si založí vlastnú demo firmu s ukážkovými dátami. Odkaz na appku mu pošlite sami.
-      </p>
+      <p className="text-sm text-muted-foreground">{tx('Pozvaný sa zaregistruje týmto e-mailom, ale neuvidí žiadnu firmu – po prihlásení si založí vlastnú demo firmu s ukážkovými dátami. Odkaz na appku mu pošlite sami.')}</p>
       <form
         className="flex flex-wrap items-end gap-2"
         onSubmit={(event) => {
@@ -68,20 +67,14 @@ export function DemoInvitesAdmin() {
           if (valid) add.mutate()
         }}
       >
-        <label className="flex min-w-56 flex-1 flex-col gap-1 text-sm">
-          E-mail
-          <input type="email" required className="h-10 rounded-lg border bg-background px-3" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <label className="flex min-w-56 flex-1 flex-col gap-1 text-sm">{tx('E-mail')}<input type="email" required className="h-10 rounded-lg border bg-background px-3" value={email} onChange={(event) => setEmail(event.target.value)} />
         </label>
-        <label className="flex min-w-40 flex-1 flex-col gap-1 text-sm">
-          Poznámka (nepovinné)
-          <input maxLength={200} className="h-10 rounded-lg border bg-background px-3" value={note} onChange={(event) => setNote(event.target.value)} />
+        <label className="flex min-w-40 flex-1 flex-col gap-1 text-sm">{tx('Poznámka (nepovinné)')}<input maxLength={200} className="h-10 rounded-lg border bg-background px-3" value={note} onChange={(event) => setNote(event.target.value)} />
         </label>
         <Button type="submit" disabled={!valid || add.isPending}>
-          <UserPlus className="size-4" aria-hidden />
-          Pozvať do dema
-        </Button>
+          <UserPlus className="size-4" aria-hidden />{tx('Pozvať do dema')}</Button>
       </form>
-      {add.isError && <p className="text-sm text-destructive">Nepodarilo sa. {errorDetail(add.error)}</p>}
+      {add.isError && <p className="text-sm text-destructive">{tx('Nepodarilo sa.')}{' '}{errorDetail(add.error)}</p>}
       {(invites.data ?? []).length > 0 && (
         <ul className="divide-y rounded-xl border bg-surface">
           {invites.data!.map((invite) => {
@@ -97,7 +90,7 @@ export function DemoInvitesAdmin() {
                     <span className={cn('mt-0.5 block font-medium', state.tone === 'ok' ? 'text-emerald-600 dark:text-emerald-400' : state.tone === 'wait' ? 'text-accent' : 'text-muted-foreground')}>{state.text}</span>
                   )}
                 </span>
-                <Button size="sm" variant="ghost" aria-label={`Zrušiť pozvánku ${invite.email}`} disabled={remove.isPending} onClick={() => remove.mutate(invite.email)}>
+                <Button size="sm" variant="ghost" aria-label={tf('Zrušiť pozvánku {0}', invite.email)} disabled={remove.isPending} onClick={() => remove.mutate(invite.email)}>
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
               </li>

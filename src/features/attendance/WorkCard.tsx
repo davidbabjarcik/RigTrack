@@ -9,6 +9,7 @@ import { currentPosition } from './api'
 import { distanceM, formatDistance } from './model'
 import { RunningCard } from './RunningCard'
 import { fetchOpenSession, finishSession, pauseSession, startSession, useHome, WORK_PLACE_LABELS, workKeys, type WorkPlace } from './workApi'
+import { tx, tf } from '@/lib/i18n'
 
 /** Polomer, v ktorom sa práca na firme / doma uzná. */
 const RADIUS_M = 300
@@ -35,7 +36,7 @@ export function WorkCard({ companyId, userId }: { companyId: string; userId: str
       const position = await currentPosition()
       const distance = distanceM(position, target)
       if (distance > RADIUS_M) {
-        setMessage(`Si ${formatDistance(distance)} od miesta (${place === 'company' ? 'firma' : 'domov'}) – začať sa dá do ${formatDistance(RADIUS_M)}.`)
+        setMessage(tf('Si {0} od miesta ({1}) – začať sa dá do {2}.', formatDistance(distance), place === 'company' ? 'firma' : 'domov', formatDistance(RADIUS_M)))
         return false
       }
       await startSession(companyId, place, true, distance)
@@ -44,7 +45,7 @@ export function WorkCard({ companyId, userId }: { companyId: string; userId: str
     onMutate: () => setMessage(''),
     // Chyba polohy má číselný kód (zamietnuté, nedostupné, vypršal čas), chyba databázy textový.
     onError: (error) =>
-      setMessage(typeof (error as { code?: unknown }).code === 'number' ? 'Polohu sa nepodarilo zistiť. Povoľte appke polohu v prehliadači.' : 'Nepodarilo sa uložiť.'),
+      setMessage(typeof (error as { code?: unknown }).code === 'number' ? tx('Polohu sa nepodarilo zistiť. Povoľte appke polohu v prehliadači.') : tx('Nepodarilo sa uložiť.')),
     onSettled: refresh,
   })
   const pause = useMutation({ mutationFn: (kind: Parameters<typeof pauseSession>[1]) => pauseSession(open.data!.id, kind), onSettled: refresh })
@@ -55,14 +56,13 @@ export function WorkCard({ companyId, userId }: { companyId: string; userId: str
     return (
       <RunningCard
         title={
-          <Link to="/attendance" className="font-medium hover:underline">
-            Práca – {WORK_PLACE_LABELS[open.data.place].toLowerCase()}
+          <Link to="/attendance" className="font-medium hover:underline">{tx('Práca –')}{' '}{WORK_PLACE_LABELS[open.data.place].toLowerCase()}
           </Link>
         }
         record={open.data}
         busy={pause.isPending || finish.isPending}
         failed={pause.isError || finish.isError}
-        confirm="Skončiť prácu? Zapíše sa do dochádzky."
+        confirm={tx('Skončiť prácu? Zapíše sa do dochádzky.')}
         onPause={(kind) => pause.mutate(kind)}
         onFinish={() => finish.mutate()}
       />
@@ -72,34 +72,24 @@ export function WorkCard({ companyId, userId }: { companyId: string; userId: str
   const homeMissing = !home.data?.address
   return (
     <div className="rounded-xl border bg-surface p-4">
-      <p className="font-medium">
-        Pracujem mimo eventu{' '}
-        <Link to="/attendance" className="text-sm font-normal text-accent hover:underline">
-          moja dochádzka
-        </Link>
+      <p className="font-medium">{tx('Pracujem mimo eventu')}{' '}
+        <Link to="/attendance" className="text-sm font-normal text-accent hover:underline">{tx('moja dochádzka')}</Link>
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button variant="outline" disabled={start.isPending || open.isPending} onClick={() => start.mutate('company')}>
-          <Building2 className="size-4" aria-hidden />
-          Začať na firme
-        </Button>
+          <Building2 className="size-4" aria-hidden />{tx('Začať na firme')}</Button>
         <Button variant="outline" disabled={start.isPending || open.isPending || homeMissing} onClick={() => start.mutate('home')}>
-          <HomeIcon className="size-4" aria-hidden />
-          Začať doma
-        </Button>
+          <HomeIcon className="size-4" aria-hidden />{tx('Začať doma')}</Button>
       </div>
-      {start.isPending && <p className="mt-2 text-sm text-muted-foreground">Zisťujem polohu…</p>}
+      {start.isPending && <p className="mt-2 text-sm text-muted-foreground">{tx('Zisťujem polohu…')}</p>}
       {message && <p className="mt-2 text-sm text-destructive">{message}</p>}
       {homeMissing && (
-        <p className="mt-2 text-sm text-muted-foreground">
-          Prácu doma začnete po zadaní adresy v{' '}
-          <Link to="/settings?tab=account" className="text-accent hover:underline">
-            Nastaveniach → Účet → Dochádzka
-          </Link>
+        <p className="mt-2 text-sm text-muted-foreground">{tx('Prácu doma začnete po zadaní adresy v')}{' '}
+          <Link to="/settings?tab=account" className="text-accent hover:underline">{tx('Nastaveniach → Účet → Dochádzka')}</Link>
           .
         </p>
       )}
-      {home.data?.address && home.data.lat == null && <p className="mt-2 text-sm text-muted-foreground">Adresa domov nie je na mape – práca doma sa neoverí polohou.</p>}
+      {home.data?.address && home.data.lat == null && <p className="mt-2 text-sm text-muted-foreground">{tx('Adresa domov nie je na mape – práca doma sa neoverí polohou.')}</p>}
     </div>
   )
 }

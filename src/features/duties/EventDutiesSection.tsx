@@ -8,6 +8,7 @@ import { memberName, useMembers } from '@/features/companies/useMembers'
 import type { CompanyEvent } from '@/features/events/model'
 import { addDuty, dutyKeys, removeDuty, useDutyTypes, useEventDuties } from './api'
 import { DUTY_PHASE_LABELS, DUTY_PHASES, dutyOwners, type DutyType, type EventDuty } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const EXTERNAL = 'external'
 
@@ -38,7 +39,7 @@ export function EventDutiesSection({ companyId, event, canEdit }: Props) {
   const shown = types.data.filter((type) => type.active || all.some((duty) => duty.dutyTypeId === type.id))
   if (shown.length === 0) return null
   const crew = event.crew.some((person) => person.memberId === userId && person.response !== 'no')
-  const label = (duty: EventDuty) => (duty.memberId ? memberName(members.data, duty.memberId) || 'Bývalý člen' : duty.personName)
+  const label = (duty: EventDuty) => (duty.memberId ? memberName(members.data, duty.memberId) || tx('Bývalý člen') : duty.personName)
   // Najprv ľudia z posádky eventu, potom ostatní členovia.
   const crewIds = new Set(event.crew.map((person) => person.memberId).filter(Boolean))
   const people = [...(members.data ?? [])].sort((a, b) => Number(crewIds.has(b.userId)) - Number(crewIds.has(a.userId)))
@@ -59,47 +60,42 @@ export function EventDutiesSection({ companyId, event, canEdit }: Props) {
     return (
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <select
-          aria-label="Kto"
+          aria-label={tx('Kto')}
           className="h-9 rounded-lg border bg-background px-2 text-sm"
           value={adding.who}
           onChange={(e) => setAdding({ ...adding, who: e.target.value })}
         >
-          <option value="">— vyberte —</option>
+          <option value="">{tx('— vyberte —')}</option>
           {people.map((member) => (
             <option key={member.userId} value={member.userId}>
               {member.fullName || member.email}
-              {crewIds.has(member.userId) ? ' (posádka)' : ''}
+              {crewIds.has(member.userId) ? tx(' (posádka)') : ''}
             </option>
           ))}
           {externals.map((person) => (
             <option key={person.id} value={`ext:${person.name}`}>
-              {person.name} (externista)
-            </option>
+              {person.name}{' '}{tx('(externista)')}</option>
           ))}
-          <option value={EXTERNAL}>Iný externista (napísať meno)</option>
+          <option value={EXTERNAL}>{tx('Iný externista (napísať meno)')}</option>
         </select>
         {adding.who === EXTERNAL && (
           <input
-            aria-label="Meno"
+            aria-label={tx('Meno')}
             className="h-9 min-w-40 flex-1 rounded-lg border bg-background px-2 text-sm"
             maxLength={80}
-            placeholder="Meno"
+            placeholder={tx('Meno')}
             value={adding.name}
             onChange={(e) => setAdding({ ...adding, name: e.target.value })}
           />
         )}
-        <Button size="sm" disabled={add.isPending || !adding.who || (adding.who === EXTERNAL && !adding.name.trim())} onClick={submit}>
-          Pridať
-        </Button>
-        <Button size="sm" variant="ghost" onClick={() => setAdding(null)}>
-          Zrušiť
-        </Button>
+        <Button size="sm" disabled={add.isPending || !adding.who || (adding.who === EXTERNAL && !adding.name.trim())} onClick={submit}>{tx('Pridať')}</Button>
+        <Button size="sm" variant="ghost" onClick={() => setAdding(null)}>{tx('Zrušiť')}</Button>
       </div>
     )
   }
 
   return (
-    <CollapsibleSection id="event.duties" title={<>Kto čo robil ({count})</>}>
+    <CollapsibleSection id="event.duties" title={<>{tx('Kto čo robil (')}{count})</>}>
       <div className="flex flex-col gap-3">
       {DUTY_PHASES.map((phase) => {
         const inPhase = shown.filter((type) => type.phase === phase)
@@ -107,7 +103,7 @@ export function EventDutiesSection({ companyId, event, canEdit }: Props) {
         return (
       <div key={phase}>
       {/* Pred eventom, na evente, po evente (kontrola hliníka, kabeláže…). */}
-      <h3 className="mb-1 text-sm font-medium text-muted-foreground">{DUTY_PHASE_LABELS[phase]}</h3>
+      <h3 className="mb-1 text-sm font-medium text-muted-foreground">{tx(DUTY_PHASE_LABELS[phase])}</h3>
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
         {inPhase.map((type) => {
           const here = all.filter((duty) => duty.dutyTypeId === type.id)
@@ -120,13 +116,13 @@ export function EventDutiesSection({ companyId, event, canEdit }: Props) {
                   <span key={duty.id} className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-sm">
                     {label(duty)}
                     {(canEdit || duty.memberId === userId) && (
-                      <button type="button" aria-label={`Odobrať: ${label(duty)}`} className="text-muted-foreground hover:text-foreground" disabled={remove.isPending} onClick={() => remove.mutate(duty.id)}>
+                      <button type="button" aria-label={tf('Odobrať: {0}', label(duty))} className="text-muted-foreground hover:text-foreground" disabled={remove.isPending} onClick={() => remove.mutate(duty.id)}>
                         <X className="size-3.5" aria-hidden />
                       </button>
                     )}
                   </span>
                 ))}
-                {here.length === 0 && <span className="text-sm text-muted-foreground">nikto</span>}
+                {here.length === 0 && <span className="text-sm text-muted-foreground">{tx('nikto')}</span>}
                 {/* Komu činnosť patrí (Nastavenia) – ponuka na jedno kliknutie. */}
                 {canEdit &&
                   type.active &&
@@ -138,7 +134,7 @@ export function EventDutiesSection({ companyId, event, canEdit }: Props) {
                         type="button"
                         className="inline-flex items-center gap-1 rounded-full border border-dashed px-2.5 py-1 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                         disabled={add.isPending}
-                        title="Patrí k tejto činnosti – pridať"
+                        title={tx('Patrí k tejto činnosti – pridať')}
                         onClick={() => add.mutate({ typeId: type.id, person: { memberId: member.userId } })}
                       >
                         <Plus className="size-3.5" aria-hidden />
@@ -146,15 +142,13 @@ export function EventDutiesSection({ companyId, event, canEdit }: Props) {
                       </button>
                     ))}
                 {canEdit && type.active && adding?.typeId !== type.id && (
-                  <Button size="sm" variant="ghost" aria-label={`Pridať človeka: ${type.name}`} onClick={() => setAdding({ typeId: type.id, who: '', name: '' })}>
+                  <Button size="sm" variant="ghost" aria-label={tf('Pridať človeka: {0}', type.name)} onClick={() => setAdding({ typeId: type.id, who: '', name: '' })}>
                     <Plus className="size-4" aria-hidden />
                   </Button>
                 )}
                 {!canEdit && crew && !mine && type.active && userId && (
                   <Button size="sm" variant="outline" disabled={add.isPending} onClick={() => add.mutate({ typeId: type.id, person: { memberId: userId } })}>
-                    <Plus className="size-4" aria-hidden />
-                    Robil(a) som
-                  </Button>
+                    <Plus className="size-4" aria-hidden />{tx('Robil(a) som')}</Button>
                 )}
               </div>
               {addRow(type)}
@@ -166,7 +160,7 @@ export function EventDutiesSection({ companyId, event, canEdit }: Props) {
         )
       })}
       </div>
-      {(add.isError || remove.isError) && <p className="mt-2 text-sm text-destructive">Zmena sa nepodarila.</p>}
+      {(add.isError || remove.isError) && <p className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>}
     </CollapsibleSection>
   )
 }

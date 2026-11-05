@@ -5,6 +5,7 @@ import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { KIND_STYLES } from './kindStyles'
 import { monthGridDays, shiftMonth, type AgendaEntry } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const WEEKDAYS = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']
 // Na širšej obrazovke sa do bunky zmestia názvy; zvyšok sa ukáže po kliknutí na deň.
@@ -29,7 +30,7 @@ export function CalendarGrid({ month, today, entries, onMonthChange, renderEntry
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <Button variant="outline" size="sm" aria-label="Predchádzajúci mesiac" onClick={() => onMonthChange(shiftMonth(month, -1))}>
+        <Button variant="outline" size="sm" aria-label={tx('Predchádzajúci mesiac')} onClick={() => onMonthChange(shiftMonth(month, -1))}>
           <ChevronLeft className="size-4" aria-hidden />
         </Button>
         <div className="flex items-center gap-3">
@@ -42,12 +43,10 @@ export function CalendarGrid({ month, today, entries, onMonthChange, renderEntry
                 onMonthChange(today.slice(0, 7))
                 setSelected(today)
               }}
-            >
-              Dnes
-            </button>
+            >{tx('Dnes')}</button>
           )}
         </div>
-        <Button variant="outline" size="sm" aria-label="Nasledujúci mesiac" onClick={() => onMonthChange(shiftMonth(month, 1))}>
+        <Button variant="outline" size="sm" aria-label={tx('Nasledujúci mesiac')} onClick={() => onMonthChange(shiftMonth(month, 1))}>
           <ChevronRight className="size-4" aria-hidden />
         </Button>
       </div>
@@ -69,7 +68,7 @@ export function CalendarGrid({ month, today, entries, onMonthChange, renderEntry
                 key={day}
                 type="button"
                 aria-pressed={day === selected}
-                aria-label={`${formatDate(day)}, termínov: ${dayEntries.length}`}
+                aria-label={tf('{0}, termínov: {1}', formatDate(day), dayEntries.length)}
                 onClick={() => setSelected(day)}
                 className={cn(
                   'flex min-h-16 min-w-0 flex-col gap-1 border-b p-1 text-left hover:bg-muted sm:min-h-24 sm:p-1.5',
@@ -101,7 +100,7 @@ export function CalendarGrid({ month, today, entries, onMonthChange, renderEntry
                     </span>
                   ))}
                   {dayEntries.length > TITLES_PER_DAY && (
-                    <span className="text-xs text-muted-foreground">+{dayEntries.length - TITLES_PER_DAY} ďalšie</span>
+                    <span className="text-xs text-muted-foreground">+{dayEntries.length - TITLES_PER_DAY}{' '}{tx('ďalšie')}</span>
                   )}
                 </span>
               </button>
@@ -112,11 +111,11 @@ export function CalendarGrid({ month, today, entries, onMonthChange, renderEntry
 
       <section className="mt-5" aria-live="polite">
         <h2 className="mb-2 text-sm font-medium text-muted-foreground">
-          {selected === today ? 'Dnes · ' : ''}
+          {selected === today ? tx('Dnes · ') : ''}
           {formatDate(selected)} ({selectedEntries.length})
         </h2>
         {selectedEntries.length === 0 ? (
-          <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">V tento deň nie je žiadny termín.</p>
+          <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('V tento deň nie je žiadny termín.')}</p>
         ) : (
           <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
             {selectedEntries.map((entry) => (

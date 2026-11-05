@@ -7,6 +7,7 @@ import type { Membership } from '@/features/companies/company-context'
 import { DEVICE_KIND_LABELS, DEVICE_KINDS, normalizeMac, type DeviceKind } from '@/features/devices/model'
 import { addDeviceToCompanies, myDeviceKeys, removeDevice, useMyDevices } from './devices'
 import { createOwnEverywhere, myEquipmentKeys, useMyEquipment } from './myEquipment'
+import { tx, tf } from '@/lib/i18n'
 
 const EMPTY = { kind: 'phone' as DeviceKind, name: '', mac: '', ethernetMac: '' }
 
@@ -48,7 +49,7 @@ export function MyDevicesEverywhere({ userId, memberships }: { userId: string; m
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
-      <p className="text-sm text-muted-foreground">Mobil, notebook, tablet s MAC adresou – zapíšu sa do všetkých vašich firiem naraz. IP adresy v sieťach doplníte v danej firme.</p>
+      <p className="text-sm text-muted-foreground">{tx('Mobil, notebook, tablet s MAC adresou – zapíšu sa do všetkých vašich firiem naraz. IP adresy v sieťach doplníte v danej firme.')}</p>
       {(devices.data ?? []).length > 0 && (
         <ul className="divide-y rounded-lg border text-sm">
           {devices.data!.map((device) => {
@@ -56,36 +57,31 @@ export function MyDevicesEverywhere({ userId, memberships }: { userId: string; m
             return (
               <li key={device.mac} className="flex flex-wrap items-center gap-2 px-3 py-2">
                 <span className="min-w-0 flex-1">
-                  <span className="font-medium">{device.name}</span> <span className="text-muted-foreground">· {DEVICE_KIND_LABELS[device.kind]} · <span className="font-mono">{device.mac}</span></span>
-                  {missing.length > 0 && <span className="block text-xs text-accent">chýba vo firme: {missing.map(nameOf).join(', ')}</span>}
+                  <span className="font-medium">{device.name}</span> <span className="text-muted-foreground">· {tx(DEVICE_KIND_LABELS[device.kind])} · <span className="font-mono">{device.mac}</span></span>
+                  {missing.length > 0 && <span className="block text-xs text-accent">{tx('chýba vo firme:')}{' '}{missing.map(nameOf).join(', ')}</span>}
                 </span>
                 {inGear(device.name) ? (
                   <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <Check className="size-3.5" aria-hidden />v technike
-                  </span>
+                    <Check className="size-3.5" aria-hidden />{tx('v technike')}</span>
                 ) : (
                   <Button
                     size="sm"
                     variant="ghost"
-                    title="Pridať ako moju vlastnú techniku (dá sa dať na event)"
+                    title={tx('Pridať ako moju vlastnú techniku (dá sa dať na event)')}
                     disabled={asGear.isPending || gear.isError}
                     onClick={() => asGear.mutate({ name: device.name, companyIds: device.companyIds })}
                   >
-                    <Speaker className="size-4" aria-hidden />
-                    Aj do techniky
-                  </Button>
+                    <Speaker className="size-4" aria-hidden />{tx('Aj do techniky')}</Button>
                 )}
                 {missing.length > 0 && (
-                  <Button size="sm" variant="outline" disabled={add.isPending} onClick={() => add.mutate({ companyIds: missing, device: { ...device, note: device.note } })}>
-                    Pridať všade
-                  </Button>
+                  <Button size="sm" variant="outline" disabled={add.isPending} onClick={() => add.mutate({ companyIds: missing, device: { ...device, note: device.note } })}>{tx('Pridať všade')}</Button>
                 )}
                 <Button
                   size="sm"
                   variant="ghost"
-                  aria-label={`Zmazať ${device.name}`}
+                  aria-label={tf('Zmazať {0}', device.name)}
                   disabled={remove.isPending}
-                  onClick={() => window.confirm(`Zmazať „${device.name}“ zo všetkých firiem?`) && remove.mutate(device.rowIds)}
+                  onClick={() => window.confirm(tf('Zmazať „{0}“ zo všetkých firiem?', device.name)) && remove.mutate(device.rowIds)}
                 >
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
@@ -96,26 +92,24 @@ export function MyDevicesEverywhere({ userId, memberships }: { userId: string; m
       )}
       {memberships.length > 0 && (
         <form onSubmit={submit} className="grid gap-2 rounded-lg border border-dashed p-3 sm:grid-cols-2 lg:grid-cols-[10rem_1fr_1fr_1fr_auto] lg:items-end">
-          <SelectField label="Druh" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as DeviceKind })}>
+          <SelectField label={tx('Druh')} value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as DeviceKind })}>
             {DEVICE_KINDS.map((kind) => (
               <option key={kind} value={kind}>
-                {DEVICE_KIND_LABELS[kind]}
+                {tx(DEVICE_KIND_LABELS[kind])}
               </option>
             ))}
           </SelectField>
-          <Field label="Názov" maxLength={80} placeholder="napr. iPhone 15" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <Field label="MAC Wi-Fi" autoComplete="off" placeholder="AA:BB:CC:DD:EE:FF" value={form.mac} onChange={(e) => setForm({ ...form, mac: e.target.value })} />
-          <Field label="MAC LAN (nepovinné)" autoComplete="off" value={form.ethernetMac} onChange={(e) => setForm({ ...form, ethernetMac: e.target.value })} />
+          <Field label={tx('Názov')} maxLength={80} placeholder={tx('napr. iPhone 15')} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <Field label={tx('MAC Wi-Fi')} autoComplete="off" placeholder={tx('AA:BB:CC:DD:EE:FF')} value={form.mac} onChange={(e) => setForm({ ...form, mac: e.target.value })} />
+          <Field label={tx('MAC LAN (nepovinné)')} autoComplete="off" value={form.ethernetMac} onChange={(e) => setForm({ ...form, ethernetMac: e.target.value })} />
           <Button type="submit" className="sm:col-span-2 sm:justify-self-start lg:col-span-1" disabled={add.isPending || !mac || ethernet === null || !form.name.trim()}>
-            <Plus className="size-4" aria-hidden />
-            Pridať
-          </Button>
+            <Plus className="size-4" aria-hidden />{tx('Pridať')}</Button>
         </form>
       )}
-      {form.mac.trim() !== '' && !mac && <p className="text-sm text-destructive">MAC zadajte v tvare AA:BB:CC:DD:EE:FF.</p>}
-      {skipped.length > 0 && <p className="text-sm text-accent">Vo firme {skipped.map(nameOf).join(', ')} sa nezapísalo – túto MAC tam už má niekto zapísanú.</p>}
-      {remove.isError && <p className="text-sm text-destructive">Zariadenie sa nepodarilo zmazať.</p>}
-      {asGear.isError && <p className="text-sm text-destructive">Do techniky sa nepodarilo pridať. Táto časť databázy ešte nemusí byť pripravená.</p>}
+      {form.mac.trim() !== '' && !mac && <p className="text-sm text-destructive">{tx('MAC zadajte v tvare AA:BB:CC:DD:EE:FF.')}</p>}
+      {skipped.length > 0 && <p className="text-sm text-accent">{tx('Vo firme')}{' '}{skipped.map(nameOf).join(', ')}{' '}{tx('sa nezapísalo – túto MAC tam už má niekto zapísanú.')}</p>}
+      {remove.isError && <p className="text-sm text-destructive">{tx('Zariadenie sa nepodarilo zmazať.')}</p>}
+      {asGear.isError && <p className="text-sm text-destructive">{tx('Do techniky sa nepodarilo pridať. Táto časť databázy ešte nemusí byť pripravená.')}</p>}
     </div>
   )
 }

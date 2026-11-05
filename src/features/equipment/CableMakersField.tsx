@@ -6,6 +6,7 @@ import { useMembers } from '@/features/companies/useMembers'
 import { cn } from '@/lib/utils'
 
 import { type Maker, type MakerMode, type MakerRow, makersOver } from './makers'
+import { tx, tf } from '@/lib/i18n'
 
 export type { Maker, MakerMode, MakerRow } from './makers'
 
@@ -33,8 +34,8 @@ export function CableMakersField({ companyId, mode, onMode, oneName, onOneName, 
 
   return (
     <div className="sm:col-span-2">
-      <p className="mb-1.5 text-sm font-medium">Kto káble vyrobil</p>
-      <div role="radiogroup" aria-label="Kto káble vyrobil" className="mb-2 flex flex-wrap gap-1 rounded-lg bg-muted p-1 sm:inline-flex">
+      <p className="mb-1.5 text-sm font-medium">{tx('Kto káble vyrobil')}</p>
+      <div role="radiogroup" aria-label={tx('Kto káble vyrobil')} className="mb-2 flex flex-wrap gap-1 rounded-lg bg-muted p-1 sm:inline-flex">
         {MODES.map((item) => (
           <button
             key={item.id}
@@ -44,7 +45,7 @@ export function CableMakersField({ companyId, mode, onMode, oneName, onOneName, 
             onClick={() => onMode(item.id)}
             className={cn('rounded-md px-3 py-1.5 text-sm font-medium', mode === item.id ? 'bg-surface text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
           >
-            {item.label}
+            {tx(item.label)}
           </button>
         ))}
       </div>
@@ -55,7 +56,7 @@ export function CableMakersField({ companyId, mode, onMode, oneName, onOneName, 
       </datalist>
 
       {mode === 'one' && (
-        <Field label="Kto vyrobil všetky kusy" list={listId} maxLength={80} placeholder="meno" value={oneName} onChange={(event) => onOneName(event.target.value)} />
+        <Field label={tx('Kto vyrobil všetky kusy')} list={listId} maxLength={80} placeholder={tx('meno')} value={oneName} onChange={(event) => onOneName(event.target.value)} />
       )}
 
       {mode === 'split' && (
@@ -68,17 +69,16 @@ export function CableMakersField({ companyId, mode, onMode, oneName, onOneName, 
               <li key={row.key} className="rounded-lg border p-3">
                 <p className="mb-2 flex flex-wrap justify-between gap-2 text-sm">
                   <span className="font-medium">
-                    {row.title} · {Number.isFinite(row.quantity) ? row.quantity : 0} ks
-                  </span>
+                    {row.title} · {Number.isFinite(row.quantity) ? row.quantity : 0}{' '}{tx('ks')}</span>
                   <span className={over ? 'text-destructive' : 'text-muted-foreground'}>
-                    {over ? `Spolu ${done} ks – viac ako ${row.quantity}` : done < row.quantity ? `bez výrobcu ${row.quantity - done} ks` : 'všetky kusy majú výrobcu'}
+                    {over ? `Spolu ${done} ks – viac ako ${row.quantity}` : done < row.quantity ? tf('bez výrobcu {0} ks', row.quantity - done) : tx('všetky kusy majú výrobcu')}
                   </span>
                 </p>
                 {row.makers.length > 0 && (
                   <ul className="mb-2 flex flex-col gap-2">
                     {row.makers.map((maker, index) => (
                       <li key={index} className="grid grid-cols-[1fr_6rem_2.5rem] gap-2">
-                        <Field label={`Kto – ${row.title}`} hideLabel list={listId} maxLength={80} placeholder="meno" value={maker.name} onChange={(event) => set(index, { name: event.target.value })} />
+                        <Field label={`Kto – ${row.title}`} hideLabel list={listId} maxLength={80} placeholder={tx('meno')} value={maker.name} onChange={(event) => set(index, { name: event.target.value })} />
                         <Field
                           label={`Kusov – ${row.title}`}
                           hideLabel
@@ -88,7 +88,7 @@ export function CableMakersField({ companyId, mode, onMode, oneName, onOneName, 
                           value={Number.isFinite(maker.count) ? maker.count : ''}
                           onChange={(event) => set(index, { count: event.target.valueAsNumber })}
                         />
-                        <Button variant="ghost" className="h-11 px-0" aria-label={`Odobrať výrobcu ${index + 1} – ${row.title}`} onClick={() => onRow(row.key, row.makers.filter((_, i) => i !== index))}>
+                        <Button variant="ghost" className="h-11 px-0" aria-label={tf('Odobrať výrobcu {0} – {1}', index + 1, row.title)} onClick={() => onRow(row.key, row.makers.filter((_, i) => i !== index))}>
                           <Trash2 className="size-4" aria-hidden />
                         </Button>
                       </li>
@@ -101,15 +101,13 @@ export function CableMakersField({ companyId, mode, onMode, oneName, onOneName, 
                   disabled={done >= row.quantity}
                   onClick={() => onRow(row.key, [...row.makers, { name: '', count: Math.max(1, row.quantity - done) }])}
                 >
-                  <Plus className="size-4" aria-hidden />
-                  Pridať človeka
-                </Button>
+                  <Plus className="size-4" aria-hidden />{tx('Pridať človeka')}</Button>
               </li>
             )
           })}
         </ul>
       )}
-      {mode !== 'none' && <p className="mt-1 text-xs text-muted-foreground">V Štatistikách potom uvidíte, kto spravil najviac káblov.</p>}
+      {mode !== 'none' && <p className="mt-1 text-xs text-muted-foreground">{tx('V Štatistikách potom uvidíte, kto spravil najviac káblov.')}</p>}
     </div>
   )
 }

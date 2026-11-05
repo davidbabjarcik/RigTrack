@@ -1,4 +1,5 @@
 import { isStructure, metres, palletTone, spotColor, type Spot, type Warehouse } from './model'
+import { tx } from '@/lib/i18n'
 
 type Props = {
   warehouse: Warehouse
@@ -36,7 +37,7 @@ export function WarehousePlan({ warehouse, spots, counts, usage, selectedId, hig
       viewBox={`${-margin} ${-margin} ${lengthCm + margin * 2} ${widthCm + margin * 2}`}
       className="max-h-[72dvh] w-full rounded-xl border bg-[#e7e5e0] select-none dark:bg-[#1c1f26]"
       role="group"
-      aria-label="Plán skladu, pohľad zhora"
+      aria-label={tx('Plán skladu, pohľad zhora')}
       fontFamily="inherit"
     >
       <defs>

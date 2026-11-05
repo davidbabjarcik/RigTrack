@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Field } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
 import { addressFromSwitches, describeSwitches, dipSwitches, MAX_ADDRESS, patchFixtures } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 /** Rad dip prepínačov; zapnuté hore (ON), klikom sa dajú prepínať. */
 function Switches({ on, reversed, onBottom, onToggle }: { on: boolean[]; reversed: boolean; onBottom: boolean; onToggle?: (index: number) => void }) {
@@ -15,14 +16,14 @@ function Switches({ on, reversed, onBottom, onToggle }: { on: boolean[]; reverse
         <span>{onBottom ? 'OFF' : 'ON'}</span>
         <span className="mb-5">{onBottom ? 'ON' : 'OFF'}</span>
       </div>
-      <div className="flex flex-wrap gap-1" role="group" aria-label="Dip prepínače">
+      <div className="flex flex-wrap gap-1" role="group" aria-label={tx('Dip prepínače')}>
       {order.map(({ value, index }) => (
         <button
           key={index}
           type="button"
           disabled={!onToggle}
           aria-pressed={value}
-          aria-label={`Prepínač ${index + 1} (${1 << index}) ${value ? 'zapnutý' : 'vypnutý'}`}
+          aria-label={tf('Prepínač {0} ({1}) {2}', index + 1, 1 << index, value ? tx('zapnutý') : tx('vypnutý'))}
           onClick={() => onToggle?.(index)}
           className="flex flex-col items-center gap-1"
         >
@@ -53,15 +54,15 @@ export function DmxPage() {
   return (
     <>
       <CalculatorTabs />
-      <PageHeader title="DMX dip switch" description="Adresa na dip prepínače a späť, adresy pre rad svetiel" />
+      <PageHeader title={tx('DMX dip switch')} description={tx('Adresa na dip prepínače a späť, adresy pre rad svetiel')} />
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="rounded-xl border bg-surface p-4">
-          <h2 className="mb-3 text-sm font-medium text-muted-foreground">Adresa ↔ prepínače</h2>
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">{tx('Adresa ↔ prepínače')}</h2>
           <div className="mb-4 grid grid-cols-2 gap-3">
-            <Field label="DMX adresa" type="number" inputMode="numeric" min={1} max={MAX_ADDRESS} value={address} onChange={(e) => setAddress(valid(e.target.valueAsNumber, 511))} />
+            <Field label={tx('DMX adresa')} type="number" inputMode="numeric" min={1} max={MAX_ADDRESS} value={address} onChange={(e) => setAddress(valid(e.target.valueAsNumber, 511))} />
             <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium">Prepínačov</span>
-              <div className="flex gap-1" role="group" aria-label="Počet prepínačov">
+              <span className="text-sm font-medium">{tx('Prepínačov')}</span>
+              <div className="flex gap-1" role="group" aria-label={tx('Počet prepínačov')}>
                 {[9, 10].map((value) => (
                   <button
                     key={value}
@@ -77,40 +78,31 @@ export function DmxPage() {
             </div>
           </div>
           <label className="mb-3 flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4" checked={reversed} onChange={(e) => setReversed(e.target.checked)} />
-            Prepínač 1 je vpravo (opačné poradie)
-          </label>
+            <input type="checkbox" className="size-4" checked={reversed} onChange={(e) => setReversed(e.target.checked)} />{tx('Prepínač 1 je vpravo (opačné poradie)')}</label>
           <label className="mb-3 flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4" checked={onBottom} onChange={(e) => setOnBottom(e.target.checked)} />
-            ON je dole (prepínače otočené)
-          </label>
+            <input type="checkbox" className="size-4" checked={onBottom} onChange={(e) => setOnBottom(e.target.checked)} />{tx('ON je dole (prepínače otočené)')}</label>
           <Switches on={on} reversed={reversed} onBottom={onBottom} onToggle={(index) => setAddress(Math.max(1, Math.min(511, addressFromSwitches(on.map((value, i) => (i === index ? !value : value))))))} />
-          <p className="mt-3 text-sm">
-            Zapnúť: <span className="font-medium">{on.flatMap((value, index) => (value ? [index + 1] : [])).join(', ') || '—'}</span>
-            <span className="text-muted-foreground"> · hodnoty {describeSwitches(on)} = {address}</span>
+          <p className="mt-3 text-sm">{tx('Zapnúť:')}{' '}<span className="font-medium">{on.flatMap((value, index) => (value ? [index + 1] : [])).join(', ') || '—'}</span>
+            <span className="text-muted-foreground">{' '}{tx('· hodnoty')}{' '}{describeSwitches(on)} = {address}</span>
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            ON = {onBottom ? 'dole' : 'hore'}, OFF = {onBottom ? 'hore' : 'dole'}. Prepínač 1 je {reversed ? 'vpravo' : 'vľavo'}, {switchCount} {reversed ? 'vľavo' : 'vpravo'}. Hodnoty: 1 = 1, 2 = 2, 3 = 4 … 9 = 256
-            {switchCount === 10 && ', 10 = funkcia (pri väčšine svetiel nie adresa)'}. Klikom na prepínač sa adresa prepočíta.
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{tx('ON =')}{' '}{onBottom ? 'dole' : 'hore'}{tx(', OFF =')}{' '}{onBottom ? 'hore' : 'dole'}{tx('. Prepínač 1 je')}{' '}{reversed ? 'vpravo' : tx('vľavo')}, {switchCount} {reversed ? tx('vľavo') : 'vpravo'}{tx('. Hodnoty: 1 = 1, 2 = 2, 3 = 4 … 9 = 256')}{switchCount === 10 && tx(', 10 = funkcia (pri väčšine svetiel nie adresa)')}{tx('. Klikom na prepínač sa adresa prepočíta.')}</p>
         </section>
 
         <section className="rounded-xl border bg-surface p-4">
-          <h2 className="mb-3 text-sm font-medium text-muted-foreground">Adresy pre rad svetiel</h2>
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">{tx('Adresy pre rad svetiel')}</h2>
           <div className="mb-3 grid grid-cols-3 gap-3">
-            <Field label="Štart" type="number" inputMode="numeric" min={1} max={512} value={start} onChange={(e) => setStart(valid(e.target.valueAsNumber, 512))} />
-            <Field label="Kanálov / svetlo" type="number" inputMode="numeric" min={1} max={512} value={channels} onChange={(e) => setChannels(valid(e.target.valueAsNumber, 512))} />
-            <Field label="Počet svetiel" type="number" inputMode="numeric" min={1} max={200} value={count} onChange={(e) => setCount(valid(e.target.valueAsNumber, 200))} />
+            <Field label={tx('Štart')} type="number" inputMode="numeric" min={1} max={512} value={start} onChange={(e) => setStart(valid(e.target.valueAsNumber, 512))} />
+            <Field label={tx('Kanálov / svetlo')} type="number" inputMode="numeric" min={1} max={512} value={channels} onChange={(e) => setChannels(valid(e.target.valueAsNumber, 512))} />
+            <Field label={tx('Počet svetiel')} type="number" inputMode="numeric" min={1} max={200} value={count} onChange={(e) => setCount(valid(e.target.valueAsNumber, 200))} />
           </div>
           <ul className="divide-y rounded-lg border text-sm">
             {fixtures.map((item) => (
               <li key={item.fixture} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
                 <span>
-                  <span className="font-medium">#{item.fixture}</span> · {item.universe > 1 && `univerzum ${item.universe} · `}adresa <span className="font-mono font-semibold">{item.address}</span>
-                  <span className="text-muted-foreground"> (do {item.last})</span>
+                  <span className="font-medium">#{item.fixture}</span> · {item.universe > 1 && `univerzum ${item.universe} · `}{tx('adresa')}{' '}<span className="font-mono font-semibold">{item.address}</span>
+                  <span className="text-muted-foreground">{' '}{tx('(do')}{' '}{item.last})</span>
                 </span>
-                <button type="button" className="text-xs text-accent hover:underline" onClick={() => setAddress(Math.min(511, item.address))}>
-                  dip: {dipSwitches(item.address, switchCount).flatMap((value, index) => (value ? [index + 1] : [])).join(', ')}
+                <button type="button" className="text-xs text-accent hover:underline" onClick={() => setAddress(Math.min(511, item.address))}>{tx('dip:')}{' '}{dipSwitches(item.address, switchCount).flatMap((value, index) => (value ? [index + 1] : [])).join(', ')}
                 </button>
               </li>
             ))}

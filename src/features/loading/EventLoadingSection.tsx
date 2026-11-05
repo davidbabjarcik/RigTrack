@@ -15,6 +15,7 @@ import { ObstacleLegend } from './ObstacleLegend'
 import { describePlace, loadingOrder, planLoading, type Unplaced } from './model'
 import { byCapacity, cargoSpaceOf, parcelOf } from './sources'
 import { DevNotice } from '@/components/feedback/DevNotice'
+import { tx, tf } from '@/lib/i18n'
 
 const REASONS: Record<Unplaced['reason'], string> = {
   'too-big': 'nezmestí sa do žiadneho vozidla',
@@ -52,26 +53,20 @@ export function EventLoadingSection({ companyId, event }: Props) {
     parcels,
   )
   const toggle = (id: string) => setExcluded((current) => (current.includes(id) ? current.filter((other) => other !== id) : [...current, id]))
-  const vehicleWord = (count: number) => (count === 1 ? 'vozidlo' : count < 5 ? 'vozidlá' : 'vozidiel')
+  const vehicleWord = (count: number) => (count === 1 ? 'vozidlo' : count < 5 ? tx('vozidlá') : 'vozidiel')
 
   return (
-    <CollapsibleSection id="event.loading" title="Nakladanie">
+    <CollapsibleSection id="event.loading" title={tx('Nakladanie')}>
       <DevNotice className="mb-3" />
 
       {cases.isPending || vehicles.isPending ? (
-        <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">Počítam…</p>
+        <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Počítam…')}</p>
       ) : cases.isError || vehicles.isError ? (
-        <p className="rounded-xl border bg-surface p-4 text-sm text-destructive">Plán nakladania sa nepodarilo pripraviť.</p>
+        <p className="rounded-xl border bg-surface p-4 text-sm text-destructive">{tx('Plán nakladania sa nepodarilo pripraviť.')}</p>
       ) : caseIds.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
-          Plán nakladania sa počíta z celých cases. Na evente je zatiaľ len jednotlivá technika.
-        </p>
+        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Plán nakladania sa počíta z celých cases. Na evente je zatiaľ len jednotlivá technika.')}</p>
       ) : spaces.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">
-          Žiadne aktívne vozidlo nemá zapísané rozmery nákladného priestoru. Doplňte ich v úprave vozidla (
-          <Link to="/vehicles" className="text-accent hover:underline">
-            Vozidlá
-          </Link>
+        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Žiadne aktívne vozidlo nemá zapísané rozmery nákladného priestoru. Doplňte ich v úprave vozidla (')}<Link to="/vehicles" className="text-accent hover:underline">{tx('Vozidlá')}</Link>
           ).
         </p>
       ) : (
@@ -80,14 +75,13 @@ export function EventLoadingSection({ companyId, event }: Props) {
             <p className="flex items-center gap-2 text-lg font-semibold">
               <Truck className="size-5 text-muted-foreground" aria-hidden />
               {plan.loads.length === 0
-                ? 'Nie je čo nakladať'
-                : `${plan.unplaced.length > 0 ? 'Nestačí: ' : 'Treba '}${plan.loads.length} ${vehicleWord(plan.loads.length)}`}
+                ? tx('Nie je čo nakladať')
+                : `${plan.unplaced.length > 0 ? tx('Nestačí: ') : tx('Treba ')}${plan.loads.length} ${vehicleWord(plan.loads.length)}`}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {parcels.length} z {caseIds.length} cases v pláne · spolu {formatNumber(parcels.reduce((sum, parcel) => sum + parcel.weightKg, 0))} kg
-            </p>
+              {parcels.length} z {caseIds.length}{' '}{tx('cases v pláne · spolu')}{' '}{formatNumber(parcels.reduce((sum, parcel) => sum + parcel.weightKg, 0))}{' '}{tx('kg')}</p>
             <fieldset className="mt-3">
-              <legend className="mb-1 text-sm font-medium">Vozidlá, s ktorými počítať</legend>
+              <legend className="mb-1 text-sm font-medium">{tx('Vozidlá, s ktorými počítať')}</legend>
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {spaces.map((space) => (
                   <label key={space.id} className="flex cursor-pointer items-center gap-2 text-sm">
@@ -101,7 +95,7 @@ export function EventLoadingSection({ companyId, event }: Props) {
 
           {(plan.unplaced.length > 0 || withoutSize.length > 0) && (
             <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm">
-              <p className="font-medium text-destructive">Do plánu sa nedostalo všetko</p>
+              <p className="font-medium text-destructive">{tx('Do plánu sa nedostalo všetko')}</p>
               <ul className="mt-1 list-disc pl-5">
                 {plan.unplaced.map(({ parcel, reason }) => (
                   <li key={parcel.id}>
@@ -112,9 +106,7 @@ export function EventLoadingSection({ companyId, event }: Props) {
                   <li key={item.id}>
                     <Link to={`/cases/${item.id}/edit`} className="underline">
                       {item.name}
-                    </Link>{' '}
-                    – nemá zapísané rozmery
-                  </li>
+                    </Link>{' '}{tx('– nemá zapísané rozmery')}</li>
                 ))}
               </ul>
             </div>
@@ -122,7 +114,7 @@ export function EventLoadingSection({ companyId, event }: Props) {
 
           {plan.loads.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex gap-2" role="group" aria-label="Pohľad na náklad">
+              <div className="flex gap-2" role="group" aria-label={tx('Pohľad na náklad')}>
                 {(
                   [
                     ['3d', '3D'],
@@ -147,10 +139,8 @@ export function EventLoadingSection({ companyId, event }: Props) {
               {view === '3d' && (
                 <>
                   <Button variant="outline" size="sm" onClick={() => setTurns((turns + 1) % 4)}>
-                    <Rotate3d className="size-4" aria-hidden />
-                    Otočiť
-                  </Button>
-                  <span className="text-sm text-muted-foreground">Pohľad {VIEW_NAMES[turns]}</span>
+                    <Rotate3d className="size-4" aria-hidden />{tx('Otočiť')}</Button>
+                  <span className="text-sm text-muted-foreground">{tx('Pohľad')}{' '}{tx(VIEW_NAMES[turns])}</span>
                 </>
               )}
             </div>
@@ -166,7 +156,7 @@ export function EventLoadingSection({ companyId, event }: Props) {
                   </Link>
                   <span className="text-sm text-muted-foreground tabular-nums">
                     {formatNumber(load.weightKg)}
-                    {load.space.payloadKg !== null && ` z ${load.space.payloadKg}`} kg · objem {Math.round(load.volumeShare * 100)} %
+                    {load.space.payloadKg !== null && ` z ${load.space.payloadKg}`}{' '}{tx('kg · objem')}{' '}{Math.round(load.volumeShare * 100)} %
                   </span>
                 </div>
                 {view === '3d' ? (
@@ -174,8 +164,8 @@ export function EventLoadingSection({ companyId, event }: Props) {
                 ) : (
                   <>
                     <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-                      <span>← dvere</span>
-                      <span>kabína →</span>
+                      <span>{tx('← dvere')}</span>
+                      <span>{tx('kabína →')}</span>
                     </div>
                     <LoadDiagram space={load.space} placements={order} />
                   </>
@@ -197,8 +187,7 @@ export function EventLoadingSection({ companyId, event }: Props) {
                         <span className="text-muted-foreground">
                           {' '}
                           – {describePlace(placement, load.space)}
-                          {placement.rotated && ', otočený o 90°'} · {formatNumber(placement.weightKg)} kg
-                        </span>
+                          {placement.rotated && tx(', otočený o 90°')} · {formatNumber(placement.weightKg)}{' '}{tx('kg')}</span>
                       </span>
                     </li>
                   ))}
@@ -207,12 +196,9 @@ export function EventLoadingSection({ companyId, event }: Props) {
             )
           })}
 
-          <p className="text-sm text-muted-foreground">
-            Nakladajte v uvedenom poradí, od kabíny dozadu. Návrh je výpočet z rozmerov, nie záruka: nepozná tvar kolies na cases, popruhy
-            ani rozloženie váhy na nápravy.
-            {withoutWeight.length > 0 && ` Bez zapísanej hmotnosti (rátajú sa ako 0 kg): ${withoutWeight.map((item) => item.name).join(', ')}.`}
-            {loose > 0 && ` Jednotlivá technika mimo cases (${loose}) sa do plánu neráta.`}
-            {unmeasured.length > 0 && ` Vozidlá bez rozmerov: ${unmeasured.map((vehicle) => vehicle.plate).join(', ')}.`}
+          <p className="text-sm text-muted-foreground">{tx('Nakladajte v uvedenom poradí, od kabíny dozadu. Návrh je výpočet z rozmerov, nie záruka: nepozná tvar kolies na cases, popruhy ani rozloženie váhy na nápravy.')}{withoutWeight.length > 0 && tf(' Bez zapísanej hmotnosti (rátajú sa ako 0 kg): {0}.', withoutWeight.map((item) => item.name).join(', '))}
+            {loose > 0 && tf(' Jednotlivá technika mimo cases ({0}) sa do plánu neráta.', loose)}
+            {unmeasured.length > 0 && tf(' Vozidlá bez rozmerov: {0}.', unmeasured.map((vehicle) => vehicle.plate).join(', '))}
           </p>
         </div>
       )}

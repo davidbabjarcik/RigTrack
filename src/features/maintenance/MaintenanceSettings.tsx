@@ -8,6 +8,7 @@ import { EQUIPMENT_KINDS, KIND_LABELS, formatNumber } from '@/features/equipment
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { errorDetail } from '@/lib/supabase/errors'
 import { deleteMaintenanceRule, maintenanceKeys, saveMaintenanceRule, useMaintenanceRules, type MaintenanceRule, type MaintenanceRuleInput } from './api'
+import { tx, tf } from '@/lib/i18n'
 
 const EMPTY: MaintenanceRuleInput = {
   kind: 'hours',
@@ -57,7 +58,7 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
   const remove = useMutation({ mutationFn: (id: string) => deleteMaintenanceRule(companyId, id), onSettled: refresh })
 
   const gear = (equipment.data ?? []).filter((item) => item.status !== 'retired')
-  const nameOf = (id: string) => gear.find((item) => item.id === id)?.name ?? 'zmazaná technika'
+  const nameOf = (id: string) => gear.find((item) => item.id === id)?.name ?? tx('zmazaná technika')
 
   function open(rule: MaintenanceRule | null, preset?: Partial<MaintenanceRuleInput>) {
     const next = rule ? { ...rule } : { ...EMPTY, ...preset }
@@ -81,21 +82,19 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
   const scopeText = (rule: MaintenanceRuleInput) => {
     const parts = [
       ...rule.kinds.map((kind) => KIND_LABELS[kind as keyof typeof KIND_LABELS] ?? kind),
-      ...rule.categoryIds.map((id) => categories.find((item) => item.id === id)?.name ?? 'kategória'),
+      ...rule.categoryIds.map((id) => categories.find((item) => item.id === id)?.name ?? tx('kategória')),
       ...rule.equipmentIds.map(nameOf),
     ]
-    return parts.length > 0 ? parts.join(', ') : 'všetka technika'
+    return parts.length > 0 ? parts.join(', ') : tx('všetka technika')
   }
 
-  if (rules.isError) return <p className="text-sm text-destructive">Limity sa nepodarilo načítať. {errorDetail(rules.error)}</p>
+  if (rules.isError) return <p className="text-sm text-destructive">{tx('Limity sa nepodarilo načítať.')}{' '}{errorDetail(rules.error)}</p>
 
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-muted-foreground">
-        <strong>Limit hodín</strong> sleduje počítadlo (prevádzkové hodiny alebo napr. Výbojka) – po výmene alebo servise sa počíta odznova.{' '}
-        <strong>Revízia</strong> má interval v mesiacoch (napr. elektro revízia káblov). Upozornenie príde tým, čo smú limity nastavovať,
-        a zodpovedným za daný druh techniky; prehľad je v Kontrolách.
-      </p>
+        <strong>{tx('Limit hodín')}</strong>{' '}{tx('sleduje počítadlo (prevádzkové hodiny alebo napr. Výbojka) – po výmene alebo servise sa počíta odznova.')}{' '}
+        <strong>{tx('Revízia')}</strong>{' '}{tx('má interval v mesiacoch (napr. elektro revízia káblov). Upozornenie príde tým, čo smú limity nastavovať, a zodpovedným za daný druh techniky; prehľad je v Kontrolách.')}</p>
 
       {(rules.data ?? []).length > 0 && (
         <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
@@ -106,22 +105,22 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
                 <p className="font-medium">{rule.name}</p>
                 <p className="text-sm text-muted-foreground">
                   {rule.kind === 'hours'
-                    ? `${rule.counter || 'Prevádzkové hodiny'} · limit ${formatNumber(rule.limitHours ?? 0)} h · upozorniť pri ${rule.warnPercent} %`
-                    : `každých ${rule.intervalMonths} mes. · upozorniť ${rule.warnDays} dní vopred`}
-                  {rule.createTask && ' · vytvorí úlohu'}
+                    ? tf('{0} · limit {1} h · upozorniť pri {2} %', rule.counter || tx('Prevádzkové hodiny'), formatNumber(rule.limitHours ?? 0), rule.warnPercent)
+                    : tf('každých {0} mes. · upozorniť {1} dní vopred', rule.intervalMonths, rule.warnDays)}
+                  {rule.createTask && tx(' · vytvorí úlohu')}
                 </p>
-                <p className="truncate text-sm text-muted-foreground">Pre: {scopeText(rule)}</p>
+                <p className="truncate text-sm text-muted-foreground">{tx('Pre:')}{' '}{scopeText(rule)}</p>
               </div>
-              <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={`Upraviť ${rule.name}`} onClick={() => open(rule)}>
+              <Button size="sm" variant="ghost" className="size-8 p-0" aria-label={tf('Upraviť {0}', rule.name)} onClick={() => open(rule)}>
                 <Pencil className="size-4" aria-hidden />
               </Button>
               <Button
                 size="sm"
                 variant="ghost"
                 className="size-8 p-0"
-                aria-label={`Zmazať ${rule.name}`}
+                aria-label={tf('Zmazať {0}', rule.name)}
                 disabled={remove.isPending}
-                onClick={() => window.confirm(`Zmazať „${rule.name}“ aj so zápismi výmen a revízií?`) && remove.mutate(rule.id)}
+                onClick={() => window.confirm(tf('Zmazať „{0}“ aj so zápismi výmen a revízií?', rule.name)) && remove.mutate(rule.id)}
               >
                 <Trash2 className="size-4" aria-hidden />
               </Button>
@@ -132,32 +131,30 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
 
       {editing === null ? (
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => open(null)}>
-            Pridať limit alebo revíziu
-          </Button>
+          <Button size="sm" onClick={() => open(null)}>{tx('Pridať limit alebo revíziu')}</Button>
           {PRESETS.map((preset) => (
             <Button key={preset.label} size="sm" variant="outline" onClick={() => open(null, preset.rule)}>
-              + {preset.label}
+              + {tx(preset.label)}
             </Button>
           ))}
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <SelectField label="Typ" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as MaintenanceRule['kind'] })}>
-              <option value="hours">Limit hodín (výmena / servis)</option>
-              <option value="revision">Revízia / pravidelná kontrola</option>
+            <SelectField label={tx('Typ')} value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as MaintenanceRule['kind'] })}>
+              <option value="hours">{tx('Limit hodín (výmena / servis)')}</option>
+              <option value="revision">{tx('Revízia / pravidelná kontrola')}</option>
             </SelectField>
-            <Field label="Názov" required maxLength={80} placeholder={form.kind === 'hours' ? 'napr. Výbojka' : 'napr. Revízia káblov'} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Field label={tx('Názov')} required maxLength={80} placeholder={form.kind === 'hours' ? tx('napr. Výbojka') : tx('napr. Revízia káblov')} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
 
           {form.kind === 'hours' ? (
             <div className="grid gap-3 sm:grid-cols-3">
               <Field
-                label="Počítadlo"
+                label={tx('Počítadlo')}
                 maxLength={40}
                 list="maintenance-counters"
-                placeholder="prázdne = prevádzkové hodiny"
+                placeholder={tx('prázdne = prevádzkové hodiny')}
                 value={form.counter}
                 onChange={(e) => setForm({ ...form, counter: e.target.value })}
               />
@@ -166,9 +163,9 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
                 <option value="Lampa" />
                 <option value="Laser" />
               </datalist>
-              <Field label="Limit (h)" required inputMode="decimal" placeholder="napr. 1500" value={limit} onChange={(e) => setLimit(e.target.value)} />
+              <Field label={tx('Limit (h)')} required inputMode="decimal" placeholder={tx('napr. 1500')} value={limit} onChange={(e) => setLimit(e.target.value)} />
               <Field
-                label="Upozorniť pri (%)"
+                label={tx('Upozorniť pri (%)')}
                 type="number"
                 min={1}
                 max={100}
@@ -179,7 +176,7 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               <Field
-                label="Interval (mesiace)"
+                label={tx('Interval (mesiace)')}
                 type="number"
                 min={1}
                 max={240}
@@ -188,7 +185,7 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
                 onChange={(e) => setForm({ ...form, intervalMonths: e.target.value === '' ? null : Math.min(240, Math.max(1, Number(e.target.value))) })}
               />
               <Field
-                label="Upozorniť vopred (dni)"
+                label={tx('Upozorniť vopred (dni)')}
                 type="number"
                 min={0}
                 max={365}
@@ -199,12 +196,12 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
           )}
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium">Pre ktorú techniku (nič nevybraté = všetka)</legend>
+            <legend className="mb-1 text-sm font-medium">{tx('Pre ktorú techniku (nič nevybraté = všetka)')}</legend>
             <div className="flex flex-wrap gap-x-4 gap-y-1.5">
               {EQUIPMENT_KINDS.map((kind) => (
                 <label key={kind} className="flex items-center gap-2 text-sm">
                   <input type="checkbox" className="size-4" checked={form.kinds.includes(kind)} onChange={() => setForm({ ...form, kinds: toggle(form.kinds, kind) })} />
-                  {KIND_LABELS[kind]}
+                  {tx(KIND_LABELS[kind])}
                 </label>
               ))}
             </div>
@@ -219,8 +216,8 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
               </div>
             )}
             <div className="flex flex-wrap items-end gap-2 border-t pt-2">
-              <SelectField label="Len vybraná technika" className="min-w-0 flex-1 sm:max-w-sm" value={picker} onChange={(e) => setPicker(e.target.value)}>
-                <option value="">— vyberte techniku —</option>
+              <SelectField label={tx('Len vybraná technika')} className="min-w-0 flex-1 sm:max-w-sm" value={picker} onChange={(e) => setPicker(e.target.value)}>
+                <option value="">{tx('— vyberte techniku —')}</option>
                 {gear
                   .filter((item) => !form.equipmentIds.includes(item.id))
                   .sort((a, b) => a.name.localeCompare(b.name, 'sk'))
@@ -238,43 +235,37 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
                   setForm({ ...form, equipmentIds: [...form.equipmentIds, picker] })
                   setPicker('')
                 }}
-              >
-                Pridať
-              </Button>
+              >{tx('Pridať')}</Button>
             </div>
             {form.equipmentIds.length > 0 && (
               <ul className="flex flex-wrap gap-2">
                 {form.equipmentIds.map((id) => (
                   <li key={id} className="flex items-center gap-1 rounded-full border px-3 py-1 text-sm">
                     {nameOf(id)}
-                    <button type="button" aria-label={`Odobrať ${nameOf(id)}`} onClick={() => setForm({ ...form, equipmentIds: form.equipmentIds.filter((item) => item !== id) })}>
+                    <button type="button" aria-label={tf('Odobrať {0}', nameOf(id))} onClick={() => setForm({ ...form, equipmentIds: form.equipmentIds.filter((item) => item !== id) })}>
                       <X className="size-3.5" aria-hidden />
                     </button>
                   </li>
                 ))}
               </ul>
             )}
-            <p className="text-sm text-muted-foreground">Ak vyberiete druh aj kategóriu, musí technika spĺňať oboje. Limit hodín sa týka len techniky, ktorá to počítadlo už má odčítané (alebo je vybraná).</p>
+            <p className="text-sm text-muted-foreground">{tx('Ak vyberiete druh aj kategóriu, musí technika spĺňať oboje. Limit hodín sa týka len techniky, ktorá to počítadlo už má odčítané (alebo je vybraná).')}</p>
           </fieldset>
 
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4" checked={form.createTask} onChange={(e) => setForm({ ...form, createTask: e.target.checked })} />
-            Po prekročení limitu / termínu vytvoriť aj úlohu (kategória Servis)
-          </label>
-          <TextareaField label="Poznámka" rows={2} maxLength={500} placeholder="napr. revíziu robí firma XY, tel. …" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+            <input type="checkbox" className="size-4" checked={form.createTask} onChange={(e) => setForm({ ...form, createTask: e.target.checked })} />{tx('Po prekročení limitu / termínu vytvoriť aj úlohu (kategória Servis)')}</label>
+          <TextareaField label={tx('Poznámka')} rows={2} maxLength={500} placeholder={tx('napr. revíziu robí firma XY, tel. …')} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
 
           {save.isError && (
             <p role="alert" className="text-sm text-destructive">
-              {/maintenance_rules/.test(String(save.error?.message ?? '')) ? 'Limity ešte databáza nepozná – spustite v Supabase supabase/update-all.sql (migrácia 0122).' : `Nepodarilo sa uložiť. ${errorDetail(save.error)}`}
+              {/maintenance_rules/.test(String(save.error?.message ?? '')) ? tx('Limity ešte databáza nepozná – spustite v Supabase supabase/update-all.sql (migrácia 0122).') : tf('Nepodarilo sa uložiť. {0}', errorDetail(save.error))}
             </p>
           )}
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={!valid || save.isPending}>
-              {save.isPending ? 'Ukladám…' : 'Uložiť'}
+              {save.isPending ? tx('Ukladám…') : tx('Uložiť')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
-              Zrušiť
-            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>{tx('Zrušiť')}</Button>
           </div>
         </form>
       )}

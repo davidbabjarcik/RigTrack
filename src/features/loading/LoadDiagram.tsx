@@ -1,5 +1,6 @@
 import { LOAD_FILLS, obstacleFill, obstacleLetter } from './fills'
 import type { CargoSpace, Placement } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 type Props = { space: CargoSpace; placements?: Placement[] }
 
@@ -19,7 +20,7 @@ export function LoadDiagram({ space, placements = [] }: Props) {
       viewBox={`${-pad} ${-pad} ${space.length + pad * 2} ${space.width + pad * 2}`}
       className="w-full rounded-lg border bg-white"
       role="img"
-      aria-label={`Nákres nakladania: ${space.name}, pohľad zhora, kabína vpravo`}
+      aria-label={tf('Nákres nakladania: {0}, pohľad zhora, kabína vpravo', space.name)}
     >
       <defs>
         <pattern id={pattern} width={font / 2} height={font / 2} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -33,7 +34,7 @@ export function LoadDiagram({ space, placements = [] }: Props) {
         const centerX = obstacle.x + obstacle.length / 2
         return (
           <g key={`obstacle-${index}`}>
-            <title>{obstacle.label || 'Prekážka'}</title>
+            <title>{obstacle.label || tx('Prekážka')}</title>
             <rect x={obstacle.x} y={obstacle.y} width={obstacle.length} height={obstacle.width} fill={obstacleFill(index)} />
             <rect
               x={obstacle.x}
@@ -85,8 +86,7 @@ export function LoadDiagram({ space, placements = [] }: Props) {
               strokeDasharray={stacked ? `${pad} ${pad / 2}` : undefined}
             >
               <title>
-                {placement.name} · {placement.length} × {placement.width} × {placement.height} cm
-              </title>
+                {placement.name} · {placement.length} × {placement.width} × {placement.height}{' '}{tx('cm')}</title>
             </rect>
             <text
               x={labelX}

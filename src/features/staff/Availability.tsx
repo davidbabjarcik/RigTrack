@@ -8,9 +8,10 @@ import { formatDate, todayIso } from '@/lib/format'
 import { addUnavailability, deleteUnavailability, saveStaff } from './api'
 import { upcomingPeriods, type Person } from './model'
 import { useStaff } from './useStaff'
+import { tx } from '@/lib/i18n'
 
 /** Kedy človek nemôže: zoznam nadchádzajúcich období a zápis nového (člen si zapisuje sám, manažér za ostatných). */
-export function Availability({ companyId, person, canEdit, title = 'Kedy nemôže' }: { companyId: string; person: Person; canEdit: boolean; title?: string }) {
+export function Availability({ companyId, person, canEdit, title = tx('Kedy nemôže') }: { companyId: string; person: Person; canEdit: boolean; title?: string }) {
   const queryClient = useQueryClient()
   const staff = useStaff(companyId)
   const today = todayIso()
@@ -39,7 +40,7 @@ export function Availability({ companyId, person, canEdit, title = 'Kedy nemôž
                 {item.note && <span className="ml-2 text-sm text-muted-foreground">{item.note}</span>}
               </span>
               {canEdit && (
-                <Button variant="ghost" size="sm" aria-label="Zmazať obdobie" disabled={remove.isPending} onClick={() => remove.mutate(item.id)}>
+                <Button variant="ghost" size="sm" aria-label={tx('Zmazať obdobie')} disabled={remove.isPending} onClick={() => remove.mutate(item.id)}>
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
               )}
@@ -47,17 +48,15 @@ export function Availability({ companyId, person, canEdit, title = 'Kedy nemôž
           ))}
         </ul>
       ) : (
-        <p className="mb-3 text-sm text-muted-foreground">Nič zapísané – môže kedykoľvek.</p>
+        <p className="mb-3 text-sm text-muted-foreground">{tx('Nič zapísané – môže kedykoľvek.')}</p>
       )}
       {canEdit && (
         <div className="flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-3">
-          <Field label="Od" type="date" value={period.startsOn} onChange={(event) => setPeriod({ ...period, startsOn: event.target.value, endsOn: period.endsOn < event.target.value ? event.target.value : period.endsOn })} />
-          <Field label="Do" type="date" min={period.startsOn} value={period.endsOn} onChange={(event) => setPeriod({ ...period, endsOn: event.target.value })} />
-          <Field label="Dôvod (nepovinné)" className="min-w-40 flex-1" placeholder="dovolenka, škola…" maxLength={200} value={period.note} onChange={(event) => setPeriod({ ...period, note: event.target.value })} />
-          <Button disabled={add.isPending || !period.startsOn || period.endsOn < period.startsOn} onClick={() => add.mutate()}>
-            Zapísať
-          </Button>
-          {add.isError && <p className="w-full text-sm text-destructive">Zápis sa nepodaril.</p>}
+          <Field label={tx('Od')} type="date" value={period.startsOn} onChange={(event) => setPeriod({ ...period, startsOn: event.target.value, endsOn: period.endsOn < event.target.value ? event.target.value : period.endsOn })} />
+          <Field label={tx('Do')} type="date" min={period.startsOn} value={period.endsOn} onChange={(event) => setPeriod({ ...period, endsOn: event.target.value })} />
+          <Field label={tx('Dôvod (nepovinné)')} className="min-w-40 flex-1" placeholder={tx('dovolenka, škola…')} maxLength={200} value={period.note} onChange={(event) => setPeriod({ ...period, note: event.target.value })} />
+          <Button disabled={add.isPending || !period.startsOn || period.endsOn < period.startsOn} onClick={() => add.mutate()}>{tx('Zapísať')}</Button>
+          {add.isError && <p className="w-full text-sm text-destructive">{tx('Zápis sa nepodaril.')}</p>}
         </div>
       )}
     </CollapsibleSection>

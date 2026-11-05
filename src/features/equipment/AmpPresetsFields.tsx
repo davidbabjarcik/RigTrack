@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { equipmentKeys, fetchEquipmentList } from './api'
 import { suggestPresetSlots, type EquipmentFormValues } from './model'
+import { tx, tf } from '@/lib/i18n'
 
 const SPEAKER_TYPES = ['line_array', 'speaker', 'monitor', 'subwoofer']
 
@@ -31,7 +32,7 @@ export function AmpPresetsFields({ companyId }: { companyId: string }) {
   return (
     <div className="flex flex-col gap-3 rounded-lg border p-3 sm:col-span-2">
       <div className="flex flex-wrap items-end gap-3">
-        <Field label="Počet presetov" type="number" inputMode="numeric" min={1} className="w-40" error={errors.ampPresetSlots?.message} {...register('ampPresetSlots', { setValueAs: (value) => (value === '' || value === null ? undefined : Number(value)) })} />
+        <Field label={tx('Počet presetov')} type="number" inputMode="numeric" min={1} className="w-40" error={errors.ampPresetSlots?.message} {...register('ampPresetSlots', { setValueAs: (value) => (value === '' || value === null ? undefined : Number(value)) })} />
         {suggestion && slots !== suggestion.slots && (
           <Button
             variant="outline"
@@ -40,24 +41,22 @@ export function AmpPresetsFields({ companyId }: { companyId: string }) {
               setValue('ampPresetSlots', suggestion.slots, { shouldDirty: true })
               // Výrobný preset (napr. č. 1) sa zapíše ako zamknutý.
               if (suggestion.factorySlot && !rows.some((row) => row.slot === suggestion.factorySlot)) {
-                presets.prepend({ slot: suggestion.factorySlot, name: 'Factory default', speakerId: '', note: 'výrobný – nedá sa prepísať', locked: true })
+                presets.prepend({ slot: suggestion.factorySlot, name: 'Factory default', speakerId: '', note: tx('výrobný – nedá sa prepísať'), locked: true })
               }
             }}
           >
-            <Wand2 className="size-4" aria-hidden />
-            Podľa modelu: {suggestion.slots} presetov{suggestion.factorySlot ? `, č. ${suggestion.factorySlot} výrobný` : ''}
+            <Wand2 className="size-4" aria-hidden />{tx('Podľa modelu:')}{' '}{suggestion.slots}{' '}{tx('presetov')}{suggestion.factorySlot ? tf(', č. {0} výrobný', suggestion.factorySlot) : ''}
           </Button>
         )}
         <Field
-          label="ID zosilňovača"
-          placeholder="napr. 101 (HiQnet / ID v sieti); viac kusov: #1: 101, #2: 102"
+          label={tx('ID zosilňovača')}
+          placeholder={tx('napr. 101 (HiQnet / ID v sieti); viac kusov: #1: 101, #2: 102')}
           className="min-w-56 flex-1"
           autoComplete="off"
           error={errors.ampDeviceId?.message}
           {...register('ampDeviceId')}
         />
-        <span className="pb-2.5 text-sm text-muted-foreground">
-          Zapísané {rows.length}
+        <span className="pb-2.5 text-sm text-muted-foreground">{tx('Zapísané')}{' '}{rows.length}
           {slots ? ` z ${slots}` : ''}
         </span>
       </div>
@@ -68,9 +67,9 @@ export function AmpPresetsFields({ companyId }: { companyId: string }) {
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
                 <th className="w-16 pb-1 font-medium">Č.</th>
-                <th className="pb-1 font-medium">Názov presetu</th>
-                <th className="pb-1 font-medium">Pre reprobox</th>
-                <th className="pb-1 font-medium">Poznámka</th>
+                <th className="pb-1 font-medium">{tx('Názov presetu')}</th>
+                <th className="pb-1 font-medium">{tx('Pre reprobox')}</th>
+                <th className="pb-1 font-medium">{tx('Poznámka')}</th>
                 <th className="w-8" />
               </tr>
             </thead>
@@ -82,17 +81,17 @@ export function AmpPresetsFields({ companyId }: { companyId: string }) {
                     <td className="pr-1 pb-1">
                       <span className="flex items-center gap-1">
                         <input
-                          aria-label={`Číslo presetu ${index + 1}`}
+                          aria-label={tf('Číslo presetu {0}', index + 1)}
                           type="number"
                           min={1}
                           className="h-8 w-14 rounded-md border bg-background px-1.5 text-right"
                           {...register(`ampPresets.${index}.slot`, { valueAsNumber: true })}
                         />
-                        {locked && <Lock className="size-3.5 text-muted-foreground" aria-label="výrobný preset" />}
+                        {locked && <Lock className="size-3.5 text-muted-foreground" aria-label={tx('výrobný preset')} />}
                       </span>
                     </td>
                     <td className="pr-1 pb-1">
-                      <input aria-label={`Názov presetu ${index + 1}`} maxLength={80} className="h-8 w-full rounded-md border bg-background px-2" placeholder="napr. Top – full range" {...register(`ampPresets.${index}.name`)} />
+                      <input aria-label={tf('Názov presetu {0}', index + 1)} maxLength={80} className="h-8 w-full rounded-md border bg-background px-2" placeholder={tx('napr. Top – full range')} {...register(`ampPresets.${index}.name`)} />
                     </td>
                     <td className="pr-1 pb-1">
                       <select aria-label={`Reprobox presetu ${index + 1}`} className="h-8 w-full rounded-md border bg-background px-1.5" {...register(`ampPresets.${index}.speakerId`)}>
@@ -105,10 +104,10 @@ export function AmpPresetsFields({ companyId }: { companyId: string }) {
                       </select>
                     </td>
                     <td className="pr-1 pb-1">
-                      <input aria-label={`Poznámka presetu ${index + 1}`} maxLength={200} className="h-8 w-full rounded-md border bg-background px-2" {...register(`ampPresets.${index}.note`)} />
+                      <input aria-label={tf('Poznámka presetu {0}', index + 1)} maxLength={200} className="h-8 w-full rounded-md border bg-background px-2" {...register(`ampPresets.${index}.note`)} />
                     </td>
                     <td className="pb-1 text-right">
-                      <button type="button" aria-label={`Odobrať preset ${index + 1}`} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => presets.remove(index)}>
+                      <button type="button" aria-label={tf('Odobrať preset {0}', index + 1)} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => presets.remove(index)}>
                         <Trash2 className="size-4" aria-hidden />
                       </button>
                     </td>
@@ -121,9 +120,9 @@ export function AmpPresetsFields({ companyId }: { companyId: string }) {
       )}
       <Button variant="outline" size="sm" className="self-start" disabled={full} onClick={() => presets.append({ slot: nextSlot(), name: '', speakerId: '', note: '', locked: false })}>
         <Plus className="size-4" aria-hidden />
-        {full ? 'Všetky presety sú obsadené' : 'Pridať preset'}
+        {full ? tx('Všetky presety sú obsadené') : tx('Pridať preset')}
       </Button>
-      <p className="text-xs text-muted-foreground">Preset prepojený s reproboxom uvidíte aj v detaile reproboxu.</p>
+      <p className="text-xs text-muted-foreground">{tx('Preset prepojený s reproboxom uvidíte aj v detaile reproboxu.')}</p>
     </div>
   )
 }
