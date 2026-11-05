@@ -90,6 +90,11 @@ export function useLangKey(): string {
   return useSyncExternalStore(subscribe, langKey, langKey)
 }
 
+/** Preklad zo slovníka, ak ho slovník má (inak undefined) – pre poistku v prehliadači (domTranslate). */
+export function lookup(text: string): string | undefined {
+  return current === 'en' && dict ? dict[text] : undefined
+}
+
 /** Text zo slovníka: tx('Uložiť') → „Save“ v angličtine; iné hodnoty než text vráti bez zmeny. */
 export function tx<T>(text: T): T {
   if (current !== 'en' || typeof text !== 'string' || !dict) return text

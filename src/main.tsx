@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { StrictMode } from 'react'
+import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './app/router'
@@ -9,6 +9,7 @@ import { installErrorReporting } from './lib/errorReporting'
 import { installStorageGuard } from './lib/consent'
 import { ConsentBanner } from './components/consent/ConsentBanner'
 import { i18nReady, useLangKey } from './lib/i18n'
+import { PRINT_PATH, startDomTranslation } from './lib/domTranslate'
 import './lib/theme'
 import './styles/index.css'
 
@@ -20,8 +21,15 @@ const queryClient = new QueryClient()
 
 /** Pri zmene jazyka sa obrazovky vykreslia nanovo (texty zo slovníka sa čítajú pri vykreslení). */
 function Screens() {
+  const key = useLangKey()
+  // V angličtine poistka preloží aj texty, ktoré v kóde nie sú obalené v tx() (okrem tlačových stránok).
+  useEffect(() => {
+    if (key !== 'en') return
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+    return startDomTranslation(document.body, () => PRINT_PATH.test(window.location.pathname.slice(base.length)))
+  }, [key])
   return (
-    <div key={useLangKey()} className="contents">
+    <div key={key} className="contents">
       <RouterProvider router={router} />
       <ConsentBanner />
     </div>

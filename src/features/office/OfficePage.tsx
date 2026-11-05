@@ -133,7 +133,7 @@ export function OfficePage() {
       {missingCommon.length > 0 && (
         <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-dashed bg-surface p-4 text-sm">
           <Coffee className="size-5 text-muted-foreground" aria-hidden />
-          <span className="flex-1">{tx('Pridať bežné:')}{' '}{missingCommon.map((item) => item.name).join(', ')}</span>
+          <span className="flex-1">{tx('Pridať bežné:')}{' '}{missingCommon.map((item) => tx(item.name)).join(', ')}</span>
           <Button variant="outline" size="sm" disabled={addItems.isPending} onClick={() => addItems.mutate(missingCommon)}>{tx('Pridať všetky')}</Button>
         </div>
       )}

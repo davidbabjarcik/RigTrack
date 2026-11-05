@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.6 – 5. 11. 2026
+
+- **Angličtina aj tam, kde chýbala**: Prehľad (štatistiky), popisy modulov, Kancelária, hlášky pri ukladaní,
+  počasie, pódium a ďalšie – vyše 400 textov navyše. Čo slovník pozná, sa v angličtine preloží všade, kde sa zobrazí.
+- **Tlačidlo Aktualizovať** pri novej verzii fungovalo zle, keď vyšli dve verzie tesne po sebe – teraz prepne vždy
+  (a keby nie, stránku obnoví samo).
+- **Technika z databázy bez údajov**: keď model zo spoločnej databázy technické údaje ešte nemá (alebo len pár),
+  hore sa ukáže, že údaje o ňom zatiaľ nie sú známe a treba ich doplniť ručne.
+
 ### 8.5 – 5. 11. 2026
 
 - **Celá appka v angličtine**: po prepnutí na EN sú po anglicky všetky obrazovky – technika, cases, eventy,

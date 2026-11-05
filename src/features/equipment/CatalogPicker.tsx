@@ -1,11 +1,18 @@
-import { BookCheck } from 'lucide-react'
+import { BookCheck, Info } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Field, SelectField } from '@/components/ui/field'
 import { catalogBrands, catalogModels, findCatalogEntry, type CatalogEntry } from './catalog'
 import type { EquipmentKind } from './model'
-import { tx } from '@/lib/i18n'
+import { tf, tx } from '@/lib/i18n'
 
 const OTHER = '__other__'
+
+/** Koľko technických údajov o modeli databáza pozná (prázdne sa nerátajú). */
+export function knownFacts(attributes: Record<string, unknown>): number {
+  return Object.values(attributes).filter((value) => value !== undefined && value !== null && value !== '' && !(Array.isArray(value) && value.length === 0)).length
+}
+/** Pod týmto počtom sú to len základné údaje (napr. typ a impedancia), nie parametre. */
+const FEW_FACTS = 4
 
 function Hint({ children }: { children?: ReactNode }) {
   return children ? <div className="text-xs text-muted-foreground">{children}</div> : null
@@ -144,9 +151,20 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
           <option value={OTHER}>{tx('+ Iný model (pridať)…')}</option>
         </SelectField>
       )}
-      {known && (
+      {known && knownFacts(known.attributes) >= FEW_FACTS && (
         <p className="-mt-2 flex items-center gap-1.5 text-xs text-muted-foreground sm:col-span-2">
-          <BookCheck className="size-3.5 text-emerald-600" aria-hidden />{tx('Model zo spoločnej databázy techniky')}{Object.keys(known.attributes).length > 0 ? tx(' – technické údaje sa doplnili.') : '.'}
+          <BookCheck className="size-3.5 text-emerald-600" aria-hidden />
+          {tx('Model zo spoločnej databázy techniky – technické údaje sa doplnili.')}
+        </p>
+      )}
+      {known && knownFacts(known.attributes) < FEW_FACTS && (
+        <p role="status" className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm sm:col-span-2">
+          <Info className="mt-0.5 size-4 shrink-0 text-amber-600" aria-hidden />
+          <span>
+            {knownFacts(known.attributes) === 0
+              ? tx('Technické údaje o tomto modeli zatiaľ nie sú známe – doplňte ich ručne, ak ich viete.')
+              : tf('O tomto modeli databáza zatiaľ pozná len základné údaje ({0}) – ostatné doplňte ručne, ak ich viete.', knownFacts(known.attributes))}
+          </span>
         </p>
       )}
     </>
