@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.9 – 5. 11. 2026
+
+- **Hliník TAF v spoločnej databáze techniky**: vyše 300 rovných dielov (FT, HT, PT, TT, TC, FTR, GS…) s typom
+  (1–4-point, ground support), dĺžkou a váhou z katalógu výrobcu – vyberiete napr. TAF → FT34-200 a vyplní sa samo.
+- **Pódium Nivtec v databáze techniky**: dosky, vrchné stupne, nohy 20–200 cm (pevné, nastaviteľné, oceľové),
+  schodnice a zábradlia s rozmerom a váhou. Pri pódiu sa teraz tiež vyberá značka a model.
+- Z databázy sa pri hliníku dopĺňa aj dĺžka dielu.
+
 ### 8.8 – 5. 11. 2026
 
 - **Vyše 650 svetiel v spoločnej databáze techniky** (Open Fixture Library, 138 výrobcov – Robe, Chauvet, ADJ,

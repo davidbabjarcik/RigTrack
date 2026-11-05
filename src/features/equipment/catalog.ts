@@ -9,7 +9,7 @@ export type CatalogEntry = { id: string; kind: EquipmentKind; manufacturer: stri
 export type CatalogReviewItem = CatalogEntry & { name: string; companies: number; submittedAt: string }
 
 /** Druhy techniky, pri ktorých sa ponúka výber značky a modelu z katalógu. */
-export const CATALOG_KINDS: EquipmentKind[] = ['audio', 'light', 'video', 'dj', 'truss', 'it', 'appliance']
+export const CATALOG_KINDS: EquipmentKind[] = ['audio', 'light', 'video', 'dj', 'truss', 'stage', 'it', 'appliance']
 
 /**
  * Technické údaje modelu, ktoré sa smú dostať do katalógu (a z neho späť do formulára). Bez ceny, sériových čísel,
@@ -22,7 +22,7 @@ export const CATALOG_KEYS = [
   'rfRange', 'micType', 'wirelessRx', 'wirelessTxs', 'powered', 'rmsW', 'peakW', 'woofer', 'maxSplDb', 'connectors',
   'poleMount', 'subDesign', 'programW', 'maxSplPeakDb', 'sensitivityDb', 'impedanceOhm', 'freqRange', 'freqResponse',
   'coverage', 'crossover', 'biamp', 'hfDriver', 'weightKg', 'boxWidthCm', 'boxDepthCm', 'boxHeightCm', 'dmxModes',
-  'ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8',
+  'ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8', 'lengthM',
   'ledPanel', 'ledProcessor', 'display',
 ] as const
 

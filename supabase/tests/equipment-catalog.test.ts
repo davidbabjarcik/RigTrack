@@ -26,6 +26,13 @@ describe('equipment catalog (0146)', () => {
     expect(n).toBeGreaterThan(600)
   })
 
+  it('has TAF truss sections (0149) and Nivtec stage parts (0150)', async () => {
+    const [taf] = await t.as('viewer', `select attributes from public.equipment_catalog where kind = 'truss' and manufacturer = 'TAF' and model = 'FT34-200'`)
+    expect(taf.attributes).toMatchObject({ trussType: 'point4', trussShape: 'straight', lengthM: 2, weightKg: 10.8 })
+    const [{ n }] = await t.as('viewer', `select count(*)::int as n from public.equipment_catalog where kind = 'stage' and manufacturer = 'Nivtec originál'`)
+    expect(n).toBeGreaterThan(40)
+  })
+
   it('is readable by everyone signed in and has seeded brands, but nobody writes it directly', async () => {
     const [{ n }] = await t.as('viewer', `select count(*)::int as n from public.equipment_catalog where manufacturer = 'JBL'`)
     expect(n).toBeGreaterThan(0)
