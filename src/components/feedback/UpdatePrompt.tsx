@@ -1,6 +1,6 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { Button } from '@/components/ui/button'
-import { tx } from '@/lib/i18n'
+import { tx, useLangKey } from '@/lib/i18n'
 
 /**
  * Prepne na novú verziu. Pri dvoch vydaniach tesne po sebe môže knižnica poslať pokyn staršej (už neplatnej)
@@ -26,6 +26,7 @@ export async function applyUpdate(update: (reload: boolean) => Promise<void>) {
 }
 
 export function UpdatePrompt() {
+  useLangKey() // texty sa prekreslia po zmene jazyka
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
@@ -47,7 +48,7 @@ export function UpdatePrompt() {
   return (
     <div
       role="alert"
-      className="fixed inset-x-4 bottom-24 z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-xl border bg-surface p-4 shadow-lg md:bottom-6"
+      className="fixed inset-x-4 bottom-24 z-[60] mx-auto flex max-w-md print:hidden items-center justify-between gap-3 rounded-xl border bg-surface p-4 shadow-lg md:bottom-6"
     >
       <p className="text-sm">{tx('Je dostupná nová verzia aplikácie.')}</p>
       <div className="flex shrink-0 gap-2">

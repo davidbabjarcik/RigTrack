@@ -10,6 +10,7 @@ import { installStorageGuard } from './lib/consent'
 import { ConsentBanner } from './components/consent/ConsentBanner'
 import { i18nReady, useLangKey } from './lib/i18n'
 import { PRINT_PATH, startDomTranslation } from './lib/domTranslate'
+import { UpdatePrompt } from './components/feedback/UpdatePrompt'
 import './lib/theme'
 import './styles/index.css'
 
@@ -29,10 +30,14 @@ function Screens() {
     return startDomTranslation(document.body, () => PRINT_PATH.test(window.location.pathname.slice(base.length)))
   }, [key])
   return (
-    <div key={key} className="contents">
+    <>
+      {/* Nová verzia sa ponúkne na každej stránke (aj pri prihlásení, výbere firmy či tlači). */}
+      <UpdatePrompt />
+      <div key={key} className="contents">
       <RouterProvider router={router} />
       <ConsentBanner />
-    </div>
+      </div>
+    </>
   )
 }
 

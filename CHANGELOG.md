@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.6.1 – 5. 11. 2026
+
+- **Nová verzia sa ponúkne na každej stránke** – aj pri prihlásení, výbere firmy, Návode či tlači (doteraz len vo
+  vnútri firmy). Okno je nad všetkým ostatným, nič ho nezakryje, a do tlače sa nedostane.
+
 ### 8.6 – 5. 11. 2026
 
 - **Angličtina aj tam, kde chýbala**: Prehľad (štatistiky), popisy modulov, Kancelária, hlášky pri ukladaní,

@@ -2,7 +2,6 @@ import { Menu } from 'lucide-react'
 import { isAdminRole } from '@/lib/roles'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { OfflineBanner } from '@/components/feedback/OfflineBanner'
-import { UpdatePrompt } from '@/components/feedback/UpdatePrompt'
 import { BinAutoPurge } from '@/features/bin/BinAutoPurge'
 import { useCompany } from '@/features/companies/company-context'
 import { CompanyLogo } from '@/features/companies/CompanyLogo'
@@ -142,7 +141,6 @@ export function AppLayout() {
       </nav>
 
       {isAdminRole(active?.role) && <BinAutoPurge companyId={active.companyId} />}
-      <UpdatePrompt />
       {isSupabaseConfigured && <LanguageSync />}
     </div>
   )
