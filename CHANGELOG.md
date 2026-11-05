@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.6.2 – 5. 11. 2026
+
+- **Spoločná databáza techniky – údaje z listov výrobcu**: JBL VRX932LA-1, VRX928LA, VRX915M, SRX712M a VT4880
+  (výkon, SPL, citlivosť, impedancia, frekvencie, uhol, výhybka, meniče, konektory, váha a rozmery) a zosilňovače
+  Crown I-Tech 4000 / 6000 / 8000. Pri výbere modelu sa údaje vyplnia samy.
+- Pri zosilňovačoch sa z databázy dopĺňa aj výkon pri 2, 4 a 8 Ω a v bridge.
+
 ### 8.6.1 – 5. 11. 2026
 
 - **Nová verzia sa ponúkne na každej stránke** – aj pri prihlásení, výbere firmy, Návode či tlači (doteraz len vo

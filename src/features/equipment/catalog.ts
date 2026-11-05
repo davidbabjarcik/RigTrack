@@ -22,6 +22,7 @@ export const CATALOG_KEYS = [
   'rfRange', 'micType', 'wirelessRx', 'wirelessTxs', 'powered', 'rmsW', 'peakW', 'woofer', 'maxSplDb', 'connectors',
   'poleMount', 'subDesign', 'programW', 'maxSplPeakDb', 'sensitivityDb', 'impedanceOhm', 'freqRange', 'freqResponse',
   'coverage', 'crossover', 'biamp', 'hfDriver', 'weightKg', 'boxWidthCm', 'boxDepthCm', 'boxHeightCm', 'dmxModes',
+  'ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8',
   'ledPanel', 'ledProcessor', 'display',
 ] as const
 
