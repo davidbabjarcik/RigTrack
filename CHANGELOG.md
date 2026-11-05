@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.4 – 5. 11. 2026
+
+- **Jazyk SK / EN** (1. časť): prepínač v Nastaveniach → Účet, na úvodnej stránke a pri prihlásení; jazyk sa uloží
+  k účtu (na každom zariadení rovnaký). V angličtine je zatiaľ menu, Prehľad, Hľadať všade, skenovanie, prihlásenie,
+  úvodná stránka a pätička; ďalšie časti appky pribudnú postupne, dovtedy ostávajú po slovensky. Hárky na tlač
+  a štítky sú vždy po slovensky.
+- Nový prehliadač bez zvoleného jazyka: slovenčina pre slovenský a český prehliadač, inak angličtina.
+
 ### 8.3 – 5. 11. 2026
 
 - **Spoločná databáza techniky**: pri pridávaní techniky (zvuk, svetlá, video, DJ, hliník, IT, spotrebiče) najprv

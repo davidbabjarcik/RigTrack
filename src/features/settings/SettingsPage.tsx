@@ -5,6 +5,7 @@ import { LinksSettings } from '@/features/links/LinksSettings'
 import { Trash2 } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { LanguageToggle } from '@/components/layout/LanguageToggle'
 import { InstallGuide } from '@/components/feedback/InstallGuide'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -494,6 +495,16 @@ export function SettingsPage() {
 
       {tab === 'account' && (
         <>
+          <Section title="Jazyk / Language">
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-surface p-4">
+              <LanguageToggle />
+              <p className="min-w-0 flex-1 text-sm text-muted-foreground">
+                Slovenčina alebo angličtina – uloží sa k účtu. Prekladáme postupne; čo ešte nie je preložené, ostáva po slovensky. Hárky na tlač
+                a štítky sú vždy po slovensky. / Slovak or English – saved to your account. Translation is in progress; untranslated parts stay in
+                Slovak.
+              </p>
+            </div>
+          </Section>
           <Section title="Účet">
             <div className="flex items-center justify-between gap-3 rounded-xl border bg-surface p-4">
               <p className="min-w-0 truncate">{user.email}</p>

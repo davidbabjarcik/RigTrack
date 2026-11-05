@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { openConsentSettings } from '@/lib/consent'
 import { CREDITS, type CreditIcon } from '@/lib/credits'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import { APP_VERSION } from '@/lib/version'
 
 // Značky sietí nie sú v sade ikon aplikácie, preto sú tu ako vlastné SVG.
@@ -48,35 +49,36 @@ const ICONS: Record<CreditIcon, { viewBox: string; filled: boolean; shape: React
 
 /** Pätička s podpisom autora a odkazmi na jeho profily. */
 export function Credits({ className }: { className?: string }) {
+  const t = useT()
   const links = CREDITS.links.filter((link) => link.url)
   return (
     <footer className={cn('flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs text-muted-foreground print:hidden', className)}>
       <span>
         Made by {CREDITS.author} © {new Date().getFullYear()}
       </span>
-      <Link to="/changelog" className="hover:text-foreground hover:underline" title="Čo je nové v jednotlivých verziách">
+      <Link to="/changelog" className="hover:text-foreground hover:underline" title={t('Čo je nové v jednotlivých verziách', 'What is new in each version')}>
         RigTrack v{APP_VERSION}
       </Link>
       <Link to="/home" className="hover:text-foreground hover:underline">
-        Úvod
+        {t('Úvod', 'Home')}
       </Link>
       <Link to="/about" className="hover:text-foreground hover:underline">
-        O aplikácii
+        {t('O aplikácii', 'About')}
       </Link>
       <Link to="/help" className="hover:text-foreground hover:underline">
-        Návod a tipy
+        {t('Návod a tipy', 'Guide & tips')}
       </Link>
       <Link to="/ochrana-sukromia" className="hover:text-foreground hover:underline">
-        Ochrana súkromia
+        {t('Ochrana súkromia', 'Privacy')}
       </Link>
       <Link to="/cookies" className="hover:text-foreground hover:underline">
-        Cookies
+        {t('Cookies', 'Cookies')}
       </Link>
       <Link to="/podmienky-pouzivania" className="hover:text-foreground hover:underline">
-        Podmienky
+        {t('Podmienky', 'Terms')}
       </Link>
       <button type="button" className="hover:text-foreground hover:underline" onClick={openConsentSettings}>
-        Nastavenia ukladania
+        {t('Nastavenia ukladania', 'Storage settings')}
       </button>
       <span className="flex items-center gap-1">
         {links.map((link) => {

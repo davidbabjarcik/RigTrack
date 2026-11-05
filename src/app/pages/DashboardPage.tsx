@@ -11,18 +11,20 @@ import { SideWidgets } from '@/features/dashboard/SideWidgets'
 import { GlobalSearch } from '@/features/search/GlobalSearch'
 import { VehicleDeadlineAlerts } from '@/features/vehicles/VehicleDeadlineAlerts'
 import { visibleNavItems } from '@/lib/navigation'
+import { useLang, useT } from '@/lib/i18n'
 import { isAdminRole } from '@/lib/roles'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
 
 export function DashboardPage() {
   const { active } = useCompany()
+  const t = useT()
   // Len moduly, na ktoré má člen práva (helper nevidí nič navyše).
-  const modules = visibleNavItems(active).filter((item) => item.id !== 'dashboard')
+  const modules = visibleNavItems(active, useLang()).filter((item) => item.id !== 'dashboard')
 
   return (
     <>
       {/* Na mobile chýba bočný panel s firmou – názov firmy je preto v popise. */}
-      <PageHeader title="Prehľad" description={active ? active.companyName : 'Evidencia techniky a jej prevádzky'} />
+      <PageHeader title={t('Prehľad', 'Overview')} description={active ? active.companyName : t('Evidencia techniky a jej prevádzky', 'Equipment inventory and operations')} />
       {isSupabaseConfigured && active && <GlobalSearch company={active} />}
       <InstallHint />
       {/* Na mobile sú bloky (úlohy, kalendár, čísla) na samostatnej karte, aby Prehľad nebol preplnený. */}
@@ -30,8 +32,8 @@ export function DashboardPage() {
         <Link to="/panel" className="mb-4 flex items-center gap-3 rounded-xl border bg-surface p-4 hover:bg-muted lg:hidden">
           <LayoutDashboard className="size-5 shrink-0 text-accent" aria-hidden />
           <span className="min-w-0 flex-1">
-            <span className="block font-medium">Môj panel</span>
-            <span className="block text-sm text-muted-foreground">Moje úlohy, kalendár, čísla</span>
+            <span className="block font-medium">{t('Môj panel', 'My panel')}</span>
+            <span className="block text-sm text-muted-foreground">{t('Moje úlohy, kalendár, čísla', 'My tasks, calendar, numbers')}</span>
           </span>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         </Link>

@@ -4,15 +4,17 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { useCompany } from '@/features/companies/company-context'
 import { FIXED_PINNED, visibleNavItems } from '@/lib/navigation'
 import { usePinnedNav } from '@/lib/usePinnedNav'
+import { useLang, useT } from '@/lib/i18n'
 
 export function MorePage() {
   const { pinned } = usePinnedNav()
   const { active } = useCompany()
-  const rest = visibleNavItems(active).filter((item) => !pinned.includes(item.id) && item.id !== FIXED_PINNED)
+  const t = useT()
+  const rest = visibleNavItems(active, useLang()).filter((item) => !pinned.includes(item.id) && item.id !== FIXED_PINNED)
 
   return (
     <>
-      <PageHeader title="Viac" description="Ostatné moduly aplikácie" />
+      <PageHeader title={t('Viac', 'More')} description={t('Ostatné moduly aplikácie', 'Other modules of the app')} />
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
         {rest.map((item) => (
           <li key={item.id}>
@@ -26,7 +28,7 @@ export function MorePage() {
         <li>
           <Link to="/more/customize" className="flex min-h-14 items-center gap-3 px-4 hover:bg-muted">
             <SlidersHorizontal className="size-5 text-muted-foreground" aria-hidden />
-            <span className="flex-1 font-medium">Prispôsobiť spodnú lištu</span>
+            <span className="flex-1 font-medium">{t('Prispôsobiť spodnú lištu', 'Customise the bottom bar')}</span>
             <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
           </Link>
         </li>

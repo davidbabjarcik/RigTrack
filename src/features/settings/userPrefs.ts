@@ -5,6 +5,8 @@ import { useAuth } from '@/features/auth/auth-context'
 import { getSupabase } from '@/lib/supabase/client'
 
 export type UserPrefs = {
+  /** Jazyk appky (sk / en). */
+  language?: 'sk' | 'en'
   /** Farby priorít úloh (hex); chýbajúce = predvolené. */
   priorityColors?: Partial<Record<string, string>>
   /** Bloky v stĺpci na Prehľade v poradí; chýbajúce = predvolené. */
@@ -86,5 +88,5 @@ export function useUserPrefs() {
     onMutate: (next) => queryClient.setQueryData(prefsKey(userId), next),
   })
   const update = (patch: Partial<UserPrefs>) => mutation.mutate({ ...prefs, ...patch })
-  return { prefs, update, saving: mutation.isPending }
+  return { prefs, update, saving: mutation.isPending, loaded: query.isFetched }
 }

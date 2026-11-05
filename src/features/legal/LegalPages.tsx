@@ -250,6 +250,7 @@ const STORAGE_ROWS: [string, string, string, string][] = [
   ['rigtrack:consent', 'Nevyhnutné', 'Vaša voľba v tejto lište', 'localStorage, do zmeny pravidiel'],
   ['Cache Storage (service worker)', 'Nevyhnutné', 'Súbory appky na rýchle a offline spustenie (bez vašich údajov)', 'do novej verzie'],
   ['rigtrack:theme', 'Funkčné', 'Svetlý / tmavý režim', 'localStorage, do zmeny'],
+  ['rigtrack:lang', 'Funkčné', 'Jazyk appky (slovenčina / angličtina)', 'localStorage, do zmeny'],
   ['rigtrack.*.filter, rigtrack.calendar.view', 'Funkčné', 'Filtre a zobrazenie zoznamov', 'localStorage, do zmeny'],
   ['rigtrack:collapsed, rigtrack:pinned-nav, rigtrack:pinned-companies:*', 'Funkčné', 'Zbalené časti, pripnuté položky a firmy', 'localStorage, do zmeny'],
   ['rigtrack:stats-*, rigtrack:poster:*, rigtrack.quote.*, rigtrack.label.*, rigtrack.tape, rigtrack.led*', 'Funkčné', 'Rozloženie štatistík a nastavenia tlače, štítkov a kalkulačiek', 'localStorage, do zmeny'],

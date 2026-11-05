@@ -1,5 +1,6 @@
 import { TURNSTILE_SITE_KEY } from './loginGuard'
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { getLang, useT } from '@/lib/i18n'
 
 // Cloudflare Turnstile – overenie, že prihlásenie / registráciu / obnovu hesla robí človek. Token overuje Supabase Auth
 // (Attack Protection → CAPTCHA); appka ho len získa a pošle. Site key je verejný (nie je tajomstvo).
@@ -47,6 +48,7 @@ export const Turnstile = forwardRef<TurnstileHandle, { onToken: (token: string |
   const callback = useRef(onToken)
   const unavailable = useRef(onUnavailable)
   const [failed, setFailed] = useState(false)
+  const t = useT()
   useEffect(() => {
     callback.current = onToken
     unavailable.current = onUnavailable
@@ -68,7 +70,7 @@ export const Turnstile = forwardRef<TurnstileHandle, { onToken: (token: string |
         widget.current = api.render(box.current, {
           sitekey: TURNSTILE_SITE_KEY,
           theme: dark ? 'dark' : 'light',
-          language: 'sk',
+          language: getLang(),
           size: 'flexible',
           callback: (token: string) => {
             unavailable.current(false)
@@ -98,7 +100,10 @@ export const Turnstile = forwardRef<TurnstileHandle, { onToken: (token: string |
       <div ref={box} className="min-h-[65px]" />
       {failed && (
         <p role="alert" className="text-sm text-destructive">
-          Overenie, že nie ste robot, sa nenačítalo. Skontrolujte pripojenie (alebo blokovanie obsahu) a obnovte stránku.
+          {t(
+            'Overenie, že nie ste robot, sa nenačítalo. Skontrolujte pripojenie (alebo blokovanie obsahu) a obnovte stránku.',
+            'The human check did not load. Check your connection (or content blocker) and reload the page.',
+          )}
         </p>
       )}
     </div>

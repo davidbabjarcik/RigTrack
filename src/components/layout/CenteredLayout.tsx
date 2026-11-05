@@ -3,21 +3,25 @@ import { OfflineBanner } from '@/components/feedback/OfflineBanner'
 import { cn } from '@/lib/utils'
 import { Credits } from './Credits'
 import { ThemeToggle } from './ThemeToggle'
+import { LanguageToggle } from './LanguageToggle'
+import { useT } from '@/lib/i18n'
 
 /** Obrazovky mimo hlavnej navigácie: prihlásenie a výber firmy. */
 export function CenteredLayout() {
   const { pathname } = useLocation()
+  const t = useT()
   // Prihlásenie ostáva úzke; výber firmy, môj účet, O aplikácii, Čo je nové a právne stránky sú na PC širšie.
   const wide = ['/about', '/help', '/changelog', '/company/select', '/ochrana-sukromia', '/cookies', '/podmienky-pouzivania'].includes(pathname)
   return (
     <div className="flex min-h-dvh flex-col">
       <OfflineBanner />
-      <header className="flex justify-end px-2 pt-2">
+      <header className="flex items-center justify-end gap-1 px-2 pt-2">
+        <LanguageToggle />
         <ThemeToggle />
       </header>
       <main className={cn('mx-auto flex w-full flex-1 flex-col px-4 py-10', wide ? 'max-w-5xl' : 'max-w-md justify-center')}>
         {/* Logo vedie na Prehľad (napr. z „Čo je nové“); neprihláseného presmeruje na prihlásenie. */}
-        <Link to="/" title="Na prehľad" className="mb-8 flex items-center justify-center gap-3 self-center rounded-lg">
+        <Link to="/" title={t('Na prehľad', 'To overview')} className="mb-8 flex items-center justify-center gap-3 self-center rounded-lg">
           <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-10 rounded-xl" />
           <span className="text-2xl font-semibold tracking-tight">RigTrack</span>
         </Link>

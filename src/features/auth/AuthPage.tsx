@@ -7,25 +7,41 @@ import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from './auth-context'
 import { formatRemaining, loginLockStatus, signInGuarded, TURNSTILE_SITE_KEY, type Lock } from './loginGuard'
 import { Turnstile, type TurnstileHandle } from './Turnstile'
+import { useLang, useT } from '@/lib/i18n'
 
 type Mode = 'signin' | 'signup' | 'reset'
 
-const TITLES: Record<Mode, string> = {
-  signin: 'Prihlásenie',
-  signup: 'Vytvorenie účtu z pozvánky',
-  reset: 'Obnova hesla',
+const TITLES: Record<Mode, [string, string]> = {
+  signin: ['Prihlásenie', 'Sign in'],
+  signup: ['Vytvorenie účtu z pozvánky', 'Create an account from an invitation'],
+  reset: ['Obnova hesla', 'Reset password'],
 }
 
-const SUBMIT_LABELS: Record<Mode, string> = {
-  signin: 'Prihlásiť sa',
-  signup: 'Vytvoriť účet',
-  reset: 'Poslať odkaz',
+const SUBMIT_LABELS: Record<Mode, [string, string]> = {
+  signin: ['Prihlásiť sa', 'Sign in'],
+  signup: ['Vytvoriť účet', 'Create account'],
+  reset: ['Poslať odkaz', 'Send link'],
+}
+
+/** Hlášky zo servera prihlásenia (sú po slovensky) v angličtine. */
+const SERVER_EN: Record<string, string> = {
+  'Nesprávny e-mail alebo heslo.': 'Wrong e-mail or password.',
+  'Najprv potvrďte e-mail odkazom, ktorý sme vám poslali.': 'Please confirm your e-mail first using the link we sent you.',
+  'Overenie, že nie ste robot, zlyhalo. Skúste to znova.': 'The human check failed. Please try again.',
+  'Príliš veľa pokusov. Skúste to o chvíľu.': 'Too many attempts. Try again in a moment.',
+  'Prihlásenie zlyhalo. Skúste to znova.': 'Sign-in failed. Please try again.',
+  'Prihlásenie zlyhalo – skontrolujte pripojenie a skúste to znova.': 'Sign-in failed – check your connection and try again.',
+  'Prihlásenie sa teraz nedá overiť. Skúste to o chvíľu.': 'Sign-in cannot be verified right now. Try again in a moment.',
+  'Zadajte e-mail a heslo.': 'Enter your e-mail and password.',
 }
 
 function AuthForm() {
   // ?mode=signup (z úvodnej stránky „Mám pozvánku“) otvorí rovno vytvorenie účtu.
   const [params] = useSearchParams()
   const [mode, setMode] = useState<Mode>(() => (params.get('mode') === 'signup' ? 'signup' : 'signin'))
+  const t = useT()
+  const lang = useLang()
+  const pick = (pair: [string, string]) => t(pair[0], pair[1])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -80,7 +96,7 @@ function AuthForm() {
 
     // Hlásenia zámerne neprezrádzajú, či účet s daným e-mailom existuje.
     if (needsCaptcha && !captcha) {
-      setError('Počkajte na overenie, že nie ste robot.')
+      setError(t('Počkajte na overenie, že nie ste robot.', 'Please wait for the human check.'))
       setBusy(false)
       return
     }
@@ -98,7 +114,7 @@ function AuthForm() {
           setLock(result.lock)
           setNow(Date.now())
           setPassword('')
-        } else setError(result.message)
+        } else setError(lang === 'en' ? (SERVER_EN[result.message] ?? result.message) : result.message)
       }
     } else if (mode === 'signup') {
       const { error } = await auth.signUp({
@@ -109,39 +125,42 @@ function AuthForm() {
       if (error) {
         setError(
           error.code === 'weak_password'
-            ? 'Heslo je príliš slabé. Zvoľte dlhšie.'
+            ? t('Heslo je príliš slabé. Zvoľte dlhšie.', 'The password is too weak. Choose a longer one.')
             : error.code === 'captcha_failed'
-              ? 'Overenie, že nie ste robot, zlyhalo. Skúste to znova.'
+              ? t('Overenie, že nie ste robot, zlyhalo. Skúste to znova.', 'The human check failed. Please try again.')
             : error.status === 403 || /pozv/i.test(error.message)
-              ? 'Pre tento e-mail nemáme pozvánku. Účet sa dá vytvoriť len s e-mailom, na ktorý vás pozval admin firmy.'
-              : 'Vytvorenie účtu zlyhalo. Skúste to znova.',
+              ? t('Pre tento e-mail nemáme pozvánku. Účet sa dá vytvoriť len s e-mailom, na ktorý vás pozval admin firmy.', 'There is no invitation for this e-mail. You can only create an account with the e-mail your company admin invited.')
+              : t('Vytvorenie účtu zlyhalo. Skúste to znova.', 'Creating the account failed. Please try again.'),
         )
       } else {
-        setNotice('Poslali sme vám e-mail s potvrdzovacím odkazom. Po potvrdení sa môžete prihlásiť.')
+        setNotice(t('Poslali sme vám e-mail s potvrdzovacím odkazom. Po potvrdení sa môžete prihlásiť.', 'We sent you an e-mail with a confirmation link. After confirming you can sign in.'))
         setMode('signin')
         setPassword('')
       }
     } else {
       const { error } = await auth.resetPasswordForEmail(email, { redirectTo: `${origin}/auth/update-password`, captchaToken })
-      if (error) setError(error.code === 'captcha_failed' ? 'Overenie, že nie ste robot, zlyhalo. Skúste to znova.' : 'Odoslanie zlyhalo. Skúste to znova o chvíľu.')
-      else setNotice('Ak účet s týmto e-mailom existuje, poslali sme naň odkaz na nastavenie nového hesla.')
+      if (error) setError(error.code === 'captcha_failed' ? t('Overenie, že nie ste robot, zlyhalo. Skúste to znova.', 'The human check failed. Please try again.') : t('Odoslanie zlyhalo. Skúste to znova o chvíľu.', 'Sending failed. Try again in a moment.'))
+      else setNotice(t('Ak účet s týmto e-mailom existuje, poslali sme naň odkaz na nastavenie nového hesla.', 'If an account with this e-mail exists, we sent it a link to set a new password.'))
     }
     setBusy(false)
   }
 
   return (
     <div className="rounded-2xl border bg-surface p-6">
-      <h1 className="mb-5 text-xl font-semibold">{TITLES[mode]}</h1>
+      <h1 className="mb-5 text-xl font-semibold">{pick(TITLES[mode])}</h1>
 
       {mode === 'signup' && (
         <p className="mb-4 rounded-lg bg-muted p-3 text-sm">
-          RigTrack funguje len na pozvánky. Účet si vytvoríte s e-mailom, na ktorý vás pozval admin firmy – po prihlásení pozvánku uvidíte.
+          {t(
+            'RigTrack funguje len na pozvánky. Účet si vytvoríte s e-mailom, na ktorý vás pozval admin firmy – po prihlásení pozvánku uvidíte.',
+            'RigTrack works by invitation only. Create your account with the e-mail your company admin invited – you will see the invitation after signing in.',
+          )}
         </p>
       )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {mode === 'signup' && (
           <Field
-            label="Meno a priezvisko"
+            label={t('Meno a priezvisko', 'Full name')}
             autoComplete="name"
             required
             maxLength={120}
@@ -161,13 +180,13 @@ function AuthForm() {
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" className="mt-0.5 size-4" required checked={adult} onChange={(e) => setAdult(e.target.checked)} />
             <span>
-              Mám aspoň 16 rokov a súhlasím s{' '}
+              {t('Mám aspoň 16 rokov a súhlasím s', 'I am at least 16 years old and agree to the')}{' '}
               <a href={`${import.meta.env.BASE_URL}podmienky-pouzivania`} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-                podmienkami používania
+                {t('podmienkami používania', 'terms of use')}
               </a>
-              . Ako narábame s údajmi:{' '}
+              . {t('Ako narábame s údajmi:', 'How we handle data:')}{' '}
               <a href={`${import.meta.env.BASE_URL}ochrana-sukromia`} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-                ochrana súkromia
+                {t('ochrana súkromia', 'privacy policy')}
               </a>
               .
             </span>
@@ -175,7 +194,7 @@ function AuthForm() {
         )}
         {mode !== 'reset' && (
           <Field
-            label="Heslo"
+            label={t('Heslo', 'Password')}
             type="password"
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
             required
@@ -189,9 +208,14 @@ function AuthForm() {
 
         {locked && lock && (
           <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
-            <p className="text-destructive">Príliš veľa neúspešných pokusov o prihlásenie. Z bezpečnostných dôvodov je prihlasovanie dočasne zablokované.</p>
+            <p className="text-destructive">
+              {t(
+                'Príliš veľa neúspešných pokusov o prihlásenie. Z bezpečnostných dôvodov je prihlasovanie dočasne zablokované.',
+                'Too many failed sign-in attempts. For security reasons signing in is temporarily blocked.',
+              )}
+            </p>
             <p className="mt-1">
-              Skúste to znova o <span className="font-mono text-base font-semibold tabular-nums">{formatRemaining(lock.until - now)}</span>
+              {t('Skúste to znova o', 'Try again in')} <span className="font-mono text-base font-semibold tabular-nums">{formatRemaining(lock.until - now)}</span>
             </p>
           </div>
         )}
@@ -207,24 +231,30 @@ function AuthForm() {
         )}
 
         <Button type="submit" disabled={busy || locked || (needsCaptcha && !captcha)}>
-          {busy ? 'Čakajte…' : needsCaptcha && !captcha && !locked ? 'Overujem…' : locked && lock ? `Zablokované – ${formatRemaining(lock.until - now)}` : SUBMIT_LABELS[mode]}
+          {busy
+            ? t('Čakajte…', 'Please wait…')
+            : needsCaptcha && !captcha && !locked
+              ? t('Overujem…', 'Verifying…')
+              : locked && lock
+                ? `${t('Zablokované', 'Blocked')} – ${formatRemaining(lock.until - now)}`
+                : pick(SUBMIT_LABELS[mode])}
         </Button>
       </form>
 
       <div className="mt-5 flex flex-col items-start gap-2 text-sm">
         {mode !== 'signin' && (
           <button type="button" className="text-accent hover:underline" onClick={() => switchMode('signin')}>
-            Mám účet — prihlásiť sa
+            {t('Mám účet — prihlásiť sa', 'I have an account — sign in')}
           </button>
         )}
         {mode !== 'signup' && (
           <button type="button" className="text-accent hover:underline" onClick={() => switchMode('signup')}>
-            Mám pozvánku – vytvoriť účet
+            {t('Mám pozvánku – vytvoriť účet', 'I have an invitation – create an account')}
           </button>
         )}
         {mode === 'signin' && (
           <button type="button" className="text-accent hover:underline" onClick={() => switchMode('reset')}>
-            Zabudnuté heslo
+            {t('Zabudnuté heslo', 'Forgot password')}
           </button>
         )}
       </div>

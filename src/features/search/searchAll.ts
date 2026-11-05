@@ -5,6 +5,17 @@ export type SearchHit = { id: string; title: string; detail: string; to: string 
 export type SearchGroup = { kind: SearchKind; label: string; hits: SearchHit[]; more: number }
 export type SearchKind = 'equipment' | 'cases' | 'events' | 'partners' | 'contacts' | 'tasks' | 'notes' | 'spots'
 
+export const SEARCH_LABELS_EN: Record<SearchKind, string> = {
+  equipment: 'Equipment',
+  cases: 'Cases & racks',
+  events: 'Events',
+  partners: 'Companies',
+  contacts: 'Contacts',
+  tasks: 'Tasks',
+  notes: 'Notes',
+  spots: 'Warehouse',
+}
+
 export const SEARCH_LABELS: Record<SearchKind, string> = {
   equipment: 'Technika',
   cases: 'Cases a racks',
@@ -36,6 +47,8 @@ export type SearchSources = {
   caseName?: (id: string) => string
   /** Dátum na zobrazenie (napr. 3. 11. 2026). */
   date?: (iso: string) => string
+  /** Preklad drobných textov (predvolene slovensky). */
+  t?: (sk: string, en: string) => string
 }
 
 export const plain = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
@@ -56,21 +69,22 @@ export function searchAll(query: string, sources: SearchSources): SearchGroup[] 
     return textWords.every((word) => haystack.includes(word))
   }
   const date = sources.date ?? ((iso: string) => iso)
+  const t = sources.t ?? ((sk: string) => sk)
   const groups: { kind: SearchKind; hits: SearchHit[] }[] = []
 
   const equipment = (sources.equipment ?? []).flatMap((item): SearchHit[] => {
-    const where = item.caseId ? `v ${sources.caseName?.(item.caseId) || 'case'}` : 'mimo case'
+    const where = item.caseId ? `${t('v', 'in')} ${sources.caseName?.(item.caseId) || 'case'}` : t('mimo case', 'not in a case')
     if (unit !== null) {
       const units = item.unitIds.length > 0 ? item.unitIds : Array.from({ length: item.quantity }, (_, index) => index + 1)
       if (!item.trackUnits || !units.includes(unit) || !matches(item.name, item.manufacturer, item.model)) return []
       return [{ id: `${item.id}#${unit}`, title: `${item.name} #${unit}`, detail: where, to: `/equipment/${item.id}?unit=${unit}` }]
     }
     if (!matches(item.name, item.manufacturer, item.model, item.serialNumber, item.inventoryNumber)) return []
-    const detail = [item.quantity > 1 ? `${item.quantity} ks` : '', where, item.inventoryNumber && `inv. ${item.inventoryNumber}`].filter(Boolean).join(' · ')
+    const detail = [item.quantity > 1 ? `${item.quantity} ${t('ks', 'pcs')}` : '', where, item.inventoryNumber && `inv. ${item.inventoryNumber}`].filter(Boolean).join(' · ')
     return [{ id: item.id, title: item.name, detail, to: `/equipment/${item.id}` }]
   })
   groups.push({ kind: 'equipment', hits: equipment })
-  if (unit !== null) return finish(groups)
+  if (unit !== null) return finish(groups, t)
 
   groups.push({
     kind: 'cases',
@@ -89,7 +103,7 @@ export function searchAll(query: string, sources: SearchSources): SearchGroup[] 
     kind: 'partners',
     hits: (sources.partners ?? [])
       .filter((item) => matches(item.name, item.legalName, item.ico))
-      .map((item) => ({ id: item.id, title: item.name, detail: [item.legalName !== item.name && item.legalName, item.ico && `IČO ${item.ico}`].filter(Boolean).join(' · '), to: `/partners/${item.id}` })),
+      .map((item) => ({ id: item.id, title: item.name, detail: [item.legalName !== item.name && item.legalName, item.ico && `${t('IČO', 'Reg. no.')} ${item.ico}`].filter(Boolean).join(' · '), to: `/partners/${item.id}` })),
   })
   groups.push({
     kind: 'contacts',
@@ -104,25 +118,25 @@ export function searchAll(query: string, sources: SearchSources): SearchGroup[] 
     hits: (sources.tasks ?? [])
       .filter((item) => matches(item.title, item.note))
       .sort((a, b) => Number(a.status === 'done') - Number(b.status === 'done'))
-      .map((item) => ({ id: item.id, title: item.title, detail: item.status === 'done' ? 'hotová' : '', to: '/todos' })),
+      .map((item) => ({ id: item.id, title: item.title, detail: item.status === 'done' ? t('hotová', 'done') : '', to: '/todos' })),
   })
   groups.push({
     kind: 'notes',
     hits: (sources.notes ?? [])
       .filter((item) => matches(item.title, item.body))
-      .map((item) => ({ id: item.id, title: item.title || item.body.split('\n')[0].slice(0, 80) || 'Poznámka', detail: '', to: '/notes' })),
+      .map((item) => ({ id: item.id, title: item.title || item.body.split('\n')[0].slice(0, 80) || t('Poznámka', 'Note'), detail: '', to: '/notes' })),
   })
   groups.push({
     kind: 'spots',
     hits: (sources.spots ?? [])
       .filter((item) => !STRUCTURES.has(item.kind) && matches(item.name, item.note))
-      .map((item) => ({ id: item.id, title: item.name, detail: 'miesto v sklade', to: `/warehouse?spot=${item.id}` })),
+      .map((item) => ({ id: item.id, title: item.name, detail: t('miesto v sklade', 'warehouse spot'), to: `/warehouse?spot=${item.id}` })),
   })
-  return finish(groups)
+  return finish(groups, t)
 }
 
-function finish(groups: { kind: SearchKind; hits: SearchHit[] }[]): SearchGroup[] {
+function finish(groups: { kind: SearchKind; hits: SearchHit[] }[], t: (sk: string, en: string) => string = (sk) => sk): SearchGroup[] {
   return groups
     .filter((group) => group.hits.length > 0)
-    .map((group) => ({ kind: group.kind, label: SEARCH_LABELS[group.kind], hits: group.hits.slice(0, PER_GROUP), more: Math.max(0, group.hits.length - PER_GROUP) }))
+    .map((group) => ({ kind: group.kind, label: t(SEARCH_LABELS[group.kind], SEARCH_LABELS_EN[group.kind]), hits: group.hits.slice(0, PER_GROUP), more: Math.max(0, group.hits.length - PER_GROUP) }))
 }
