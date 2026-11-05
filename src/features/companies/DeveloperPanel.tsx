@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { AppErrorsPanel } from '@/features/bugs/AppErrorsPanel'
+import { CatalogReviewPanel } from '@/features/equipment/CatalogReviewPanel'
 import { PushSetupGuide } from '@/features/push/PushSetupGuide'
 import { CompanyRequestsAdmin } from './CompanyRequestsAdmin'
 import { DemoInvitesAdmin } from './DemoInvitesAdmin'
@@ -21,6 +22,9 @@ export function DeveloperPanel({ email }: { email: string }) {
     <>
       <Section title="Chyby v appke">
         <AppErrorsPanel />
+      </Section>
+      <Section title="Databáza techniky – návrhy na overenie">
+        <CatalogReviewPanel />
       </Section>
       <Section title="Používatelia – účty, posledné prihlásenie, firmy a role">
         <DeveloperUsers />

@@ -1,0 +1,137 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Check, Trash2, X } from 'lucide-react'
+import { useState } from 'react'
+import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
+import { Button } from '@/components/ui/button'
+import { plain } from '@/features/search/searchAll'
+import {
+  approveCatalogEntry,
+  CATALOG_KINDS,
+  catalogKeys,
+  deleteCatalogEntry,
+  fetchReviewQueue,
+  rejectCatalogEntry,
+  useCatalog,
+  type CatalogReviewItem,
+} from './catalog'
+import { describeAttributes, KIND_LABELS, type EquipmentKind } from './model'
+
+const input = 'h-9 w-full rounded-lg border bg-background px-2 text-sm'
+
+/**
+ * Vývojár: návrhy do spoločnej databázy techniky (model, ktorý firma zadala a v katalógu nie je). Rovnaký model od
+ * viacerých firiem je jeden riadok. Schváliť (aj s opravou značky, modelu a druhu) alebo zamietnuť; pod tým katalóg.
+ */
+export function CatalogReviewPanel() {
+  const queue = useQuery({ queryKey: catalogKeys.review, queryFn: fetchReviewQueue, retry: false })
+  if (queue.isPending) return <LoadingBlock />
+  if (queue.isError) return <ErrorBlock message="Návrhy sa nepodarilo načítať – je spustená migrácia 0146?" onRetry={() => void queue.refetch()} />
+  return (
+    <div className="flex flex-col gap-6">
+      {queue.data.length === 0 ? (
+        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">Žiadne návrhy na overenie.</p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {queue.data.map((item) => (
+            <ReviewRow key={item.id} item={item} />
+          ))}
+        </ul>
+      )}
+      <CatalogList />
+    </div>
+  )
+}
+
+function ReviewRow({ item }: { item: CatalogReviewItem }) {
+  const queryClient = useQueryClient()
+  const [kind, setKind] = useState<EquipmentKind>(item.kind)
+  const [manufacturer, setManufacturer] = useState(item.manufacturer)
+  const [model, setModel] = useState(item.model)
+  const [note, setNote] = useState('')
+  const refresh = () => Promise.all([queryClient.invalidateQueries({ queryKey: catalogKeys.review }), queryClient.invalidateQueries({ queryKey: catalogKeys.all })])
+  const approve = useMutation({ mutationFn: () => approveCatalogEntry(item.id, { kind, manufacturer, model, attributes: item.attributes }), onSuccess: refresh })
+  const reject = useMutation({ mutationFn: () => rejectCatalogEntry(item.id, note), onSuccess: refresh })
+  const details = describeAttributes({ attributes: item.attributes })
+  const busy = approve.isPending || reject.isPending
+
+  return (
+    <li className="rounded-xl border bg-surface p-4">
+      <div className="grid gap-2 sm:grid-cols-[10rem_1fr_1fr]">
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          Druh
+          <select className={input} value={kind} onChange={(event) => setKind(event.target.value as EquipmentKind)}>
+            {CATALOG_KINDS.map((value) => (
+              <option key={value} value={value}>
+                {KIND_LABELS[value]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          Značka
+          <input className={input} value={manufacturer} maxLength={80} onChange={(event) => setManufacturer(event.target.value)} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          Model
+          <input className={input} value={model} maxLength={80} onChange={(event) => setModel(event.target.value)} />
+        </label>
+      </div>
+      <p className="mt-2 text-sm">
+        <span className="text-muted-foreground">Názov vo firme:</span> {item.name || '—'} · {item.companies === 1 ? '1 firma' : `${item.companies} firmy`} · {new Date(item.submittedAt).toLocaleDateString('sk-SK')}
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{details || 'Bez technických údajov – schválením pribudne len značka a model.'}</p>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Button size="sm" disabled={busy || !manufacturer.trim()} onClick={() => approve.mutate()}>
+          <Check className="size-4" aria-hidden />
+          Schváliť do katalógu
+        </Button>
+        <input className={`${input} max-w-64`} placeholder="Dôvod zamietnutia (nepovinné)" maxLength={300} value={note} onChange={(event) => setNote(event.target.value)} />
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => reject.mutate()}>
+          <X className="size-4" aria-hidden />
+          Zamietnuť
+        </Button>
+      </div>
+      {(approve.isError || reject.isError) && <p className="mt-2 text-sm text-destructive">Nepodarilo sa uložiť.</p>}
+    </li>
+  )
+}
+
+/** Oficiálny katalóg: hľadanie a zmazanie chybného modelu. */
+function CatalogList() {
+  const queryClient = useQueryClient()
+  const catalog = useCatalog()
+  const [search, setSearch] = useState('')
+  const remove = useMutation({ mutationFn: deleteCatalogEntry, onSuccess: () => queryClient.invalidateQueries({ queryKey: catalogKeys.all }) })
+  const all = catalog.data ?? []
+  const words = plain(search.trim()).split(/\s+/).filter(Boolean)
+  const shown = words.length === 0 ? [] : all.filter((entry) => words.every((word) => plain(`${entry.manufacturer} ${entry.model} ${KIND_LABELS[entry.kind]}`).includes(word))).slice(0, 50)
+
+  return (
+    <section>
+      <h3 className="mb-2 text-sm font-medium">Katalóg ({all.length} modelov)</h3>
+      <input className={`${input} mb-2 max-w-md`} placeholder="Hľadať značku alebo model…" value={search} onChange={(event) => setSearch(event.target.value)} />
+      {shown.length > 0 && (
+        <ul className="divide-y rounded-xl border bg-surface">
+          {shown.map((entry) => (
+            <li key={entry.id} className="flex items-center gap-3 px-3 py-2 text-sm">
+              <span className="w-24 shrink-0 text-muted-foreground">{KIND_LABELS[entry.kind]}</span>
+              <span className="min-w-0 flex-1 truncate">
+                <span className="font-medium">{entry.manufacturer}</span> {entry.model}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="size-8 p-0"
+                aria-label={`Zmazať ${entry.manufacturer} ${entry.model}`}
+                disabled={remove.isPending}
+                onClick={() => window.confirm(`Zmazať z katalógu ${entry.manufacturer} ${entry.model}? Technika firiem ostane.`) && remove.mutate(entry.id)}
+              >
+                <Trash2 className="size-4" aria-hidden />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}

@@ -32,6 +32,15 @@ const TOPICS: Topic[] = [
     title: 'Technika a cases',
     tips: [
       {
+        title: 'Značka a model zo spoločnej databázy techniky',
+        steps: [
+          'Pri pridávaní techniky zvoľte druh (napr. Zvuk), potom značku (napr. JBL) a jej model – technické údaje sa doplnia samy.',
+          'Značka alebo model chýba? Na konci zoznamu „Iná značka / Iný model“ a dopíšte ho.',
+          'Technika sa uloží vašej firme hneď; model ide ako návrh do spoločnej databázy a po overení ho uvidia všetci. Do databázy idú len údaje modelu, nie sériové čísla ani ceny.',
+        ],
+        link: { to: '/equipment/new', label: 'Pridať techniku' },
+      },
+      {
         title: 'Rozdeliť kusy do viacerých cases naraz (napr. háky)',
         steps: [
           'Otvorte techniku, ktorá je rozdelená vo viacerých cases (zoznam „Časti“).',

@@ -19,6 +19,7 @@ import { cableColorKeys, fetchCableColors, resolveCableType, saveCableColor, typ
 import { LengthColorField, type ColorEdit } from './LengthColorField'
 import {
   asOptionalNumber,
+  attributesFor,
   CABLE_VARIANTS,
   COMMON_CONNECTORS,
   DJ_TYPE_LABELS,
@@ -53,6 +54,8 @@ import {
   wirelessTransmitters,
 } from './model'
 import { PurchaseLinksFields } from './PurchaseLinksFields'
+import { CATALOG_FORM_KEYS, CATALOG_KINDS, findCatalogEntry, submitCatalogEntry, useCatalog, type CatalogEntry } from './catalog'
+import { CatalogPicker } from './CatalogPicker'
 import { UnitDetailsFields } from './UnitDetailsFields'
 import { CableMakersField } from './CableMakersField'
 import { makerModeOf, makersOver, makersToSave, type Maker, type MakerMode } from './makers'
@@ -62,6 +65,34 @@ import { Group } from './FormGroup'
 import { AudioFields } from './AudioFields'
 import { LightingFields } from './LightingFields'
 import { VideoFields } from './VideoFields'
+
+/** Prázdna technika na prevod údajov z katalógu do formulára (toFormValues). */
+const CATALOG_BASE = {
+  id: '',
+  name: '',
+  categoryId: null,
+  locationId: null,
+  caseId: null,
+  labelRole: null,
+  minQuantity: null,
+  quantity: 1,
+  trackUnits: false,
+  unitIds: [],
+  rentalPrice: null,
+  serialNumber: '',
+  inventoryNumber: '',
+  macAddress: '',
+  ipAddress: '',
+  serviceIntervalMonths: null,
+  lastServiceOn: null,
+  hoursIntervalMonths: null,
+  operatingHours: null,
+  hoursReadOn: null,
+  photoPath: '',
+  status: 'available',
+  note: '',
+  updatedAt: '',
+}
 
 const EMPTY: EquipmentFormValues = {
   name: '',
@@ -375,10 +406,29 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
     control,
     handleSubmit,
     setValue,
+    getValues,
     setError,
     formState: { errors },
   } = methods
   const kind = useWatch({ control, name: 'kind' })
+  // Spoločný katalóg techniky: značka → model; model z katalógu doplní technické údaje.
+  const catalog = useCatalog().data ?? []
+  const manufacturerValue = useWatch({ control, name: 'manufacturer' }) ?? ''
+  const modelValue = useWatch({ control, name: 'model' }) ?? ''
+  const useCatalogPicker = CATALOG_KINDS.includes(kind) && catalog.some((entry) => entry.kind === kind)
+  const applyCatalog = (entry: CatalogEntry) => {
+    const fake = { ...CATALOG_BASE, kind: entry.kind, manufacturer: entry.manufacturer, model: entry.model, attributes: entry.attributes } as Equipment
+    const patch = toFormValues(fake, [], []) as unknown as Record<string, unknown>
+    const has = entry.attributes as Record<string, unknown>
+    // Pole sa vyplní, len keď ho katalóg naozaj má (LED panel, procesor a displej podľa ich skupiny údajov).
+    const source = (key: string) => (key.startsWith('led') || key === 'isLedPanel' ? 'ledPanel' : key.startsWith('proc') || key === 'isLedProcessor' ? 'ledProcessor' : key.startsWith('display') || key === 'isDisplay' ? 'display' : key)
+    for (const key of CATALOG_FORM_KEYS) {
+      const value = patch[key]
+      if (has[source(key)] === undefined || value === undefined || value === null || value === '') continue
+      setValue(key as keyof EquipmentFormValues, value as never, { shouldDirty: true })
+    }
+    if (!getValues('name').trim()) setValue('name', entry.model, { shouldDirty: true })
+  }
   const categoryText = useWatch({ control, name: 'category' })
   // Časť Svetlo sa ukáže pri druhu Svetlo aj pri kategórii, ktorá je o svetlách.
   const lighting = isLighting(kind, categoryText ?? '')
@@ -442,6 +492,10 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         locations,
         addresses: canAddresses,
       })
+      // Model mimo spoločného katalógu ide ako návrh na overenie (chyba návrhu uloženie techniky nezastaví).
+      if (CATALOG_KINDS.includes(values.kind) && values.manufacturer.trim() && !findCatalogEntry(catalog, values.kind, values.manufacturer, values.model)) {
+        await submitCatalogEntry(companyId, { kind: values.kind, manufacturer: values.manufacturer, model: values.model, name: values.name, attributes: attributesFor(values) }).catch(() => {})
+      }
       // Duplikát dostane vlastnú kópiu fotky vzoru.
       if (!equipment && copyFrom?.photoPath) await copyEquipmentPhoto(companyId, id, copyFrom.photoPath).catch(() => {})
       // „Upraviť všetky naraz“: spoločné údaje aj do ostatných častí rozdelenej techniky.
@@ -789,6 +843,20 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           ))}
         </datalist>
 
+        {useCatalogPicker ? (
+          <CatalogPicker
+            key={kind}
+            kind={kind}
+            catalog={catalog}
+            manufacturer={manufacturerValue}
+            model={modelValue}
+            manufacturerError={errors.manufacturer?.message}
+            modelError={errors.model?.message}
+            onManufacturer={(value) => setValue('manufacturer', value, { shouldDirty: true })}
+            onModel={(value) => setValue('model', value, { shouldDirty: true })}
+            onPick={applyCatalog}
+          />
+        ) : (
         <Field
           label={kind === 'stage' ? 'Výrobca / značka' : 'Výrobca'}
           list={kind === 'stage' ? stageBrandList : undefined}
@@ -796,6 +864,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           error={errors.manufacturer?.message}
           {...register('manufacturer')}
         />
+        )}
         {kind === 'stage' && (
           <datalist id={stageBrandList}>
             <option value="Nivtec originál" />
@@ -805,7 +874,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           </datalist>
         )}
         <Field label="Váha kusu (kg)" type="number" inputMode="decimal" min={0} step="0.1" error={errors.weightKg?.message} {...register('weightKg', asOptionalNumber)} />
-        <Field label="Model" error={errors.model?.message} {...register('model')} />
+        {!useCatalogPicker && <Field label="Model" error={errors.model?.message} {...register('model')} />}
         {/* Pri evidencii po kusoch má každý kus svoje sériové a inventárne číslo (nižšie, Údaje po kusoch). */}
         {!simple && !trackUnits && !groupMode && (
           <Field label="Sériové číslo" autoComplete="off" error={errors.serialNumber?.message} {...register('serialNumber')} />

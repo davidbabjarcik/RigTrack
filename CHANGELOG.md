@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.3 – 5. 11. 2026
+
+- **Spoločná databáza techniky**: pri pridávaní techniky (zvuk, svetlá, video, DJ, hliník, IT, spotrebiče) najprv
+  značka (napr. JBL), potom jej model – model z databázy doplní technické údaje. Na konci zoznamu „Iná značka / Iný
+  model“: dopíšete vlastný, technika sa uloží firme a model ide ako návrh do databázy. Na začiatok asi 100 známych
+  značiek a modelov.
+- **Vývojár → Databáza techniky – návrhy na overenie**: rovnaký model od viacerých firiem je jeden riadok s počtom
+  firiem; schváliť (aj s opravou značky, modelu a druhu) alebo zamietnuť s dôvodom; hľadanie a mazanie v katalógu.
+- Do databázy idú len technické údaje modelu – nikdy sériové čísla, ceny, poznámky ani nič o firme.
+- Nová migrácia: `0146` (je aj v `supabase/update-all.sql`).
+
 ### 8.2 – 5. 11. 2026
 
 - **Úvodná stránka RigTracku** pre každého: čo appka vie, ukážky z ukážkovej firmy a ako začať, s tlačidlami
