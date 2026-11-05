@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.12 – 5. 11. 2026
+
+- **RCF v spoločnej databáze techniky** podľa katalógov Touring 2026 a Portable: line array HDL (50-A 4K, 30-A,
+  28-A) a ich suby, KX, NXL / NXW, NX (aj monitory NX-SMA), ART 9 a ART MK5, EVOX, suby SUB 9000 / 8000 / AX / MK3
+  a procesory DX – typ, výkon, frekvencie, max SPL, uhol, meniče, výhybka, váha a rozmery.
+
 ### 8.11 – 5. 11. 2026
 
 - **Overené / neoverené údaje v spoločnej databáze techniky**: pri výbere modelu je vidieť, či údaje overil

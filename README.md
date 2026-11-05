@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-8.11-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-8.12-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **8.12** | RCF v databáze techniky |
 | **8.11** | Overené / neoverené modely v databáze techniky, Global Truss 2023, spojky, JBL EON a PRX900 |
 | **8.10.1** | Výrobníky hmly v databáze techniky pri svetlách |
 | **8.10** | Global Truss, Duratruss, JBL 2026 a Shure bezdrôty v databáze techniky |

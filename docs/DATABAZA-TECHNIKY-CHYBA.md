@@ -3,7 +3,9 @@
 Zoznam modelov, ku ktorým v spoločnej databáze techniky chýbajú údaje (alebo sú neúplné). Aktualizuje sa po každom
 doplnení katalógov. Stačí poslať PDF (celý katalóg výrobcu alebo list ku konkrétnemu modelu) – údaje prepíšem.
 
-**Naposledy aktualizované:** 5. 11. 2026, po verzii 8.10.
+**Naposledy aktualizované:** 5. 11. 2026, po verzii 8.12.
+
+Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Databáza techniky.
 
 ## Prehľad
 
@@ -38,9 +40,9 @@ Yamaha (pulty), Allen & Heath, listy k JBL SRX900 a VTX.
 |---|---|---|
 | d&b audiotechnik | V8, Y10P, E12, M4, D80 (zosilňovač) | listy k modelom alebo katalóg |
 | L-Acoustics | K2, Kara II, KS28, X15 HiQ, LA12X (zosilňovač) | listy / katalóg |
-| RCF | HDL 30-A, ART 745-A, SUB 8006-AS | listy / katalóg |
+| RCF | ART 745-A (starší model – v katalógu je už len ART 745-A MK5) | list |
 | dB Technologies | VIO L210, VIO S318, Opera 15 | listy / katalóg |
-| JBL | EON715, PRX815W, SRX835P, SRX828SP | listy (v katalógu 2026 nie sú) |
+| JBL | PRX815W, SRX835P, SRX828SP | listy (v katalógu 2026 nie sú) |
 | Powersoft | X8, Quattrocanali 4804 DSP+D | listy |
 | Lab.gruppen | PLM 20K44 | list |
 | Yamaha | CL5, QL5, TF5, DM7 (pulty) | listy / katalóg |
@@ -76,8 +78,7 @@ Starší všeobecný záznam bez dĺžky dielu – nové diely s váhou už v da
 
 - **Prolyte** H30V, H40V – katalóg Prolyte (tabuľka dielov)
 - **Eurotruss** FD34 – katalóg Eurotruss
-- **Global Truss** F44P – v katalógu 2019 nie je (novší katalóg alebo list)
-- Global Truss F34 (všeobecný) – diely F34 s váhou už sú, tento sa dá ignorovať
+- Global Truss F34 a F44P (všeobecné záznamy) – diely s váhou z katalógu 2023 už sú, tieto sa dajú zmazať
 
 ## DJ a video – bez údajov
 

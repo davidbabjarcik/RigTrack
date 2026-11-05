@@ -37,6 +37,8 @@ describe('equipment catalog (0146)', () => {
     expect(await t.as('viewer', `select model from public.equipment_catalog where model = 'F34 – 2 m (SQ-4112)'`)).toEqual([])
     const [gt] = await t.as('viewer', `select attributes from public.equipment_catalog where kind = 'truss' and manufacturer = 'Global Truss' and model = 'F34 – 2 m (F34200)'`)
     expect(gt.attributes).toMatchObject({ trussType: 'point4', lengthM: 2, weightKg: 12 })
+    const [rcf] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'RCF' and model = 'HDL 30-A'`)
+    expect(rcf.attributes).toMatchObject({ audioType: 'line_array', powered: 'active', peakW: 2200, weightKg: 25 })
     const [eon] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'JBL' and model = 'EON715'`)
     expect(eon.attributes).toMatchObject({ powered: 'active', peakW: 1300 })
     const [m22] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'JBL' and model = 'VTX M22'`)
