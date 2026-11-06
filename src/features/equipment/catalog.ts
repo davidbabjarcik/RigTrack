@@ -23,14 +23,14 @@ export const CATALOG_KEYS = [
   'rfRange', 'micType', 'wirelessRx', 'wirelessTxs', 'powered', 'rmsW', 'peakW', 'woofer', 'maxSplDb', 'connectors',
   'poleMount', 'subDesign', 'programW', 'maxSplPeakDb', 'sensitivityDb', 'impedanceOhm', 'freqRange', 'freqResponse',
   'coverage', 'crossover', 'biamp', 'hfDriver', 'weightKg', 'boxWidthCm', 'boxDepthCm', 'boxHeightCm', 'dmxModes',
-  'ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8', 'lengthM', 'thomannCode',
+  'ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8', 'lengthM', 'thomannCode', 'compatibleAmps',
   'ledPanel', 'ledProcessor', 'display',
 ] as const
 
 /** Polia formulára, ktoré katalóg vyplní (rovnaké názvy ako vo formulári techniky). */
 export const CATALOG_FORM_KEYS = [
   // Kód Thomann je len v databáze techniky (na objednanie), do formulára techniky sa nevypĺňa.
-  ...CATALOG_KEYS.filter((key) => key !== 'ledPanel' && key !== 'ledProcessor' && key !== 'display' && key !== 'thomannCode'),
+  ...CATALOG_KEYS.filter((key) => key !== 'ledPanel' && key !== 'ledProcessor' && key !== 'display' && key !== 'thomannCode' && key !== 'compatibleAmps'),
   'isLedPanel', 'ledPitchMm', 'ledWidthMm', 'ledHeightMm', 'ledPxW', 'ledPxH', 'ledWeightKg', 'ledMaxW', 'ledAvgW',
   'isLedProcessor', 'isDisplay', 'displayType', 'displayResW', 'displayResH', 'displayDiagonalIn', 'displayLumens',
   'procOutputs', 'procPixels', 'procInputs', 'procChip', 'procControl', 'procHdmi', 'procDvi', 'procSdi', 'procDp',
@@ -47,6 +47,75 @@ export function catalogAttributes(attributes: EquipmentAttributes): EquipmentAtt
     picked[key] = value
   }
   return picked as EquipmentAttributes
+}
+
+/**
+ * Zosilňovače, ktoré box poháňajú (napr. L-Acoustics: len ich vlastné zosilňovače) a koľko boxov zvládne jeden výstup
+ * a celý zosilňovač – podľa výrobcu (Amplification reference). Uložené pri modeli boxu v databáze techniky.
+ */
+export type CompatibleAmp = { model: string; perOutput: number; total: number; note?: string }
+
+export function compatibleAmps(entry: Pick<CatalogEntry, 'attributes'> | undefined): CompatibleAmp[] {
+  const value = (entry?.attributes as Record<string, unknown> | undefined)?.compatibleAmps
+  if (!Array.isArray(value)) return []
+  return value.filter(
+    (amp): amp is CompatibleAmp => typeof amp === 'object' && amp !== null && typeof amp.model === 'string' && Number.isFinite(amp.perOutput) && Number.isFinite(amp.total),
+  )
+}
+
+/** „LA12X (3 na výstup, 3 na zosilňovač) · LA4X (…)“ */
+export function ampsText(amps: CompatibleAmp[], t: (sk: string, en: string) => string = (sk) => sk) {
+  return amps
+    .map((amp) => `${amp.model} (${amp.perOutput} ${t('na výstup', 'per output')}, ${amp.total} ${t('na zosilňovač', 'per amplifier')}${amp.note ? `, ${amp.note}` : ''})`)
+    .join(' · ')
+}
+
+const ampKey = (text: string) => text.toLowerCase().replace(/[\s()-]/g, '').replace(/i$/, '')
+
+/** Je technika daný zosilňovač? (LA7.16 aj LA7.16i, podľa modelu alebo názvu.) */
+function isAmp(item: { manufacturer: string; model: string; name: string }, brand: string, ampModel: string) {
+  if (item.manufacturer.trim().toLowerCase() !== brand.trim().toLowerCase()) return false
+  const wanted = ampKey(ampModel)
+  return ampKey(item.model) === wanted || ampKey(item.name).includes(wanted)
+}
+
+export type AmpReminder = { key: string; text: string }
+
+/**
+ * Pripomienky k zosilňovačom na evente / vo výpožičke: box, ktorý potrebuje konkrétne zosilňovače (L-Acoustics),
+ * a žiadny z nich tam nie je – alebo ich je málo na počet boxov (počíta sa, akoby poháňali len tieto boxy).
+ */
+export function ampReminders(
+  items: { manufacturer: string; model: string; name: string; kind: EquipmentKind; quantity: number }[],
+  catalog: CatalogEntry[],
+  where: string,
+  t: (sk: string, en: string) => string = (sk) => sk,
+): AmpReminder[] {
+  const boxes = new Map<string, { entry: CatalogEntry; count: number }>()
+  for (const item of items) {
+    const entry = findCatalogEntry(catalog, item.kind, item.manufacturer, item.model)
+    if (!entry || compatibleAmps(entry).length === 0) continue
+    const current = boxes.get(entry.id) ?? { entry, count: 0 }
+    current.count += item.quantity
+    boxes.set(entry.id, current)
+  }
+  const result: AmpReminder[] = []
+  for (const { entry, count } of boxes.values()) {
+    const amps = compatibleAmps(entry)
+    const present = amps.map((amp) => ({ amp, quantity: items.filter((item) => isAmp(item, entry.manufacturer, amp.model)).reduce((sum, item) => sum + item.quantity, 0) })).filter((row) => row.quantity > 0)
+    const box = `${count} × ${entry.manufacturer} ${entry.model}`
+    const list = amps.map((amp) => amp.model).join(', ')
+    if (present.length === 0) {
+      result.push({ key: `amp:${entry.id}`, text: `${where.charAt(0).toUpperCase()}${where.slice(1)} ${t('je', 'is')} ${box}, ${t('ale žiadny zosilňovač, ktorý ho poháňa – len', 'but no amplifier that drives it – only')} ${entry.manufacturer}: ${list}.` })
+      continue
+    }
+    const capacity = present.reduce((sum, row) => sum + row.amp.total * row.quantity, 0)
+    if (count > capacity) {
+      const have = present.map((row) => `${row.quantity} × ${row.amp.model} (${row.amp.total} ${t('boxy', 'boxes')})`).join(', ')
+      result.push({ key: `amp-capacity:${entry.id}`, text: `${box}: ${t('zosilňovače', 'amplifiers')} ${where} (${have}) ${t('zvládnu najviac', 'handle at most')} ${capacity} – ${t('pridajte ďalší zosilňovač', 'add another amplifier')}.` })
+    }
+  }
+  return result
 }
 
 /** Odkaz na produkt v Thomanne podľa kódu (číslo artiklu); iný text sa vyhľadá. */

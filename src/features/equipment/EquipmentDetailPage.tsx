@@ -32,7 +32,8 @@ import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
 import { useEquipmentLookups } from './useEquipmentLookups'
 import { equipmentValue } from './value'
-import { tx, tf } from '@/lib/i18n'
+import { tx, tf, useT } from '@/lib/i18n'
+import { ampsText, compatibleAmps, findCatalogEntry, useCatalog } from './catalog'
 
 export function EquipmentDetailPage() {
   const { id = '' } = useParams()
@@ -50,6 +51,8 @@ export function EquipmentDetailPage() {
   // QR kusu (?unit=7): ak kus medzitým presunuli do inej časti (iný case), otvorí sa tá.
   const [params] = useSearchParams()
   const [dmxOpen, setDmxOpen] = useState(false)
+  const catalog = useCatalog()
+  const t = useT()
   const unit = Number(params.get('unit')) || null
   const list = useQuery({ queryKey: equipmentKeys.list(company.companyId), queryFn: () => fetchEquipmentList(company.companyId), enabled: unit !== null })
 
@@ -102,6 +105,8 @@ export function EquipmentDetailPage() {
   const simple = isSimpleKind(equipment.kind, categories.find((c) => c.id === equipment.categoryId)?.name ?? '')
   // Nákupná cena a hodnota len pre tých, čo techniku spravujú.
   const value = can(company, 'equipment.edit') ? equipmentValue(equipment) : null
+  // Zosilňovače, ktoré box poháňajú (z databáze techniky – napr. L-Acoustics len vlastné).
+  const amps = compatibleAmps(findCatalogEntry(catalog.data ?? [], equipment.kind, equipment.manufacturer, equipment.model))
   const rows: [string, ReactNode][] = [
     ['Druh', [KIND_LABELS[equipment.kind], ...describeAttributes(equipment)].join(' · ')],
     [tx('Vlastník'), equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
@@ -194,6 +199,7 @@ export function EquipmentDetailPage() {
     [tx('Upozorniť pri počte'), equipment.minQuantity !== null ? `${equipment.minQuantity} ks a menej` : undefined],
     [tx('Výrobca'), equipment.manufacturer],
     ['Model', equipment.model],
+    [tf('Zosilňovače (len {0})', equipment.manufacturer), amps.length > 0 ? ampsText(amps, t) : undefined],
     [tx('Sériové číslo'), equipment.serialNumber],
     [tx('Inventárne číslo'), equipment.inventoryNumber],
     ['MAC adresa', equipment.macAddress],

@@ -1,9 +1,9 @@
 import { BookCheck, Info, ShieldAlert } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Field, SelectField } from '@/components/ui/field'
-import { catalogBrands, catalogModels, findCatalogEntry, type CatalogEntry } from './catalog'
+import { ampsText, catalogBrands, catalogModels, compatibleAmps, findCatalogEntry, type CatalogEntry } from './catalog'
 import type { EquipmentKind } from './model'
-import { tf, tx } from '@/lib/i18n'
+import { tf, tx, useT } from '@/lib/i18n'
 
 const OTHER = '__other__'
 
@@ -45,6 +45,7 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
   const [ownModel, setOwnModel] = useState(() => Boolean(model.trim()) && !known)
   const freeBrand = ownBrand || brands.length === 0
   const freeModel = freeBrand || ownModel || models.length === 0
+  const t = useT()
 
   return (
     <>
@@ -157,6 +158,14 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
           {known.verified
             ? tx('Model zo spoločnej databázy techniky – údaje sú overené.')
             : tx('Model zo spoločnej databázy techniky – údaje zatiaľ nie sú overené, skontrolujte ich.')}
+        </p>
+      )}
+      {known && compatibleAmps(known).length > 0 && (
+        <p className="flex items-start gap-2 rounded-lg border border-sky-400/50 bg-sky-100/60 px-3 py-2 text-sm sm:col-span-2 dark:bg-sky-950/40">
+          <Info className="mt-0.5 size-4 shrink-0 text-sky-600" aria-hidden />
+          <span>
+            <strong>{tf('Zosilňovače – len {0}:', known.manufacturer)}</strong> {ampsText(compatibleAmps(known), t)}
+          </span>
         </p>
       )}
       {known && knownFacts(known.attributes) < FEW_FACTS && (

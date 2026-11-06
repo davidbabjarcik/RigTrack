@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-8.14-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-8.15-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **8.15** | L-Acoustics v databáze techniky, kompatibilné zosilňovače a pripomienka pri evente |
 | **8.14** | Celá databáza techniky (viac ako 1 000), lepšia úprava modelu, obnova po novej verzii |
 | **8.13** | Vývojár: celá databáza techniky s filtrami a úpravou |
 | **8.12** | RCF v databáze techniky |

@@ -39,6 +39,8 @@ describe('equipment catalog (0146)', () => {
     expect(gt.attributes).toMatchObject({ trussType: 'point4', lengthM: 2, weightKg: 12 })
     const [rcf] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'RCF' and model = 'HDL 30-A'`)
     expect(rcf.attributes).toMatchObject({ audioType: 'line_array', powered: 'active', peakW: 2200, weightKg: 25 })
+    const [k2] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'L-Acoustics' and model = 'K2'`)
+    expect(k2.attributes.compatibleAmps).toEqual([{ model: 'LA12X', perOutput: 3, total: 3 }, { model: 'LA7.16', perOutput: 1, total: 4, note: 'aj LA7.16i' }, { model: 'LA4X', perOutput: 1, total: 1 }])
     const [eon] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'JBL' and model = 'EON715'`)
     expect(eon.attributes).toMatchObject({ powered: 'active', peakW: 1300 })
     const [m22] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'JBL' and model = 'VTX M22'`)

@@ -59,10 +59,10 @@ const KEY_LABELS: Record<string, string> = {
   dipSwitches: 'DIP prepínače', nodeProtocols: 'Protokoly nodu (JSON)', nodePorts: 'Porty nodu', trussType: 'Typ trussu', trussShape: 'Tvar trussu', lengthM: 'Dĺžka dielu (m)',
   stageType: 'Typ pódia (deck / accessory)', stageSize: 'Veľkosť', djType: 'Typ DJ techniky', videoType: 'Typ videa', cameraSensor: 'Snímač', hdmiOut: 'HDMI výstup',
   itType: 'Typ IT', applianceType: 'Typ spotrebiča', cableType: 'Typ kábla', connector: 'Konektor', cableVariant: 'Variant kábla',
-  ledPanel: 'LED panel (JSON)', ledProcessor: 'LED procesor (JSON)', display: 'Displej (JSON)', thomannCode: 'Kód Thomann (číslo artiklu)',
+  ledPanel: 'LED panel (JSON)', ledProcessor: 'LED procesor (JSON)', display: 'Displej (JSON)', thomannCode: 'Kód Thomann (číslo artiklu)', compatibleAmps: 'Zosilňovače (JSON: model, perOutput, total)',
 }
 const BOOLEAN_KEYS = new Set(['biamp', 'poleMount', 'hdmiOut'])
-const JSON_KEYS = new Set(['dmxModes', 'wirelessTxs', 'nodeProtocols', 'ledPanel', 'ledProcessor', 'display'])
+const JSON_KEYS = new Set(['dmxModes', 'wirelessTxs', 'nodeProtocols', 'ledPanel', 'ledProcessor', 'display', 'compatibleAmps'])
 const isNumberKey = (key: string) => /(W|Db|Ohm|Kg|Cm|M|Slots|Channels|Ports|Switches|W2|W4|W8|Bridge4|Bridge8)$/.test(key) && !['powered', 'woofer'].includes(key)
 const label = (key: string) => (KEY_LABELS[key] ? tx(KEY_LABELS[key]) : key)
 

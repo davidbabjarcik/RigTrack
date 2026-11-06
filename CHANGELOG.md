@@ -5,6 +5,18 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.15 – 6. 11. 2026
+
+- **L-Acoustics v spoločnej databáze techniky**: X, S (Syva, Soka), A, K (Kiva II, Kara II, K3, K2, K1), L2 / L2D
+  a suby (SB, KS) s frekvenciami, max SPL, uhlom, meničmi, váhou a rozmermi, a zosilňovače LA12X, LA7.16 (i), LA4X, LA2Xi a LA1.16i.
+- **Ktoré zosilňovače box poháňa**: pri boxe L-Acoustics je vidieť (pri výbere modelu aj v detaile techniky), že ide
+  len na ich zosilňovače, na ktoré a koľko boxov zvládne jeden výstup a celý zosilňovač (napr. K2: LA12X 3 / 3,
+  LA7.16 1 / 4, LA4X 1 / 1).
+- **Pripomienka pri evente a výpožičke**: keď sú na nich boxy L-Acoustics a chýba ich zosilňovač – alebo je ich málo
+  na počet boxov –, ukáže sa upozornenie. Funguje samo, netreba nastavovať pravidlo.
+- U L-Acoustics „Active“ znamená bi-amp (2 kanály zosilňovača), nie vlastný zosilňovač – v databáze sú preto ako
+  pasívne s bi-ampom.
+
 ### 8.14 – 6. 11. 2026
 
 - **Databáza techniky načíta všetky modely** – predtým sa načítalo najviac 1 000, takže časť značiek a modelov
