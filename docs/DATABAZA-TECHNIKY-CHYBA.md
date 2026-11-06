@@ -3,7 +3,7 @@
 Zoznam modelov, ku ktorým v spoločnej databáze techniky chýbajú údaje (alebo sú neúplné). Aktualizuje sa po každom
 doplnení katalógov. Stačí poslať PDF (celý katalóg výrobcu alebo list ku konkrétnemu modelu) – údaje prepíšem.
 
-**Naposledy aktualizované:** 5. 11. 2026, po verzii 8.12.
+**Naposledy aktualizované:** 6. 11. 2026, po verzii 8.15.
 
 Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Databáza techniky.
 
@@ -18,7 +18,7 @@ Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Datab
 | DJ technika | 6 | 6 | – |
 | Video | 4 | 4 | – |
 
-**Najviac by pomohli (podľa poradia):** d&b audiotechnik, L-Acoustics, RCF, Shure (mikrofóny), Sennheiser,
+**Najviac by pomohli (podľa poradia):** d&b audiotechnik, Shure (mikrofóny), Sennheiser,
 Yamaha (pulty), Allen & Heath, listy k JBL SRX900 a VTX.
 
 ## Aké údaje treba podľa druhu
@@ -38,8 +38,7 @@ Yamaha (pulty), Allen & Heath, listy k JBL SRX900 a VTX.
 
 | Výrobca | Modely | Čo poslať |
 |---|---|---|
-| d&b audiotechnik | V8, Y10P, E12, M4, D80 (zosilňovač) | listy k modelom alebo katalóg |
-| L-Acoustics | K2, Kara II, KS28, X15 HiQ, LA12X (zosilňovač) | listy / katalóg |
+| d&b audiotechnik | V8, Y10P, E12, M4, D80 (zosilňovač) – pri d&b by sa hodil aj zoznam, ktoré zosilňovače box poháňa (ako pri L-Acoustics) | listy k modelom alebo katalóg |
 | RCF | ART 745-A (starší model – v katalógu je už len ART 745-A MK5) | list |
 | dB Technologies | VIO L210, VIO S318, Opera 15 | listy / katalóg |
 | JBL | PRX815W, SRX835P, SRX828SP | listy (v katalógu 2026 nie sú) |
