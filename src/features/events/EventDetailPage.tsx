@@ -29,6 +29,7 @@ import { DmxPatchSection } from '@/features/patch/DmxPatchSection'
 import { usePartners } from '@/features/partners/api'
 import { EventDocumentsSection } from './EventDocumentsSection'
 import { EventIncomeSection } from './EventIncomeSection'
+import { EventProfitSection } from '@/features/profit/EventProfitSection'
 import { EventPhotosSection } from './EventPhotosSection'
 import { EventStagePlan } from '@/features/stage/EventStagePlan'
 import { EventEquipmentSection } from './EventEquipmentSection'
@@ -263,6 +264,7 @@ export function EventDetailPage() {
           <EventDrivesSection companyId={companyId} event={event} canEdit={canEdit} />
           <EventLogSection companyId={companyId} event={event} />
           {can(company, 'payouts.manage') && <EventIncomeSection companyId={companyId} eventId={event.id} />}
+          {can(company, 'payouts.manage') && <EventProfitSection companyId={companyId} event={event} />}
         </>
       )}
       {tab === 'docs' && (

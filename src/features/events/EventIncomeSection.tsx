@@ -36,7 +36,8 @@ export function EventIncomeSection({ companyId, eventId }: { companyId: string; 
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ ...EMPTY, receivedOn: todayIso() })
   const set = (patch: Partial<typeof form>) => setForm((current) => ({ ...current, ...patch }))
-  const refresh = () => queryClient.invalidateQueries({ queryKey: key })
+  // Zisk z eventu (0171) sa ráta aj z týchto údajov.
+  const refresh = () => Promise.all([queryClient.invalidateQueries({ queryKey: key }), queryClient.invalidateQueries({ queryKey: ['company', companyId, 'profit'] })])
 
   const add = useMutation({
     mutationFn: () =>

@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.4 – 8. 11. 2026
+
+- **Zisk z eventov**: nová stránka v menu ukáže za rok alebo mesiac príjem bez DPH, náklady a zisk každého eventu
+  s maržou a poradie klientov podľa zisku. Vidí ju len ten, kto spravuje peniaze firmy (Zapisovať a vyplácať odmeny).
+- Pri evente (karta Doprava a peniaze) je **rozpis zisku**: príjem (zo zapísaných platieb, inak z prijatej či poslanej
+  ponuky) mínus odmeny posádke, doprava (km × sadzba), výdavky, prenájom od partnerov, subdodávky a opotrebenie
+  techniky. Ďalšie náklady sa dajú pridať aj s firmou, od ktorej sú.
+- Nastavenie výpočtu: náklad na 1 km auta a koľko dní v roku je technika na akciách (na opotrebenie z nákupnej ceny).
+- Technické: migrácia 0171 (náklady eventov a nastavenie zisku).
+
 ### 9.3 – 8. 11. 2026
 
 - **Detail eventu na karty**: Prehľad, Technika, Posádka, Doprava a peniaze a Podklady – vždy vidíte len jednu časť

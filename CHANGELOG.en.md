@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.4
+
+- **Event profit**: a new page in the menu shows income without VAT, costs and profit of every event for a year or
+  month, with the margin and clients ranked by profit. Only people who manage company money can see it.
+- On the event (Travel and money tab) there is a **profit breakdown**: income (from recorded payments, otherwise from
+  the accepted or sent quote) minus crew rewards, travel (km × rate), expenses, rentals from partners, subcontracts and
+  equipment wear. Extra costs can be added, including the company they come from.
+- Calculation settings: cost per 1 km of a vehicle and how many days a year equipment is at events (for wear from the
+  purchase price).
+- Technical: migration 0171 (event costs and profit settings).
+
 ### 9.3
 
 - **Event detail in tabs**: Overview, Equipment, Crew, Travel and money, and Documents – you always see one part

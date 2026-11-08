@@ -29,7 +29,8 @@ export function EventLogSection({ companyId, event }: { companyId: string; event
   const [mode, setMode] = useState<'work' | 'expense' | null>(null)
   const [work, setWork] = useState({ date: dates[0], startsAt: '08:00', endsAt: '18:00', breakMinutes: 30, note: '' })
   const [expense, setExpense] = useState({ date: dates[0], amount: '', category: 'food' as ExpenseCategory, place: '', note: '' })
-  const refresh = () => queryClient.invalidateQueries({ queryKey: key })
+  // Zisk z eventu (0171) sa ráta aj z týchto údajov.
+  const refresh = () => Promise.all([queryClient.invalidateQueries({ queryKey: key }), queryClient.invalidateQueries({ queryKey: ['company', companyId, 'profit'] })])
   const addWork = useMutation({ mutationFn: () => addWorkLog(companyId, event.id, work), onSuccess: () => setMode(null), onSettled: refresh })
   const addSpend = useMutation({
     mutationFn: () => addExpense(companyId, event.id, { ...expense, amount: Number(expense.amount.replace(',', '.')) }),

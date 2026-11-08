@@ -48,6 +48,7 @@ const networks = lazyPage(() => import('@/features/networks/NetworksPage').then(
 const capsules = lazyPage(() => import('@/features/capsules/CapsulesPage').then((m) => m.CapsulesPage), 'equipment.view')
 const serviceRequests = lazyPage(() => import('@/features/requests/ServiceRequestsPage').then((m) => m.ServiceRequestsPage))
 const serviceRequestForm = lazyPage(() => import('@/features/requests/ServiceRequestFormPage').then((m) => m.ServiceRequestFormPage))
+const profit = lazyPage(() => import('@/features/profit/ProfitPage').then((m) => m.ProfitPage), 'payouts.manage')
 const report = lazyPage(() => import('@/features/report/YearReportPage').then((m) => m.YearReportPage), 'report.view')
 const dmx = lazyPage(() => import('@/features/dmx/DmxPage').then((m) => m.DmxPage))
 const calculators = lazyPage(() => import('@/features/calculators/CalculatorsPage').then((m) => m.CalculatorsPage))
@@ -243,6 +244,7 @@ export const routes: RouteObject[] = [
               { path: 'events/:id/import', lazy: eventImport },
               { path: 'audit', lazy: audit },
               { path: 'payouts', lazy: payouts },
+              { path: 'profit', lazy: profit },
               { path: 'admin/recycle-bin', lazy: recycleBin },
               { path: 'warehouse', lazy: warehouse },
               { path: 'warehouse/truss', lazy: trussStorage },

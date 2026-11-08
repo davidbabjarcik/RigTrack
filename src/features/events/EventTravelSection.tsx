@@ -22,7 +22,8 @@ function TravelRow({ companyId, eventId, date, day, distanceKm, canEdit, first, 
   const queryClient = useQueryClient()
   const [draft, setDraft] = useState<Omit<TravelDay, 'id'> | null>(null)
   const current = draft ?? { date, vehicles: day?.vehicles ?? 1, roundTrips: day?.roundTrips ?? 1, stay: day?.stay ?? 'home', stayPlace: day?.stayPlace ?? '', extraKm: day?.extraKm ?? 0, note: day?.note ?? '', label: day?.label ?? '' }
-  const refresh = () => queryClient.invalidateQueries({ queryKey: planKeys.travel(companyId, eventId) })
+  // Zisk z eventu (0171) sa ráta aj z týchto údajov.
+  const refresh = () => Promise.all([queryClient.invalidateQueries({ queryKey: planKeys.travel(companyId, eventId) }), queryClient.invalidateQueries({ queryKey: ['company', companyId, 'profit'] })])
   const save = useMutation({ mutationFn: () => saveTravel(companyId, eventId, { ...current, id: day?.id }), onSuccess: async () => (await refresh(), setDraft(null), onDone?.()) })
   const remove = useMutation({ mutationFn: () => deleteTravel(day!.id), onSettled: refresh })
   const number = (value: string, max: number) => Math.min(max, Math.max(0, Math.round(Number(value) || 0)))
@@ -125,7 +126,7 @@ export function EventTravelSection({ companyId, event, canEdit }: { companyId: s
   const savePlaceMutation = useMutation({
     mutationFn: ({ nextAddress, nextKm }: { nextAddress: string; nextKm: number | null }) => savePlace(companyId, event.id, nextAddress, nextKm),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: planKeys.place(companyId, event.id) })
+      await Promise.all([queryClient.invalidateQueries({ queryKey: planKeys.place(companyId, event.id) }), queryClient.invalidateQueries({ queryKey: ['company', companyId, 'profit'] })])
       setAddress(null)
       setKm(null)
     },

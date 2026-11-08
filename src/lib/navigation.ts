@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Briefcase, Building2, Cable, Calculator, CalendarDays, Car, ChartColumn, ClipboardCheck, Coffee, FileText, LayoutDashboard, Lightbulb, ListTodo, Printer, Receipt, Settings, ShieldAlert, Speaker, StickyNote, Ticket, Timer, Users, Wallet, Warehouse, Wifi, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, Briefcase, Building2, Cable, Calculator, CalendarDays, Car, ChartColumn, ClipboardCheck, Coffee, FileText, LayoutDashboard, Lightbulb, ListTodo, PiggyBank, Printer, Receipt, Settings, ShieldAlert, Speaker, StickyNote, Ticket, Timer, Users, Wallet, Warehouse, Wifi, Wrench, type LucideIcon } from 'lucide-react'
 import type { PermissionKey } from '@/features/permissions/catalog'
 import { can, type Permitted } from './permissions'
 import type { Lang } from './i18n'
@@ -60,6 +60,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'staff', permission: 'staff.view', label: 'Zamestnanci', to: '/staff', icon: Users, description: 'Tím, kontakty a kto kedy môže' },
   { id: 'attendance', label: 'Dochádzka', to: '/attendance', icon: Timer, description: 'Práca na firme a doma, odpracované hodiny' },
   { id: 'payouts', label: 'Odmeny', to: '/payouts', icon: Wallet, description: 'Odmeny a zálohy za akcie' },
+  { id: 'profit', permission: 'payouts.manage', label: 'Zisk z eventov', to: '/profit', icon: PiggyBank, description: 'Ktoré akcie a klienti sa oplatia' },
   { id: 'stats', label: 'Štatistiky', to: '/stats', icon: ChartColumn, description: 'Dostupnosť, vyťaženie a náklady', hiddenFor: ['helper'] },
   { id: 'settings', label: 'Nastavenia', to: '/settings', icon: Settings, description: 'Firma a používatelia' },
 ]
@@ -91,6 +92,7 @@ const NAV_EN: Record<string, [string, string]> = {
   staff: ['Staff', 'Team, contacts and who is available when'],
   attendance: ['Attendance', 'Work at the company and from home, hours worked'],
   payouts: ['Payouts', 'Rewards and advances for events'],
+  profit: ['Event profit', 'Which events and clients pay off'],
   stats: ['Statistics', 'Availability, utilisation and costs'],
   settings: ['Settings', 'Company and users'],
 }
