@@ -25,6 +25,8 @@ export type UserPrefs = {
   tapeFields?: Record<string, boolean>
   /** Farba pásky: biela (čierny text) alebo čierna (biely text). */
   tapeColor?: 'white' | 'black'
+  /** Posledné zvolené triedenie zoznamu techniky (pamätá sa aj po zatvorení appky a na iných zariadeniach). */
+  equipmentSort?: string
   /** Poradie druhov techniky pri triedení „Podľa kategórie / druhu“ (moje zameranie hore). */
   kindOrder?: string[]
   /** Voľby hárku s obsahom case. */

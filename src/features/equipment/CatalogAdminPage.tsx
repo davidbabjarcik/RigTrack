@@ -8,7 +8,7 @@ import { bugKeys, fetchIsDeveloper } from '@/features/bugs/api'
 import { plain } from '@/features/search/searchAll'
 import { tf, tx } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { CATALOG_KEYS, CATALOG_KINDS, catalogKeys, catalogMissing, deleteCatalogEntry, thomannUrl, updateCatalogEntry, useCatalog, verifyCatalogEntries, type CatalogEntry } from './catalog'
+import { CATALOG_KEYS, CATALOG_KINDS, catalogKeys, catalogMissing, deleteCatalogEntry, fetchCatalogUsage, fetchFeedbackQueue, resolveCatalogFeedback, thomannUrl, updateCatalogEntry, useCatalog, verifyCatalogEntries, type CatalogEntry, type CatalogFeedback } from './catalog'
 import {
   APPLIANCE_TYPE_LABELS,
   APPLIANCE_TYPES,
@@ -181,6 +181,10 @@ function CatalogAdmin() {
   const [data, setData] = useState<'all' | 'empty' | 'filled' | 'incomplete' | 'complete'>('all')
   const [page, setPage] = useState(0)
   const [editing, setEditing] = useState<string | null>(null)
+  const [order, setOrder] = useState<'brand' | 'usage'>('brand')
+  // Koľko firiem a kusov model používa – čo overovať najskôr.
+  const usage = useQuery({ queryKey: catalogKeys.usage, queryFn: fetchCatalogUsage, retry: false, staleTime: 5 * 60_000 })
+  const used = (id: string) => usage.data?.get(id)
   const refresh = () => queryClient.invalidateQueries({ queryKey: catalogKeys.all })
   const verify = useMutation({ mutationFn: ({ ids, value }: { ids: string[]; value: boolean }) => verifyCatalogEntries(ids, value), onSuccess: refresh })
 
@@ -202,7 +206,12 @@ function CatalogAdmin() {
       return (missing.length > 0) === (data === 'incomplete')
     })
     .filter((entry) => words.every((word) => plain(`${entry.manufacturer} ${entry.model}`).includes(word)))
-    .sort((a, b) => a.manufacturer.localeCompare(b.manufacturer, 'sk') || a.model.localeCompare(b.model, 'sk', { numeric: true }))
+    .sort(
+      (a, b) =>
+        (order === 'usage' ? (used(b.id)?.companies ?? 0) - (used(a.id)?.companies ?? 0) || (used(b.id)?.pieces ?? 0) - (used(a.id)?.pieces ?? 0) : 0) ||
+        a.manufacturer.localeCompare(b.manufacturer, 'sk') ||
+        a.model.localeCompare(b.model, 'sk', { numeric: true }),
+    )
   const pages = Math.max(1, Math.ceil(matching.length / PAGE))
   const current = Math.min(page, pages - 1)
   const shown = matching.slice(current * PAGE, current * PAGE + PAGE)
@@ -227,7 +236,9 @@ function CatalogAdmin() {
         </p>
       </header>
 
-      <div className="grid gap-2 rounded-xl border bg-surface p-3 sm:grid-cols-2 lg:grid-cols-5">
+      <FeedbackQueue catalog={all} />
+
+      <div className="grid gap-2 rounded-xl border bg-surface p-3 sm:grid-cols-2 lg:grid-cols-6">
         <input className={input} placeholder={tx('Hľadať značku alebo model…')} aria-label={tx('Hľadať')} value={search} onChange={(event) => resetPage(setSearch)(event.target.value)} />
         <select className={input} aria-label={tx('Druh')} value={kind} onChange={(event) => { resetPage(setKind)(event.target.value as EquipmentKind | ''); setBrand('') }}>
           <option value="">{tx('Všetky druhy')}</option>
@@ -257,6 +268,10 @@ function CatalogAdmin() {
           <option value="incomplete">{tx('Neúplné (niečo chýba)')}</option>
           <option value="complete">{tx('Úplné')}</option>
         </select>
+        <select className={input} aria-label={tx('Zoradenie')} value={order} onChange={(event) => resetPage(setOrder)(event.target.value as typeof order)}>
+          <option value="brand">{tx('Podľa značky')}</option>
+          <option value="usage">{tx('Najpoužívanejšie vo firmách')}</option>
+        </select>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -281,6 +296,9 @@ function CatalogAdmin() {
                     <span className="font-medium">{entry.manufacturer}</span> {entry.model}
                   </span>
                   <span className="block text-xs text-muted-foreground">{describeAttributes({ attributes: entry.attributes }) || tx('bez technických údajov')}</span>
+                  {used(entry.id) && (
+                    <span className="block text-xs text-sky-700 dark:text-sky-400">{tf('Používa {0} firiem · {1} ks', used(entry.id)!.companies, used(entry.id)!.pieces)}</span>
+                  )}
                   <Missing entry={entry} />
                 </span>
                 <Button
@@ -316,6 +334,61 @@ function CatalogAdmin() {
         </div>
       )}
     </article>
+  )
+}
+
+/** Od firiem: „údaje sú správne“ (overiť jedným klikom) a navrhované zmeny údajov (prijať do databázy / zamietnuť). */
+function FeedbackQueue({ catalog }: { catalog: CatalogEntry[] }) {
+  const queryClient = useQueryClient()
+  const queue = useQuery({ queryKey: catalogKeys.feedback, queryFn: fetchFeedbackQueue, retry: false })
+  const resolve = useMutation({
+    mutationFn: ({ item, accept }: { item: CatalogFeedback; accept: boolean }) => resolveCatalogFeedback(item.id, accept),
+    onSuccess: () => Promise.all([queryClient.invalidateQueries({ queryKey: catalogKeys.feedback }), queryClient.invalidateQueries({ queryKey: catalogKeys.all })]),
+  })
+  const items = (queue.data ?? []).map((item) => ({ item, entry: catalog.find((entry) => entry.id === item.catalogId) })).filter((row) => row.entry)
+  if (items.length === 0) return null
+  return (
+    <section className="flex flex-col gap-2 rounded-xl border border-accent/40 bg-accent/5 p-3">
+      <h2 className="font-semibold">{tf('Od firiem na overenie ({0})', items.length)}</h2>
+      {resolve.isError && <p className="text-sm text-destructive">{tx('Nepodarilo sa uložiť.')}</p>}
+      <ul className="flex flex-col gap-2">
+        {items.map(({ item, entry }) => (
+          <li key={item.id} className="flex flex-wrap items-start gap-3 rounded-lg border bg-surface px-3 py-2 text-sm">
+            <span className="min-w-0 flex-1">
+              <span className="block">
+                <span className="font-medium">{entry!.manufacturer}</span> {entry!.model}
+                <span className="ml-2 text-xs text-muted-foreground">{tx(KIND_LABELS[entry!.kind])}</span>
+              </span>
+              {item.type === 'confirm' ? (
+                <span className="block text-xs text-emerald-700 dark:text-emerald-400">
+                  {tf('Údaje sú podľa firiem správne ({0})', item.companies)}
+                </span>
+              ) : (
+                <span className="mt-1 flex flex-col gap-0.5 text-xs">
+                  <span className="text-amber-700 dark:text-amber-400">{tx('Navrhovaná zmena údajov:')}</span>
+                  {Object.entries(item.attributes).map(([key, value]) => {
+                    const before = (entry!.attributes as Record<string, unknown>)[key]
+                    return (
+                      <span key={key} className="break-words">
+                        {label(key)}: <span className="text-muted-foreground line-through">{before === undefined ? tx('(prázdne)') : toText(before)}</span> → <span className="font-medium">{toText(value)}</span>
+                      </span>
+                    )
+                  })}
+                </span>
+              )}
+            </span>
+            <Button size="sm" variant="outline" className="shrink-0" disabled={resolve.isPending} onClick={() => resolve.mutate({ item, accept: true })}>
+              <Check className="size-4" aria-hidden />
+              {item.type === 'confirm' ? tx('Overiť') : tx('Prijať zmenu')}
+            </Button>
+            <Button size="sm" variant="ghost" className="shrink-0" disabled={resolve.isPending} onClick={() => resolve.mutate({ item, accept: false })}>
+              <X className="size-4" aria-hidden />
+              {tx('Zamietnuť')}
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 

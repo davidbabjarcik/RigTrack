@@ -54,7 +54,7 @@ import {
   wirelessTransmitters,
 } from './model'
 import { PurchaseLinksFields } from './PurchaseLinksFields'
-import { CATALOG_FORM_KEYS, CATALOG_KINDS, findCatalogEntry, submitCatalogEntry, useCatalog, type CatalogEntry } from './catalog'
+import { CATALOG_FORM_KEYS, CATALOG_KINDS, catalogChanges, findCatalogEntry, submitCatalogEntry, submitCatalogFeedback, useCatalog, type CatalogEntry } from './catalog'
 import { CatalogPicker } from './CatalogPicker'
 import { GdtfImport } from './GdtfImport'
 import type { GdtfFixture } from './gdtf'
@@ -419,6 +419,9 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const manufacturerValue = useWatch({ control, name: 'manufacturer' }) ?? ''
   const modelValue = useWatch({ control, name: 'model' }) ?? ''
   const useCatalogPicker = CATALOG_KINDS.includes(kind) && catalog.some((entry) => entry.kind === kind)
+  // Model z databázy: firma môže potvrdiť, že údaje sedia; zmenené údaje sa pošlú vývojárovi na kontrolu.
+  const catalogEntry = CATALOG_KINDS.includes(kind) && manufacturerValue.trim() ? findCatalogEntry(catalog, kind, manufacturerValue, modelValue) : undefined
+  const [confirmCatalog, setConfirmCatalog] = useState(false)
   const applyCatalog = (entry: CatalogEntry) => {
     const fake = { ...CATALOG_BASE, kind: entry.kind, manufacturer: entry.manufacturer, model: entry.model, attributes: entry.attributes } as Equipment
     const patch = toFormValues(fake, [], []) as unknown as Record<string, unknown>
@@ -511,6 +514,12 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
       // Model mimo spoločného katalógu ide ako návrh na overenie (chyba návrhu uloženie techniky nezastaví).
       if (CATALOG_KINDS.includes(values.kind) && values.manufacturer.trim() && !findCatalogEntry(catalog, values.kind, values.manufacturer, values.model)) {
         await submitCatalogEntry(companyId, { kind: values.kind, manufacturer: values.manufacturer, model: values.model, name: values.name, attributes: attributesFor(values) }).catch(() => {})
+      }
+      const known = CATALOG_KINDS.includes(values.kind) && values.manufacturer.trim() ? findCatalogEntry(catalog, values.kind, values.manufacturer, values.model) : undefined
+      if (known) {
+        const changes = catalogChanges(known, attributesFor(values))
+        if (Object.keys(changes).length > 0) await submitCatalogFeedback(companyId, known.id, 'correction', changes).catch(() => {})
+        else if (confirmCatalog && !known.verified) await submitCatalogFeedback(companyId, known.id, 'confirm').catch(() => {})
       }
       // Duplikát dostane vlastnú kópiu fotky vzoru.
       if (!equipment && copyFrom?.photoPath) await copyEquipmentPhoto(companyId, id, copyFrom.photoPath).catch(() => {})
@@ -605,6 +614,17 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         />
         )}
         {!useCatalogPicker && <Field label={tx('Model')} error={errors.model?.message} {...register('model')} />}
+        {catalogEntry && (
+          <div className="flex flex-col gap-1 rounded-lg border bg-muted/40 p-2 text-sm sm:col-span-2">
+            {!catalogEntry.verified && (
+              <label className="flex items-start gap-2">
+                <input type="checkbox" className="mt-0.5 size-4" checked={confirmCatalog} onChange={(event) => setConfirmCatalog(event.target.checked)} />
+                <span>{tx('Údaje z databázy techniky sú podľa mňa správne')}<span className="block text-xs text-muted-foreground">{tx('Pošle sa vývojárovi, ktorý ich overí pre všetkých.')}</span></span>
+              </label>
+            )}
+            <p className="text-xs text-muted-foreground">{tx('Ak údaje z databázy zmeníte alebo doplníte, zmena sa po uložení pošle vývojárovi na kontrolu.')}</p>
+          </div>
+        )}
         {kind === 'stage' && (
           <datalist id={stageBrandList}>
             <option value="Nivtec originál" />

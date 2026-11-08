@@ -27,3 +27,12 @@ describe('compatible amplifiers', () => {
     expect(ampReminders([box('K2', 7), box('LA12X', 1), box('LA7.16i', 1)], [k2], 'na evente')).toEqual([])
   })
 })
+
+describe('catalog changes', () => {
+  it('lists only changed or added technical data', async () => {
+    const { catalogChanges } = await import('./catalog')
+    const entry = { attributes: { audioType: 'line_array', weightKg: 56, compatibleAmps: [] } as unknown as CatalogEntry['attributes'] }
+    expect(catalogChanges(entry, { audioType: 'line_array', weightKg: 56 })).toEqual({})
+    expect(catalogChanges(entry, { audioType: 'line_array', weightKg: 57, rmsW: 900, purchasePrice: 100 })).toEqual({ weightKg: 57, rmsW: 900 })
+  })
+})

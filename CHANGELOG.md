@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.18 – 8. 11. 2026
+
+- **„Údaje z databázy techniky sú podľa mňa správne“**: pri technike s modelom z databázy, ktorý ešte nie je overený,
+  sa dá zaškrtnúť, že údaje sedia. Vývojárovi sa to ukáže hore v Databáze techniky a overí to jedným klikom.
+- **Zmenené údaje idú na kontrolu**: keď pri modeli z databázy zmeníte alebo doplníte technické údaje, po uložení sa
+  zmena pošle vývojárovi – uvidí pôvodnú aj novú hodnotu a zmenu prijme do databázy pre všetkých alebo zamietne.
+- **Čo overovať najskôr**: vývojár pri každom modeli vidí, koľko firiem a kusov ho používa, a môže zoradiť
+  „Najpoužívanejšie vo firmách“.
+- **Zoznam techniky si pamätá zoradenie** aj po zatvorení appky a na ďalších zariadeniach.
+
 ### 8.17.2 – 8. 11. 2026
 
 - **Pulty na svetlá v databáze techniky**: MA Lighting (grandMA2 / grandMA3), Avolites, ChamSys, ETC, High End Systems

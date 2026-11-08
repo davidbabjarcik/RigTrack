@@ -102,10 +102,12 @@ export function EquipmentListPage() {
   const linkedVisible = filterLinkedEquipment(linked, filter)
   // Pri výbere jednej prepojenej firmy sa naša technika neukazuje.
   const ownHidden = Boolean(filter.company && filter.company !== 'all')
-  const { prefs } = useUserPrefs()
+  const { prefs, update: updatePrefs } = useUserPrefs()
+  // Triedenie: zvolené v tejto karte, inak posledné uložené k účtu.
+  const sorted: EquipmentFilter = { ...filter, sort: filter.sort ?? (prefs.equipmentSort as EquipmentFilter['sort']) }
   const sortContext = { kindOrder: prefs.kindOrder, categoryName: (id: string | null) => categories.find((c) => c.id === id)?.name ?? '' }
-  const byGroup = filter.sort === 'category'
-  const visible = ownHidden ? [] : filterEquipment(all, filter, today, sortContext)
+  const byGroup = sorted.sort === 'category'
+  const visible = ownHidden ? [] : filterEquipment(all, sorted, today, sortContext)
   const thumbs = usePhotoThumbs(
     company.companyId,
     all.map((item) => item.photoPath),
@@ -251,8 +253,11 @@ export function EquipmentListPage() {
           />
         </div>
         <AdvancedFilter
-          filter={filter}
-          onChange={set}
+          filter={sorted}
+          onChange={(patch) => {
+            set(patch)
+            if (patch.sort && patch.sort !== prefs.equipmentSort) updatePrefs({ equipmentSort: patch.sort })
+          }}
           items={all}
           owners={staff.people.filter((person) => person.staffId).map((person) => ({ staffId: person.staffId!, name: person.name }))}
           linkedCompanies={linkedCompanies}

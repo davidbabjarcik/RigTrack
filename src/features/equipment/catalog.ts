@@ -201,6 +201,8 @@ export function findCatalogEntry(catalog: CatalogEntry[], kind: EquipmentKind, b
 export const catalogKeys = {
   all: ['equipment-catalog'] as const,
   review: ['equipment-catalog', 'review'] as const,
+  feedback: ['equipment-catalog', 'feedback'] as const,
+  usage: ['equipment-catalog', 'usage'] as const,
 }
 
 type Row = { id: string; kind: EquipmentKind; manufacturer: string; model: string; attributes: EquipmentAttributes | null; verified?: boolean | null }
@@ -227,6 +229,48 @@ export async function fetchCatalog(): Promise<CatalogEntry[]> {
 
 export function useCatalog(enabled = true) {
   return useQuery({ queryKey: catalogKeys.all, queryFn: fetchCatalog, enabled, staleTime: 10 * 60_000, retry: false })
+}
+
+/**
+ * Čo firma pri modeli z databázy zmenila alebo doplnila (len technické údaje). Prázdne = údaje sedia s databázou.
+ * Polia, ktoré firma nevyplnila, sa neberú ako zmena.
+ */
+export function catalogChanges(entry: Pick<CatalogEntry, 'attributes'>, attributes: EquipmentAttributes): Record<string, unknown> {
+  const mine = catalogAttributes(attributes) as Record<string, unknown>
+  const theirs = entry.attributes as Record<string, unknown>
+  const changes: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(mine)) {
+    if (key === 'thomannCode' || key === 'compatibleAmps') continue
+    if (JSON.stringify(value) !== JSON.stringify(theirs[key])) changes[key] = value
+  }
+  return changes
+}
+
+/** Firma pri modeli z databázy potvrdí údaje („confirm“) alebo pošle zmenu („correction“). Chyba sa ignoruje. */
+export async function submitCatalogFeedback(companyId: string, catalogId: string, type: 'confirm' | 'correction', attributes: Record<string, unknown> = {}) {
+  await getSupabase().rpc('submit_catalog_feedback', { _company_id: companyId, _catalog_id: catalogId, _type: type, _attributes: attributes })
+}
+
+export type CatalogFeedback = { id: string; catalogId: string; type: 'confirm' | 'correction'; attributes: Record<string, unknown>; companies: number; submittedAt: string }
+
+export async function fetchFeedbackQueue(): Promise<CatalogFeedback[]> {
+  const { data, error } = await getSupabase().rpc('catalog_feedback_queue')
+  if (error) throw error
+  type FeedbackRow = { id: string; catalog_id: string; type: 'confirm' | 'correction'; attributes: Record<string, unknown> | null; companies: number; submitted_at: string }
+  return (data as FeedbackRow[]).map((row) => ({ id: row.id, catalogId: row.catalog_id, type: row.type, attributes: row.attributes ?? {}, companies: Number(row.companies), submittedAt: row.submitted_at }))
+}
+
+/** Vývojár: prijať (potvrdenie = overené, zmena = zlúčiť do modelu a overiť) alebo zamietnuť. */
+export async function resolveCatalogFeedback(id: string, accept: boolean, attributes?: Record<string, unknown>) {
+  const { error } = await getSupabase().rpc('resolve_catalog_feedback', { _submission_id: id, _accept: accept, _attributes: attributes ?? null })
+  if (error) throw error
+}
+
+/** Vývojár: koľko firiem a kusov používa model z databázy. */
+export async function fetchCatalogUsage(): Promise<Map<string, { companies: number; pieces: number }>> {
+  const { data, error } = await getSupabase().rpc('catalog_usage')
+  if (error) throw error
+  return new Map((data as { catalog_id: string; companies: number; pieces: number }[]).map((row) => [row.catalog_id, { companies: Number(row.companies), pieces: Number(row.pieces) }]))
 }
 
 /** Návrh do katalógu (model, ktorý tam nie je). Chyba sa ignoruje – technika firmy je uložená tak či tak. */
