@@ -48,7 +48,7 @@ function ReviewRow({ item }: { item: CatalogReviewItem }) {
   const refresh = () => Promise.all([queryClient.invalidateQueries({ queryKey: catalogKeys.review }), queryClient.invalidateQueries({ queryKey: catalogKeys.all })])
   const approve = useMutation({ mutationFn: () => approveCatalogEntry(item.id, { kind, manufacturer, model, attributes: item.attributes }), onSuccess: refresh })
   const reject = useMutation({ mutationFn: () => rejectCatalogEntry(item.id, note), onSuccess: refresh })
-  const details = describeAttributes({ attributes: item.attributes })
+  const details = describeAttributes({ attributes: item.attributes }).join(' · ')
   const busy = approve.isPending || reject.isPending
 
   return (

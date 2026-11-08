@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.18.1 – 8. 11. 2026
+
+- Vo Vývojár → Návrhy do katalógu a v Databáze techniky sú technické údaje modelu oddelené bodkou („Zosilňovač ·
+  2 Ω 3500 W · …“) – predtým sa zliali do jedného slova.
+
 ### 8.18 – 8. 11. 2026
 
 - **„Údaje z databázy techniky sú podľa mňa správne“**: pri technike s modelom z databázy, ktorý ešte nie je overený,

@@ -295,7 +295,7 @@ function CatalogAdmin() {
                   <span className="block">
                     <span className="font-medium">{entry.manufacturer}</span> {entry.model}
                   </span>
-                  <span className="block text-xs text-muted-foreground">{describeAttributes({ attributes: entry.attributes }) || tx('bez technických údajov')}</span>
+                  <span className="block text-xs text-muted-foreground">{describeAttributes({ attributes: entry.attributes }).join(' · ') || tx('bez technických údajov')}</span>
                   {used(entry.id) && (
                     <span className="block text-xs text-sky-700 dark:text-sky-400">{tf('Používa {0} firiem · {1} ks', used(entry.id)!.companies, used(entry.id)!.pieces)}</span>
                   )}
