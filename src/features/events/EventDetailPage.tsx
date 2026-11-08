@@ -18,6 +18,7 @@ import { EventCrewSection } from './EventCrewSection'
 import { EventLinksSection } from './EventLinksSection'
 import { EventLogSection } from './EventLogSection'
 import { EventPlanSection } from './EventPlanSection'
+import { useEventDays } from './planApi'
 import { EventPowerSection } from './EventPowerSection'
 import { EventTravelSection } from './EventTravelSection'
 import { EventPartnersSection } from '@/features/partners/EventPartnersSection'
@@ -47,6 +48,8 @@ export function EventDetailPage() {
   const queryClient = useQueryClient()
   const events = useEvents(companyId)
   const directory = usePartners(companyId)
+  // Časy sú v programe po dňoch; hore sa ukážu len pri evente bez programu.
+  const program = useEventDays(companyId, id)
 
   const remove = useMutation({
     mutationFn: () => deleteEvent(companyId, id),
@@ -73,7 +76,7 @@ export function EventDetailPage() {
     )
   }
 
-  const times = describeTimes(event)
+  const times = program.data && program.data.length > 0 ? '' : describeTimes(event)
   // Organizátor je v sekcii „Organizátor a firmy“; tu len pri starej databáze bez adresára firiem (pred 0059).
   const organizer = directory.isError ? [event.organizer, event.organizerPerson, event.organizerPhone, event.organizerEmail].filter(Boolean) : []
   const when = event.startsOn === event.endsOn ? formatDate(event.startsOn) : `${formatDate(event.startsOn)} – ${formatDate(event.endsOn)}`
@@ -127,9 +130,11 @@ export function EventDetailPage() {
         <p role="alert" className="mb-4 text-sm text-destructive">{tx('Event sa nepodarilo odstrániť.')}</p>
       )}
 
+      {/* Na PC miesto a elektrina vedľa organizátora (užší stĺpec), na mobile pod sebou. */}
+      <div className="grid items-start gap-x-6 lg:grid-cols-[2fr_3fr]">
       {(times || organizer.length > 0 || event.setting || event.power) && (
         <CollapsibleSection id="event.details" title={organizer.length > 0 ? tx('Miesto, elektrina a organizátor') : tx('Miesto a elektrina')}>
-          <dl className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2">
+          <dl className="grid gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-1">
             {event.setting && (
               <div>
                 <dt className="text-sm text-muted-foreground">{tx('Miesto')}</dt>
@@ -183,6 +188,10 @@ export function EventDetailPage() {
           </dl>
         </CollapsibleSection>
       )}
+      <div className="min-w-0 lg:col-start-2 lg:row-start-1">
+        <EventPartnersSection companyId={companyId} event={event} canEdit={canEdit} />
+      </div>
+      </div>
 
       {(event.setting === 'outdoor' || event.setting === 'mixed') && <EventWeather event={event} />}
 
@@ -198,7 +207,6 @@ export function EventDetailPage() {
       )}
 
       <EventPlanSection companyId={companyId} event={event} canEdit={canEdit} />
-      <EventPartnersSection companyId={companyId} event={event} canEdit={canEdit} />
       <EventSharesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
       <EventLinksSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
       <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />

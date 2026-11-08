@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.2 – 8. 11. 2026
+
+- **Program po dňoch už pri pridávaní eventu**: po zadaní dátumov od–do sa ku každému dňu dá vybrať, čo sa deje
+  (stavba, event, balenie, cesta, voľno), časy od–do a poznámka. Appka navrhne stavbu prvý deň, event a balenie
+  posledný deň. Kto ide ktorý deň, sa nastaví pri posádke.
+- V detaile eventu už nie sú hore „Časy (prvý deň)“ – časy sú v programe po dňoch (pri evente bez programu ostávajú).
+- Na počítači je **Miesto a elektrina vedľa Organizátora a firiem** (užší a širší stĺpec), na mobile pod sebou.
+- Dátum narodenia pri človeku z firmy sa neuloží s nezmyselným rokom (napr. 19999 z preklepu).
+
 ### 9.1.2 – 8. 11. 2026
 
 - Ukážková firma sa už nepočíta ako iná firma: človek zo vzorových eventov ukážky už nie je „v termíne v posádke

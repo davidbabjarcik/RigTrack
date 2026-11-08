@@ -89,3 +89,43 @@ export function formatMinutes(minutes: number) {
   const rest = minutes % 60
   return rest ? `${hours} h ${rest} min` : `${hours} h`
 }
+
+export type ProgramRow = Omit<EventDay, 'id'> & { id?: string }
+
+/**
+ * Program pri zakladaní / úprave eventu: uložené dni, inak návrh – jeden deň: event; dva: event a balenie;
+ * viac: stavba, event…, balenie. Pri starom evente bez programu sa doplnia jeho časy.
+ */
+export function defaultProgram(dates: string[], saved: EventDay[], times: { getInTime: string; showTime: string; showEndTime: string }): ProgramRow[] {
+  return dates.map((date, index) => {
+    const existing = saved.find((day) => day.day === date)
+    if (existing) return existing
+    // 2 dni: event (so stavbou) a balenie; 3 a viac: stavba, event…, balenie.
+    const firstShow = dates.length <= 2 ? 0 : 1
+    const kind: DayKind = index === firstShow ? 'show' : index === 0 ? 'build' : index === dates.length - 1 ? 'teardown' : 'show'
+    const row: ProgramRow = { day: date, kind, startsAt: '', endsAt: '', note: '' }
+    if (saved.length > 0) return row
+    // Časy zo starého formulára (príchod, začiatok a koniec programu) do prvého dňa stavby / eventu.
+    if (index === 0 && kind === 'build') row.startsAt = times.getInTime
+    if (index === firstShow) {
+      row.startsAt = times.showTime || (firstShow === 0 ? times.getInTime : '')
+      row.endsAt = times.showEndTime
+    }
+    return row
+  })
+}
+
+/** Časy eventu (pre tlač, kalendár, počasie) z programu: príchod = začiatok prvého dňa, program = prvý deň eventu. */
+export function timesFromProgram(rows: ProgramRow[]) {
+  const sorted = [...rows].sort((a, b) => a.day.localeCompare(b.day))
+  const show = sorted.find((row) => row.kind === 'show' && (row.startsAt || row.endsAt))
+  const first = sorted.find((row) => row.startsAt)
+  return {
+    getInTime: first && first !== show ? first.startsAt : '',
+    showTime: show?.startsAt ?? '',
+    showEndTime: show?.endsAt ?? '',
+  }
+}
+
+/** Deň stojí za uloženie, keď má čas alebo poznámku, alebo už v databáze je. */
+export const worthSaving = (row: ProgramRow) => Boolean(row.id || row.startsAt || row.endsAt || row.note.trim())

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { setPartnerShared } from '@/features/links/api'
 import { FoundCompanyButton } from './FoundCompanyButton'
-import { formatDate } from '@/lib/format'
+import { formatDate, todayIso } from '@/lib/format'
 import { isLegalForm, LEGAL_FORM_LABELS, statutoryLabel } from './legalForms'
 import { addContact, deleteContact, partnerKeys, updateContact, type Partner, type PartnerContact } from './api'
 import { tx, tf } from '@/lib/i18n'
@@ -34,9 +34,11 @@ export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { 
   }
   const remove = useMutation({ mutationFn: deleteContact, onSettled: refresh })
   const share = useMutation({ mutationFn: (shared: boolean) => setPartnerShared(partner.id, shared), onSettled: refresh })
+  // Dátum narodenia s nezmyselným rokom (napr. 19999 z preklepu) sa neuloží.
+  const birthDateWrong = Boolean(person.birthDate) && !(/^\d{4}-\d{2}-\d{2}$/.test(person.birthDate!) && person.birthDate! >= '1900-01-01' && person.birthDate! <= todayIso())
   function submit(event: FormEvent) {
     event.preventDefault()
-    if (person.name.trim()) add.mutate()
+    if (person.name.trim() && !birthDateWrong) add.mutate()
   }
   return (
     <div className="flex flex-col gap-2 rounded-xl border bg-surface p-4">
@@ -135,10 +137,18 @@ export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { 
             <Field label={tx('Úloha')} placeholder={tx('napr. produkcia, technik')} maxLength={80} value={person.role} onChange={(event) => setPerson({ ...person, role: event.target.value })} />
             <Field label={tx('Telefón')} type="tel" maxLength={40} value={person.phone} onChange={(event) => setPerson({ ...person, phone: event.target.value })} />
             <Field label={tx('E-mail')} type="email" maxLength={120} value={person.email} onChange={(event) => setPerson({ ...person, email: event.target.value })} />
-            <Field label={tx('Dátum narodenia')} type="date" value={person.birthDate ?? ''} onChange={(event) => setPerson({ ...person, birthDate: event.target.value })} />
+            <Field
+              label={tx('Dátum narodenia')}
+              type="date"
+              min="1900-01-01"
+              max={todayIso()}
+              value={person.birthDate ?? ''}
+              error={birthDateWrong ? tx('Skontrolujte rok (napr. 1990).') : undefined}
+              onChange={(event) => setPerson({ ...person, birthDate: event.target.value })}
+            />
             {add.isError && <p className="text-sm text-destructive sm:col-span-2">{tx('Nepodarilo sa uložiť.')}</p>}
             <div className="flex gap-2 sm:col-span-2">
-              <Button type="submit" size="sm" disabled={!person.name.trim() || add.isPending}>
+              <Button type="submit" size="sm" disabled={!person.name.trim() || birthDateWrong || add.isPending}>
                 {adding === 'new' ? tx('Pridať človeka') : tx('Uložiť')}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => (setAdding(null), setPerson(empty))}>{tx('Zrušiť')}</Button>

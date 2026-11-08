@@ -32,7 +32,7 @@ export async function fetchDays(companyId: string, eventId: string): Promise<Eve
 }
 
 export function useEventDays(companyId: string, eventId: string) {
-  return useQuery({ queryKey: planKeys.days(companyId, eventId), queryFn: () => fetchDays(companyId, eventId), retry: false })
+  return useQuery({ queryKey: planKeys.days(companyId, eventId), queryFn: () => fetchDays(companyId, eventId), retry: false, enabled: Boolean(eventId) })
 }
 
 /** Uloží deň (nový alebo zmenený); prázdny deň bez druhu sa nezapisuje. */

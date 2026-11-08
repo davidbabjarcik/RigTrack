@@ -27,11 +27,13 @@ import {
   type EventFormValues,
 } from './model'
 import { useEvents } from './useEvents'
-import { tx } from '@/lib/i18n'
+import { DAY_KIND_LABELS, DAY_KINDS, defaultProgram, eventDates, timesFromProgram, worthSaving, type DayKind, type EventDay, type ProgramRow } from './plan'
+import { planKeys, saveDay, useEventDays } from './planApi'
+import { tf, tx } from '@/lib/i18n'
 
-type FormProps = { companyId: string; current: CompanyEvent | null; events: CompanyEvent[] }
+type FormProps = { companyId: string; current: CompanyEvent | null; events: CompanyEvent[]; savedDays: EventDay[] }
 
-function EventForm({ companyId, current, events }: FormProps) {
+function EventForm({ companyId, current, events, savedDays }: FormProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const today = todayIso()
@@ -93,10 +95,22 @@ function EventForm({ companyId, current, events }: FormProps) {
     }
   }
 
+  // Program po dňoch: čo sa ktorý deň deje (stavba, event, balenie…) a kedy; upravené dni podľa dátumu.
+  const endsOn = useWatch({ control, name: 'endsOn' })
+  const dates = startsOn && endsOn && startsOn <= endsOn ? eventDates(startsOn, endsOn).slice(0, 31) : []
+  const [edited, setEdited] = useState<Record<string, ProgramRow>>({})
+  const suggested = defaultProgram(dates, savedDays, { getInTime: current?.getInTime ?? '', showTime: current?.showTime ?? '', showEndTime: current?.showEndTime ?? '' })
+  const program = suggested.map((row) => edited[row.day] ?? row)
+  const setRow = (row: ProgramRow) => setEdited({ ...edited, [row.day]: row })
+
   const save = useMutation({
     mutationFn: async (values: EventFormValues) => {
+      // Časy eventu (tlač, kalendár, počasie) sa berú z programu.
+      const times = dates.length > 0 ? timesFromProgram(program) : { getInTime: values.getInTime, showTime: values.showTime, showEndTime: values.showEndTime }
       // Klient a organizátor sú to isté – klient sa ukladá podľa organizátora (staré eventy si klienta nechajú).
-      const id = await saveEvent(companyId, current?.id ?? null, { ...values, client: values.organizer.trim() || values.client })
+      const id = await saveEvent(companyId, current?.id ?? null, { ...values, ...times, client: values.organizer.trim() || values.client })
+      // Dni s časom alebo poznámkou (a tie, čo už boli uložené); bez migrácie 0059 sa preskočí.
+      for (const row of program.filter(worthSaving)) await saveDay(companyId, id, row).catch(() => {})
       // Organizátor do Firmy a kontakty a k eventu (bez migrácie 0059 sa preskočí).
       if (partners.isSuccess) await setEventOrganizer(companyId, id, organizerChoice, values).catch(() => {})
       return id
@@ -106,6 +120,7 @@ function EventForm({ companyId, current, events }: FormProps) {
       if (!current) void notifyNewEvent(id)
       // Celá firma: zmenia sa aj novinky.
       await queryClient.invalidateQueries({ queryKey: eventKeys.list(companyId) })
+      void queryClient.invalidateQueries({ queryKey: planKeys.days(companyId, id) })
       void queryClient.invalidateQueries({ queryKey: ['company', companyId, 'news'] })
       navigate(`/events/${id}`, { replace: true })
     },
@@ -141,11 +156,27 @@ function EventForm({ companyId, current, events }: FormProps) {
           ))}
         </SelectField>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label={tx('Príchod / stavba')} type="time" error={errors.getInTime?.message} {...register('getInTime')} />
-        <Field label={tx('Začiatok programu')} type="time" error={errors.showTime?.message} {...register('showTime')} />
-        <Field label={tx('Koniec programu')} type="time" error={errors.showEndTime?.message} {...register('showEndTime')} />
-      </div>
+      {dates.length > 0 && (
+        <fieldset className="rounded-xl border p-4">
+          <legend className="px-1 text-sm font-medium">{tx('Program po dňoch')}</legend>
+          <p className="mb-3 text-sm text-muted-foreground">{tx('Čo sa ktorý deň deje a kedy. Kto ide ktorý deň, nastavíte po uložení pri posádke.')}</p>
+          <ul className="flex flex-col gap-3">
+            {program.map((row) => (
+              <li key={row.day} className="grid grid-cols-2 gap-2 sm:grid-cols-[7rem_9rem_7rem_7rem_1fr] sm:items-center">
+                <span className="col-span-2 font-medium capitalize sm:col-span-1">{new Date(`${row.day}T00:00:00`).toLocaleDateString('sk-SK', { weekday: 'short', day: 'numeric', month: 'numeric' })}</span>
+                <select aria-label={tf('Druh dňa {0}', formatDate(row.day))} className="col-span-2 h-10 rounded-lg border bg-surface px-2 text-sm sm:col-span-1" value={row.kind} onChange={(e) => setRow({ ...row, kind: e.target.value as DayKind })}>
+                  {DAY_KINDS.map((kind) => (
+                    <option key={kind} value={kind}>{tx(DAY_KIND_LABELS[kind])}</option>
+                  ))}
+                </select>
+                <input type="time" aria-label={tf('Od {0}', formatDate(row.day))} className="h-10 rounded-lg border bg-surface px-2 text-sm" value={row.startsAt} onChange={(e) => setRow({ ...row, startsAt: e.target.value })} />
+                <input type="time" aria-label={tf('Do {0}', formatDate(row.day))} className="h-10 rounded-lg border bg-surface px-2 text-sm" value={row.endsAt} onChange={(e) => setRow({ ...row, endsAt: e.target.value })} />
+                <input aria-label={tf('Poznámka {0}', formatDate(row.day))} placeholder={tx('poznámka (napr. príchod kamióna)')} maxLength={300} className="col-span-2 h-10 rounded-lg border bg-surface px-2 text-sm sm:col-span-1" value={row.note} onChange={(e) => setRow({ ...row, note: e.target.value })} />
+              </li>
+            ))}
+          </ul>
+        </fieldset>
+      )}
 
       <fieldset className="grid gap-4 rounded-xl border p-4 sm:grid-cols-2">
         <legend className="px-1 text-sm font-medium">{tx('Miesto a elektrina')}</legend>
@@ -232,18 +263,21 @@ export function EventFormPage() {
   const company = useCompany().active!
   const events = useEvents(company.companyId)
   const current = id ? events.data?.find((event) => event.id === id) : null
+  // Pri úprave sa program načíta skôr, než sa formulár ukáže (bez migrácie 0059 prázdny).
+  const days = useEventDays(company.companyId, id ?? '')
+  const daysReady = !id || days.isSuccess || days.isError
 
   let body
   if (!can(company, 'events.edit')) {
     body = <ErrorBlock message={tx('Na úpravu eventov nemáte oprávnenie.')} />
-  } else if (events.isPending) {
+  } else if (events.isPending || !daysReady) {
     body = <LoadingBlock />
   } else if (events.isError) {
     body = <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void events.refetch()} />
   } else if (id && !current) {
     body = <ErrorBlock message={tx('Tento event neexistuje alebo k nemu nemáte prístup.')} />
   } else {
-    body = <EventForm key={id ?? 'new'} companyId={company.companyId} current={current ?? null} events={events.data} />
+    body = <EventForm key={id ?? 'new'} companyId={company.companyId} current={current ?? null} events={events.data} savedDays={days.data ?? []} />
   }
 
   return (

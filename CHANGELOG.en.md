@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.2
+
+- **Day-by-day programme right when adding an event**: after entering the dates from–to you choose for each day what
+  happens (build, event, teardown, travel, day off), times from–to and a note. The app suggests build on the first day,
+  then the event and teardown on the last day. Who goes on which day is set with the crew.
+- The event detail no longer shows “Times (first day)” at the top – the times are in the day-by-day programme (events
+  without a programme keep them).
+- On a computer **Place and power sit next to Organiser and companies** (a narrower and a wider column), on mobile
+  they are below each other.
+- A person's date of birth is no longer saved with a nonsense year (e.g. 19999 from a typo).
+
 ### 9.1.2
 
 - The demo company no longer counts as another company: a person from the demo sample events is no longer “in the crew
