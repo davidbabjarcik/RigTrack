@@ -40,11 +40,19 @@ export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { 
   }
   return (
     <div className="flex flex-col gap-2 rounded-xl border bg-surface p-4">
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2">
         <Building2 className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
-        <div className="min-w-0 flex-1">
-          <p className="font-medium break-words">{partner.name}</p>
-          <p className="text-sm text-muted-foreground">
+        <p className="min-w-0 flex-1 pt-0.5 font-medium break-words">{partner.name}</p>
+        {actions}
+        {canEdit && onEdit && (
+          <Button variant="ghost" size="sm" aria-label={tf('Upraviť {0}', partner.name)} onClick={onEdit}>
+            <Pencil className="size-4" aria-hidden />
+          </Button>
+        )}
+      </div>
+      {/* Údaje firmy pod názvom na celú šírku (pod ikonou odsadené). */}
+      <div className="-mt-1 pl-7 text-sm text-muted-foreground empty:hidden">
+          <p className="empty:hidden">
             {[
               isLegalForm(partner.legalForm) && LEGAL_FORM_LABELS[partner.legalForm],
               partner.legalName && partner.legalName !== partner.name && partner.legalName,
@@ -53,24 +61,22 @@ export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { 
               .filter(Boolean)
               .join(' · ')}
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="empty:hidden">
             {[partner.address, partner.linkedCompanyId ? 'prepojené v RigTracku' : partner.usesApp && 'používa RigTrack'].filter(Boolean).join(' · ')}
           </p>
-        </div>
-        {actions}
-        {canEdit && onEdit && (
-          <Button variant="ghost" size="sm" aria-label={tf('Upraviť {0}', partner.name)} onClick={onEdit}>
-            <Pencil className="size-4" aria-hidden />
-          </Button>
-        )}
       </div>
       {partner.contacts.length > 0 && (
         <ul className="divide-y rounded-lg border text-sm">
           {partner.contacts.map((contact) => (
-            <li key={contact.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
-              <span className="font-medium">{contact.name}</span>
-              {contact.role && <span className="text-muted-foreground">{contact.role}</span>}
-              {contact.birthDate && <span className="text-muted-foreground">{tx('nar.')}{' '}{formatDate(contact.birthDate)}</span>}
+            <li key={contact.id} className="flex items-center gap-3 px-3 py-2">
+              {/* Vľavo meno a údaje, vpravo tlačidlá – riadok sa nerozsype pri dlhom e-maile ani na úzkom displeji. */}
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="font-medium">{contact.name}</span>
+                  {contact.role && <span className="text-muted-foreground">{contact.role}</span>}
+                  {contact.birthDate && <span className="text-xs text-muted-foreground">{tx('nar.')}{' '}{formatDate(contact.birthDate)}</span>}
+                </p>
+                <p className="flex flex-wrap gap-x-3 empty:hidden">
               {contact.phone && (
                 <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 text-accent hover:underline">
                   <Phone className="size-3.5" aria-hidden />
@@ -83,8 +89,10 @@ export function PartnerCard({ companyId, partner, canEdit, onEdit, actions }: { 
                   {contact.email}
                 </a>
               )}
-              <span className="ml-auto flex items-center gap-1">
-                <AddToContactsButton label={tx('Do kontaktov')} contact={{ name: contact.name, org: partner.name, title: contact.role, phone: contact.phone, email: contact.email }} />
+                </p>
+              </div>
+              <span className="flex shrink-0 items-center gap-1">
+                <AddToContactsButton label={tx('Do kontaktov')} compact contact={{ name: contact.name, org: partner.name, title: contact.role, phone: contact.phone, email: contact.email }} />
                 {canEdit && (
                   <button type="button" aria-label={tf('Upraviť {0}', contact.name)} className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => edit(contact)}>
                     <Pencil className="size-4" aria-hidden />

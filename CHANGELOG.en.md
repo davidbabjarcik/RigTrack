@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.1.2
+
+- The demo company no longer counts as another company: a person from the demo sample events is no longer “in the crew
+  of another company” and equipment is not “on another company's event”.
+- Companies and contacts are aligned: cards stack without gaps, company details are under the name and each person has
+  the name and number on the left and the buttons on the right in one row (on mobile “Add to contacts” is just an icon).
+
 ### 9.1.1
 
 - Calendar on your phone: the “Add to Google Calendar” button opens the subscription prompt in a form Google accepts.

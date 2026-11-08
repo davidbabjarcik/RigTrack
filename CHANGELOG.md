@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.1.2 – 8. 11. 2026
+
+- Ukážková firma sa už nepočíta ako iná firma: človek zo vzorových eventov ukážky už nie je „v termíne v posádke
+  inej firmy“ a technika nie je „na evente inej firmy“.
+- Firmy a kontakty sú zarovnané: karty sa skladajú pod seba bez prázdnych miest, údaje firmy sú pod názvom a pri
+  každom človeku je meno s číslom vľavo a tlačidlá vpravo v jednom riadku (na mobile „Do kontaktov“ len ako ikona).
+- Technické: migrácia 0169 (kolízie bez ukážkovej firmy).
+
 ### 9.1.1 – 8. 11. 2026
 
 - Kalendár v mobile: tlačidlo „Pridať do Google Kalendára“ otvorí potvrdenie odberu v tvare, ktorý Google prijme.

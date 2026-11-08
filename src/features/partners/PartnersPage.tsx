@@ -81,9 +81,10 @@ export function PartnersPage() {
           {partners.data.length === 0 ? tx('Zatiaľ žiadne firmy. Pridajte organizátora (napr. obec, agentúru) a ľudí s číslami.') : tx('Nikto nezodpovedá hľadaniu.')}
         </p>
       ) : (
-        <ul className="grid gap-3 lg:grid-cols-2">
+        // Karty rôznej výšky pod sebou v stĺpcoch (bez prázdnych miest ako v mriežke).
+        <ul className="gap-3 lg:columns-2">
           {visible.map((partner) => (
-            <li key={partner.id}>
+            <li key={partner.id} className="mb-3 break-inside-avoid">
               {editing === partner.id ? (
                 <PartnerForm companyId={company.companyId} current={partner} onDone={() => setEditing(null)} />
               ) : (

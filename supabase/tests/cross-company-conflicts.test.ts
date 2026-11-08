@@ -34,4 +34,14 @@ describe('conflicts across companies', () => {
     expect(await t.as('boss', `select equipment_id, quantity from public.gear_busy_elsewhere($1, '2026-11-12', '2026-11-15')`, [a])).toEqual([{ equipment_id: mine, quantity: 2 }])
     expect(await t.as('other', `select * from public.gear_busy_elsewhere($1, '2026-11-12', '2026-11-15')`, [b])).toEqual([])
   })
+
+  it('ignores sample events of a demo company', async () => {
+    const demo = (await t.as('jano', 'select public.create_demo_company() as id'))[0]?.id
+    expect(demo).toBeTruthy()
+    // Ukážková firma zapíše zakladateľa do posádky vzorových eventov.
+    expect((await t.rows('select count(*)::int as n from public.event_crew where company_id = $1 and member_id = $2', [demo, t.users.jano]))[0].n).toBeGreaterThan(0)
+    const busy = await t.as('boss', `select member_id from public.crew_busy_elsewhere($1, '2020-01-01', '2030-12-31')`, [a])
+    expect(busy).toEqual([{ member_id: t.users.jano }])
+    expect((await t.as('boss', `select events from public.crew_busy_elsewhere($1, '2020-01-01', '2030-12-31')`, [a]))[0].events).toBe(1)
+  })
 })

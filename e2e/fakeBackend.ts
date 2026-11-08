@@ -27,7 +27,8 @@ export async function signIn(page: Page) {
 }
 
 /** Odpovede pre tabuľky, ktoré appka pri štarte potrebuje vyplnené. */
-function tableRows(table: string): unknown[] {
+function tableRows(table: string, fixtures: Record<string, unknown[]>): unknown[] {
+  if (fixtures[table]) return fixtures[table]
   if (table === 'company_members') return [{ role: 'admin', company: { id: COMPANY_ID, name: 'Ukážková firma' }, user_id: USER_ID, company_id: COMPANY_ID }]
   if (table === 'profiles') return [{ id: USER_ID, full_name: 'Tester', email: user.email }]
   return []
@@ -37,7 +38,7 @@ const json = (route: Route, status: number, body: unknown, headers: Record<strin
   route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range', ...headers }, body: JSON.stringify(body) })
 
 /** Všetky volania na databázu: čítania vrátia prázdno, zápisy „prejdú“, nič neodíde von. */
-export async function fakeBackend(page: Page) {
+export async function fakeBackend(page: Page, fixtures: Record<string, unknown[]> = {}) {
   const requests: string[] = []
   await page.route(`${FAKE_SUPABASE}/**`, async (route) => {
     const request = route.request()
@@ -58,7 +59,7 @@ export async function fakeBackend(page: Page) {
       const table = url.pathname.slice('/rest/v1/'.length)
       if (request.method() === 'HEAD') return route.fulfill({ status: 200, headers: { 'content-range': '0-0/0', 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range' } })
       if (request.method() !== 'GET') return json(route, 201, [])
-      const rows = tableRows(table)
+      const rows = tableRows(table, fixtures)
       // .single() / .maybeSingle(): jeden riadok, alebo „nenájdené“ (maybeSingle z toho spraví null).
       if ((request.headers()['accept'] ?? '').includes('vnd.pgrst.object')) {
         return rows.length === 1 ? json(route, 200, rows[0]) : json(route, 406, { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned', details: 'The result contains 0 rows', hint: null })
