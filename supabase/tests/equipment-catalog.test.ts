@@ -47,6 +47,13 @@ describe('equipment catalog (0146)', () => {
     expect(m22.attributes).toMatchObject({ audioType: 'monitor', rmsW: 1500 })
     const [ulx] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'Shure' and model = 'ULXD4'`)
     expect(ulx.attributes).toMatchObject({ audioType: 'wireless', rfRange: 'VHF / UHF / 900 MHz, ladenie 64 MHz' })
+    // 0158: databáza pre všetky druhy techniky (pulty, mikrofóny, DI boxy, DJ, video, IT, spotrebiče, spotrebný materiál)
+    const [sm58] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'Shure' and model = 'SM58'`)
+    expect(sm58.attributes).toMatchObject({ audioType: 'microphone', micType: 'dynamic' })
+    const [cl5] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'Yamaha' and model = 'CL5'`)
+    expect(cl5.attributes).toMatchObject({ audioType: 'mixer', mixerKind: 'digital', mixerChannels: 72 })
+    const kinds = await t.as('viewer', `select distinct kind from public.equipment_catalog where kind in ('cable', 'dj', 'video', 'it', 'appliance', 'consumable') order by kind`)
+    expect(kinds.map((row) => row.kind)).toEqual(['appliance', 'cable', 'consumable', 'dj', 'it', 'video'])
     // 0152: výrobníky hmly sú pri svetlách
     const [haze] = await t.as('viewer', `select kind, attributes from public.equipment_catalog where manufacturer = 'MDG' and model = 'theONE'`)
     expect(haze).toMatchObject({ kind: 'light', attributes: { lightType: 'hazer' } })

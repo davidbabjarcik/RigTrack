@@ -43,7 +43,9 @@ describe('catalog helpers', () => {
   it('lists what a model is missing by its kind', () => {
     expect(catalogMissing({ kind: 'audio', attributes: { audioType: 'subwoofer', powered: 'active', peakW: 2000, freqRange: '30 Hz – 120 Hz', maxSplPeakDb: 135, woofer: '18″', weightKg: 40 } })).toEqual(['rozmery', 'kód Thomann'])
     expect(catalogMissing({ kind: 'truss', attributes: { trussType: 'point4', lengthM: 2, weightKg: 12, thomannCode: '123456' } })).toEqual([])
-    expect(catalogMissing({ kind: 'dj', attributes: {} })).toEqual(['všetko', 'kód Thomann'])
+    expect(catalogMissing({ kind: 'dj', attributes: {} })).toEqual(['typ', 'kód Thomann'])
+    expect(catalogMissing({ kind: 'cable', attributes: { cableType: 'di', powered: 'active' } })).toEqual(['kód Thomann'])
+    expect(catalogMissing({ kind: 'consumable', attributes: {} })).toEqual(['všetko', 'kód Thomann'])
   })
 
   it('links a Thomann article number to the product, other text to search', () => {

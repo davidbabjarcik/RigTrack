@@ -3,23 +3,28 @@
 Zoznam modelov, ku ktorým v spoločnej databáze techniky chýbajú údaje (alebo sú neúplné). Aktualizuje sa po každom
 doplnení katalógov. Stačí poslať PDF (celý katalóg výrobcu alebo list ku konkrétnemu modelu) – údaje prepíšem.
 
-**Naposledy aktualizované:** 6. 11. 2026, po verzii 8.15.
+**Naposledy aktualizované:** 8. 11. 2026, po verzii 8.16.
 
 Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Databáza techniky.
 
 ## Prehľad
 
-| Druh | Modelov spolu | Bez údajov | Neúplné |
-|---|---:|---:|---:|
-| Svetlá (vrátane výrobníkov hmly) | 692 | 36 + 3 hazery bez údajov | ~140 bez typu svetla |
-| Hliník | 406 | 5 | – |
-| Zvuk | 105 | 51 | 35 |
-| Pódium (Nivtec) | 49 | 0 | – |
-| DJ technika | 6 | 6 | – |
-| Video | 4 | 4 | – |
+| Druh | Modelov spolu | Stav |
+|---|---:|---|
+| Svetlá (vrátane výrobníkov hmly) | 692 | 36 bez údajov, ~140 bez typu svetla |
+| Hliník | 406 | všetky s typom; 5 všeobecných záznamov bez dĺžky a váhy |
+| Zvuk | ~390 | boxy z katalógov úplné; pulty, mikrofóny, bezdrôty, stageboxy a zosilňovače z 8.16 len so základnými údajmi |
+| Pódium (Nivtec) | 49 | úplné |
+| DJ technika | ~72 | len typ (player / mix / gramofón / kontrolér) |
+| Video | ~80 | typ; kamery so snímačom; LED procesory s výstupmi; projektory s rozlíšením a lm |
+| IT | 67 | len typ |
+| Spotrebiče | 25 | typ; elektrické ohrievače s príkonom |
+| Káble (DI boxy) | 19 | typ a aktívny / pasívny |
+| Spotrebný materiál | 24 | len názov (batérie, gaffer páska, náplne) |
 
-**Najviac by pomohli (podľa poradia):** d&b audiotechnik, Shure (mikrofóny), Sennheiser,
-Yamaha (pulty), Allen & Heath, listy k JBL SRX900 a VTX.
+**Najviac by pomohli (podľa poradia):** d&b audiotechnik (aj zosilňovače ku boxom), listy k pultom (Yamaha,
+Allen & Heath, DiGiCo – váha, karty), Shure a Sennheiser (frekvenčné pásma bezdrôtov a in-ear), listy k JBL SRX900
+a VTX, Pioneer DJ / Denon DJ (váha, konektory).
 
 ## Aké údaje treba podľa druhu
 
@@ -34,25 +39,18 @@ Yamaha (pulty), Allen & Heath, listy k JBL SRX900 a VTX.
   (vo formulári techniky „Nahrať GDTF súbor“).
 - **Video:** výstupy, pixely na výstup, vstupy (procesory), rozlíšenie a svietivosť (projektory, TV).
 
-## Zvuk – úplne bez údajov
+## Zvuk – len základné údaje (8.16)
 
-| Výrobca | Modely | Čo poslať |
+| Čo | Je zadané | Chýba |
 |---|---|---|
-| d&b audiotechnik | V8, Y10P, E12, M4, D80 (zosilňovač) – pri d&b by sa hodil aj zoznam, ktoré zosilňovače box poháňa (ako pri L-Acoustics) | listy k modelom alebo katalóg |
-| RCF | ART 745-A (starší model – v katalógu je už len ART 745-A MK5) | list |
-| dB Technologies | VIO L210, VIO S318, Opera 15 | listy / katalóg |
-| JBL | PRX815W, SRX835P, SRX828SP | listy (v katalógu 2026 nie sú) |
-| Powersoft | X8, Quattrocanali 4804 DSP+D | listy |
-| Lab.gruppen | PLM 20K44 | list |
-| Yamaha | CL5, QL5, TF5, DM7 (pulty) | listy / katalóg |
-| Allen & Heath | SQ-5, SQ-6, Avantis, dLive S5000 (pulty) | listy / katalóg |
-| DiGiCo | SD12, Quantum 225 (pulty) | listy |
-| Midas | M32, PRO2 (pulty) | listy |
-| Behringer | X32 (pult) | list |
-| Shure | SM58, SM57, Beta 58A, Beta 52A, Beta 91A, PSM 1000 (in-ear) | listy / katalóg mikrofónov |
-| Sennheiser | e 835, e 935, e 906, MD 421-II, EW-DX EM 2, ew IEM G4 | listy / katalóg |
-| Audio-Technica | ATM650 | list |
-| Wisycom | MRK960, MTH410 | listy |
+| Pulty (Yamaha, Allen & Heath, DiGiCo, Midas, Behringer, Soundcraft) | digitálny / analógový, pri väčšine počet kanálov | DiGiCo, Allen & Heath Qu / CQ, Midas HD96, Yamaha DM3 a Soundcraft: počet kanálov; všade váha a karty |
+| Mikrofóny (Shure, Sennheiser, AKG, Audix, Neumann, DPA, Audio-Technica, EV, Beyerdynamic, Røde) | káblový, dynamický / kondenzátorový | frekvenčný rozsah |
+| Bezdrôty a in-ear (Shure, Sennheiser, Wisycom, Audio-Technica) | typ, prijímač | frekvenčné pásmo (podľa verzie, napr. G51), vysielače |
+| Stageboxy (Yamaha Rio / Tio, Allen & Heath, Behringer, Midas, DiGiCo) | typ | počet vstupov / výstupov, protokol |
+| Zosilňovače d&b, Powersoft, Lab.gruppen, QSC | digitálny, počet kanálov (D80 a Quattrocanali aj výkon) | výkon pri 2 / 4 / 8 Ω, váha |
+| Procesory (dbx, Lake, XTA, Klark Teknik) | typ | – |
+| Boxy d&b a dB Technologies, JBL PRX815W / SRX835P / SRX828SP, RCF ART 745-A | typ, aktívny / pasívny | výkon, frekvencie, SPL, uhol, váha, rozmery; pri d&b aj zosilňovače |
+| Stojany K&M | typ | – |
 
 ## Zvuk – neúplné
 
@@ -79,16 +77,16 @@ Starší všeobecný záznam bez dĺžky dielu – nové diely s váhou už v da
 - **Eurotruss** FD34 – katalóg Eurotruss
 - Global Truss F34 a F44P (všeobecné záznamy) – diely s váhou z katalógu 2023 už sú, tieto sa dajú zmazať
 
-## DJ a video – bez údajov
+## DJ, video, IT, spotrebiče a spotrebný materiál (8.16)
 
-| Výrobca | Modely |
-|---|---|
-| Pioneer DJ | CDJ-3000, DJM-900NXS2, DJM-A9, DJM-V10 |
-| Allen & Heath | Xone:96 |
-| Technics | SL-1210MK7 |
-| Novastar | VX1000, MCTRL4K |
-| Barco | E2 |
-| Blackmagic Design | ATEM Mini Pro |
+- **DJ technika** (Pioneer DJ, AlphaTheta, Allen & Heath Xone, Technics, Denon DJ, Rane, PLAYdifferently, Native
+  Instruments, Reloop, Numark): len typ – chýba váha a konektory.
+- **LED procesory Novastar**: výstupy a pixely na výstup sú zadané, **vstupy sú zatiaľ len „1 vstup“** – treba
+  doplniť podľa listu (HDMI / DVI / SDI / DP).
+- **Video prepínače a prevodníky** (Blackmagic ATEM, Roland V, Barco E2 / S3 / EventMaster): len typ.
+- **Kamery**: snímač a HDMI výstup; chýba váha.
+- **IT a spotrebiče**: len typ (pri elektrických ohrievačoch Master aj príkon).
+- **Spotrebný materiál**: len názov.
 
 ## Svetlá
 

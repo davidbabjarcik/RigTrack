@@ -10,7 +10,7 @@ export type CatalogEntry = { id: string; kind: EquipmentKind; manufacturer: stri
 export type CatalogReviewItem = Omit<CatalogEntry, 'verified'> & { name: string; companies: number; submittedAt: string }
 
 /** Druhy techniky, pri ktorých sa ponúka výber značky a modelu z katalógu. */
-export const CATALOG_KINDS: EquipmentKind[] = ['audio', 'light', 'video', 'dj', 'truss', 'stage', 'it', 'appliance']
+export const CATALOG_KINDS: EquipmentKind[] = ['audio', 'light', 'video', 'dj', 'truss', 'stage', 'cable', 'it', 'appliance', 'consumable', 'general']
 
 /**
  * Technické údaje modelu, ktoré sa smú dostať do katalógu (a z neho späť do formulára). Bez ceny, sériových čísel,
@@ -170,7 +170,12 @@ export function catalogMissing(entry: Pick<CatalogEntry, 'kind' | 'attributes'>)
     need('typ', 'stageType')
     need('veľkosť', 'stageSize')
     need('váha', 'weightKg')
-  } else if (Object.keys(a).length === 0) missing.push('všetko')
+  } else if (entry.kind === 'dj') need('typ', 'djType')
+  else if (entry.kind === 'video') need('typ', 'videoType', 'ledPanel', 'ledProcessor', 'display')
+  else if (entry.kind === 'it') need('typ', 'itType')
+  else if (entry.kind === 'appliance') need('typ', 'applianceType')
+  else if (entry.kind === 'cable') need('typ / konektor', 'cableType', 'connector')
+  else if (Object.keys(a).length === 0) missing.push('všetko')
   need('kód Thomann', 'thomannCode')
   return missing
 }

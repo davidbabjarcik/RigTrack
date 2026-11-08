@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.16 – 8. 11. 2026
+
+- **Výber značky a modelu z databázy pri každom druhu techniky**: okrem zvuku, svetiel, hliníka a pódia aj pri DJ
+  technike, videu, IT, spotrebičoch, kábloch (DI boxy), spotrebnom materiáli a pri „Ostatné“.
+- **Vyše 550 nových modelov v databáze techniky**: digitálne a analógové pulty (s počtom kanálov), mikrofóny
+  (dynamické / kondenzátorové), bezdrôty a in-ear, stageboxy, zosilňovače, procesory, stojany, DI boxy, DJ technika
+  (playery, mixy, gramofóny, kontroléry), kamery, gimbaly, statívy, objektívy, video prepínače, LED procesory,
+  projektory, mobily, tablety, notebooky, sieťové prvky, kávovary, ohrievače a batérie, gaffer páska či náplne do
+  výrobníkov hmly.
+- Pri týchto modeloch sú zatiaľ základné údaje (najmä typ) – ostatné sa dopĺňajú postupne.
+
 ### 8.15 – 6. 11. 2026
 
 - **L-Acoustics v spoločnej databáze techniky**: X, S (Syva, Soka), A, K (Kiva II, Kara II, K3, K2, K1), L2 / L2D

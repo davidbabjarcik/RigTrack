@@ -82,6 +82,7 @@ const SELECTS: Record<string, [string, string][]> = {
   trussShape: pairs(TRUSS_SHAPES, TRUSS_SHAPE_LABELS),
   stageType: pairs(STAGE_TYPES, STAGE_TYPE_LABELS),
   djType: pairs(DJ_TYPES, DJ_TYPE_LABELS),
+  cableType: [['cable', 'Kábel'], ['adapter', 'Redukcia'], ['di', 'DI box']],
   videoType: pairs(VIDEO_TYPES, VIDEO_TYPE_LABELS),
   cameraSensor: pairs(CAMERA_SENSORS, CAMERA_SENSOR_LABELS),
   itType: pairs(IT_TYPES, IT_TYPE_LABELS),
@@ -110,6 +111,9 @@ function fieldsFor(kind: EquipmentKind, values: Record<string, string>): string[
     video: ['videoType', 'cameraSensor', 'hdmiOut', 'powerW', 'weightKg'],
     it: ['itType', 'weightKg'],
     appliance: ['applianceType', 'powerW', 'weightKg'],
+    cable: ['cableType', 'connector', 'cableVariant', 'powered', 'lengthM', 'weightKg'],
+    consumable: ['weightKg'],
+    general: ['powerW', 'weightKg'],
   }
   return [...(fields[kind] ?? []), 'thomannCode']
 }
