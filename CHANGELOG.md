@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.1 – 8. 11. 2026
+
+- **Kalendár v mobile** (Kalendár → Kalendár v mobile): vytvoríte si odkaz a pridáte ho do Google či Apple kalendára,
+  Outlooku alebo TickTicku (Notion Calendar cez Google). Eventy, kde ste v posádke – alebo všetky eventy firmy –
+  sa tam objavia samé a zmena termínu sa prejaví aj v mobile. Odkaz sa dá kedykoľvek zrušiť alebo vytvoriť nový.
+
 ### 9.0 – 8. 11. 2026
 
 - **Elektrika po miestach**: v detaile eventu rozdelíte techniku podľa miest (strecha, predná a zadná rampa, svetlá na

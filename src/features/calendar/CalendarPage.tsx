@@ -21,8 +21,6 @@ import { cn } from '@/lib/utils'
 import { CalendarGrid } from './CalendarGrid'
 import { CalendarSubscription } from './CalendarSubscription'
 import { can } from '@/lib/permissions'
-
-const CALENDAR_FEED_READY = false
 import { calendarExport } from './export'
 import { KIND_STYLES } from './kindStyles'
 import {
@@ -149,12 +147,9 @@ export function CalendarPage() {
         </div>
       )}
 
-      {/* Odber kalendára sa zapne po nasadení Edge funkcie calendar-feed. */}
-      {CALENDAR_FEED_READY && (
-        <div className="mb-5">
-          <CalendarSubscription companyId={companyId} canSeeAll={can(company, 'events.view')} />
-        </div>
-      )}
+      <div className="mb-5">
+        <CalendarSubscription companyId={companyId} canSeeAll={can(company, 'events.view')} />
+      </div>
 
       <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label={tx('Zobrazenie')}>
         {(

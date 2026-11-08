@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.1
+
+- **Calendar on your phone** (Calendar → Calendar on your phone): create a link and add it to Google or Apple
+  Calendar, Outlook or TickTick (Notion Calendar via Google). Events where you are in the crew – or all company
+  events – appear there on their own and a changed date shows up on your phone too. You can cancel the link or
+  create a new one at any time.
+
 ### 9.0
 
 - **Power by places**: in the event detail you split the equipment by places (roof, front and rear truss, stage

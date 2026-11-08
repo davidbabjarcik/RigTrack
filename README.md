@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-9.0-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-9.1-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **9.1** | Kalendár eventov v mobile (Google, Apple, Outlook, TickTick) |
 | **9.0** | Elektrika po miestach s dimmermi a elektrocentrálami, kontrola dostupnosti, hromadný presun skenovaním |
 | **8.19** | Čo je nové a právne stránky po anglicky |
 | **8.18.1** | Oprava zobrazenia údajov v návrhoch do katalógu |
@@ -87,7 +88,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **7.14** | Overenie, že nie ste robot, pri prihlásení (Cloudflare Turnstile) |
 | **7.13** | Demo s plánom skladu, hliníkom a činnosťami; nové snímky v README |
 | **7.12** | Registrácia od 16 rokov, nahlásenie nezákonného obsahu, doplnok právneho auditu |
-| **7.11** | Vlastné farby plánu skladu a typov paliet |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 
