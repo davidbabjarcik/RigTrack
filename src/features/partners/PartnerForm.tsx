@@ -9,7 +9,7 @@ import { useAuth } from '@/features/auth/auth-context'
 import { companyKeys } from '@/features/companies/api'
 import { createPartnerCompany } from '@/features/companies/partnerCompany'
 import { cn } from '@/lib/utils'
-import { deletePartner, findRigTrackCompanies, linkPartnerCompany, partnerKeys, savePartner, type Partner, type PartnerFields } from './api'
+import { deletePartner, findRigTrackCompanies, findRigTrackCompanyByCode, linkPartnerCompany, partnerKeys, savePartner, type Partner, type PartnerFields } from './api'
 import { tx, tf } from '@/lib/i18n'
 
 type AppChoice = 'none' | 'linked' | 'found'
@@ -38,14 +38,19 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
   const linkable = current?.linkedCompanyId !== undefined || !current
   const [choice, setChoice] = useState<AppChoice>(current?.linkedCompanyId || current?.usesApp ? 'linked' : 'none')
   const [picked, setPicked] = useState<string | null>(current?.linkedCompanyId ?? null)
-  const [lookup, setLookup] = useState({ ico: '', name: '', legalName: '' })
+  const [lookup, setLookup] = useState({ ico: '', name: '', legalName: '', code: '' })
+  const [code, setCode] = useState('')
   const found = useQuery({
     queryKey: ['rigtrack-companies', lookup],
-    queryFn: () => findRigTrackCompanies(lookup.ico, lookup.name, lookup.legalName),
-    enabled: Boolean(lookup.ico || lookup.name || lookup.legalName),
+    queryFn: async () => {
+      const byCode = lookup.code ? await findRigTrackCompanyByCode(lookup.code) : []
+      const byData = lookup.ico || lookup.name || lookup.legalName ? await findRigTrackCompanies(lookup.ico, lookup.name, lookup.legalName) : []
+      return [...byCode, ...byData.filter((company) => !byCode.some((item) => item.id === company.id))]
+    },
+    enabled: Boolean(lookup.ico || lookup.name || lookup.legalName || lookup.code),
     retry: false,
   })
-  const search = () => setLookup({ ico: fields.ico.trim(), name: fields.name.trim(), legalName: (fields.legalName ?? '').trim() })
+  const search = () => setLookup({ ico: fields.ico.trim(), name: fields.name.trim(), legalName: (fields.legalName ?? '').trim(), code: code.trim() })
   // Firma s rovnakým IČO / názvom už v RigTracku je – ponúkneme prepojenie aj keď je zvolené „Nepoužívajú“.
   const matches = (found.data ?? []).filter((company) => company.id !== companyId)
 
@@ -141,10 +146,25 @@ export function PartnerForm({ companyId, current, onDone }: { companyId: string;
               ) : (
                 !current?.linkedCompanyId && (
                   <p className="text-sm text-muted-foreground">
-                    {lookup.ico || lookup.name ? tx('V RigTracku sme firmu s týmto IČO ani názvom nenašli. Doplňte IČO, alebo im ju založte.') : tx('Zadajte názov alebo IČO a stlačte Hľadať.')}
+                    {lookup.ico || lookup.name || lookup.code
+                      ? tx('V RigTracku sme firmu s týmto IČO, názvom ani kódom nenašli. Vypýtajte si od nich kód na prepojenie, alebo im firmu založte.')
+                      : tx('Zadajte názov, IČO alebo kód na prepojenie a stlačte Hľadať.')}
                   </p>
                 )
               )}
+              <Field
+                label={tx('Kód na prepojenie (ak nemajú vyplnené IČO)')}
+                maxLength={20}
+                value={code}
+                placeholder={tx('napr. 3F9A2C7B')}
+                onChange={(event) => setCode(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter') return
+                  event.preventDefault()
+                  search()
+                }}
+              />
+              <p className="text-xs text-muted-foreground">{tx('Kód nájdu v RigTracku v Nastavenia → Prepojené firmy („Váš kód“).')}</p>
               <Button size="sm" variant="outline" className="self-start" onClick={search}>
                 <Search className="size-4" aria-hidden />{tx('Hľadať v RigTracku')}</Button>
             </div>

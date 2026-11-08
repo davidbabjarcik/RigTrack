@@ -5,6 +5,22 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.17 – 8. 11. 2026
+
+- **Prepojenie firmy v kontaktoch aj bez IČO**: pri „Už majú firmu v RigTracku“ sa dá zadať ich kód na prepojenie
+  (nájdu ho v Nastavenia → Prepojené firmy). Hľadanie podľa názvu už nezáleží na diakritike, bodkách ani „s.r.o.“
+  či „a.s.“ – stále sa však musí zhodovať celý názov.
+- **DJ technika v databáze techniky**: Pioneer DJ (CDJ, XDJ, DJM, DDJ, PLX, RMX, slúchadlá HDJ, monitory a PA boxy
+  XPRS), AlphaTheta, Denon DJ (SC, Prime, MC, X a staršie DN) a Technics (SL-1200 / SL-1210 vrátane limitovaných
+  edícií, SH mixy).
+- **Digitálne pulty s údajmi**: DiGiCo, Allen & Heath, Midas, Yamaha a Soundcraft – počet kanálov, váha, fadery,
+  sloty a rozširujúce karty (DMI, MY, CM-1, DN32).
+- **Mikrofóny s frekvenčným rozsahom** (Shure, Sennheiser, AKG, Audix, Neumann, DPA, Audio-Technica, Electro-Voice,
+  Beyerdynamic, Røde), **bezdrôty a in-ear** so zostavou prijímač + vysielače (Shure, Sennheiser, Wisycom,
+  Audio-Technica), **stageboxy** s počtom vstupov / výstupov a protokolom a **procesory** dbx, Lake, XTA a Klark Teknik.
+- **Technics Hi-Fi** (zosilňovače, receivery, CD, decky, tunery, reproduktory, slúchadlá) a **prenosky** (Ortofon,
+  Shure, Audio-Technica, JICO, Stanton a ďalšie).
+
 ### 8.16.1 – 8. 11. 2026
 
 - **Značka „Unknown“ v databáze techniky** pre techniku bez značky: bežné beamy (7R, 9R…), LED spoty, washe, pary,

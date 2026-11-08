@@ -141,6 +141,13 @@ export async function findRigTrackCompanies(ico: string, name: string, legalName
   return (data as { id: string; name: string; legal_name: string }[]).map((row) => ({ id: row.id, name: row.name, legalName: row.legal_name }))
 }
 
+/** Firma v RigTracku podľa kódu na prepojenie (ten z Nastavenia → Prepojené firmy) – keď nemá IČO (0160). */
+export async function findRigTrackCompanyByCode(code: string): Promise<RigTrackCompany[]> {
+  const { data, error } = await getSupabase().rpc('find_company_by_link_code', { _code: code })
+  if (error) throw error
+  return (data as { id: string; name: string; legal_name: string }[]).map((row) => ({ id: row.id, name: row.name, legalName: row.legal_name }))
+}
+
 /** Prepojí firmu z adresára s firmou v RigTracku (null = zruší väzbu). */
 export async function linkPartnerCompany(partnerId: string, companyId: string | null) {
   const { error } = await getSupabase().rpc('link_partner_company', { _partner_id: partnerId, _company_id: companyId })

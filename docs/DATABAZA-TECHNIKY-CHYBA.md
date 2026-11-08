@@ -3,7 +3,7 @@
 Zoznam modelov, ku ktorým v spoločnej databáze techniky chýbajú údaje (alebo sú neúplné). Aktualizuje sa po každom
 doplnení katalógov. Stačí poslať PDF (celý katalóg výrobcu alebo list ku konkrétnemu modelu) – údaje prepíšem.
 
-**Naposledy aktualizované:** 8. 11. 2026, po verzii 8.16.1.
+**Naposledy aktualizované:** 8. 11. 2026, po verzii 8.17.
 
 Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Databáza techniky.
 
@@ -15,7 +15,7 @@ Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Datab
 | Hliník | 406 | všetky s typom; 5 všeobecných záznamov bez dĺžky a váhy |
 | Zvuk | ~390 | boxy z katalógov úplné; pulty, mikrofóny, bezdrôty, stageboxy a zosilňovače z 8.16 len so základnými údajmi |
 | Pódium (Nivtec) | 49 | úplné |
-| DJ technika | ~72 | len typ (player / mix / gramofón / kontrolér) |
+| DJ technika (vrátane prenosiek) | ~500 | len typ (player / mix / gramofón / kontrolér / iné) |
 | Video | ~80 | typ; kamery so snímačom; LED procesory s výstupmi; projektory s rozlíšením a lm |
 | IT | 67 | len typ |
 | Spotrebiče | 25 | typ; elektrické ohrievače s príkonom |
@@ -44,12 +44,12 @@ a VTX, Pioneer DJ / Denon DJ (váha, konektory).
 
 | Čo | Je zadané | Chýba |
 |---|---|---|
-| Pulty (Yamaha, Allen & Heath, DiGiCo, Midas, Behringer, Soundcraft) | digitálny / analógový, pri väčšine počet kanálov | DiGiCo, Allen & Heath Qu / CQ, Midas HD96, Yamaha DM3 a Soundcraft: počet kanálov; všade váha a karty |
-| Mikrofóny (Shure, Sennheiser, AKG, Audix, Neumann, DPA, Audio-Technica, EV, Beyerdynamic, Røde) | káblový, dynamický / kondenzátorový | frekvenčný rozsah |
+| Pulty (Yamaha, Allen & Heath, DiGiCo, Midas, Behringer, Soundcraft) | počet kanálov, váha (pri väčšine), fadery a sloty (8.17) | Behringer: váha; DiGiCo Quantum 5 / 852 / 326 / 638 / 112, SD-séria okrem SD12 a Soundcraft Vi: váha |
+| Mikrofóny (Shure, Sennheiser, AKG, Audix, Neumann, DPA, Audio-Technica, EV, Beyerdynamic, Røde) | káblový, typ, frekvenčný rozsah (8.17) | pri modeloch z 0158 mimo zoznamu 8.17 frekvenčný rozsah |
 | Bezdrôty a in-ear (Shure, Sennheiser, Wisycom, Audio-Technica) | typ, prijímač | frekvenčné pásmo (podľa verzie, napr. G51), vysielače |
-| Stageboxy (Yamaha Rio / Tio, Allen & Heath, Behringer, Midas, DiGiCo) | typ | počet vstupov / výstupov, protokol |
+| Stageboxy (Yamaha Rio / Tio, Allen & Heath, Behringer, Midas, DiGiCo) | vstupy / výstupy a protokol (8.17) | váha |
 | Zosilňovače d&b, Powersoft, Lab.gruppen, QSC | digitálny, počet kanálov (D80 a Quattrocanali aj výkon) | výkon pri 2 / 4 / 8 Ω, váha |
-| Procesory (dbx, Lake, XTA, Klark Teknik) | typ | – |
+| Procesory (dbx, Lake, XTA, Klark Teknik) | vstupy / výstupy, rozhrania (8.17) | váha |
 | Boxy d&b a dB Technologies, JBL PRX815W / SRX835P / SRX828SP, RCF ART 745-A | typ, aktívny / pasívny | výkon, frekvencie, SPL, uhol, váha, rozmery; pri d&b aj zosilňovače |
 | Stojany K&M | typ | – |
 

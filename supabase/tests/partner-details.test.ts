@@ -25,6 +25,18 @@ describe('partner details and linking', () => {
     expect(await t.as('boss', `select name from public.find_rigtrack_companies('123', 'Niekto')`)).toEqual([])
   })
 
+  it('finds a company without IČO by a name written differently or by its link code (0160)', async () => {
+    // Bez diakritiky, s bodkami, s právnou formou – ale stále celý názov.
+    expect(await t.as('boss', `select name from public.find_rigtrack_companies('', 'ZVUK-PLUS, s.r.o.')`)).toEqual([{ name: 'Zvuk Plus' }])
+    expect(await t.as('boss', `select name from public.find_rigtrack_companies('', 'Ukazka')`)).toEqual([{ name: 'Zvuk Plus' }])
+    expect(await t.as('boss', `select name from public.find_rigtrack_companies('', 'Zvuk')`)).toEqual([])
+    const code = (await t.as('cvr', 'select public.my_link_code($1) as code', [cvr]))[0].code as string
+    expect(await t.as('boss', 'select name from public.find_company_by_link_code($1)', [` ${code.toLowerCase()} `])).toEqual([{ name: 'Zvuk Plus' }])
+    expect(await t.as('boss', 'select name from public.find_company_by_link_code($1)', [code.slice(0, 3)])).toEqual([])
+    // Kód cudzej firmy si nikto iný nevypýta.
+    await expect(t.as('boss', 'select public.my_link_code($1)', [cvr])).rejects.toThrow()
+  })
+
   it('links and unlinks the partner only for event editors', async () => {
     await t.as('boss', 'select public.link_partner_company($1, $2)', [partner, cvr])
     expect(await t.as('boss', 'select linked_company_id, uses_app from public.partners where id = $1', [partner])).toEqual([{ linked_company_id: cvr, uses_app: true }])

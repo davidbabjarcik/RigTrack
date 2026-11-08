@@ -57,6 +57,12 @@ describe('equipment catalog (0146)', () => {
     // 0159: technika bez značky
     const [beam] = await t.as('viewer', `select attributes from public.equipment_catalog where kind = 'light' and manufacturer = 'Unknown' and model = 'Beam 7R 230 W'`)
     expect(beam.attributes).toMatchObject({ lightType: 'moving_beam' })
+    const [djm] = await t.as('viewer', `select attributes from public.equipment_catalog where kind = 'dj' and manufacturer = 'Pioneer DJ' and model = 'DJM-S9'`)
+    expect(djm.attributes).toEqual({ djType: 'mixer' })
+    const [q225] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'DiGiCo' and model = 'Quantum 225'`)
+    expect(q225.attributes).toMatchObject({ audioType: 'mixer', mixerChannels: 72, weightKg: 43 })
+    const [sm58Range] = await t.as('viewer', `select attributes->>'freqRange' as range from public.equipment_catalog where manufacturer = 'Shure' and model = 'SM58'`)
+    expect(sm58Range.range).toBe('50 Hz – 15 kHz')
     // 0152: výrobníky hmly sú pri svetlách
     const [haze] = await t.as('viewer', `select kind, attributes from public.equipment_catalog where manufacturer = 'MDG' and model = 'theONE'`)
     expect(haze).toMatchObject({ kind: 'light', attributes: { lightType: 'hazer' } })
