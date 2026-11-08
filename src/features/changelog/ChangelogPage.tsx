@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
 import readme from '../../../CHANGELOG.md?raw'
-import { forUsers, parseChangelog, parseInline, sameVersion } from './parse'
-import { tx } from '@/lib/i18n'
+import readmeEn from '../../../CHANGELOG.en.md?raw'
+import { forUsers, parseChangelog, parseInline, sameVersion, withTranslation } from './parse'
+import { tx, useLang } from '@/lib/i18n'
 
 function Inline({ text }: { text: string }) {
   return parseInline(text).map((part, index) =>
@@ -20,18 +21,20 @@ function Inline({ text }: { text: string }) {
   )
 }
 
-const releases = parseChangelog(readme).map(forUsers)
+const releasesSk = parseChangelog(readme).map(forUsers)
+const releasesEn = withTranslation(releasesSk, parseChangelog(readmeEn).map(forUsers))
 
 /** Verzie podľa hlavného čísla (3.x, 2.x…) do bočného zoznamu na PC. */
-const majors = [...new Set(releases.map((release) => release.version.split('.')[0]))].map((major) => ({
+const majors = [...new Set(releasesSk.map((release) => release.version.split('.')[0]))].map((major) => ({
   major,
-  versions: releases.filter((release) => release.version.split('.')[0] === major).map((release) => release.version),
+  versions: releasesSk.filter((release) => release.version.split('.')[0] === major).map((release) => release.version),
 }))
 const anchor = (version: string) => `v${version.replace(/\./g, '-')}`
 
 /** Čo je nové v jednotlivých verziách (zo sekcie README „Čo je nové“). Na PC s bočným zoznamom verzií. */
 export function ChangelogPage() {
   const navigate = useNavigate()
+  const releases = useLang() === 'en' ? releasesEn : releasesSk
   return (
     <div className="w-full">
       <button type="button" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">

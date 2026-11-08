@@ -66,3 +66,22 @@ describe('changelog', () => {
     expect(sameVersion(APP_VERSION, latest.version)).toBe(true)
   })
 })
+
+describe('English changelog', () => {
+  it('uses the English text by version with an English date and keeps Slovak where the translation is missing', async () => {
+    const { withTranslation, englishDate } = await import('./parse')
+    const sk = parseChangelog('## Čo je nové\n\n### 2.0 – 8. 11. 2026\n\n- Nové\n\n### 1.0 – 1. 1. 2026\n\n- Prvá\n')
+    const en = parseChangelog("## What's new\n\n### 2.0\n\n- New\n- New migration: `0001`\n")
+    const merged = withTranslation(sk, en.map(forUsers))
+    expect(merged[0]).toEqual({ version: '2.0', date: '8 Nov 2026', blocks: [{ kind: 'list', items: ['New'] }] })
+    expect(merged[1].blocks).toEqual([{ kind: 'list', items: ['Prvá'] }])
+    expect(englishDate('jeseň')).toBe('jeseň')
+  })
+
+  it('has an English entry for every released version', async () => {
+    const fs = await import('node:fs')
+    const sk = parseChangelog(fs.readFileSync('CHANGELOG.md', 'utf8')).map((release) => release.version)
+    const en = parseChangelog(fs.readFileSync('CHANGELOG.en.md', 'utf8')).map((release) => release.version)
+    expect(sk.filter((version) => !en.includes(version))).toEqual([])
+  })
+})

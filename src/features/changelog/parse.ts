@@ -7,9 +7,9 @@ export type Release = {
   blocks: ({ kind: 'list'; items: string[] } | { kind: 'text'; text: string })[]
 }
 
-/** Vytiahne vydania zo sekcie „## Čo je nové“; najnovšie prvé, tak ako sú v README. */
+/** Vytiahne vydania zo sekcie „## Čo je nové“ (v anglickom CHANGELOG.en.md „## What's new“); najnovšie prvé. */
 export function parseChangelog(markdown: string): Release[] {
-  const start = markdown.search(/^## Čo je nové\s*$/m)
+  const start = markdown.search(/^## (Čo je nové|What's new)\s*$/m)
   if (start < 0) return []
   const rest = markdown.slice(start).split('\n').slice(1)
   const end = rest.findIndex((line) => /^## /.test(line))
@@ -76,7 +76,7 @@ export function sameVersion(a: string, b: string) {
 }
 
 // Technické poznámky o migráciách databázy (odsek aj odrážka) sú pre vývojára, nie pre používateľa.
-const TECHNICAL = /migráci/i
+const TECHNICAL = /migráci|migration/i
 
 /** Text vydania pre používateľa: bez technických riadkov o migráciách databázy. */
 export function forUsers(release: Release): Release {
@@ -84,4 +84,24 @@ export function forUsers(release: Release): Release {
     .map((block) => (block.kind === 'list' ? { ...block, items: block.items.filter((item) => !TECHNICAL.test(item)) } : block))
     .filter((block) => (block.kind === 'list' ? block.items.length > 0 : !TECHNICAL.test(block.text)))
   return { ...release, blocks }
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** „8. 11. 2026“ → „8 Nov 2026“ (iný tvar ostane, ako je). */
+export function englishDate(date: string) {
+  const match = date.match(/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})$/)
+  return match ? `${Number(match[1])} ${MONTHS[Number(match[2]) - 1] ?? match[2]} ${match[3]}` : date
+}
+
+/**
+ * Anglické „Čo je nové“: text z CHANGELOG.en.md podľa verzie, dátum zo slovenského. Verzia bez prekladu ostane
+ * po slovensky, aby nič nechýbalo.
+ */
+export function withTranslation(releases: Release[], english: Release[]): Release[] {
+  const byVersion = new Map(english.map((release) => [release.version, release]))
+  return releases.map((release) => {
+    const translated = byVersion.get(release.version)
+    return translated ? { ...translated, date: englishDate(release.date) } : release
+  })
 }

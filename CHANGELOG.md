@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.19 – 8. 11. 2026
+
+- **Čo je nové po anglicky**: pri anglickej appke sú všetky verzie zmien v angličtine (aj s anglickým dátumom).
+- **Právne stránky po anglicky**: Ochrana súkromia, Cookies a úložisko a Podmienky používania majú anglickú verziu
+  (pri rozpore platí slovenská).
+
 ### 8.18.1 – 8. 11. 2026
 
 - Vo Vývojár → Návrhy do katalógu a v Databáze techniky sú technické údaje modelu oddelené bodkou („Zosilňovač ·
@@ -1955,7 +1961,7 @@ Nové migrácie: žiadne.
 - **Zamestnanci** – nový modul: tím s fotkou, pozíciou, telefónom, e-mailom, zručnosťami a poznámkou,
   stav na dnes (voľný / na evente / nemôže), **kedy nemôže** (dovolenka, škola…) a najbližšie eventy.
   Členovia sa zobrazujú sami, brigádnici bez účtu sa dajú pridať menom. Svoju kartu a svoje „kedy nemôžem“
-  si upraví každý sám; ostatných spravuje ten, kto má nové oprávnenie *Zamestnanci – spravovať*.
+  si upraví každý sám; ostatných spravuje ten, kto má nové oprávnenie Zamestnanci – spravovať.
 - V posádke eventu sa ukáže, keď niekto v termíne nemôže.
 - **Pódium Nivtec:** na pôdoryse je označená doska, ktorou začať stavať (1), a pero sa kreslí podľa otočenia
   dosiek (dlhšou stranou dozadu: pero dozadu a doprava, začína sa vľavo vzadu; dlhšou stranou dopredu:
@@ -1997,7 +2003,7 @@ Nové migrácie: `0044`.
 
 - **Štatistiky:** okrem toho, čo chcem vidieť, sa dá aj **preskladať poradie** – sekcie aj jednotlivé
   štatistiky šípkami hore/dole; „Pôvodné poradie“ ich vráti.
-- **Pódium Nivtec** *(vo vývoji)*:
+- **Pódium Nivtec** (vo vývoji):
   - **molo** – výbežok z pódia (strana, poloha, šírka, dĺžka) v rovnakej výške, so spoločnými nohami
     s pódiom, voliteľnou plachtou a otvorom v plachte, lištách a zábradlí pódia;
   - **rizery** – jeden alebo viac (napr. pre bicie), rozmer, výška, poloha na pódiu, **pevné na nohách alebo
@@ -2027,14 +2033,14 @@ Nové migrácie: žiadne.
 
 Prvá ucelená verzia. Oproti predošlým priebežným verziám pribudlo:
 
-- **Technika:** DMX módy svetiel, typy zvuku (mixpult, mikrofón, reprobox…), druhy *Hliník / truss*
-  a *Pódium*, farebný prúžok podľa kategórie, tabuľka **IP / MAC adries** s hľadaním a kontrolou duplicít.
+- **Technika:** DMX módy svetiel, typy zvuku (mixpult, mikrofón, reprobox…), druhy Hliník / truss
+  a Pódium, farebný prúžok podľa kategórie, tabuľka **IP / MAC adries** s hľadaním a kontrolou duplicít.
 - **Excel:** export a import techniky a cases v jednom súbore – hárok na každú kategóriu, prázdna šablóna
   s vysvetlivkami, náhľad a kontrola chýb pred zápisom.
 - **Eventy:** organizátor, popis a časy, fotky, **tlač A4 / PDF** s checklistom techniky,
   **príjmy z akcie** (hotovosť / účet / faktúra cez firmu, s DPH aj bez), **import techniky z Capture**
   (Equipment Report v HTML alebo PDF), upozornenie na case bez kontroly obsahu.
-- **Pódium Nivtec** *(vo vývoji)*: kalkulačka dosiek, nôh, schodov, líšt, plachiet, zábradlia, výstuh
+- **Pódium Nivtec** (vo vývoji): kalkulačka dosiek, nôh, schodov, líšt, plachiet, zábradlia, výstuh
   a príslušenstva s pôdorysom a pridaním na event.
 - **Objednávky:** nákupy z bazárov (Bazoš, Kleinanzeigen, Willhaben, eBay…) a fotka nákupu.
 - **Fotky** ku cases a k položkám „kúpiť / chceme časom“.
