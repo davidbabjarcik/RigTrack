@@ -54,6 +54,9 @@ describe('equipment catalog (0146)', () => {
     expect(cl5.attributes).toMatchObject({ audioType: 'mixer', mixerKind: 'digital', mixerChannels: 72 })
     const kinds = await t.as('viewer', `select distinct kind from public.equipment_catalog where kind in ('cable', 'dj', 'video', 'it', 'appliance', 'consumable') order by kind`)
     expect(kinds.map((row) => row.kind)).toEqual(['appliance', 'cable', 'consumable', 'dj', 'it', 'video'])
+    // 0159: technika bez značky
+    const [beam] = await t.as('viewer', `select attributes from public.equipment_catalog where kind = 'light' and manufacturer = 'Unknown' and model = 'Beam 7R 230 W'`)
+    expect(beam.attributes).toMatchObject({ lightType: 'moving_beam' })
     // 0152: výrobníky hmly sú pri svetlách
     const [haze] = await t.as('viewer', `select kind, attributes from public.equipment_catalog where manufacturer = 'MDG' and model = 'theONE'`)
     expect(haze).toMatchObject({ kind: 'light', attributes: { lightType: 'hazer' } })

@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0158 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0159 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -4836,6 +4836,46 @@ do update set attributes = excluded.attributes || public.equipment_catalog.attri
 insert into public.equipment_catalog (kind, manufacturer, model, attributes)
 select 'truss', 'Global Truss', row->>'model', row->'attributes'
 from jsonb_array_elements($c158$[{"model":"F34","attributes":{"trussType":"point4"}},{"model":"F44P","attributes":{"trussType":"point4"}}]$c158$::jsonb) as row
+on conflict (kind, lower(manufacturer), lower(model))
+do update set attributes = excluded.attributes || public.equipment_catalog.attributes, updated_at = now();
+
+-- ===== 0159_catalog_unknown_brand.sql =====
+-- 0159: značka „Unknown“ – technika bez značky (napr. bežné beamy, LED pary, výrobníky hmly, boxy, truss) s typom,
+-- aby sa aj pri nej doplnili základné údaje. Neoverené, kým neoverí vývojár.
+
+insert into public.equipment_catalog (kind, manufacturer, model, attributes)
+select 'light', 'Unknown', row->>'model', row->'attributes'
+from jsonb_array_elements($c159$[{"model":"Beam 7R 230 W","attributes":{"lightType":"moving_beam","lightSource":"discharge"}},{"model":"Beam 9R 260 W","attributes":{"lightType":"moving_beam","lightSource":"discharge"}},{"model":"Beam 12R 295 W","attributes":{"lightType":"moving_beam","lightSource":"discharge"}},{"model":"Beam 17R 350 W","attributes":{"lightType":"moving_beam","lightSource":"discharge"}},{"model":"LED Beam 100 W","attributes":{"lightType":"moving_beam","lightSource":"led"}},{"model":"LED Beam 150 W","attributes":{"lightType":"moving_beam","lightSource":"led"}},{"model":"LED Spot 60 W","attributes":{"lightType":"moving_spot","lightSource":"led"}},{"model":"LED Spot 100 W","attributes":{"lightType":"moving_spot","lightSource":"led"}},{"model":"LED Spot 200 W","attributes":{"lightType":"moving_spot","lightSource":"led"}},{"model":"LED Spot 300 W","attributes":{"lightType":"moving_spot","lightSource":"led"}},{"model":"Hybrid 380 W (beam / spot / wash)","attributes":{"lightType":"moving_hybrid","lightSource":"discharge"}},{"model":"LED Wash 7×40 W RGBW","attributes":{"lightType":"moving_wash","lightSource":"led"}},{"model":"LED Wash 19×15 W RGBW zoom","attributes":{"lightType":"moving_wash","lightSource":"led"}},{"model":"LED Wash 36×10 W RGBW","attributes":{"lightType":"moving_wash","lightSource":"led"}},{"model":"LED PAR 18×10 W RGBW","attributes":{"lightType":"led_par","lightSource":"led"}},{"model":"LED PAR 18×12 W RGBWA+UV","attributes":{"lightType":"led_par","lightSource":"led"}},{"model":"LED PAR 18×18 W RGBWA+UV","attributes":{"lightType":"led_par","lightSource":"led"}},{"model":"LED PAR 54×3 W RGBW","attributes":{"lightType":"led_par","lightSource":"led"}},{"model":"LED PAR 7×40 W RGBW zoom","attributes":{"lightType":"led_par","lightSource":"led"}},{"model":"LED PAR batériový 6×18 W RGBWA+UV","attributes":{"lightType":"led_par","lightSource":"led"}},{"model":"LED Bar 18×3 W RGB","attributes":{"lightType":"led_bar","lightSource":"led"}},{"model":"LED Bar 12×10 W RGBW","attributes":{"lightType":"led_bar","lightSource":"led"}},{"model":"Pixel bar 1 m","attributes":{"lightType":"pixel_line","lightSource":"led"}},{"model":"Strobo LED 1000 W","attributes":{"lightType":"strobe","lightSource":"led"}},{"model":"Blinder 2×100 W COB","attributes":{"lightType":"blinder","lightSource":"led"}},{"model":"Blinder 4×100 W COB","attributes":{"lightType":"blinder","lightSource":"led"}},{"model":"Laser RGB animácie","attributes":{"lightType":"laser","lightSource":"laser"}},{"model":"Výrobník hmly 1500 W","attributes":{"lightType":"smoke"}},{"model":"Výrobník hmly 3000 W","attributes":{"lightType":"smoke"}},{"model":"Hazer 600 W","attributes":{"lightType":"hazer"}},{"model":"Low fog (ťažký dym) 3000 W","attributes":{"lightType":"smoke"}},{"model":"Spark machine 600 W (studené iskry)","attributes":{"lightType":"special_fx"}},{"model":"Spark machine 750 W (studené iskry)","attributes":{"lightType":"special_fx"}},{"model":"CO2 jet","attributes":{"lightType":"special_fx"}},{"model":"Výrobník bublín","attributes":{"lightType":"special_fx"}},{"model":"Konfety kanón","attributes":{"lightType":"special_fx"}},{"model":"Výrobník snehu","attributes":{"lightType":"special_fx"}},{"model":"Plameňomet DMX","attributes":{"lightType":"special_fx"}}]$c159$::jsonb) as row
+on conflict (kind, lower(manufacturer), lower(model))
+do update set attributes = excluded.attributes || public.equipment_catalog.attributes, updated_at = now();
+
+insert into public.equipment_catalog (kind, manufacturer, model, attributes)
+select 'audio', 'Unknown', row->>'model', row->'attributes'
+from jsonb_array_elements($c159$[{"model":"Reprobox 10″ aktívny","attributes":{"audioType":"speaker","powered":"active","woofer":"1× 10″"}},{"model":"Reprobox 12″ aktívny","attributes":{"audioType":"speaker","powered":"active","woofer":"1× 12″"}},{"model":"Reprobox 15″ aktívny","attributes":{"audioType":"speaker","powered":"active","woofer":"1× 15″"}},{"model":"Reprobox 12″ pasívny","attributes":{"audioType":"speaker","powered":"passive","woofer":"1× 12″"}},{"model":"Reprobox 15″ pasívny","attributes":{"audioType":"speaker","powered":"passive","woofer":"1× 15″"}},{"model":"Sub 15″ aktívny","attributes":{"audioType":"subwoofer","powered":"active","woofer":"1× 15″"}},{"model":"Sub 18″ aktívny","attributes":{"audioType":"subwoofer","powered":"active","woofer":"1× 18″"}},{"model":"Sub 18″ pasívny","attributes":{"audioType":"subwoofer","powered":"passive","woofer":"1× 18″"}},{"model":"Sub 2×18″ pasívny","attributes":{"audioType":"subwoofer","powered":"passive","woofer":"2× 18″"}},{"model":"Odposluch 12″ aktívny","attributes":{"audioType":"monitor","powered":"active","woofer":"1× 12″"}},{"model":"Odposluch 12″ pasívny","attributes":{"audioType":"monitor","powered":"passive","woofer":"1× 12″"}},{"model":"Line array 2×10″ aktívny","attributes":{"audioType":"line_array","powered":"active","woofer":"2× 10″"}},{"model":"Line array 2×12″ pasívny","attributes":{"audioType":"line_array","powered":"passive","woofer":"2× 12″"}},{"model":"Zosilňovač 2-kanálový","attributes":{"audioType":"amplifier","connectors":"2 kanály"}},{"model":"Zosilňovač 4-kanálový","attributes":{"audioType":"amplifier","connectors":"4 kanály"}},{"model":"Mikrofón dynamický","attributes":{"audioType":"microphone","micKind":"wired","micType":"dynamic"}},{"model":"Mikrofón kondenzátorový","attributes":{"audioType":"microphone","micKind":"wired","micType":"condenser"}},{"model":"Bezdrôtový set UHF (2× handka)","attributes":{"audioType":"wireless"}},{"model":"Bezdrôtový set UHF (2× bodypack)","attributes":{"audioType":"wireless"}},{"model":"In-ear set","attributes":{"audioType":"iem"}},{"model":"Stagebox analógový 16/4","attributes":{"audioType":"stagebox"}},{"model":"Stagebox analógový 24/8","attributes":{"audioType":"stagebox"}},{"model":"Stagebox analógový 32/8","attributes":{"audioType":"stagebox"}},{"model":"Stojan na repro","attributes":{"audioType":"speaker_stand"}},{"model":"Stojan na mikrofón (šibenica)","attributes":{"audioType":"mic_stand"}},{"model":"Stojan na mikrofón (nízky)","attributes":{"audioType":"mic_stand"}}]$c159$::jsonb) as row
+on conflict (kind, lower(manufacturer), lower(model))
+do update set attributes = excluded.attributes || public.equipment_catalog.attributes, updated_at = now();
+
+insert into public.equipment_catalog (kind, manufacturer, model, attributes)
+select 'truss', 'Unknown', row->>'model', row->'attributes'
+from jsonb_array_elements($c159$[{"model":"Truss 4-bod 290 mm","attributes":{"trussType":"point4"}},{"model":"Truss 4-bod 400 mm","attributes":{"trussType":"point4"}},{"model":"Truss 3-bod 290 mm","attributes":{"trussType":"point3"}},{"model":"Truss 2-bod 290 mm","attributes":{"trussType":"point2"}},{"model":"Ground support","attributes":{"trussType":"ground_support"}},{"model":"Stojan / lift","attributes":{"trussType":"stand_lift"}},{"model":"Spojka (kónus)","attributes":{"trussType":"accessory"}},{"model":"Base plate","attributes":{"trussType":"accessory"}}]$c159$::jsonb) as row
+on conflict (kind, lower(manufacturer), lower(model))
+do update set attributes = excluded.attributes || public.equipment_catalog.attributes, updated_at = now();
+
+insert into public.equipment_catalog (kind, manufacturer, model, attributes)
+select 'cable', 'Unknown', row->>'model', row->'attributes'
+from jsonb_array_elements($c159$[{"model":"DI box pasívny","attributes":{"cableType":"di","powered":"passive"}},{"model":"DI box aktívny","attributes":{"cableType":"di","powered":"active"}}]$c159$::jsonb) as row
+on conflict (kind, lower(manufacturer), lower(model))
+do update set attributes = excluded.attributes || public.equipment_catalog.attributes, updated_at = now();
+
+insert into public.equipment_catalog (kind, manufacturer, model, attributes)
+select 'dj', 'Unknown', row->>'model', row->'attributes'
+from jsonb_array_elements($c159$[{"model":"DJ mix","attributes":{"djType":"mixer"}},{"model":"DJ player","attributes":{"djType":"player"}},{"model":"Gramofón","attributes":{"djType":"turntable"}},{"model":"DJ kontrolér","attributes":{"djType":"pc_controller"}}]$c159$::jsonb) as row
+on conflict (kind, lower(manufacturer), lower(model))
+do update set attributes = excluded.attributes || public.equipment_catalog.attributes, updated_at = now();
+
+insert into public.equipment_catalog (kind, manufacturer, model, attributes)
+select 'video', 'Unknown', row->>'model', row->'attributes'
+from jsonb_array_elements($c159$[{"model":"Kamera","attributes":{"videoType":"camera"}},{"model":"Statív","attributes":{"videoType":"tripod"}},{"model":"Gimbal","attributes":{"videoType":"gimbal"}},{"model":"Prevodník HDMI / SDI","attributes":{"videoType":"other"}}]$c159$::jsonb) as row
 on conflict (kind, lower(manufacturer), lower(model))
 do update set attributes = excluded.attributes || public.equipment_catalog.attributes, updated_at = now();
 

@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.16.1 – 8. 11. 2026
+
+- **Značka „Unknown“ v databáze techniky** pre techniku bez značky: bežné beamy (7R, 9R…), LED spoty, washe, pary,
+  bary, blindre, stroboskopy, výrobníky hmly, spark machine a ďalšie efekty, boxy, suby, odposluchy, zosilňovače,
+  mikrofóny, bezdrôty, stageboxy, stojany, truss, DI boxy, DJ a video technika. Vyberiete ju ako výrobcu a doplní sa
+  aspoň typ.
+
 ### 8.16 – 8. 11. 2026
 
 - **Výber značky a modelu z databázy pri každom druhu techniky**: okrem zvuku, svetiel, hliníka a pódia aj pri DJ

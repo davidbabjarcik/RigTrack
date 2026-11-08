@@ -3,7 +3,7 @@
 Zoznam modelov, ku ktorým v spoločnej databáze techniky chýbajú údaje (alebo sú neúplné). Aktualizuje sa po každom
 doplnení katalógov. Stačí poslať PDF (celý katalóg výrobcu alebo list ku konkrétnemu modelu) – údaje prepíšem.
 
-**Naposledy aktualizované:** 8. 11. 2026, po verzii 8.16.
+**Naposledy aktualizované:** 8. 11. 2026, po verzii 8.16.1.
 
 Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Databáza techniky.
 
@@ -21,6 +21,7 @@ Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Datab
 | Spotrebiče | 25 | typ; elektrické ohrievače s príkonom |
 | Káble (DI boxy) | 19 | typ a aktívny / pasívny |
 | Spotrebný materiál | 24 | len názov (batérie, gaffer páska, náplne) |
+| Značka „Unknown“ (bez značky) | 82 | len typ – pri technike bez značky sa ďalšie údaje nedopĺňajú |
 
 **Najviac by pomohli (podľa poradia):** d&b audiotechnik (aj zosilňovače ku boxom), listy k pultom (Yamaha,
 Allen & Heath, DiGiCo – váha, karty), Shure a Sennheiser (frekvenčné pásma bezdrôtov a in-ear), listy k JBL SRX900
