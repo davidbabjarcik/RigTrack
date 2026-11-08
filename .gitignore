@@ -8,3 +8,6 @@ release
 !.env.example
 *.local
 .DS_Store
+dist-e2e
+test-results
+playwright-report

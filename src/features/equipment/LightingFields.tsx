@@ -83,6 +83,15 @@ export function LightingFields() {
           </SelectField>
         )}
         {!lightAccessory && (
+          <label className="flex items-start gap-2 text-sm sm:col-span-2">
+            <input type="checkbox" className="mt-0.5 size-4" {...register('externalDimmer')} />
+            <span>
+              {tx('Stmieva sa externým dimmerom (bez DMX, len 230 V)')}
+              <span className="block text-xs text-muted-foreground">{tx('Napríklad halogénový fresnel, PAR alebo blinder. V elektrike eventu sa k nemu odporučí dimmer.')}</span>
+            </span>
+          </label>
+        )}
+        {!lightAccessory && (
           <fieldset className="sm:col-span-2">
             <legend className="mb-1.5 text-sm font-medium">{tx('DMX módy')}</legend>
             {dmxModes.fields.length === 0 && <p className="mb-2 text-sm text-muted-foreground">{tx('Napríklad Basic 8 ch, Standard 16 ch, Extended 24 ch.')}</p>}

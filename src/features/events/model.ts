@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { busyQuantity, type Loan } from '@/features/loans/model'
+import { busyQuantity, isOpen, isOverdue, type Loan } from '@/features/loans/model'
 
 // Zodpovedá check constraint v 0018_events.sql.
 export const EVENT_STATUSES = ['planned', 'confirmed', 'done', 'cancelled'] as const
@@ -165,6 +165,39 @@ export function busyElsewhere(
     plannedOnEvents(others, equipmentId, event.startsOn, event.endsOn) +
     busyQuantity(loans, equipmentId, event.startsOn, event.endsOn, today)
   )
+}
+
+/** Kde je technika v termíne eventu: iné živé eventy a otvorené výpožičky (s počtom kusov). */
+export function whereBusy(
+  event: Pick<CompanyEvent, 'id' | 'startsOn' | 'endsOn'>,
+  equipmentId: string,
+  events: CompanyEvent[],
+  loans: Loan[],
+  today: string,
+) {
+  const onEvents = events
+    .filter((other) => other.id !== event.id && isLive(other) && other.startsOn <= event.endsOn && other.endsOn >= event.startsOn)
+    .map((other) => ({ id: other.id, name: other.name, startsOn: other.startsOn, endsOn: other.endsOn, quantity: other.equipment.find((item) => item.equipmentId === equipmentId)?.quantity ?? 0 }))
+    .filter((row) => row.quantity > 0)
+  const onLoans = loans
+    .filter((loan) => isOpen(loan) && loan.startsOn <= event.endsOn && (isOverdue(loan, today) || loan.endsOn >= event.startsOn))
+    .map((loan) => ({ id: loan.id, borrower: loan.borrower, overdue: isOverdue(loan, today), quantity: loan.items.find((item) => item.equipmentId === equipmentId)?.quantity ?? 0 }))
+    .filter((row) => row.quantity > 0)
+  return { onEvents, onLoans }
+}
+
+type Comparable = { name: string; manufacturer: string; model: string }
+const key = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ')
+
+/** Rovnaká technika u prepojených firiem: podľa výrobcu a modelu, bez nich podľa názvu. */
+export function sameGearAt<T extends Comparable & { companyName: string; quantity: number }>(item: Comparable, linked: T[]) {
+  const byModel = Boolean(key(item.manufacturer) && key(item.model))
+  const matches = linked.filter((other) =>
+    byModel ? key(other.manufacturer) === key(item.manufacturer) && key(other.model) === key(item.model) : key(other.name) === key(item.name) && key(item.name) !== '',
+  )
+  const companies = new Map<string, number>()
+  for (const other of matches) companies.set(other.companyName, (companies.get(other.companyName) ?? 0) + other.quantity)
+  return [...companies].map(([companyName, quantity]) => ({ companyName, quantity })).sort((a, b) => b.quantity - a.quantity)
 }
 
 /**

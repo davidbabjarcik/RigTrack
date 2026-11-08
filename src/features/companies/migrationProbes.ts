@@ -66,6 +66,8 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0137', label: 'komu činnosť patrí', table: 'company_duty_types', column: 'owner_ids' },
   { migration: '0139', label: 'formát v tlačovej fronte', table: 'print_queue', column: 'format' },
   { migration: '0141', label: 'farby plánu skladu', table: 'warehouses', column: 'plan_colors' },
+  { migration: '0166', label: 'elektrika eventu po miestach a elektrocentrály', table: 'event_power_plans', column: 'plan' },
+  { migration: '0167', label: 'kalendár eventov do mobilu', table: 'calendar_feeds', column: 'scope' },
   { migration: '0067', label: 'žiadosti o servis pre autá', table: 'service_requests', column: 'vehicle_id' },
 ]
 

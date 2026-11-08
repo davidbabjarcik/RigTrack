@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight, ClipboardCheck, PackageOpen, Plus, QrCode as QrCodeIcon, SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, ChevronRight, ClipboardCheck, PackageOpen, Plus, QrCode as QrCodeIcon, SlidersHorizontal, ArrowRightLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -150,6 +150,8 @@ export function CasesListPage() {
         action={
           <div className="flex flex-wrap gap-2">
             <ScanButton />
+            <LinkButton to="/move" variant="outline">
+              <ArrowRightLeft className="size-4" aria-hidden />{tx('Hromadný presun')}</LinkButton>
             {canEdit && (
               <LinkButton to="/qr/cases" variant="outline">
                 <QrCodeIcon className="size-4" aria-hidden />{tx('QR štítky')}</LinkButton>

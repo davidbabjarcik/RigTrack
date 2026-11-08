@@ -89,6 +89,7 @@ const offerEditor = lazyPage(() => import('@/features/offers/OfferEditorPage').t
 const sharedOffer = lazyPage(() => import('@/features/offers/SharedOfferPage').then((m) => m.SharedOfferPage))
 const offerPrint = lazyPage(() => import('@/features/offers/OfferPrintPage').then((m) => m.OfferPrintPage), 'offers.view')
 const attendance = lazyPage(() => import('@/features/attendance/AttendancePage').then((m) => m.AttendancePage))
+const bulkMove = lazyPage(() => import('@/features/scan/BulkMovePage').then((m) => m.BulkMovePage))
 const qrLabels = lazyPage(() => import('@/features/scan/QrLabelsPage').then((m) => m.QrLabelsPage), 'equipment.view')
 const crewSheet = lazyPage(() => import('@/features/events/CrewSheetPage').then((m) => m.CrewSheetPage), 'events.view')
 const dmxPrint = lazyPage(() => import('@/features/patch/DmxPrintPage').then((m) => m.DmxPrintPage), 'events.view')
@@ -221,6 +222,7 @@ export const routes: RouteObject[] = [
               { path: 'incidents', lazy: incidents },
               { path: 'shopping', lazy: shopping },
               { path: 'calendar', lazy: calendar },
+              { path: 'move', lazy: bulkMove },
               { path: 'suggestions', lazy: suggestions },
               { path: 'notifications', lazy: notifications },
               { path: 'panel', lazy: panel },

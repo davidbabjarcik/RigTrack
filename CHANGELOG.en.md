@@ -5,6 +5,21 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.0
+
+- **Power by places**: in the event detail you split the equipment by places (roof, front and rear truss, stage
+  lights, front light, main PA, monitors, band…). For each place the app balances the load over the phases and
+  recommends a feed – minimum and optimal (with 20 % reserve), single and three phase – and Socapex circuits for lights.
+- **External dimmer**: for a light without DMX (halogen fresnel, PAR, blinder) tick “Dimmed by an external dimmer”.
+  The event power section then recommends a 230 V or 400 V dimmer, the number of channels and its feed.
+- **Generators**: add generators to an event – your own or rented from a company in Contacts. The app works out how
+  many kVA you need (minimum and with reserve) and whether the added generators are enough.
+- **Availability check when planning**: when you add more pieces to an event than are free in that term, the app
+  shows how many are missing, where the equipment is (another event, a loan, service) and which linked companies have it.
+- **Bulk move by scanning** (Cases → Bulk move): scan several cases and pieces in a row and with one tap store them
+  in a warehouse spot, add them to an event or send them to service. Scanning a spot label sets the destination.
+- The app loads faster on mobile the first time.
+
 ### 8.19
 
 - **What's new in English**: with the app in English, all versions of the changes are in English (with English dates).

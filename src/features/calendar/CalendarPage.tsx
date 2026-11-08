@@ -19,6 +19,10 @@ import { formatDate, todayIso } from '@/lib/format'
 import { downloadIcs } from '@/lib/ics'
 import { cn } from '@/lib/utils'
 import { CalendarGrid } from './CalendarGrid'
+import { CalendarSubscription } from './CalendarSubscription'
+import { can } from '@/lib/permissions'
+
+const CALENDAR_FEED_READY = false
 import { calendarExport } from './export'
 import { KIND_STYLES } from './kindStyles'
 import {
@@ -76,7 +80,8 @@ function EntryRow({ entry, showDate }: { entry: AgendaEntry; showDate?: boolean 
 }
 
 export function CalendarPage() {
-  const companyId = useCompany().active!.companyId
+  const company = useCompany().active!
+  const companyId = company.companyId
   const userId = useAuth().session?.user.id
   const [days, setDays] = useState(90)
   const [hidden, setHidden] = useState<EntryKind[]>([])
@@ -141,6 +146,13 @@ export function CalendarPage() {
       {me && (
         <div className="mb-5">
           <Availability companyId={companyId} person={me} canEdit title={tx('Kedy nemôžem')} />
+        </div>
+      )}
+
+      {/* Odber kalendára sa zapne po nasadení Edge funkcie calendar-feed. */}
+      {CALENDAR_FEED_READY && (
+        <div className="mb-5">
+          <CalendarSubscription companyId={companyId} canSeeAll={can(company, 'events.view')} />
         </div>
       )}
 

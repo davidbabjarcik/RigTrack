@@ -272,6 +272,8 @@ export type EquipmentAttributes = {
   inCover?: boolean
   /** Aký obal (nepovinné), napr. „obal na top“. */
   coverNote?: string
+  /** Svetlo bez DMX (napr. halogénový fresnel, blinder) – stmieva sa externým dimmerom, len 230 V. */
+  externalDimmer?: boolean
   /** Sledovať prevádzkové hodiny (zosilňovače, svetlá) a s akou úrovňou kontroly odčítavať počítadlo. */
   trackHours?: boolean
   hoursPriority?: CheckLevel
@@ -536,6 +538,7 @@ export const equipmentSchema = z.object({
   lightSource: z.enum([...LIGHT_SOURCES, '']),
   lightType: z.enum([...(LIGHT_TYPES as LightType[]), '']).optional(),
   trackHours: z.boolean().optional(),
+  externalDimmer: z.boolean().optional(),
   noCase: z.boolean().optional(),
   sheetAccessory: z.boolean().optional(),
   cableVariant: text(40).optional(),
@@ -756,6 +759,7 @@ export function attributesFor(
         | 'category'
         | 'lightType'
         | 'trackHours'
+        | 'externalDimmer'
         | 'noCase'
         | 'sheetAccessory'
         | 'cableVariant'
@@ -900,6 +904,7 @@ export function attributesFor(
   // Mixpult a prevodník: verzia softvéru / firmvéru.
   if (lighting && (values.lightType === 'acc_console' || values.lightType === 'acc_converter') && values.softwareVersion?.trim()) attributes.softwareVersion = values.softwareVersion.trim()
   if (lighting && values.lightSource && !accessory) attributes.lightSource = values.lightSource
+  if (lighting && values.externalDimmer && !accessory) attributes.externalDimmer = true
   if (lighting && (values.lightSource === 'discharge' || values.lightSource === 'halogen') && !accessory) {
     if (values.lampChangedOn) attributes.lampChangedOn = values.lampChangedOn
     if (values.lampChangedHours !== undefined) attributes.lampChangedHours = values.lampChangedHours
@@ -1115,6 +1120,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>, options:
     a.lightSource && LIGHT_SOURCE_LABELS[a.lightSource],
     a.boxWidthCm !== undefined && a.boxDepthCm !== undefined && `${formatNumber(a.boxWidthCm)}×${formatNumber(a.boxDepthCm)}${a.boxHeightCm !== undefined ? `×${formatNumber(a.boxHeightCm)}` : ''} cm`,
     a.dmxModes?.length && `DMX ${a.dmxModes.map((mode) => mode.channels).join('/')} ch`,
+    a.externalDimmer && 'externý dimmer (230 V)',
     a.dipSwitches && `DIP ${a.dipSwitches}`,
     a.nodeProtocols?.length && a.nodeProtocols.map((value) => (value === 'artnet' ? 'Art-Net' : 'sACN')).join(' + '),
     a.nodePorts?.length && `${a.nodePorts.length} ${a.nodePorts.length === 1 ? 'port' : a.nodePorts.length < 5 ? 'porty' : 'portov'}`,

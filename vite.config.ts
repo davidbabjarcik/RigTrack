@@ -94,7 +94,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         // Čítanie PDF sa sťahuje až pri importe faktúry; do offline shellu nepatrí.
         // Snímky úvodnej stránky do offline shellu nepatria.
-        globIgnores: ['**/pdf-*.js', 'home/**'],
+        // Zoznam noviniek (veľký, mení sa pri každej verzii) sa stiahne až pri otvorení.
+        globIgnores: ['**/pdf-*.js', 'home/**', '**/ChangelogPage-*.js'],
         navigateFallback: `${base}index.html`,
         cleanupOutdatedCaches: true,
         // Push upozornenia (public/push-sw.js): zobrazenie a otvorenie appky po ťuknutí.
@@ -113,7 +114,9 @@ export default defineConfig({
           groups: [
             { name: 'react', test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/ },
             { name: 'supabase', test: /node_modules[\\/]@supabase[\\/]/ },
-            { name: 'vendor', test: /node_modules[\\/](@tanstack|react-hook-form|zod|@hookform|lucide-react)[\\/]/ },
+            { name: 'vendor', test: /node_modules[\\/](@tanstack|zod|lucide-react)[\\/]/ },
+            // Formuláre až pri otvorení formulára – úvodná obrazovka ich nepotrebuje.
+            { name: 'forms', test: /node_modules[\\/](react-hook-form|@hookform)[\\/]/ },
           ],
         },
       },

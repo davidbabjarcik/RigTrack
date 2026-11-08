@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Loan } from '@/features/loans/model'
-import { busyElsewhere, describeTimes, eventsSinceCheck, EMPTY_EVENT_DETAILS, eventSchema, formatFileSize, pastEventNames, plannedOnEvents, previousEdition, seriesKey, sortEvents, type CompanyEvent } from './model'
+import { busyElsewhere, describeTimes, eventsSinceCheck, EMPTY_EVENT_DETAILS, eventSchema, formatFileSize, pastEventNames, plannedOnEvents, previousEdition, seriesKey, sameGearAt, sortEvents, whereBusy, type CompanyEvent } from './model'
 
 const today = '2026-10-13'
 
@@ -135,5 +135,38 @@ describe('eventsSinceCheck', () => {
     expect(eventsSinceCheck('box', '2026-09-01', events, 'future', today)).toBe(2)
     expect(eventsSinceCheck('box', '2026-10-01', events, 'future', today)).toBe(0)
     expect(eventsSinceCheck('box', null, events, 'b', today)).toBe(2)
+  })
+})
+
+describe('whereBusy', () => {
+  it('lists the other events and open loans that hold the equipment in the term', () => {
+    const events = [
+      event({ id: 'e1', equipment: [{ equipmentId: 'cables', quantity: 5, caseId: null }] }),
+      event({ id: 'other', name: 'Ples', startsOn: '2026-11-02', endsOn: '2026-11-03', equipment: [{ equipmentId: 'cables', quantity: 3, caseId: null }] }),
+      event({ id: 'cancelled', status: 'cancelled', equipment: [{ equipmentId: 'cables', quantity: 2, caseId: null }] }),
+      event({ id: 'none', equipment: [{ equipmentId: 'mixer', quantity: 1, caseId: null }] }),
+    ]
+    const result = whereBusy(event({}), 'cables', events, [loan({}), loan({ id: 'done', status: 'returned' })], today)
+    expect(result.onEvents).toEqual([{ id: 'other', name: 'Ples', startsOn: '2026-11-02', endsOn: '2026-11-03', quantity: 3 }])
+    expect(result.onLoans).toEqual([{ id: 'l1', borrower: 'Klient', overdue: false, quantity: 4 }])
+  })
+})
+
+describe('sameGearAt', () => {
+  const linked = [
+    { companyName: 'Partner A', name: 'Svetlo 1', manufacturer: 'Maker', model: 'X1', quantity: 4 },
+    { companyName: 'Partner A', name: 'Svetlo 1 b', manufacturer: 'maker ', model: 'x1', quantity: 2 },
+    { companyName: 'Partner B', name: 'Iné', manufacturer: 'Maker', model: 'X1', quantity: 8 },
+    { companyName: 'Partner C', name: 'Kábel 10 m', manufacturer: '', model: '', quantity: 20 },
+  ]
+  it('matches by manufacturer and model, summed per company', () => {
+    expect(sameGearAt({ name: 'Moje svetlo', manufacturer: 'MAKER', model: 'X1' }, linked)).toEqual([
+      { companyName: 'Partner B', quantity: 8 },
+      { companyName: 'Partner A', quantity: 6 },
+    ])
+  })
+  it('falls back to the name without a model', () => {
+    expect(sameGearAt({ name: 'kábel 10 m', manufacturer: '', model: '' }, linked)).toEqual([{ companyName: 'Partner C', quantity: 20 }])
+    expect(sameGearAt({ name: '', manufacturer: '', model: '' }, linked)).toEqual([])
   })
 })

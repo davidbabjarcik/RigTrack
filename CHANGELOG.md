@@ -5,6 +5,23 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.0 – 8. 11. 2026
+
+- **Elektrika po miestach**: v detaile eventu rozdelíte techniku podľa miest (strecha, predná a zadná rampa, svetlá na
+  pódiu, predné svietenie, hlavný zvuk, odposluchy, kapela…). Ku každému miestu appka rozfázuje záťaž a odporučí
+  prívod – minimálny aj optimálny (s rezervou 20 %), jednofázový aj trojfázový – a pri svetlách počet okruhov Socapexu.
+- **Externý dimmer**: pri svetle bez DMX (halogénový fresnel, PAR, blinder) zaškrtnete „Stmieva sa externým dimmerom“.
+  V elektrike eventu sa potom odporučí dimmer 230 V alebo 400 V, počet kanálov a prívod k nemu.
+- **Elektrocentrály**: k eventu pridáte centrály – vlastné aj požičané od firmy z Kontaktov. Appka spočíta, koľko kVA
+  treba (minimálne aj s rezervou) a či pridané centrály stačia.
+- **Kontrola dostupnosti pri plánovaní**: keď na event pridáte viac kusov, než je v termíne voľných, appka napíše,
+  koľko chýba a kde technika je (iný event, výpožička, servis) a ktoré prepojené firmy ju majú.
+- **Hromadný presun skenovaním** (Cases → Hromadný presun): naskenujete viac cases a techniky za sebou a jedným
+  ťuknutím ich uložíte na miesto v sklade, pridáte na event alebo pošlete do servisu. Štítok miesta nastaví cieľ.
+- Appka sa na mobile pri prvom otvorení načíta rýchlejšie.
+- Technické: migrácie 0166 (elektrika po miestach), 0167 (príprava kalendára do mobilu) a 0168 (doladenie) – `supabase/update-all.sql`;
+  automatický test všetkých obrazovík v prehliadači (`npm run test:e2e`).
+
 ### 8.19 – 8. 11. 2026
 
 - **Čo je nové po anglicky**: pri anglickej appke sú všetky verzie zmien v angličtine (aj s anglickým dátumom).

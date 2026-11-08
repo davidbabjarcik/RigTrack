@@ -18,13 +18,15 @@ import { addEventCase, addEventEquipment, eventKeys, removeEventCase, removeEven
 import { EventReminders } from './EventReminders'
 import { useGearBusyElsewhere } from './elsewhere'
 import { PackagePicker } from '@/features/packages/PackagePicker'
-import { busyElsewhere, eventsSinceCheck, type CompanyEvent } from './model'
+import { busyElsewhere, eventsSinceCheck, sameGearAt, whereBusy, type CompanyEvent } from './model'
+import { piecesInService } from '@/features/service/model'
+import { useServiceRecords } from '@/features/service/useServiceRecords'
+import { useLinkedEquipment } from '@/features/links/api'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { tx, tf } from '@/lib/i18n'
 
 type Props = { companyId: string; event: CompanyEvent; events: CompanyEvent[]; canEdit: boolean }
 
-const COLLISION = 'Kolízia: v tomto termíne je časť techniky na inom evente alebo výpožičke.'
 
 /** Technika naplánovaná na event, s upozornením na kolízie s inými eventmi a výpožičkami. */
 export function EventEquipmentSection({ companyId, event, events, canEdit }: Props) {
@@ -98,7 +100,14 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
   // Vlastná technika zdieľaná s inou firmou: kusy, ktoré sú v termíne na evente tej firmy (0091).
   const gearElsewhere = useGearBusyElsewhere(companyId, event.startsOn, event.endsOn)
   const otherCompany = (equipmentId: string) => gearElsewhere.data?.find((item) => item.equipmentId === equipmentId)?.quantity ?? 0
-  const freeOf = (equipmentId: string, total: number) => total - busyElsewhere(event, equipmentId, events, loans.data ?? [], today) - otherCompany(equipmentId)
+  // Kusy v rozpracovanom servise sa rátajú ako nedostupné (kým sa servis neuzavrie).
+  const service = useServiceRecords(companyId)
+  const inService = piecesInService(service.data ?? [])
+  const freeOf = (equipmentId: string, total: number) =>
+    total - busyElsewhere(event, equipmentId, events, loans.data ?? [], today) - otherCompany(equipmentId) - (inService.get(equipmentId) ?? 0)
+  // Pri nedostatku návrh: rovnakú techniku majú prepojené firmy (len tie, ktoré techniku zdieľajú).
+  const short = event.equipment.some((line) => line.quantity > freeOf(line.equipmentId, itemOf(line.equipmentId)?.quantity ?? 0))
+  const linked = useLinkedEquipment(companyId, short)
   const grouped = groupByCase(event.equipment)
 
   return (
@@ -167,12 +176,21 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                     </Button>
                   )}
                 </div>
-                {collision && (
-                  <p className="mt-2 flex items-center gap-2 text-sm text-destructive">
-                    <TriangleAlert className="size-4 shrink-0" aria-hidden />
-                    {COLLISION}
-                  </p>
-                )}
+                {collision && content.map((line) => {
+                  const piece = itemOf(line.equipmentId)
+                  const free = freeOf(line.equipmentId, piece?.quantity ?? 0)
+                  if (!piece || line.quantity <= free) return null
+                  return (
+                    <Shortage
+                      key={line.equipmentId}
+                      title={piece.name}
+                      missing={line.quantity - Math.max(free, 0)}
+                      where={whereBusy(event, line.equipmentId, events, loans.data ?? [], today)}
+                      inService={inService.get(line.equipmentId) ?? 0}
+                      partners={sameGearAt(piece, linked.data ?? [])}
+                    />
+                  )
+                })}
                 {unchecked && (
                   <p className="mt-2 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
                     <ClipboardCheck className="size-4 shrink-0" aria-hidden />
@@ -231,11 +249,13 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                     <span className="shrink-0 font-medium">{item.quantity}{' '}{tx('ks')}</span>
                   )}
                 </div>
-                {collision && (
-                  <p className="mt-2 flex items-center gap-2 text-sm text-destructive">
-                    <TriangleAlert className="size-4 shrink-0" aria-hidden />
-                    {COLLISION}
-                  </p>
+                {collision && piece && (
+                  <Shortage
+                    missing={item.quantity - Math.max(free, 0)}
+                    where={whereBusy(event, item.equipmentId, events, loans.data ?? [], today)}
+                    inService={inService.get(item.equipmentId) ?? 0}
+                    partners={sameGearAt(piece, linked.data ?? [])}
+                  />
                 )}
                 {otherCompany(item.equipmentId) > 0 && (
                   <p className="mt-1 flex items-center gap-2 text-sm text-accent">
@@ -270,5 +290,43 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
         </div>
       )}
     </CollapsibleSection>
+  )
+}
+
+/** Prečo technika nestačí: kde je v termíne, koľko je v servise a kto z prepojených firiem ju má. */
+function Shortage({ title, missing, where, inService, partners }: {
+  title?: string
+  missing: number
+  where: ReturnType<typeof whereBusy>
+  inService: number
+  partners: { companyName: string; quantity: number }[]
+}) {
+  const term = (from: string, to: string) => (from === to ? formatDate(from) : `${formatDate(from)} – ${formatDate(to)}`)
+  return (
+    <div className="mt-2 rounded-lg border border-destructive/40 bg-destructive/5 p-2 text-sm">
+      <p className="flex items-center gap-2 font-medium text-destructive">
+        <TriangleAlert className="size-4 shrink-0" aria-hidden />
+        {title ? tf('{0}: chýba {1} ks v tomto termíne.', title, missing) : tf('Chýba {0} ks v tomto termíne.', missing)}
+      </p>
+      <ul className="mt-1 flex flex-col gap-0.5 pl-6 text-muted-foreground">
+        {where.onEvents.map((row) => (
+          <li key={row.id}>
+            {row.quantity}{' '}{tx('ks na evente')}{' '}<Link to={`/events/${row.id}`} className="font-medium text-foreground underline">{row.name}</Link>{' '}({term(row.startsOn, row.endsOn)})
+          </li>
+        ))}
+        {where.onLoans.map((row) => (
+          <li key={row.id}>
+            {row.quantity}{' '}{tx('ks na výpožičke:')}{' '}<Link to={`/loans/${row.id}`} className="font-medium text-foreground underline">{row.borrower}</Link>
+            {row.overdue && <span className="text-destructive">{' '}{tx('(po termíne vrátenia)')}</span>}
+          </li>
+        ))}
+        {inService > 0 && <li>{inService}{' '}{tx('ks je v servise (neuzavretý záznam)')}</li>}
+      </ul>
+      {partners.length > 0 && (
+        <p className="mt-1 pl-6">
+          {tx('Majú ju prepojené firmy:')}{' '}{partners.map((partner) => `${partner.companyName} (${partner.quantity} ks)`).join(', ')}
+        </p>
+      )}
+    </div>
   )
 }
