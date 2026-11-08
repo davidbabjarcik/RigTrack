@@ -45,6 +45,13 @@ jobs:
       - name: Testy
         run: npm test
 
+      # Každá obrazovka appky v prehliadači (mobil aj PC) na hotovom builde s náhradnou databázou – bez skutočných dát.
+      - name: Prehliadač pre test obrazoviek
+        run: npx playwright install --with-deps chromium
+
+      - name: Test obrazoviek
+        run: npm run test:e2e
+
       # Bez týchto dvoch premenných by sa nasadila appka s hláškou „Databáza zatiaľ nie je pripojená“.
       - name: Kontrola premenných
         run: |
