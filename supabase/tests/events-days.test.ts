@@ -53,6 +53,14 @@ describe('event days, links, partners and travel', () => {
     await t.as('technik', `insert into public.event_travel (company_id, event_id, travel_date, vehicles, round_trips, stay) values ($1, $2, '2026-11-06', 2, 1, 'venue')`, [company, event])
     expect(await t.as('viewer', 'select vehicles, stay from public.event_travel')).toEqual([{ vehicles: 2, stay: 'venue' }])
   })
+
+  it('allows more cars on one day that stayed in different places', async () => {
+    await t.as('technik', `insert into public.event_travel (company_id, event_id, travel_date, stay, label) values ($1, $2, '2026-11-06', 'home', 'Auto 2')`, [company, event])
+    const id = (await t.as('technik', `select id from public.event_travel where label = 'Auto 2'`))[0].id
+    await t.as('technik', `update public.event_travel set label = 'Dodávka' where id = $1`, [id])
+    expect(await t.as('viewer', `select label, stay from public.event_travel where travel_date = '2026-11-06' order by label`)).toEqual([{ label: '', stay: 'venue' }, { label: 'Dodávka', stay: 'home' }])
+    await expect(t.as('technik', `insert into public.event_travel (company_id, event_id, travel_date, label) values ($1, $2, '2026-11-06', $3)`, [company, event, 'x'.repeat(61)])).rejects.toThrow()
+  })
 })
 
 describe('personal work logs and expenses', () => {

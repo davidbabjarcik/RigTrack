@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeftRight, CalendarDays, CalendarPlus, CalendarX, Gift, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, CalendarDays, CalendarX, Gift, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { useEvents } from '@/features/events/useEvents'
@@ -130,15 +129,6 @@ export function CalendarPage() {
       <PageHeader
         title={tx('Kalendár')}
         description={tx('Termíny zo všetkých častí aplikácie na jednom mieste')}
-        action={
-          <Button
-            variant="outline"
-            disabled={events.isPending || loans.isPending}
-            title={tx('Stiahne eventy a výpožičky (od minulého mesiaca) ako .ics – otvoríte ho v telefóne, Google Kalendári alebo Outlooku')}
-            onClick={() => downloadIcs(`rigtrack-kalendar-${today}`, calendarExport(data.events, data.loans, addDays(today, -30)))}
-          >
-            <CalendarPlus className="size-4" aria-hidden />{tx('Export do kalendára')}</Button>
-        }
       />
 
       {me && (
@@ -148,7 +138,9 @@ export function CalendarPage() {
       )}
 
       <div className="mb-5">
-        <CalendarSubscription companyId={companyId} companyName={company.companyName} canSeeAll={can(company, 'events.view')} />
+        <CalendarSubscription companyId={companyId} companyName={company.companyName} canSeeAll={can(company, 'events.view')}
+          onDownload={events.isPending || loans.isPending ? undefined : () => downloadIcs(`rigtrack-kalendar-${today}`, calendarExport(data.events, data.loans, addDays(today, -30)))}
+        />
       </div>
 
       <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label={tx('Zobrazenie')}>

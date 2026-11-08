@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Car, ExternalLink, Route } from 'lucide-react'
+import { Car, ExternalLink, Plus, Route } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
@@ -15,31 +15,37 @@ import { tx } from '@/lib/i18n'
 
 const weekday = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('sk-SK', { weekday: 'short', day: 'numeric', month: 'numeric' })
 
-function TravelRow({ companyId, eventId, date, day, distanceKm, canEdit }: { companyId: string; eventId: string; date: string; day: TravelDay | undefined; distanceKm: number | null; canEdit: boolean }) {
+type RowProps = { companyId: string; eventId: string; date: string; day: TravelDay | undefined; distanceKm: number | null; canEdit: boolean; first: boolean; onDone?: () => void }
+
+/** Jeden záznam dopravy: auto (alebo viac rovnakých áut) v daný deň. Deň môže mať viac záznamov – napr. jedno auto ide domov, druhé ostane na akcii. */
+function TravelRow({ companyId, eventId, date, day, distanceKm, canEdit, first, onDone }: RowProps) {
   const queryClient = useQueryClient()
   const [draft, setDraft] = useState<Omit<TravelDay, 'id'> | null>(null)
-  const current = draft ?? { date, vehicles: day?.vehicles ?? 1, roundTrips: day?.roundTrips ?? 1, stay: day?.stay ?? 'home', stayPlace: day?.stayPlace ?? '', extraKm: day?.extraKm ?? 0, note: day?.note ?? '' }
+  const current = draft ?? { date, vehicles: day?.vehicles ?? 1, roundTrips: day?.roundTrips ?? 1, stay: day?.stay ?? 'home', stayPlace: day?.stayPlace ?? '', extraKm: day?.extraKm ?? 0, note: day?.note ?? '', label: day?.label ?? '' }
   const refresh = () => queryClient.invalidateQueries({ queryKey: planKeys.travel(companyId, eventId) })
-  const save = useMutation({ mutationFn: () => saveTravel(companyId, eventId, { ...current, id: day?.id }), onSuccess: async () => (await refresh(), setDraft(null)) })
+  const save = useMutation({ mutationFn: () => saveTravel(companyId, eventId, { ...current, id: day?.id }), onSuccess: async () => (await refresh(), setDraft(null), onDone?.()) })
   const remove = useMutation({ mutationFn: () => deleteTravel(day!.id), onSettled: refresh })
   const number = (value: string, max: number) => Math.min(max, Math.max(0, Math.round(Number(value) || 0)))
+  const dateLabel = <span className="w-24 shrink-0 font-medium capitalize">{first ? weekday(date) : ''}</span>
 
   if (!canEdit) {
     if (!day) return null
     return (
-      <li className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm">
-        <span className="w-24 font-medium capitalize">{weekday(date)}</span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm">
+        {dateLabel}
+        {day.label && <span className="font-medium">{day.label}</span>}
         <span>
           {day.vehicles} {day.vehicles === 1 ? 'auto' : day.vehicles < 5 ? tx('autá') : tx('áut')} × {day.roundTrips} {day.roundTrips === 1 ? tx('otočka') : tx('otočky')}
         </span>
         <span>{tx(STAY_LABELS[day.stay])}{day.stayPlace && ` (${day.stayPlace})`}</span>
         <span className="ml-auto font-medium tabular-nums">{formatNumber(dayKm(distanceKm, day))}{' '}{tx('km')}</span>
-      </li>
+      </div>
     )
   }
   return (
-    <li className="flex flex-wrap items-center gap-2 px-4 py-3 text-sm">
-      <span className="w-24 shrink-0 font-medium capitalize">{weekday(date)}</span>
+    <div className="flex flex-wrap items-center gap-2 px-4 py-3 text-sm">
+      {dateLabel}
+      <input aria-label={tx('Auto alebo šofér')} placeholder={tx('auto / šofér')} className="h-9 w-28 rounded-lg border bg-surface px-2" maxLength={60} value={current.label} onChange={(event) => setDraft({ ...current, label: event.target.value })} />
       <label className="flex items-center gap-1">
         <Car className="size-4 text-muted-foreground" aria-hidden />
         <input aria-label={tx('Počet áut')} type="number" min={0} max={50} className="h-9 w-14 rounded-lg border bg-surface px-2" value={current.vehicles} onChange={(event) => setDraft({ ...current, vehicles: number(event.target.value, 50) })} />{tx('áut')}</label>
@@ -65,8 +71,43 @@ function TravelRow({ companyId, eventId, date, day, distanceKm, canEdit }: { com
           {day ? tx('Uložiť') : tx('Zapísať')}
         </Button>
       )}
+      {!day && onDone && (
+        <Button variant="ghost" size="sm" onClick={onDone}>{tx('Zrušiť')}</Button>
+      )}
       {day && !draft && (
         <Button variant="ghost" size="sm" disabled={remove.isPending} onClick={() => remove.mutate()}>{tx('Zmazať')}</Button>
+      )}
+    </div>
+  )
+}
+
+/** Jeden deň: uložené záznamy a prípadne nové (ďalšie auto). */
+function TravelDate({ companyId, eventId, date, days, distanceKm, canEdit }: { companyId: string; eventId: string; date: string; days: TravelDay[]; distanceKm: number | null; canEdit: boolean }) {
+  const [added, setAdded] = useState(0)
+  if (!canEdit && days.length === 0) return null
+  // Prázdny deň ukáže jeden riadok na zapísanie; ďalšie pribudnú tlačidlom.
+  const blanks = days.length === 0 ? Math.max(1, added) : added
+  const common = { companyId, eventId, date, distanceKm, canEdit }
+  return (
+    <li>
+      {days.map((day, index) => (
+        <TravelRow key={day.id} {...common} day={day} first={index === 0} />
+      ))}
+      {Array.from({ length: blanks }, (_, index) => (
+        <TravelRow
+          key={`new-${index}`}
+          {...common}
+          day={undefined}
+          first={days.length === 0 && index === 0}
+          onDone={days.length === 0 && index === 0 && added === 0 ? undefined : () => setAdded((count) => Math.max(0, count - 1))}
+        />
+      ))}
+      {canEdit && days.length > 0 && (
+        <div className="px-4 pb-3 pl-[7.25rem] max-sm:pl-4">
+          <Button variant="ghost" size="sm" onClick={() => setAdded((count) => count + 1)}>
+            <Plus className="size-4" aria-hidden />{tx('Ďalšie auto v tento deň')}
+          </Button>
+        </div>
       )}
     </li>
   )
@@ -145,11 +186,11 @@ export function EventTravelSection({ companyId, event, canEdit }: { companyId: s
       </div>
       <ul className="divide-y overflow-hidden rounded-xl border bg-surface">
         {eventDates(event.startsOn, event.endsOn).map((date) => (
-          <TravelRow key={date} companyId={companyId} eventId={event.id} date={date} day={travel.data?.find((item) => item.date === date)} distanceKm={distance} canEdit={canEdit} />
+          <TravelDate key={date} companyId={companyId} eventId={event.id} date={date} days={(travel.data ?? []).filter((item) => item.date === date)} distanceKm={distance} canEdit={canEdit} />
         ))}
       </ul>
       <p className="mt-2 text-sm">{tx('Spolu:')}{' '}<span className="font-semibold tabular-nums">{formatNumber(total)}{' '}{tx('km')}</span>
-        <span className="text-muted-foreground">{' '}{tx('– tam a späť × otočky × autá + km navyše (napr. po meste)')}</span>
+        <span className="text-muted-foreground">{' '}{tx('– tam a späť × otočky × autá + km navyše (napr. po meste). Ak autá v jeden deň jazdili inak (jedno domov, druhé ostalo), pridajte ďalšie auto.')}</span>
       </p>
     </CollapsibleSection>
   )

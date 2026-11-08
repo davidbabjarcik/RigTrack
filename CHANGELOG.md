@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.3 – 8. 11. 2026
+
+- **Detail eventu na karty**: Prehľad, Technika, Posádka, Doprava a peniaze a Podklady – vždy vidíte len jednu časť
+  namiesto dlhej stránky so všetkými sekciami.
+- **Doprava: viac áut v jeden deň** – tlačidlo „Ďalšie auto v tento deň“. Každé auto má popis (napr. dodávka alebo
+  meno šoféra), počet otočiek a vlastné „kde sa spalo“ – napríklad jedno auto sa vrátilo domov a druhé ostalo na akcii.
+- Kalendár je prehľadnejší: hlavná cesta je „Kalendár v mobile“ (odber, ktorý sa aktualizuje sám). Jednorazové
+  stiahnutie .ics je ako malý odkaz v tej istej sekcii a tlačidlo Google Kalendára v detaile eventu je preč, aby sa
+  event v kalendári neukázal dvakrát.
+- Technické: migrácia 0170 (viac záznamov dopravy v jeden deň).
+
 ### 9.2 – 8. 11. 2026
 
 - **Program po dňoch už pri pridávaní eventu**: po zadaní dátumov od–do sa ku každému dňu dá vybrať, čo sa deje

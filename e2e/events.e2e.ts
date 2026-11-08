@@ -39,3 +39,18 @@ test('detail eventu: časy len v programe, organizátor vedľa miesta', async ({
   await expect(page.getByText('Časy (prvý deň)')).toHaveCount(0)
   await page.screenshot({ path: info.outputPath(`detail-eventu-${info.project.name}.png`), fullPage: true })
 })
+
+test('detail eventu: karty a viac áut v jeden deň', async ({ page }, info) => {
+  await signIn(page)
+  const travel = (id: string, stay: string, label: string) => ({ id, travel_date: '2026-11-15', vehicles: 1, round_trips: 1, stay, stay_place: '', extra_km: 0, note: '', label, company_id: COMPANY_ID, event_id: EVENT_ID })
+  await fakeBackend(page, { ...fixtures, events: [{ ...event, address: 'Námestie 1', distance_km: 50 }], event_travel: [travel('t1', 'home', 'Dodávka'), travel('t2', 'venue', 'Osobné')] })
+  await page.goto(`/events/${EVENT_ID}`)
+  await expect(page.getByRole('tab', { name: 'Prehľad' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByText('Program po dňoch')).toBeVisible()
+  await page.getByRole('tab', { name: 'Doprava a peniaze' }).click()
+  await expect(page).toHaveURL(/tab=money/)
+  await expect(page.getByText('Program po dňoch')).toHaveCount(0)
+  await expect(page.getByLabel('Auto alebo šofér')).toHaveCount(4)
+  await expect(page.getByRole('button', { name: 'Ďalšie auto v tento deň' })).toHaveCount(1)
+  await page.screenshot({ path: info.outputPath(`doprava-${info.project.name}.png`), fullPage: true })
+})

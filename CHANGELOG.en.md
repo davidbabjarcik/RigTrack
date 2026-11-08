@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.3
+
+- **Event detail in tabs**: Overview, Equipment, Crew, Travel and money, and Documents – you always see one part
+  instead of a long page with every section.
+- **Travel: more cars on one day** – the "Another car on this day" button. Each car has a label (e.g. van or the
+  driver's name), the number of trips and its own "where we slept" – for example one car went home and the other stayed.
+- A clearer calendar: the main way is "Calendar on your phone" (a subscription that updates itself). The one-time .ics
+  download is a small link in the same section, and the Google Calendar button on the event detail is gone so the event
+  does not show up twice.
+- Technical: migration 0170 (more travel records on one day).
+
 ### 9.2
 
 - **Day-by-day programme right when adding an event**: after entering the dates from–to you choose for each day what

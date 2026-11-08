@@ -135,7 +135,7 @@ function OutsideWidget({ company }: { company: Membership }) {
         <ul className="flex flex-col gap-1 text-sm">
           {outside.map(({ event, items }) => (
             <li key={event.id}>
-              <Link to={`/events/${event.id}#vratenie`} className="flex gap-2 rounded-md px-1 py-0.5 text-destructive hover:bg-muted">
+              <Link to={`/events/${event.id}?tab=gear#vratenie`} className="flex gap-2 rounded-md px-1 py-0.5 text-destructive hover:bg-muted">
                 <span className="min-w-0 flex-1 truncate">{event.name}</span>
                 <span className="shrink-0">{items.length}{' '}{tx('nevrátené')}</span>
               </Link>

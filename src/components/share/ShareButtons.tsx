@@ -21,7 +21,7 @@ export function AddToCalendarButtons({ item, className }: { item: CalendarItem; 
   return (
     <span className={cn('inline-flex flex-wrap gap-2', className)}>
       <AnchorButton variant="outline" size="sm" href={googleCalendarUrl(item)}>
-        <CalendarPlus className="size-4" aria-hidden />{tx('Add to Google kalendár')}</AnchorButton>
+        <CalendarPlus className="size-4" aria-hidden />{tx('Do Google Kalendára')}</AnchorButton>
     </span>
   )
 }

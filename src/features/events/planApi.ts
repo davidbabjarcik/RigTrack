@@ -83,8 +83,8 @@ export async function savePlace(companyId: string, eventId: string, address: str
 
 export async function fetchTravel(companyId: string, eventId: string): Promise<TravelDay[]> {
   const rows = check(
-    await db().from('event_travel').select('id, travel_date, vehicles, round_trips, stay, stay_place, extra_km, note').eq('company_id', companyId).eq('event_id', eventId).order('travel_date'),
-  ) as { id: string; travel_date: string; vehicles: number; round_trips: number; stay: Stay; stay_place: string; extra_km: number | string; note: string }[]
+    await db().from('event_travel').select('id, travel_date, vehicles, round_trips, stay, stay_place, extra_km, note, label').eq('company_id', companyId).eq('event_id', eventId).order('travel_date').order('id'),
+  ) as { id: string; travel_date: string; vehicles: number; round_trips: number; stay: Stay; stay_place: string; extra_km: number | string; note: string; label: string }[]
   return rows.map((row) => ({
     id: row.id,
     date: row.travel_date,
@@ -94,11 +94,12 @@ export async function fetchTravel(companyId: string, eventId: string): Promise<T
     stayPlace: row.stay_place,
     extraKm: Number(row.extra_km),
     note: row.note,
+    label: row.label ?? '',
   }))
 }
 
 export async function saveTravel(companyId: string, eventId: string, day: Omit<TravelDay, 'id'> & { id?: string }) {
-  const fields = { vehicles: day.vehicles, round_trips: day.roundTrips, stay: day.stay, stay_place: day.stayPlace.trim(), extra_km: day.extraKm, note: day.note.trim() }
+  const fields = { vehicles: day.vehicles, round_trips: day.roundTrips, stay: day.stay, stay_place: day.stayPlace.trim(), extra_km: day.extraKm, note: day.note.trim(), label: day.label.trim() }
   if (day.id) check(await db().from('event_travel').update(fields).eq('id', day.id).select('id'))
   else check(await db().from('event_travel').insert({ ...fields, company_id: companyId, event_id: eventId, travel_date: day.date }).select('id'))
 }

@@ -11,7 +11,7 @@ import { createCalendarFeed, deleteCalendarFeed, feedKeys, googleSubscribeUrl, u
 const SCOPE_LABELS: Record<FeedScope, string> = { mine: 'Moje eventy (kde som v posádke)', all: 'Všetky eventy firmy' }
 
 /** Odber eventov v kalendári telefónu (Google, Apple, Outlook, TickTick…) cez tajný odkaz. */
-export function CalendarSubscription({ companyId, companyName, canSeeAll }: { companyId: string; companyName: string; canSeeAll: boolean }) {
+export function CalendarSubscription({ companyId, companyName, canSeeAll, onDownload }: { companyId: string; companyName: string; canSeeAll: boolean; /** Jednorazová kópia (.ics) – neaktualizuje sa. */ onDownload?: () => void }) {
   const feeds = useCalendarFeeds(companyId)
   const queryClient = useQueryClient()
   const [created, setCreated] = useState<{ scope: FeedScope; url: string } | null>(null)
@@ -95,6 +95,14 @@ export function CalendarSubscription({ companyId, companyName, canSeeAll }: { co
             </li>
           ))}
         </ul>
+      )}
+
+      {onDownload && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          {tx('Bez odberu:')}{' '}
+          <button type="button" className="text-accent hover:underline" onClick={onDownload}>{tx('stiahnuť jednorazovú kópiu (.ics)')}</button>
+          {' '}{tx('– eventy a výpožičky od minulého mesiaca; zmeny sa do nej už neprenesú.')}
+        </p>
       )}
     </CollapsibleSection>
   )

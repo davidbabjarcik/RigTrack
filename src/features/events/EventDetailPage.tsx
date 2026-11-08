@@ -3,12 +3,12 @@ import { EventDutiesSection } from '@/features/duties/EventDutiesSection'
 import { EventDrivesSection } from '@/features/drives/EventDrivesSection'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CalendarClock, FileText, ListChecks, Pencil, Printer, Receipt, Trash2 } from 'lucide-react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
-import { AddToCalendarButtons, AddToContactsButton } from '@/components/share/ShareButtons'
+import { AddToContactsButton } from '@/components/share/ShareButtons'
 import { Button, LinkButton } from '@/components/ui/button'
-import { eventCalendarItem } from '@/features/calendar/export'
 import { useCompany } from '@/features/companies/company-context'
 import { formatDate } from '@/lib/format'
 import { EventLoadingSection } from '@/features/loading/EventLoadingSection'
@@ -39,12 +39,24 @@ import { EventWeather } from './EventWeather'
 import { useEvents } from './useEvents'
 import { tx, tf } from '@/lib/i18n'
 
+/** Detail eventu je rozdelený na karty, aby sa nemuselo scrollovať cez všetky sekcie. */
+const EVENT_TABS = [
+  { id: 'overview', label: 'Prehľad' },
+  { id: 'gear', label: 'Technika' },
+  { id: 'crew', label: 'Posádka' },
+  { id: 'money', label: 'Doprava a peniaze' },
+  { id: 'docs', label: 'Podklady' },
+] as const
+type EventTab = (typeof EVENT_TABS)[number]['id']
+
 export function EventDetailPage() {
   const { id = '' } = useParams()
   const company = useCompany().active!
   const companyId = company.companyId
   const canEdit = can(company, 'events.edit')
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const tab: EventTab = EVENT_TABS.find((item) => item.id === params.get('tab'))?.id ?? 'overview'
   const queryClient = useQueryClient()
   const events = useEvents(companyId)
   const directory = usePartners(companyId)
@@ -91,7 +103,6 @@ export function EventDetailPage() {
           <div className="mt-2">
             <EventStatusBadge status={event.status} />
           </div>
-          <AddToCalendarButtons item={eventCalendarItem(event)} className="mt-3" />
         </div>
         <div className="flex flex-wrap gap-2">
           <LinkButton to={`/events/${id}/crew`} variant="outline" size="sm">
@@ -130,7 +141,23 @@ export function EventDetailPage() {
         <p role="alert" className="mb-4 text-sm text-destructive">{tx('Event sa nepodarilo odstrániť.')}</p>
       )}
 
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label={tx('Časti eventu')}>
+        {EVENT_TABS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.id}
+            onClick={() => setParams(item.id === 'overview' ? {} : { tab: item.id }, { replace: true })}
+            className={cn('h-9 shrink-0 rounded-lg border px-3 text-sm font-medium', tab === item.id ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
+          >
+            {tx(item.label)}
+          </button>
+        ))}
+      </div>
+
       {/* Na PC miesto a elektrina vedľa organizátora (užší stĺpec), na mobile pod sebou. */}
+      {tab === 'overview' && (
       <div className="grid items-start gap-x-6 lg:grid-cols-[2fr_3fr]">
       {(times || organizer.length > 0 || event.setting || event.power) && (
         <CollapsibleSection id="event.details" title={organizer.length > 0 ? tx('Miesto, elektrina a organizátor') : tx('Miesto a elektrina')}>
@@ -192,40 +219,59 @@ export function EventDetailPage() {
         <EventPartnersSection companyId={companyId} event={event} canEdit={canEdit} />
       </div>
       </div>
-
-      {(event.setting === 'outdoor' || event.setting === 'mixed') && <EventWeather event={event} />}
-
-      {event.description && (
-        <CollapsibleSection id="event.description" title={tx('Popis')}>
-          <p className="rounded-xl border bg-surface p-4 whitespace-pre-wrap">{tx(event.description)}</p>
-        </CollapsibleSection>
-      )}
-      {event.note && (
-        <CollapsibleSection id="event.note" title={tx('Interná poznámka')}>
-          <p className="rounded-xl border border-dashed bg-surface p-4 whitespace-pre-wrap">{event.note}</p>
-        </CollapsibleSection>
       )}
 
-      <EventPlanSection companyId={companyId} event={event} canEdit={canEdit} />
-      <EventSharesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
-      <EventLinksSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
-      <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
-      <EventReturnSection company={company} event={event} />
-      <EventStagePlan companyId={companyId} eventId={event.id} />
-      <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
-      <DmxPatchSection companyId={companyId} event={event} canEdit={canEdit} />
-      {can(company, 'equipment.view') && <EventPowerSection companyId={companyId} event={event} canEdit={canEdit} />}
-      {can(company, 'equipment.view') && <EventCapsulesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />}
-      {can(company, 'vehicles.view') && <EventLoadingSection companyId={companyId} event={event} />}
-      <EventCrewSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
-      <EventAttendanceSection companyId={companyId} event={event} canEdit={canEdit} />
-      <EventDutiesSection companyId={companyId} event={event} canEdit={canEdit} />
-      <EventTravelSection companyId={companyId} event={event} canEdit={canEdit} />
-      <EventDrivesSection companyId={companyId} event={event} canEdit={canEdit} />
-      <EventLogSection companyId={companyId} event={event} />
-      {can(company, 'payouts.manage') && <EventIncomeSection companyId={companyId} eventId={event.id} />}
-      <EventPhotosSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
-      <EventDocumentsSection companyId={companyId} eventId={event.id} canEdit={false} />
+      {tab === 'overview' && (
+        <>
+          {(event.setting === 'outdoor' || event.setting === 'mixed') && <EventWeather event={event} />}
+          {event.description && (
+            <CollapsibleSection id="event.description" title={tx('Popis')}>
+              <p className="rounded-xl border bg-surface p-4 whitespace-pre-wrap">{tx(event.description)}</p>
+            </CollapsibleSection>
+          )}
+          {event.note && (
+            <CollapsibleSection id="event.note" title={tx('Interná poznámka')}>
+              <p className="rounded-xl border border-dashed bg-surface p-4 whitespace-pre-wrap">{event.note}</p>
+            </CollapsibleSection>
+          )}
+          <EventPlanSection companyId={companyId} event={event} canEdit={canEdit} />
+          <EventSharesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
+        </>
+      )}
+      {tab === 'gear' && (
+        <>
+          <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+          <EventReturnSection company={company} event={event} />
+          <EventStagePlan companyId={companyId} eventId={event.id} />
+          <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+          <DmxPatchSection companyId={companyId} event={event} canEdit={canEdit} />
+          {can(company, 'equipment.view') && <EventPowerSection companyId={companyId} event={event} canEdit={canEdit} />}
+          {can(company, 'equipment.view') && <EventCapsulesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />}
+          {can(company, 'vehicles.view') && <EventLoadingSection companyId={companyId} event={event} />}
+        </>
+      )}
+      {tab === 'crew' && (
+        <>
+          <EventCrewSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+          <EventAttendanceSection companyId={companyId} event={event} canEdit={canEdit} />
+          <EventDutiesSection companyId={companyId} event={event} canEdit={canEdit} />
+        </>
+      )}
+      {tab === 'money' && (
+        <>
+          <EventTravelSection companyId={companyId} event={event} canEdit={canEdit} />
+          <EventDrivesSection companyId={companyId} event={event} canEdit={canEdit} />
+          <EventLogSection companyId={companyId} event={event} />
+          {can(company, 'payouts.manage') && <EventIncomeSection companyId={companyId} eventId={event.id} />}
+        </>
+      )}
+      {tab === 'docs' && (
+        <>
+          <EventLinksSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
+          <EventPhotosSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
+          <EventDocumentsSection companyId={companyId} eventId={event.id} canEdit={false} />
+        </>
+      )}
     </>
   )
 }

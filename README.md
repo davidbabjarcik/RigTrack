@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-9.2-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-9.3-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **9.3** | Detail eventu na karty, viac áut v jeden deň v doprave, prehľadnejší kalendár |
 | **9.2** | Program po dňoch pri pridávaní eventu, prehľadnejší detail eventu |
 | **9.1.2** | Ukážková firma bez kolízií, zarovnané kontakty |
 | **9.1.1** | Oprava pridania kalendára do Google Kalendára, firma pri odkaze |
@@ -59,7 +60,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **8.19** | Čo je nové a právne stránky po anglicky |
 | **8.18.1** | Oprava zobrazenia údajov v návrhoch do katalógu |
 | **8.18** | Potvrdenie a zmeny údajov z databázy techniky od firiem, používanosť modelov, zapamätané zoradenie techniky |
-| **8.17.2** | Pulty na svetlá v databáze techniky |
 | **8.17.1** | Zosilňovače, DI boxy, stojany, NovaStar, Blackmagic a IT v databáze techniky |
 | **8.17** | Prepojenie firmy bez IČO (kód), DJ technika, pulty, mikrofóny, bezdrôty, stageboxy, procesory a Technics Hi-Fi v databáze |
 | **8.16.1** | Značka „Unknown“ pre techniku bez značky |

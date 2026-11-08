@@ -29,7 +29,7 @@ export type EventLink = { id: string; url: string; title: string; tag: LinkTag }
 export const STAYS = ['home', 'venue', 'elsewhere'] as const
 export type Stay = (typeof STAYS)[number]
 export const STAY_LABELS: Record<Stay, string> = { home: 'Domov', venue: 'Spali sme na akcii', elsewhere: 'Spali sme inde' }
-export type TravelDay = { id: string; date: string; vehicles: number; roundTrips: number; stay: Stay; stayPlace: string; extraKm: number; note: string }
+export type TravelDay = { id: string; date: string; vehicles: number; roundTrips: number; stay: Stay; stayPlace: string; extraKm: number; note: string; label: string }
 
 export const EXPENSE_CATEGORIES = ['fuel', 'food', 'accommodation', 'parking', 'material', 'other'] as const
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]
