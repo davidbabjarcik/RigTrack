@@ -148,7 +148,7 @@ export function CalendarPage() {
       )}
 
       <div className="mb-5">
-        <CalendarSubscription companyId={companyId} canSeeAll={can(company, 'events.view')} />
+        <CalendarSubscription companyId={companyId} companyName={company.companyName} canSeeAll={can(company, 'events.view')} />
       </div>
 
       <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label={tx('Zobrazenie')}>

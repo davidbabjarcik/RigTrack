@@ -11,7 +11,7 @@ import { createCalendarFeed, deleteCalendarFeed, feedKeys, googleSubscribeUrl, u
 const SCOPE_LABELS: Record<FeedScope, string> = { mine: 'Moje eventy (kde som v posádke)', all: 'Všetky eventy firmy' }
 
 /** Odber eventov v kalendári telefónu (Google, Apple, Outlook, TickTick…) cez tajný odkaz. */
-export function CalendarSubscription({ companyId, canSeeAll }: { companyId: string; canSeeAll: boolean }) {
+export function CalendarSubscription({ companyId, companyName, canSeeAll }: { companyId: string; companyName: string; canSeeAll: boolean }) {
   const feeds = useCalendarFeeds(companyId)
   const queryClient = useQueryClient()
   const [created, setCreated] = useState<{ scope: FeedScope; url: string } | null>(null)
@@ -32,7 +32,11 @@ export function CalendarSubscription({ companyId, canSeeAll }: { companyId: stri
   return (
     <CollapsibleSection id="calendar.subscribe" title={tx('Kalendár v mobile')}>
       <p className="text-sm text-muted-foreground">
-        {tx('Jeden odkaz pridáte do Google či Apple kalendára, Outlooku alebo TickTicku. Eventy sa tam objavia samé a zmena termínu sa prejaví aj v mobile (kalendár sa obnovuje približne raz za hodinu).')}
+        {tx('Jeden odkaz pridáte do Google či Apple kalendára, Outlooku alebo TickTicku. Eventy sa tam objavia samé a zmena termínu sa prejaví aj v mobile.')}
+      </p>
+      <p className="mt-1 text-sm">
+        {tf('Odkaz je pre firmu {0}', companyName)}
+        <span className="text-muted-foreground">{' '}{tx('(pre inú firmu ju najprv prepnite).')}</span>
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -47,7 +51,7 @@ export function CalendarSubscription({ companyId, canSeeAll }: { companyId: stri
 
       {created && (
         <div className="mt-3 rounded-xl border bg-surface p-3 text-sm">
-          <p className="font-medium">{tx(SCOPE_LABELS[created.scope])}</p>
+          <p className="font-medium">{tx(SCOPE_LABELS[created.scope])}{' · '}{companyName}</p>
           <p className="mt-1 text-muted-foreground">{tx('Odkaz si skopírujte teraz – z bezpečnostných dôvodov ho appka neukladá. Kto ho má, uvidí tieto eventy; neposielajte ho ďalej.')}</p>
           <div className="mt-2 flex gap-2">
             <input readOnly aria-label={tx('Odkaz na kalendár')} className="h-10 min-w-0 flex-1 rounded-lg border bg-background px-3 text-xs" value={created.url} onFocus={(e) => e.target.select()} />
@@ -69,6 +73,7 @@ export function CalendarSubscription({ companyId, canSeeAll }: { companyId: stri
             <li>{tx('TickTick: Nastavenia → Kalendár → Pridať odber kalendára → vložiť odkaz.')}</li>
             <li>{tx('Outlook: Pridať kalendár → Prihlásiť sa na odber z webu.')}</li>
           </ul>
+          <p className="mt-2 text-xs text-muted-foreground">{tx('iPhone a TickTick zmeny načítajú zhruba do hodiny. Google Kalendár je pomalší – nové eventy a zmeny sa v ňom môžu ukázať až o niekoľko hodín, niekedy až na druhý deň.')}</p>
         </div>
       )}
 

@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.1.1
+
+- Calendar on your phone: the “Add to Google Calendar” button opens the subscription prompt in a form Google accepts.
+- The link shows which company it is for (with several companies it is made for the one currently selected).
+- A note that Google Calendar picks up changes more slowly (up to once a day); iPhone and TickTick within about an hour.
+
 ### 9.1
 
 - **Calendar on your phone** (Calendar → Calendar on your phone): create a link and add it to Google or Apple

@@ -36,5 +36,5 @@ export function feedUrl(token: string, base = import.meta.env.VITE_SUPABASE_URL 
 
 /** webcal:// otvorí odber priamo v kalendári telefónu (iPhone, Mac, Outlook). */
 export const webcalUrl = (url: string) => url.replace(/^https?:\/\//, 'webcal://')
-/** Google Kalendár: pridanie odberu cez odkaz. */
-export const googleSubscribeUrl = (url: string) => `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl(url))}`
+/** Google Kalendár: otvorí potvrdenie odberu (webcal:// nezakódovaný – v tomto tvare ho Google prijme). */
+export const googleSubscribeUrl = (url: string) => `https://www.google.com/calendar/render?cid=${webcalUrl(url)}`

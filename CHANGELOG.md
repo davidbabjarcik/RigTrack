@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.1.1 – 8. 11. 2026
+
+- Kalendár v mobile: tlačidlo „Pridať do Google Kalendára“ otvorí potvrdenie odberu v tvare, ktorý Google prijme.
+- Pri odkaze je vidieť, pre ktorú firmu je (pri viacerých firmách sa odkaz robí pre práve zvolenú).
+- Upozornenie, že Google Kalendár načítava zmeny pomalšie (až raz za deň); iPhone a TickTick zhruba do hodiny.
+
 ### 9.1 – 8. 11. 2026
 
 - **Kalendár v mobile** (Kalendár → Kalendár v mobile): vytvoríte si odkaz a pridáte ho do Google či Apple kalendára,
