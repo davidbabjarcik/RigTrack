@@ -3,7 +3,7 @@
 Zoznam modelov, ku ktorým v spoločnej databáze techniky chýbajú údaje (alebo sú neúplné). Aktualizuje sa po každom
 doplnení katalógov. Stačí poslať PDF (celý katalóg výrobcu alebo list ku konkrétnemu modelu) – údaje prepíšem.
 
-**Naposledy aktualizované:** 8. 11. 2026, po verzii 8.17.
+**Naposledy aktualizované:** 8. 11. 2026, po verzii 8.17.1.
 
 Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Databáza techniky.
 
@@ -19,7 +19,7 @@ Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Datab
 | Video | ~80 | typ; kamery so snímačom; LED procesory s výstupmi; projektory s rozlíšením a lm |
 | IT | 67 | len typ |
 | Spotrebiče | 25 | typ; elektrické ohrievače s príkonom |
-| Káble (DI boxy) | 19 | typ a aktívny / pasívny |
+| Káble (DI a reamp boxy) | ~130 | typ, aktívny / pasívny, počet kanálov |
 | Spotrebný materiál | 24 | len názov (batérie, gaffer páska, náplne) |
 | Značka „Unknown“ (bez značky) | 82 | len typ – pri technike bez značky sa ďalšie údaje nedopĺňajú |
 
@@ -48,7 +48,7 @@ a VTX, Pioneer DJ / Denon DJ (váha, konektory).
 | Mikrofóny (Shure, Sennheiser, AKG, Audix, Neumann, DPA, Audio-Technica, EV, Beyerdynamic, Røde) | káblový, typ, frekvenčný rozsah (8.17) | pri modeloch z 0158 mimo zoznamu 8.17 frekvenčný rozsah |
 | Bezdrôty a in-ear (Shure, Sennheiser, Wisycom, Audio-Technica) | typ, prijímač | frekvenčné pásmo (podľa verzie, napr. G51), vysielače |
 | Stageboxy (Yamaha Rio / Tio, Allen & Heath, Behringer, Midas, DiGiCo) | vstupy / výstupy a protokol (8.17) | váha |
-| Zosilňovače d&b, Powersoft, Lab.gruppen, QSC | digitálny, počet kanálov (D80 a Quattrocanali aj výkon) | výkon pri 2 / 4 / 8 Ω, váha |
+| Zosilňovače (d&b, Powersoft, Lab.gruppen, Crown, Yamaha, QSC, MC², Linea, EV, Behringer) | počet kanálov, pri časti výkon a váha (8.17.1) | výkon pri 2 / 4 / 8 Ω a váha pri väčšine (Lab.gruppen PLM / D, QSC, Crown, MC²) |
 | Procesory (dbx, Lake, XTA, Klark Teknik) | vstupy / výstupy, rozhrania (8.17) | váha |
 | Boxy d&b a dB Technologies, JBL PRX815W / SRX835P / SRX828SP, RCF ART 745-A | typ, aktívny / pasívny | výkon, frekvencie, SPL, uhol, váha, rozmery; pri d&b aj zosilňovače |
 | Stojany K&M | typ | – |
@@ -68,7 +68,7 @@ a VTX, Pioneer DJ / Denon DJ (váha, konektory).
 | JBL SRX906LA, SRX910LA, SRX912M, SRX915M, SRX922 | výkon, frekvencie, citlivosť / max SPL, uhol, váha, rozmery |
 | JBL SRX918S, SRX928S, SRX915SF, SRX918SF | výkon, frekvencie, citlivosť / max SPL, váha, rozmery |
 | JBL PRX412M, PRX415M, PRX425, PRX418S | váha, rozmery |
-| Shure BLX, GLX-D+, SLX-D, QLX-D, ULX-D | vysielače a ich modely sú len v popise systému; váha prijímačov |
+| Shure BLX, GLX-D+, SLX-D, QLX-D, ULX-D (záznamy z 8.10) | váha prijímačov; zostavy s vysielačmi (BLX24, SLXD24, ULXD24D…) sú od 8.17 samostatne |
 
 ## Hliník – bez váhy
 

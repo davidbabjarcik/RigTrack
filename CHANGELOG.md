@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.17.1 – 8. 11. 2026
+
+- **Ďalšie modely v databáze techniky**: zosilňovače (Powersoft, Lab.gruppen, Crown, Yamaha, QSC, d&b, L-Acoustics,
+  MC² Audio, Linea Research, Electro-Voice, Behringer) s počtom kanálov a pri mnohých aj výkonom, DI a reamp boxy
+  (Radial, BSS, Klark Teknik, Palmer, Behringer, Whirlwind, Countryman, ART), stojany K&M a Gravity, NovaStar
+  (LED procesory, karty, optické prevodníky) a Blackmagic Design (prepínače ATEM, prevodníky, Videohub, HyperDeck).
+- **IT**: všetky iPady a MacBooky, najpredávanejšie mobily, tablety a notebooky.
+
 ### 8.17 – 8. 11. 2026
 
 - **Prepojenie firmy v kontaktoch aj bez IČO**: pri „Už majú firmu v RigTracku“ sa dá zadať ich kód na prepojenie

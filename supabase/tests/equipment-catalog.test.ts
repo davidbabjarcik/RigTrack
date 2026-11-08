@@ -63,6 +63,10 @@ describe('equipment catalog (0146)', () => {
     expect(q225.attributes).toMatchObject({ audioType: 'mixer', mixerChannels: 72, weightKg: 43 })
     const [sm58Range] = await t.as('viewer', `select attributes->>'freqRange' as range from public.equipment_catalog where manufacturer = 'Shure' and model = 'SM58'`)
     expect(sm58Range.range).toBe('50 Hz – 15 kHz')
+    const [k10] = await t.as('viewer', `select attributes from public.equipment_catalog where manufacturer = 'Powersoft' and model = 'K10'`)
+    expect(k10.attributes).toMatchObject({ audioType: 'amplifier', ampW4: 4000, weightKg: 13 })
+    const [j48] = await t.as('viewer', `select kind, attributes from public.equipment_catalog where manufacturer = 'Radial' and model = 'J48'`)
+    expect(j48).toMatchObject({ kind: 'cable', attributes: { cableType: 'di', powered: 'active' } })
     // 0152: výrobníky hmly sú pri svetlách
     const [haze] = await t.as('viewer', `select kind, attributes from public.equipment_catalog where manufacturer = 'MDG' and model = 'theONE'`)
     expect(haze).toMatchObject({ kind: 'light', attributes: { lightType: 'hazer' } })
