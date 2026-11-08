@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 8.17.2 – 8. 11. 2026
+
+- **Pulty na svetlá v databáze techniky**: MA Lighting (grandMA2 / grandMA3), Avolites, ChamSys, ETC, High End Systems
+  (Hog), Obsidian (ONYX), Martin, Zero 88, LightShark, LSC, Strand, Jands, ADJ a ENTTEC, aj svetelný softvér.
+
 ### 8.17.1 – 8. 11. 2026
 
 - **Ďalšie modely v databáze techniky**: zosilňovače (Powersoft, Lab.gruppen, Crown, Yamaha, QSC, d&b, L-Acoustics,

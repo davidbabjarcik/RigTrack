@@ -3,7 +3,7 @@
 Zoznam modelov, ku ktorým v spoločnej databáze techniky chýbajú údaje (alebo sú neúplné). Aktualizuje sa po každom
 doplnení katalógov. Stačí poslať PDF (celý katalóg výrobcu alebo list ku konkrétnemu modelu) – údaje prepíšem.
 
-**Naposledy aktualizované:** 8. 11. 2026, po verzii 8.17.1.
+**Naposledy aktualizované:** 8. 11. 2026, po verzii 8.17.2.
 
 Všetky údaje sú zatiaľ **neoverené** – overujú sa vo Vývojár → Databáza techniky.
 
@@ -114,7 +114,7 @@ GDTF súbor pri svetle, alebo pošlite list / GDTF súbor:
 | Minuit Une | M-Carré |
 | Lixada, U`King | Mini Beam RGBW, Mini Moving Head RGBW, Mini Gobo Moving Head Light |
 | Výrobníky hmly (hazery) | MDG theONE, Look Solutions Unique 2.1, Showtec Compact Hazer – typ je zadaný, chýba príkon, váha a DMX |
-| Pulty na svetlá | MA Lighting grandMA3 compact XT a light, Avolites Titan Mobile, ChamSys MagicQ MQ80 |
+| Pulty na svetlá | od 8.17.2 je ich vyše 100 s typom; chýba počet univerz, fadery a váha |
 
 Pri asi 140 svetlách chýba **typ** (beam / wash / spot / PAR…) – Open Fixture Library ho nemá jednoznačne. Najviac
 pri Eurolite (22), Generic (15), Stairville, American DJ a Cameo (po 11–12). Pri „Generic“ (16) chýba aj príkon.
