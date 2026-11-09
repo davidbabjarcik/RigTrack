@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { DEFAULT_CHECK_DAYS, levelDays, type CheckLevel, type CheckLevelDays } from '@/features/checks/levels'
 import type { CategoryColor } from './categoryColors'
+import { COLOR_PARTS, colorMixName, type ColorPart, type ColorWheel } from './dmxChannels'
 import { normalizePort } from './dmxNode'
 
 export const EQUIPMENT_STATUSES = ['available', 'loaned', 'in_service', 'damaged', 'retired'] as const
@@ -369,6 +370,9 @@ export type EquipmentAttributes = {
   subDelayMs?: number
   /** DMX módy svetla: názov a počet kanálov, napr. Standard 16 ch. */
   dmxModes?: DmxMode[]
+  /** Farby svetla: zložky miešania (R, G, B, W…) a farebné koliesko (počet farieb a ich názvy s farbou). */
+  colorParts?: ColorPart[]
+  colorWheel?: ColorWheel
   /** LED panel (pre LED kalkulačku): rozmer, pixely, váha a príkon jedného panela. */
   ledPanel?: LedPanelSpec
   /** LED procesor (napr. Novastar): výstupy, pixely na výstup, vstupy a ich rozlíšenie. */
@@ -655,6 +659,13 @@ export const equipmentSchema = z.object({
       }),
     )
     .max(20, 'Najviac 20 módov'),
+  colorParts: z.array(z.enum(COLOR_PARTS)).max(COLOR_PARTS.length).optional(),
+  colorWheel: z.boolean().optional(),
+  wheelSlots: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Aspoň 1 farba').max(60, 'Najviac 60 farieb').optional(),
+  wheelColors: z
+    .array(z.object({ name: text(40).min(1, 'Zadajte názov farby'), hex: z.string().regex(/^#[0-9a-f]{6}$/i, 'Farba má tvar #RRGGBB') }))
+    .max(60, 'Najviac 60 farieb')
+    .optional(),
   macAddress: z
     .string()
     .trim()
@@ -780,6 +791,10 @@ export function attributesFor(
         | 'stageBrand'
         | 'stageSize'
         | 'dmxModes'
+        | 'colorParts'
+        | 'colorWheel'
+        | 'wheelSlots'
+        | 'wheelColors'
         | 'makers'
         | 'audioType'
         | 'djType'
@@ -1000,6 +1015,11 @@ export function attributesFor(
     attributes.dipSwitches = values.dipSwitches
     if (values.dipNote?.trim()) attributes.dipNote = values.dipNote.trim()
   }
+  if (lighting && values.colorParts?.length) attributes.colorParts = COLOR_PARTS.filter((part) => values.colorParts!.includes(part))
+  if (lighting && values.colorWheel) {
+    const colors = (values.wheelColors ?? []).filter((color) => color.name.trim()).map((color) => ({ name: color.name.trim(), hex: color.hex.toLowerCase() }))
+    attributes.colorWheel = { ...(values.wheelSlots ? { slots: values.wheelSlots } : {}), colors }
+  }
   if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels, ...(mode.map?.trim() ? { map: mode.map.replace(/\s+$/, '') } : {}) }))
   if (values.kind === 'cable') {
     const makers = (values.makers ?? []).filter((maker) => maker.name.trim() && maker.count > 0).map((maker) => ({ name: maker.name.trim(), count: maker.count }))
@@ -1120,6 +1140,8 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>, options:
     a.lightSource && LIGHT_SOURCE_LABELS[a.lightSource],
     a.boxWidthCm !== undefined && a.boxDepthCm !== undefined && `${formatNumber(a.boxWidthCm)}×${formatNumber(a.boxDepthCm)}${a.boxHeightCm !== undefined ? `×${formatNumber(a.boxHeightCm)}` : ''} cm`,
     a.dmxModes?.length && `DMX ${a.dmxModes.map((mode) => mode.channels).join('/')} ch`,
+    a.colorParts?.length && colorMixName(a.colorParts),
+    a.colorWheel && `farebné koliesko${(a.colorWheel.slots ?? a.colorWheel.colors.length) ? ` ${a.colorWheel.slots ?? a.colorWheel.colors.length} farieb` : ''}`,
     a.externalDimmer && 'externý dimmer (230 V)',
     a.dipSwitches && `DIP ${a.dipSwitches}`,
     a.nodeProtocols?.length && a.nodeProtocols.map((value) => (value === 'artnet' ? 'Art-Net' : 'sACN')).join(' + '),

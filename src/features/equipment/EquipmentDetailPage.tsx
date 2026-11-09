@@ -26,7 +26,8 @@ import { OwnerLink } from '@/features/staff/OwnerLink'
 import { AmpPresetsInfo } from './AmpPresetsInfo'
 import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { EquipmentLinks } from './PurchaseLinksFields'
-import { capsuleLabel, transmitterLabel, wirelessTransmitters, CAPTURE_MATCH_LABELS, channelMap, hoursSinceLamp, describeAttributes, describeUnitIds, groupSplitEquipment, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
+import { capsuleLabel, transmitterLabel, wirelessTransmitters, CAPTURE_MATCH_LABELS, hoursSinceLamp, describeAttributes, describeUnitIds, groupSplitEquipment, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
+import { LightDmxSection } from './DmxChannelTable'
 import { OperatingHours } from './OperatingHours'
 import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
@@ -127,28 +128,9 @@ export function EquipmentDetailPage() {
     [
       tx('DMX módy'),
       equipment.attributes.dmxModes?.length ? (
-        <span key="dmx-modes" className="flex flex-col gap-1">
-          {equipment.attributes.dmxModes.map((mode, index) =>
-            channelMap(mode).length > 0 ? (
-              <details key={index}>
-                <summary className="cursor-pointer">
-                  {mode.name} {mode.channels}{' '}{tx('ch')}{' '}<span className="text-sm font-normal text-accent">{tx('– rozpis kanálov')}</span>
-                </summary>
-                <ol className="mt-1 grid gap-x-6 text-sm font-normal sm:grid-cols-2">
-                  {channelMap(mode).map(([channel, text]) => (
-                    <li key={channel} className="flex gap-2">
-                      <span className="w-8 shrink-0 text-right font-mono text-muted-foreground tabular-nums">{channel}</span>
-                      {text}
-                    </li>
-                  ))}
-                </ol>
-              </details>
-            ) : (
-              <span key={index}>
-                {mode.name} {mode.channels}{' '}{tx('ch')}</span>
-            ),
-          )}
-        </span>
+        <a key="dmx-modes" href="#dmx-mody" className="hover:underline">
+          {equipment.attributes.dmxModes.map((mode) => `${mode.name} ${mode.channels} ch`).join(', ')}
+        </a>
       ) : undefined,
     ],
     [tx('Kópia čoho'), equipment.cloneOf],
@@ -317,6 +299,10 @@ export function EquipmentDetailPage() {
             </div>
           ))}
       </dl>
+
+      <div id="dmx-mody" className="mt-6 scroll-mt-20 empty:hidden">
+        <LightDmxSection attributes={equipment.attributes} />
+      </div>
 
       {(equipment.links?.length ?? 0) > 0 && (
         <section className="mt-6">

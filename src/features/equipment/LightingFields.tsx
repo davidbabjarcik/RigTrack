@@ -2,14 +2,35 @@ import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form'
 import { ampsAt230 } from '@/features/labels/tape'
+import { DmxChannelTable } from './DmxChannelTable'
 import { DmxNodeFields } from './DmxNodeFields'
+import { LightColorFields } from './LightColorFields'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { asOptionalNumber, CAPTURE_MATCH_LABELS, CAPTURE_MATCHES, LIGHT_SOURCE_LABELS, LIGHT_SOURCES, LIGHT_TYPE_GROUPS, LIGHT_TYPE_LABELS, type EquipmentFormValues } from './model'
 import { Group } from './FormGroup'
 import { tx, tf } from '@/lib/i18n'
 
-/** Časť formulára Svetlo: typ, zdroj, výkon, DMX módy, Capture a prevádzkové hodiny. */
+/** Náhľad rozpisu kanálov pri písaní: ikonky, predvolené hodnoty a upozornenie, keď počet riadkov nesedí s módom. */
+function MapPreview({ mode }: { mode: EquipmentFormValues['dmxModes'][number] | undefined }) {
+  const map = (mode?.map ?? '').replace(/\s+$/, '')
+  if (!mode || !map) return null
+  const lines = map.split('\n').length
+  const channels = Number(mode.channels)
+  return (
+    <details className="text-sm">
+      <summary className="cursor-pointer text-accent">{tx('Náhľad rozpisu')}</summary>
+      <div className="mt-2">
+        <DmxChannelTable mode={{ name: mode.name, channels, map }} />
+      </div>
+      {channels > 0 && lines !== channels && (
+        <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">{tf('Rozpis má {0} riadkov, mód {1} kanálov.', lines, channels)}</p>
+      )}
+    </details>
+  )
+}
+
+/** Časť formulára Svetlo: typ, zdroj, výkon, DMX módy, farby, Capture a prevádzkové hodiny. */
 export function LightingFields() {
   const {
     register,
@@ -126,15 +147,19 @@ export function LightingFields() {
                   </Button>
                   {/* Nepovinný rozpis: čo robí ktorý kanál v tomto móde. */}
                   {openMaps.includes(field.id) || (modesValue?.[index]?.map ?? '').trim() ? (
-                    <label className="flex basis-full flex-col gap-1 text-sm">
-                      <span className="font-medium">{tx('Kanály módu')}{' '}{modesValue?.[index]?.name || index + 1}{' '}{tx('– riadok = kanál')}</span>
-                      <textarea
-                        rows={Math.min(12, Math.max(4, Number(modesValue?.[index]?.channels) || 4))}
-                        placeholder={tx('Pan\nPan fine\nTilt\nTilt fine\nDimmer\nShutter / strobe\n…')}
-                        className="rounded-lg border bg-surface px-3 py-2 font-mono text-sm"
-                        {...register(`dmxModes.${index}.map`)}
-                      />
-                    </label>
+                    <div className="flex basis-full flex-col gap-2">
+                      <label className="flex flex-col gap-1 text-sm">
+                        <span className="font-medium">{tx('Kanály módu')}{' '}{modesValue?.[index]?.name || index + 1}{' '}{tx('– riadok = kanál')}</span>
+                        <span className="text-xs text-muted-foreground">{tx('Za zvislú čiaru môžete dať predvolenú hodnotu, napr. „Pan | 50 %“ alebo „Shutter | Open“. Ikonka sa doplní podľa názvu.')}</span>
+                        <textarea
+                          rows={Math.min(12, Math.max(4, Number(modesValue?.[index]?.channels) || 4))}
+                          placeholder={tx('Pan | 50 %\nPan fine\nTilt | 50 %\nTilt fine\nDimmer | 0 %\nShutter | Open\nColor Wheel\n…')}
+                          className="rounded-lg border bg-surface px-3 py-2 font-mono text-sm"
+                          {...register(`dmxModes.${index}.map`)}
+                        />
+                      </label>
+                      <MapPreview mode={modesValue?.[index]} />
+                    </div>
                   ) : (
                     <button type="button" className="basis-full text-left text-sm text-accent hover:underline" onClick={() => setOpenMaps([...openMaps, field.id])}>{tx('+ Rozpis kanálov (nepovinné) – čo robí ktorý kanál')}</button>
                   )}
@@ -150,6 +175,7 @@ export function LightingFields() {
               <Plus className="size-4" aria-hidden />{tx('Pridať mód')}</Button>
           </fieldset>
         )}
+        {!lightAccessory && <LightColorFields />}
         {/* Háky, klemy a iné príslušenstvo nie sú fixtúry – Capture ani „kópia čoho“ pri nich netreba. */}
         {!lightAccessory && (
           <>

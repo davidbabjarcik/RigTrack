@@ -5,6 +5,20 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.6 – 9. 11. 2026
+
+- **DMX módy v detaile svetla**: nová sekcia „DMX módy a farby“ s prepínaním módov a prehľadnou tabuľkou kanálov.
+  Pri každom kanáli je ikonka podľa toho, čo robí (stmievanie, shutter, farba, pozícia, gobo, prizma, zoom, efekty,
+  rýchlosť, ovládanie), a farebné kanály (Red, Green, Blue…) majú bodku vo svojej farbe.
+- Pri kanáli sa dá zapísať aj predvolená hodnota – za zvislú čiaru, napr. „Pan | 50 %“ alebo „Shutter | Open“.
+  Pri zadávaní kanálov je náhľad tabuľky a upozornenie, keď počet riadkov nesedí s počtom kanálov módu.
+- **Farby svetla**: z čoho svetlo mieša farby (R, G, B, W, A, UV, lime, CMY, CTO) a či má farebné koliesko – koľko
+  farieb na ňom je a ich názvy s farbou. Farba sa doplní sama podľa názvu (napr. Tmavomodrá, CTO, Congo blue), dá sa
+  vybrať aj z palety alebo pridať jedným ťuknutím zo zoznamu bežných farieb. Pri svetlách bez zadaných farieb ich
+  appka odhadne podľa názvov kanálov.
+- GDTF súbor svetla doplní aj farebné koliesko s farbami, miešanie farieb a predvolené hodnoty kanálov.
+- V DMX patchi eventu sa pri svetle dá rozbaliť rozpis kanálov s konkrétnymi DMX adresami.
+
 ### 9.5 – 9. 11. 2026
 
 - **Licencie programov**: v Technike je nové tlačidlo „Licencie programov“. Zapíšete, aké programy máte kúpené,

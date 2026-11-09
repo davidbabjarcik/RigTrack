@@ -1,13 +1,16 @@
 import { readZip } from '@/lib/zip'
+import { COLOR_PARTS, type ColorPart, type ColorWheel } from './dmxChannels'
 import type { DmxMode, LightSource } from './model'
 
 // GDTF (General Device Type Format, gdtf-share.com): ZIP s popisom svetla v description.xml. Čítame len ten popis –
-// výrobcu, model, DMX módy s kanálmi, príkon, váhu a zdroj svetla. Súbor sa číta v prehliadači a nikam sa neposiela.
+// výrobcu, model, DMX módy s kanálmi a predvolenými hodnotami, farby (miešanie a koliesko), príkon, váhu a zdroj svetla. Súbor sa číta v prehliadači a nikam sa neposiela.
 
 export type GdtfFixture = {
   manufacturer: string
   model: string
   modes: DmxMode[]
+  colorParts?: ColorPart[]
+  wheel?: ColorWheel
   powerW?: number
   weightKg?: number
   lightSource?: LightSource
@@ -41,6 +44,75 @@ function lampSource(lamp: string | null): LightSource | undefined {
   return 'other'
 }
 
+/** Hodnota DMX „128/1“ (hodnota/bajty) ako podiel 0–1. */
+function dmxFraction(value: string | null) {
+  const match = /^(\d+)\/(\d)$/.exec((value ?? '').trim())
+  if (!match) return null
+  const max = 256 ** Number(match[2]) - 1
+  return max > 0 ? Math.min(1, Number(match[1]) / max) : null
+}
+
+/** Predvolená hodnota kanála: názov nastavenia (napr. Open), inak percentá. */
+function channelDefault(channel: Element): string {
+  const functions = Array.from(channel.getElementsByTagName('ChannelFunction'))
+  const fraction = dmxFraction(functions[0]?.getAttribute('Default') ?? channel.getAttribute('Default'))
+  if (fraction === null) return ''
+  const active = functions.filter((item) => (dmxFraction(item.getAttribute('DMXFrom')) ?? 0) <= fraction).pop()
+  const set = active ? Array.from(active.getElementsByTagName('ChannelSet')).filter((item) => (item.getAttribute('Name') ?? '').trim() && (dmxFraction(item.getAttribute('DMXFrom')) ?? 0) <= fraction).pop() : undefined
+  const name = (set?.getAttribute('Name') ?? '').trim()
+  return name ? name.slice(0, 40) : `${Math.round(fraction * 100)} %`
+}
+
+/** Farba z GDTF (CIE x, y, Y) ako #rrggbb; jas sa vyrovná na najsvetlejšiu zložku. */
+export function xyToHex(color: string | null): string {
+  const [x, y] = (color ?? '').split(',').map((part) => Number.parseFloat(part))
+  if (!Number.isFinite(x) || !Number.isFinite(y) || y <= 0) return '#ffffff'
+  const X = x / y
+  const Z = (1 - x - y) / y
+  const linear = [3.2406 * X - 1.5372 - 0.4986 * Z, -0.9689 * X + 1.8758 + 0.0415 * Z, 0.0557 * X - 0.204 + 1.057 * Z].map((value) => Math.max(0, value))
+  const peak = Math.max(...linear)
+  if (peak <= 0) return '#ffffff'
+  return `#${linear
+    .map((value) => {
+      const c = value / peak
+      const srgb = c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055
+      return Math.round(Math.min(1, srgb) * 255).toString(16).padStart(2, '0')
+    })
+    .join('')}`
+}
+
+const PART_OF: Record<string, ColorPart> = { R: 'R', G: 'G', B: 'B', W: 'W', WW: 'W', CW: 'W', A: 'A', UV: 'UV', L: 'L', C: 'C', M: 'M', Y: 'Y' }
+
+/** Zložky miešania farieb podľa atribútov kanálov (ColorAdd_R, ColorSub_C, CTO…). */
+function colorPartsOf(doc: Document): ColorPart[] {
+  const parts = new Set<ColorPart>()
+  for (const logical of Array.from(doc.getElementsByTagName('LogicalChannel'))) {
+    const attribute = logical.getAttribute('Attribute') ?? ''
+    const match = /^Color(?:Add|Sub|RGB)_([A-Z]+)$/.exec(attribute)
+    if (match && PART_OF[match[1]]) parts.add(PART_OF[match[1]])
+    if (/^CTO$/i.test(attribute)) parts.add('CTO')
+  }
+  return COLOR_PARTS.filter((part) => parts.has(part))
+}
+
+/** Farebné koliesko: koleso, na ktoré ukazuje kanál farby (Color1), inak koleso s „color“ v názve. */
+function colorWheelOf(doc: Document): ColorWheel | undefined {
+  const used = new Set(
+    Array.from(doc.getElementsByTagName('ChannelFunction'))
+      .filter((item) => /^Color\d/.test(item.getAttribute('Attribute') ?? '') && item.getAttribute('Wheel'))
+      .map((item) => item.getAttribute('Wheel')!),
+  )
+  const wheels = Array.from(doc.getElementsByTagName('Wheel'))
+  const wheel = wheels.find((item) => used.has(item.getAttribute('Name') ?? '')) ?? wheels.find((item) => /colou?r/i.test(item.getAttribute('Name') ?? ''))
+  if (!wheel) return undefined
+  const slots = Array.from(wheel.getElementsByTagName('Slot')).slice(0, 60)
+  if (slots.length === 0) return undefined
+  return {
+    slots: slots.length,
+    colors: slots.map((slot, index) => ({ name: (slot.getAttribute('Name') ?? '').trim().slice(0, 40) || `Farba ${index + 1}`, hex: xyToHex(slot.getAttribute('Color')) })),
+  }
+}
+
 /** Prečíta description.xml (text). Vyhodí chybu so slovenskou hláškou, keď to nie je GDTF. */
 export function parseGdtfXml(xml: string): GdtfFixture {
   const doc = new DOMParser().parseFromString(xml, 'application/xml')
@@ -71,8 +143,9 @@ export function parseGdtfXml(xml: string): GdtfFixture {
       if (offsets.length === 0) continue
       const logical = channel.getElementsByTagName('LogicalChannel')[0]
       const attribute = attributeLabel(logical?.getAttribute('Attribute') ?? channel.getAttribute('Name') ?? '')
+      const value = channelDefault(channel)
       offsets.forEach((offset, index) => {
-        slots.set(breakBase + offset, index === 0 ? attribute : `${attribute} ${'fine '.repeat(index).trim()}`)
+        slots.set(breakBase + offset, index === 0 ? (value ? `${attribute} | ${value}` : attribute) : `${attribute} ${'fine '.repeat(index).trim()}`)
         breakMax = Math.max(breakMax, offset)
       })
     }
@@ -91,10 +164,14 @@ export function parseGdtfXml(xml: string): GdtfFixture {
   const beamPower = beams.reduce((sum, beam) => sum + (num(beam.getAttribute('PowerConsumption')) ?? 0), 0)
   const powerW = num(power?.getAttribute('Value')) ?? (beamPower > 0 ? beamPower : undefined)
 
+  const colorParts = colorPartsOf(doc)
+  const wheel = colorWheelOf(doc)
   return {
     manufacturer,
     model,
     modes,
+    ...(colorParts.length > 0 ? { colorParts } : {}),
+    ...(wheel ? { wheel } : {}),
     ...(powerW ? { powerW: Math.round(powerW) } : {}),
     ...(num(weight?.getAttribute('Value')) ? { weightKg: Math.round(num(weight?.getAttribute('Value'))! * 10) / 10 } : {}),
     ...(beams.length > 0 && lampSource(beams[0].getAttribute('LampType')) ? { lightSource: lampSource(beams[0].getAttribute('LampType')) } : {}),

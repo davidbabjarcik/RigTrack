@@ -5,6 +5,7 @@ import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { DmxChannelTable } from '@/features/equipment/DmxChannelTable'
 import { isLighting, type Equipment } from '@/features/equipment/model'
 import type { CompanyEvent } from '@/features/events/model'
 import { cn } from '@/lib/utils'
@@ -159,6 +160,7 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
                     <span className="block truncate text-muted-foreground">{[line.mode && `mód ${line.mode}`, `${line.channels} ch`, line.note].filter(Boolean).join(' · ')}</span>
                   </span>
                 </button>
+                <LineChannels line={line} items={items} />
               </li>
             ),
           )}
@@ -224,5 +226,20 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
       {saveTemplate.isSuccess && <p className="mt-2 text-sm text-muted-foreground">{tx('Šablóna je uložená (Patch listy).')}</p>}
       {(save.isError || remove.isError || load.isError || saveTemplate.isError) && <p className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>}
     </CollapsibleSection>
+  )
+}
+
+/** Rozpis kanálov svetla v patchi s konkrétnymi DMX adresami (keď ho má technika pri zvolenom móde). */
+function LineChannels({ line, items }: { line: DmxLine; items: Equipment[] }) {
+  const light = line.equipmentId ? items.find((item) => item.id === line.equipmentId) : undefined
+  const mode = light?.attributes.dmxModes?.find((item) => (item.name || `${item.channels} ch`) === line.mode) ?? (light?.attributes.dmxModes?.length === 1 ? light.attributes.dmxModes[0] : undefined)
+  if (!mode?.map?.trim()) return null
+  return (
+    <details className="px-3 pb-2 text-sm">
+      <summary className="cursor-pointer text-accent">{tx('Rozpis kanálov')}</summary>
+      <div className="mt-2">
+        <DmxChannelTable mode={mode} startAddress={line.address} />
+      </div>
+    </details>
   )
 }

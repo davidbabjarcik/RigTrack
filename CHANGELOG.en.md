@@ -5,6 +5,20 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.6
+
+- **DMX modes on the light detail**: a new “DMX modes and colours” section with mode switching and a clear channel
+  table. Each channel has an icon for what it does (intensity, shutter, colour, position, gobo, prism, zoom, effects,
+  speed, control), and colour channels (Red, Green, Blue…) show a dot in their colour.
+- A channel can also have a default value – after a vertical bar, e.g. “Pan | 50 %” or “Shutter | Open”. While
+  entering channels there is a table preview and a warning when the number of lines does not match the mode.
+- **Light colours**: which colours the light mixes (R, G, B, W, A, UV, lime, CMY, CTO) and whether it has a colour
+  wheel – how many colours and their names with the colour. The colour is filled in from the name (e.g. Dark blue,
+  CTO, Congo blue), can be picked from a palette or added with one tap from a list of common colours. For lights
+  without colours entered, the app guesses them from the channel names.
+- A GDTF file also fills in the colour wheel with its colours, colour mixing and channel default values.
+- In the event DMX patch, each light can expand its channel layout with the actual DMX addresses.
+
 ### 9.5
 
 - **Software licences**: Equipment has a new “Software licences” button. Record which programs you have bought, the

@@ -169,6 +169,10 @@ const EMPTY: EquipmentFormValues = {
   boxHeightCm: undefined,
   subDelayMs: undefined,
   dmxModes: [],
+  colorParts: [],
+  colorWheel: false,
+  wheelSlots: undefined,
+  wheelColors: [],
   macAddress: '',
   ipAddress: '',
   serviceIntervalMonths: undefined,
@@ -320,6 +324,10 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     boxHeightCm: equipment.attributes.boxHeightCm,
     subDelayMs: equipment.attributes.subDelayMs,
     dmxModes: equipment.attributes.dmxModes ?? [],
+    colorParts: equipment.attributes.colorParts ?? [],
+    colorWheel: Boolean(equipment.attributes.colorWheel),
+    wheelSlots: equipment.attributes.colorWheel?.slots,
+    wheelColors: equipment.attributes.colorWheel?.colors ?? [],
     macAddress: equipment.macAddress,
     ipAddress: equipment.ipAddress,
     serviceIntervalMonths: equipment.serviceIntervalMonths ?? undefined,
@@ -445,6 +453,12 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
     if (fixture.model) setValue('model', fixture.model, dirty)
     if (!getValues('name').trim() && fixture.model) setValue('name', fixture.model, dirty)
     if (fixture.modes.length > 0) setValue('dmxModes', fixture.modes, dirty)
+    if (fixture.colorParts?.length) setValue('colorParts', fixture.colorParts, dirty)
+    if (fixture.wheel) {
+      setValue('colorWheel', true, dirty)
+      setValue('wheelSlots', fixture.wheel.slots, dirty)
+      setValue('wheelColors', fixture.wheel.colors, dirty)
+    }
     if (fixture.powerW) setValue('powerW', fixture.powerW, dirty)
     if (fixture.weightKg) setValue('weightKg', fixture.weightKg, dirty)
     if (fixture.lightSource) setValue('lightSource', fixture.lightSource, dirty)
