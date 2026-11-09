@@ -19,6 +19,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
       { table: 'equipment_aliases', sheet: 'Zapamätané názvy' },
       { table: 'equipment_packages', sheet: 'Balíky' },
       { table: 'mic_capsules', sheet: 'Kapsule' },
+      { table: 'software_licenses', sheet: 'Licencie programov' },
     ],
   },
   {
@@ -127,6 +128,7 @@ export const BACKUP_FILES: { file: string; tables: { table: string; sheet: strin
     tables: [
       { table: 'staff', sheet: 'Zamestnanci' },
       { table: 'staff_unavailability', sheet: 'Kedy nemôžu' },
+      { table: 'staff_certificates', sheet: 'Certifikácie' },
       { table: 'work_sessions', sheet: 'Dochádzka mimo eventov' },
       { table: 'member_rates', sheet: 'Hodinové sadzby' },
       { table: 'member_devices', sheet: 'Zariadenia členov' },

@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.5 – 9. 11. 2026
+
+- **Licencie programov**: v Technike je nové tlačidlo „Licencie programov“. Zapíšete, aké programy máte kúpené,
+  edíciu, počet inštalácií, na koho účet, kedy ste ich kúpili, dokedy platia (alebo že sú trvalé), cenu a na ktorom
+  počítači z techniky bežia. Licencie, ktoré čoskoro končia alebo už skončili, svietia hore.
+- Licenčný kľúč vidí a mení len ten, kto smie upravovať techniku. Ostatní vidia len zoznam programov.
+- **Certifikácie pri ľuďoch**: v detaile človeka v Zamestnancoch je nová sekcia Certifikácie (napr. práca vo výškach,
+  elektro vyhláška) s tým, kto ich vydal, číslom preukazu a platnosťou. Pridá ich správca tímu alebo človek sám.
+- Technické: migrácia 0172 (licencie programov a certifikácie).
+
 ### 9.4 – 8. 11. 2026
 
 - **Zisk z eventov**: nová stránka v menu ukáže za rok alebo mesiac príjem bez DPH, náklady a zisk každého eventu

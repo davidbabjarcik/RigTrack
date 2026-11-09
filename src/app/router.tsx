@@ -45,6 +45,7 @@ const equipmentExcel = lazyPage(() => import('@/features/equipment/EquipmentExce
 const addressPrint = lazyPage(() => import('@/features/networks/AddressPrintPage').then((m) => m.AddressPrintPage), 'networks.view')
 const wifiQrPrint = lazyPage(() => import('@/features/networks/WifiQrPrintPage').then((m) => m.WifiQrPrintPage), 'networks.view')
 const networks = lazyPage(() => import('@/features/networks/NetworksPage').then((m) => m.NetworksPage), 'networks.view')
+const licenses = lazyPage(() => import('@/features/licenses/LicensesPage').then((m) => m.LicensesPage), 'equipment.view')
 const capsules = lazyPage(() => import('@/features/capsules/CapsulesPage').then((m) => m.CapsulesPage), 'equipment.view')
 const serviceRequests = lazyPage(() => import('@/features/requests/ServiceRequestsPage').then((m) => m.ServiceRequestsPage))
 const serviceRequestForm = lazyPage(() => import('@/features/requests/ServiceRequestFormPage').then((m) => m.ServiceRequestFormPage))
@@ -189,6 +190,7 @@ export const routes: RouteObject[] = [
               { path: 'partners/:id', lazy: partnerDetail },
               { path: 'equipment/excel', lazy: equipmentExcel },
               { path: 'equipment/capsules', lazy: capsules },
+              { path: 'equipment/licenses', lazy: licenses },
               { path: 'equipment/group', lazy: equipmentGroup },
               { path: 'equipment/poster', lazy: inventoryPoster },
               { path: 'notes', lazy: notes },

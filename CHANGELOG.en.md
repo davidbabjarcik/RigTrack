@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.5
+
+- **Software licences**: Equipment has a new “Software licences” button. Record which programs you have bought, the
+  edition, number of installs, the account, purchase date, validity (or perpetual), price and which computer from your
+  equipment they run on. Licences that are about to end or have ended are highlighted at the top.
+- Only people who can edit equipment can see and change licence keys. Everyone else sees just the list of programs.
+- **Certificates for people**: the person detail in Staff has a new Certificates section (e.g. work at height,
+  electrical qualification) with the issuer, card number and validity. The team manager or the person can add them.
+- Technical: migration 0172 (software licences and certificates).
+
 ### 9.4
 
 - **Event profit**: a new page in the menu shows income without VAT, costs and profit of every event for a year or

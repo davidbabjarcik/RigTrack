@@ -29,7 +29,7 @@ export async function signIn(page: Page) {
 /** Odpovede pre tabuľky, ktoré appka pri štarte potrebuje vyplnené. */
 function tableRows(table: string, fixtures: Record<string, unknown[]>): unknown[] {
   if (fixtures[table]) return fixtures[table]
-  if (table === 'company_members') return [{ role: 'admin', company: { id: COMPANY_ID, name: 'Ukážková firma' }, user_id: USER_ID, company_id: COMPANY_ID }]
+  if (table === 'company_members') return [{ role: 'admin', company: { id: COMPANY_ID, name: 'Ukážková firma' }, profile: { email: user.email, full_name: 'Tester' }, user_id: USER_ID, company_id: COMPANY_ID }]
   if (table === 'profiles') return [{ id: USER_ID, full_name: 'Tester', email: user.email }]
   return []
 }
