@@ -1,5 +1,5 @@
 import { serviceState, type Equipment } from '@/features/equipment/model'
-import { EVENT_STATUS_LABELS, isLive, type CompanyEvent } from '@/features/events/model'
+import { djCrew, EVENT_STATUS_LABELS, isLive, type CompanyEvent } from '@/features/events/model'
 import { isOpen, LOAN_STATUS_LABELS, type Loan } from '@/features/loans/model'
 import type { ShoppingItem } from '@/features/shopping/model'
 import type { Task } from '@/features/tasks/model'
@@ -9,11 +9,12 @@ import type { Person, Unavailability } from '@/features/staff/model'
 
 // Kalendár je odvodený pohľad: nič sa doň nezapisuje, skladá sa z termínov ostatných modulov.
 
-export const ENTRY_KINDS = ['event', 'loan', 'vehicle', 'task', 'service', 'shopping', 'celebration', 'away'] as const
+export const ENTRY_KINDS = ['event', 'dj', 'loan', 'vehicle', 'task', 'service', 'shopping', 'celebration', 'away'] as const
 export type EntryKind = (typeof ENTRY_KINDS)[number]
 
 export const ENTRY_KIND_LABELS: Record<EntryKind, string> = {
   event: 'Eventy',
+  dj: 'DJ hrania',
   loan: 'Výpožičky',
   vehicle: 'Vozidlá',
   task: 'Úlohy',
@@ -44,6 +45,8 @@ export type AgendaSources = {
   people?: Person[]
   /** Kedy ľudia z tímu nemôžu; nepovinné. */
   unavailability?: Unavailability[]
+  /** Meno člena firmy podľa používateľa (kto hrá na DJ hraní); nepovinné. */
+  memberName?: (userId: string) => string
 }
 
 /** Všetky nevybavené termíny zo všetkých modulov, zoradené podľa dátumu. */
@@ -56,12 +59,14 @@ export function buildAgenda(sources: AgendaSources, today: string): AgendaEntry[
       .join(' · ')
     // Prebiehajúci viacdňový event patrí k dnešku, nie medzi veci po termíne.
     const running = event.startsOn < today && event.endsOn >= today
+    // DJ hranie: kto hrá ide do popisu, aby bolo v kalendári hneď vidno.
+    const djs = event.kind === 'dj' ? djCrew(event).map((person) => (person.memberId ? sources.memberName?.(person.memberId) : person.name)).filter(Boolean) : []
     entries.push({
       id: `event-${event.id}`,
       date: running ? today : event.startsOn,
-      kind: 'event',
+      kind: event.kind === 'dj' ? 'dj' : 'event',
       title: event.name,
-      detail: [running && 'prebieha', detail].filter(Boolean).join(' · ') || 'event',
+      detail: [running && 'prebieha', djs.length > 0 && `hrá ${djs.join(', ')}`, detail].filter(Boolean).join(' · ') || (event.kind === 'dj' ? 'DJ hranie' : 'event'),
       to: `/events/${event.id}`,
     })
   }

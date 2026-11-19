@@ -12,6 +12,19 @@ export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
   cancelled: 'Zrušený',
 }
 
+/** Druh akcie: bežný event (technika, posádka) alebo DJ hranie člena firmy (0173). */
+export const EVENT_KINDS = ['event', 'dj'] as const
+export type EventKind = (typeof EVENT_KINDS)[number]
+export const EVENT_KIND_LABELS: Record<EventKind, string> = { event: 'Event', dj: 'DJ hranie' }
+/** Úloha v posádke, podľa ktorej vieme, kto hrá. */
+export const DJ_ROLE = 'DJ'
+
+/** Kto na akcii hrá: posádka s úlohou DJ (pri DJ hraní celá posádka, ak úlohu nikto nemá). */
+export function djCrew(event: Pick<CompanyEvent, 'kind' | 'crew'>) {
+  const djs = event.crew.filter((person) => /\bdj\b/i.test(person.role))
+  return djs.length > 0 || event.kind !== 'dj' ? djs : event.crew
+}
+
 /** `caseId` je vyplnené, keď technika prišla na event ako súčasť celého case. */
 export type EventEquipment = { equipmentId: string; quantity: number; caseId: string | null }
 /** Odpoveď člena posádky: zatiaľ nič / môže / nemôže. */
@@ -37,6 +50,8 @@ export const POWER_LABELS: Record<PowerType, string> = {
 }
 
 export type EventDetails = {
+  /** Bežný event alebo DJ hranie. */
+  kind: EventKind
   /** Interiér / exteriér; prázdne = nezadané. */
   setting: EventSetting | ''
   /** Prípojka elektriny; prázdne = ešte nevieme. */
@@ -56,6 +71,7 @@ export type EventDetails = {
 }
 
 export const EMPTY_EVENT_DETAILS: EventDetails = {
+  kind: 'event',
   setting: '',
   power: '',
   powerCount: null,
@@ -93,6 +109,7 @@ const time = z.string().regex(/^(\d{2}:\d{2})?$/, 'Zadajte čas')
 
 export const eventSchema = z
   .object({
+    kind: z.enum(EVENT_KINDS),
     name: text(160).min(1, 'Zadajte názov eventu'),
     client: text(120),
     venue: text(200),

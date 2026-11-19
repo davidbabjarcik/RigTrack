@@ -1,7 +1,7 @@
 import { shrinkImage } from '@/features/equipment/photo'
 import { getSupabase } from '@/lib/supabase/client'
 import { isMissingColumn } from '@/lib/supabase/errors'
-import type { CompanyEvent, CrewResponse, EventDocument, EventFormValues, EventSetting, EventStatus, PowerType } from './model'
+import type { CompanyEvent, CrewResponse, EventDocument, EventFormValues, EventKind, EventSetting, EventStatus, PowerType } from './model'
 
 const BUCKET = 'event-documents'
 
@@ -10,6 +10,8 @@ export const eventKeys = {
   documents: (companyId: string, eventId: string) => ['company', companyId, 'events', eventId, 'documents'] as const,
 }
 
+// Druh akcie (0173); bez migrácie sú všetky bežné eventy a druh sa neukladá.
+let kindColumn = ', kind'
 const EVENT_COLUMNS =
   'id, name, client, venue, starts_on, ends_on, status, note, organizer, organizer_person, organizer_phone, organizer_email, description, get_in_time, show_time, show_end_time, setting, power, power_count, power_note, weather_place'
 
@@ -23,10 +25,14 @@ let crewResponseColumns = ', response, response_note'
 export async function fetchEvents(companyId: string): Promise<CompanyEvent[]> {
   const db = getSupabase()
   const [events, equipment, crew] = await Promise.all([
-    db.from('events').select(EVENT_COLUMNS).eq('company_id', companyId),
+    db.from('events').select(EVENT_COLUMNS + kindColumn).eq('company_id', companyId),
     db.from('event_equipment').select('event_id, equipment_id, quantity, case_id').eq('company_id', companyId),
     db.from('event_crew').select('id, event_id, member_id, name, role' + crewResponseColumns).eq('company_id', companyId).order('created_at'),
   ])
+  if (kindColumn && isMissingColumn(events.error, 'kind')) {
+    kindColumn = ''
+    return fetchEvents(companyId)
+  }
   if (crewResponseColumns && isMissingColumn(crew.error, 'response')) {
     crewResponseColumns = ''
     return fetchEvents(companyId)
@@ -36,8 +42,9 @@ export async function fetchEvents(companyId: string): Promise<CompanyEvent[]> {
 
   const equipmentRows = equipment.data as { event_id: string; equipment_id: string; quantity: number; case_id: string | null }[]
   const crewRows = crew.data as unknown as { id: string; event_id: string; member_id: string | null; name: string; role: string; response?: CrewResponse; response_note?: string }[]
-  const rows = events.data as {
+  const rows = events.data as unknown as {
     id: string
+    kind?: EventKind
     name: string
     client: string
     venue: string
@@ -61,6 +68,7 @@ export async function fetchEvents(companyId: string): Promise<CompanyEvent[]> {
   }[]
   return rows.map((row) => ({
     id: row.id,
+    kind: row.kind === 'dj' ? 'dj' : 'event',
     name: row.name,
     client: row.client,
     venue: row.venue,
@@ -112,6 +120,7 @@ export async function saveEvent(companyId: string, id: string | null, values: Ev
     power_count: values.power ? values.powerCount : null,
     power_note: values.powerNote,
     weather_place: values.weatherPlace,
+    ...(kindColumn ? { kind: values.kind } : {}),
   }
   const table = getSupabase().from('events')
   const { data, error } = id

@@ -1,5 +1,6 @@
 import { Aperture, CircleDot, Gauge, Minus, Move, Settings, Sparkles, Sun, Triangle, Zap, ZoomIn, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { tf, tx } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
@@ -148,17 +149,24 @@ export function LightColors({ parts, wheel, guessed = false }: { parts: ColorPar
 }
 
 /** Sekcia v detaile svetla: DMX módy s rozpisom kanálov a farby (zadané, inak odhadnuté z kanálov). */
-export function LightDmxSection({ attributes }: { attributes: { dmxModes?: DmxMode[]; colorParts?: ColorPart[]; colorWheel?: ColorWheel } }) {
+/** `editTo`: svetlo bez módov ukáže výzvu s odkazom na doplnenie (len tomu, kto môže upravovať). */
+export function LightDmxSection({ attributes, editTo }: { attributes: { dmxModes?: DmxMode[]; colorParts?: ColorPart[]; colorWheel?: ColorWheel }; editTo?: string }) {
   const modes = attributes.dmxModes ?? []
   const entered = Boolean(attributes.colorParts?.length || attributes.colorWheel)
   const guess = entered ? null : colorsFromChannels(modes)
   const parts = attributes.colorParts ?? guess?.parts ?? []
   const wheel = attributes.colorWheel ?? (guess?.wheel ? { colors: [] } : null)
   const hasColors = parts.length > 0 || Boolean(wheel)
-  if (modes.length === 0 && !hasColors) return null
+  if (modes.length === 0 && !hasColors && !editTo) return null
   return (
     <CollapsibleSection id="equipment.dmx" title={tx('DMX módy a farby')}>
       <div className="flex flex-col gap-4">
+        {modes.length === 0 && editTo && (
+          <p className="rounded-xl border border-dashed bg-surface px-4 py-6 text-center text-sm text-muted-foreground">
+            {tx('DMX módy tohto svetla zatiaľ nie sú zapísané.')}{' '}
+            <Link to={editTo} className="font-medium text-accent hover:underline">{tx('Doplniť v úprave')}</Link>
+          </p>
+        )}
         {hasColors && (
           <div className="rounded-xl border bg-surface p-4">
             <LightColors parts={parts} wheel={wheel} guessed={!entered} />

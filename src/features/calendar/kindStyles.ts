@@ -8,6 +8,12 @@ export const KIND_STYLES: Record<EntryKind, { dot: string; text: string; chip: s
     chip: 'bg-violet-500/15 text-violet-800 dark:text-violet-200',
     bar: 'border-l-violet-500',
   },
+  dj: {
+    dot: 'bg-fuchsia-500',
+    text: 'text-fuchsia-600 dark:text-fuchsia-400',
+    chip: 'bg-fuchsia-500/15 text-fuchsia-800 dark:text-fuchsia-200',
+    bar: 'border-l-fuchsia-500',
+  },
   loan: {
     dot: 'bg-sky-500',
     text: 'text-sky-600 dark:text-sky-400',

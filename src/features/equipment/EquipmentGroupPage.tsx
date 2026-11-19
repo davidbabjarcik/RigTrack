@@ -4,6 +4,8 @@ import { useRef, useState } from 'react'
 import { usePastedImage } from '@/lib/usePastedImage'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { EquipmentMaintenance } from '@/features/maintenance/EquipmentMaintenance'
+import { LightDmxSection } from './DmxChannelTable'
+import { needsDmx } from './dmxChannels'
 import { GroupDmx } from './GroupDmx'
 import { GroupHours } from './GroupHours'
 import { GroupToCases } from './GroupToCases'
@@ -304,6 +306,15 @@ export function EquipmentGroupPage() {
           ))}
         </ul>
       </section>
+      {/* DMX módy a farby svetla – rovnaké pre všetky časti, berú sa z prvej. */}
+      {!cables && (
+        <div id="dmx-mody" className="mt-6 scroll-mt-20 empty:hidden">
+          <LightDmxSection
+            attributes={(parts.find((part) => part.attributes.dmxModes?.length) ?? main).attributes}
+            editTo={can(company, 'equipment.edit') && needsDmx(main) ? `/equipment/${main.id}/edit?group=${allIds}` : undefined}
+          />
+        </div>
+      )}
       <EquipmentMaintenance companyId={companyId} items={parts} />
     </>
   )

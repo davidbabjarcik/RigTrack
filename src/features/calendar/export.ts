@@ -21,7 +21,7 @@ export function eventCalendarItem(event: CompanyEvent): CalendarItem {
     .join('\n')
   return {
     uid: `event-${event.id}`,
-    title: event.name,
+    title: event.kind === 'dj' ? `DJ: ${event.name}` : event.name,
     startsOn: event.startsOn,
     endsOn: event.endsOn,
     location: event.venue,

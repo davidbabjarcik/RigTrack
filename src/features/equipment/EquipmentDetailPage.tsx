@@ -28,6 +28,7 @@ import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { EquipmentLinks } from './PurchaseLinksFields'
 import { capsuleLabel, transmitterLabel, wirelessTransmitters, CAPTURE_MATCH_LABELS, hoursSinceLamp, describeAttributes, describeUnitIds, groupSplitEquipment, isSimpleKind, KIND_LABELS, needsRestock, serviceState, unitIdsOf } from './model'
 import { LightDmxSection } from './DmxChannelTable'
+import { needsDmx } from './dmxChannels'
 import { OperatingHours } from './OperatingHours'
 import { QuantityStepper } from './QuantityStepper'
 import { StatusBadge } from './StatusBadge'
@@ -301,7 +302,10 @@ export function EquipmentDetailPage() {
       </dl>
 
       <div id="dmx-mody" className="mt-6 scroll-mt-20 empty:hidden">
-        <LightDmxSection attributes={equipment.attributes} />
+        <LightDmxSection
+          attributes={equipment.attributes}
+          editTo={can(company, 'equipment.edit') && needsDmx(equipment) ? `/equipment/${equipment.id}/edit` : undefined}
+        />
       </div>
 
       {(equipment.links?.length ?? 0) > 0 && (

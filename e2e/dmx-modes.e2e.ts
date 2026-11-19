@@ -40,6 +40,14 @@ test('DMX módy svetla: rozpis kanálov a farby', async ({ page }, info) => {
   await page.screenshot({ path: info.outputPath(`dmx-form-${info.project.name}.png`), fullPage: true })
 })
 
+test('svetlo bez DMX módov ponúkne ich doplnenie', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, { equipment: [{ ...light, attributes: { lightType: 'moving_wash' } }] })
+  await page.goto(`/equipment/${LIGHT_ID}`)
+  await expect(page.getByText('DMX módy tohto svetla zatiaľ nie sú zapísané.')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Doplniť v úprave' })).toHaveAttribute('href', /\/equipment\/.+\/edit$/)
+})
+
 test('farby kolieska sa vo formulári ukážu v uloženej farbe', async ({ page }) => {
   await signIn(page)
   await fakeBackend(page, { equipment: [light] })

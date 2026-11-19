@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.7
+
+- **DJ gigs**: an event can be a regular event or a DJ gig of someone from the company. Start a new DJ gig with the
+  “DJ gig” button in Events. Instead of the crew it has a “Who plays” part (people are added as DJ).
+- In the calendar, DJ gigs have their own colour and icon, can be shown or hidden separately and show who plays.
+  The events list and detail mark them with a DJ label.
+- The “DMX modes and colours” section is also on gear with several pieces (e.g. 10 heads in cases). A light without
+  DMX modes offers to fill them in.
+- Technical: migration 0173 (event kind).
+
 ### 9.6
 
 - **DMX modes on the light detail**: a new “DMX modes and colours” section with mode switching and a clear channel

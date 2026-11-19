@@ -2,7 +2,7 @@ import { EventAttendanceSection } from '@/features/attendance/EventAttendanceSec
 import { EventDutiesSection } from '@/features/duties/EventDutiesSection'
 import { EventDrivesSection } from '@/features/drives/EventDrivesSection'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CalendarClock, FileText, ListChecks, Pencil, Printer, Receipt, Trash2 } from 'lucide-react'
+import { ArrowLeft, CalendarClock, Disc3, FileText, ListChecks, Pencil, Printer, Receipt, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -101,7 +101,12 @@ export function EventDetailPage() {
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight break-words">{event.name}</h1>
           <p className="mt-1 text-muted-foreground">{[when, event.venue, event.client].filter(Boolean).join(' · ')}</p>
-          <div className="mt-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {event.kind === 'dj' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-fuchsia-500/15 px-2.5 py-0.5 text-xs font-medium text-fuchsia-800 dark:text-fuchsia-200">
+                <Disc3 className="size-3.5" aria-hidden />{tx('DJ hranie')}
+              </span>
+            )}
             <EventStatusBadge status={event.status} />
           </div>
         </div>
@@ -152,7 +157,7 @@ export function EventDetailPage() {
             onClick={() => setParams(item.id === 'overview' ? {} : { tab: item.id }, { replace: true })}
             className={cn('h-9 shrink-0 rounded-lg border px-3 text-sm font-medium', tab === item.id ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')}
           >
-            {tx(item.label)}
+            {item.id === 'crew' && event.kind === 'dj' ? tx('Kto hrá') : tx(item.label)}
           </button>
         ))}
       </div>

@@ -202,3 +202,8 @@ export function colorsFromChannels(modes: Pick<DmxMode, 'map'>[]): { parts: Colo
   }
   return { parts: COLOR_PARTS.filter((part) => parts.has(part)), wheel }
 }
+
+/** Svetlo ovládané cez DMX (nie príslušenstvo ani svetlo na externom dimmeri). */
+export function needsDmx(item: { kind: string; attributes: { lightType?: string; externalDimmer?: boolean } }) {
+  return item.kind === 'light' && !item.attributes.lightType?.startsWith('acc_') && !item.attributes.externalDimmer
+}

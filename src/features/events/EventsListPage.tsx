@@ -1,4 +1,4 @@
-import { ChevronRight, Plus } from 'lucide-react'
+import { ChevronRight, Disc3, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -10,7 +10,8 @@ import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { EventStatusBadge } from './EventStatusBadge'
-import { isLive, sortEvents } from './model'
+import { djCrew, isLive, sortEvents } from './model'
+import { memberName, useMembers } from '@/features/companies/useMembers'
 import { useEvents } from './useEvents'
 import { tx, tf } from '@/lib/i18n'
 
@@ -18,6 +19,7 @@ export function EventsListPage() {
   const company = useCompany().active!
   const canEdit = can(company, 'events.edit')
   const events = useEvents(company.companyId)
+  const members = useMembers(company.companyId)
   const [showPast, setShowPast] = useState(false)
   const today = todayIso()
 
@@ -32,8 +34,12 @@ export function EventsListPage() {
         description={tx('Akcie, technika na ne, posádka a dokumenty')}
         action={
           canEdit && (
-            <LinkButton to="/events/new">
-              <Plus className="size-4" aria-hidden />{tx('Nový')}</LinkButton>
+            <div className="flex flex-wrap gap-2">
+              <LinkButton to="/events/new?kind=dj" variant="outline">
+                <Disc3 className="size-4" aria-hidden />{tx('DJ hranie')}</LinkButton>
+              <LinkButton to="/events/new">
+                <Plus className="size-4" aria-hidden />{tx('Nový')}</LinkButton>
+            </div>
           )
         }
       />
@@ -73,11 +79,19 @@ export function EventsListPage() {
             <li key={event.id}>
               <Link to={`/events/${event.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-muted">
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">{event.name}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    {event.kind === 'dj' && (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-fuchsia-500/15 px-2 py-0.5 text-xs font-medium text-fuchsia-800 dark:text-fuchsia-200">
+                        <Disc3 className="size-3" aria-hidden />DJ
+                      </span>
+                    )}
+                    <span className="truncate font-medium">{event.name}</span>
+                  </span>
                   <span className="block truncate text-sm text-muted-foreground">
                     {[
                       event.startsOn === event.endsOn ? formatDate(event.startsOn) : `${formatDate(event.startsOn)} – ${formatDate(event.endsOn)}`,
                       event.venue,
+                      event.kind === 'dj' && djCrew(event).map((person) => person.memberId ? memberName(members.data, person.memberId) : person.name).filter(Boolean).join(', '),
                       event.client,
                     ]
                       .filter(Boolean)

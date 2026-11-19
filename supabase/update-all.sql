@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0172 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0173 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -6422,6 +6422,17 @@ grant update (name, issuer, number, issued_on, valid_until, note) on public.staf
 drop trigger if exists staff_certificates_audit on public.staff_certificates;
 create trigger staff_certificates_audit after insert or update or delete on public.staff_certificates
   for each row execute function public.write_audit();
+
+-- ===== 0173_dj_gigs.sql =====
+-- 0173: DJ hrania.
+-- Event môže byť bežná akcia (technika, posádka) alebo DJ hranie člena firmy. Kto hrá, je v posádke
+-- s úlohou „DJ“. Oprávnenia sa nemenia – platia tie isté pravidlá ako pre eventy (RLS z 0018).
+
+alter table public.events
+  add column if not exists kind text not null default 'event'
+  constraint events_kind_check check (kind in ('event', 'dj'));
+
+grant update (kind) on public.events to authenticated;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

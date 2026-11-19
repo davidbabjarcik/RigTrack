@@ -82,6 +82,21 @@ describe('events in the agenda', () => {
       '2026-10-13 event prebieha · Amfiteáter · do 14. 10. 2026',
     ])
   })
+
+  it('shows a DJ gig as its own kind with who plays', () => {
+    const crew = [
+      { id: 'c1', memberId: 'u1', name: '', role: 'DJ', response: 'pending' as const, responseNote: '' },
+      { id: 'c2', memberId: null, name: 'Externý DJ', role: 'dj set', response: 'pending' as const, responseNote: '' },
+      { id: 'c3', memberId: 'u2', name: '', role: 'zvukár', response: 'pending' as const, responseNote: '' },
+    ]
+    const gig = event({ kind: 'dj', endsOn: '2026-11-01', crew })
+    expect(agenda({ events: [gig], memberName: (id) => (id === 'u1' ? 'Ukážkový Člen' : '') })).toEqual([
+      '2026-11-01 dj hrá Ukážkový Člen, Externý DJ · Amfiteáter',
+    ])
+    // Bez úlohy DJ pri DJ hraní hrá celá posádka; bez nikoho len „DJ hranie“.
+    expect(agenda({ events: [event({ kind: 'dj', endsOn: '2026-11-01', venue: '', crew: [{ ...crew[2], memberId: null, name: 'Ukážka' }] })] })).toEqual(['2026-11-01 dj hrá Ukážka'])
+    expect(agenda({ events: [event({ kind: 'dj', endsOn: '2026-11-01', venue: '' })] })).toEqual(['2026-11-01 dj DJ hranie'])
+  })
 })
 
 describe('groupAgenda', () => {

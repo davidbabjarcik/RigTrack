@@ -42,6 +42,7 @@ export function OfferActions({ companyId, id, draft, canEdit }: { companyId: str
         powerCount: null,
         powerNote: '',
         weatherPlace: '',
+        kind: 'event',
       })
       // Technika z riadkov ceny (zo skladu) ide rovno na event.
       const gear = new Map<string, number>()

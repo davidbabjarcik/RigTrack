@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeftRight, CalendarDays, CalendarX, Gift, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, CalendarDays, Disc3, CalendarX, Gift, Car, List, ListTodo, ShoppingCart, Ticket, Wrench, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -38,6 +38,7 @@ import { tx } from '@/lib/i18n'
 
 const ICONS: Record<EntryKind, LucideIcon> = {
   event: Ticket,
+  dj: Disc3,
   loan: ArrowLeftRight,
   vehicle: Car,
   task: ListTodo,
@@ -109,6 +110,7 @@ export function CalendarPage() {
     shopping: shopping.data ?? [],
     people: staff.people,
     unavailability: staff.unavailability,
+    memberName: (memberId) => staff.people.find((person) => person.memberId === memberId)?.name ?? '',
   }
   // Moja karta v tíme: tu si zapisujem, kedy nemôžem (vedúci to uvidí pri plánovaní posádky).
   const me = staff.people.find((person) => person.memberId === userId)

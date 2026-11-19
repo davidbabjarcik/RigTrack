@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.7 – 20. 11. 2026
+
+- **DJ hrania**: pri evente sa dá zvoliť, či je to bežný event alebo DJ hranie niekoho z firmy. Nové DJ hranie
+  založíte tlačidlom „DJ hranie“ v Eventoch. Namiesto posádky má časť „Kto hrá“ (ľudia sa pridávajú ako DJ).
+- V kalendári majú DJ hrania vlastnú farbu a ikonku, dajú sa skryť alebo ukázať zvlášť a pri každom je, kto hrá.
+  V zozname eventov a v detaile majú štítok DJ.
+- Sekcia „DMX módy a farby“ je aj pri technike s viacerými kusmi (napr. 10 hláv v cases). Pri svetle bez zapísaných
+  DMX módov ponúkne ich doplnenie.
+- Technické: migrácia 0173 (druh eventu).
+
 ### 9.6 – 9. 11. 2026
 
 - **DMX módy v detaile svetla**: nová sekcia „DMX módy a farby“ s prepínaním módov a prehľadnou tabuľkou kanálov.

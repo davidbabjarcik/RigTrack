@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -14,6 +14,8 @@ import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { eventKeys, notifyNewEvent, saveEvent } from './api'
 import {
+  EVENT_KIND_LABELS,
+  EVENT_KINDS,
   EVENT_SETTINGS,
   EVENT_STATUS_LABELS,
   EVENT_STATUSES,
@@ -25,15 +27,18 @@ import {
   SETTING_LABELS,
   type CompanyEvent,
   type EventFormValues,
+  type EventKind,
 } from './model'
 import { useEvents } from './useEvents'
 import { DAY_KIND_LABELS, DAY_KINDS, defaultProgram, eventDates, timesFromProgram, worthSaving, type DayKind, type EventDay, type ProgramRow } from './plan'
 import { planKeys, saveDay, useEventDays } from './planApi'
 import { tf, tx } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
+import { Disc3, Ticket } from 'lucide-react'
 
-type FormProps = { companyId: string; current: CompanyEvent | null; events: CompanyEvent[]; savedDays: EventDay[] }
+type FormProps = { companyId: string; current: CompanyEvent | null; events: CompanyEvent[]; savedDays: EventDay[]; kind: EventKind }
 
-function EventForm({ companyId, current, events, savedDays }: FormProps) {
+function EventForm({ companyId, current, events, savedDays, kind: startKind }: FormProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const today = todayIso()
@@ -47,6 +52,7 @@ function EventForm({ companyId, current, events, savedDays }: FormProps) {
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
+      kind: current?.kind ?? startKind,
       name: current?.name ?? '',
       client: current?.client ?? '',
       venue: current?.venue ?? '',
@@ -87,6 +93,7 @@ function EventForm({ companyId, current, events, savedDays }: FormProps) {
   const startsOn = useWatch({ control, name: 'startsOn' })
   const setting = useWatch({ control, name: 'setting' })
   const venue = useWatch({ control, name: 'venue' })
+  const kind = useWatch({ control, name: 'kind' })
   const previous = previousEdition(events, { id: current?.id, name, startsOn })
   const copyPrevious = () => {
     if (!previous) return
@@ -128,7 +135,28 @@ function EventForm({ companyId, current, events, savedDays }: FormProps) {
 
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="flex flex-col gap-4">
-      <Field label={tx('Názov eventu *')} autoFocus={!current} list="past-event-names" error={errors.name?.message} {...register('name')} />
+      <fieldset>
+        <legend className="mb-1.5 text-sm font-medium">{tx('Čo to je')}</legend>
+        <div className="flex flex-wrap gap-2">
+          {EVENT_KINDS.map((option) => (
+            <label
+              key={option}
+              className={cn(
+                'inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border px-4 text-sm has-focus-visible:ring-2 has-focus-visible:ring-ring',
+                kind === option ? 'border-accent bg-accent/10 font-medium' : 'bg-surface hover:bg-muted',
+              )}
+            >
+              <input type="radio" value={option} className="sr-only" {...register('kind')} />
+              {option === 'dj' ? <Disc3 className="size-4" aria-hidden /> : <Ticket className="size-4" aria-hidden />}
+              {tx(EVENT_KIND_LABELS[option])}
+            </label>
+          ))}
+        </div>
+        {kind === 'dj' && (
+          <p className="mt-1.5 text-sm text-muted-foreground">{tx('Hranie niekoho z firmy ako DJ. Kto hrá, pridáte po uložení v časti „Kto hrá“. V kalendári má vlastnú farbu.')}</p>
+        )}
+      </fieldset>
+      <Field label={kind === 'dj' ? tx('Názov (napr. klub alebo akcia) *') : tx('Názov eventu *')} autoFocus={!current} list="past-event-names" error={errors.name?.message} {...register('name')} />
       <datalist id="past-event-names">
         {pastEventNames(events).map((past) => (
           <option key={past} value={past} />
@@ -260,6 +288,7 @@ function EventForm({ companyId, current, events, savedDays }: FormProps) {
 
 export function EventFormPage() {
   const { id } = useParams()
+  const [params] = useSearchParams()
   const company = useCompany().active!
   const events = useEvents(company.companyId)
   const current = id ? events.data?.find((event) => event.id === id) : null
@@ -277,12 +306,12 @@ export function EventFormPage() {
   } else if (id && !current) {
     body = <ErrorBlock message={tx('Tento event neexistuje alebo k nemu nemáte prístup.')} />
   } else {
-    body = <EventForm key={id ?? 'new'} companyId={company.companyId} current={current ?? null} events={events.data} savedDays={days.data ?? []} />
+    body = <EventForm key={id ?? 'new'} companyId={company.companyId} current={current ?? null} events={events.data} savedDays={days.data ?? []} kind={params.get('kind') === 'dj' ? 'dj' : 'event'} />
   }
 
   return (
     <>
-      <PageHeader title={id ? tx('Úprava eventu') : tx('Nový event')} />
+      <PageHeader title={id ? tx('Úprava eventu') : params.get('kind') === 'dj' ? tx('Nové DJ hranie') : tx('Nový event')} />
       {body}
     </>
   )

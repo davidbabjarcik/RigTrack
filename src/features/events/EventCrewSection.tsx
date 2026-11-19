@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { addEventCrew, eventKeys, removeEventCrew, setCrewResponse } from './api'
-import { previousEdition, type CompanyEvent, type CrewResponse, type EventCrew } from './model'
+import { DJ_ROLE, previousEdition, type CompanyEvent, type CrewResponse, type EventCrew } from './model'
 import { clashes, crewAvailability, type CrewAvailability } from '@/features/staff/model'
 import { useCrewBusyElsewhere } from './elsewhere'
 import { useStaff } from '@/features/staff/useStaff'
@@ -81,7 +81,9 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
   }
   const [who, setWho] = useState('')
   const [name, setName] = useState('')
-  const [role, setRole] = useState('')
+  // Pri DJ hraní sa ľudia pridávajú ako DJ.
+  const defaultRole = event.kind === 'dj' ? DJ_ROLE : ''
+  const [role, setRole] = useState(defaultRole)
   const refresh = () => queryClient.invalidateQueries({ queryKey: eventKeys.list(companyId) })
 
   const add = useMutation({
@@ -90,7 +92,7 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
     onSuccess: () => {
       setWho('')
       setName('')
-      setRole('')
+      setRole(defaultRole)
     },
     onSettled: refresh,
   })
@@ -134,7 +136,7 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
   }
 
   return (
-    <CollapsibleSection id="event.crew" title={<>{tx('Posádka (')}{event.crew.length})</>}>
+    <CollapsibleSection id="event.crew" title={<>{event.kind === 'dj' ? tx('Kto hrá (') : tx('Posádka (')}{event.crew.length})</>}>
 
       {event.crew.length > 0 && (
         <ul className="mb-3 divide-y overflow-hidden rounded-xl border bg-surface">
