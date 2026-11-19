@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.8 – 20. 11. 2026
+
+- **Tlač z mobilu a tabletu**: na telefóne sa tlačová strana ukáže ako celá A4 (zmenšená), nie rozhádzaná podľa
+  šírky displeja. Tlačidlo Tlačiť na mobile a tablete pripraví PDF a otvorí zdieľanie – odtiaľ sa dá vytlačiť
+  (AirPrint), uložiť alebo poslať. Platí pre tlač eventu, výpožičky, patch listu, DMX, cenových ponúk, plagátu
+  inventára, hárkov cases, QR štítkov, Wi-Fi, IP/MAC adries a hromadnú tlač.
+- Pri suboch sú „horna“ a „slimák“ jedna voľba: Horna (slimák).
+
 ### 9.7 – 20. 11. 2026
 
 - **DJ hrania**: pri evente sa dá zvoliť, či je to bežný event alebo DJ hranie niekoho z firmy. Nové DJ hranie

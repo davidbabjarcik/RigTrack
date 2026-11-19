@@ -1,12 +1,14 @@
+import { useRef } from 'react'
+import { PaperSheet } from '@/components/print/PaperSheet'
+import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { dipOn } from '@/features/labels/tape'
 import { portsForUniverse } from '@/features/equipment/dmxNode'
 import { Link, useParams } from 'react-router-dom'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { useEvents } from '@/features/events/useEvents'
 import { formatDate } from '@/lib/format'
@@ -22,6 +24,7 @@ const pad = (value: number | null) => (value ? String(value).padStart(3, '0') : 
 
 /** DMX patch list eventu na A4 – po linkách, s adresami od–do a súhrnom kanálov. */
 export function DmxPrintPage() {
+  const sheet = useRef<HTMLDivElement>(null)
   const { id = '' } = useParams()
   const company = useCompany().active!
   const companyId = company.companyId
@@ -44,7 +47,7 @@ export function DmxPrintPage() {
   const universes = [...new Set(patch.data.map((line) => line.universe))]
 
   return (
-    <div className="min-h-dvh bg-white p-6 text-black">
+    <div className="min-h-dvh bg-muted p-2 text-black sm:p-6 print:bg-white print:p-0">
       <style>{PRINT_CSS}</style>
       <div className="mb-4 flex items-center justify-between gap-3 print:hidden">
         <Link to={`/events/${id}`} className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-black">
@@ -53,12 +56,10 @@ export function DmxPrintPage() {
         </Link>
         <div className="flex gap-2">
           <AddToPrintButton light companyId={companyId} kind="event" targetIds={[id]} label="dmx" />
-          <Button onClick={() => window.print()}>
-            <Printer className="size-4" aria-hidden />
-            Tlačiť / PDF
-          </Button>
+          <PrintButton sheet={sheet} fileName={`dmx-${event.name}`} marginMm={12} />
         </div>
       </div>
+      <PaperSheet sheetRef={sheet} marginMm={12}>
       <header className="mb-4 border-b border-neutral-400 pb-2">
         <h1 className="text-xl font-bold">DMX patch list – {event.name}</h1>
         <p className="text-sm text-neutral-700">
@@ -111,6 +112,7 @@ export function DmxPrintPage() {
         )
       })}
       {conflicts.size > 0 && <p className="text-sm">⚠ Adresa sa prekrýva s iným svetlom na tej istej linke alebo presahuje 512.</p>}
+      </PaperSheet>
     </div>
   )
 }

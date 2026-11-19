@@ -1,8 +1,10 @@
+import { useRef } from 'react'
+import { PaperSheet } from '@/components/print/PaperSheet'
+import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { Button } from '@/components/ui/button'
 import { useCapsules } from '@/features/capsules/api'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
@@ -20,6 +22,7 @@ const PRINT_CSS = `
 
 /** Patch list eventu na A4 – na tlač alebo PDF. */
 export function PatchPrintPage() {
+  const sheet = useRef<HTMLDivElement>(null)
   const { id = '' } = useParams()
   const company = useCompany().active!
   const companyId = company.companyId
@@ -40,7 +43,7 @@ export function PatchPrintPage() {
   const summary = patchSummary(patch.data, equipmentName, capsuleName)
 
   return (
-    <div className="min-h-dvh bg-white p-6 text-black">
+    <div className="min-h-dvh bg-muted p-2 text-black sm:p-6 print:bg-white print:p-0">
       <style>{PRINT_CSS}</style>
       <div className="mb-4 flex items-center justify-between gap-3 print:hidden">
         <Link to={`/events/${id}`} className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-black">
@@ -49,12 +52,10 @@ export function PatchPrintPage() {
         </Link>
         <div className="flex gap-2">
         <AddToPrintButton light companyId={companyId} kind="event" targetIds={[id]} label="patch" />
-        <Button onClick={() => window.print()}>
-          <Printer className="size-4" aria-hidden />
-          Tlačiť / PDF
-        </Button>
+        <PrintButton sheet={sheet} fileName={`patch-${event.name}`} marginMm={12} />
         </div>
       </div>
+      <PaperSheet sheetRef={sheet} marginMm={12}>
       <header className="mb-4 border-b border-neutral-400 pb-2">
         <h1 className="text-xl font-bold">Patch list – {event.name}</h1>
         <p className="text-sm text-neutral-700">
@@ -101,6 +102,7 @@ export function PatchPrintPage() {
           </ul>
         </section>
       )}
+      </PaperSheet>
     </div>
   )
 }

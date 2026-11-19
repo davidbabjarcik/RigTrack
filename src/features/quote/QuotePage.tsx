@@ -1,6 +1,8 @@
+import { PaperSheet } from '@/components/print/PaperSheet'
+import { PrintButton } from '@/components/print/PrintButton'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Eye, Printer, Save, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowLeft, Eye, Save, Trash2 } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
@@ -128,6 +130,7 @@ function QuoteDocument({ doc, number }: { doc: QuoteDoc; number?: string }) {
 
 /** Cenová ponuka z eventu: technika s cenami prenájmu, doprava, obsluha, zľava a DPH – na tlač / PDF, s históriou uložených verzií. */
 export function QuotePage() {
+  const sheet = useRef<HTMLDivElement>(null)
   const { id = '' } = useParams()
   const company = useCompany().active!
   const companyId = company.companyId
@@ -190,7 +193,7 @@ export function QuotePage() {
   const shown = saved.data?.find((item) => item.id === viewing)
 
   return (
-    <div className="min-h-dvh bg-white p-6 text-black">
+    <div className="min-h-dvh bg-muted p-2 text-black sm:p-6 print:bg-white print:p-0">
       <style>{PRINT_CSS}</style>
       <div className="mb-6 flex flex-col gap-4 print:hidden">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -203,8 +206,7 @@ export function QuotePage() {
                 {save.isPending ? tx('Ukladám…') : tx('Uložiť ponuku')}
               </Button>
             )}
-            <Button onClick={() => window.print()}>
-              <Printer className="size-4" aria-hidden />{tx('Tlačiť / PDF')}</Button>
+            <PrintButton sheet={sheet} fileName="ponuka" marginMm={14} />
           </div>
         </div>
 
@@ -277,8 +279,10 @@ export function QuotePage() {
         )}
         {(save.isError || status.isError || remove.isError) && <p className="text-sm text-red-700">{tx('Nepodarilo sa uložiť. Táto časť databázy ešte nemusí byť pripravená (migrácia 0093).')}</p>}
       </div>
+      <PaperSheet sheetRef={sheet} marginMm={14}>
 
       {shown ? <QuoteDocument doc={shown.doc} number={quoteNumber(shown)} /> : <QuoteDocument doc={live} />}
+      </PaperSheet>
     </div>
   )
 }

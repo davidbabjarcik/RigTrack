@@ -303,7 +303,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     maxSplDb: equipment.attributes.maxSplDb,
     connectors: equipment.attributes.connectors ?? '',
     poleMount: equipment.attributes.poleMount ?? false,
-    subDesign: equipment.attributes.subDesign ?? '',
+    subDesign: equipment.attributes.subDesign === 'snail' ? 'horn' : (equipment.attributes.subDesign ?? ''),
     programW: equipment.attributes.programW,
     maxSplPeakDb: equipment.attributes.maxSplPeakDb,
     sensitivityDb: equipment.attributes.sensitivityDb,

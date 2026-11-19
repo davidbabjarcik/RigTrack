@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.8
+
+- **Printing from a phone or tablet**: on a phone the print page shows as a whole A4 page (scaled down) instead of
+  being squeezed to the screen width. On phones and tablets the Print button prepares a PDF and opens sharing –
+  from there it can be printed (AirPrint), saved or sent. This covers event, loan, patch list, DMX, quote,
+  inventory poster, case sheets, QR labels, Wi-Fi, IP/MAC addresses and batch printing.
+- For subwoofers, “horn” and “folded horn” are one option: Horn (folded).
+
 ### 9.7
 
 - **DJ gigs**: an event can be a regular event or a DJ gig of someone from the company. Start a new DJ gig with the

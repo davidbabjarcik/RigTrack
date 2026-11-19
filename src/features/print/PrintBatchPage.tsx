@@ -1,5 +1,6 @@
+import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, FileDown, Printer } from 'lucide-react'
+import { ArrowLeft, FileDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -141,10 +142,13 @@ export function PrintBatchPage() {
 
   if (cases.isError || equipment.isError || colors.isError || branding.isError) return <ErrorBlock message="Údaje na tlač sa nepodarilo načítať." />
 
+  const pdfBlob = async () => {
+    const images = await Promise.all((pages ?? []).map(async (page) => ({ ...(await canvasJpeg(page.canvas)), page: pageSizePt(page.paper, page.landscape) })))
+    return buildPdf(images, pageSizePt('A4', false))
+  }
   const downloadPdf = async () => {
     if (!pages) return
-    const images = await Promise.all(pages.map(async (page) => ({ ...(await canvasJpeg(page.canvas)), page: pageSizePt(page.paper, page.landscape) })))
-    const url = URL.createObjectURL(buildPdf(images, pageSizePt('A4', false)))
+    const url = URL.createObjectURL(await pdfBlob())
     const link = document.createElement('a')
     link.href = url
     link.download = 'rigtrack-tlac.pdf'
@@ -183,10 +187,7 @@ export function PrintBatchPage() {
           <div className="flex flex-wrap gap-2">
             {contentIds.length > 0 && <AddToPrintButton companyId={companyId} kind="case" targetIds={contentIds} label="content" format={formatOf(options.paper, options.landscape)} />}
             {labelIds.length > 0 && <AddToPrintButton companyId={companyId} kind="case" targetIds={labelIds} label="case_label" />}
-            <Button disabled={!pages || pages.length === 0} onClick={print}>
-              <Printer className="size-4" aria-hidden />
-              Tlačiť
-            </Button>
+            <PrintButton makePdf={pdfBlob} onPrint={print} fileName="rigtrack-tlac" disabled={!pages || pages.length === 0} label="Tlačiť" />
             <Button variant="outline" disabled={!pages || pages.length === 0} onClick={() => void downloadPdf()}>
               <FileDown className="size-4" aria-hidden />
               PDF

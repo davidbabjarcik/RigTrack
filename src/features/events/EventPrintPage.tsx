@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Printer } from 'lucide-react'
-import { useEffect, type ReactNode } from 'react'
+import { ArrowLeft } from 'lucide-react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { Button } from '@/components/ui/button'
+import { PaperSheet } from '@/components/print/PaperSheet'
+import { PrintButton } from '@/components/print/PrintButton'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { useCompanyLogo } from '@/features/companies/useCompanyLogo'
@@ -34,6 +35,7 @@ function CheckBox() {
 /** Prehľad eventu na A4: termín, časy, miesto, organizátor, popis, posádka, technika, fotky a dokumenty. */
 export function EventPrintPage() {
   const { id = '' } = useParams()
+  const sheet = useRef<HTMLDivElement>(null)
   const company = useCompany().active!
   const companyId = company.companyId
   const events = useEvents(companyId)
@@ -124,15 +126,13 @@ export function EventPrintPage() {
       <div className="mx-auto flex max-w-[210mm] flex-wrap items-center justify-between gap-3 px-4 py-4 print:hidden">
         {back}
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">V dialógu tlače zvoľte „Uložiť ako PDF“.</span>
-          <Button onClick={() => window.print()}>
-            <Printer className="size-4" aria-hidden />
-            Tlačiť / PDF
-          </Button>
+          <span className="hidden text-sm text-muted-foreground sm:inline">V dialógu tlače zvoľte „Uložiť ako PDF“.</span>
+          <PrintButton sheet={sheet} fileName={`event-${event.name}`} />
         </div>
       </div>
 
-      <article className="mx-auto mb-8 max-w-[210mm] bg-white p-[14mm] text-sm text-black shadow-sm [color-scheme:light] print:mb-0 print:max-w-none print:p-0 print:shadow-none">
+      <div className="mb-8 px-2 print:mb-0 print:px-0">
+      <PaperSheet sheetRef={sheet} className="text-sm">
         <header className="flex items-start justify-between gap-6 border-b-2 border-black pb-4">
           <div className="min-w-0">
             {logo.url ? (
@@ -274,7 +274,8 @@ export function EventPrintPage() {
             </div>
           </section>
         )}
-      </article>
+      </PaperSheet>
+      </div>
     </div>
   )
 }

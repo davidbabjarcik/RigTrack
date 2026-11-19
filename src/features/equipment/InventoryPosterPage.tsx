@@ -1,5 +1,6 @@
+import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Download, FileDown, Printer } from 'lucide-react'
+import { ArrowLeft, Download, FileDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -134,9 +135,9 @@ export function InventoryPosterPage() {
   if (list.isError) return <ErrorBlock message="Techniku sa nepodarilo načítať." onRetry={() => void list.refetch()} />
 
   const baseName = `inventar-${fileSlug(settings.title || KIND_LABELS[kind])}`
+  const pdfBlob = async () => buildPdf(await Promise.all(pages.map((canvas) => canvasJpeg(canvas, 0.92))), pageSizePt(settings.paper, !settings.portrait))
   const downloadPdf = async () => {
-    const images = await Promise.all(pages.map((canvas) => canvasJpeg(canvas, 0.92)))
-    const url = URL.createObjectURL(buildPdf(images, pageSizePt(settings.paper, !settings.portrait)))
+    const url = URL.createObjectURL(await pdfBlob())
     const link = document.createElement('a')
     link.href = url
     link.download = `${baseName}.pdf`
@@ -177,10 +178,7 @@ export function InventoryPosterPage() {
         </Link>
         <span className="flex-1" />
         <AddToPrintButton companyId={companyId} kind="poster" targetIds={[companyId]} label={`poster:${kind}`} format={formatOf(settings.paper, !settings.portrait)} />
-        <Button variant="outline" disabled={!ready} onClick={print}>
-          <Printer className="size-4" aria-hidden />
-          Tlačiť
-        </Button>
+        <PrintButton variant="outline" makePdf={pdfBlob} onPrint={print} fileName={baseName} disabled={!ready} label="Tlačiť" />
         <Button variant="outline" disabled={!ready} onClick={() => void downloadPdf()}>
           <FileDown className="size-4" aria-hidden />
           PDF

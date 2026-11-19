@@ -1,6 +1,8 @@
+import { PaperSheet } from '@/components/print/PaperSheet'
+import { PrintButton } from '@/components/print/PrintButton'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Check, Printer, X } from 'lucide-react'
-import { useState } from 'react'
+import { Check, X } from 'lucide-react'
+import { useState, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/format'
@@ -14,6 +16,7 @@ const PRINT_CSS = `
 
 /** Ponuka pre klienta cez odkaz (bez prihlásenia): prečítať, vytlačiť, potvrdiť alebo odmietnuť. */
 export function SharedOfferPage() {
+  const sheet = useRef<HTMLDivElement>(null)
   const { token = '' } = useParams()
   const offer = useQuery({ queryKey: ['shared-offer', token], queryFn: () => fetchSharedOffer(token), retry: false })
   const [note, setNote] = useState('')
@@ -31,14 +34,11 @@ export function SharedOfferPage() {
       <style>{PRINT_CSS}</style>
       <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center justify-between gap-3 px-4 print:hidden">
         <p className="text-sm text-neutral-600">Cenová ponuka od {data.issuer.name || data.companyName}</p>
-        <Button variant="outline" onClick={() => window.print()}>
-          <Printer className="size-4" aria-hidden />
-          Tlačiť / uložiť ako PDF
-        </Button>
+        <PrintButton sheet={sheet} fileName="cenova-ponuka" marginMm={14} variant="outline" label="Tlačiť / uložiť ako PDF" />
       </div>
-      <div className="mx-auto max-w-[210mm] bg-white p-8 shadow print:p-0 print:shadow-none">
+      <PaperSheet sheetRef={sheet} marginMm={14}>
         <OfferDocument offer={data} />
-      </div>
+      </PaperSheet>
       <div className="mx-auto mt-4 max-w-[210mm] px-4 print:hidden">
         {answered ? (
           <p className={`rounded-lg p-4 text-sm ${data.status === 'accepted' ? 'bg-emerald-100 text-emerald-900' : 'bg-neutral-200'}`}>

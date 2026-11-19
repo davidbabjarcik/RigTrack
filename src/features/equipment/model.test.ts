@@ -335,7 +335,7 @@ describe('speaker specs and weight', () => {
   it('stores speaker data and weight', () => {
     const sub = attributesFor({ kind: 'audio', connector: '', lengthM: undefined, powerW: undefined, lightSource: '', audioType: 'subwoofer', powered: 'active', subDesign: 'horn', woofer: '2× 18″', rmsW: 2000, maxSplDb: 138, poleMount: true, subDelayMs: 4, weightKg: 85 })
     expect(sub).toMatchObject({ powered: 'active', subDesign: 'horn', woofer: '2× 18″', rmsW: 2000, maxSplDb: 138, poleMount: true, subDelayMs: 4, weightKg: 85 })
-    expect(describeAttributes({ attributes: sub })).toEqual(['Sub (basák)', 'aktívny', 'horna', '2× 18″', '2000 W RMS', '138 dB SPL', '85 kg'])
+    expect(describeAttributes({ attributes: sub })).toEqual(['Sub (basák)', 'aktívny', 'horna (slimák)', '2× 18″', '2000 W RMS', '138 dB SPL', '85 kg'])
     const cable = attributesFor({ kind: 'cable', connector: 'XLR', lengthM: 5, powerW: undefined, lightSource: '', weightKg: 0.4 })
     expect(cable.weightKg).toBe(0.4)
   })

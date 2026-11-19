@@ -1,5 +1,6 @@
+import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Download, FileDown, Printer } from 'lucide-react'
+import { ArrowLeft, Download, FileDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -77,9 +78,9 @@ export function AddressPrintPage() {
   if (networks.isError) return <ErrorBlock message="Siete sa nepodarilo načítať." />
 
   const baseName = `${mode === 'ip' ? 'ip-tabulka' : 'mac-adresy'}-${fileSlug(networkName || 'vsetky')}`
+  const pdfBlob = async () => buildPdf(await Promise.all(pages.map((canvas) => canvasJpeg(canvas, 0.92))), pageSizePt(paper, landscape))
   const downloadPdf = async () => {
-    const images = await Promise.all(pages.map((canvas) => canvasJpeg(canvas, 0.92)))
-    const url = URL.createObjectURL(buildPdf(images, pageSizePt(paper, landscape)))
+    const url = URL.createObjectURL(await pdfBlob())
     const link = document.createElement('a')
     link.href = url
     link.download = `${baseName}.pdf`
@@ -119,10 +120,7 @@ export function AddressPrintPage() {
         </Link>
         <span className="flex-1" />
         <AddToPrintButton companyId={companyId} kind="network" targetIds={[networkFilter && networkFilter !== 'none' ? networkFilter : companyId]} label={mode} format={formatOf(paper, landscape)} />
-        <Button variant="outline" onClick={print}>
-          <Printer className="size-4" aria-hidden />
-          Tlačiť
-        </Button>
+        <PrintButton variant="outline" makePdf={pdfBlob} onPrint={print} fileName={baseName} label="Tlačiť" />
         <Button variant="outline" onClick={() => void downloadPdf()}>
           <FileDown className="size-4" aria-hidden />
           PDF

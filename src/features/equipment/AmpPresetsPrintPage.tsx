@@ -1,5 +1,8 @@
+import { useRef } from 'react'
+import { PaperSheet } from '@/components/print/PaperSheet'
+import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Download, Printer } from 'lucide-react'
+import { ArrowLeft, Download } from 'lucide-react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
@@ -38,6 +41,7 @@ function toCsv(amps: Equipment[], nameOf: (id?: string) => string) {
  * /equipment/:id/presets – jeden zosilňovač; ?ids=a,b – viac naraz (napr. všetky časti rozdelenej techniky).
  */
 export function AmpPresetsPrintPage() {
+  const sheet = useRef<HTMLDivElement>(null)
   const { id = '' } = useParams()
   const [params] = useSearchParams()
   const company = useCompany().active!
@@ -59,7 +63,7 @@ export function AmpPresetsPrintPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-white p-6 text-black">
+    <div className="min-h-dvh bg-muted p-2 text-black sm:p-6 print:bg-white print:p-0">
       <style>{PRINT_CSS}</style>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link to={ids.length === 1 ? `/equipment/${ids[0]}` : '/equipment'} className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-black">
@@ -71,12 +75,10 @@ export function AmpPresetsPrintPage() {
             <Download className="size-4" aria-hidden />
             Stiahnuť (Excel)
           </Button>
-          <Button disabled={amps.length === 0} onClick={() => window.print()}>
-            <Printer className="size-4" aria-hidden />
-            Tlačiť
-          </Button>
+          <PrintButton sheet={sheet} fileName="presety-zosilnovacov" marginMm={12} disabled={amps.length === 0} label="Tlačiť" />
         </div>
       </div>
+      <PaperSheet sheetRef={sheet} marginMm={12}>
       {amps.length === 0 ? (
         <p>Pri tejto technike nie sú zapísané presety.</p>
       ) : (
@@ -112,6 +114,7 @@ export function AmpPresetsPrintPage() {
           </section>
         ))
       )}
+      </PaperSheet>
     </div>
   )
 }

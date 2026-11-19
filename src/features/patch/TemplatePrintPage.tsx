@@ -1,7 +1,9 @@
-import { ArrowLeft, Printer } from 'lucide-react'
+import { useRef } from 'react'
+import { PaperSheet } from '@/components/print/PaperSheet'
+import { PrintButton } from '@/components/print/PrintButton'
+import { ArrowLeft } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { lastAddress, sortDmx } from './dmx'
 import { usePatchTemplates } from './dmxApi'
@@ -16,6 +18,7 @@ const td = 'border border-neutral-400 px-2 py-1'
 
 /** Šablóna patch listu (zvuk alebo DMX) na A4 – na tlač alebo PDF. /patch/:id/print */
 export function TemplatePrintPage() {
+  const sheet = useRef<HTMLDivElement>(null)
   const { id = '' } = useParams()
   const company = useCompany().active!
   const templates = usePatchTemplates(company.companyId)
@@ -24,18 +27,16 @@ export function TemplatePrintPage() {
   if (!template) return <ErrorBlock message="Šablóna neexistuje alebo k nej nemáte prístup." />
 
   return (
-    <div className="min-h-dvh bg-white p-6 text-black">
+    <div className="min-h-dvh bg-muted p-2 text-black sm:p-6 print:bg-white print:p-0">
       <style>{PRINT_CSS}</style>
       <div className="mb-4 flex items-center justify-between gap-3 print:hidden">
         <Link to="/patch" className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-black">
           <ArrowLeft className="size-4" aria-hidden />
           Šablóny patch listov
         </Link>
-        <Button onClick={() => window.print()}>
-          <Printer className="size-4" aria-hidden />
-          Tlačiť / PDF
-        </Button>
+        <PrintButton sheet={sheet} fileName="patch-sablona" marginMm={12} />
       </div>
+      <PaperSheet sheetRef={sheet} marginMm={12}>
       <header className="mb-4 border-b border-neutral-400 pb-2">
         <h1 className="text-xl font-bold">
           {template.kind === 'sound' ? 'Patch list' : 'DMX patch'} – {template.name}
@@ -97,6 +98,7 @@ export function TemplatePrintPage() {
           </tbody>
         </table>
       )}
+      </PaperSheet>
     </div>
   )
 }

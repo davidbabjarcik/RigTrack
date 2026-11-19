@@ -1,8 +1,9 @@
-import { ArrowLeft, Printer } from 'lucide-react'
-import { useState } from 'react'
+import { PaperSheet } from '@/components/print/PaperSheet'
+import { PrintButton } from '@/components/print/PrintButton'
+import { ArrowLeft } from 'lucide-react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { useNetworks } from './api'
 import { wifiQrText } from './model'
@@ -15,6 +16,7 @@ const PRINT_CSS = `
 
 /** QR kódy Wi-Fi sietí na A4 (naskenovaním sa mobil pripojí); heslo pod kódom sa dá skryť. /networks/qr */
 export function WifiQrPrintPage() {
+  const sheet = useRef<HTMLDivElement>(null)
   const company = useCompany().active!
   const networks = useNetworks(company.companyId)
   const [hidden, setHidden] = useState<Set<string>>(() => new Set())
@@ -39,10 +41,7 @@ export function WifiQrPrintPage() {
           <input type="checkbox" className="size-4" checked={showPassword} onChange={(e) => setShowPassword(e.target.checked)} />
           Heslo aj textom pod kódom
         </label>
-        <Button disabled={shown.length === 0} onClick={() => window.print()}>
-          <Printer className="size-4" aria-hidden />
-          Tlačiť / PDF
-        </Button>
+        <PrintButton sheet={sheet} fileName="wifi-qr" marginMm={10} disabled={shown.length === 0} />
       </div>
       {printable.length < networks.data.length && (
         <p className="mb-3 text-sm text-muted-foreground print:hidden">Siete, ktorých heslo nevidíte (oprávnenie), sa nedajú vytlačiť ako QR.</p>
@@ -70,7 +69,7 @@ export function WifiQrPrintPage() {
       {shown.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nie je čo tlačiť.</p>
       ) : (
-        <div className="mx-auto w-full max-w-[190mm] rounded-xl bg-white p-[6mm] text-black shadow-lg print:max-w-none print:rounded-none print:p-0 print:shadow-none">
+        <PaperSheet sheetRef={sheet} marginMm={10}>
           <ul className="grid grid-cols-2 gap-[6mm]">
             {shown.map((network) => (
               <li key={network.id} className="flex break-inside-avoid flex-col items-center rounded-lg border border-neutral-400 p-[5mm] text-center">
@@ -81,7 +80,7 @@ export function WifiQrPrintPage() {
               </li>
             ))}
           </ul>
-        </div>
+        </PaperSheet>
       )}
     </div>
   )

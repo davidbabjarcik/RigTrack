@@ -1,7 +1,9 @@
-import { ArrowLeft, Printer } from 'lucide-react'
+import { useRef } from 'react'
+import { PaperSheet } from '@/components/print/PaperSheet'
+import { PrintButton } from '@/components/print/PrintButton'
+import { ArrowLeft } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { Button } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
 import { useCompanyLogo } from '@/features/companies/useCompanyLogo'
 import { useOffer } from './api'
@@ -14,6 +16,7 @@ const PRINT_CSS = `
 
 /** Cenová ponuka na tlač / PDF (bez menu aplikácie). */
 export function OfferPrintPage() {
+  const sheet = useRef<HTMLDivElement>(null)
   const { id = '' } = useParams()
   const company = useCompany().active!
   const offer = useOffer(company.companyId, id)
@@ -21,19 +24,18 @@ export function OfferPrintPage() {
   if (offer.isPending) return <LoadingBlock />
   if (offer.isError || !offer.data) return <ErrorBlock message="Ponuka sa nenašla alebo k nej nemáte prístup." />
   return (
-    <div className="min-h-dvh bg-white p-6 text-black">
+    <div className="min-h-dvh bg-muted p-2 text-black sm:p-6 print:bg-white print:p-0">
       <style>{PRINT_CSS}</style>
       <div className="mx-auto mb-6 flex max-w-[190mm] items-center justify-between gap-3 print:hidden">
         <Link to={`/offers/${id}`} className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-black">
           <ArrowLeft className="size-4" aria-hidden />
           Späť na úpravu
         </Link>
-        <Button onClick={() => window.print()}>
-          <Printer className="size-4" aria-hidden />
-          Tlačiť / uložiť ako PDF
-        </Button>
+        <PrintButton sheet={sheet} fileName="cenova-ponuka" marginMm={14} label="Tlačiť / uložiť ako PDF" />
       </div>
+      <PaperSheet sheetRef={sheet} marginMm={14}>
       <OfferDocument offer={offer.data} logoUrl={logo.url || undefined} />
+      </PaperSheet>
     </div>
   )
 }

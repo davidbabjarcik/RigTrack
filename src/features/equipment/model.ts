@@ -160,7 +160,8 @@ export const LIGHT_SOURCE_LABELS: Record<LightSource, string> = {
   other: 'Iné',
 }
 
-export const SUB_DESIGN_LABELS = { direct: 'Priamy (bass reflex)', horn: 'Horna', snail: 'Slimák' } as const
+// Horna a slimák sú to isté (hornový sub); staré „snail“ sa číta ako horna.
+export const SUB_DESIGN_LABELS = { direct: 'Priamy (bass reflex)', horn: 'Horna (slimák)' } as const
 
 /** Video okrem LED a obrazoviek: kamery, statívy, objektívy, gimbaly. */
 export const VIDEO_TYPES = ['camera', 'tripod', 'lens', 'gimbal', 'other'] as const
@@ -351,7 +352,7 @@ export type EquipmentAttributes = {
   hfDriver?: string
   /** Spoločná databáza techniky: číslo artiklu v Thomanne (len v katalógu, kvôli objednávaniu). */
   thomannCode?: string
-  /** Sub: konštrukcia – priamy (bass reflex), horna alebo slimák. */
+  /** Sub: konštrukcia – priamy (bass reflex) alebo horna (slimák); „snail“ len v starých záznamoch. */
   subDesign?: 'direct' | 'horn' | 'snail'
   /** Váha jedného kusu (kg). */
   weightKg?: number
@@ -995,7 +996,7 @@ export function attributesFor(
     const texts = ['freqRange', 'freqResponse', 'coverage', 'crossover', 'hfDriver'] as const
     for (const key of texts) if (values[key]?.trim()) attributes[key] = values[key]!.trim()
     if (values.biamp) attributes.biamp = true
-    if (values.audioType === 'subwoofer' && values.subDesign) attributes.subDesign = values.subDesign
+    if (values.audioType === 'subwoofer' && values.subDesign) attributes.subDesign = values.subDesign === 'snail' ? 'horn' : values.subDesign
     if (values.boxWidthCm !== undefined) attributes.boxWidthCm = values.boxWidthCm
     if (values.boxDepthCm !== undefined) attributes.boxDepthCm = values.boxDepthCm
     if (values.boxHeightCm !== undefined) attributes.boxHeightCm = values.boxHeightCm
@@ -1127,7 +1128,7 @@ export function describeAttributes(item: Pick<Equipment, 'attributes'>, options:
     a.micKind && (a.micKind === 'wireless' ? 'bezdrôtový' : 'káblový'),
     a.micType && (a.micType === 'condenser' ? 'kondenzátorový' : 'dynamický'),
     a.powered && (a.powered === 'active' ? 'aktívny' : 'pasívny'),
-    a.subDesign && SUB_DESIGN_LABELS[a.subDesign].toLowerCase(),
+    a.subDesign && SUB_DESIGN_LABELS[a.subDesign === 'snail' ? 'horn' : a.subDesign].toLowerCase(),
     a.woofer,
     a.rmsW !== undefined && `${formatNumber(a.rmsW)} W RMS`,
     a.maxSplDb !== undefined && `${formatNumber(a.maxSplDb)} dB SPL`,

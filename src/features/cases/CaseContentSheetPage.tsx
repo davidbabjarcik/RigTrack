@@ -1,5 +1,6 @@
+import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, ChevronDown, ChevronUp, Download, FileDown, Printer } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronUp, Download, FileDown } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
@@ -170,9 +171,12 @@ export function CaseContentSheetPage() {
   }
   const sheets = () => canvases.current.slice(0, pages.length).filter((target): target is HTMLCanvasElement => Boolean(target))
   // PDF: všetky hárky ako strany (A4 / A5, na výšku / na šírku).
-  const downloadPdf = async () => {
+  const pdfBlob = async () => {
     const images = await Promise.all(sheets().map((target) => canvasJpeg(paper === 'A5' ? scaled(target, a5W, a5H) : target)))
-    const url = URL.createObjectURL(buildPdf(images, pageSizePt(paper, landscape)))
+    return buildPdf(images, pageSizePt(paper, landscape))
+  }
+  const downloadPdf = async () => {
+    const url = URL.createObjectURL(await pdfBlob())
     const link = document.createElement('a')
     link.href = url
     link.download = `${baseName}${paper === 'A5' ? '-a5' : ''}.pdf`
@@ -207,10 +211,7 @@ export function CaseContentSheetPage() {
         action={
           <div className="flex flex-wrap gap-2">
             <AddToPrintButton companyId={companyId} kind="case" targetIds={[current.id]} label="content" format={formatOf(paper, landscape)} />
-            <Button disabled={!drawn} onClick={print}>
-              <Printer className="size-4" aria-hidden />
-              Tlačiť
-            </Button>
+            <PrintButton makePdf={pdfBlob} onPrint={print} fileName={`${baseName}${paper === 'A5' ? '-a5' : ''}`} disabled={!drawn} label="Tlačiť" />
             <Button variant="outline" disabled={!drawn} onClick={() => void downloadPdf()}>
               <FileDown className="size-4" aria-hidden />
               PDF

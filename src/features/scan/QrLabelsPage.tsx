@@ -1,6 +1,8 @@
+import { PaperSheet } from '@/components/print/PaperSheet'
+import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Download, Printer } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Download } from 'lucide-react'
+import { useState, useRef } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -40,6 +42,7 @@ const PRINT_CSS = `
 
 /** QR štítky na tlač (3 v rade): jeden kus (?ids=…) alebo všetky cases / všetka technika. */
 export function QrLabelsPage() {
+  const sheet = useRef<HTMLDivElement>(null)
   const { type = 'cases' } = useParams()
   const [params] = useSearchParams()
   const company = useCompany().active!
@@ -149,10 +152,7 @@ export function QrLabelsPage() {
               mm
             </label>
           )}
-          <Button onClick={() => window.print()}>
-            <Printer className="size-4" aria-hidden />
-            Tlačiť
-          </Button>
+          <PrintButton sheet={sheet} fileName="qr-stitky" marginMm={10} label="Tlačiť" />
         </div>
       </div>
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm print:hidden">
@@ -175,7 +175,7 @@ export function QrLabelsPage() {
         <p>Nie je čo tlačiť.</p>
       ) : (
         // Biely papier v šírke A4 (190 mm bez okrajov), aby veľkosť na obrazovke sedela s tlačou.
-        <div className="mx-auto w-full max-w-[190mm] rounded-xl bg-white p-[6mm] text-black shadow-lg print:max-w-none print:rounded-none print:p-0 print:shadow-none">
+        <PaperSheet sheetRef={sheet} marginMm={10}>
         <ul className={cn('grid gap-3', !custom && look.grid)} style={custom ? { gridTemplateColumns: `repeat(auto-fill, ${mm + 8}mm)`, justifyContent: 'center' } : undefined}>
           {items.map((item) => (
             <li key={item.id} className={cn('flex break-inside-avoid flex-col items-center rounded-lg border border-neutral-400 text-center', custom ? 'p-[4mm]' : look.card)}>
@@ -200,7 +200,7 @@ export function QrLabelsPage() {
             </li>
           ))}
         </ul>
-        </div>
+        </PaperSheet>
       )}
     </div>
   )

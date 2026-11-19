@@ -51,7 +51,7 @@ const KEY_LABELS: Record<string, string> = {
   audioType: 'Typ zvuku', powered: 'Aktívny / pasívny (active / passive)', rmsW: 'Výkon RMS (W)', programW: 'Výkon program (W)', peakW: 'Výkon peak (W)',
   woofer: 'Woofer / meniče', hfDriver: 'HF driver', maxSplDb: 'Max SPL continuous (dB)', maxSplPeakDb: 'Max SPL peak (dB)', sensitivityDb: 'Citlivosť (dB)',
   impedanceOhm: 'Impedancia (Ω)', freqRange: 'Frekvenčný rozsah', freqResponse: 'Frekvenčná odozva', coverage: 'Vyžarovací uhol', crossover: 'Výhybka',
-  biamp: 'Bi-amp', connectors: 'Konektory', poleMount: 'Hniezdo na stojan', subDesign: 'Konštrukcia subu (direct / horn / snail)', weightKg: 'Váha (kg)',
+  biamp: 'Bi-amp', connectors: 'Konektory', poleMount: 'Hniezdo na stojan', subDesign: 'Konštrukcia subu (direct / horn)', weightKg: 'Váha (kg)',
   boxWidthCm: 'Šírka (cm)', boxDepthCm: 'Hĺbka (cm)', boxHeightCm: 'Výška (cm)', ampKind: 'Zosilňovač (analog / digital)', ampPresetSlots: 'Počet presetov',
   ampW2: 'Výkon 2 Ω (W)', ampW4: 'Výkon 4 Ω (W)', ampW8: 'Výkon 8 Ω (W)', ampBridge4: 'Bridge 4 Ω (W)', ampBridge8: 'Bridge 8 Ω (W)', mixerKind: 'Mixpult (analog / digital)',
   mixerChannels: 'Počet kanálov', micKind: 'Mikrofón (wired / wireless)', micType: 'Typ mikrofónu (dynamic / condenser)', rfRange: 'Frekvenčné pásmo',
@@ -71,7 +71,7 @@ const pairs = <T extends string>(values: readonly T[], labels: Record<T, string>
 const SELECTS: Record<string, [string, string][]> = {
   audioType: pairs(AUDIO_TYPES, AUDIO_TYPE_LABELS),
   powered: [['active', 'Aktívny'], ['passive', 'Pasívny']],
-  subDesign: [['direct', 'Priamy (bass reflex)'], ['horn', 'Horna'], ['snail', 'Slimák']],
+  subDesign: [['direct', 'Priamy (bass reflex)'], ['horn', 'Horna (slimák)']],
   ampKind: [['analog', 'Analógový'], ['digital', 'Digitálny (DSP, presety)']],
   mixerKind: [['analog', 'Analógový'], ['digital', 'Digitálny']],
   micKind: [['wired', 'Káblový'], ['wireless', 'Bezdrôtový']],
