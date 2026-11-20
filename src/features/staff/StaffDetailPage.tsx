@@ -16,6 +16,7 @@ import { useEvents } from '@/features/events/useEvents'
 import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { StaffCertificates } from './StaffCertificates'
+import { StaffDjSection } from './StaffDjSection'
 import { ROLE_LABELS } from '@/lib/roles'
 import { useMembers } from '@/features/companies/useMembers'
 import { clearStaffPhoto, deleteStaff, saveStaff, setStaffPhoto, staffKeys, type StaffFields } from './api'
@@ -259,6 +260,8 @@ export function StaffDetailPage() {
       <Availability companyId={companyId} person={person} canEdit={canEdit} />
 
       {person.staffId && <StaffCertificates companyId={companyId} staffId={person.staffId} canEdit={canEdit} />}
+
+      <StaffDjSection companyId={companyId} person={person} />
 
       {person.memberId && (
         <CollapsibleSection id="staff.events" title={tx('Najbližšie eventy')}>

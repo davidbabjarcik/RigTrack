@@ -1,5 +1,5 @@
 import type { Member } from '@/features/companies/api'
-import type { CompanyEvent } from '@/features/events/model'
+import { djCrew, type CompanyEvent } from '@/features/events/model'
 
 // Zamestnanci: karta človeka z tímu (fotka, pozícia, kontakt, zručnosti) a kedy nemôže.
 
@@ -122,4 +122,12 @@ export function crewAvailability(memberId: string, people: Person[], periods: Un
       other.crew.some((person) => person.memberId === memberId && person.response !== 'no'),
   )
   return busy.length > 0 ? { state: 'busy', events: busy } : { state: 'free' }
+}
+
+/** Hrá tento človek na DJ hraní? Člen podľa účtu, externista podľa mena. */
+export function playsAt(event: Pick<CompanyEvent, 'kind' | 'crew'>, person: Pick<Person, 'memberId' | 'name'>) {
+  if (event.kind !== 'dj') return false
+  return djCrew(event).some((crew) =>
+    person.memberId ? crew.memberId === person.memberId : !crew.memberId && crew.name.trim().toLowerCase() === person.name.trim().toLowerCase(),
+  )
 }

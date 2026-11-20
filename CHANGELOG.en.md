@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.4
+
+- **DJ profile on a person's card**: whoever plays at DJ gigs has a DJ section in Staff – how many gigs this year
+  and in total, how much they earned for playing (from Rewards) and a list of upcoming and played gigs.
+- **Their gear for the gig in one tap**: next to a DJ in “Who plays” there is an “Add their gear” button – their own
+  controller, headphones and other gear not yet on the event are added at once.
+
 ### 10.3
 
 - **Loading by what is unloaded first**: in an event's Loading you mark the cases and gear that are unloaded first

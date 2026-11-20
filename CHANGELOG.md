@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.4 – 20. 11. 2026
+
+- **DJ profil na karte človeka**: kto hrá na DJ hraniach, má v Zamestnancoch sekciu DJ – koľko hraní mal tento
+  rok a spolu, koľko za hranie zarobil (podľa Odmien) a zoznam najbližších a odohraných hraní.
+- **Jeho technika na hranie jedným ťuknutím**: pri DJ v „Kto hrá“ je tlačidlo „Pridať jeho techniku“ – jeho vlastný
+  pult, slúchadlá a ďalšia technika, ktorá ešte nie je na evente, sa pridá naraz.
+
 ### 10.3 – 20. 11. 2026
 
 - **Nakladanie podľa toho, čo sa vykladá skôr**: v Nakladaní pri evente označíte cases a techniku, ktoré sa na

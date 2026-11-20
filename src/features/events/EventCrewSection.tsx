@@ -1,3 +1,4 @@
+import { DjGearButton } from './DjGearButton'
 import { DjPayLine } from './DjPayLine'
 import { useCompany } from '@/features/companies/company-context'
 import { can } from '@/lib/permissions'
@@ -84,6 +85,10 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
     )
     return card ? clashes(staff.unavailability, card.staffId, event.startsOn, event.endsOn) : []
   }
+  const cardOf = (person: EventCrew) =>
+    staff.people.find((candidate) =>
+      person.memberId ? candidate.memberId === person.memberId : !candidate.isMember && candidate.name.trim().toLowerCase() === person.name.trim().toLowerCase(),
+    )
   const [who, setWho] = useState('')
   const [name, setName] = useState('')
   // Pri DJ hraní sa ľudia pridávajú ako DJ.
@@ -157,6 +162,8 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
                   <CrewResponseLine companyId={companyId} person={person} mine={person.memberId === userId} />
                   {/* DJ hranie: odmena toho, kto hrá (do Odmien a Zisku z eventov). */}
                   {event.kind === 'dj' && person.memberId && canPay && <DjPayLine companyId={companyId} event={event} memberId={person.memberId} />}
+                  {/* DJ hranie: jeho vlastná technika na event jedným ťuknutím. */}
+                  {event.kind === 'dj' && canEdit && cardOf(person)?.staffId && <DjGearButton companyId={companyId} event={event} staffId={cardOf(person)!.staffId!} />}
                   {elsewhereOf(person.memberId) && (
                     <span className="mt-0.5 flex items-center gap-1 text-sm text-accent">
                       <CalendarX className="size-4 shrink-0" aria-hidden />{tx('V termíne je v posádke inej firmy (')}{range(elsewhereOf(person.memberId)!.startsOn, elsewhereOf(person.memberId)!.endsOn)})
