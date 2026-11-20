@@ -190,7 +190,7 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
                     }}
                   >
                     <Check className="size-4" aria-hidden />{tx('Uzavrieť vrátenie')}</Button>
-                  <span className="text-xs text-muted-foreground">{tx('Po uzavretí event zmizne z „Ešte vonku“ na Prehľade.')}</span>
+                  <span className="text-xs text-muted-foreground">{tx('Po uzavretí event zmizne z „Ešte vonku“ na Prehľade. Kým nie je uzavreté, deň po evente príde posádke pripomienka.')}</span>
                 </div>
               )}
             </>

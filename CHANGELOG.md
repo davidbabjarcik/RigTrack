@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.5 – 20. 11. 2026
+
+- **Pripomienka vrátenia techniky**: deň po skončení eventu, ktorý mal techniku a vrátenie ešte nie je uzavreté,
+  príde upozornenie posádke eventu a tým, čo upravujú eventy. Každý event sa pripomenie len raz.
+- Technické: migrácia 0180 (pripomienka vrátenia techniky).
+
 ### 10.4 – 20. 11. 2026
 
 - **DJ profil na karte človeka**: kto hrá na DJ hraniach, má v Zamestnancoch sekciu DJ – koľko hraní mal tento

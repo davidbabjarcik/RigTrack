@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.5
+
+- **Gear return reminder**: the day after an event that had gear ends and its return is not closed yet, the event
+  crew and those who edit events get a notification. Each event is reminded only once.
+- Technical: migration 0180 (gear return reminder).
+
 ### 10.4
 
 - **DJ profile on a person's card**: whoever plays at DJ gigs has a DJ section in Staff – how many gigs this year
