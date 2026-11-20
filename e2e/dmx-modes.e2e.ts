@@ -35,9 +35,35 @@ test('DMX módy svetla: rozpis kanálov a farby', async ({ page }, info) => {
   await page.goto(`/equipment/${LIGHT_ID}/edit`)
   await expect(page.getByRole('checkbox', { name: 'Má farebné koliesko' })).toBeChecked()
   await expect(page.getByRole('button', { name: 'UV' }).first()).toHaveAttribute('aria-pressed', 'true')
-  await page.getByText('Náhľad rozpisu').first().click()
-  await expect(page.getByRole('cell', { name: 'Shutter', exact: true }).first()).toBeVisible()
+  // Kanály módu ako tabuľka: riadok na kanál, názov a predvolená hodnota.
+  await expect(page.getByLabel('Kanál 4 – čo robí').first()).toHaveValue('Shutter')
+  await expect(page.getByLabel('Kanál 4 – predvolená hodnota').first()).toHaveValue('Open')
   await page.screenshot({ path: info.outputPath(`dmx-form-${info.project.name}.png`), fullPage: true })
+})
+
+test('nový mód: po zadaní počtu kanálov sa ukáže tabuľka na vyplnenie', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, { equipment: [{ ...light, attributes: { lightType: 'moving_wash' } }] })
+  await page.goto(`/equipment/${LIGHT_ID}/edit`)
+  await page.getByRole('button', { name: 'Pridať mód' }).click()
+  await page.getByLabel('Názov módu').fill('Ukážkový')
+  await page.getByLabel('Kanály', { exact: true }).fill('10')
+  await expect(page.getByLabel(/^Kanál \d+ – čo robí$/)).toHaveCount(10)
+  // Názov sa vyberá z rozbaľovacieho zoznamu; „Iné – napísať…“ dovolí vlastný text.
+  await page.getByLabel('Kanál 1 – čo robí').selectOption('Pan fine')
+  await expect(page.getByLabel('Kanál 1 – čo robí')).toHaveValue('Pan fine')
+  await page.getByLabel('Kanál 5 – čo robí', { exact: true }).selectOption({ label: 'Iné – napísať…' })
+  await page.getByLabel('Kanál 5 – čo robí', { exact: true }).fill('Ukážkový efekt')
+  await expect(page.getByLabel('Kanál 5 – čo robí', { exact: true })).toHaveValue('Ukážkový efekt')
+  // Vložený zoznam z návodu vyplní tabuľku naraz.
+  await page.getByRole('button', { name: 'Vložiť zoznam' }).click()
+  await page.getByPlaceholder(/^Pan \| 50 %/).fill('Dimmer\nShutter | Open\nRed')
+  await page.getByRole('button', { name: 'Použiť' }).click()
+  await expect(page.getByLabel('Kanál 2 – predvolená hodnota')).toHaveValue('Open')
+  await expect(page.getByLabel(/^Kanál \d+ – čo robí$/)).toHaveCount(10)
+  // Na mobile nič netečie do strany.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0)
+  await page.getByRole('group', { name: 'DMX módy' }).screenshot({ path: test.info().outputPath(`dmx-tabulka-${test.info().project.name}.png`) })
 })
 
 test('svetlo bez DMX módov ponúkne ich doplnenie', async ({ page }) => {

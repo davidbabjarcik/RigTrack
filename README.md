@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-9.8-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-9.9-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **9.9** | Kanály DMX módu ako tabuľka s rozbaľovacím výberom, ikonkami a vložením zoznamu |
 | **9.8** | Tlač z mobilu a tabletu ako A4 a cez PDF, horna a slimák pri suboch spolu |
 | **9.7** | DJ hrania pri eventoch a v kalendári, DMX módy aj pri technike s viacerými kusmi |
 | **9.6** | DMX módy s ikonkami a predvolenými hodnotami, farby svetla (miešanie a farebné koliesko) |
@@ -78,6 +79,8 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **8.7** | Nahrať GDTF súbor pri svetle (módy, kanály, príkon) |
 | **8.6.2** | Údaje JBL a Crown I-Tech v spoločnej databáze techniky |
 | **8.6.1** | Ponuka novej verzie na každej stránke |
+| **8.6** | Angličtina všade, oprava Aktualizovať, upozornenie pri modeli bez údajov |
+| **8.5** | Celá appka v angličtine; výrobca a model hore pri technike |
 | **8.4** | Jazyk SK / EN – 1. časť (menu, Prehľad, prihlásenie, úvodná stránka) |
 | **8.3** | Spoločná databáza techniky: značka → model, návrhy a overovanie |
 | **8.2** | Úvodná stránka s prihlásením |
@@ -85,9 +88,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **8.0** | Hľadať všade a Skenovať QR na Prehľade, Návod a tipy |
 | **7.19** | Príslušenstvo naraz pre sadu cases, jeho poradie a čísla kusov na hárku s obsahom |
 | **7.18** | Technika do viacerých cases naraz |
-| **7.17** | Vrátenie po evente: nevrátené veci, strata / poškodené, uzavretie vrátenia |
-| **7.16** | Hliník na Mieste spolu s cases, rozmery miesta v metroch, plagát na A5 |
-| **7.15** | Rýchlejšia databáza (pravidlá prístupu, indexy) a upratanie bezpečnosti |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 
@@ -95,7 +95,7 @@ Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je 
 |---|---|
 | **Frontend** | React · TypeScript · Vite · Tailwind CSS · React Router · TanStack Query |
 | **Backend** | Supabase – prihlásenie, Postgres s Row Level Security, úložisko súborov, Edge Functions |
-| **Ďalej** | `vite-plugin-pwa` (offline inštalácia, push), `pdfjs-dist`, `read-excel-file` / `write-excel-file` |
+| **Ďalej** | `vite-plugin-pwa` (offline inštalácia, push), `pdfjs-dist`, `read-excel-file` / `write-excel-file`, `html-to-image` |
 
 ---
 

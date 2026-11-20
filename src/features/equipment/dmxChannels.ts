@@ -83,6 +83,34 @@ export function dmxChannels(mode: Pick<DmxMode, 'map'>): DmxChannel[] {
     .map((row) => ({ ...row, group: channelGroup(row.name), fine: /\bfine\b/i.test(row.name), color: channelColor(row.name) }))
 }
 
+export type ChannelRow = { name: string; value: string }
+
+/** Rozpis na riadky tabuľky: aspoň toľko, koľko má mód kanálov (prázdne riadky na doplnenie). */
+export function mapRows(map: string | undefined, channels: number): ChannelRow[] {
+  const rows = (map ?? '').replace(/\s+$/, '').split('\n').map(parseChannelLine)
+  const filled = rows.length === 1 && !rows[0].name && !rows[0].value ? [] : rows
+  const count = Math.max(Number.isFinite(channels) && channels > 0 ? Math.min(channels, 512) : 0, filled.length)
+  return Array.from({ length: count }, (_, index) => filled[index] ?? { name: '', value: '' })
+}
+
+/** Riadky tabuľky späť na rozpis „Názov | hodnota“; prázdne riadky na konci sa vynechajú. */
+export function rowsToMap(rows: ChannelRow[]) {
+  const lines = rows.map((row) => (row.value.trim() ? `${row.name.trim()} | ${row.value.trim()}` : row.name.trim()))
+  while (lines.length > 0 && !lines[lines.length - 1]) lines.pop()
+  return lines.join('\n')
+}
+
+/** Bežné názvy kanálov na výber pri písaní (dajú sa aj prepísať). */
+export const CHANNEL_SUGGESTIONS = [
+  'Dimmer', 'Dimmer fine', 'Shutter', 'Strobe', 'Pan', 'Pan fine', 'Tilt', 'Tilt fine', 'Pan/Tilt speed',
+  'Red', 'Green', 'Blue', 'White', 'Amber', 'UV', 'Lime', 'Cyan', 'Magenta', 'Yellow', 'CTO', 'CTB',
+  'Color Wheel', 'Color macro', 'Color temperature', 'Gobo wheel', 'Gobo rotation', 'Gobo 2', 'Prism', 'Prism rotation',
+  'Zoom', 'Focus', 'Iris', 'Frost', 'Effect', 'Effect speed', 'Macro', 'Speed', 'Control / Reset', 'Not used',
+]
+
+/** Bežné predvolené hodnoty kanálov. */
+export const VALUE_SUGGESTIONS = ['0 %', '50 %', '100 %', 'Open', 'Closed', 'Off', 'White', '0', '128', '255']
+
 // --- Farby svetla: miešanie (RGBW, CMY…) a farebné koliesko ---
 
 export const COLOR_PARTS = ['R', 'G', 'B', 'W', 'A', 'UV', 'L', 'C', 'M', 'Y', 'CTO'] as const

@@ -35,7 +35,7 @@ export function LightColorFields() {
   }
 
   return (
-    <fieldset className="sm:col-span-2">
+    <fieldset className="min-w-0 sm:col-span-2">
       <legend className="mb-1.5 text-sm font-medium">{tx('Farby')}</legend>
       <p className="mb-2 text-xs text-muted-foreground">{tx('Z čoho svetlo mieša farby (napr. RGBW) a či má farebné koliesko. Svetlo môže mať oboje.')}</p>
       <div role="group" aria-label={tx('Miešanie farieb')} className="flex flex-wrap gap-2">

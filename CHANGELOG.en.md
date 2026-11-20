@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.9
+
+- **DMX mode channels as a table**: after entering the number of channels (e.g. 10) a table with 10 rows appears –
+  what each channel does and its default value. Both are picked from a drop-down list (Dimmer, Pan, Shutter, Open,
+  50 %…) or typed via “Other – type…”; the icon follows the name. The whole list from the manual can be pasted at
+  once with “Paste a list”.
+- Fixed: the gear form no longer overflows sideways on a phone.
+
 ### 9.8
 
 - **Printing from a phone or tablet**: on a phone the print page shows as a whole A4 page (scaled down) instead of

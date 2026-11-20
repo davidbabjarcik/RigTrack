@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { channelColor, channelGroup, colorMixName, colorsFromChannels, dmxChannels, guessColor, parseChannelLine } from './dmxChannels'
+import { channelColor, channelGroup, colorMixName, colorsFromChannels, dmxChannels, guessColor, mapRows, parseChannelLine, rowsToMap } from './dmxChannels'
 
 describe('DMX channels', () => {
   it('sorts channel names into groups', () => {
@@ -42,5 +42,21 @@ describe('DMX channels', () => {
     expect(guessColor('Tmavomodrá')).toBe('#1e3a8a')
     expect(guessColor('Congo blue')).toBe('#1e3a8a')
     expect(guessColor('Lavender')).toBe('#a78bfa')
+  })
+})
+
+describe('channel table', () => {
+  it('turns a layout into as many rows as the mode has channels and back', () => {
+    const rows = mapRows('Pan | 50 %\nTilt', 4)
+    expect(rows).toEqual([{ name: 'Pan', value: '50 %' }, { name: 'Tilt', value: '' }, { name: '', value: '' }, { name: '', value: '' }])
+    expect(rowsToMap(rows)).toBe('Pan | 50 %\nTilt')
+    // Prázdny riadok v strede drží číslo kanála.
+    expect(rowsToMap([{ name: 'Dimmer', value: '' }, { name: '', value: '' }, { name: 'Strobe', value: 'Open' }])).toBe('Dimmer\n\nStrobe | Open')
+  })
+
+  it('keeps extra lines and works without a channel count', () => {
+    expect(mapRows('A\nB\nC', 2)).toHaveLength(3)
+    expect(mapRows('', Number.NaN)).toEqual([])
+    expect(mapRows(undefined, 2)).toHaveLength(2)
   })
 })

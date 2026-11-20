@@ -8,7 +8,7 @@ export function Group({ title, children }: { title: string; children: ReactNode 
   const id = `equipment.form.${title}`
   const collapsed = useSyncExternalStore(subscribeCollapsed, () => isCollapsed(id))
   return (
-    <fieldset className="rounded-xl border bg-surface p-4">
+    <fieldset className="min-w-0 rounded-xl border bg-surface p-4">
       <legend className="px-1 text-sm font-medium text-muted-foreground">
         <button type="button" className="inline-flex items-center gap-1 hover:text-foreground" aria-expanded={!collapsed} onClick={() => setCollapsed(id, !collapsed)}>
           <ChevronDown className={cn('size-4 transition-transform', collapsed && '-rotate-90')} aria-hidden />

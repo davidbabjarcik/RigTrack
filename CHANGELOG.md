@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.9 – 20. 11. 2026
+
+- **Kanály DMX módu ako tabuľka**: po zadaní počtu kanálov (napr. 10) sa ukáže tabuľka s 10 riadkami – čo kanál
+  robí a predvolená hodnota. Obe sa vyberajú z rozbaľovacieho zoznamu (Dimmer, Pan, Shutter, Open, 50 %…) alebo sa
+  dajú napísať cez „Iné – napísať…“; ikonka sa doplní podľa názvu. Celý zoznam z návodu sa dá vložiť naraz
+  tlačidlom „Vložiť zoznam“.
+- Opravené: formulár techniky na mobile už nepreteká do strany.
+
 ### 9.8 – 20. 11. 2026
 
 - **Tlač z mobilu a tabletu**: na telefóne sa tlačová strana ukáže ako celá A4 (zmenšená), nie rozhádzaná podľa
