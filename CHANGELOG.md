@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.18 – 20. 11. 2026
+
+- **Ťahák pre osvetľovača**: pri DMX patch liste eventu tlačidlo „Ťahák pre osvetľovača“ pripraví A4 so všetkými
+  svetlami eventu – mód, adresy z patchu, rozpis kanálov s ikonkami a predvolenými hodnotami, farby kolieska a gobá
+  s obrázkami a DMX hodnotami. Vytlačíte ho alebo uložíte ako PDF (aj z mobilu).
+
 ### 9.17 – 20. 11. 2026
 
 - **Zmluva s históriou a podpisom**: zmluvu k eventu teraz uložíte – dostane číslo (napr. Z2026-001) a ostane pri

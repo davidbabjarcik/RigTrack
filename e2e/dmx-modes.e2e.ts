@@ -109,3 +109,25 @@ test('gobo kanál sa rozklikne na gobá s DMX hodnotou', async ({ page }) => {
   await page.getByRole('button', { name: 'Gobo 2 – nahrať obrázok' }).locator('xpath=following-sibling::input[@type="file"]').setInputFiles({ name: 'gobo.png', mimeType: 'image/png', buffer: png })
   await expect(page.getByRole('button', { name: 'Gobo 2 – odobrať obrázok' })).toBeVisible()
 })
+
+test('ťahák pre osvetľovača: kanály, farby a gobá svetiel eventu', async ({ page }, info) => {
+  await signIn(page)
+  const EVENT_ID = '00000000-0000-4000-8000-0000000000e8'
+  await fakeBackend(page, {
+    equipment: [light],
+    events: [{
+      id: EVENT_ID, kind: 'event', name: 'Ukážkový koncert', client: '', venue: 'Ukážková hala', starts_on: '2026-12-05', ends_on: '2026-12-05', status: 'planned', note: '',
+      organizer: '', organizer_person: '', organizer_phone: '', organizer_email: '', description: '', get_in_time: null, show_time: null, show_end_time: null,
+      setting: '', power: '', power_count: null, power_note: '', weather_place: '',
+    }],
+    event_equipment: [{ event_id: EVENT_ID, equipment_id: LIGHT_ID, quantity: 4, case_id: null }],
+  })
+  await page.goto(`/events/${EVENT_ID}?tab=gear`)
+  await page.getByRole('link', { name: 'Ťahák pre osvetľovača' }).click()
+  await expect(page.getByRole('heading', { name: 'Ťahák pre osvetľovača – Ukážkový koncert' })).toBeVisible()
+  await expect(page.getByText('mód Basic · 6 ch', { exact: false })).toBeVisible()
+  await expect(page.getByText('Farebné koliesko', { exact: true })).toBeVisible()
+  await expect(page.getByText('DMX 10–19')).toBeVisible()
+  await expect(page.getByText('DMX 20–29')).toBeVisible()
+  await page.screenshot({ path: info.outputPath(`tahak-${info.project.name}.png`), fullPage: true })
+})

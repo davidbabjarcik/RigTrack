@@ -134,10 +134,14 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
       id="event.dmx"
       title={`DMX patch list (${lines.length})`}
       actions={
-        lines.length > 0 && (
-          <LinkButton to={`/events/${event.id}/dmx`} variant="outline" size="sm">
-            <Printer className="size-4" aria-hidden />{tx('Tlačiť')}</LinkButton>
-        )
+        <>
+          <LinkButton to={`/events/${event.id}/lighting`} variant="outline" size="sm" title={tx('Farby, gobá a kanály svetiel na papier')}>
+            <Lightbulb className="size-4" aria-hidden />{tx('Ťahák pre osvetľovača')}</LinkButton>
+          {lines.length > 0 && (
+            <LinkButton to={`/events/${event.id}/dmx`} variant="outline" size="sm">
+              <Printer className="size-4" aria-hidden />{tx('Tlačiť')}</LinkButton>
+          )}
+        </>
       }
     >
       {conflicts.size > 0 && <p className="mb-2 text-sm text-destructive">{tx('Niektoré adresy sa na tej istej linke prekrývajú alebo presahujú 512 (označené červenou).')}</p>}

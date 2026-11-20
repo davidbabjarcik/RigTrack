@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.18
+
+- **Lighting cheat sheet**: the “Lighting cheat sheet” button at the event's DMX patch list prepares an A4 with every
+  light of the event – mode, patch addresses, channel layout with icons and defaults, wheel colours and gobos with
+  pictures and DMX values. Print it or save it as a PDF (also from a phone).
+
 ### 9.17
 
 - **Contracts with history and signatures**: you can now save an event contract – it gets a number (e.g. Z2026-001)
