@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.0 – 20. 11. 2026
+
+- **Odmena za DJ hranie**: pri DJ hraní v časti „Kto hrá“ je pri každom DJ-ovi z firmy jeho odmena – koľko je
+  zapísané a koľko ešte nevyplatené – a políčko na zapísanie odmeny. Odmena sa uloží do Odmien (ako odmena za
+  akciu k tomuto hraniu) a započíta sa do Zisku z eventov. Vidí a zapisuje ju len ten, kto spravuje odmeny.
+
 ### 9.19 – 20. 11. 2026
 
 - **Appka si pamätá, čo bolo vytlačené**: pri case je, kedy bol vytlačený hárok s obsahom, pri technike kedy QR

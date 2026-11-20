@@ -1,3 +1,6 @@
+import { DjPayLine } from './DjPayLine'
+import { useCompany } from '@/features/companies/company-context'
+import { can } from '@/lib/permissions'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { CalendarX, Check, Plus, X } from 'lucide-react'
@@ -69,6 +72,8 @@ function CrewResponseLine({ companyId, person, mine }: { companyId: string; pers
 
 export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
   const userId = useAuth().session?.user.id
+  const company = useCompany().active!
+  const canPay = can(company, 'payouts.manage')
   const queryClient = useQueryClient()
   const members = useMembers(companyId)
   const staff = useStaff(companyId)
@@ -150,6 +155,8 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
                     {[person.role, !person.memberId && 'externista'].filter(Boolean).join(' · ')}
                   </span>
                   <CrewResponseLine companyId={companyId} person={person} mine={person.memberId === userId} />
+                  {/* DJ hranie: odmena toho, kto hrá (do Odmien a Zisku z eventov). */}
+                  {event.kind === 'dj' && person.memberId && canPay && <DjPayLine companyId={companyId} event={event} memberId={person.memberId} />}
                   {elsewhereOf(person.memberId) && (
                     <span className="mt-0.5 flex items-center gap-1 text-sm text-accent">
                       <CalendarX className="size-4 shrink-0" aria-hidden />{tx('V termíne je v posádke inej firmy (')}{range(elsewhereOf(person.memberId)!.startsOn, elsewhereOf(person.memberId)!.endsOn)})

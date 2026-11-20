@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { COMPANY_ID, fakeBackend, signIn } from './fakeBackend'
+import { COMPANY_ID, USER_ID, fakeBackend, signIn } from './fakeBackend'
 
 // DJ hranie: druh akcie pri evente, vlastná farba v kalendári a „Kto hrá“ namiesto posádky.
 const GIG_ID = '00000000-0000-4000-8000-0000000000f1'
@@ -38,4 +38,19 @@ test('nové DJ hranie má predvolený druh', async ({ page }) => {
   await expect(page.getByRole('radio', { name: 'DJ hranie' })).toBeChecked()
   await page.getByRole('radio', { name: 'Event' }).check({ force: true })
   await expect(page.getByLabel('Názov eventu *')).toBeVisible()
+})
+
+test('odmena DJ-a pri DJ hraní', async ({ page }) => {
+  await signIn(page)
+  const me = { ...crew, id: 'c2', member_id: USER_ID, name: '' }
+  await fakeBackend(page, {
+    events: [gig],
+    event_crew: [me],
+    member_payments: [{ id: 'p1', company_id: COMPANY_ID, member_id: USER_ID, amount: 150, kind: 'reward', happened_on: '2026-11-20', event_id: GIG_ID, note: 'DJ hranie', paid_at: null }],
+  })
+  await page.goto(`/events/${GIG_ID}?tab=crew`)
+  await expect(page.getByText(/Odmena 150,00\s€/)).toBeVisible()
+  await expect(page.getByText(/nevyplatené 150,00\s€/)).toBeVisible()
+  await page.getByLabel('Odmena za hranie (€)').fill('50')
+  await expect(page.getByLabel('Odmena za hranie (€)').locator('xpath=following-sibling::button')).toBeEnabled()
 })

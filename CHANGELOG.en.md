@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.0
+
+- **Pay for DJ gigs**: in a DJ gig's “Who plays” part, each DJ from the company shows their pay – how much is
+  entered and how much is still unpaid – and a field to enter it. The pay is saved to Pay (as a reward for this gig)
+  and counts in Event profit. Only those who manage pay see and enter it.
+
 ### 9.19
 
 - **The app remembers what was printed**: a case shows when its content sheet was printed, gear shows when its QR
