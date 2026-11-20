@@ -204,3 +204,34 @@ export function duplicateName(source: Pick<Case, 'name' | 'labelNumber'>, all: P
     ? { name: `${base} ${next}`, labelNumber: source.labelNumber.trim() ? String(next) : '' }
     : { name: source.name, labelNumber: String(next) }
 }
+
+/**
+ * Odtlačok obsahu case pre hárok s obsahom: čo v ňom je, koľko kusov a ktoré čísla kusov. Ak sa po tlači hárku
+ * zmení, hárok treba vytlačiť znova. Krátky text (nie šifrovanie), poradie položiek nehrá rolu.
+ */
+export type ContentGear = { id: string; name: string; caseId: string | null; quantity: number; unitIds?: number[] }
+
+export function caseContentHash(caseId: string, equipment: ContentGear[]) {
+  const text = equipment
+    .filter((item) => item.caseId === caseId)
+    .map((item) => `${item.id}:${item.name.trim()}:${item.quantity}:${[...(item.unitIds ?? [])].sort((a, b) => a - b).join(',')}`)
+    .sort()
+    .join('|')
+  // FNV-1a (32 bit) dvakrát s iným základom – na rozlíšenie obsahu stačí.
+  const fnv = (seed: number) => {
+    let hash = seed
+    for (let index = 0; index < text.length; index++) {
+      hash ^= text.charCodeAt(index)
+      hash = Math.imul(hash, 16777619) >>> 0
+    }
+    return hash.toString(16).padStart(8, '0')
+  }
+  return `${fnv(2166136261)}${fnv(0x9747b28c)}`
+}
+
+/** Stav tlače hárku s obsahom: kedy bol vytlačený a či sa obsah case odvtedy zmenil (vtedy treba nový hárok). */
+export function contentPrintState(printed: { printedAt?: string; contentHash?: string } | undefined, caseId: string, equipment: ContentGear[]) {
+  if (!printed) return { state: 'never' as const }
+  const changed = Boolean(printed.contentHash) && printed.contentHash !== caseContentHash(caseId, equipment)
+  return { state: changed ? ('changed' as const) : ('printed' as const), printedAt: printed.printedAt }
+}

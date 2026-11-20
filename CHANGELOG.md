@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.19 – 20. 11. 2026
+
+- **Appka si pamätá, čo bolo vytlačené**: pri case je, kedy bol vytlačený hárok s obsahom, pri technike kedy QR
+  štítok (a štítok na pásku). Zapíše sa pri tlači aj PDF – z case, z hromadnej tlače aj z tlačovej fronty.
+- **Upozornenie na novú tlač**: keď sa obsah case po vytlačení hárku zmení (pridaná alebo odobratá technika, iný
+  počet či čísla kusov), pri case svieti upozornenie s tlačidlom „Vytlačiť hárok“ a v Tlači zoznam „Treba vytlačiť
+  znova“ s tlačidlom „Všetky do tlače“.
+- Technické: migrácia 0178 (dátum a odtlačok obsahu pri vytlačených štítkoch).
+
 ### 9.18 – 20. 11. 2026
 
 - **Ťahák pre osvetľovača**: pri DMX patch liste eventu tlačidlo „Ťahák pre osvetľovača“ pripraví A4 so všetkými

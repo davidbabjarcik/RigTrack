@@ -1,14 +1,14 @@
 import { PrintButton } from '@/components/print/PrintButton'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, FileDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { AddToPrintButton } from './AddToPrintButton'
-import { formatOf } from './api'
+import { formatOf, markPrinted, printKeys } from './api'
 import { Button } from '@/components/ui/button'
-import { caseTitle } from '@/features/cases/model'
+import { caseContentHash, caseTitle } from '@/features/cases/model'
 import { drawCaseLabelFor, renderContentSheets, scaledCanvas, sheetOptions } from '@/features/cases/renderSheets'
 import { buildPdf, canvasJpeg, pageSizePt } from '@/features/cases/sheetPdf'
 import { useCases } from '@/features/cases/useCases'
@@ -71,6 +71,7 @@ export function PrintBatchPage() {
   const options = sheetOptions(sheet)
   const back = params.get('back') ?? '/print'
   const cases = useCases(companyId)
+  const queryClient = useQueryClient()
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const colors = useQuery({ queryKey: cableColorKeys.list(companyId), queryFn: () => fetchCableColors(companyId) })
   const branding = useQuery({ queryKey: brandingKeys.branding(companyId), queryFn: () => fetchBranding(companyId) })
@@ -143,6 +144,7 @@ export function PrintBatchPage() {
   if (cases.isError || equipment.isError || colors.isError || branding.isError) return <ErrorBlock message="Údaje na tlač sa nepodarilo načítať." />
 
   const pdfBlob = async () => {
+    remember()
     const images = await Promise.all((pages ?? []).map(async (page) => ({ ...(await canvasJpeg(page.canvas)), page: pageSizePt(page.paper, page.landscape) })))
     return buildPdf(images, pageSizePt('A4', false))
   }
@@ -155,7 +157,15 @@ export function PrintBatchPage() {
     link.click()
     window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
   }
+  // Hárky s obsahom: zapamätať tlač aj obsah (pri zmene obsahu appka upozorní na novú tlač).
+  const remember = () => {
+    if (!equipment.data || contentIds.length === 0) return
+    void markPrinted(companyId, contentIds.map((caseId) => ({ kind: 'case' as const, targetId: caseId, label: 'content' as const, contentHash: caseContentHash(caseId, equipment.data!) })))
+      .then(() => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }))
+      .catch(() => undefined)
+  }
   const print = () => {
+    remember()
     setPrinting(true)
     window.setTimeout(() => {
       window.print()

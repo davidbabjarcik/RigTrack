@@ -1,3 +1,6 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { markPrinted, printKeys } from '@/features/print/api'
+import { caseContentHash } from './model'
 import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, ChevronDown, ChevronUp, Download, FileDown } from 'lucide-react'
@@ -65,6 +68,7 @@ export function CaseContentSheetPage() {
   const setLayout = (next: SheetLayout) => setSheet({ layout: next })
 
   const cases = useCases(companyId)
+  const queryClient = useQueryClient()
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const colors = useQuery({ queryKey: cableColorKeys.list(companyId), queryFn: () => fetchCableColors(companyId) })
   const branding = useQuery({ queryKey: brandingKeys.branding(companyId), queryFn: () => fetchBranding(companyId) })
@@ -160,6 +164,7 @@ export function CaseContentSheetPage() {
   const missingColors = matrix.rows.filter((row) => !colors.data.some((color) => color.lengthM === row.lengthM)).length
   const baseName = `flightcase-content-${fileSlug([current.name, current.labelNumber].filter(Boolean).join('-'))}`
   const download = async () => {
+    remember()
     for (const [index, target] of canvases.current.slice(0, pages.length).entries()) {
       if (!target) continue
       // A5 má rovnaký pomer strán ako A4 – hárok sa len zmenší (148 × 210 mm pri 300 dpi).
@@ -170,8 +175,15 @@ export function CaseContentSheetPage() {
     }
   }
   const sheets = () => canvases.current.slice(0, pages.length).filter((target): target is HTMLCanvasElement => Boolean(target))
+  // Zapamätať, že hárok bol vytlačený a s akým obsahom – pri zmene obsahu appka upozorní na novú tlač.
+  const remember = () => {
+    void markPrinted(companyId, [{ kind: 'case', targetId: current.id, label: 'content', contentHash: caseContentHash(current.id, equipment.data ?? []) }])
+      .then(() => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }))
+      .catch(() => undefined)
+  }
   // PDF: všetky hárky ako strany (A4 / A5, na výšku / na šírku).
   const pdfBlob = async () => {
+    remember()
     const images = await Promise.all(sheets().map((target) => canvasJpeg(paper === 'A5' ? scaled(target, a5W, a5H) : target)))
     return buildPdf(images, pageSizePt(paper, landscape))
   }
@@ -185,6 +197,7 @@ export function CaseContentSheetPage() {
   }
   // Tlač: obrázky hárkov na celú stranu, bez okrajov prehliadača.
   const print = () => {
+    remember()
     setPrintUrls(sheets().map((target) => target.toDataURL('image/jpeg', 0.92)))
     window.setTimeout(() => {
       window.print()

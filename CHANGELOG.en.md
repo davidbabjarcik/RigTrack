@@ -5,6 +5,15 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.19
+
+- **The app remembers what was printed**: a case shows when its content sheet was printed, gear shows when its QR
+  label (and tape label) was printed. It is recorded on print and PDF – from the case, batch printing and the queue.
+- **Reprint warning**: when a case's content changes after the sheet was printed (gear added or removed, another
+  quantity or piece numbers), the case shows a warning with a “Print sheet” button and Print lists “Print again”
+  with an “All to the print queue” button.
+- Technical: migration 0178 (date and content fingerprint of printed labels).
+
 ### 9.18
 
 - **Lighting cheat sheet**: the “Lighting cheat sheet” button at the event's DMX patch list prepares an A4 with every

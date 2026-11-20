@@ -10,6 +10,8 @@ type Props = {
   makePdf?: () => Promise<Blob>
   /** Tlač na počítači; predvolene dialóg tlače prehliadača. */
   onPrint?: () => void
+  /** Zavolá sa pri každej tlači alebo PDF (napr. zapamätať, že štítky sú vytlačené). */
+  onPrinted?: () => void
   /** Názov PDF bez prípony. */
   fileName: string
   marginMm?: number
@@ -23,7 +25,7 @@ type Props = {
  * Tlačidlo Tlačiť: na počítači dialóg tlače, na mobile a tablete PDF cez zdieľanie
  * (odtiaľ AirPrint / tlačiareň, uloženie alebo poslanie).
  */
-export function PrintButton({ sheet, makePdf, onPrint, fileName, marginMm = 14, landscape = false, variant = 'default', disabled, label }: Props) {
+export function PrintButton({ sheet, makePdf, onPrint, onPrinted, fileName, marginMm = 14, landscape = false, variant = 'default', disabled, label }: Props) {
   const [busy, setBusy] = useState(false)
   const [ready, setReady] = useState<Blob | null>(null)
   const [failed, setFailed] = useState(false)
@@ -34,6 +36,7 @@ export function PrintButton({ sheet, makePdf, onPrint, fileName, marginMm = 14, 
     setReady(result === 'blocked' ? pdf : null)
   }
   const print = async () => {
+    onPrinted?.()
     if (!printsViaPdf()) {
       if (onPrint) onPrint()
       else window.print()

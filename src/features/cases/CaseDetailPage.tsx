@@ -1,3 +1,4 @@
+import { ContentPrintStatus } from './ContentPrintStatus'
 import { WHEEL_LABELS } from '@/lib/dimensions'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CirclePlus, ClipboardList, Copy, MapPin, Pencil, Plug, Plus, QrCode, Star, Tag, Trash2, X } from 'lucide-react'
@@ -156,6 +157,7 @@ export function CaseDetailPage() {
           {info.length > 0 && <p className="mt-1 text-sm text-muted-foreground">{info.join(' · ')}</p>}
           <OwnerLink companyId={companyId} staffId={current.ownerStaffId} className="mt-1" />
           <ResponsibleFor companyId={companyId} caseId={id} kinds={[...new Set(all.filter((item) => item.caseId === id).map((item) => item.kind))]} className="mt-1" />
+          {equipment.data && <ContentPrintStatus companyId={companyId} caseId={id} equipment={equipment.data} />}
           {spot && (
             <Link to={`/warehouse?spot=${spot.id}`} className="mt-1 inline-flex items-center gap-1 text-sm text-accent hover:underline">
               <MapPin className="size-4" aria-hidden />{tx('V sklade:')}{' '}{describeSpot(spot, current.spotLevel)}

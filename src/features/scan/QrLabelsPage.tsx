@@ -1,3 +1,5 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { markPrinted, printKeys } from '@/features/print/api'
 import { PaperSheet } from '@/components/print/PaperSheet'
 import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
@@ -61,6 +63,7 @@ export function QrLabelsPage() {
   const text = { name: true, place: true, number: true, company: true, ...userPrefs.qrText }
   const toggleText = (key: keyof typeof text) => updateUserPrefs({ qrText: { ...text, [key]: !text[key] } })
   const companyId = company.companyId
+  const queryClient = useQueryClient()
   const isCases = type === 'cases'
   const isSpots = type === 'spots'
   const cases = useCases(companyId)
@@ -152,7 +155,22 @@ export function QrLabelsPage() {
               mm
             </label>
           )}
-          <PrintButton sheet={sheet} fileName="qr-stitky" marginMm={10} label="Tlačiť" />
+          <PrintButton
+            sheet={sheet}
+            fileName="qr-stitky"
+            marginMm={10}
+            label="Tlačiť"
+            // Zapamätať vytlačené QR štítky (Tlač → Bez QR štítku, stav pri technike a case).
+            onPrinted={() =>
+              !isSpots &&
+              void markPrinted(
+                company.companyId,
+                [...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))].map((targetId) => ({ kind: isCases ? ('case' as const) : ('equipment' as const), targetId, label: 'qr' as const })),
+              )
+                .then(() => queryClient.invalidateQueries({ queryKey: printKeys.queue(company.companyId) }))
+                .catch(() => undefined)
+            }
+          />
         </div>
       </div>
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm print:hidden">

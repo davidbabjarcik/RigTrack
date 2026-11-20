@@ -99,21 +99,47 @@ export async function addToPrintQueue(companyId: string, items: { kind: PrintIte
   if (error) throw error
 }
 
-/** Čo už má vytlačený štítok (0123); bez migrácie null. */
-export type PrintedLabel = { kind: PrintItem['kind']; targetId: string; label: PrintLabel }
+/**
+ * Čo už má vytlačený štítok (0123); bez migrácie null. Od 0178 aj kedy a odtlačok obsahu (pri hárku s obsahom
+ * case), podľa ktorého appka pozná, že sa obsah od tlače zmenil.
+ */
+export type PrintedLabel = { kind: PrintItem['kind']; targetId: string; label: PrintLabel; printedAt?: string; contentHash?: string }
+
+let printedDetails = true
 
 export async function fetchPrintedLabels(companyId: string): Promise<PrintedLabel[] | null> {
-  const { data, error } = await getSupabase().from('printed_labels').select('kind, target_id, label').eq('company_id', companyId)
+  const columns = printedDetails ? 'kind, target_id, label, printed_at, content_hash' : 'kind, target_id, label'
+  const { data, error } = await getSupabase().from('printed_labels').select(columns).eq('company_id', companyId)
+  if (error && printedDetails && /content_hash|printed_at/.test(error.message ?? '')) {
+    printedDetails = false
+    return fetchPrintedLabels(companyId)
+  }
   if (error) return null
-  return (data as { kind: PrintItem['kind']; target_id: string; label: PrintLabel }[]).map((row) => ({ kind: row.kind, targetId: row.target_id, label: row.label }))
+  return (data as unknown as { kind: PrintItem['kind']; target_id: string; label: PrintLabel; printed_at?: string; content_hash?: string }[]).map((row) => ({
+    kind: row.kind,
+    targetId: row.target_id,
+    label: row.label,
+    printedAt: row.printed_at,
+    contentHash: row.content_hash ?? '',
+  }))
 }
 
 export function usePrintedLabels(companyId: string) {
   return useQuery({ queryKey: [...printKeys.queue(companyId), 'printed'], queryFn: () => fetchPrintedLabels(companyId), retry: false })
 }
 
-/** Zapamätá, že štítky sú vytlačené (alebo už nalepené); duplicity sa preskočia. */
+/**
+ * Zapamätá, že štítky sú vytlačené (alebo už nalepené). Od 0178 sa pri opätovnej tlači obnoví dátum a odtlačok
+ * obsahu; bez migrácie sa len zapíše, že vytlačené sú (duplicity sa preskočia).
+ */
 export async function markPrinted(companyId: string, items: PrintedLabel[]) {
+  if (items.length === 0) return
+  const viaRpc = await getSupabase().rpc('mark_printed', {
+    _company_id: companyId,
+    _items: items.map((item) => ({ kind: item.kind, target_id: item.targetId, label: item.label, content_hash: item.contentHash ?? '' })),
+  })
+  if (!viaRpc.error) return
+  if (!/mark_printed|PGRST202|function/i.test(`${viaRpc.error.code ?? ''} ${viaRpc.error.message ?? ''}`)) throw viaRpc.error
   const rows = items.map((item) => ({ company_id: companyId, kind: item.kind, target_id: item.targetId, label: item.label }))
   for (let index = 0; index < rows.length; index += 500) {
     const { error } = await getSupabase().from('printed_labels').upsert(rows.slice(index, index + 500), { onConflict: 'company_id,kind,target_id,label', ignoreDuplicates: true })

@@ -1,3 +1,4 @@
+import { EquipmentPrintStatus } from '@/features/print/EquipmentPrintStatus'
 import { LicensesSection } from '@/features/licenses/LicensesPage'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Pencil, QrCode, SlidersHorizontal, Trash2, Wrench } from 'lucide-react'
@@ -253,6 +254,7 @@ export function EquipmentDetailPage() {
             <StatusBadge status={equipment.status} />
           </div>
           <ResponsibleFor companyId={company.companyId} caseId={equipment.caseId} kinds={[equipment.kind]} className="mt-2" />
+          <EquipmentPrintStatus companyId={company.companyId} equipmentId={equipment.id} />
         </div>
         <div className="flex flex-wrap gap-2">
           <LinkButton to={`/service/requests/new?equipment=${equipment.id}`} variant="outline" size="sm">

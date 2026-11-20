@@ -1,3 +1,4 @@
+import { caseContentHash, contentPrintState } from '@/features/cases/model'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Briefcase, Cable, Presentation, Printer, Speaker, Tag, Trash2, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -12,7 +13,7 @@ import { KIND_LABELS, type EquipmentKind, isGone } from '@/features/equipment/mo
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { useEvents } from '@/features/events/useEvents'
 import { MissingLabels } from './MissingLabels'
-import { FORMAT_LABELS, formatParams, markPrinted, printKeys, type PrintFormat, removeFromPrintQueue, useCompanyPrefs, usePrintedLabels, usePrintQueue, type PrintItem } from './api'
+import { addToPrintQueue, FORMAT_LABELS, formatParams, markPrinted, printKeys, type PrintFormat, removeFromPrintQueue, useCompanyPrefs, usePrintedLabels, usePrintQueue, type PrintItem } from './api'
 
 /**
  * Tlačová fronta: štítky pridané cez „Do tlače“ alebo @toprint. QR idú na A4 alebo na Brother (podľa nastavenia firmy),
@@ -35,9 +36,21 @@ export function PrintQueuePage() {
     mutationFn: async (list: PrintItem[]) => {
       // Plagáty sa nepamätajú (nie sú to štítky).
       const labels = list.filter((item) => item.kind !== 'poster' && item.kind !== 'event' && item.kind !== 'network')
-      await markPrinted(companyId, labels.map((item) => ({ kind: item.kind as 'equipment' | 'case' | 'spot', targetId: item.targetId, label: item.label }))).catch(() => undefined)
+      // Pri hárku s obsahom case aj odtlačok obsahu – keď sa obsah zmení, appka upozorní na novú tlač.
+      const hashOf = (item: PrintItem) => (item.kind === 'case' && item.label === 'content' && equipment.data ? caseContentHash(item.targetId, equipment.data) : '')
+      await markPrinted(companyId, labels.map((item) => ({ kind: item.kind as 'equipment' | 'case' | 'spot', targetId: item.targetId, label: item.label, contentHash: hashOf(item) }))).catch(() => undefined)
       await removeFromPrintQueue(companyId, list.map((item) => item.id))
     },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }),
+  })
+
+  // Hárky s obsahom vytlačené pred zmenou obsahu case – treba ich vytlačiť znova.
+  const reprint = (cases.data ?? []).filter((box) => {
+    const record = printed.data?.find((item) => item.kind === 'case' && item.targetId === box.id && item.label === 'content')
+    return equipment.data ? contentPrintState(record, box.id, equipment.data).state === 'changed' : false
+  })
+  const queueReprint = useMutation({
+    mutationFn: () => addToPrintQueue(companyId, reprint.map((box) => ({ kind: 'case' as const, targetId: box.id, label: 'content' as const }))),
     onSettled: () => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }),
   })
 
@@ -188,6 +201,25 @@ export function PrintQueuePage() {
           {group('Plagáty inventára', <Presentation className="size-5 text-accent" aria-hidden />, posters, null)}
           {group('Štítky (adresy, módy, odber)', <Tag className="size-5 text-accent" aria-hidden />, tape, printLink(`/labels/tape?ids=${ids(tape.filter((item) => item.kind === 'equipment'))}&back=/print`, 'Štítky'))}
         </>
+      )}
+      {reprint.length > 0 && (
+        <section className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-medium">Treba vytlačiť znova – zmenil sa obsah case ({reprint.length})</h2>
+            <Button size="sm" variant="outline" disabled={queueReprint.isPending} onClick={() => queueReprint.mutate()}>
+              Všetky do tlače
+            </Button>
+          </div>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {reprint.map((box) => (
+              <li key={box.id}>
+                <Link to={`/cases/${box.id}/content`} className="inline-flex rounded-full border border-amber-400 bg-surface px-3 py-1 text-foreground hover:bg-muted">
+                  {caseTitle(box)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       {printed.data && missing.length > 0 && (
         <MissingLabels
