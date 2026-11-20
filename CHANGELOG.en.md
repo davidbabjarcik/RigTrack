@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.16
+
+- **Request archived gear**: anyone who edits events can ask the CEO for archived gear at the event's gear (quantity
+  and why). The CEO gets a notification and approves or rejects it with one tap – approved gear is added to the event
+  automatically and the requester is notified. A pending request can be cancelled by the requester.
+- **Software and licences are in Gear** as their own group below the list (search narrows them), not a separate
+  page. A computer shows the software installed on it.
+- A finished or cancelled event no longer offers a quick quote or a quote.
+- Technical: migration 0176 (archived gear requests).
+
 ### 9.15
 
 - **More accurate van loading**: a case weighs the empty case plus the gear packed in it. Gear outside cases that has

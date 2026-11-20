@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AppWindow, ArrowLeft, Copy, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react'
+import { AppWindow, Copy, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { Link, Navigate } from 'react-router-dom'
+import { LoadingBlock } from '@/components/feedback/QueryState'
+import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
@@ -98,7 +98,11 @@ function validityText(expiresOn: string | null, today: string) {
 }
 
 /** Licencie kúpených programov: koľko inštalácií, na koho účet, dokedy platí, na ktorom počítači. Kľúč vidí len ten, kto upravuje techniku. */
-export function LicensesPage() {
+/**
+ * Programy a licencie ako podkategória v Technike: zbaliteľná skupina pod zoznamom techniky.
+ * `search` (text z hľadania v Technike) zúži zoznam; `equipmentId` ukáže len programy na danom počítači.
+ */
+export function LicensesSection({ search = '', equipmentId }: { search?: string; equipmentId?: string }) {
   const company = useCompany().active!
   const companyId = company.companyId
   const canEdit = can(company, 'equipment.edit')
@@ -115,23 +119,30 @@ export function LicensesPage() {
   const computers: Computer[] = (equipment.data ?? []).map((item) => ({ id: item.id, name: item.name })).sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   const computerName = new Map(computers.map((item) => [item.id, item.name]))
   const keyOf = (id: string) => keys.data?.get(id) ?? ''
-  const ending = (licenses.data ?? []).filter((license) => ['soon', 'expired'].includes(validity(license.expiresOn, today)))
+  const words = search.trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').split(/\s+/).filter(Boolean)
+  const shown = (licenses.data ?? []).filter((license) => {
+    if (equipmentId && license.equipmentId !== equipmentId) return false
+    const text = [license.name, license.edition, license.account, license.note].join(' ').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
+    return words.every((word) => text.includes(word))
+  })
+  const ending = shown.filter((license) => ['soon', 'expired'].includes(validity(license.expiresOn, today)))
+  // Bez migrácie 0172 alebo bez programov na počítači sa časť nezobrazí.
+  if (licenses.isError || (equipmentId && shown.length === 0)) return null
+  if (words.length > 0 && shown.length === 0) return null
 
   return (
-    <>
-      <Link to="/equipment" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" aria-hidden />{tx('Technika')}</Link>
-      <PageHeader
-        title={tx('Licencie programov')}
-        description={tx('Aké programy máme kúpené, koľko inštalácií, na koho účet a dokedy platia.')}
-        action={
-          canEdit &&
-          editing === null && (
-            <Button onClick={() => setEditing('new')}>
-              <Plus className="size-4" aria-hidden />{tx('Pridať')}</Button>
-          )
-        }
-      />
+    <CollapsibleSection
+      id={equipmentId ? 'equipment.detail.licenses' : 'equipment.licenses'}
+      title={<span className="inline-flex items-center gap-2"><AppWindow className="size-4 text-muted-foreground" aria-hidden />{tf('Programy a licencie ({0})', shown.length)}</span>}
+      actions={
+        canEdit &&
+        !equipmentId &&
+        editing === null && (
+          <Button size="sm" variant="outline" onClick={() => setEditing('new')}>
+            <Plus className="size-4" aria-hidden />{tx('Pridať program')}</Button>
+        )
+      }
+    >
       {editing === 'new' && (
         <div className="mb-4">
           <LicenseForm companyId={companyId} current={null} currentKey="" canKeys={canEdit} computers={computers} onDone={() => setEditing(null)} />
@@ -144,16 +155,14 @@ export function LicensesPage() {
       )}
       {licenses.isPending ? (
         <LoadingBlock />
-      ) : licenses.isError ? (
-        <ErrorBlock message={tx('Licencie sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')} onRetry={() => void licenses.refetch()} />
-      ) : licenses.data.length === 0 ? (
+      ) : shown.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center">
           <p className="font-medium">{tx('Zatiaľ žiadne licencie')}</p>
           {canEdit && <p className="mt-1 text-sm text-muted-foreground">{tx('Pridajte programy, ktoré máte kúpené – napr. na mix, svetlá alebo strih videa.')}</p>}
         </div>
       ) : (
         <ul className="flex flex-col gap-2">
-          {licenses.data.map((license) =>
+          {shown.map((license) =>
             editing === license.id ? (
               <li key={license.id}>
                 <LicenseForm companyId={companyId} current={license} currentKey={keyOf(license.id)} canKeys={canEdit} computers={computers} onDone={() => setEditing(null)} />
@@ -203,6 +212,11 @@ export function LicensesPage() {
           )}
         </ul>
       )}
-    </>
+    </CollapsibleSection>
   )
+}
+
+/** Stará adresa samostatnej stránky licencií vedie do Techniky, kde sú teraz ako podkategória. */
+export function LicensesPage() {
+  return <Navigate to="/equipment#licencie" replace />
 }

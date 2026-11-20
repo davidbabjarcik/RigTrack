@@ -3,7 +3,7 @@ import type { Page, Route } from '@playwright/test'
 
 // Náhradný Supabase pre test v prehliadači: jeden prihlásený admin v jednej vymyslenej firme, inak prázdne dáta.
 export const FAKE_SUPABASE = 'http://127.0.0.1:54321'
-const USER_ID = '00000000-0000-4000-8000-000000000001'
+export const USER_ID = '00000000-0000-4000-8000-000000000001'
 export const COMPANY_ID = '00000000-0000-4000-8000-0000000000c1'
 const user = { id: USER_ID, aud: 'authenticated', role: 'authenticated', email: 'tester@example.com', email_confirmed_at: '2026-01-01T00:00:00Z', app_metadata: { provider: 'email' }, user_metadata: { full_name: 'Tester' }, created_at: '2026-01-01T00:00:00Z' }
 

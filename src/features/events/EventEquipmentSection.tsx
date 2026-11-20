@@ -1,3 +1,4 @@
+import { ArchivedRequests } from './ArchivedRequests'
 import { useCanUseArchived } from '@/features/equipment/useCanUseArchived'
 import { isUsable } from '@/features/equipment/model'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -288,10 +289,17 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
         <p role="alert" className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>
       )}
 
+      <ArchivedRequests
+        companyId={companyId}
+        eventId={event.id}
+        archived={all.filter((item) => item.status === 'archived')}
+        canDecide={isCeo}
+        canRequest={canEdit}
+      />
       {adding && (
         <div className="mt-4">
           {archivedHidden > 0 && (
-            <p className="mb-2 text-sm text-muted-foreground">{tf('Archívnu techniku ({0}) môže na event pridať len CEO firmy.', archivedHidden)}</p>
+            <p className="mb-2 text-sm text-muted-foreground">{tf('Archívnu techniku ({0}) môže na event pridať len CEO firmy – nižšie o ňu môžete požiadať.', archivedHidden)}</p>
           )}
           <PackagePicker companyId={companyId} equipment={lendable} cases={cases.data ?? []} disabled={busy} onAdd={(additions) => addPackage.mutate(additions)} />
           <LoanPicker

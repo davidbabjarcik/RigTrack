@@ -10,7 +10,7 @@ import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { AddToContactsButton } from '@/components/share/ShareButtons'
 import { Button, LinkButton } from '@/components/ui/button'
 import { useCompany } from '@/features/companies/company-context'
-import { formatDate } from '@/lib/format'
+import { formatDate, todayIso } from '@/lib/format'
 import { EventLoadingSection } from '@/features/loading/EventLoadingSection'
 import { can } from '@/lib/permissions'
 import { deleteEvent, eventKeys } from './api'
@@ -35,7 +35,7 @@ import { EventStagePlan } from '@/features/stage/EventStagePlan'
 import { EventEquipmentSection } from './EventEquipmentSection'
 import { EventReturnSection } from './EventReturnSection'
 import { EventStatusBadge } from './EventStatusBadge'
-import { describeTimes, POWER_LABELS, SETTING_LABELS } from './model'
+import { describeTimes, POWER_LABELS, SETTING_LABELS, shownStatus } from './model'
 import { EventWeather } from './EventWeather'
 import { useEvents } from './useEvents'
 import { tx, tf } from '@/lib/i18n'
@@ -94,6 +94,8 @@ export function EventDetailPage() {
   const organizer = directory.isError ? [event.organizer, event.organizerPerson, event.organizerPhone, event.organizerEmail].filter(Boolean) : []
   const when = event.startsOn === event.endsOn ? formatDate(event.startsOn) : `${formatDate(event.startsOn)} – ${formatDate(event.endsOn)}`
 
+  // Ponuku má zmysel robiť len pred eventom – po termíne alebo pri zrušenom sa tlačidlá skryjú.
+  const quotable = event.status !== 'cancelled' && shownStatus(event, todayIso()) !== 'done'
   return (
     <>
       {back}
@@ -115,11 +117,11 @@ export function EventDetailPage() {
             <CalendarClock className="size-4" aria-hidden />{tx('Pre posádku')}</LinkButton>
           <LinkButton to={`/events/${id}/pack`} variant="outline" size="sm">
             <ListChecks className="size-4" aria-hidden />{tx('Pack list')}</LinkButton>
-          {canEdit && (
+          {canEdit && quotable && (
             <LinkButton to={`/events/${id}/quote`} variant="outline" size="sm" title={tx('Rýchla ponuka z techniky eventu podľa cenníka')}>
               <Receipt className="size-4" aria-hidden />{tx('Rýchla ponuka')}</LinkButton>
           )}
-          {can(company, 'offers.edit') && (
+          {can(company, 'offers.edit') && quotable && (
             <LinkButton to={`/offers/new?event=${id}`} variant="outline" size="sm" title={tx('Cenová ponuka s časťami, rozpočtom a vystavovateľom')}>
               <FileText className="size-4" aria-hidden />{tx('Cenová ponuka')}</LinkButton>
           )}

@@ -1,3 +1,4 @@
+import { LicensesSection } from '@/features/licenses/LicensesPage'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Pencil, QrCode, SlidersHorizontal, Trash2, Wrench } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
@@ -314,6 +315,10 @@ export function EquipmentDetailPage() {
           ))}
       </dl>
 
+      {/* Programy nainštalované na tomto počítači. */}
+      <div className="mt-6 empty:hidden">
+        <LicensesSection equipmentId={equipment.id} />
+      </div>
       <div id="dmx-mody" className="mt-6 scroll-mt-20 empty:hidden">
         <LightDmxSection
           attributes={equipment.attributes}

@@ -106,3 +106,13 @@ test('nakladanie: case s technikou a repro mimo case', async ({ page }) => {
   await expect(page.getByText(/1 z 1 cases a 2 ks techniky mimo cases · spolu 62 kg/)).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ukážkový top (1/2)' })).toHaveAttribute('href', /\/equipment\//)
 })
+
+test('po skončení eventu sa cenová ponuka neponúka', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, { ...fixtures, events: [{ ...event, starts_on: '2026-01-10', ends_on: '2026-01-11' }] })
+  await page.goto(`/events/${EVENT_ID}`)
+  await expect(page.getByText('Odohraný').first()).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Rýchla ponuka' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Cenová ponuka' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Zmluva' })).toBeVisible()
+})

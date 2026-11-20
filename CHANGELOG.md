@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.16 – 20. 11. 2026
+
+- **Žiadosť o archívnu techniku**: kto upravuje eventy, môže pri technike eventu požiadať CEO o archívnu techniku
+  (počet a prečo). CEO dostane upozornenie a pri evente žiadosť jedným ťuknutím schváli alebo zamietne – schválená
+  technika sa sama pridá na event a žiadateľ dostane upozornenie. Nevybavenú žiadosť môže žiadateľ zrušiť.
+- **Programy a licencie sú v Technike** ako vlastná skupina pod zoznamom (hľadanie ich zúži), nie ako samostatná
+  stránka. Pri počítači sa ukážu programy, ktoré sú naň nainštalované.
+- Po skončení alebo zrušení eventu sa pri ňom už neponúka rýchla ani cenová ponuka.
+- Technické: migrácia 0176 (žiadosti o archívnu techniku).
+
 ### 9.15 – 20. 11. 2026
 
 - **Nakladanie do dodávky presnejšie**: hmotnosť case = prázdny case a technika, ktorá v ňom ide. Do plánu sa

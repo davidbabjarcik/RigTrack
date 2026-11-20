@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { fakeBackend, signIn } from './fakeBackend'
+import { COMPANY_ID, USER_ID, fakeBackend, signIn } from './fakeBackend'
 
 // Predaná technika: v zozname sa neukazuje, ale je stále v Technike pod „Predaná technika“; archívna má svoj štítok.
 const piece = (id: string, name: string, status: string, attributes: object = {}) => ({
@@ -36,4 +36,34 @@ test('detail predanej techniky: kedy, komu a za koľko', async ({ page }) => {
   await expect(page.getByText(/1. 10. 2026 · Ukážkový kupec · 300/)).toBeVisible()
   await page.goto(`/equipment/${SOLD}/edit`)
   await expect(page.getByLabel('Komu')).toHaveValue('Ukážkový kupec')
+})
+
+test('archívna technika: technik požiada CEO, CEO schváli', async ({ page }) => {
+  await signIn(page)
+  const EVENT_ID = '00000000-0000-4000-8000-0000000000e9'
+  const ARCHIVED = '00000000-0000-4000-8000-0000000000b3'
+  const event = {
+    id: EVENT_ID, company_id: COMPANY_ID, kind: 'event', name: 'Ukážkový event', client: '', venue: '', starts_on: '2026-12-05', ends_on: '2026-12-05', status: 'planned', note: '',
+    organizer: '', organizer_person: '', organizer_phone: '', organizer_email: '', description: '', get_in_time: null, show_time: null, show_end_time: null,
+    setting: '', power: '', power_count: null, power_note: '', weather_place: '',
+  }
+  const me = { role: 'admin', company: { id: COMPANY_ID, name: 'Ukážková firma' }, profile: { email: 'tester@example.com', full_name: 'Tester' }, user_id: USER_ID, company_id: COMPANY_ID }
+  const ceo = { ...me, role: 'ceo', profile: { email: 'ceo@example.com', full_name: 'Ukážkový CEO' }, user_id: '00000000-0000-4000-8000-0000000000f9' }
+  const requests = [{ id: 'r1', company_id: COMPANY_ID, event_id: EVENT_ID, equipment_id: ARCHIVED, quantity: 2, note: 'na ples', status: 'pending', answer: '', requested_by: USER_ID, created_at: '2026-11-20T10:00:00Z' }]
+  const backend = { events: [event], equipment: [piece(ARCHIVED, 'Ukážková stará hlava', 'archived')], equipment_requests: requests }
+
+  // Admin vo firme s CEO: archívnu techniku nepridá, ale požiada o ňu a môže žiadosť zrušiť.
+  await fakeBackend(page, { ...backend, company_members: [me, ceo] })
+  await page.goto(`/events/${EVENT_ID}?tab=gear`)
+  await expect(page.getByText('Čaká na CEO')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Zrušiť žiadosť' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Schváliť' })).toHaveCount(0)
+  await expect(page.getByLabel('Požiadať CEO o archívnu techniku')).toBeVisible()
+
+  // CEO vidí Schváliť / Zamietnuť.
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+  await fakeBackend(page, { ...backend, company_members: [{ ...me, role: 'ceo' }] })
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Schváliť' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Zamietnuť' })).toBeVisible()
 })

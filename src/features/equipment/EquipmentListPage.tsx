@@ -1,5 +1,6 @@
+import { LicensesSection } from '@/features/licenses/LicensesPage'
 import { useQuery } from '@tanstack/react-query'
-import { AppWindow, ChevronDown, ChevronRight, Plus, Presentation, Search } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Presentation, Search } from 'lucide-react'
 import { Fragment, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -229,8 +230,6 @@ export function EquipmentListPage() {
         action={
           <div className="flex flex-wrap gap-2">
             <ScanButton />
-            <LinkButton to="/equipment/licenses" variant="outline">
-              <AppWindow className="size-4" aria-hidden />{tx('Licencie programov')}</LinkButton>
             <LinkButton to="/equipment/poster" variant="outline">
               <Presentation className="size-4" aria-hidden />{tx('Plagát inventára')}</LinkButton>
             {canWrite && (
@@ -344,6 +343,12 @@ export function EquipmentListPage() {
         </ul>
       )}
       <LinkedEquipmentList items={linkedVisible} />
+      {/* Programy a licencie ako podkategória Techniky (pri filtri na iný druh sa skryjú). */}
+      {(!filter.kind || filter.kind === 'it') && !filter.status && (
+        <div id="licencie" className="mt-6 scroll-mt-20">
+          <LicensesSection search={filter.search} />
+        </div>
+      )}
     </>
   )
 }
