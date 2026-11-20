@@ -13,7 +13,9 @@ import { LOAD_FILLS } from './fills'
 import { LoadDiagram3D } from './LoadDiagram3D'
 import { ObstacleLegend } from './ObstacleLegend'
 import { describePlace, loadingOrder, planLoading, type Unplaced } from './model'
-import { byCapacity, cargoSpaceOf, parcelOf } from './sources'
+import { byCapacity, cargoSpaceOf, contentWeights, looseParcels, parcelOf, placementLink } from './sources'
+import { useQuery } from '@tanstack/react-query'
+import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { DevNotice } from '@/components/feedback/DevNotice'
 import { tx, tf } from '@/lib/i18n'
 
@@ -32,6 +34,7 @@ type Props = { companyId: string; event: CompanyEvent }
 export function EventLoadingSection({ companyId, event }: Props) {
   const cases = useCases(companyId)
   const vehicles = useVehicles(companyId)
+  const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const [excluded, setExcluded] = useState<string[]>([])
   const [view, setView] = useState<'3d' | 'top'>('3d')
   const [turns, setTurns] = useState(0)
@@ -41,9 +44,14 @@ export function EventLoadingSection({ companyId, event }: Props) {
   if (caseIds.length === 0 && loose === 0) return null
 
   const eventCases = caseIds.map((id) => cases.data?.find((item) => item.id === id)).filter((item) => item !== undefined)
-  const parcels = eventCases.map(parcelOf).filter((parcel) => parcel !== null)
+  // Case = prázdny case + technika v ňom; k tomu repro a iná technika mimo cases, ak má rozmery boxu.
+  const items = equipment.data ?? []
+  const contents = contentWeights(event.equipment, items)
+  const caseParcels = eventCases.map((item) => parcelOf(item, contents.get(item.id) ?? 0)).filter((parcel) => parcel !== null)
+  const loosePlan = looseParcels(event.equipment, items)
+  const parcels = [...caseParcels, ...loosePlan.parcels]
   const withoutSize = eventCases.filter((item) => parcelOf(item) === null)
-  const withoutWeight = eventCases.filter((item) => parcelOf(item) !== null && item.weightKg === null)
+  const withoutWeight = eventCases.filter((item) => parcelOf(item) !== null && item.weightKg === null && !contents.get(item.id))
 
   const active = (vehicles.data ?? []).filter((vehicle) => vehicle.status === 'active')
   const spaces = byCapacity(active.map(cargoSpaceOf).filter((space) => space !== null))
@@ -59,12 +67,12 @@ export function EventLoadingSection({ companyId, event }: Props) {
     <CollapsibleSection id="event.loading" title={tx('Nakladanie')}>
       <DevNotice className="mb-3" />
 
-      {cases.isPending || vehicles.isPending ? (
+      {cases.isPending || vehicles.isPending || equipment.isPending ? (
         <p className="rounded-xl border bg-surface p-4 text-sm text-muted-foreground">{tx('Počítam…')}</p>
       ) : cases.isError || vehicles.isError ? (
         <p className="rounded-xl border bg-surface p-4 text-sm text-destructive">{tx('Plán nakladania sa nepodarilo pripraviť.')}</p>
-      ) : caseIds.length === 0 ? (
-        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Plán nakladania sa počíta z celých cases. Na evente je zatiaľ len jednotlivá technika.')}</p>
+      ) : parcels.length === 0 && withoutSize.length === 0 ? (
+        <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Plán nakladania sa počíta z cases a z techniky s rozmermi boxu (napr. repro). Na evente zatiaľ nič také nie je.')}</p>
       ) : spaces.length === 0 ? (
         <p className="rounded-xl border border-dashed bg-surface p-4 text-sm text-muted-foreground">{tx('Žiadne aktívne vozidlo nemá zapísané rozmery nákladného priestoru. Doplňte ich v úprave vozidla (')}<Link to="/vehicles" className="text-accent hover:underline">{tx('Vozidlá')}</Link>
           ).
@@ -79,7 +87,10 @@ export function EventLoadingSection({ companyId, event }: Props) {
                 : `${plan.unplaced.length > 0 ? tx('Nestačí: ') : tx('Treba ')}${plan.loads.length} ${vehicleWord(plan.loads.length)}`}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {parcels.length} z {caseIds.length}{' '}{tx('cases v pláne · spolu')}{' '}{formatNumber(parcels.reduce((sum, parcel) => sum + parcel.weightKg, 0))}{' '}{tx('kg')}</p>
+              {tf('{0} z {1} cases', caseParcels.length, caseIds.length)}
+              {loosePlan.parcels.length > 0 && tf(' a {0} ks techniky mimo cases', loosePlan.parcels.length)}
+              {tf(' · spolu {0} kg · {1} m³', formatNumber(Math.round(parcels.reduce((sum, parcel) => sum + parcel.weightKg, 0))), formatNumber(Math.round(parcels.reduce((sum, parcel) => sum + (parcel.length * parcel.width * parcel.height) / 1e6, 0) * 100) / 100))}
+            </p>
             <fieldset className="mt-3">
               <legend className="mb-1 text-sm font-medium">{tx('Vozidlá, s ktorými počítať')}</legend>
               <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -181,7 +192,7 @@ export function EventLoadingSection({ companyId, event }: Props) {
                         {index + 1}
                       </span>
                       <span className="min-w-0">
-                        <Link to={`/cases/${placement.id}`} className="font-medium hover:underline">
+                        <Link to={placementLink(placement.id)} className="font-medium hover:underline">
                           {placement.name}
                         </Link>
                         <span className="text-muted-foreground">
@@ -197,7 +208,7 @@ export function EventLoadingSection({ companyId, event }: Props) {
           })}
 
           <p className="text-sm text-muted-foreground">{tx('Nakladajte v uvedenom poradí, od kabíny dozadu. Návrh je výpočet z rozmerov, nie záruka: nepozná tvar kolies na cases, popruhy ani rozloženie váhy na nápravy.')}{withoutWeight.length > 0 && tf(' Bez zapísanej hmotnosti (rátajú sa ako 0 kg): {0}.', withoutWeight.map((item) => item.name).join(', '))}
-            {loose > 0 && tf(' Jednotlivá technika mimo cases ({0}) sa do plánu neráta.', loose)}
+            {loosePlan.withoutSize.length > 0 && tf(' Technika mimo cases bez rozmerov boxu sa do plánu neráta: {0}.', loosePlan.withoutSize.map((item) => item.name).join(', '))}
             {unmeasured.length > 0 && tf(' Vozidlá bez rozmerov: {0}.', unmeasured.map((vehicle) => vehicle.plate).join(', '))}
           </p>
         </div>

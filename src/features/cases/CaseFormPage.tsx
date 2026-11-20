@@ -288,8 +288,8 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
                 inputMode="decimal"
                 min={0}
                 step="0.1"
-                error={errors.widthCm?.message}
-                {...register('widthCm', asOptionalNumber)}
+                error={errors.lengthCm?.message}
+                {...register('lengthCm', asOptionalNumber)}
               />
               <Field
                 label={tx('Hĺbka')}
@@ -298,8 +298,8 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
                 inputMode="decimal"
                 min={0}
                 step="0.1"
-                error={errors.depthCm?.message}
-                {...register('depthCm', asOptionalNumber)}
+                error={errors.widthCm?.message}
+                {...register('widthCm', asOptionalNumber)}
               />
               <Field
                 label={tx('Výška')}
@@ -308,8 +308,8 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
                 inputMode="decimal"
                 min={0}
                 step="0.1"
-                error={errors.lengthCm?.message}
-                {...register('lengthCm', asOptionalNumber)}
+                error={errors.depthCm?.message}
+                {...register('depthCm', asOptionalNumber)}
               />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">

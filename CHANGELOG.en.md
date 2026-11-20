@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.15
+
+- **More accurate van loading**: a case weighs the empty case plus the gear packed in it. Gear outside cases that has
+  box sizes (speakers, subs…) is included too – each piece separately. The total kg and m³ are shown at the top.
+- Fixed: since 9.10 the case size fields (Width, Depth, Height) were saved to different columns than the warehouse
+  and loading use. They match everywhere now; please check case sizes entered after 9.10.
+
 ### 9.14
 
 - **Sold gear**: a new “Sold” status with date, buyer and price. It is hidden from the gear list but still in Gear

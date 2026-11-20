@@ -76,3 +76,33 @@ test('technika eventu: celková váha', async ({ page }) => {
   await expect(page.getByText('Celková váha')).toContainText('≈ 41 kg')
   await expect(page.getByText('(1 položka bez zadanej váhy)')).toBeVisible()
 })
+
+test('nakladanie: case s technikou a repro mimo case', async ({ page }) => {
+  await signIn(page)
+  const gear = (id: string, name: string, attributes: object) => ({
+    id, company_id: COMPANY_ID, name, kind: 'audio', category_id: null, location_id: null, case_id: null, label_role: 'main', quantity: 2, track_units: false, unit_ids: [],
+    rental_price: null, min_quantity: null, manufacturer: '', model: '', serial_number: '', inventory_number: '', mac_address: '', ip_address: '',
+    service_interval_months: null, last_service_on: null, hours_interval_months: null, operating_hours: null, hours_read_on: null, photo_path: '', status: 'available', note: '',
+    updated_at: '2026-11-01T00:00:00Z', owner_staff_id: null, purchased_on: null, unit_purchases: {}, links: [], clone_of: '', capture_match: '', capture_note: '', unit_info: {},
+    attributes,
+  })
+  const CASE = '00000000-0000-4000-8000-0000000000d9'
+  await fakeBackend(page, {
+    ...fixtures,
+    equipment: [
+      gear('00000000-0000-4000-8000-0000000000a3', 'Ukážkový top', { audioType: 'pa_top', boxWidthCm: 50, boxDepthCm: 40, boxHeightCm: 70, weightKg: 25 }),
+      gear('00000000-0000-4000-8000-0000000000a4', 'Ukážkový mikrofón', { weightKg: 0.5 }),
+    ],
+    cases: [{ id: CASE, company_id: COMPANY_ID, name: 'Ukážkový case', inventory_number: '', location_id: null, label_number: '', label_category: '', label_title: '', label_photo_path: '', photo_path: '', weight_kg: 10, width_cm: 40, length_cm: 60, depth_cm: 40, spot_id: null, spot_level: null, note: '', updated_at: '2026-11-01T00:00:00Z' }],
+    event_equipment: [
+      { company_id: COMPANY_ID, event_id: EVENT_ID, equipment_id: '00000000-0000-4000-8000-0000000000a3', quantity: 2, case_id: null },
+      { company_id: COMPANY_ID, event_id: EVENT_ID, equipment_id: '00000000-0000-4000-8000-0000000000a4', quantity: 4, case_id: CASE },
+    ],
+    vehicles: [{ id: 'v1', company_id: COMPANY_ID, plate: 'UK-123AA', model: 'Ukážková dodávka', vin: '', status: 'active', driver: '', odometer_km: null, stk_until: null, ek_until: null, vignette_until: null, pzp_until: null, casco_until: null, leasing_until: null, photo_path: '', payload_kg: 1000, cargo_length_cm: 300, cargo_width_cm: 170, cargo_height_cm: 170, cargo_obstacles: [], technician_id: null, note: '' }],
+  })
+  await page.goto(`/events/${EVENT_ID}?tab=gear`)
+  await expect(page.getByText('Treba 1 vozidlo')).toBeVisible()
+  // Case 10 kg + 4 mikrofóny po 0,5 kg; dva topy po 25 kg.
+  await expect(page.getByText(/1 z 1 cases a 2 ks techniky mimo cases · spolu 62 kg/)).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Ukážkový top (1/2)' })).toHaveAttribute('href', /\/equipment\//)
+})

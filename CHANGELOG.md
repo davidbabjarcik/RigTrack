@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.15 – 20. 11. 2026
+
+- **Nakladanie do dodávky presnejšie**: hmotnosť case = prázdny case a technika, ktorá v ňom ide. Do plánu sa
+  počíta aj technika mimo cases, ktorá má rozmery boxu (repro, sub…) – každý kus zvlášť. Hore je spolu kg a m³.
+- Opravené: rozmery case vo formulári (Šírka, Hĺbka, Výška) sa od 9.10 ukladali do iných stĺpcov, než s akými
+  počíta sklad a nakladanie. Teraz sedia všade; rozmery case zapísané po 9.10 si skontrolujte.
+
 ### 9.14 – 20. 11. 2026
 
 - **Predaná technika**: nový stav „Predaná“ s dátumom, kupcom a sumou. V zozname techniky sa neukazuje, ale je

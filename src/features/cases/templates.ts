@@ -87,7 +87,7 @@ export function numberedCaseNames(name: string, count: number, existing: string[
 /** Rozmery šablóny jedným riadkom, na výber v zozname. */
 export function describeTemplate(template: CaseTemplateFields) {
   return [
-    formatSides({ width: template.widthCm, depth: template.depthCm, height: template.lengthCm }),
+    formatSides({ width: template.lengthCm, depth: template.widthCm, height: template.depthCm }),
     template.weightKg !== null && `${String(template.weightKg).replace('.', ',')} kg`,
     template.labelCategory,
   ]

@@ -16,11 +16,12 @@ export type Case = {
   /** Vlastná fotka na štítku (cesta v Storage); platí to isté. */
   labelPhotoPath: string
   weightKg: number | null
-  /** Šírka – zľava doprava (pri pohľade spredu). */
+  /** Rozmery ako v sklade a pri nakladaní: pôdorys dĺžka × šírka a výška v „depth“. */
+  /** Hĺbka – spredu dozadu (na obrazovke „Hĺbka“). */
   widthCm: number | null
-  /** Výška – od zeme hore (stĺpec „length_cm“ z 0003; na obrazovke „Výška“). */
+  /** Šírka zľava doprava, pri pohľade spredu (na obrazovke „Šírka“). */
   lengthCm: number | null
-  /** Hĺbka – spredu dozadu. */
+  /** Výška od zeme hore (na obrazovke „Výška“). */
   depthCm: number | null
   /** Rozmery zmerané vrátane guľových rohov (0174); null = nevieme. */
   cornersIncluded?: boolean | null
@@ -186,7 +187,7 @@ export const caseSchema = z.object({
 
 /** „120 × 60 × 40 cm“ z rozmerov, ktoré sú vyplnené; bez rozmerov prázdny text. */
 export function formatDimensions(item: Pick<Case, 'widthCm' | 'lengthCm' | 'depthCm' | 'cornersIncluded'>) {
-  return formatSides({ width: item.widthCm, depth: item.depthCm, height: item.lengthCm }, { corners: item.cornersIncluded })
+  return formatSides({ width: item.lengthCm, depth: item.widthCm, height: item.depthCm }, { corners: item.cornersIncluded })
 }
 
 export type CaseFormValues = z.infer<typeof caseSchema>

@@ -71,9 +71,9 @@ export function CaseTemplateSettings({ companyId }: { companyId: string }) {
 
       <form onSubmit={submit} className="grid items-end gap-3 rounded-xl border bg-surface p-4 sm:grid-cols-3 lg:grid-cols-6">
         <Field label={tx('Názov šablóny')} placeholder={tx('napr. Thon case 120')} maxLength={120} className="sm:col-span-3 lg:col-span-2" value={form.name} onChange={set('name')} />
-        <Field label={tx('Šírka (cm)')} placeholder={tx('zľava doprava')} inputMode="decimal" value={form.widthCm} onChange={set('widthCm')} />
-        <Field label={tx('Hĺbka (cm)')} placeholder={tx('spredu dozadu')} inputMode="decimal" value={form.depthCm} onChange={set('depthCm')} />
-        <Field label={tx('Výška (cm)')} placeholder={tx('od zeme hore')} inputMode="decimal" value={form.lengthCm} onChange={set('lengthCm')} />
+        <Field label={tx('Šírka (cm)')} placeholder={tx('zľava doprava')} inputMode="decimal" value={form.lengthCm} onChange={set('lengthCm')} />
+        <Field label={tx('Hĺbka (cm)')} placeholder={tx('spredu dozadu')} inputMode="decimal" value={form.widthCm} onChange={set('widthCm')} />
+        <Field label={tx('Výška (cm)')} placeholder={tx('od zeme hore')} inputMode="decimal" value={form.depthCm} onChange={set('depthCm')} />
         <Field label={tx('Hmotnosť (kg)')} inputMode="decimal" value={form.weightKg} onChange={set('weightKg')} />
         <Field label={tx('Kategória na štítku')} placeholder={tx('napr. Light')} maxLength={40} className="sm:col-span-2" value={form.labelCategory} onChange={set('labelCategory')} />
         <Button type="submit" disabled={add.isPending || !form.name.trim()}>{tx('Pridať šablónu')}</Button>
