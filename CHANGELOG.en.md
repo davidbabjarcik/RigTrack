@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.1
+
+- **Sold gear in statistics**: Statistics → Gear has a “Sold gear – gain / loss” tile (how many items, bought for
+  and sold for) and a list of sold gear with date, buyer, gain or loss and a comparison with the value after
+  depreciation on the sale date. Visible to those who edit gear.
+- The gear value in statistics no longer counts retired or sold gear.
+
 ### 10.0
 
 - **Pay for DJ gigs**: in a DJ gig's “Who plays” part, each DJ from the company shows their pay – how much is

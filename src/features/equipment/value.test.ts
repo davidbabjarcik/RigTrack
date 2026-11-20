@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { equipmentValue, valueSummary } from './value'
+import { bookValueOn, equipmentValue, soldSummary, valueSummary } from './value'
 
 describe('equipment value', () => {
   it('multiplies purchase price by pieces', () => {
@@ -17,5 +17,29 @@ describe('equipment value', () => {
       (item) => item.group,
     )
     expect(summary).toEqual({ total: 1300, unpriced: 1, groups: [{ name: 'Svetlá', value: 1000 }, { name: 'Audio', value: 300 }] })
+  })
+})
+
+describe('sold gear', () => {
+  const sold = (id: string, attributes: object, purchasedOn: string | null = '2022-01-01', quantity = 2) =>
+    ({ id, name: `Ukážka ${id}`, status: 'sold' as const, quantity, purchasedOn, attributes })
+
+  it('compares the sale with the purchase and with the value after depreciation', () => {
+    // 2 ks po 1000 € = 2000 €, odpis 4 roky; predané po 2 rokoch (hodnota 1000 €) za 1300 €.
+    const summary = soldSummary([
+      sold('a', { purchasePrice: 1000, depreciationYears: 4, soldOn: '2024-01-01', soldPrice: 1300, soldTo: 'Ukážkový kupec' }),
+      sold('b', { soldOn: '2025-05-01' }),
+      { id: 'c', name: 'Máme', status: 'available' as const, quantity: 1, purchasedOn: null, attributes: { purchasePrice: 99 } },
+    ])
+    expect(summary.count).toBe(2)
+    expect(summary.unpriced).toBe(1)
+    expect(summary.rows[1]).toMatchObject({ id: 'a', bought: 2000, sold: 1300, gain: -700, soldTo: 'Ukážkový kupec' })
+    expect(summary.rows[1].gainVsBook).toBeCloseTo(300, -1)
+    expect(summary).toMatchObject({ sold: 1300, bought: 2000, gain: -700 })
+  })
+
+  it('has no book value without purchase date or depreciation', () => {
+    expect(bookValueOn({ quantity: 1, purchasedOn: null, attributes: { purchasePrice: 100, depreciationYears: 2 } }, '2025-01-01')).toBeNull()
+    expect(bookValueOn({ quantity: 1, purchasedOn: '2020-01-01', attributes: { purchasePrice: 100, depreciationYears: 2 } }, '2025-01-01')).toBe(0)
   })
 })

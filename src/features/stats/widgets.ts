@@ -33,6 +33,8 @@ export const STAT_WIDGETS = [
   { id: 'equipment.cableMeters', section: 'equipment', kind: 'ranking', label: 'Káble – metre podľa konektora' },
   { id: 'equipment.value', section: 'equipment', kind: 'tile', label: 'Hodnota techniky', needs: ['equipment.edit'] },
   { id: 'equipment.valueByCategory', section: 'equipment', kind: 'ranking', label: 'Hodnota techniky podľa kategórií', needs: ['equipment.edit'] },
+  { id: 'equipment.sold', section: 'equipment', kind: 'tile', label: 'Predaná technika – zisk / strata', needs: ['equipment.edit'] },
+  { id: 'equipment.soldList', section: 'equipment', kind: 'ranking', label: 'Predaná technika – kúpa a predaj', needs: ['equipment.edit'] },
   { id: 'loans.mostLent', section: 'equipment', kind: 'ranking', label: 'Najviac požičiavaná technika' },
   { id: 'service.records', section: 'service', kind: 'tile', label: 'Servisné záznamy' },
   { id: 'service.hours', section: 'service', kind: 'tile', label: 'Odpracované hodiny' },

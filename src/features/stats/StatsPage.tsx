@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, Check, FileChartColumn, SlidersHorizontal } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
@@ -8,7 +9,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { cableMakers, cableMeters, formatNumber } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
-import { valueSummary } from '@/features/equipment/value'
+import { soldSummary, valueSummary } from '@/features/equipment/value'
 import { dutyKeys, fetchAllDuties, fetchWorkLogs, useDutyTypes } from '@/features/duties/api'
 import { dutyRanking, hoursByPerson } from '@/features/duties/model'
 import { useAllDrives } from '@/features/drives/api'
@@ -19,7 +20,8 @@ import { useLoans } from '@/features/loans/useLoans'
 import { useServiceRecords } from '@/features/service/useServiceRecords'
 import { fetchVehicleCosts, vehicleKeys } from '@/features/vehicles/api'
 import { useVehicles } from '@/features/vehicles/useVehicles'
-import { formatMoney, todayIso } from '@/lib/format'
+import { formatDate, formatMoney, todayIso } from '@/lib/format'
+import { Link } from 'react-router-dom'
 import { addDays } from '@/features/calendar/model'
 import { useAuth } from '@/features/auth/auth-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
@@ -87,6 +89,48 @@ function Ranking({ title, rows, format, empty }: { title: string; rows: Ranked[]
               <div className="mt-1 h-2 rounded-r bg-muted" aria-hidden>
                 <div className="h-2 min-w-1 rounded-r bg-accent" style={{ width: `${max === 0 ? 0 : (row.value / max) * 100}%` }} />
               </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+/** Predaná technika: kúpa, predaj a zisk alebo strata (aj oproti hodnote po odpisoch). */
+function SoldList({ rows }: { rows: ReturnType<typeof soldSummary>['rows'] }) {
+  const money = (value: number) => formatMoney(value, 'EUR')
+  const signed = (value: number) => `${value > 0 ? '+' : ''}${money(value)}`
+  return (
+    <div className="rounded-xl border bg-surface p-4">
+      <h3 className="mb-3 font-medium">{tx('Predaná technika – kúpa a predaj')}</h3>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{tx('Zatiaľ nič predané. Pri technike zvoľte stav Predaná a zapíšte, za koľko.')}</p>
+      ) : (
+        <ul className="flex flex-col divide-y">
+          {rows.map((row) => (
+            <li key={row.id} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 py-2 text-sm">
+              <Link to={`/equipment/${row.id}`} className="min-w-0 font-medium hover:underline">
+                {row.name}
+              </Link>
+              <span className="tabular-nums">
+                {row.gain !== null ? (
+                  <span className={row.gain >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive'}>{signed(row.gain)}</span>
+                ) : (
+                  <span className="text-muted-foreground">{tx('bez sumy')}</span>
+                )}
+              </span>
+              <span className="basis-full text-muted-foreground">
+                {[
+                  row.soldOn && formatDate(row.soldOn),
+                  row.soldTo,
+                  row.bought !== null && tf('kúpené {0}', money(row.bought)),
+                  row.sold !== null && tf('predané {0}', money(row.sold)),
+                  row.gainVsBook !== null && tf('oproti hodnote po odpisoch {0}', signed(row.gainVsBook)),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </span>
             </li>
           ))}
         </ul>
@@ -179,7 +223,9 @@ export function StatsPage() {
     addDays(today, -365),
   )
 
-  const value = valueSummary(equipment.data ?? [], (item) => categories.find((category) => category.id === item.categoryId)?.name ?? tx('Bez kategórie'))
+  // Hodnota len techniky, ktorú firma má (vyradená a predaná sa nepočíta).
+  const value = valueSummary((equipment.data ?? []).filter((item) => !isGone(item.status)), (item) => categories.find((category) => category.id === item.categoryId)?.name ?? tx('Bez kategórie'))
+  const sold = soldSummary(equipment.data ?? [])
 
   // Peniaze vo zvolenom roku.
   const allPayments = payments.data ?? []
@@ -257,6 +303,18 @@ export function StatsPage() {
     'equipment.cableMeters': (
       <Ranking title={tx('Káble – metre podľa konektora')} rows={cableMeters(equipment.data ?? [])} format={(value) => `${formatNumber(value)} m`} empty={tx('Zatiaľ žiadne káble s dĺžkou.')} />
     ),
+    'equipment.sold': (
+      <Tile
+        label={tx('Predaná technika – zisk / strata')}
+        value={sold.count === 0 ? '–' : `${sold.gain > 0 ? '+' : ''}${money(sold.gain)}`}
+        hint={
+          sold.count === 0
+            ? tx('Zatiaľ nič predané (stav Predaná pri technike).')
+            : tf(sold.count === 1 ? '{0} položka · kúpená za {1}, predaná za {2}{3}' : sold.count < 5 ? '{0} položky · kúpené za {1}, predané za {2}{3}' : '{0} položiek · kúpené za {1}, predané za {2}{3}', sold.count, money(sold.bought), money(sold.sold), sold.unpriced > 0 ? tf(' · {0} bez sumy predaja', sold.unpriced) : '')
+        }
+      />
+    ),
+    'equipment.soldList': <SoldList rows={sold.rows} />,
     'equipment.packed': <Tile label={tx('Kusov v cases')} value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} ks mimo cases`} />,
     'loans.open': (
       <Tile

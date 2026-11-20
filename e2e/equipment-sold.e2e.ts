@@ -67,3 +67,18 @@ test('archívna technika: technik požiada CEO, CEO schváli', async ({ page }) 
   await expect(page.getByRole('button', { name: 'Schváliť' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Zamietnuť' })).toBeVisible()
 })
+
+test('štatistiky: predaná technika so ziskom alebo stratou', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, {
+    equipment: [
+      { ...piece(SOLD, 'Ukážkový starý pult', 'sold', { purchasePrice: 1000, soldOn: '2026-10-01', soldTo: 'Ukážkový kupec', soldPrice: 1300 }), quantity: 1 },
+      { ...piece('00000000-0000-4000-8000-0000000000b1', 'Ukážkový pult', 'available', { purchasePrice: 500 }), quantity: 1 },
+    ],
+  })
+  await page.goto('/stats')
+  await expect(page.getByText('Predaná technika – zisk / strata', { exact: true })).toBeVisible()
+  await expect(page.getByText(/\+300,00\s€/).first()).toBeVisible()
+  await expect(page.getByText(/1 položka · kúpená za 1\s000,00\s€, predaná za 1\s300,00\s€/)).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Ukážkový starý pult' })).toBeVisible()
+})

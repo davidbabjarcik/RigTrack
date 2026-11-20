@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.1 – 20. 11. 2026
+
+- **Predaná technika v štatistikách**: v Štatistikách → Technika je dlaždica „Predaná technika – zisk / strata“
+  (koľko položiek, za koľko kúpené a za koľko predané) a zoznam predanej techniky s dátumom, kupcom, ziskom alebo
+  stratou a porovnaním s hodnotou po odpisoch v deň predaja. Vidí ich ten, kto upravuje techniku.
+- Hodnota techniky v štatistikách už nezapočítava vyradenú ani predanú techniku.
+
 ### 10.0 – 20. 11. 2026
 
 - **Odmena za DJ hranie**: pri DJ hraní v časti „Kto hrá“ je pri každom DJ-ovi z firmy jeho odmena – koľko je
