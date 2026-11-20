@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CalendarPlus, Check, Copy, Link2, Link2Off } from 'lucide-react'
+import { CalendarPlus, Check, Copy, FileSignature, Link2, Link2Off } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
+import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { addEventEquipment, eventKeys, saveEvent, setEventEquipmentQuantity } from '@/features/events/api'
 import { formatDate, todayIso } from '@/lib/format'
@@ -100,6 +100,11 @@ export function OfferActions({ companyId, id, draft, canEdit }: { companyId: str
             <Button size="sm" variant="outline" disabled={share.isPending} onClick={() => share.mutate()}>
               <Link2 className="size-4" aria-hidden />{tx('Odkaz pre klienta')}</Button>
           )
+        )}
+        {/* Prijatá ponuka k eventu: zmluva s cenou z ponuky a údajmi klienta. */}
+        {draft.eventId && (draft.status === 'accepted' || data?.status === 'accepted') && (
+          <LinkButton to={`/events/${draft.eventId}/contract`} size="sm">
+            <FileSignature className="size-4" aria-hidden />{tx('Pripraviť zmluvu')}</LinkButton>
         )}
         {canEdit && !draft.eventId && !eventForm && (
           <Button size="sm" variant="outline" onClick={() => setEventForm({ startsOn: todayIso(), endsOn: todayIso() })}>

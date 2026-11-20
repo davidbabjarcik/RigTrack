@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.2
+
+- **Client signs the contract through a link**: on a saved contract, “Signing link for the client” creates a secret
+  link. Without signing in, the client reads the contract, prints it or saves it as a PDF and signs it once with a
+  finger or mouse. The signature is saved with the contract and whoever saved it gets a notification. Nothing else
+  from the company is visible through the link.
+- **Contract from an accepted quote**: an accepted quote for an event has a “Prepare contract” button – the price,
+  VAT and client details are filled in automatically.
+- Technical: migration 0179 (contract signing through a link).
+
 ### 10.1
 
 - **Sold gear in statistics**: Statistics → Gear has a “Sold gear – gain / loss” tile (how many items, bought for

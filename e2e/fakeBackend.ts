@@ -53,6 +53,8 @@ export async function fakeBackend(page: Page, fixtures: Record<string, unknown[]
     if (url.pathname.startsWith('/rest/v1/rpc/')) {
       const name = url.pathname.split('/').pop()
       if (name === 'my_permissions') return json(route, 200, [])
+      // Odpoveď funkcie z fixtures: { 'rpc:názov': [hodnota] }.
+      if (fixtures[`rpc:${name}`]) return json(route, 200, fixtures[`rpc:${name}`][0])
       return json(route, 200, [])
     }
     if (url.pathname.startsWith('/rest/v1/')) {

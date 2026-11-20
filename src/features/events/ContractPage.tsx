@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, FileSignature, PenLine, Save, Trash2, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, FileSignature, Link2, PenLine, Save, Trash2, TriangleAlert } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -27,7 +27,7 @@ import {
   type ContractTerms,
   type VatNote,
 } from './contract'
-import { contractKeys, deleteContract, saveContract, signContract, useContracts, type SavedContract } from './contractApi'
+import { contractKeys, contractLink, deleteContract, saveContract, shareContract, signContract, useContracts, type SavedContract } from './contractApi'
 import { ContractDocument } from './ContractDocument'
 import { describeTimes, POWER_LABELS, type CompanyEvent } from './model'
 import { useEvents } from './useEvents'
@@ -233,6 +233,13 @@ function SavedContractView({ contract, eventName, canEdit, onBack }: { contract:
   const queryClient = useQueryClient()
   const sheet = useRef<HTMLDivElement>(null)
   const [signing, setSigning] = useState<'client' | 'supplier' | null>(null)
+  const [copied, setCopied] = useState(false)
+  const share = useMutation({
+    mutationFn: () => shareContract(contract.id),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['company', companyId, 'events'] }),
+  })
+  const token = share.data ?? contract.shareToken
+  const link = token ? contractLink(token) : ''
   const sign = useMutation({
     mutationFn: ({ side, name, image }: { side: 'client' | 'supplier'; name: string; image: string }) => signContract(contract.id, side, name, image),
     onSuccess: () => setSigning(null),
@@ -276,6 +283,27 @@ function SavedContractView({ contract, eventName, canEdit, onBack }: { contract:
             )}
           </div>
         )}
+        {canEdit && !contract.clientSignature && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-3 text-sm">
+            <Link2 className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            {link ? (
+              <>
+                <input aria-label={tx('Odkaz na podpis pre klienta')} readOnly value={link} className="h-9 min-w-0 flex-1 rounded-md border bg-background px-2 text-sm" onFocus={(focused) => focused.target.select()} />
+                <Button size="sm" variant="outline" onClick={() => void navigator.clipboard?.writeText(link).then(() => setCopied(true))}>
+                  {copied ? tx('Skopírované') : tx('Kopírovať')}
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="min-w-0 flex-1">{tx('Klient môže zmluvu podpísať aj sám – cez odkaz, bez prihlásenia.')}</span>
+                <Button size="sm" variant="outline" disabled={share.isPending} onClick={() => share.mutate()}>
+                  {tx('Odkaz na podpis pre klienta')}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+        {share.isError && <p role="alert" className="text-sm text-destructive">{tx('Odkaz sa nepodarilo vytvoriť.')}</p>}
         {sign.isError && <p role="alert" className="text-sm text-destructive">{tx('Podpis sa nepodarilo uložiť.')}</p>}
       </div>
       <div className="mb-8 px-2 print:mb-0 print:px-0">

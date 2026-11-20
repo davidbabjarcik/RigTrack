@@ -73,3 +73,23 @@ test('zmluva k eventu: strany, cena a záloha', async ({ page, isMobile }, info)
   await page.getByRole('button', { name: 'Tlačiť / PDF' }).click()
   expect((await download).suggestedFilename()).toBe('zmluva-Ukážkový-ples.pdf')
 })
+
+test('klient podpíše zmluvu cez odkaz bez prihlásenia', async ({ page }) => {
+  // Len súhlas s cookies (rovnako ako pri teste ponuky cez odkaz); stránka prihlásenie nepotrebuje.
+  await signIn(page)
+  await fakeBackend(page, {
+    'rpc:get_shared_contract': [{ number: 'Z2026-002', kind: 'service', data: saved.data, createdAt: '2026-11-20T10:00:00Z', clientSigner: '', clientSignature: null, supplierSigner: '', supplierSignature: null, companyName: 'Ukážková firma' }],
+  })
+  await page.goto('/z/00000000-0000-4000-8000-00000000abcd')
+  await expect(page.getByText('Zmluva Z2026-002 od Ukážková firma s.r.o.')).toBeVisible()
+  await expect(page.getByText('Číslo zmluvy: Z2026-002')).toBeVisible()
+  await page.getByRole('button', { name: 'Podpísať zmluvu' }).click()
+  await expect(page.getByText(/Podpisom potvrdzujem zmluvu Z2026-002/)).toBeVisible()
+})
+
+test('uložená zmluva: odkaz na podpis pre klienta', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, { ...fixtures, event_contracts: [{ ...saved, client_signature: null, client_signer: '', share_token: '00000000-0000-4000-8000-00000000abcd' }] })
+  await page.goto(`/events/${EVENT_ID}/contract?contract=z1`)
+  await expect(page.getByLabel('Odkaz na podpis pre klienta')).toHaveValue(/\/z\/00000000-0000-4000-8000-00000000abcd$/)
+})

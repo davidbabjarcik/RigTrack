@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.2 – 20. 11. 2026
+
+- **Klient podpíše zmluvu cez odkaz**: pri uloženej zmluve tlačidlo „Odkaz na podpis pre klienta“ vytvorí tajný
+  odkaz. Klient cez neho zmluvu bez prihlásenia prečíta, vytlačí alebo uloží ako PDF a raz ju podpíše prstom či
+  myšou. Podpis sa uloží k zmluve a tomu, kto zmluvu uložil, príde upozornenie. Cez odkaz nevidno nič iné z firmy.
+- **Zmluva z prijatej ponuky**: pri prijatej cenovej ponuke k eventu je tlačidlo „Pripraviť zmluvu“ – cena, DPH
+  a údaje klienta sa doplnia samy.
+- Technické: migrácia 0179 (podpis zmluvy cez odkaz).
+
 ### 10.1 – 20. 11. 2026
 
 - **Predaná technika v štatistikách**: v Štatistikách → Technika je dlaždica „Predaná technika – zisk / strata“

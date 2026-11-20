@@ -11,3 +11,6 @@ release
 dist-e2e
 test-results
 playwright-report
+
+# Osobné nastavenia Claude Code (povolenia) – necommitovať
+.claude/settings.local.json

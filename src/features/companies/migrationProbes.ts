@@ -73,6 +73,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0176', label: 'žiadosti o archívnu techniku', table: 'equipment_requests', column: 'status' },
   { migration: '0177', label: 'uložené zmluvy k eventu', table: 'event_contracts', column: 'number' },
   { migration: '0178', label: 'kedy a s akým obsahom sa tlačilo', table: 'printed_labels', column: 'content_hash' },
+  { migration: '0179', label: 'podpis zmluvy cez odkaz', table: 'event_contracts', column: 'share_token' },
   { migration: '0170', label: 'viac áut v jeden deň pri doprave', table: 'event_travel', column: 'label' },
   { migration: '0166', label: 'elektrika eventu po miestach a elektrocentrály', table: 'event_power_plans', column: 'plan' },
   { migration: '0167', label: 'kalendár eventov do mobilu', table: 'calendar_feeds', column: 'scope' },
