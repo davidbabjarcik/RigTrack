@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.12
+
+- **Truss inventory poster by series**: pieces are grouped by series (e.g. F34 and F34 P) – first all straight
+  lengths together, then corners, T pieces and crosses of the same series, and finally adapters, bases and
+  couplers. Before, every length was its own part.
+
 ### 9.11
 
 - **Colours and gobos right at the channels**: in the channel table the Color Wheel or Gobo row expands to list the

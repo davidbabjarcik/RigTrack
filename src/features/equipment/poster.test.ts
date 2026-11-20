@@ -22,15 +22,38 @@ describe('posterSections', () => {
       'truss',
     )
     expect(sections.map((s) => [s.title, s.total])).toEqual([
-      ['Rovné diely – F34', 19],
-      ['Rohy, T a kríže', 8],
-      ['Základne, spojky a príslušenstvo', 12],
+      ['F34 – rovné diely', 19],
+      ['Rohy, T-čká a kríže', 8],
+      ['Adaptéry, základne, spojky a príslušenstvo', 12],
     ])
     expect(sections[0].tiles.map((t) => [t.name, t.detail, t.count])).toEqual([
       ['F34 3 m', '3 m', 10],
       ['F34 1 m', '1 m', 9],
     ])
     expect(sections[1].tiles[0].detail).toBe('Roh')
+  })
+
+  it('splits truss by series (F34, F34 P) with straight pieces first, then corners and T pieces', () => {
+    const gt = (model: string, patch: Partial<Equipment['attributes']>, quantity = 1) =>
+      item({ name: `Global Truss ${model}`, manufacturer: 'Global Truss', model, attributes: { trussType: 'point4', ...patch }, quantity })
+    const sections = posterSections(
+      [
+        gt('F34 – 1 m (F34100)', { trussShape: 'straight', lengthM: 1 }, 9),
+        gt('F34 – 2 m (F34200)', { trussShape: 'straight', lengthM: 2 }, 10),
+        gt('F34 P (silnejší) – 3 m (F34300P)', { trussShape: 'straight', lengthM: 3 }, 20),
+        gt('F34 – roh 90° (C001)', { trussShape: 'corner' }, 4),
+        gt('F34 – T-kus (T35)', { trussShape: 'tee' }, 2),
+        gt('F34 P (silnejší) – 0,5 m (F34050P)', { trussShape: 'straight', lengthM: 0.5 }, 4),
+        item({ name: 'Adaptér F34 / F44', attributes: { trussType: 'accessory' }, quantity: 3 }),
+      ],
+      'truss',
+    )
+    expect(sections.map((s) => [s.title, s.total])).toEqual([
+      ['Global Truss F34 – rovné diely', 19],
+      ['Global Truss F34 – rohy, T-čká a kríže', 6],
+      ['Global Truss F34 P (silnejší) – rovné diely', 24],
+      ['Adaptéry, základne, spojky a príslušenstvo', 3],
+    ])
   })
 
   it('puts the biggest stage decks first', () => {

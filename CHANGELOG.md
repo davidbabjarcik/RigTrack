@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.12 – 20. 11. 2026
+
+- **Plagát inventára trussu po sériách**: diely sa delia podľa série (napr. F34 a F34 P) – najprv rovné diely
+  všetkých dĺžok spolu, potom rohy, T-čká a kríže tej istej série, a nakoniec adaptéry, základne a spojky.
+  Predtým bola každá dĺžka samostatná časť.
+
 ### 9.11 – 20. 11. 2026
 
 - **Farby a gobá priamo pri kanáloch**: v tabuľke kanálov sa riadok Color Wheel alebo Gobo rozklikne a dajú sa

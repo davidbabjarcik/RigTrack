@@ -35,21 +35,45 @@ export const POSTER_TITLES: Partial<Record<EquipmentKind, string>> = {
   video: 'Video – inventár',
 }
 
+/**
+ * Séria trussu (napr. „Global Truss F34“ a „Global Truss F34 P“): z modelu alebo názvu bez dĺžky a kódu dielu.
+ * „F34 – 1 m (F34100)“ → „F34“, „F34 P (silnejší) – 2 m (F34200P)“ → „F34 P (silnejší)“.
+ */
+export function trussSeries(item: Pick<Item, 'manufacturer' | 'model' | 'name'>) {
+  const text = (item.model || item.name || '').trim()
+  const head = text
+    .split(/\s+[–—-]\s+/)[0]
+    .replace(/\b\d+(?:[.,]\d+)?\s*(?:m|cm|mm)\b/gi, '')
+    .replace(/\b(?:roh|rohy|corner|t-?kus|t-?čko|tee|kríž|cross|kocka|box|kruh|circle|oblúk)\b.*$/i, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+  const maker = (item.manufacturer ?? '').trim()
+  if (!head) return maker
+  return maker && !head.toLowerCase().startsWith(maker.toLowerCase()) ? `${maker} ${head}` : head
+}
+
+type SectionPlace = { key: string; title: string; order: number; series?: string; rank?: number }
+
 /** Do ktorej časti plagátu technika patrí a ako sa volá. */
-function sectionOf(item: Item, categoryName: (id: string | null) => string): { key: string; title: string; order: number } {
+function sectionOf(item: Item, categoryName: (id: string | null) => string): SectionPlace {
   const a = item.attributes
-  const series = [item.manufacturer, item.model].filter(Boolean).join(' ')
   if (item.kind === 'truss') {
     const shape = a.trussShape
     if (a.trussType?.startsWith('point')) {
-      if (shape === 'corner' || shape === 'tee' || shape === 'cross' || shape === 'box') return { key: 'corners', title: 'Rohy, T a kríže', order: 2 }
-      if (shape === 'circle') return { key: 'circles', title: 'Kruhy a oblúky', order: 3 }
-      // Rovné diely zvlášť podľa série (napr. tenkostenný a heavy duty).
-      return { key: `straight:${series}`, title: series ? `Rovné diely – ${series}` : 'Rovné diely', order: 1 }
+      // Každá séria (F34, F34 P…) zvlášť: najprv rovné diely, potom rohy a T-čká, potom kruhy.
+      const series = trussSeries(item)
+      const title = (part: string) => (series ? `${series} – ${part}` : part.charAt(0).toUpperCase() + part.slice(1))
+      // Diely bez série idú za série.
+      const sortSeries = series || '\uffff'
+      if (shape === 'corner' || shape === 'tee' || shape === 'cross' || shape === 'box') {
+        return { key: `corners:${series}`, title: title('rohy, T-čká a kríže'), order: 1, series: sortSeries, rank: 2 }
+      }
+      if (shape === 'circle') return { key: `circles:${series}`, title: title('kruhy a oblúky'), order: 1, series: sortSeries, rank: 3 }
+      return { key: `straight:${series}`, title: title('rovné diely'), order: 1, series: sortSeries, rank: 1 }
     }
     if (a.trussType === 'ground_support') return { key: 'ground', title: 'Ground support', order: 4 }
     if (a.trussType === 'stand_lift') return { key: 'stands', title: 'Stojany a lifty', order: 5 }
-    if (a.trussType === 'accessory') return { key: 'acc', title: 'Základne, spojky a príslušenstvo', order: 6 }
+    if (a.trussType === 'accessory') return { key: 'acc', title: 'Adaptéry, základne, spojky a príslušenstvo', order: 6 }
     return { key: 'other', title: 'Ostatné', order: 9 }
   }
   if (item.kind === 'stage') {
@@ -104,14 +128,14 @@ function sizeOf(item: Item) {
  * vyradená sa nepočíta. Väčšie diely sú v časti prvé.
  */
 export function posterSections(items: Item[], kind: EquipmentKind, categoryName: (id: string | null) => string = () => ''): PosterSection[] {
-  const sections = new Map<string, PosterSection & { order: number }>()
+  const sections = new Map<string, PosterSection & { order: number; series: string; rank: number }>()
   for (const item of items) {
     if (item.kind !== kind || item.status === 'retired' || item.quantity <= 0) continue
     const section = sectionOf(item, categoryName)
     const detail = detailOf(item)
     const info = [infoOf(item), item.from].filter(Boolean).join(' · ')
     const tileKey = `${item.name.trim().toLowerCase()}|${detail}|${item.from ?? ''}`
-    const current = sections.get(section.key) ?? { key: section.key, title: section.title, order: section.order, tiles: [], total: 0 }
+    const current = sections.get(section.key) ?? { key: section.key, title: section.title, order: section.order, series: section.series ?? '', rank: section.rank ?? 0, tiles: [], total: 0 }
     const tile = current.tiles.find((candidate) => candidate.key === tileKey)
     if (tile) {
       tile.count += item.quantity
@@ -124,6 +148,6 @@ export function posterSections(items: Item[], kind: EquipmentKind, categoryName:
     sections.set(section.key, current)
   }
   return [...sections.values()]
-    .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, 'sk'))
+    .sort((a, b) => a.order - b.order || a.series.localeCompare(b.series, 'sk', { numeric: true }) || a.rank - b.rank || a.title.localeCompare(b.title, 'sk'))
     .map(({ key, title, tiles, total }) => ({ key, title, total, tiles: tiles.sort((a, b) => b.sort - a.sort || a.name.localeCompare(b.name, 'sk')) }))
 }
