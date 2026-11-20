@@ -37,6 +37,7 @@ const equipmentDetail = lazyPage(() => import('@/features/equipment/EquipmentDet
 const printQueue = lazyPage(() => import('@/features/print/PrintQueuePage').then((m) => m.PrintQueuePage))
 const printBatch = lazyPage(() => import('@/features/print/PrintBatchPage').then((m) => m.PrintBatchPage))
 const notes = lazyPage(() => import('@/features/notes/NotesPage').then((m) => m.NotesPage))
+const soldPrint = lazyPage(() => import('@/features/equipment/SoldPrintPage').then((m) => m.SoldPrintPage), 'equipment.edit')
 const ampPresets = lazyPage(() => import('@/features/equipment/AmpPresetsPrintPage').then((m) => m.AmpPresetsPrintPage), 'equipment.view')
 const inventoryPoster = lazyPage(() => import('@/features/equipment/InventoryPosterPage').then((m) => m.InventoryPosterPage), 'equipment.view')
 const equipmentGroup = lazyPage(() => import('@/features/equipment/EquipmentGroupPage').then((m) => m.EquipmentGroupPage), 'equipment.view')
@@ -203,6 +204,7 @@ export const routes: RouteObject[] = [
               { path: 'print', lazy: printQueue },
               { path: 'print/batch', lazy: printBatch },
               { path: 'networks/print', lazy: addressPrint },
+              { path: 'equipment/sold', lazy: soldPrint },
               { path: 'equipment/:id', lazy: equipmentDetail },
               { path: 'equipment/:id/presets', lazy: ampPresets },
               { path: 'equipment/:id/edit', lazy: equipmentForm },

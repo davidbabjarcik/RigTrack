@@ -82,3 +82,23 @@ test('štatistiky: predaná technika so ziskom alebo stratou', async ({ page }) 
   await expect(page.getByText(/1 položka · kúpená za 1\s000,00\s€, predaná za 1\s300,00\s€/)).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ukážkový starý pult' })).toBeVisible()
 })
+
+test('predaná technika pre účtovníka: rok, tabuľka a Excel', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, {
+    equipment: [
+      piece(SOLD, 'Ukážkový starý pult', 'sold', { soldOn: '2026-10-01', soldTo: 'Ukážkový kupec', soldPrice: 300, purchasePrice: 500 }),
+      piece('00000000-0000-4000-8000-0000000000b4', 'Ukážková stará hlava', 'sold', { soldOn: '2025-02-01', soldPrice: 100 }),
+    ],
+  })
+  await page.goto('/stats')
+  await page.getByRole('link', { name: 'Pre účtovníka (tlač, Excel)' }).click()
+  await expect(page.getByRole('heading', { name: 'Predaná technika 2026' })).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Ukážkový kupec' })).toBeVisible()
+  await expect(page.getByText('Ukážková stará hlava')).toHaveCount(0)
+  await page.getByLabel('Rok').selectOption('')
+  await expect(page.getByText('Ukážková stará hlava')).toBeVisible()
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Stiahnuť (Excel)' }).click()
+  expect((await download).suggestedFilename()).toBe('predana-technika-vsetko.csv')
+})

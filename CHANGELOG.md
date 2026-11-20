@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.6 – 20. 11. 2026
+
+- **Predaná technika pre účtovníka**: v Štatistikách pri predanej technike odkaz „Pre účtovníka (tlač, Excel)“
+  otvorí prehľad za vybraný rok – dátum, technika, výrobné a inventárne číslo, kupujúci, nákupná a predajná cena,
+  rozdiel a súčty. Dá sa vytlačiť alebo uložiť ako PDF a stiahnuť do Excelu. Vidí ho len ten, kto upravuje techniku.
+
 ### 10.5 – 20. 11. 2026
 
 - **Pripomienka vrátenia techniky**: deň po skončení eventu, ktorý mal techniku a vrátenie ešte nie je uzavreté,

@@ -78,3 +78,26 @@ export function soldSummary(items: Sold[]) {
     unpriced: rows.length - priced.length,
   }
 }
+
+/** Predaná technika za rok (pri prázdnom roku všetko) – riadky pre účtovníka. */
+export function soldForYear<T extends Sold>(items: T[], year: string) {
+  return soldSummary(items.filter((item) => item.status === 'sold' && (!year || (item.attributes.soldOn ?? '').startsWith(year))))
+}
+
+/** Roky, v ktorých sa niečo predalo (najnovší prvý). */
+export function soldYears(items: Sold[]) {
+  return [...new Set(items.filter((item) => item.status === 'sold').map((item) => (item.attributes.soldOn ?? '').slice(0, 4)).filter(Boolean))].sort().reverse()
+}
+
+/** CSV pre Excel (bodkočiarka, UTF-8 s BOM, desatinná čiarka), aby ho účtovník otvoril bez úprav. */
+export function soldCsv(rows: ReturnType<typeof soldSummary>['rows'], extra: (id: string) => { serial: string; inventory: string }) {
+  const cell = (value: string | number | null) => `"${String(value ?? '').replace(/"/g, '""')}"`
+  const amount = (value: number | null) => (value === null ? '' : value.toFixed(2).replace('.', ','))
+  const date = (iso: string) => (iso ? iso.split('-').reverse().join('.') : '')
+  const lines = [['Dátum predaja', 'Technika', 'Výrobné číslo', 'Inventárne číslo', 'Kupujúci', 'Nákupná cena (€)', 'Predajná cena (€)', 'Rozdiel (€)'].map(cell).join(';')]
+  for (const row of rows) {
+    const { serial, inventory } = extra(row.id)
+    lines.push([date(row.soldOn), row.name, serial, inventory, row.soldTo, amount(row.bought), amount(row.sold), amount(row.gain)].map(cell).join(';'))
+  }
+  return String.fromCharCode(0xfeff) + lines.join(String.fromCharCode(13, 10))
+}

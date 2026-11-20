@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.6
+
+- **Sold gear for the accountant**: in Statistics, the sold gear link “For the accountant (print, Excel)” opens an
+  overview for the chosen year – date, gear, serial and inventory number, buyer, purchase and sale price, difference
+  and totals. It can be printed or saved as a PDF and downloaded to Excel. Only those who edit gear can see it.
+
 ### 10.5
 
 - **Gear return reminder**: the day after an event that had gear ends and its return is not closed yet, the event

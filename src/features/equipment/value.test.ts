@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bookValueOn, equipmentValue, soldSummary, valueSummary } from './value'
+import { bookValueOn, equipmentValue, soldCsv, soldForYear, soldSummary, soldYears, valueSummary } from './value'
 
 describe('equipment value', () => {
   it('multiplies purchase price by pieces', () => {
@@ -36,6 +36,19 @@ describe('sold gear', () => {
     expect(summary.rows[1]).toMatchObject({ id: 'a', bought: 2000, sold: 1300, gain: -700, soldTo: 'Ukážkový kupec' })
     expect(summary.rows[1].gainVsBook).toBeCloseTo(300, -1)
     expect(summary).toMatchObject({ sold: 1300, bought: 2000, gain: -700 })
+  })
+
+  it('filters by year and exports CSV for the accountant', () => {
+    const items = [
+      sold('a', { purchasePrice: 1000, soldOn: '2024-03-05', soldPrice: 1300.5, soldTo: 'Ukážkový "kupec"' }, '2022-01-01', 1),
+      sold('b', { soldOn: '2025-05-01' }),
+    ]
+    expect(soldYears(items)).toEqual(['2025', '2024'])
+    expect(soldForYear(items, '2024').count).toBe(1)
+    expect(soldForYear(items, '').count).toBe(2)
+    const csv = soldCsv(soldForYear(items, '2024').rows, () => ({ serial: 'SN1', inventory: 'INV1' }))
+    expect(csv.charCodeAt(0)).toBe(0xfeff)
+    expect(csv.split('\r\n')[1]).toBe('"05.03.2024";"Ukážka a";"SN1";"INV1";"Ukážkový ""kupec""";"1000,00";"1300,50";"300,50"')
   })
 
   it('has no book value without purchase date or depreciation', () => {

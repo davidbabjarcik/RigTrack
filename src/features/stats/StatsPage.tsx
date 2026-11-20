@@ -1,6 +1,6 @@
 import { isGone } from '@/features/equipment/model'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp, Check, FileChartColumn, SlidersHorizontal } from 'lucide-react'
+import { ArrowDown, ArrowUp, Check, FileChartColumn, Printer, SlidersHorizontal } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -103,7 +103,14 @@ function SoldList({ rows }: { rows: ReturnType<typeof soldSummary>['rows'] }) {
   const signed = (value: number) => `${value > 0 ? '+' : ''}${money(value)}`
   return (
     <div className="rounded-xl border bg-surface p-4">
-      <h3 className="mb-3 font-medium">{tx('Predaná technika – kúpa a predaj')}</h3>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="font-medium">{tx('Predaná technika – kúpa a predaj')}</h3>
+        {rows.length > 0 && (
+          <Link to="/equipment/sold" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+            <Printer className="size-4" aria-hidden />{tx('Pre účtovníka (tlač, Excel)')}
+          </Link>
+        )}
+      </div>
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">{tx('Zatiaľ nič predané. Pri technike zvoľte stav Predaná a zapíšte, za koľko.')}</p>
       ) : (
