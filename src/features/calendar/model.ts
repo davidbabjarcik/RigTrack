@@ -1,4 +1,4 @@
-import { serviceState, type Equipment } from '@/features/equipment/model'
+import { serviceState, type Equipment, isGone } from '@/features/equipment/model'
 import { djCrew, EVENT_STATUS_LABELS, isLive, type CompanyEvent } from '@/features/events/model'
 import { isOpen, LOAN_STATUS_LABELS, type Loan } from '@/features/loans/model'
 import type { ShoppingItem } from '@/features/shopping/model'
@@ -99,7 +99,7 @@ export function buildAgenda(sources: AgendaSources, today: string): AgendaEntry[
 
   for (const item of sources.equipment) {
     const service = serviceState(item, today)
-    if (item.status !== 'retired' && 'dueOn' in service) {
+    if (!isGone(item.status) && 'dueOn' in service) {
       entries.push({ id: `service-${item.id}`, date: service.dueOn, kind: 'service', title: item.name, detail: 'pravidelný servis', to: `/equipment/${item.id}` })
     }
   }

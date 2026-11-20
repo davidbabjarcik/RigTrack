@@ -6,7 +6,7 @@ import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
-import { unitIdsOf } from '@/features/equipment/model'
+import { unitIdsOf, isGone } from '@/features/equipment/model'
 import { useVehicles } from '@/features/vehicles/useVehicles'
 import { can } from '@/lib/permissions'
 import { errorDetail } from '@/lib/supabase/errors'
@@ -41,7 +41,7 @@ export function ServiceRequestFormPage() {
     },
   })
 
-  const items = (equipment.data ?? []).filter((item) => item.status !== 'retired')
+  const items = (equipment.data ?? []).filter((item) => !isGone(item.status))
   const chosen = items.find((item) => item.id === equipmentId)
   const words = plain(search).split(/\s+/).filter(Boolean)
   const matches = items.filter((item) => item.id === equipmentId || words.every((word) => plain(`${item.name} ${item.manufacturer} ${item.model} ${item.inventoryNumber}`).includes(word))).slice(0, 100)

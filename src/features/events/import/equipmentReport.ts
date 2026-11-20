@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import type { Equipment, EquipmentKind } from '@/features/equipment/model'
 
 // Equipment Report z Capture (vizualizácia svetiel) ako HTML alebo PDF.
@@ -110,7 +111,7 @@ const sameName = (a: Equipment, b: Equipment) => normalizeName(a.name) === norma
  * (napr. 12 Sharpy ako 12 samostatných položiek). Čo sa nezmestí, pripíše prvej.
  */
 export function distribute(quantity: number, target: Equipment, equipment: Equipment[]) {
-  const group = equipment.filter((item) => item.status !== 'retired' && sameName(item, target))
+  const group = equipment.filter((item) => !isGone(item.status) && sameName(item, target))
   const pieces = group.length > 0 ? group : [target]
   const result = new Map<string, number>()
   let rest = quantity
@@ -126,5 +127,5 @@ export function distribute(quantity: number, target: Equipment, equipment: Equip
 
 /** Koľko kusov máme spolu pod názvom tejto techniky. */
 export function ownedUnderName(target: Equipment, equipment: Equipment[]) {
-  return equipment.filter((item) => item.status !== 'retired' && sameName(item, target)).reduce((sum, item) => sum + item.quantity, 0)
+  return equipment.filter((item) => !isGone(item.status) && sameName(item, target)).reduce((sum, item) => sum + item.quantity, 0)
 }

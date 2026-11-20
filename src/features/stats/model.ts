@@ -1,4 +1,4 @@
-import { EQUIPMENT_STATUSES, STATUS_LABELS, type Equipment } from '@/features/equipment/model'
+import { EQUIPMENT_STATUSES, STATUS_LABELS, type Equipment, isGone } from '@/features/equipment/model'
 import { isOpen, isOverdue, type Loan } from '@/features/loans/model'
 import { SERVICE_KIND_LABELS, SERVICE_KINDS, type ServiceRecord } from '@/features/service/model'
 import { upcomingDeadlines, type Vehicle } from '@/features/vehicles/model'
@@ -58,7 +58,7 @@ export function buildStats(sources: StatsSources, today: string, yearAgo: string
   const nameOf = (id: string) => equipment.find((item) => item.id === id)?.name ?? 'Odstránená technika'
   // Spotrebný materiál nie je technika na požičanie ani balenie; do prehľadu stavu nepatrí.
   const gear = equipment.filter((item) => item.kind !== 'consumable')
-  const active = gear.filter((item) => item.status !== 'retired')
+  const active = gear.filter((item) => !isGone(item.status))
   const pieces = (items: Equipment[]) => items.reduce((sum, item) => sum + item.quantity, 0)
 
   const lentDays = new Map<string, number>()

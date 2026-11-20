@@ -320,6 +320,9 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     hfDriver: equipment.attributes.hfDriver ?? '',
     weightKg: equipment.attributes.weightKg,
     purchasePrice: equipment.attributes.purchasePrice,
+    soldOn: equipment.attributes.soldOn ?? '',
+    soldTo: equipment.attributes.soldTo ?? '',
+    soldPrice: equipment.attributes.soldPrice,
     depreciationYears: equipment.attributes.depreciationYears,
     ipPrefix: equipment.attributes.ipPrefix,
     ipDhcp: equipment.attributes.ipDhcp ?? false,
@@ -432,6 +435,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
     formState: { errors },
   } = methods
   const kind = useWatch({ control, name: 'kind' })
+  const status = useWatch({ control, name: 'status' })
   // Spoločný katalóg techniky: značka → model; model z katalógu doplní technické údaje.
   const catalog = useCatalog().data ?? []
   const manufacturerValue = useWatch({ control, name: 'manufacturer' }) ?? ''
@@ -1005,6 +1009,17 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
           ))}
         </SelectField>
       </div>
+      {status === 'sold' && !groupMode && (
+        <div className="grid gap-3 rounded-xl border bg-muted/30 p-3 sm:grid-cols-3">
+          <p className="text-sm text-muted-foreground sm:col-span-3">{tx('Predaná technika ostane v Technike pod filtrom „Predaná“, ale nikde sa už neponúka.')}</p>
+          <Field label={tx('Predané dňa')} type="date" error={errors.soldOn?.message} {...register('soldOn')} />
+          <Field label={tx('Komu')} maxLength={160} placeholder={tx('meno alebo firma')} error={errors.soldTo?.message} {...register('soldTo')} />
+          <Field label={tx('Za koľko (€)')} type="number" inputMode="decimal" min={0} step="0.01" error={errors.soldPrice?.message} {...register('soldPrice', asOptionalNumber)} />
+        </div>
+      )}
+      {status === 'archived' && !groupMode && (
+        <p className="rounded-xl border bg-violet-500/10 p-3 text-sm">{tx('Archívnu techniku vidno v Technike, ale na event alebo výpožičku ju môže pridať len CEO firmy.')}</p>
+      )}
       <p className="-mt-2 text-sm text-muted-foreground">{tx('Pri evidencii po kusoch zadajte počet kusov a údaje každého kusu vyplníte priamo pod tým. Pri spotrebnom materiáli (kvapalina do hazera) nastavte, pri koľkých kusoch sa má objaviť v zozname „treba kúpiť“.')}</p>
 
       <OwnerSelect companyId={companyId} error={errors.owner?.message} {...register('owner')} />

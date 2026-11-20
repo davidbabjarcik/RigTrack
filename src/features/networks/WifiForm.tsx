@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Trash2 } from 'lucide-react'
@@ -67,7 +68,7 @@ export function WifiForm({ companyId, current, login, equipment, onDone }: Props
   const save = useMutation({ mutationFn: (values: WifiFormValues) => saveNetwork(companyId, current?.id ?? null, values), onSuccess: async () => (await refresh(), onDone()) })
   const remove = useMutation({ mutationFn: () => deleteNetwork(companyId, current!.id), onSuccess: async () => (await refresh(), onDone()) })
   // Do výberu techniky najprv routery, mixy a sieťové veci (s IP), potom ostatné.
-  const options = [...equipment].filter((item) => item.status !== 'retired').sort((a, b) => Number(Boolean(b.ipAddress)) - Number(Boolean(a.ipAddress)) || a.name.localeCompare(b.name, 'sk'))
+  const options = [...equipment].filter((item) => !isGone(item.status)).sort((a, b) => Number(Boolean(b.ipAddress)) - Number(Boolean(a.ipAddress)) || a.name.localeCompare(b.name, 'sk'))
 
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} className="flex flex-col gap-3 rounded-xl border bg-surface p-4">

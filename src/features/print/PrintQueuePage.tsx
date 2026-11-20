@@ -8,7 +8,7 @@ import { caseTitle } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
-import { KIND_LABELS, type EquipmentKind } from '@/features/equipment/model'
+import { KIND_LABELS, type EquipmentKind, isGone } from '@/features/equipment/model'
 import { fetchWarehouse, warehouseKeys } from '@/features/warehouse/api'
 import { useEvents } from '@/features/events/useEvents'
 import { MissingLabels } from './MissingLabels'
@@ -70,7 +70,7 @@ export function PrintQueuePage() {
   const a4 = (prefs.qrTarget ?? 'a4') === 'a4'
   // Bez QR štítku: technika (okrem spotrebného materiálu) a cases, ktoré ešte nemajú vytlačený ani zaradený QR.
   const hasQr = new Set([...(printed.data ?? []), ...items].filter((item) => item.label === 'qr').map((item) => `${item.kind}|${item.targetId}`))
-  const missingEquipment = (equipment.data ?? []).filter((item) => item.status !== 'retired' && item.kind !== 'consumable' && item.kind !== 'cable' && !hasQr.has(`equipment|${item.id}`))
+  const missingEquipment = (equipment.data ?? []).filter((item) => !isGone(item.status) && item.kind !== 'consumable' && item.kind !== 'cable' && !hasQr.has(`equipment|${item.id}`))
   const missingCases = (cases.data ?? []).filter((item) => !hasQr.has(`case|${item.id}`))
   const missing = [...missingEquipment.map((item) => ({ kind: 'equipment' as const, targetId: item.id })), ...missingCases.map((item) => ({ kind: 'case' as const, targetId: item.id }))]
   // Hárky s obsahom: ak majú všetky rovnaký formát, hromadná tlač ho použije.

@@ -1,3 +1,5 @@
+import { useCanUseArchived } from '@/features/equipment/useCanUseArchived'
+import { isUsable } from '@/features/equipment/model'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { ClipboardCheck, FileUp, Package, Plus, TriangleAlert, Weight, X } from 'lucide-react'
@@ -40,7 +42,10 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
   const { categories } = useEquipmentLookups(companyId)
   const loans = useLoans(companyId)
   const all = equipment.data ?? []
-  const lendable = all.filter((item) => item.status !== 'retired' && item.kind !== 'consumable')
+  // Archívnu techniku pridá len CEO firmy, vo firme bez CEO admin (pravidlo platí aj v databáze).
+  const isCeo = useCanUseArchived(companyId)
+  const lendable = all.filter((item) => isUsable(item.status, isCeo) && item.kind !== 'consumable')
+  const archivedHidden = isCeo ? 0 : all.filter((item) => item.status === 'archived').length
   const itemOf = (equipmentId: string) => all.find((item) => item.id === equipmentId)
   const nameOf = (equipmentId: string) => itemOf(equipmentId)?.name ?? 'Technika'
   // Náhľady pre naplánovanú techniku; pri otvorenom výbere aj pre celý sklad.
@@ -285,6 +290,9 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
 
       {adding && (
         <div className="mt-4">
+          {archivedHidden > 0 && (
+            <p className="mb-2 text-sm text-muted-foreground">{tf('Archívnu techniku ({0}) môže na event pridať len CEO firmy.', archivedHidden)}</p>
+          )}
           <PackagePicker companyId={companyId} equipment={lendable} cases={cases.data ?? []} disabled={busy} onAdd={(additions) => addPackage.mutate(additions)} />
           <LoanPicker
             title={tx('Pridať techniku na event')}

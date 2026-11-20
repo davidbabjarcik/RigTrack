@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import {
   APPLIANCE_TYPE_LABELS,
   AUDIO_TYPE_LABELS,
@@ -130,7 +131,7 @@ function sizeOf(item: Item) {
 export function posterSections(items: Item[], kind: EquipmentKind, categoryName: (id: string | null) => string = () => ''): PosterSection[] {
   const sections = new Map<string, PosterSection & { order: number; series: string; rank: number }>()
   for (const item of items) {
-    if (item.kind !== kind || item.status === 'retired' || item.quantity <= 0) continue
+    if (item.kind !== kind || isGone(item.status) || item.quantity <= 0) continue
     const section = sectionOf(item, categoryName)
     const detail = detailOf(item)
     const info = [infoOf(item), item.from].filter(Boolean).join(' · ')

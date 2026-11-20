@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { isValidIp, type Equipment } from '@/features/equipment/model'
+import { isValidIp, type Equipment, isGone } from '@/features/equipment/model'
 import type { DeviceNetwork, MemberDevice } from '@/features/devices/model'
 
 // ---------------------------------------------------------------------------
@@ -208,7 +208,7 @@ export function addressRows(equipment: Equipment[], devices: MemberDevice[], net
   const byIp = (ip: string) => (ip ? (networks.find((network) => inNetwork(ip, network))?.id ?? null) : null)
   const rows: Omit<AddressRow, 'duplicateIp' | 'duplicateMac'>[] = []
   for (const item of equipment) {
-    if (item.status === 'retired' || (!item.ipAddress && !item.macAddress && !item.attributes?.ipDhcp)) continue
+    if (isGone(item.status) || (!item.ipAddress && !item.macAddress && !item.attributes?.ipDhcp)) continue
     rows.push({
       key: `e-${item.id}`,
       source: 'equipment',

@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { z } from 'zod'
 import type { Equipment } from '@/features/equipment/model'
 
@@ -42,7 +43,7 @@ export function packageAdditions(pkg: Pick<EquipmentPackage, 'items' | 'cases'>,
   let skipped = 0
   for (const item of pkg.items) {
     const known = equipment.find((candidate) => candidate.id === item.equipmentId)
-    if (!known || known.status === 'retired') {
+    if (!known || isGone(known.status)) {
       skipped++
       continue
     }

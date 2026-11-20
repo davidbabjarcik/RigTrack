@@ -1,5 +1,5 @@
 import type { Equipment } from '@/features/equipment/model'
-import { purchaseDates } from '@/features/equipment/model'
+import { purchaseDates, isGone } from '@/features/equipment/model'
 import type { CompanyEvent } from '@/features/events/model'
 import type { Incident } from '@/features/incidents/api'
 import type { OfficePurchase } from '@/features/office/api'
@@ -65,7 +65,7 @@ export function yearReport(input: ReportInput) {
     },
     equipment: input.equipment && {
       bought: input.equipment.filter((item) => purchaseDates(item).some(inYear)).length,
-      total: input.equipment.filter((item) => item.status !== 'retired').length,
+      total: input.equipment.filter((item) => !isGone(item.status)).length,
     },
     service: service && { count: service.length, cost: round(service.reduce((sum, record) => sum + (record.cost ?? 0), 0)), hours: round(service.reduce((sum, record) => sum + (record.hours ?? 0), 0)) },
     incidents: incidents && {

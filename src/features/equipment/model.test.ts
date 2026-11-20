@@ -12,6 +12,7 @@ import {
   describeUnitIds,
   equipmentSchema,
   filterEquipment,
+  isUsable,
   hoursSinceLamp,
   hoursState,
   isAudio,
@@ -69,6 +70,20 @@ const none: EquipmentFilter = { search: '', status: '', categoryId: '', location
 const ids = (filter: Partial<EquipmentFilter>) => filterEquipment(items, { ...none, ...filter }).map((i) => i.id)
 
 describe('filterEquipment', () => {
+  it('hides sold gear unless the Sold filter is on', () => {
+    const withSold = [...items, { ...base, id: '4', name: 'Predaný pult', status: 'sold' as const }]
+    expect(filterEquipment(withSold, none).map((i) => i.id)).toEqual(['1', '2', '3'])
+    expect(filterEquipment(withSold, { ...none, status: 'sold' }).map((i) => i.id)).toEqual(['4'])
+  })
+
+  it('lets only the CEO use archived gear and nobody sold or retired gear', () => {
+    expect(isUsable('archived', false)).toBe(false)
+    expect(isUsable('archived', true)).toBe(true)
+    expect(isUsable('sold', true)).toBe(false)
+    expect(isUsable('retired', true)).toBe(false)
+    expect(isUsable('available', false)).toBe(true)
+  })
+
   it('returns everything without a filter', () => {
     expect(ids({})).toEqual(['1', '2', '3'])
   })

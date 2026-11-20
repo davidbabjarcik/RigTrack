@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Package, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useId, useState } from 'react'
@@ -141,7 +142,7 @@ export function PackagesSettings({ companyId }: { companyId: string }) {
 
   if (packages.isError) return <p className="text-sm text-destructive">{tx('Balíky sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
   if (!packages.data || !equipment.data || !cases.data) return <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
-  const lendable = [...equipment.data].filter((item) => item.status !== 'retired').sort((a, b) => a.name.localeCompare(b.name, 'sk'))
+  const lendable = [...equipment.data].filter((item) => !isGone(item.status)).sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   const caseList = [...cases.data].sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   const form = (initial: EquipmentPackage | null) => (
     <PackageForm key={initial?.id ?? 'new'} companyId={companyId} initial={initial} equipment={lendable} cases={caseList} onDone={() => setEditing(null)} />

@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { useQuery } from '@tanstack/react-query'
 import { Download, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
@@ -390,13 +391,13 @@ export function LedCalculatorPage() {
 
   const items = equipment.data ?? []
   const stockPanels: StockPanel[] = items
-    .filter((item) => item.attributes.ledPanel && item.status !== 'retired')
+    .filter((item) => item.attributes.ledPanel && !isGone(item.status))
     .map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, panel: { name: item.name, ...item.attributes.ledPanel! } }))
-  const stockProcessors = items.filter((item) => item.attributes.ledProcessor && item.status !== 'retired')
+  const stockProcessors = items.filter((item) => item.attributes.ledProcessor && !isGone(item.status))
   const trussStock = new Map<number, number>()
   for (const item of items) {
     const length = item.attributes.lengthM
-    if (item.kind === 'truss' && length && item.status !== 'retired') trussStock.set(length, (trussStock.get(length) ?? 0) + item.quantity)
+    if (item.kind === 'truss' && length && !isGone(item.status)) trussStock.set(length, (trussStock.get(length) ?? 0) + item.quantity)
   }
   const stockTruss = state.stockTruss && trussStock.size > 0
   const effective = (wall: Wall): LedInput => (stockTruss ? { ...wall, trussLengths: [...trussStock.keys()] } : wall)

@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowLeft, ArrowUp, Move, Plus, X } from 'lucide-react'
 import { useState } from 'react'
@@ -51,7 +52,7 @@ export function TrussStoragePage() {
   if (layoutQuery.isError || equipment.isError) return <ErrorBlock message={tx('Hliník sa nepodarilo načítať.')} onRetry={() => void Promise.all([layoutQuery.refetch(), equipment.refetch()])} />
 
   const { layout, ready } = layoutQuery.data
-  const trusses = equipment.data.filter((item) => item.kind === 'truss' && item.status !== 'retired')
+  const trusses = equipment.data.filter((item) => item.kind === 'truss' && !isGone(item.status))
   const byId = new Map(equipment.data.map((item) => [item.id, item]))
   const placed = placedCounts(layout)
   const stack = selected ? stackAt(layout, selected.col, selected.row) : undefined

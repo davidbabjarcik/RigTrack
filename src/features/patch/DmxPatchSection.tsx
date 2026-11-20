@@ -6,7 +6,7 @@ import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { DmxChannelTable } from '@/features/equipment/DmxChannelTable'
-import { isLighting, type Equipment } from '@/features/equipment/model'
+import { isLighting, type Equipment, isGone } from '@/features/equipment/model'
 import type { CompanyEvent } from '@/features/events/model'
 import { cn } from '@/lib/utils'
 import { addressesFromEquipment, dmxConflicts, dmxFromEquipment, EMPTY_DMX, fillAddresses, lastAddress, nextDmxAddress, type DmxFields, type DmxLine } from './dmx'
@@ -110,7 +110,7 @@ export function DmxPatchSection({ companyId, event, canEdit }: { companyId: stri
 
   const lines = patch.data
   const items = equipment.data ?? []
-  const lights = items.filter((item) => item.status !== 'retired' && (isLighting(item.kind, '') || item.attributes.dmxModes?.length)).sort((a, b) => a.name.localeCompare(b.name, 'sk'))
+  const lights = items.filter((item) => !isGone(item.status) && (isLighting(item.kind, '') || item.attributes.dmxModes?.length)).sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   const conflicts = dmxConflicts(lines)
   const fromEvent = dmxFromEquipment(event.equipment, items)
   // Adresy zapísané pri technike (napr. až po vytvorení patch listu).

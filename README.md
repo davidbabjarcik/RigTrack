@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-9.13-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-9.14-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **9.14** | Predaná technika ostáva v Technike, archívnu na event pridá len CEO |
 | **9.13** | Zmluva k eventu – vzor z údajov eventu, dodávateľa a organizátora |
 | **9.12** | Plagát trussu po sériách (F34, F34 P): rovné diely, rohy a T-čká, adaptéry |
 | **9.11** | Farby kolieska a gobá s fotkami a DMX hodnotami priamo pri kanáloch |
@@ -87,7 +88,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **8.5** | Celá appka v angličtine; výrobca a model hore pri technike |
 | **8.4** | Jazyk SK / EN – 1. časť (menu, Prehľad, prihlásenie, úvodná stránka) |
 | **8.3** | Spoločná databáza techniky: značka → model, návrhy a overovanie |
-| **8.2** | Úvodná stránka s prihlásením |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

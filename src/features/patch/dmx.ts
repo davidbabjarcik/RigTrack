@@ -1,5 +1,5 @@
 // DMX patch list eventu (0104): linka, adresa, počet kanálov a mód každého svetla / kusu.
-import { isLighting, unitIdsOf, type Equipment } from '@/features/equipment/model'
+import { isLighting, unitIdsOf, type Equipment, isGone } from '@/features/equipment/model'
 import type { EventEquipment } from '@/features/events/model'
 
 export type DmxLine = {
@@ -95,7 +95,7 @@ export function dmxFromEquipment(onEvent: EventEquipment[], equipment: Equipment
 export function dmxFromAllEquipment(equipment: Pick<Equipment, 'id' | 'name' | 'status' | 'unitInfo' | 'attributes'>[]): DmxFields[] {
   const lines: DmxFields[] = []
   for (const item of equipment) {
-    if (item.status === 'retired') continue
+    if (isGone(item.status)) continue
     for (const [unit, info] of Object.entries(item.unitInfo ?? {})) {
       if (!info?.dmxAddress) continue
       const mode = info.dmxMode ?? ''

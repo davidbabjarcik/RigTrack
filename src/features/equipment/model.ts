@@ -5,7 +5,7 @@ import type { CategoryColor } from './categoryColors'
 import { COLOR_PARTS, colorMixName, type ColorPart, type ColorWheel, colorsFromChannels, type Gobo } from './dmxChannels'
 import { normalizePort } from './dmxNode'
 
-export const EQUIPMENT_STATUSES = ['available', 'loaned', 'in_service', 'damaged', 'retired'] as const
+export const EQUIPMENT_STATUSES = ['available', 'loaned', 'in_service', 'damaged', 'archived', 'retired', 'sold'] as const
 export type EquipmentStatus = (typeof EQUIPMENT_STATUSES)[number]
 
 export const STATUS_LABELS: Record<EquipmentStatus, string> = {
@@ -14,6 +14,18 @@ export const STATUS_LABELS: Record<EquipmentStatus, string> = {
   in_service: 'V servise',
   damaged: 'Poškodená',
   retired: 'Vyradená',
+  archived: 'Archívna',
+  sold: 'Predaná',
+}
+
+/** Technika, ktorú firma už nepoužíva: vyradená alebo predaná (v technike ostáva, ale nikde sa neponúka). */
+export function isGone(status: EquipmentStatus) {
+  return status === 'retired' || status === 'sold'
+}
+
+/** Dá sa dať na event alebo výpožičku: nie vyradená ani predaná; archívnu len CEO firmy. */
+export function isUsable(status: EquipmentStatus, isCeo: boolean) {
+  return !isGone(status) && (status !== 'archived' || isCeo)
 }
 
 // Druh určuje, na čo sa formulár pýta. Zodpovedá check constraint v 0007_equipment_details.sql.
@@ -360,6 +372,10 @@ export type EquipmentAttributes = {
   /** Nákupná cena jedného kusu (€) a za koľko rokov sa odpíše do nuly. */
   purchasePrice?: number
   depreciationYears?: number
+  /** Predaná technika: kedy, komu a za koľko (€ za celú položku). */
+  soldOn?: string
+  soldTo?: string
+  soldPrice?: number
   /** Prefix siete pri IP adrese, napr. 24 (= maska 255.255.255.0). */
   ipPrefix?: number
   /** IP prideľuje DHCP (nemá pevnú adresu). */
@@ -653,6 +669,9 @@ export const equipmentSchema = z.object({
   weightKg: optionalNumber(10000),
   purchasePrice: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(10_000_000).optional(),
   depreciationYears: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Aspoň 1 rok').max(50, 'Najviac 50 rokov').optional(),
+  soldOn: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Zadajte dátum').optional(),
+  soldTo: text(160).optional(),
+  soldPrice: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(10_000_000).optional(),
   ipPrefix: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Od 1').max(32, 'Najviac 32').optional(),
   ipDhcp: z.boolean().optional(),
   boxWidthCm: optionalNumber(1000),
@@ -872,6 +891,10 @@ export function attributesFor(
         | 'weightKg'
         | 'purchasePrice'
         | 'depreciationYears'
+        | 'status'
+        | 'soldOn'
+        | 'soldTo'
+        | 'soldPrice'
         | 'boxWidthCm'
         | 'boxDepthCm'
         | 'boxHeightCm'
@@ -1009,6 +1032,11 @@ export function attributesFor(
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipDhcp && !values.ipAddress) attributes.ipDhcp = true
   if (values.weightKg !== undefined) attributes.weightKg = values.weightKg
   if (values.purchasePrice !== undefined) attributes.purchasePrice = values.purchasePrice
+  if (values.status === 'sold') {
+    if (values.soldOn) attributes.soldOn = values.soldOn
+    if (values.soldTo?.trim()) attributes.soldTo = values.soldTo.trim()
+    if (values.soldPrice !== undefined) attributes.soldPrice = values.soldPrice
+  }
   if (values.purchasePrice !== undefined && values.depreciationYears !== undefined) attributes.depreciationYears = values.depreciationYears
   if (audio && hasBox(values.audioType)) {
     if (values.powered) attributes.powered = values.powered
@@ -1414,6 +1442,8 @@ export function filterEquipment(items: Equipment[], filter: EquipmentFilter, tod
   const partlyPacked = filter.caseId === NO_CASE ? new Set(items.filter((item) => item.caseId !== null).map(splitGroupKey)) : new Set<string>()
   const found = items.filter((item) => {
     if (filter.status && item.status !== filter.status) return false
+    // Predaná technika sa ukáže len pri filtri „Predaná“.
+    if (!filter.status && item.status === 'sold') return false
     if (filter.kind && item.kind !== filter.kind) return false
     if (filter.audioType && item.attributes.audioType !== filter.audioType) return false
     if (filter.owner === COMPANY_OWNER ? item.ownerStaffId : filter.owner && item.ownerStaffId !== filter.owner) return false
@@ -1477,7 +1507,7 @@ export function sortEquipment(items: Equipment[], sort: EquipmentSort, context: 
 
 /** Technika, ktorá by mala byť v nejakom case, ale nie je. Vyradená a spotrebný materiál sa nerátajú. */
 export function unpackedEquipment(items: Equipment[]) {
-  return items.filter((item) => item.caseId === null && item.status !== 'retired' && item.kind !== 'consumable' && !item.attributes.noCase && !item.attributes.inCover)
+  return items.filter((item) => item.caseId === null && !isGone(item.status) && item.kind !== 'consumable' && !item.attributes.noCase && !item.attributes.inCover)
 }
 
 // ---------------------------------------------------------------------------
@@ -1562,7 +1592,7 @@ export function describeUnitIds(ids: number[]) {
 export function cableMeters(items: Pick<Equipment, 'kind' | 'attributes' | 'quantity' | 'status'>[]) {
   const totals = new Map<string, number>()
   for (const item of items) {
-    if (item.kind !== 'cable' || item.status === 'retired' || item.attributes.cableType === 'adapter' || item.attributes.cableType === 'di') continue
+    if (item.kind !== 'cable' || isGone(item.status) || item.attributes.cableType === 'adapter' || item.attributes.cableType === 'di') continue
     const length = item.attributes.lengthM ?? 0
     if (length <= 0) continue
     const key = item.attributes.connector?.trim() || 'Bez konektora'

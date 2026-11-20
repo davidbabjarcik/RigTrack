@@ -8,6 +8,8 @@ const STYLES: Record<EquipmentStatus, string> = {
   in_service: 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
   damaged: 'bg-red-500/15 text-red-700 dark:text-red-400',
   retired: 'bg-muted text-muted-foreground',
+  archived: 'bg-violet-500/15 text-violet-700 dark:text-violet-400',
+  sold: 'bg-muted text-muted-foreground line-through decoration-1',
 }
 
 export function StatusBadge({ status }: { status: EquipmentStatus }) {

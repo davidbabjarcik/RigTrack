@@ -20,7 +20,7 @@ import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { DEFAULT_STAT_TILES, DEFAULT_WIDGETS, STAT_TILES, WIDGETS, widgetOrder, type StatTileId, type WidgetId } from './widgets'
 import { useCases } from '@/features/cases/useCases'
-import { unpackedEquipment } from '@/features/equipment/model'
+import { unpackedEquipment, isGone } from '@/features/equipment/model'
 import { isFillTask } from '@/features/tasks/board'
 import { caseTitle } from '@/features/cases/model'
 import { useEventReturns, lastReturns, returnedUnchecked, stillOut, useRecentPackMarks } from '@/features/pack/returns'
@@ -171,7 +171,7 @@ function QuickStats({ company, tileIds }: { company: Membership; tileIds: StatTi
   const events = useEvents(companyId)
   const tasks = useTasks(companyId)
   const cases = useCases(companyId)
-  const gear = (equipment.data ?? []).filter((item) => item.status !== 'retired' && item.kind !== 'consumable')
+  const gear = (equipment.data ?? []).filter((item) => !isGone(item.status) && item.kind !== 'consumable')
   const mine = (tasks.data ?? []).filter((task) => isAssignedTo(task, userId) && task.status !== 'done')
   const sum = (items: { quantity: number }[]) => items.reduce((total, item) => total + item.quantity, 0)
   const filled = new Set(gear.map((item) => item.caseId).filter(Boolean))

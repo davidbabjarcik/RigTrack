@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
@@ -267,6 +268,6 @@ export function StageSettings({ companyId }: { companyId: string }) {
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   if (config.isError) return <p className="text-sm text-destructive">{tx('Nastavenie sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
   if (!config.data || !equipment.data) return <p className="text-sm text-muted-foreground">{tx('Načítavam…')}</p>
-  const sorted = [...equipment.data].filter((item) => item.status !== 'retired').sort((a, b) => a.name.localeCompare(b.name, 'sk'))
+  const sorted = [...equipment.data].filter((item) => !isGone(item.status)).sort((a, b) => a.name.localeCompare(b.name, 'sk'))
   return <Editor companyId={companyId} initial={config.data} equipment={sorted} />
 }

@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useState, type ReactNode } from 'react'
@@ -268,7 +269,7 @@ export function DelayPage() {
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: companyId !== '' })
   // Suby z techniky: podľa typu Subwoofer, s rozmermi boxu navrchu.
   const subChoices = (equipment.data ?? [])
-    .filter((item) => item.status !== 'retired' && item.attributes.audioType === 'subwoofer')
+    .filter((item) => !isGone(item.status) && item.attributes.audioType === 'subwoofer')
     .sort((a, b) => Number(b.attributes.boxWidthCm !== undefined) - Number(a.attributes.boxWidthCm !== undefined) || a.name.localeCompare(b.name, 'sk'))
   const [subId, setSubId] = useState('')
   const [boxW, setBoxW] = useState<number | null>(null)

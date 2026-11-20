@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, ArrowLeft, FileUp } from 'lucide-react'
 import { useRef, useState, type DragEvent } from 'react'
@@ -258,7 +259,7 @@ export function EventImportPage() {
           )}
         </div>
       ) : (
-        <Review companyId={companyId} event={event} report={report} equipment={equipment.data.filter((item) => item.status !== 'retired')} aliases={aliases.data} />
+        <Review companyId={companyId} event={event} report={report} equipment={equipment.data.filter((item) => !isGone(item.status))} aliases={aliases.data} />
       )}
     </>
   )

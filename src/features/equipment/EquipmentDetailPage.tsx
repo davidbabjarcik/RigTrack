@@ -111,6 +111,19 @@ export function EquipmentDetailPage() {
   const amps = compatibleAmps(findCatalogEntry(catalog.data ?? [], equipment.kind, equipment.manufacturer, equipment.model))
   const rows: [string, ReactNode][] = [
     ['Druh', [KIND_LABELS[equipment.kind], ...describeAttributes(equipment)].join(' · ')],
+    [
+      tx('Predaná'),
+      equipment.status === 'sold'
+        ? [
+            equipment.attributes.soldOn && formatDate(equipment.attributes.soldOn),
+            equipment.attributes.soldTo,
+            // Suma predaja len pre toho, kto spravuje techniku (ako hodnota techniky).
+            can(company, 'equipment.edit') && equipment.attributes.soldPrice !== undefined && formatMoney(equipment.attributes.soldPrice, 'EUR'),
+          ]
+            .filter(Boolean)
+            .join(' · ') || tx('áno')
+        : undefined,
+    ],
     [tx('Vlastník'), equipment.ownerStaffId ? <OwnerLink key="owner" companyId={company.companyId} staffId={equipment.ownerStaffId} /> : undefined],
     [tx('Kategória'), categories.find((c) => c.id === equipment.categoryId)?.name],
     [tx('Prijímač'), equipment.attributes.wirelessRx],

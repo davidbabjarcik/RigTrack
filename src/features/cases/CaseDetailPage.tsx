@@ -8,7 +8,7 @@ import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList, setEquipmentCase, setEquipmentLabelRole, setSheetAccessory, splitEquipmentIntoCase, splitEquipmentUnits, takeOutOfCase } from '@/features/equipment/api'
-import { unitIdsOf } from '@/features/equipment/model'
+import { unitIdsOf, isGone } from '@/features/equipment/model'
 import { filterEquipment, type LabelRole } from '@/features/equipment/model'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { StatusBadge } from '@/features/equipment/StatusBadge'
@@ -127,9 +127,9 @@ export function CaseDetailPage() {
   const all = equipment.data ?? []
   const content = all.filter((item) => item.caseId === id)
   const onLabelCount = content.filter((item) => item.labelRole).length
-  const inOtherCases = all.filter((item) => item.caseId && item.caseId !== id && item.status !== 'retired').length
+  const inOtherCases = all.filter((item) => item.caseId && item.caseId !== id && !isGone(item.status)).length
   const candidates = filterEquipment(
-    all.filter((item) => item.caseId !== id && item.status !== 'retired' && (fromOtherCases || !item.caseId)),
+    all.filter((item) => item.caseId !== id && !isGone(item.status) && (fromOtherCases || !item.caseId)),
     { search, status: '', categoryId: '', locationId: '', caseId: '' },
   )
   const spot = warehouse.data?.spots.find((item) => item.id === current.spotId)

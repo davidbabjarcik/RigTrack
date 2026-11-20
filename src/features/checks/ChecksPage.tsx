@@ -9,7 +9,7 @@ import { caseTitle, needsCheck, type Case } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
-import { cableBaseName, formatNumber, groupSplitEquipment, hoursState, serviceState, type Equipment } from '@/features/equipment/model'
+import { cableBaseName, formatNumber, groupSplitEquipment, hoursState, serviceState, type Equipment, isGone } from '@/features/equipment/model'
 import { describeDue, isLate, needsAttention, useMaintenanceDue, useMaintenanceRules, type MaintenanceDue } from '@/features/maintenance/api'
 import { concernsMe } from '@/features/notifications/model'
 import { useResponsibilities, type Responsibility } from '@/features/responsibilities/api'
@@ -76,7 +76,7 @@ export function ChecksPage() {
   if (cases.isPending || equipment.isPending) return <LoadingBlock />
   if (cases.isError || equipment.isError) return <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void Promise.all([cases.refetch(), equipment.refetch()])} />
 
-  const gear = (equipment.data ?? []).filter((item) => item.status !== 'retired')
+  const gear = (equipment.data ?? []).filter((item) => !isGone(item.status))
   const mine = (item: Equipment) => !onlyMine || concernsMe(item, responsibilities, userId)
   const returns = lastReturns(marks)
   // Vrátené z eventu a nespočítané majú prednosť pred bežnou kontrolou podľa úrovne.

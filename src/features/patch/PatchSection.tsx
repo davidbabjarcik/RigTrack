@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookmarkPlus, Copy, Plus, Printer, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
@@ -31,10 +32,10 @@ import { tx } from '@/lib/i18n'
 /** Ktorá technika sa ponúkne pri zdroji: mikrofóny, bezdrôtové systémy, DI boxy (keď typ nie je zadaný, všetok zvuk). */
 function equipmentFor(source: PatchSource, items: Equipment[]) {
   if (source === 'di') {
-    const di = items.filter((item) => item.status !== 'retired' && (item.attributes.cableType === 'di' || item.attributes.audioType === 'di'))
+    const di = items.filter((item) => !isGone(item.status) && (item.attributes.cableType === 'di' || item.attributes.audioType === 'di'))
     if (di.length > 0) return di
   }
-  const audio = items.filter((item) => item.kind === 'audio' && item.status !== 'retired')
+  const audio = items.filter((item) => item.kind === 'audio' && !isGone(item.status))
   const types = source === 'wireless' ? ['wireless', 'iem'] : source === 'di' ? ['di'] : ['microphone']
   const typed = audio.filter(
     (item) =>

@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.14
+
+- **Sold gear**: a new “Sold” status with date, buyer and price. It is hidden from the gear list but still in Gear
+  under “Sold gear (N)”, and is no longer offered anywhere (events, loans, posters…).
+- **Archived gear**: a new “Archived” status – visible in Gear, but only the company CEO (or an admin when the
+  company has no CEO) can add it to an event or loan. The database enforces this too.
+- Technical: migration 0175 (sold and archived statuses, check on events and loans).
+
 ### 9.13
 
 - **Event contract**: the “Contract” button in the event detail prepares a template of an event technical services

@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.14 – 20. 11. 2026
+
+- **Predaná technika**: nový stav „Predaná“ s dátumom, kupcom a sumou. V zozname techniky sa neukazuje, ale je
+  stále v Technike – tlačidlo „Predaná technika (N)“. Nikde sa už neponúka (eventy, výpožičky, plagáty…).
+- **Archívna technika**: nový stav „Archívna“ – vidno ju v Technike, ale na event alebo výpožičku ju môže pridať
+  len CEO firmy (vo firme bez CEO admin). Pravidlo stráži aj databáza.
+- Technické: migrácia 0175 (stavy predaná a archívna, kontrola pri evente a výpožičke).
+
 ### 9.13 – 20. 11. 2026
 
 - **Zmluva k eventu**: v detaile eventu tlačidlo „Zmluva“ pripraví vzor zmluvy o technickom zabezpečení podujatia

@@ -1,3 +1,5 @@
+import { useCanUseArchived } from '@/features/equipment/useCanUseArchived'
+import { isUsable } from '@/features/equipment/model'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Package, Trash2 } from 'lucide-react'
@@ -115,7 +117,9 @@ function LoanForm({ companyId, current, equipment, cases, loans, events }: FormP
   const conflict = saveError?.code === '23514' ? saveError.message : null
 
   const chosen = new Set(fields.map((field) => field.equipmentId))
-  const lendable = equipment.filter((item) => item.status !== 'retired' && item.kind !== 'consumable')
+  // Archívnu techniku pridá len CEO firmy, vo firme bez CEO admin (pravidlo platí aj v databáze).
+  const isCeo = useCanUseArchived(companyId)
+  const lendable = equipment.filter((item) => isUsable(item.status, isCeo) && item.kind !== 'consumable')
   const thumbs = usePhotoThumbs(
     companyId,
     lendable.map((item) => item.photoPath),

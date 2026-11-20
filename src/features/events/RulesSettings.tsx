@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
-import { AUDIO_TYPE_LABELS, AUDIO_TYPES, EQUIPMENT_KINDS, KIND_LABELS, type Equipment, type Lookup } from '@/features/equipment/model'
+import { AUDIO_TYPE_LABELS, AUDIO_TYPES, EQUIPMENT_KINDS, KIND_LABELS, type Equipment, type Lookup, isGone } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { fetchRules, MATCHER_LABELS, MATCHER_TYPES, ruleKeys, rulesSchema, saveRules, type AmountMode, type EventRule, type Matcher, type MatcherType } from './rules'
 import { tx, tf } from '@/lib/i18n'
@@ -140,7 +140,7 @@ export function RulesSettings({ companyId }: { companyId: string }) {
     <Editor
       companyId={companyId}
       initial={rules.data}
-      options={{ equipment: byName(equipment.data.filter((item) => item.status !== 'retired')), categories: byName(categories), cases: byName(cases.data) }}
+      options={{ equipment: byName(equipment.data.filter((item) => !isGone(item.status))), categories: byName(categories), cases: byName(cases.data) }}
     />
   )
 }

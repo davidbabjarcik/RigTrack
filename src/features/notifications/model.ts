@@ -1,4 +1,4 @@
-import { hoursState, needsRestock, serviceState, type Equipment } from '@/features/equipment/model'
+import { hoursState, needsRestock, serviceState, type Equipment, isGone } from '@/features/equipment/model'
 import { isAwaitingIssue, isOverdue, type Loan } from '@/features/loans/model'
 import { isAssignedTo, isTaskOverdue, isTaskStale, type Task } from '@/features/tasks/model'
 import type { Responsibility } from '@/features/responsibilities/api'
@@ -64,7 +64,7 @@ export function buildNotifications(sources: NotificationSources, today: string, 
   }
 
   for (const item of sources.equipment) {
-    if (item.status === 'retired') continue
+    if (isGone(item.status)) continue
     if (!concernsMe(item, sources.responsibilities, userId)) continue
     const service = serviceState(item, today).state
     if (service === 'overdue' || service === 'soon') {

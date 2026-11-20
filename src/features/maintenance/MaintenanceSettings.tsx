@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
-import { EQUIPMENT_KINDS, KIND_LABELS, formatNumber } from '@/features/equipment/model'
+import { EQUIPMENT_KINDS, KIND_LABELS, formatNumber, isGone } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { errorDetail } from '@/lib/supabase/errors'
 import { deleteMaintenanceRule, maintenanceKeys, saveMaintenanceRule, useMaintenanceRules, type MaintenanceRule, type MaintenanceRuleInput } from './api'
@@ -57,7 +57,7 @@ export function MaintenanceSettings({ companyId }: { companyId: string }) {
   })
   const remove = useMutation({ mutationFn: (id: string) => deleteMaintenanceRule(companyId, id), onSettled: refresh })
 
-  const gear = (equipment.data ?? []).filter((item) => item.status !== 'retired')
+  const gear = (equipment.data ?? []).filter((item) => !isGone(item.status))
   const nameOf = (id: string) => gear.find((item) => item.id === id)?.name ?? tx('zmazaná technika')
 
   function open(rule: MaintenanceRule | null, preset?: Partial<MaintenanceRuleInput>) {

@@ -299,6 +299,22 @@ export function EquipmentListPage() {
           </SelectField>
         </AdvancedFilter>
       </div>
+      {/* Predaná technika sa v zozname neukazuje, ale je stále tu – jedným ťuknutím. */}
+      {(() => {
+        const sold = all.filter((item) => item.status === 'sold').length
+        if (filter.status === 'sold') {
+          return (
+            <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-accent hover:underline" onClick={() => set({ status: '' })}>
+              {tx('← Späť na techniku, ktorú máme')}
+            </button>
+          )
+        }
+        return sold > 0 ? (
+          <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground hover:underline" onClick={() => set({ status: 'sold' })}>
+            {tf('Predaná technika ({0})', sold)}
+          </button>
+        ) : null
+      })()}
 
       {list.isPending ? (
         <LoadingBlock />

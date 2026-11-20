@@ -1,3 +1,4 @@
+import { isGone } from '@/features/equipment/model'
 import { ArrowDown, ArrowUp, BookmarkPlus, ListPlus, Plus, Search, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -41,7 +42,7 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
   const query = search.trim().toLowerCase()
   const found = query
     ? equipment
-        .filter((item) => item.status !== 'retired' && `${item.name} ${item.manufacturer} ${item.model}`.toLowerCase().includes(query))
+        .filter((item) => !isGone(item.status) && `${item.name} ${item.manufacturer} ${item.model}`.toLowerCase().includes(query))
         .slice(0, 8)
     : []
   const addGear = (item: Equipment) => {
@@ -54,7 +55,7 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
   // Zoznam (odrážky) sa dá klikať z vlastnej techniky: „2 × Názov“, ďalší klik pridá kus.
   const itemQuery = itemSearch.trim().toLowerCase()
   const itemFound = itemQuery
-    ? equipment.filter((item) => item.status !== 'retired' && `${item.name} ${item.manufacturer} ${item.model}`.toLowerCase().includes(itemQuery)).slice(0, 8)
+    ? equipment.filter((item) => !isGone(item.status) && `${item.name} ${item.manufacturer} ${item.model}`.toLowerCase().includes(itemQuery)).slice(0, 8)
     : []
   const addItem = (item: Equipment) => {
     const label = [item.manufacturer, item.model].filter(Boolean).join(' ') || item.name
