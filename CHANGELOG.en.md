@@ -5,6 +5,15 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.17
+
+- **Contracts with history and signatures**: you can now save an event contract – it gets a number (e.g. Z2026-001)
+  and stays with the event exactly as saved, even if the event changes later. Saved contracts are listed above the
+  form, can be opened, printed and signed with a finger on a phone – for the client and for us. Signatures appear
+  right in the contract.
+- The price is pre-filled from the event's quote (the accepted one, otherwise the latest), including the VAT mode.
+- Technical: migration 0177 (saved event contracts).
+
 ### 9.16
 
 - **Request archived gear**: anyone who edits events can ask the CEO for archived gear at the event's gear (quantity

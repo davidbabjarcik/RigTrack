@@ -71,6 +71,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0173', label: 'DJ hrania', table: 'events', column: 'kind' },
   { migration: '0174', label: 'guľové rohy a kolieska pri cases', table: 'cases', column: 'wheels' },
   { migration: '0176', label: 'žiadosti o archívnu techniku', table: 'equipment_requests', column: 'status' },
+  { migration: '0177', label: 'uložené zmluvy k eventu', table: 'event_contracts', column: 'number' },
   { migration: '0170', label: 'viac áut v jeden deň pri doprave', table: 'event_travel', column: 'label' },
   { migration: '0166', label: 'elektrika eventu po miestach a elektrocentrály', table: 'event_power_plans', column: 'plan' },
   { migration: '0167', label: 'kalendár eventov do mobilu', table: 'calendar_feeds', column: 'scope' },

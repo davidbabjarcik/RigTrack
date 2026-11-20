@@ -13,7 +13,42 @@ const fixtures = {
   quote_issuers: [{ id: 'i1', company_id: COMPANY_ID, name: 'Ukážková firma s.r.o.', address: 'Ukážková 1, Mesto', ico: '12345678', dic: '2020000000', ic_dph: '', contact: '', vat_payer: false, kind: 'sro', sort: 0 }],
   partners: [{ id: 'p1', company_id: COMPANY_ID, name: 'Ukážková agentúra', legal_name: 'Ukážková agentúra s.r.o.', ico: '87654321', dic: '', ic_dph: '', address: 'Druhá 2, Mesto', ceo: 'Ukážkový konateľ', uses_app: false, note: '', linked_company_id: null, shared: false, legal_form: 'sro' }],
   event_partners: [{ event_id: EVENT_ID, partner_id: 'p1', kind: 'organizer', company_id: COMPANY_ID }],
+  // Prijatá cenová ponuka k eventu – cena sa z nej predvyplní.
+  quotes: [{
+    id: 'q1', company_id: COMPANY_ID, event_id: EVENT_ID, number: '20261201', status: 'accepted', client: {}, issuer_id: null, issuer: {}, budget: null, title: '', place: '', service_dates: '',
+    issued_on: '2026-11-01', sections: [], vat_mode: 'none', vat_pct: 20, total_override: 1800, notes: '', author_name: '', updated_at: '2026-11-01T00:00:00Z',
+  }],
 }
+
+const saved = {
+  id: 'z1', company_id: COMPANY_ID, event_id: EVENT_ID, number: 'Z2026-001', kind: 'service',
+  data: {
+    supplier: { name: 'Ukážková firma s.r.o.', address: 'Ukážková 1, Mesto', ico: '12345678', dic: '', icDph: '', representative: '' },
+    client: { name: 'Ukážková agentúra s.r.o.', address: 'Druhá 2, Mesto', ico: '87654321', dic: '', icDph: '', representative: 'Ukážkový konateľ' },
+    terms: { kind: 'service', price: 1500, vat: 'none', deposit: null, dueDays: 14, cancellation: '', extra: '', place: 'Mesto', withEquipment: false },
+    subject: { eventName: 'Ukážkový ples', when: '5. 12. 2026', venue: 'Ukážková sála', times: '', getIn: '', power: '', gear: [], dj: false },
+    createdOn: '2026-11-20',
+  },
+  client_signer: 'Ukážkový konateľ', client_signature: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  supplier_signer: '', supplier_signature: null, created_at: '2026-11-20T10:00:00Z',
+}
+
+test('zmluva: cena z prijatej ponuky, uložené zmluvy a podpis', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, { ...fixtures, event_contracts: [saved] })
+  await page.goto(`/events/${EVENT_ID}/contract`)
+  await expect(page.getByLabel('Cena (€)')).toHaveValue('1800')
+  await expect(page.getByText('z prijatej ponuky 20261201')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Uložiť zmluvu' })).toBeVisible()
+  await expect(page.getByText('Uložené zmluvy (1)')).toBeVisible()
+  await expect(page.getByText('podpísaná jednou stranou')).toBeVisible()
+  await page.getByRole('button', { name: 'Z2026-001', exact: true }).click()
+  await expect(page.getByText('Číslo zmluvy: Z2026-001')).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Podpis: Ukážkový konateľ' })).toBeVisible()
+  await expect(page.getByText('Objednávateľ podpísal: Ukážkový konateľ')).toBeVisible()
+  await page.getByRole('button', { name: 'Podpis: Dodávateľ' }).click()
+  await expect(page.getByText(/Podpisom potvrdzujem zmluvu Z2026-001/)).toBeVisible()
+})
 
 test('zmluva k eventu: strany, cena a záloha', async ({ page, isMobile }, info) => {
   await signIn(page)

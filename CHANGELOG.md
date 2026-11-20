@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.17 – 20. 11. 2026
+
+- **Zmluva s históriou a podpisom**: zmluvu k eventu teraz uložíte – dostane číslo (napr. Z2026-001) a ostane pri
+  evente presne tak, ako bola uložená, aj keď sa event neskôr zmení. Uložené zmluvy sú v zozname nad formulárom,
+  dá sa ich otvoriť, vytlačiť a podpísať prstom na mobile – za klienta aj za nás. Podpisy sa ukážu priamo v zmluve.
+- Cena sa predvyplní z cenovej ponuky k eventu (prijatej, inak poslednej), aj s režimom DPH.
+- Technické: migrácia 0177 (uložené zmluvy k eventu).
+
 ### 9.16 – 20. 11. 2026
 
 - **Žiadosť o archívnu techniku**: kto upravuje eventy, môže pri technike eventu požiadať CEO o archívnu techniku

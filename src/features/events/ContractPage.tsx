@@ -1,30 +1,34 @@
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, TriangleAlert } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, FileSignature, PenLine, Save, Trash2, TriangleAlert } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
-import { PaperSheet } from '@/components/print/PaperSheet'
 import { PrintButton } from '@/components/print/PrintButton'
+import { Button } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
-import { useIssuers, type Issuer } from '@/features/offers/api'
+import { SignaturePad } from '@/features/loans/SignaturePad'
+import { useIssuers, useOffers, type Issuer } from '@/features/offers/api'
+import type { Offer } from '@/features/offers/model'
 import { fetchEventPartners, partnerKeys, usePartners, type Partner } from '@/features/partners/api'
-import { formatDate, todayIso } from '@/lib/format'
-import { tx } from '@/lib/i18n'
+import { formatDate, formatMoney, todayIso } from '@/lib/format'
+import { tf, tx } from '@/lib/i18n'
 import { can } from '@/lib/permissions'
 import {
   CONTRACT_KIND_LABELS,
   DEFAULT_TERMS,
+  offerPrice,
   EMPTY_PARTY,
-  partyLines,
-  paymentPoints,
   VAT_NOTE_LABELS,
   type ContractKind,
   type ContractParty,
+  type ContractSnapshot,
   type ContractTerms,
   type VatNote,
 } from './contract'
+import { contractKeys, deleteContract, saveContract, signContract, useContracts, type SavedContract } from './contractApi'
+import { ContractDocument } from './ContractDocument'
 import { describeTimes, POWER_LABELS, type CompanyEvent } from './model'
 import { useEvents } from './useEvents'
 
@@ -45,36 +49,6 @@ const numberOrNull = (text: string) => {
   return text.trim() && Number.isFinite(value) && value >= 0 ? value : null
 }
 
-/** Jeden článok zmluvy: „Čl. II Predmet zmluvy“ a očíslované body. */
-function Article({ number, title, points }: { number: string; title: string; points: ReactNode[] }) {
-  return (
-    <section className="mt-5 break-inside-avoid">
-      <h2 className="text-center font-semibold">
-        Čl. {number}
-        <br />
-        {title}
-      </h2>
-      <ol className="mt-2 flex list-decimal flex-col gap-1.5 pl-5 text-justify">
-        {points.map((point, index) => (
-          <li key={index}>{point}</li>
-        ))}
-      </ol>
-    </section>
-  )
-}
-
-function Party({ role, party }: { role: string; party: ContractParty }) {
-  return (
-    <div className="break-inside-avoid">
-      <p className="font-semibold">{party.name || '_______________________________'}</p>
-      {partyLines(party).map((line) => (
-        <p key={line}>{line}</p>
-      ))}
-      <p className="text-neutral-600">(ďalej len „{role}“)</p>
-    </div>
-  )
-}
-
 /** Údaje strany na úpravu pred tlačou. */
 function PartyFields({ title, party, onChange }: { title: string; party: ContractParty; onChange: (party: ContractParty) => void }) {
   const set = (key: keyof ContractParty) => (event: { target: { value: string } }) => onChange({ ...party, [key]: event.target.value })
@@ -91,20 +65,29 @@ function PartyFields({ title, party, onChange }: { title: string; party: Contrac
   )
 }
 
-function ContractForm({ event, issuers, partners, organizerId }: { event: CompanyEvent; issuers: Issuer[]; partners: Partner[]; organizerId?: string }) {
+/** Nová zmluva: údaje strán a podmienky, náhľad na A4, tlač a uloženie s číslom. */
+function ContractForm({ event, issuers, partners, offers, organizerId, canSave, onSaved }: {
+  event: CompanyEvent
+  issuers: Issuer[]
+  partners: Partner[]
+  offers: Offer[]
+  organizerId?: string
+  canSave: boolean
+  onSaved: (id: string) => void
+}) {
   const company = useCompany().active!
   const companyId = company.companyId
+  const queryClient = useQueryClient()
   const sheet = useRef<HTMLDivElement>(null)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId), enabled: can(company, 'equipment.view') })
+  const fromOffer = offerPrice(offers, event.id)
   const [supplier, setSupplier] = useState<ContractParty>(() => fromIssuer(issuers[0]))
   const [client, setClient] = useState<ContractParty>(() => fromPartner(partners.find((partner) => partner.id === organizerId), event.organizer || event.client))
-  const [terms, setTerms] = useState<ContractTerms>({ ...DEFAULT_TERMS, kind: event.kind === 'dj' ? 'service' : DEFAULT_TERMS.kind })
-  const [priceText, setPriceText] = useState('')
+  const [terms, setTerms] = useState<ContractTerms>(() => ({ ...DEFAULT_TERMS, price: fromOffer?.price ?? null, vat: fromOffer?.vat ?? DEFAULT_TERMS.vat }))
+  const [priceText, setPriceText] = useState(() => (fromOffer ? String(fromOffer.price).replace('.', ',') : ''))
   const [depositText, setDepositText] = useState('')
   const update = (patch: Partial<ContractTerms>) => setTerms({ ...terms, ...patch })
 
-  const when = event.startsOn === event.endsOn ? formatDate(event.startsOn) : `${formatDate(event.startsOn)} – ${formatDate(event.endsOn)}`
-  const times = describeTimes(event)
   const gear = (equipment.data ?? []).length
     ? event.equipment
         .map((line) => {
@@ -113,94 +96,40 @@ function ContractForm({ event, issuers, partners, organizerId }: { event: Compan
         })
         .filter((line): line is string => Boolean(line))
     : []
+  const snapshot: ContractSnapshot = {
+    supplier,
+    client,
+    terms,
+    createdOn: todayIso(),
+    subject: {
+      eventName: event.name,
+      when: event.startsOn === event.endsOn ? formatDate(event.startsOn) : `${formatDate(event.startsOn)} – ${formatDate(event.endsOn)}`,
+      venue: event.venue,
+      times: describeTimes(event),
+      getIn: event.getInTime,
+      power: event.power ? `${POWER_LABELS[event.power]}${event.powerCount && event.powerCount > 1 ? `, ${event.powerCount}×` : ''}` : '',
+      gear,
+      dj: event.kind === 'dj',
+    },
+  }
+  const save = useMutation({
+    mutationFn: () => saveContract(companyId, event.id, snapshot),
+    onSuccess: (saved) => {
+      void queryClient.invalidateQueries({ queryKey: contractKeys.ofEvent(companyId, event.id) })
+      onSaved(saved.id)
+    },
+  })
   const rental = terms.kind === 'rental'
-  const supplierRole = rental ? 'prenajímateľ' : 'dodávateľ'
-  const clientRole = rental ? 'nájomca' : 'objednávateľ'
-  const Supplier = rental ? 'Prenajímateľ' : 'Dodávateľ'
-  const Client = rental ? 'Nájomca' : 'Objednávateľ'
-  const cancellation = terms.cancellation.split('\n').map((line) => line.trim()).filter(Boolean)
-
-  const articles: { title: string; points: ReactNode[] }[] = [
-    {
-      title: 'Predmet zmluvy',
-      points: [
-        rental
-          ? 'Prenajímateľ prenechá nájomcovi do dočasného užívania techniku uvedenú v tejto zmluve a nájomca sa zaväzuje zaplatiť za to dohodnutú cenu.'
-          : event.kind === 'dj'
-            ? `${Supplier} sa zaväzuje zabezpečiť pre ${clientRole}a hudobnú produkciu (DJ) na podujatí uvedenom nižšie a ${clientRole} sa zaväzuje zaplatiť za to dohodnutú cenu.`
-            : `${Supplier} sa zaväzuje zabezpečiť pre ${clientRole}a technické zabezpečenie podujatia (zvuk, svetlo, prípadne ďalšia technika a obsluha) a ${clientRole} sa zaväzuje zaplatiť za to dohodnutú cenu.`,
-        <>
-          Podujatie: <strong>{event.name}</strong>, termín: <strong>{when}</strong>
-          {event.venue && (
-            <>
-              , miesto: <strong>{event.venue}</strong>
-            </>
-          )}
-          {times && <>, {times}</>}.
-        </>,
-        ...(terms.withEquipment && gear.length > 0 ? [`Technika: ${gear.join(', ')}.`] : []),
-      ],
-    },
-    { title: rental ? 'Nájomné a platobné podmienky' : 'Cena a platobné podmienky', points: paymentPoints(terms, Client) },
-    {
-      title: `Povinnosti ${rental ? 'prenajímateľa' : 'dodávateľa'}`,
-      points: rental
-        ? [`${Supplier} odovzdá techniku funkčnú a v dohodnutom rozsahu; pri odovzdaní a vrátení sa skontroluje jej stav.`]
-        : [
-            `${Supplier} zabezpečí plnenie riadne, včas a s odbornou starostlivosťou, vrátane dopravy, stavby a demontáže techniky, ak sa nedohodne inak.`,
-            `${Supplier} zodpovedá za to, že technika je funkčná a bezpečná a obsluhujú ju poučené osoby.`,
-          ],
-    },
-    {
-      title: `Povinnosti ${rental ? 'nájomcu' : 'objednávateľa'}`,
-      points: [
-        ...(rental
-          ? [`${Client} používa techniku len na dohodnutý účel, chráni ju pred poškodením, krádežou a nepriaznivým počasím a vráti ju v dohodnutom termíne v stave, v akom ju prevzal, s prihliadnutím na bežné opotrebenie.`]
-          : [
-              `${Client} zabezpečí včasný prístup na miesto podujatia${event.getInTime ? ` (príchod / stavba ${event.getInTime})` : ''}, priestor na techniku a súčinnosť potrebnú na plnenie.`,
-              `${Client} zabezpečí elektrickú prípojku${event.power ? ` (${POWER_LABELS[event.power]}${event.powerCount && event.powerCount > 1 ? `, ${event.powerCount}×` : ''})` : ''} v dohodnutom mieste, pri vonkajšom podujatí aj ochranu techniky pred dažďom.`,
-            ]),
-        `${Client} zodpovedá za škodu na technike spôsobenú ním, jeho hosťami alebo tretími osobami počas podujatia, okrem škody spôsobenej ${rental ? 'prenajímateľom' : 'dodávateľom'}.`,
-      ],
-    },
-    ...(cancellation.length > 0
-      ? [
-          {
-            title: 'Zrušenie podujatia (storno)',
-            points: [
-              <>
-                Ak {clientRole} podujatie zruší, zaplatí storno poplatok:
-                <ol className="mt-1 list-[lower-alpha] pl-5">
-                  {cancellation.map((line) => (
-                    <li key={line}>{line}</li>
-                  ))}
-                </ol>
-              </>,
-            ],
-          },
-        ]
-      : []),
-    ...(terms.extra.trim() ? [{ title: 'Ďalšie dojednania', points: terms.extra.split('\n').map((line) => line.trim()).filter(Boolean) }] : []),
-    {
-      title: 'Záverečné ustanovenia',
-      points: [
-        'Zmluva nadobúda platnosť a účinnosť dňom podpisu oboma zmluvnými stranami.',
-        'Zmluvu možno meniť len písomnými dodatkami podpísanými oboma stranami. Vzťahy, ktoré táto zmluva neupravuje, sa riadia Obchodným zákonníkom, prípadne Občianskym zákonníkom.',
-        'Zmluva je vyhotovená v dvoch rovnopisoch, každá strana dostane jeden. Strany zmluvu prečítali, súhlasia s jej obsahom a na znak súhlasu ju podpisujú.',
-      ],
-    },
-  ]
-  const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX']
 
   return (
     <>
       <div className="mx-auto mb-4 flex max-w-[210mm] flex-col gap-4 rounded-xl border bg-surface p-4 text-foreground print:hidden">
         <p className="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-          {tx('Toto je vzor zmluvy z údajov eventu. Pred podpisom si ho prečítajte a podľa potreby upravte, pri väčších zákazkách s právnikom. Nič z tohto formulára sa neukladá.')}
+          {tx('Toto je vzor zmluvy z údajov eventu. Pred podpisom si ho prečítajte a podľa potreby upravte, pri väčších zákazkách s právnikom.')}
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <SelectField label={tx('Druh zmluvy')} value={terms.kind} onChange={(event) => update({ kind: event.target.value as ContractKind })}>
+          <SelectField label={tx('Druh zmluvy')} value={terms.kind} onChange={(changed) => update({ kind: changed.target.value as ContractKind })}>
             {(Object.keys(CONTRACT_KIND_LABELS) as ContractKind[]).map((kind) => (
               <option key={kind} value={kind}>
                 {tx(CONTRACT_KIND_LABELS[kind])}
@@ -208,7 +137,7 @@ function ContractForm({ event, issuers, partners, organizerId }: { event: Compan
             ))}
           </SelectField>
           {issuers.length > 1 && (
-            <SelectField label={tx('Dodávateľ')} defaultValue={issuers[0].id} onChange={(event) => setSupplier(fromIssuer(issuers.find((issuer) => issuer.id === event.target.value)))}>
+            <SelectField label={tx('Dodávateľ')} defaultValue={issuers[0].id} onChange={(changed) => setSupplier(fromIssuer(issuers.find((issuer) => issuer.id === changed.target.value)))}>
               {issuers.map((issuer) => (
                 <option key={issuer.id} value={issuer.id}>
                   {issuer.name}
@@ -222,17 +151,24 @@ function ContractForm({ event, issuers, partners, organizerId }: { event: Compan
           <PartyFields title={tx(rental ? 'Nájomca' : 'Objednávateľ')} party={client} onChange={setClient} />
         </div>
         <div className="grid gap-3 sm:grid-cols-4">
-          <Field
-            label={tx('Cena (€)')}
-            inputMode="decimal"
-            placeholder={tx('prázdne = dopísať perom')}
-            value={priceText}
-            onChange={(event) => {
-              setPriceText(event.target.value)
-              update({ price: numberOrNull(event.target.value) })
-            }}
-          />
-          <SelectField label={tx('DPH')} value={terms.vat} onChange={(event) => update({ vat: event.target.value as VatNote })}>
+          <div>
+            <Field
+              label={tx('Cena (€)')}
+              inputMode="decimal"
+              placeholder={tx('prázdne = dopísať perom')}
+              value={priceText}
+              onChange={(changed) => {
+                setPriceText(changed.target.value)
+                update({ price: numberOrNull(changed.target.value) })
+              }}
+            />
+            {fromOffer && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {tf(fromOffer.accepted ? 'z prijatej ponuky {0}' : 'z ponuky {0}', fromOffer.number || '')}
+              </p>
+            )}
+          </div>
+          <SelectField label={tx('DPH')} value={terms.vat} onChange={(changed) => update({ vat: changed.target.value as VatNote })}>
             {(Object.keys(VAT_NOTE_LABELS) as VatNote[]).map((vat) => (
               <option key={vat} value={vat}>
                 {tx(VAT_NOTE_LABELS[vat])}
@@ -244,9 +180,9 @@ function ContractForm({ event, issuers, partners, organizerId }: { event: Compan
             inputMode="decimal"
             placeholder={tx('bez zálohy')}
             value={depositText}
-            onChange={(event) => {
-              setDepositText(event.target.value)
-              update({ deposit: numberOrNull(event.target.value) })
+            onChange={(changed) => {
+              setDepositText(changed.target.value)
+              update({ deposit: numberOrNull(changed.target.value) })
             }}
           />
           <Field
@@ -256,75 +192,182 @@ function ContractForm({ event, issuers, partners, organizerId }: { event: Compan
             min={0}
             max={120}
             value={terms.dueDays}
-            onChange={(event) => update({ dueDays: Math.min(120, Math.max(0, Number(event.target.value) || 0)) })}
+            onChange={(changed) => update({ dueDays: Math.min(120, Math.max(0, Number(changed.target.value) || 0)) })}
           />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <TextareaField label={tx('Storno podmienky (každá na riadok)')} rows={3} maxLength={1500} value={terms.cancellation} onChange={(event) => update({ cancellation: event.target.value })} />
-          <TextareaField label={tx('Ďalšie dojednania (každé na riadok)')} rows={3} maxLength={3000} value={terms.extra} onChange={(event) => update({ extra: event.target.value })} />
+          <TextareaField label={tx('Storno podmienky (každá na riadok)')} rows={3} maxLength={1500} value={terms.cancellation} onChange={(changed) => update({ cancellation: changed.target.value })} />
+          <TextareaField label={tx('Ďalšie dojednania (každé na riadok)')} rows={3} maxLength={3000} value={terms.extra} onChange={(changed) => update({ extra: changed.target.value })} />
         </div>
         <div className="flex flex-wrap items-end gap-4">
-          <Field label={tx('Miesto podpisu')} placeholder={tx('napr. Bratislava')} maxLength={80} value={terms.place} onChange={(event) => update({ place: event.target.value })} />
+          <Field label={tx('Miesto podpisu')} placeholder={tx('napr. Bratislava')} maxLength={80} value={terms.place} onChange={(changed) => update({ place: changed.target.value })} />
           {gear.length > 0 && (
             <label className="flex items-center gap-2 pb-3 text-sm">
-              <input type="checkbox" className="size-4" checked={terms.withEquipment} onChange={(event) => update({ withEquipment: event.target.checked })} />
+              <input type="checkbox" className="size-4" checked={terms.withEquipment} onChange={(changed) => update({ withEquipment: changed.target.checked })} />
               {tx('Uviesť techniku eventu v zmluve')}
             </label>
           )}
           <span className="flex-1" />
-          <PrintButton sheet={sheet} fileName={`zmluva-${event.name}`} marginMm={18} />
+          <PrintButton sheet={sheet} fileName={`zmluva-${event.name}`} marginMm={18} variant="outline" />
+          {canSave && (
+            <Button disabled={save.isPending} onClick={() => save.mutate()}>
+              <Save className="size-4" aria-hidden />
+              {save.isPending ? tx('Ukladám…') : tx('Uložiť zmluvu')}
+            </Button>
+          )}
         </div>
+        {canSave && <p className="text-xs text-muted-foreground">{tx('Uložená zmluva dostane číslo, ostane pri evente presne tak, ako je, a dá sa podpísať prstom (klient aj my).')}</p>}
+        {save.isError && <p role="alert" className="text-sm text-destructive">{tx('Zmluvu sa nepodarilo uložiť.')}</p>}
       </div>
 
       <div className="mb-8 px-2 print:mb-0 print:px-0">
-        <PaperSheet sheetRef={sheet} marginMm={18} className="text-[13px] leading-relaxed">
-          <h1 className="text-center text-xl font-bold tracking-tight uppercase">{CONTRACT_KIND_LABELS[terms.kind]}</h1>
-          <p className="mt-1 text-center text-neutral-600">
-            {rental ? 'uzavretá podľa § 659 a nasl. Občianskeho zákonníka' : 'uzavretá podľa § 269 ods. 2 Obchodného zákonníka'}
-          </p>
-          <section className="mt-6 flex flex-col gap-3">
-            <h2 className="text-center font-semibold">
-              Čl. I
-              <br />
-              Zmluvné strany
-            </h2>
-            <Party role={supplierRole} party={supplier} />
-            <p className="text-center">a</p>
-            <Party role={clientRole} party={client} />
-          </section>
-          {articles.map((article, index) => (
-            <Article key={article.title} number={roman[index + 1]} title={article.title} points={article.points} />
-          ))}
-          <section className="mt-10 grid grid-cols-2 gap-10 break-inside-avoid">
-            {[Supplier, Client].map((role) => (
-              <div key={role}>
-                <p>
-                  V {terms.place || '____________'} dňa {role === Supplier ? formatDate(todayIso()) : '____________'}
-                </p>
-                <div className="mt-16 border-t border-black pt-1 text-center">
-                  {role}
-                  <br />
-                  <span className="text-neutral-600">{role === Supplier ? supplier.name : client.name}</span>
-                </div>
-              </div>
-            ))}
-          </section>
-        </PaperSheet>
+        <ContractDocument snapshot={snapshot} sheetRef={sheet} />
       </div>
     </>
   )
 }
 
-/** Zmluva k eventu na A4: vzor z údajov eventu, dodávateľa a organizátora; doplní sa cena, záloha a podmienky. */
+/** Uložená zmluva: presne ako pri uložení, s podpismi a tlačou. */
+function SavedContractView({ contract, eventName, canEdit, onBack }: { contract: SavedContract; eventName: string; canEdit: boolean; onBack: () => void }) {
+  const companyId = useCompany().active!.companyId
+  const queryClient = useQueryClient()
+  const sheet = useRef<HTMLDivElement>(null)
+  const [signing, setSigning] = useState<'client' | 'supplier' | null>(null)
+  const sign = useMutation({
+    mutationFn: ({ side, name, image }: { side: 'client' | 'supplier'; name: string; image: string }) => signContract(contract.id, side, name, image),
+    onSuccess: () => setSigning(null),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['company', companyId, 'events'] }),
+  })
+  const { snapshot } = contract
+  const rental = snapshot.terms.kind === 'rental'
+  const sides = [
+    { side: 'supplier' as const, label: rental ? tx('Prenajímateľ') : tx('Dodávateľ'), party: snapshot.supplier, signer: contract.supplierSigner, image: contract.supplierSignature },
+    { side: 'client' as const, label: rental ? tx('Nájomca') : tx('Objednávateľ'), party: snapshot.client, signer: contract.clientSigner, image: contract.clientSignature },
+  ]
+  const current = sides.find((item) => item.side === signing)
+
+  return (
+    <>
+      <div className="mx-auto mb-4 flex max-w-[210mm] flex-col gap-3 rounded-xl border bg-surface p-4 text-foreground print:hidden">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ArrowLeft className="size-4" aria-hidden />
+            {tx('Späť na zmluvy')}
+          </Button>
+          <span className="font-medium">{tf('Zmluva {0}', contract.number)}</span>
+          <span className="text-sm text-muted-foreground">{tf('uložená {0}', formatDate(contract.createdAt.slice(0, 10)))}</span>
+          <span className="flex-1" />
+          <PrintButton sheet={sheet} fileName={`zmluva-${contract.number}-${eventName}`} marginMm={18} />
+        </div>
+        {canEdit && (
+          <div className="flex flex-wrap gap-2">
+            {sides.map((item) =>
+              item.image ? (
+                <span key={item.side} className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-3 py-1 text-sm text-emerald-800 dark:text-emerald-200">
+                  <FileSignature className="size-4" aria-hidden />
+                  {tf('{0} podpísal: {1}', item.label, item.signer)}
+                </span>
+              ) : (
+                <Button key={item.side} variant="outline" size="sm" onClick={() => setSigning(item.side)}>
+                  <PenLine className="size-4" aria-hidden />
+                  {tf('Podpis: {0}', item.label)}
+                </Button>
+              ),
+            )}
+          </div>
+        )}
+        {sign.isError && <p role="alert" className="text-sm text-destructive">{tx('Podpis sa nepodarilo uložiť.')}</p>}
+      </div>
+      <div className="mb-8 px-2 print:mb-0 print:px-0">
+        <ContractDocument
+          snapshot={snapshot}
+          number={contract.number}
+          sheetRef={sheet}
+          signatures={{
+            supplier: contract.supplierSignature ? { name: contract.supplierSigner, image: contract.supplierSignature } : undefined,
+            client: contract.clientSignature ? { name: contract.clientSigner, image: contract.clientSignature } : undefined,
+          }}
+        />
+      </div>
+      {current && (
+        <SignaturePad
+          title={tf('Podpis: {0}', current.label)}
+          statement={tf('Podpisom potvrdzujem zmluvu {0} so všetkými jej podmienkami.', contract.number)}
+          defaultName={current.party.representative || current.party.name}
+          saving={sign.isPending}
+          error={sign.isError}
+          onSave={(name, image) => sign.mutate({ side: current.side, name, image })}
+          onClose={() => setSigning(null)}
+        />
+      )}
+    </>
+  )
+}
+
+/** Zoznam uložených zmlúv k eventu. */
+function SavedList({ contracts, onOpen, canEdit }: { contracts: SavedContract[]; onOpen: (id: string) => void; canEdit: boolean }) {
+  const companyId = useCompany().active!.companyId
+  const queryClient = useQueryClient()
+  const remove = useMutation({ mutationFn: deleteContract, onSettled: () => queryClient.invalidateQueries({ queryKey: ['company', companyId, 'events'] }) })
+  if (contracts.length === 0) return null
+  return (
+    <div className="mx-auto mb-4 max-w-[210mm] rounded-xl border bg-surface p-4 text-foreground print:hidden">
+      <h2 className="mb-2 text-sm font-medium">{tf('Uložené zmluvy ({0})', contracts.length)}</h2>
+      <ul className="flex flex-col divide-y">
+        {contracts.map((contract) => {
+          const signed = [contract.supplierSignature, contract.clientSignature].filter(Boolean).length
+          return (
+            <li key={contract.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
+              <button type="button" className="font-medium text-accent hover:underline" onClick={() => onOpen(contract.id)}>
+                {contract.number}
+              </button>
+              <span className="min-w-0 flex-1 text-muted-foreground">
+                {[
+                  formatDate(contract.createdAt.slice(0, 10)),
+                  tx(CONTRACT_KIND_LABELS[contract.kind]),
+                  contract.snapshot.client.name,
+                  contract.snapshot.terms.price !== null && formatMoney(contract.snapshot.terms.price, 'EUR'),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </span>
+              <span className={signed === 2 ? 'text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground'}>
+                {signed === 2 ? tx('podpísaná') : signed === 1 ? tx('podpísaná jednou stranou') : tx('nepodpísaná')}
+              </span>
+              {canEdit && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={tf('Zmazať zmluvu {0}', contract.number)}
+                  disabled={remove.isPending}
+                  onClick={() => window.confirm(tf('Zmazať zmluvu {0}?', contract.number)) && remove.mutate(contract.id)}
+                >
+                  <Trash2 className="size-4" aria-hidden />
+                </Button>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+/** Zmluva k eventu na A4: vzor z údajov eventu, dodávateľa a organizátora; uloží sa s číslom a dá sa podpísať. */
 export function ContractPage() {
   const { id = '' } = useParams()
+  const [params, setParams] = useSearchParams()
   const company = useCompany().active!
   const companyId = company.companyId
   const events = useEvents(companyId)
   const issuers = useIssuers(companyId)
   const partners = usePartners(companyId)
+  const offers = useOffers(companyId)
+  const contracts = useContracts(companyId, id)
   const linked = useQuery({ queryKey: partnerKeys.ofEvent(companyId, id), queryFn: () => fetchEventPartners(companyId, id), retry: false })
   const event = events.data?.find((candidate) => candidate.id === id)
+  const open = (contractId: string | null) => setParams(contractId ? { contract: contractId } : {}, { replace: false })
+  const opened = contracts.data?.find((contract) => contract.id === params.get('contract'))
 
   const back = (
     <Link to={`/events/${id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -334,17 +377,24 @@ export function ContractPage() {
   )
   let body: ReactNode
   if (!can(company, 'events.edit')) body = <ErrorBlock message={tx('Na zmluvy k eventom nemáte oprávnenie.')} />
-  else if (events.isPending || issuers.isPending || partners.isPending || linked.isPending) body = <LoadingBlock />
+  else if (events.isPending || issuers.isPending || partners.isPending || linked.isPending || offers.isPending || contracts.isPending) body = <LoadingBlock />
   else if (events.isError) body = <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void events.refetch()} />
   else if (!event) body = <ErrorBlock message={tx('Tento event neexistuje alebo k nemu nemáte prístup.')} />
+  else if (opened) body = <SavedContractView contract={opened} eventName={event.name} canEdit onBack={() => open(null)} />
   else {
     body = (
-      <ContractForm
-        event={event}
-        issuers={issuers.data ?? []}
-        partners={partners.data ?? []}
-        organizerId={linked.data?.find((item) => item.kind === 'organizer')?.partnerId}
-      />
+      <>
+        <SavedList contracts={contracts.data ?? []} onOpen={open} canEdit />
+        <ContractForm
+          event={event}
+          issuers={issuers.data ?? []}
+          partners={partners.data ?? []}
+          offers={offers.data ?? []}
+          organizerId={linked.data?.find((item) => item.kind === 'organizer')?.partnerId}
+          canSave={contracts.isSuccess}
+          onSaved={open}
+        />
+      </>
     )
   }
   return (
