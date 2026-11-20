@@ -105,6 +105,10 @@ test('nakladanie: case s technikou a repro mimo case', async ({ page }) => {
   // Case 10 kg + 4 mikrofóny po 0,5 kg; dva topy po 25 kg.
   await expect(page.getByText(/1 z 1 cases a 2 ks techniky mimo cases · spolu 62 kg/)).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ukážkový top (1/2)' })).toHaveAttribute('href', /\/equipment\//)
+  // Vykladá sa najskôr: označené ide do auta posledné (v zozname nakladania na konci).
+  await page.getByRole('group', { name: 'Na mieste sa vykladá najskôr' }).getByRole('button', { name: 'Ukážkový case' }).click()
+  await expect(page.getByRole('group', { name: 'Na mieste sa vykladá najskôr' }).getByRole('button', { name: 'Ukážkový case' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('ol li').last()).toContainText('Ukážkový case')
 })
 
 test('po skončení eventu sa cenová ponuka neponúka', async ({ page }) => {

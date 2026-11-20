@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.3 – 20. 11. 2026
+
+- **Nakladanie podľa toho, čo sa vykladá skôr**: v Nakladaní pri evente označíte cases a techniku, ktoré sa na
+  mieste vykladajú najskôr (napr. pódium alebo hliník). Naložia sa ako posledné, takže budú pri dverách. Voľbu si
+  prehliadač pamätá pre každý event.
+
 ### 10.2 – 20. 11. 2026
 
 - **Klient podpíše zmluvu cez odkaz**: pri uloženej zmluve tlačidlo „Odkaz na podpis pre klienta“ vytvorí tajný

@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.3
+
+- **Loading by what is unloaded first**: in an event's Loading you mark the cases and gear that are unloaded first
+  on site (e.g. the stage or truss). They are loaded last, so they end up by the doors. The browser remembers the
+  choice for each event.
+
 ### 10.2
 
 - **Client signs the contract through a link**: on a saved contract, “Signing link for the client” creates a secret

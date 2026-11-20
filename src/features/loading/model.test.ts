@@ -81,3 +81,14 @@ describe('loading order and place names', () => {
     expect(at({ x: 125, y: 50 })).toBe('v strede, na podlahe')
   })
 })
+
+describe('unload first', () => {
+  it('loads what is unloaded first last, nearer to the doors', () => {
+    const van = { id: 'v', name: 'Dodávka', payloadKg: null, length: 300, width: 100, height: 100, obstacles: [] }
+    const box = (id: string, first = false) => ({ id, name: id, length: 100, width: 100, height: 100, weightKg: 10, first })
+    const plan = planLoading([van], [box('stage', true), box('sound'), box('light')])
+    const x = (id: string) => plan.loads[0].placements.find((placement) => placement.id === id)!.x
+    expect(x('stage')).toBeGreaterThan(x('sound'))
+    expect(x('stage')).toBeGreaterThan(x('light'))
+  })
+})

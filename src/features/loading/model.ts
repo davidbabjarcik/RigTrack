@@ -19,7 +19,8 @@ export type CargoSpace = {
   obstacles: Obstacle[]
 }
 
-export type Parcel = { id: string; name: string; length: number; width: number; height: number; weightKg: number }
+/** `first`: na mieste sa vykladá najskôr – naloží sa ako posledný, čo najbližšie k dverám. */
+export type Parcel = { id: string; name: string; length: number; width: number; height: number; weightKg: number; first?: boolean }
 
 export type Placement = Box & {
   id: string
@@ -125,8 +126,14 @@ export function planLoading(spaces: CargoSpace[], parcels: Parcel[]): LoadPlan {
   const loads: VehicleLoad[] = []
   const unused = [...spaces]
   const unplaced: Unplaced[] = []
+  // Čo sa vykladá najskôr, ide na rad posledné (ostane pri dverách); inak najprv veľké a ťažké.
   const ordered = [...parcels].sort(
-    (a, b) => b.length * b.width - a.length * a.width || b.weightKg - a.weightKg || b.height - a.height || a.name.localeCompare(b.name, 'sk'),
+    (a, b) =>
+      Number(Boolean(a.first)) - Number(Boolean(b.first)) ||
+      b.length * b.width - a.length * a.width ||
+      b.weightKg - a.weightKg ||
+      b.height - a.height ||
+      a.name.localeCompare(b.name, 'sk'),
   )
 
   for (const parcel of ordered) {

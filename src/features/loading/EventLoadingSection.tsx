@@ -36,6 +36,25 @@ export function EventLoadingSection({ companyId, event }: Props) {
   const vehicles = useVehicles(companyId)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const [excluded, setExcluded] = useState<string[]>([])
+  // Čo sa na mieste vykladá najskôr (pamätá si prehliadač pre každý event).
+  const firstKey = `rigtrack.loading.first.${event.id}`
+  const [firstIds, setFirstIds] = useState<string[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(firstKey) ?? '[]')
+      return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string') : []
+    } catch {
+      return []
+    }
+  })
+  const toggleFirst = (id: string) => {
+    const next = firstIds.includes(id) ? firstIds.filter((other) => other !== id) : [...firstIds, id]
+    setFirstIds(next)
+    try {
+      localStorage.setItem(firstKey, JSON.stringify(next))
+    } catch {
+      // Bez úložiska sa voľba len nezapamätá.
+    }
+  }
   const [view, setView] = useState<'3d' | 'top'>('3d')
   const [turns, setTurns] = useState(0)
 
@@ -49,7 +68,10 @@ export function EventLoadingSection({ companyId, event }: Props) {
   const contents = contentWeights(event.equipment, items)
   const caseParcels = eventCases.map((item) => parcelOf(item, contents.get(item.id) ?? 0)).filter((parcel) => parcel !== null)
   const loosePlan = looseParcels(event.equipment, items)
-  const parcels = [...caseParcels, ...loosePlan.parcels]
+  const baseId = (id: string) => id.split('#')[0]
+  const parcels = [...caseParcels, ...loosePlan.parcels].map((parcel) => ({ ...parcel, first: firstIds.includes(baseId(parcel.id)) }))
+  // Na výber „vykladať najskôr“: každý case a každá technika mimo cases raz.
+  const choices = [...new Map(parcels.map((parcel) => [baseId(parcel.id), parcel.name.replace(/ \(\d+\/\d+\)$/, '')])).entries()]
   const withoutSize = eventCases.filter((item) => parcelOf(item) === null)
   const withoutWeight = eventCases.filter((item) => parcelOf(item) !== null && item.weightKg === null && !contents.get(item.id))
 
@@ -102,6 +124,28 @@ export function EventLoadingSection({ companyId, event }: Props) {
                 ))}
               </div>
             </fieldset>
+            {choices.length > 1 && (
+              <fieldset className="mt-3">
+                <legend className="mb-1 text-sm font-medium">{tx('Na mieste sa vykladá najskôr')}</legend>
+                <p className="mb-1.5 text-xs text-muted-foreground">{tx('Označené sa naložia ako posledné – budú pri dverách (napr. pódium alebo hliník, ktoré sa stavajú prvé).')}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {choices.map(([id, name]) => {
+                    const on = firstIds.includes(id)
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => toggleFirst(id)}
+                        className={on ? 'rounded-full border border-accent bg-accent/15 px-3 py-1 text-sm font-medium' : 'rounded-full border bg-surface px-3 py-1 text-sm text-muted-foreground hover:bg-muted'}
+                      >
+                        {name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </fieldset>
+            )}
           </div>
 
           {(plan.unplaced.length > 0 || withoutSize.length > 0) && (
