@@ -92,7 +92,7 @@ export function PartnerDetailPage() {
                       .join(' · ')}
                   </span>
                 </Link>
-                <EventStatusBadge status={event.status} />
+                <EventStatusBadge status={event.status} endsOn={event.endsOn} />
                 {canEdit && event.startsOn >= today && (
                   <Link to={`/events/${event.id}/quote`} className="inline-flex shrink-0 items-center gap-1 text-sm text-accent hover:underline" aria-label={`Ponuka: ${event.name}`}>
                     <Receipt className="size-4" aria-hidden />{tx('Ponuka')}</Link>

@@ -144,6 +144,11 @@ export function describeTimes(event: Pick<EventDetails, 'getInTime' | 'showTime'
   return [event.getInTime && `príchod / stavba ${event.getInTime}`, program && `program ${program}`].filter(Boolean).join(' · ')
 }
 
+/** Stav na zobrazenie: plánovaný alebo potvrdený event po termíne je už odohraný. */
+export function shownStatus(event: Pick<CompanyEvent, 'status' | 'endsOn'>, today: string): EventStatus {
+  return (event.status === 'planned' || event.status === 'confirmed') && event.endsOn < today ? 'done' : event.status
+}
+
 /** Event, ktorý ešte drží techniku: plánovaný alebo potvrdený. */
 export function isLive(event: Pick<CompanyEvent, 'status'>) {
   return event.status === 'planned' || event.status === 'confirmed'

@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.10
+
+- **Case and speaker sizes with a picture**: Width (left to right), Depth (front to back) and Height (floor up)
+  with a picture of how to measure and a reminder to measure the whole outer size including ball corners and
+  wheels – for packing the van. For cases and speakers you can note whether the sizes include the corners and
+  where the wheels are (underneath, at the back, on the side); for speakers also the box bottom above the floor.
+- **Total gear weight on an event** (gear × quantity plus empty cases). The case weight is now explicitly the
+  empty case weight.
+- An event after its dates no longer shows as “Planned” but as “Done”.
+- Technical: migration 0174 (case corners and wheels).
+
 ### 9.9
 
 - **DMX mode channels as a table**: after entering the number of channels (e.g. 10) a table with 10 rows appears –

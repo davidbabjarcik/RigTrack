@@ -1,3 +1,4 @@
+import { WHEEL_PLACES, type WheelPlace } from '@/lib/dimensions'
 import { z } from 'zod'
 import { DEFAULT_CHECK_DAYS, levelDays, type CheckLevel, type CheckLevelDays } from '@/features/checks/levels'
 import type { CategoryColor } from './categoryColors'
@@ -367,6 +368,12 @@ export type EquipmentAttributes = {
   boxWidthCm?: number
   boxDepthCm?: number
   boxHeightCm?: number
+  /** Rozmery boxu sú zmerané vrátane rohov / kovania (true) alebo bez (false). */
+  boxWithCorners?: boolean
+  /** Kde má box kolieska. */
+  boxWheels?: WheelPlace
+  /** Výška spodku boxu nad zemou na kolieskach (cm). */
+  boxFloorGapCm?: number
   /** Vlastné oneskorenie subu v ms (hornový sub / „slimák“ má zvuk dlhšiu cestu) – pre delay kalkulačku. */
   subDelayMs?: number
   /** DMX módy svetla: názov a počet kanálov, napr. Standard 16 ch. */
@@ -649,6 +656,9 @@ export const equipmentSchema = z.object({
   boxWidthCm: optionalNumber(1000),
   boxDepthCm: optionalNumber(1000),
   boxHeightCm: optionalNumber(1000),
+  boxWithCorners: z.enum(['yes', 'no', '']).optional(),
+  boxWheels: z.enum(WHEEL_PLACES).optional(),
+  boxFloorGapCm: optionalNumber(100),
   subDelayMs: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(200, 'Najviac 200 ms').optional(),
   makers: z.array(z.object({ name: z.string().trim().max(80).catch(''), count: z.number().int().min(0).max(100000).catch(0) })).max(10).optional(),
   dmxModes: z
@@ -851,6 +861,9 @@ export function attributesFor(
         | 'boxWidthCm'
         | 'boxDepthCm'
         | 'boxHeightCm'
+        | 'boxWithCorners'
+        | 'boxWheels'
+        | 'boxFloorGapCm'
         | 'subDelayMs'
         | 'ipPrefix'
         | 'ipAddress'
@@ -1000,6 +1013,9 @@ export function attributesFor(
     if (values.boxWidthCm !== undefined) attributes.boxWidthCm = values.boxWidthCm
     if (values.boxDepthCm !== undefined) attributes.boxDepthCm = values.boxDepthCm
     if (values.boxHeightCm !== undefined) attributes.boxHeightCm = values.boxHeightCm
+    if (values.boxWithCorners === 'yes' || values.boxWithCorners === 'no') attributes.boxWithCorners = values.boxWithCorners === 'yes'
+    if (values.boxWheels && values.boxWheels !== 'none') attributes.boxWheels = values.boxWheels
+    if (values.boxWheels && values.boxWheels !== 'none' && values.boxFloorGapCm !== undefined) attributes.boxFloorGapCm = values.boxFloorGapCm
     if (values.audioType === 'subwoofer' && values.subDelayMs !== undefined) attributes.subDelayMs = values.subDelayMs
   }
   // Prevodník (Art-Net / sACN node) – aj keď je to príslušenstvo.

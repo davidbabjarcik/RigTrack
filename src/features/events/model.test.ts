@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Loan } from '@/features/loans/model'
-import { busyElsewhere, describeTimes, eventsSinceCheck, EMPTY_EVENT_DETAILS, eventSchema, formatFileSize, pastEventNames, plannedOnEvents, previousEdition, seriesKey, sameGearAt, sortEvents, whereBusy, type CompanyEvent } from './model'
+import { busyElsewhere, describeTimes, eventsSinceCheck, EMPTY_EVENT_DETAILS, eventSchema, formatFileSize, pastEventNames, plannedOnEvents, previousEdition, seriesKey, sameGearAt, shownStatus, sortEvents, whereBusy, type CompanyEvent } from './model'
 
 const today = '2026-10-13'
 
@@ -168,5 +168,13 @@ describe('sameGearAt', () => {
   it('falls back to the name without a model', () => {
     expect(sameGearAt({ name: 'kábel 10 m', manufacturer: '', model: '' }, linked)).toEqual([{ companyName: 'Partner C', quantity: 20 }])
     expect(sameGearAt({ name: '', manufacturer: '', model: '' }, linked)).toEqual([])
+  })
+})
+
+describe('shownStatus', () => {
+  it('shows a planned or confirmed event after its last day as done', () => {
+    expect(shownStatus({ status: 'planned', endsOn: '2026-11-17' }, '2026-11-20')).toBe('done')
+    expect(shownStatus({ status: 'confirmed', endsOn: '2026-11-20' }, '2026-11-20')).toBe('confirmed')
+    expect(shownStatus({ status: 'cancelled', endsOn: '2026-11-01' }, '2026-11-20')).toBe('cancelled')
   })
 })

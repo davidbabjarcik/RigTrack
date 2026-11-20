@@ -7,6 +7,8 @@ import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
+import { DimensionsPicture } from '@/components/dimensions/DimensionsPicture'
+import { WHEEL_LABELS, WHEEL_PLACES } from '@/lib/dimensions'
 import { useCompany } from '@/features/companies/company-context'
 import { asOptionalNumber, type Lookup } from '@/features/equipment/model'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
@@ -63,6 +65,8 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
       widthCm: current?.widthCm ?? undefined,
       lengthCm: current?.lengthCm ?? undefined,
       depthCm: current?.depthCm ?? undefined,
+      cornersIncluded: current?.cornersIncluded === true ? 'yes' : current?.cornersIncluded === false ? 'no' : '',
+      wheels: current?.wheels ?? 'none',
       note: current?.note ?? '',
       owner: current?.ownerStaffId ?? ownerPreset,
       checkPriority: current?.checkPriority ?? 'normal',
@@ -72,6 +76,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
     },
   })
   const kind = useWatch({ control, name: 'kind' }) ?? 'case'
+  const wheels = useWatch({ control, name: 'wheels' }) ?? 'none'
 
   const save = useMutation({
     mutationFn: async (values: CaseFormValues) => {
@@ -259,7 +264,7 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
           ))}
         </datalist>
         <Field
-          label={tx('Hmotnosť (kg)')}
+          label={tx('Hmotnosť prázdneho case (kg)')}
           type="number"
           inputMode="decimal"
           min={0}
@@ -268,36 +273,61 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
           {...register('weightKg', asOptionalNumber)}
         />
       </div>
-      <fieldset className="rounded-xl border bg-surface p-4">
+      <fieldset className="min-w-0 rounded-xl border bg-surface p-4">
         <legend className="px-1 text-sm font-medium text-muted-foreground">{tx('Vonkajšie rozmery (cm)')}</legend>
-        <div className="grid grid-cols-3 gap-3">
-          <Field
-            label={tx('Šírka')}
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="0.1"
-            error={errors.widthCm?.message}
-            {...register('widthCm', asOptionalNumber)}
-          />
-          <Field
-            label={tx('Dĺžka')}
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="0.1"
-            error={errors.lengthCm?.message}
-            {...register('lengthCm', asOptionalNumber)}
-          />
-          <Field
-            label={tx('Hĺbka')}
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="0.1"
-            error={errors.depthCm?.message}
-            {...register('depthCm', asOptionalNumber)}
-          />
+        <div className="grid gap-4 sm:grid-cols-[1fr_18rem] sm:items-center">
+          <div className="flex flex-col gap-3">
+            <p className="rounded-lg bg-amber-500/10 p-2.5 text-sm text-amber-900 dark:text-amber-200">
+              {tx('Merajte celý vonkajší rozmer vrátane guľových rohov, rukovätí a koliesok – presne toľko miesta zaberie v dodávke.')}
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              <Field
+                label={tx('Šírka')}
+                placeholder={tx('zľava doprava')}
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.1"
+                error={errors.widthCm?.message}
+                {...register('widthCm', asOptionalNumber)}
+              />
+              <Field
+                label={tx('Hĺbka')}
+                placeholder={tx('spredu dozadu')}
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.1"
+                error={errors.depthCm?.message}
+                {...register('depthCm', asOptionalNumber)}
+              />
+              <Field
+                label={tx('Výška')}
+                placeholder={tx('od zeme hore')}
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.1"
+                error={errors.lengthCm?.message}
+                {...register('lengthCm', asOptionalNumber)}
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <SelectField label={tx('Guľové rohy')} {...register('cornersIncluded')}>
+                <option value="">{tx('— nevieme —')}</option>
+                <option value="yes">{tx('Rozmery sú vrátane rohov')}</option>
+                <option value="no">{tx('Rozmery sú bez rohov')}</option>
+              </SelectField>
+              <SelectField label={tx('Kolieska')} {...register('wheels')}>
+                {WHEEL_PLACES.map((place) => (
+                  <option key={place} value={place}>
+                    {tx(WHEEL_LABELS[place])}
+                  </option>
+                ))}
+              </SelectField>
+            </div>
+          </div>
+          <DimensionsPicture wheels={wheels} className="order-first mx-auto w-full max-w-72 text-foreground sm:order-none" />
         </div>
       </fieldset>
       <TextareaField label={tx('Poznámka')} error={errors.note?.message} {...register('note')} />

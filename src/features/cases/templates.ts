@@ -1,3 +1,4 @@
+import { formatSides } from '@/lib/dimensions'
 import { getSupabase } from '@/lib/supabase/client'
 
 // Šablóny cases (0034_case_templates.sql): typ case s rozmermi, z ktorého sa zakladajú nové.
@@ -85,9 +86,8 @@ export function numberedCaseNames(name: string, count: number, existing: string[
 
 /** Rozmery šablóny jedným riadkom, na výber v zozname. */
 export function describeTemplate(template: CaseTemplateFields) {
-  const sides = [template.widthCm, template.lengthCm, template.depthCm].filter((side) => side !== null)
   return [
-    sides.length > 0 && `${sides.map((side) => String(side).replace('.', ',')).join(' × ')} cm`,
+    formatSides({ width: template.widthCm, depth: template.depthCm, height: template.lengthCm }),
     template.weightKg !== null && `${String(template.weightKg).replace('.', ',')} kg`,
     template.labelCategory,
   ]

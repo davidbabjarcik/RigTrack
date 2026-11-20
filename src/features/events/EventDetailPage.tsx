@@ -107,7 +107,7 @@ export function EventDetailPage() {
                 <Disc3 className="size-3.5" aria-hidden />{tx('DJ hranie')}
               </span>
             )}
-            <EventStatusBadge status={event.status} />
+            <EventStatusBadge status={event.status} endsOn={event.endsOn} />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">

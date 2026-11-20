@@ -1,3 +1,4 @@
+import type { WheelPlace } from '@/lib/dimensions'
 import { resolveLookup, resolveOwner } from '@/features/equipment/api'
 import { copyCompanyPhoto, storeCompanyPhoto } from '@/features/equipment/photo'
 import type { Lookup } from '@/features/equipment/model'
@@ -33,6 +34,8 @@ type Row = {
   old_numbers?: string
   kind?: 'case' | 'rack'
   rack_units?: number | null
+  corners_included?: boolean | null
+  wheels?: WheelPlace
 }
 
 const COLUMNS = 'id, name, inventory_number, location_id, label_number, label_category, label_title, label_photo_path, photo_path, weight_kg, width_cm, length_cm, depth_cm, spot_id, spot_level, note, updated_at'
@@ -41,6 +44,9 @@ const OPTIONAL_COLUMNS = [', owner_staff_id, check_priority, old_numbers', ', ow
 let optionalLevel = 0
 // Case / rack a výška v U (0099).
 let rackColumns = ', kind, rack_units'
+// Guľové rohy a kolieska (0174).
+let dimColumns = ', corners_included, wheels'
+const missingDims = (error: { code?: string; message?: string } | null) => Boolean(dimColumns) && (isMissingColumn(error, 'corners_included') || isMissingColumn(error, 'wheels'))
 const missingRack = (error: { code?: string; message?: string } | null) => Boolean(rackColumns) && (isMissingColumn(error, 'kind') || isMissingColumn(error, 'rack_units'))
 const hasOldNumbers = () => optionalLevel === 0
 const hasOwnerColumn = () => optionalLevel < 3
@@ -65,11 +71,15 @@ function toCheck(row: CheckRow): CaseCheck {
 export async function fetchCases(companyId: string): Promise<Case[]> {
   const db = getSupabase()
   const [cases, checks] = await Promise.all([
-    db.from('cases').select(COLUMNS + OPTIONAL_COLUMNS[optionalLevel] + rackColumns).eq('company_id', companyId).order('name'),
+    db.from('cases').select(COLUMNS + OPTIONAL_COLUMNS[optionalLevel] + rackColumns + dimColumns).eq('company_id', companyId).order('name'),
     db.from('case_last_checks').select('case_id, checked_at, checked_by_name, note').eq('company_id', companyId),
   ])
   if (missingRack(cases.error)) {
     rackColumns = ''
+    return fetchCases(companyId)
+  }
+  if (missingDims(cases.error)) {
+    dimColumns = ''
     return fetchCases(companyId)
   }
   if (fallBack(cases.error)) return fetchCases(companyId)
@@ -101,6 +111,8 @@ export async function fetchCases(companyId: string): Promise<Case[]> {
     oldNumbers: row.old_numbers ?? '',
     kind: row.kind ?? 'case',
     rackUnits: row.rack_units ?? null,
+    cornersIncluded: row.corners_included ?? null,
+    wheels: row.wheels ?? 'none',
   }))
 }
 
@@ -136,6 +148,7 @@ export async function saveCase({ companyId, id, values, locations }: SaveArgs): 
     width_cm: values.widthCm ?? null,
     length_cm: values.lengthCm ?? null,
     depth_cm: values.depthCm ?? null,
+    ...(dimColumns ? { corners_included: values.cornersIncluded === 'yes' ? true : values.cornersIncluded === 'no' ? false : null, wheels: values.wheels ?? 'none' } : {}),
     note: values.note,
     ...(values.owner !== undefined && (values.owner !== '' || hasOwnerColumn()) ? { owner_staff_id: await resolveOwner(companyId, values.owner) } : {}),
     ...(values.checkPriority && (values.checkPriority !== 'normal' || hasPriorityColumn()) ? { check_priority: values.checkPriority } : {}),
@@ -225,6 +238,7 @@ export async function duplicateCase(companyId: string, source: Case, all: Case[]
     width_cm: source.widthCm,
     length_cm: source.lengthCm,
     depth_cm: source.depthCm,
+    ...(dimColumns ? { corners_included: source.cornersIncluded ?? null, wheels: source.wheels ?? 'none' } : {}),
     note: source.note,
     ...(hasOwnerColumn() ? { owner_staff_id: source.ownerStaffId ?? null } : {}),
     ...(hasPriorityColumn() ? { check_priority: source.checkPriority ?? 'normal' } : {}),

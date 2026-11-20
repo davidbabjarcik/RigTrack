@@ -98,7 +98,7 @@ export function EventsListPage() {
                       .join(' · ')}
                   </span>
                 </span>
-                <EventStatusBadge status={event.status} />
+                <EventStatusBadge status={event.status} endsOn={event.endsOn} />
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               </Link>
             </li>

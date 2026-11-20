@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.10 – 20. 11. 2026
+
+- **Rozmery case a reprákov s obrázkom**: Šírka (zľava doprava), Hĺbka (spredu dozadu) a Výška (od zeme hore)
+  s obrázkom, ako merať, a upozornením merať celý vonkajší rozmer vrátane guľových rohov a koliesok – kvôli
+  skladaniu do dodávky. Pri case aj repráku sa dá zapísať, či sú rozmery s rohmi alebo bez, a kde sú kolieska
+  (zospodu, vzadu, na boku); pri repráku aj výška spodku nad zemou.
+- **Celková váha techniky pri evente** (technika × počet a prázdne cases). Pri case je hmotnosť teraz výslovne
+  hmotnosť prázdneho case.
+- Event po termíne sa už neukazuje ako „Plánovaný“, ale ako „Odohraný“.
+- Technické: migrácia 0174 (rohy a kolieska pri cases).
+
 ### 9.9 – 20. 11. 2026
 
 - **Kanály DMX módu ako tabuľka**: po zadaní počtu kanálov (napr. 10) sa ukáže tabuľka s 10 riadkami – čo kanál

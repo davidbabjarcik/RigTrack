@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { formatSides, WHEEL_PLACES, type WheelPlace } from '@/lib/dimensions'
 import { CHECK_LEVEL_LABELS, DEFAULT_CHECK_DAYS, levelDays, type CheckLevel, type CheckLevelDays } from '@/features/checks/levels'
 
 export type Case = {
@@ -15,9 +16,16 @@ export type Case = {
   /** Vlastná fotka na štítku (cesta v Storage); platí to isté. */
   labelPhotoPath: string
   weightKg: number | null
+  /** Šírka – zľava doprava (pri pohľade spredu). */
   widthCm: number | null
+  /** Výška – od zeme hore (stĺpec „length_cm“ z 0003; na obrazovke „Výška“). */
   lengthCm: number | null
+  /** Hĺbka – spredu dozadu. */
   depthCm: number | null
+  /** Rozmery zmerané vrátane guľových rohov (0174); null = nevieme. */
+  cornersIncluded?: boolean | null
+  /** Kde má case kolieska (0174). */
+  wheels?: WheelPlace
   /** Miesto na pláne skladu a pri regáli poschodie; null = case na pláne nie je. */
   spotId: string | null
   spotLevel: number | null
@@ -165,6 +173,8 @@ export const caseSchema = z.object({
   widthCm: size(10000),
   lengthCm: size(10000),
   depthCm: size(10000),
+  cornersIncluded: z.enum(['yes', 'no', '']).optional(),
+  wheels: z.enum(WHEEL_PLACES).optional(),
   note: text(2000),
   /** Vlastník: prázdne = firma, id karty zamestnanca, alebo „m-<id člena>“. */
   owner: z.string().optional(),
@@ -175,9 +185,8 @@ export const caseSchema = z.object({
 })
 
 /** „120 × 60 × 40 cm“ z rozmerov, ktoré sú vyplnené; bez rozmerov prázdny text. */
-export function formatDimensions(item: Pick<Case, 'widthCm' | 'lengthCm' | 'depthCm'>) {
-  const sides = [item.widthCm, item.lengthCm, item.depthCm].filter((side) => side !== null)
-  return sides.length > 0 ? `${sides.map((side) => String(side).replace('.', ',')).join(' × ')} cm` : ''
+export function formatDimensions(item: Pick<Case, 'widthCm' | 'lengthCm' | 'depthCm' | 'cornersIncluded'>) {
+  return formatSides({ width: item.widthCm, depth: item.depthCm, height: item.lengthCm }, { corners: item.cornersIncluded })
 }
 
 export type CaseFormValues = z.infer<typeof caseSchema>

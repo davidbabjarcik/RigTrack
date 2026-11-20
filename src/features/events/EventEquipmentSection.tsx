@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
-import { ClipboardCheck, FileUp, Package, Plus, TriangleAlert, X } from 'lucide-react'
+import { ClipboardCheck, FileUp, Package, Plus, TriangleAlert, Weight, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { useCases } from '@/features/cases/useCases'
+import { eventWeight, formatTotalWeight } from './weight'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { PhotoThumb } from '@/features/equipment/PhotoThumb'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
@@ -126,6 +127,16 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
         </>
       }>
 
+      {equipment.data && event.equipment.length > 0 && (() => {
+        const weight = eventWeight(event.equipment, all, cases.data ?? [])
+        return (
+          <p className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <Weight className="size-4 text-muted-foreground" aria-hidden />
+            <span>{tx('Celková váha')}{' '}<strong>{weight.missing > 0 ? '≈ ' : ''}{formatTotalWeight(weight.kg)}</strong></span>
+            {weight.missing > 0 && <span className="text-muted-foreground">{weight.missing === 1 ? tx('(1 položka bez zadanej váhy)') : weight.missing < 5 ? tf('({0} položky bez zadanej váhy)', weight.missing) : tf('({0} položiek bez zadanej váhy)', weight.missing)}</span>}
+          </p>
+        )
+      })()}
       {equipment.data && (
         <EventReminders
           companyId={companyId}

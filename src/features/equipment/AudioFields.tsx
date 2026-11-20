@@ -1,3 +1,5 @@
+import { DimensionsPicture } from '@/components/dimensions/DimensionsPicture'
+import { WHEEL_LABELS, WHEEL_PLACES } from '@/lib/dimensions'
 import { Plus } from 'lucide-react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { Link } from 'react-router-dom'
@@ -20,6 +22,7 @@ export function AudioFields({ companyId }: { companyId: string }) {
   } = useFormContext<EquipmentFormValues>()
   const kind = useWatch({ control, name: 'kind' })
   const categoryText = useWatch({ control, name: 'category' })
+  const boxWheels = useWatch({ control, name: 'boxWheels' }) ?? 'none'
   // Časť Svetlo sa ukáže pri druhu Svetlo aj pri kategórii, ktorá je o svetlách.
   const audio = isAudio(kind, categoryText ?? '')
   const ampKind = useWatch({ control, name: 'ampKind' })
@@ -175,12 +178,44 @@ export function AudioFields({ companyId }: { companyId: string }) {
           </fieldset>
         )}
         {hasBox(audioType) && (
-          <fieldset className="sm:col-span-2">
+          <fieldset className="min-w-0 sm:col-span-2">
             <legend className="mb-1 text-sm font-medium">{tx('Rozmery boxu (cm)')}</legend>
-            <div className="grid grid-cols-3 gap-3">
-              <Field label={tx('Šírka')} type="number" inputMode="decimal" min={0} error={errors.boxWidthCm?.message} {...register('boxWidthCm', asOptionalNumber)} />
-              <Field label={tx('Hĺbka')} type="number" inputMode="decimal" min={0} error={errors.boxDepthCm?.message} {...register('boxDepthCm', asOptionalNumber)} />
-              <Field label={tx('Výška')} type="number" inputMode="decimal" min={0} error={errors.boxHeightCm?.message} {...register('boxHeightCm', asOptionalNumber)} />
+            <div className="grid gap-4 sm:grid-cols-[1fr_16rem] sm:items-center">
+              <div className="flex min-w-0 flex-col gap-3">
+                <p className="text-xs text-muted-foreground">{tx('Celý vonkajší rozmer vrátane rohov, rukovätí a koliesok – toľko miesta zaberie v dodávke.')}</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <Field label={tx('Šírka')} placeholder={tx('zľava doprava')} type="number" inputMode="decimal" min={0} error={errors.boxWidthCm?.message} {...register('boxWidthCm', asOptionalNumber)} />
+                  <Field label={tx('Hĺbka')} placeholder={tx('spredu dozadu')} type="number" inputMode="decimal" min={0} error={errors.boxDepthCm?.message} {...register('boxDepthCm', asOptionalNumber)} />
+                  <Field label={tx('Výška')} placeholder={tx('od zeme hore')} type="number" inputMode="decimal" min={0} error={errors.boxHeightCm?.message} {...register('boxHeightCm', asOptionalNumber)} />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <SelectField label={tx('Rohy a kovanie')} {...register('boxWithCorners')}>
+                    <option value="">{tx('— nevieme —')}</option>
+                    <option value="yes">{tx('Rozmery sú vrátane rohov')}</option>
+                    <option value="no">{tx('Rozmery sú bez rohov')}</option>
+                  </SelectField>
+                  <SelectField label={tx('Kolieska')} {...register('boxWheels')}>
+                    {WHEEL_PLACES.map((place) => (
+                      <option key={place} value={place}>
+                        {tx(WHEEL_LABELS[place])}
+                      </option>
+                    ))}
+                  </SelectField>
+                </div>
+                {boxWheels !== 'none' && (
+                  <Field
+                    label={tx('Spodok boxu nad zemou (cm)')}
+                    placeholder={tx('výška koliesok')}
+                    className="sm:w-64"
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    error={errors.boxFloorGapCm?.message}
+                    {...register('boxFloorGapCm', asOptionalNumber)}
+                  />
+                )}
+              </div>
+              <DimensionsPicture kind="speaker" wheels={boxWheels} className="order-first mx-auto w-full max-w-64 text-foreground sm:order-none" />
             </div>
             {audioType === 'subwoofer' && (
               <Field

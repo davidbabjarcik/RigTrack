@@ -54,3 +54,25 @@ test('detail eventu: karty a viac áut v jeden deň', async ({ page }, info) => 
   await expect(page.getByRole('button', { name: 'Ďalšie auto v tento deň' })).toHaveCount(1)
   await page.screenshot({ path: info.outputPath(`doprava-${info.project.name}.png`), fullPage: true })
 })
+
+test('technika eventu: celková váha', async ({ page }) => {
+  await signIn(page)
+  const item = (id: string, name: string, weightKg?: number) => ({
+    id, company_id: COMPANY_ID, name, kind: 'light', category_id: null, location_id: null, case_id: null, label_role: 'main', quantity: 4, track_units: false, unit_ids: [],
+    rental_price: null, min_quantity: null, manufacturer: '', model: '', serial_number: '', inventory_number: '', mac_address: '', ip_address: '',
+    service_interval_months: null, last_service_on: null, hours_interval_months: null, operating_hours: null, hours_read_on: null, photo_path: '', status: 'available', note: '',
+    updated_at: '2026-11-01T00:00:00Z', owner_staff_id: null, purchased_on: null, unit_purchases: {}, links: [], clone_of: '', capture_match: '', capture_note: '', unit_info: {},
+    attributes: weightKg ? { weightKg } : {},
+  })
+  await fakeBackend(page, {
+    ...fixtures,
+    equipment: [item('00000000-0000-4000-8000-0000000000a1', 'Ukážková hlava', 20.5), item('00000000-0000-4000-8000-0000000000a2', 'Ukážkový kábel')],
+    event_equipment: [
+      { company_id: COMPANY_ID, event_id: EVENT_ID, equipment_id: '00000000-0000-4000-8000-0000000000a1', quantity: 2, case_id: null },
+      { company_id: COMPANY_ID, event_id: EVENT_ID, equipment_id: '00000000-0000-4000-8000-0000000000a2', quantity: 3, case_id: null },
+    ],
+  })
+  await page.goto(`/events/${EVENT_ID}?tab=gear`)
+  await expect(page.getByText('Celková váha')).toContainText('≈ 41 kg')
+  await expect(page.getByText('(1 položka bez zadanej váhy)')).toBeVisible()
+})

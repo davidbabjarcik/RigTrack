@@ -18,7 +18,7 @@ describe('numberedCaseNames', () => {
 
 describe('describeTemplate', () => {
   it('sums up the dimensions, weight and category', () => {
-    expect(describeTemplate({ name: 'x', labelCategory: 'Light', weightKg: 18.5, widthCm: 60, lengthCm: 120, depthCm: 40 })).toBe('60 × 120 × 40 cm · 18,5 kg · Light')
+    expect(describeTemplate({ name: 'x', labelCategory: 'Light', weightKg: 18.5, widthCm: 60, lengthCm: 120, depthCm: 40 })).toBe('60 × 40 × 120 cm (š × h × v) · 18,5 kg · Light')
     expect(describeTemplate({ name: 'x', labelCategory: '', weightKg: null, widthCm: null, lengthCm: null, depthCm: null })).toBe('')
   })
 })

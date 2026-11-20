@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0173 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0174 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -6433,6 +6433,16 @@ alter table public.events
   constraint events_kind_check check (kind in ('event', 'dj'));
 
 grant update (kind) on public.events to authenticated;
+
+-- ===== 0174_case_corners_wheels.sql =====
+-- 0174: rozmery case jasnejšie – či sú zmerané vrátane guľových rohov a kde má case kolieska.
+-- Pri skladaní do dodávky treba vedieť skutočný vonkajší rozmer. Oprávnenia sa nemenia (RLS cases).
+
+alter table public.cases add column if not exists corners_included boolean;
+alter table public.cases add column if not exists wheels text not null default 'none'
+  constraint cases_wheels_check check (wheels in ('none', 'bottom', 'back', 'side'));
+
+grant update (corners_included, wheels) on public.cases to authenticated;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).
