@@ -142,7 +142,19 @@ export const COLOR_PART_HEX: Record<ColorPart, string> = {
   CTO: '#fdba74',
 }
 
-export type WheelColor = { name: string; hex: string }
+/** Farba na koliesku: názov, farba, DMX hodnota (napr. „10–19“) a nepovinná fotka (cesta v úložisku). */
+export type WheelColor = { name: string; hex: string; dmx?: string; image?: string }
+/** Gobo: názov, DMX hodnota a nepovinný obrázok; `wheel` = názov kanála pri svetle s viac gobo kolieskami. */
+export type Gobo = { name: string; dmx?: string; image?: string; wheel?: string }
+
+/** Ktorý riadok tabuľky kanálov sa dá rozkliknúť na farby alebo gobá. */
+export function slotKind(name: string): 'color' | 'gobo' | null {
+  const group = channelGroup(name)
+  if (/rot|speed|shake|index|fine|r[yý]chlos|ot[aá]č/i.test(name)) return null
+  if ((group === 'color' && /wheel|koliesk/i.test(name)) || /farebn\S*\s+koliesk|koliesk\S*\s+farieb/i.test(name)) return 'color'
+  if (group === 'gobo') return 'gobo'
+  return null
+}
 export type ColorWheel = { slots?: number; colors: WheelColor[] }
 
 /** Názov miešania podľa zložiek: RGBW, RGBA+UV, CMY… */

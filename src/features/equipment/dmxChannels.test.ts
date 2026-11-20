@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { channelColor, channelGroup, colorMixName, colorsFromChannels, dmxChannels, guessColor, mapRows, parseChannelLine, rowsToMap } from './dmxChannels'
+import { channelColor, channelGroup, colorMixName, colorsFromChannels, dmxChannels, guessColor, mapRows, parseChannelLine, rowsToMap, slotKind } from './dmxChannels'
 
 describe('DMX channels', () => {
   it('sorts channel names into groups', () => {
@@ -58,5 +58,17 @@ describe('channel table', () => {
     expect(mapRows('A\nB\nC', 2)).toHaveLength(3)
     expect(mapRows('', Number.NaN)).toEqual([])
     expect(mapRows(undefined, 2)).toHaveLength(2)
+  })
+})
+
+describe('slotKind', () => {
+  it('opens colour wheel and gobo channels, not their rotation or speed', () => {
+    expect(slotKind('Color Wheel')).toBe('color')
+    expect(slotKind('Farebné koliesko')).toBe('color')
+    expect(slotKind('Gobo wheel')).toBe('gobo')
+    expect(slotKind('Gobo 2')).toBe('gobo')
+    expect(slotKind('Gobo rotation')).toBeNull()
+    expect(slotKind('Color Wheel fine')).toBeNull()
+    expect(slotKind('Red')).toBeNull()
   })
 })

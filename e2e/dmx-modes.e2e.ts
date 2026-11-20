@@ -14,7 +14,8 @@ const light = {
       { name: 'Basic', channels: 6, map: 'Pan | 50 %\nTilt | 50 %\nDimmer\nShutter | Open\nColor Wheel\nRed' },
       { name: 'Extended', channels: 8, map: 'Pan\nPan fine\nTilt\nTilt fine\nDimmer\nShutter\nColor Wheel\nGobo' },
     ],
-    colorWheel: { slots: 8, colors: [{ name: 'Tmavomodrá', hex: '#1e3a8a' }, { name: 'CTO', hex: '#fdba74' }] },
+    colorWheel: { slots: 8, colors: [{ name: 'Tmavomodrá', hex: '#1e3a8a', dmx: '10–19' }, { name: 'CTO', hex: '#fdba74' }] },
+    gobos: [{ name: 'Hviezda', dmx: '20–29' }],
     colorParts: ['UV'],
   },
 }
@@ -26,6 +27,9 @@ test('DMX módy svetla: rozpis kanálov a farby', async ({ page }, info) => {
   await expect(page.getByText('DMX módy a farby')).toBeVisible()
   await expect(page.getByText('Farebné koliesko · 8 farieb')).toBeVisible()
   await expect(page.getByText('Tmavomodrá')).toBeVisible()
+  await expect(page.getByText('DMX 10–19')).toBeVisible()
+  await expect(page.getByText('Gobá · 1')).toBeVisible()
+  await expect(page.getByText('Hviezda')).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Open' })).toBeVisible()
   await expect(page.getByRole('img', { name: 'Pozícia' }).first()).toBeVisible()
   await page.getByRole('tab', { name: /Extended/ }).click()
@@ -33,8 +37,8 @@ test('DMX módy svetla: rozpis kanálov a farby', async ({ page }, info) => {
   await page.screenshot({ path: info.outputPath(`dmx-detail-${info.project.name}.png`), fullPage: true })
 
   await page.goto(`/equipment/${LIGHT_ID}/edit`)
-  await expect(page.getByRole('checkbox', { name: 'Má farebné koliesko' })).toBeChecked()
-  await expect(page.getByRole('button', { name: 'UV' }).first()).toHaveAttribute('aria-pressed', 'true')
+  // Samostatná časť Farby s krúžkami už nie je – farby sú pri kanáli Color Wheel.
+  await expect(page.getByRole('checkbox', { name: 'Má farebné koliesko' })).toHaveCount(0)
   // Kanály módu ako tabuľka: riadok na kanál, názov a predvolená hodnota.
   await expect(page.getByLabel('Kanál 4 – čo robí').first()).toHaveValue('Shutter')
   await expect(page.getByLabel('Kanál 4 – predvolená hodnota').first()).toHaveValue('Open')
@@ -78,9 +82,30 @@ test('farby kolieska sa vo formulári ukážu v uloženej farbe', async ({ page 
   await signIn(page)
   await fakeBackend(page, { equipment: [light] })
   await page.goto(`/equipment/${LIGHT_ID}/edit`)
+  // Riadok Color Wheel sa rozklikne na farby kolieska.
+  await page.getByRole('button', { name: 'Farby na koliesku (2)' }).first().click()
+  await expect(page.getByLabel('DMX hodnota farby 1')).toHaveValue('10–19')
   await expect(page.getByLabel('Farba 2', { exact: true })).toHaveValue('#fdba74')
   await page.getByLabel('Názov farby 2').fill('Červená')
   await page.getByRole('button', { name: 'Pridať farbu' }).click()
   await page.getByLabel('Názov farby 3').fill('Zelená')
   await expect(page.getByLabel('Farba 3', { exact: true })).toHaveValue('#16a34a')
+  await expect(page.getByRole('button', { name: 'Farby na koliesku (3)' }).first()).toBeVisible()
+})
+
+test('gobo kanál sa rozklikne na gobá s DMX hodnotou', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, { equipment: [light] })
+  await page.goto(`/equipment/${LIGHT_ID}/edit`)
+  // Mód Extended má kanál Gobo.
+  await page.getByRole('button', { name: 'Gobá (1)' }).click()
+  await expect(page.getByLabel('Názov gobo 1')).toHaveValue('Hviezda')
+  await page.getByRole('button', { name: 'Pridať gobo' }).click()
+  await page.getByLabel('Názov gobo 2').fill('Bodky')
+  await page.getByLabel('DMX hodnota gobo 2').fill('30–39')
+  await expect(page.getByRole('button', { name: 'Gobá (2)' })).toBeVisible()
+  // Obrázok gobo (fotka alebo z návodu) sa nahrá k danému gobo.
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
+  await page.getByRole('button', { name: 'Gobo 2 – nahrať obrázok' }).locator('xpath=following-sibling::input[@type="file"]').setInputFiles({ name: 'gobo.png', mimeType: 'image/png', buffer: png })
+  await expect(page.getByRole('button', { name: 'Gobo 2 – odobrať obrázok' })).toBeVisible()
 })

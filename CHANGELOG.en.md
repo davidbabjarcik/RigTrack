@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.11
+
+- **Colours and gobos right at the channels**: in the channel table the Color Wheel or Gobo row expands to list the
+  wheel colours (palette colour or photo, name, DMX value e.g. “10–19”) and the gobos (picture – photo or from the
+  manual, name and DMX value). A light with several gobo wheels has gobos for each.
+- The light detail shows wheel colours and gobos as pictures with their DMX values.
+- The separate “Colours” part with R, G, B… chips is gone from the form – colour mixing comes from the channels
+  (Red, Green, Blue…).
+- A GDTF file also fills in the gobos from its gobo wheels.
+
 ### 9.10
 
 - **Case and speaker sizes with a picture**: Width (left to right), Depth (front to back) and Height (floor up)

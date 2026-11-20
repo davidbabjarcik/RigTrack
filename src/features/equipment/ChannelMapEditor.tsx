@@ -1,9 +1,12 @@
 import { ChevronDown, ClipboardPaste } from 'lucide-react'
 import { useState } from 'react'
+import { useFormContext, useWatch } from 'react-hook-form'
+import { ColorSlotsEditor, GoboSlotsEditor } from './DmxSlotsEditor'
+import type { EquipmentFormValues } from './model'
 import { Button } from '@/components/ui/button'
 import { tf, tx } from '@/lib/i18n'
 import { ChannelIcon } from './DmxChannelTable'
-import { CHANNEL_GROUP_LABELS, CHANNEL_GROUPS, CHANNEL_SUGGESTIONS, channelColor, channelGroup, mapRows, rowsToMap, VALUE_SUGGESTIONS, type ChannelRow } from './dmxChannels'
+import { CHANNEL_GROUP_LABELS, CHANNEL_GROUPS, CHANNEL_SUGGESTIONS, channelColor, channelGroup, mapRows, rowsToMap, slotKind, VALUE_SUGGESTIONS, type ChannelRow } from './dmxChannels'
 
 type OptionGroup = { label: string; items: string[] }
 const CUSTOM = '__custom'
@@ -108,6 +111,11 @@ export function ChannelMapEditor({ map, channels, modeName, onChange }: Props) {
   const [stored, setRows] = useState<ChannelRow[]>(() => mapRows(map, channels))
   const [pasting, setPasting] = useState(false)
   const [pasted, setPasted] = useState('')
+  const [openSlots, setOpenSlots] = useState<number | null>(null)
+  // Počty farieb a gobo pri tlačidle rozkliknutia (bez formulára, napr. v teste, sú nulové).
+  const form = useFormContext<EquipmentFormValues>()
+  const wheelColors = useWatch({ control: form?.control, name: 'wheelColors' }) ?? []
+  const gobos = useWatch({ control: form?.control, name: 'gobos' }) ?? []
   // Rozpis zmenený zvonka (GDTF, databáza techniky): tabuľka sa načíta nanovo.
   const [seen, setSeen] = useState(map)
   if (map !== seen) {
@@ -171,8 +179,18 @@ export function ChannelMapEditor({ map, channels, modeName, onChange }: Props) {
         <ol className="flex flex-col divide-y overflow-hidden rounded-lg border bg-surface">
           {rows.map((row, index) => {
             const group = channelGroup(row.name)
+            const slots = form ? slotKind(row.name) : null
+            const firstGobo = slots === 'gobo' && rows.findIndex((other) => slotKind(other.name) === 'gobo') === index
+            const slotCount =
+              slots === 'color'
+                ? wheelColors.length
+                : slots === 'gobo'
+                  ? gobos.filter((gobo) => (gobo?.wheel?.trim() ? gobo.wheel.trim().toLowerCase() === row.name.trim().toLowerCase() : firstGobo)).length
+                  : 0
+            const open = openSlots === index && slots !== null
             return (
-              <li key={index} className={`flex items-center gap-2 px-2 py-1.5 ${extra && index >= channels ? 'bg-amber-500/10' : ''}`}>
+              <li key={index} className={`flex flex-col gap-2 px-2 py-1.5 ${extra && index >= channels ? 'bg-amber-500/10' : ''}`}>
+                <div className="flex items-center gap-2">
                 <span className="w-7 shrink-0 text-right font-mono text-sm text-muted-foreground tabular-nums">{index + 1}</span>
                 <span className="flex w-6 shrink-0 justify-center" title={row.name ? tx(CHANNEL_GROUP_LABELS[group]) : undefined}>
                   {row.name.trim() ? <ChannelIcon group={group} color={channelColor(row.name)} /> : null}
@@ -195,6 +213,23 @@ export function ChannelMapEditor({ map, channels, modeName, onChange }: Props) {
                   value={row.value}
                   onChange={(value) => setRow(index, { value })}
                 />
+                </div>
+                {slots && (
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    className="ml-[4.25rem] inline-flex items-center gap-1 self-start text-sm text-accent hover:underline"
+                    onClick={() => setOpenSlots(open ? null : index)}
+                  >
+                    <ChevronDown className={`size-4 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden />
+                    {slots === 'color' ? tf('Farby na koliesku ({0})', slotCount) : tf('Gobá ({0})', slotCount)}
+                  </button>
+                )}
+                {open && (
+                  <div className="rounded-lg border bg-muted/30 p-3 sm:ml-[4.25rem]">
+                    {slots === 'color' ? <ColorSlotsEditor /> : <GoboSlotsEditor wheel={row.name} first={firstGobo} />}
+                  </div>
+                )}
               </li>
             )
           })}

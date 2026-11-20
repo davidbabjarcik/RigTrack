@@ -176,6 +176,7 @@ const EMPTY: EquipmentFormValues = {
   colorWheel: false,
   wheelSlots: undefined,
   wheelColors: [],
+  gobos: [],
   macAddress: '',
   ipAddress: '',
   serviceIntervalMonths: undefined,
@@ -334,6 +335,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     colorWheel: Boolean(equipment.attributes.colorWheel),
     wheelSlots: equipment.attributes.colorWheel?.slots,
     wheelColors: equipment.attributes.colorWheel?.colors ?? [],
+    gobos: equipment.attributes.gobos ?? [],
     macAddress: equipment.macAddress,
     ipAddress: equipment.ipAddress,
     serviceIntervalMonths: equipment.serviceIntervalMonths ?? undefined,
@@ -465,6 +467,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
       setValue('wheelSlots', fixture.wheel.slots, dirty)
       setValue('wheelColors', fixture.wheel.colors, dirty)
     }
+    if (fixture.gobos?.length) setValue('gobos', fixture.gobos, dirty)
     if (fixture.powerW) setValue('powerW', fixture.powerW, dirty)
     if (fixture.weightKg) setValue('weightKg', fixture.weightKg, dirty)
     if (fixture.lightSource) setValue('lightSource', fixture.lightSource, dirty)

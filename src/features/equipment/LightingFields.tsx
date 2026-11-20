@@ -3,7 +3,6 @@ import { useFieldArray, useFormContext, useWatch } from 'react-hook-form'
 import { ampsAt230 } from '@/features/labels/tape'
 import { ChannelMapEditor } from './ChannelMapEditor'
 import { DmxNodeFields } from './DmxNodeFields'
-import { LightColorFields } from './LightColorFields'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { asOptionalNumber, CAPTURE_MATCH_LABELS, CAPTURE_MATCHES, LIGHT_SOURCE_LABELS, LIGHT_SOURCES, LIGHT_TYPE_GROUPS, LIGHT_TYPE_LABELS, type EquipmentFormValues } from './model'
@@ -148,7 +147,6 @@ export function LightingFields() {
               <Plus className="size-4" aria-hidden />{tx('Pridať mód')}</Button>
           </fieldset>
         )}
-        {!lightAccessory && <LightColorFields />}
         {/* Háky, klemy a iné príslušenstvo nie sú fixtúry – Capture ani „kópia čoho“ pri nich netreba. */}
         {!lightAccessory && (
           <>

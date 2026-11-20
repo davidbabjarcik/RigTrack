@@ -2,7 +2,7 @@ import { WHEEL_PLACES, type WheelPlace } from '@/lib/dimensions'
 import { z } from 'zod'
 import { DEFAULT_CHECK_DAYS, levelDays, type CheckLevel, type CheckLevelDays } from '@/features/checks/levels'
 import type { CategoryColor } from './categoryColors'
-import { COLOR_PARTS, colorMixName, type ColorPart, type ColorWheel } from './dmxChannels'
+import { COLOR_PARTS, colorMixName, type ColorPart, type ColorWheel, colorsFromChannels, type Gobo } from './dmxChannels'
 import { normalizePort } from './dmxNode'
 
 export const EQUIPMENT_STATUSES = ['available', 'loaned', 'in_service', 'damaged', 'retired'] as const
@@ -381,6 +381,8 @@ export type EquipmentAttributes = {
   /** Farby svetla: zložky miešania (R, G, B, W…) a farebné koliesko (počet farieb a ich názvy s farbou). */
   colorParts?: ColorPart[]
   colorWheel?: ColorWheel
+  /** Gobá s DMX hodnotami a obrázkami. */
+  gobos?: Gobo[]
   /** LED panel (pre LED kalkulačku): rozmer, pixely, váha a príkon jedného panela. */
   ledPanel?: LedPanelSpec
   /** LED procesor (napr. Novastar): výstupy, pixely na výstup, vstupy a ich rozlíšenie. */
@@ -674,8 +676,19 @@ export const equipmentSchema = z.object({
   colorWheel: z.boolean().optional(),
   wheelSlots: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Aspoň 1 farba').max(60, 'Najviac 60 farieb').optional(),
   wheelColors: z
-    .array(z.object({ name: text(40).min(1, 'Zadajte názov farby'), hex: z.string().regex(/^#[0-9a-f]{6}$/i, 'Farba má tvar #RRGGBB') }))
+    .array(
+      z.object({
+        name: text(40).min(1, 'Zadajte názov farby'),
+        hex: z.string().regex(/^#[0-9a-f]{6}$/i, 'Farba má tvar #RRGGBB'),
+        dmx: text(20).optional(),
+        image: z.string().max(300).optional(),
+      }),
+    )
     .max(60, 'Najviac 60 farieb')
+    .optional(),
+  gobos: z
+    .array(z.object({ name: text(40).min(1, 'Zadajte názov gobo'), dmx: text(20).optional(), image: z.string().max(300).optional(), wheel: text(60).optional() }))
+    .max(60, 'Najviac 60 gobo')
     .optional(),
   macAddress: z
     .string()
@@ -806,6 +819,7 @@ export function attributesFor(
         | 'colorWheel'
         | 'wheelSlots'
         | 'wheelColors'
+        | 'gobos'
         | 'makers'
         | 'audioType'
         | 'djType'
@@ -1032,11 +1046,20 @@ export function attributesFor(
     attributes.dipSwitches = values.dipSwitches
     if (values.dipNote?.trim()) attributes.dipNote = values.dipNote.trim()
   }
-  if (lighting && values.colorParts?.length) attributes.colorParts = COLOR_PARTS.filter((part) => values.colorParts!.includes(part))
-  if (lighting && values.colorWheel) {
-    const colors = (values.wheelColors ?? []).filter((color) => color.name.trim()).map((color) => ({ name: color.name.trim(), hex: color.hex.toLowerCase() }))
+  // Miešanie farieb sa berie z kanálov (Red, Green…), ak ho nikto nezadal; koliesko, keď má svetlo kanál Color Wheel alebo farby.
+  const fromChannels = lighting ? colorsFromChannels(values.dmxModes ?? []) : { parts: [], wheel: false }
+  const parts = values.colorParts?.length ? values.colorParts : fromChannels.parts
+  if (lighting && parts.length) attributes.colorParts = COLOR_PARTS.filter((part) => parts.includes(part))
+  const colors = (values.wheelColors ?? [])
+    .filter((color) => color.name.trim())
+    .map((color) => ({ name: color.name.trim(), hex: color.hex.toLowerCase(), ...(color.dmx?.trim() ? { dmx: color.dmx.trim() } : {}), ...(color.image ? { image: color.image } : {}) }))
+  if (lighting && (values.colorWheel || fromChannels.wheel || colors.length > 0)) {
     attributes.colorWheel = { ...(values.wheelSlots ? { slots: values.wheelSlots } : {}), colors }
   }
+  const gobos = (values.gobos ?? [])
+    .filter((gobo) => gobo.name.trim())
+    .map((gobo) => ({ name: gobo.name.trim(), ...(gobo.dmx?.trim() ? { dmx: gobo.dmx.trim() } : {}), ...(gobo.image ? { image: gobo.image } : {}), ...(gobo.wheel?.trim() ? { wheel: gobo.wheel.trim() } : {}) }))
+  if (lighting && gobos.length > 0) attributes.gobos = gobos
   if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels, ...(mode.map?.trim() ? { map: mode.map.replace(/\s+$/, '') } : {}) }))
   if (values.kind === 'cable') {
     const makers = (values.makers ?? []).filter((maker) => maker.name.trim() && maker.count > 0).map((maker) => ({ name: maker.name.trim(), count: maker.count }))

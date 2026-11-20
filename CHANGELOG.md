@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.11 – 20. 11. 2026
+
+- **Farby a gobá priamo pri kanáloch**: v tabuľke kanálov sa riadok Color Wheel alebo Gobo rozklikne a dajú sa
+  zapísať farby na koliesku (farba z palety alebo fotka, názov, DMX hodnota napr. „10–19“) a gobá (obrázok –
+  fotka alebo z návodu, názov a DMX hodnota). Pri svetle s viacerými gobo kolieskami má každé svoje gobá.
+- V detaile svetla sa farby kolieska aj gobá ukážu ako obrázky s DMX hodnotami.
+- Samostatná časť „Farby“ s krúžkami R, G, B… vo formulári už nie je – miešanie farieb sa berie z kanálov
+  (Red, Green, Blue…).
+- GDTF súbor doplní aj gobá z gobo koliesok.
+
 ### 9.10 – 20. 11. 2026
 
 - **Rozmery case a reprákov s obrázkom**: Šírka (zľava doprava), Hĺbka (spredu dozadu) a Výška (od zeme hore)

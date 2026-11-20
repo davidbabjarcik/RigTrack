@@ -1,5 +1,5 @@
 import { readZip } from '@/lib/zip'
-import { COLOR_PARTS, type ColorPart, type ColorWheel } from './dmxChannels'
+import { COLOR_PARTS, type ColorPart, type ColorWheel, type Gobo } from './dmxChannels'
 import type { DmxMode, LightSource } from './model'
 
 // GDTF (General Device Type Format, gdtf-share.com): ZIP s popisom svetla v description.xml. Čítame len ten popis –
@@ -11,6 +11,7 @@ export type GdtfFixture = {
   modes: DmxMode[]
   colorParts?: ColorPart[]
   wheel?: ColorWheel
+  gobos?: Gobo[]
   powerW?: number
   weightKg?: number
   lightSource?: LightSource
@@ -113,6 +114,25 @@ function colorWheelOf(doc: Document): ColorWheel | undefined {
   }
 }
 
+/** Gobá: kolesá, na ktoré ukazujú kanály Gobo1, Gobo2…, inak kolesá s „gobo“ v názve; „Open“ sa vynechá. */
+function gobosOf(doc: Document): Gobo[] {
+  const used = Array.from(doc.getElementsByTagName('ChannelFunction'))
+    .filter((item) => /^Gobo\d$/.test(item.getAttribute('Attribute') ?? '') && item.getAttribute('Wheel'))
+    .map((item) => item.getAttribute('Wheel')!)
+  const all = Array.from(doc.getElementsByTagName('Wheel'))
+  const names = [...new Set(used.length > 0 ? used : all.map((item) => item.getAttribute('Name') ?? '').filter((name) => /gobo/i.test(name)))]
+  const gobos: Gobo[] = []
+  names.forEach((wheelName, wheelIndex) => {
+    const wheel = all.find((item) => item.getAttribute('Name') === wheelName)
+    for (const slot of Array.from(wheel?.getElementsByTagName('Slot') ?? [])) {
+      const name = (slot.getAttribute('Name') ?? '').trim().slice(0, 40)
+      if (!name || /^open$/i.test(name)) continue
+      gobos.push({ name, ...(names.length > 1 ? { wheel: `Gobo ${wheelIndex + 1}` } : {}) })
+    }
+  })
+  return gobos.slice(0, 60)
+}
+
 /** Prečíta description.xml (text). Vyhodí chybu so slovenskou hláškou, keď to nie je GDTF. */
 export function parseGdtfXml(xml: string): GdtfFixture {
   const doc = new DOMParser().parseFromString(xml, 'application/xml')
@@ -166,12 +186,14 @@ export function parseGdtfXml(xml: string): GdtfFixture {
 
   const colorParts = colorPartsOf(doc)
   const wheel = colorWheelOf(doc)
+  const gobos = gobosOf(doc)
   return {
     manufacturer,
     model,
     modes,
     ...(colorParts.length > 0 ? { colorParts } : {}),
     ...(wheel ? { wheel } : {}),
+    ...(gobos.length > 0 ? { gobos } : {}),
     ...(powerW ? { powerW: Math.round(powerW) } : {}),
     ...(num(weight?.getAttribute('Value')) ? { weightKg: Math.round(num(weight?.getAttribute('Value'))! * 10) / 10 } : {}),
     ...(beams.length > 0 && lampSource(beams[0].getAttribute('LampType')) ? { lightSource: lampSource(beams[0].getAttribute('LampType')) } : {}),

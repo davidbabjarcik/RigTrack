@@ -4,8 +4,10 @@ import { Link } from 'react-router-dom'
 import { tf, tx } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
-import { CHANNEL_GROUP_LABELS, COLOR_PART_HEX, COLOR_PART_LABELS, colorMixName, colorsFromChannels, dmxChannels, type ChannelGroup, type ColorPart, type ColorWheel } from './dmxChannels'
+import { CHANNEL_GROUP_LABELS, COLOR_PART_HEX, COLOR_PART_LABELS, colorMixName, colorsFromChannels, dmxChannels, type ChannelGroup, type ColorPart, type ColorWheel, type Gobo } from './dmxChannels'
 import type { DmxMode } from './model'
+import { useCompany } from '@/features/companies/company-context'
+import { usePhotoThumbs } from './usePhotoThumbs'
 
 const ICONS: Record<Exclude<ChannelGroup, 'color'>, [LucideIcon, string]> = {
   intensity: [Sun, 'text-amber-500'],
@@ -110,12 +112,30 @@ export function DmxModesView({ modes }: { modes: DmxMode[] }) {
   )
 }
 
-/** Farby svetla: miešanie (RGBW…) a farebné koliesko s farbami. */
-export function LightColors({ parts, wheel, guessed = false }: { parts: ColorPart[]; wheel: ColorWheel | null; guessed?: boolean }) {
-  if (parts.length === 0 && !wheel) return null
-  const slots = wheel ? wheel.slots ?? wheel.colors.length : 0
+/** Políčko farby alebo gobo: fotka (ak je), inak farba; pod ňou názov a DMX hodnota. */
+function SlotCard({ index, name, dmx, hex, image }: { index: number; name: string; dmx?: string; hex?: string; image?: string }) {
   return (
-    <div className="flex flex-col gap-2 text-sm">
+    <li className="flex w-20 flex-col items-center gap-1 text-center text-xs">
+      <span className="flex size-14 items-center justify-center overflow-hidden rounded-xl border bg-surface">
+        {image ? <img src={image} alt="" className="size-full object-cover" /> : hex ? <span className="size-full" style={{ background: hex }} /> : <CircleDot className="size-6 text-muted-foreground" aria-hidden />}
+      </span>
+      <span className="leading-tight break-words">
+        <span className="font-mono text-muted-foreground tabular-nums">{index + 1}</span> {name}
+      </span>
+      {dmx && <span className="font-mono text-[11px] text-muted-foreground">DMX {dmx}</span>}
+    </li>
+  )
+}
+
+/** Farby svetla: miešanie (RGBW…), farebné koliesko s farbami a gobá (s fotkami a DMX hodnotami). */
+export function LightColors({ parts, wheel, gobos = [], guessed = false }: { parts: ColorPart[]; wheel: ColorWheel | null; gobos?: Gobo[]; guessed?: boolean }) {
+  const companyId = useCompany().active?.companyId ?? ''
+  const thumbs = usePhotoThumbs(companyId, [...(wheel?.colors ?? []).map((color) => color.image ?? ''), ...gobos.map((gobo) => gobo.image ?? '')])
+  if (parts.length === 0 && !wheel && gobos.length === 0) return null
+  const slots = wheel ? wheel.slots ?? wheel.colors.length : 0
+  const wheels = [...new Set(gobos.map((gobo) => gobo.wheel?.trim() || ''))]
+  return (
+    <div className="flex flex-col gap-3 text-sm">
       {parts.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-medium">{tf('Miešanie {0}', colorMixName(parts))}</span>
@@ -131,18 +151,27 @@ export function LightColors({ parts, wheel, guessed = false }: { parts: ColorPar
         <div>
           <span className="font-medium">{slots > 0 ? tf('Farebné koliesko · {0} farieb', slots) : tx('Farebné koliesko')}</span>
           {wheel.colors.length > 0 && (
-            <ul className="mt-1.5 flex flex-wrap gap-1.5">
+            <ul className="mt-2 flex flex-wrap gap-2">
               {wheel.colors.map((color, index) => (
-                <li key={index} className="inline-flex items-center gap-1.5 rounded-full border bg-surface py-0.5 pr-2.5 pl-1 text-xs">
-                  <Swatch hex={color.hex} />
-                  <span className="font-mono text-muted-foreground tabular-nums">{index + 1}</span>
-                  {color.name}
-                </li>
+                <SlotCard key={index} index={index} name={color.name} dmx={color.dmx} hex={color.hex} image={color.image ? thumbs[color.image] : undefined} />
               ))}
             </ul>
           )}
         </div>
       )}
+      {wheels.map((name) => {
+        const list = gobos.filter((gobo) => (gobo.wheel?.trim() || '') === name)
+        return (
+          <div key={name || 'gobo'}>
+            <span className="font-medium">{name ? `${name} · ${list.length}` : tf('Gobá · {0}', list.length)}</span>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {list.map((gobo, index) => (
+                <SlotCard key={index} index={index} name={gobo.name} dmx={gobo.dmx} image={gobo.image ? thumbs[gobo.image] : undefined} />
+              ))}
+            </ul>
+          </div>
+        )
+      })}
       {guessed && <p className="text-xs text-muted-foreground">{tx('Odhadnuté podľa názvov DMX kanálov – presne to nastavíte v úprave svetla.')}</p>}
     </div>
   )
@@ -150,13 +179,14 @@ export function LightColors({ parts, wheel, guessed = false }: { parts: ColorPar
 
 /** Sekcia v detaile svetla: DMX módy s rozpisom kanálov a farby (zadané, inak odhadnuté z kanálov). */
 /** `editTo`: svetlo bez módov ukáže výzvu s odkazom na doplnenie (len tomu, kto môže upravovať). */
-export function LightDmxSection({ attributes, editTo }: { attributes: { dmxModes?: DmxMode[]; colorParts?: ColorPart[]; colorWheel?: ColorWheel }; editTo?: string }) {
+export function LightDmxSection({ attributes, editTo }: { attributes: { dmxModes?: DmxMode[]; colorParts?: ColorPart[]; colorWheel?: ColorWheel; gobos?: Gobo[] }; editTo?: string }) {
   const modes = attributes.dmxModes ?? []
   const entered = Boolean(attributes.colorParts?.length || attributes.colorWheel)
   const guess = entered ? null : colorsFromChannels(modes)
   const parts = attributes.colorParts ?? guess?.parts ?? []
   const wheel = attributes.colorWheel ?? (guess?.wheel ? { colors: [] } : null)
-  const hasColors = parts.length > 0 || Boolean(wheel)
+  const gobos = attributes.gobos ?? []
+  const hasColors = parts.length > 0 || Boolean(wheel) || gobos.length > 0
   if (modes.length === 0 && !hasColors && !editTo) return null
   return (
     <CollapsibleSection id="equipment.dmx" title={tx('DMX módy a farby')}>
@@ -169,7 +199,7 @@ export function LightDmxSection({ attributes, editTo }: { attributes: { dmxModes
         )}
         {hasColors && (
           <div className="rounded-xl border bg-surface p-4">
-            <LightColors parts={parts} wheel={wheel} guessed={!entered} />
+            <LightColors parts={parts} wheel={wheel} gobos={gobos} guessed={!entered} />
           </div>
         )}
         {modes.length > 0 && <DmxModesView modes={modes} />}
