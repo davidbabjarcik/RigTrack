@@ -2,7 +2,7 @@ import { EventAttendanceSection } from '@/features/attendance/EventAttendanceSec
 import { EventDutiesSection } from '@/features/duties/EventDutiesSection'
 import { EventDrivesSection } from '@/features/drives/EventDrivesSection'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CalendarClock, Disc3, FileText, ListChecks, Pencil, Printer, Receipt, Trash2 } from 'lucide-react'
+import { ArrowLeft, CalendarClock, Disc3, FileSignature, FileText, ListChecks, Pencil, Printer, Receipt, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -122,6 +122,10 @@ export function EventDetailPage() {
           {can(company, 'offers.edit') && (
             <LinkButton to={`/offers/new?event=${id}`} variant="outline" size="sm" title={tx('Cenová ponuka s časťami, rozpočtom a vystavovateľom')}>
               <FileText className="size-4" aria-hidden />{tx('Cenová ponuka')}</LinkButton>
+          )}
+          {canEdit && (
+            <LinkButton to={`/events/${id}/contract`} variant="outline" size="sm" title={tx('Vzor zmluvy s klientom z údajov eventu')}>
+              <FileSignature className="size-4" aria-hidden />{tx('Zmluva')}</LinkButton>
           )}
           <LinkButton to={`/events/${id}/print`} variant="outline" size="sm">
             <Printer className="size-4" aria-hidden />{tx('Tlač / PDF')}</LinkButton>

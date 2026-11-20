@@ -100,6 +100,7 @@ const patchTemplates = lazyPage(() => import('@/features/patch/PatchTemplatesPag
 const tapeLabels = lazyPage(() => import('@/features/labels/TapeLabelsPage').then((m) => m.TapeLabelsPage), 'equipment.view')
 const patchPrint = lazyPage(() => import('@/features/patch/PatchPrintPage').then((m) => m.PatchPrintPage), 'events.view')
 const eventPrint = lazyPage(() => import('@/features/events/EventPrintPage').then((m) => m.EventPrintPage), 'events.view')
+const eventContract = lazyPage(() => import('@/features/events/ContractPage').then((m) => m.ContractPage), 'events.edit')
 const eventForm = lazyPage(() => import('@/features/events/EventFormPage').then((m) => m.EventFormPage), 'events.view')
 const audit = lazyPage(() => import('@/features/audit/AuditPage').then((m) => m.AuditPage), 'audit.view')
 const staffList = lazyPage(() => import('@/features/staff/StaffPage').then((m) => m.StaffPage), 'staff.view')
@@ -166,6 +167,7 @@ export const routes: RouteObject[] = [
           // Tlačová listina stojí mimo rozloženia aplikácie, aby sa netlačilo menu.
           { path: 'loans/:id/sheet', lazy: loanSheet },
           { path: 'events/:id/print', lazy: eventPrint },
+          { path: 'events/:id/contract', lazy: eventContract },
           { path: 'events/:id/patch', lazy: patchPrint },
           { path: 'events/:id/dmx', lazy: dmxPrint },
           { path: 'events/:id/quote', lazy: quote },

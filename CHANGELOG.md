@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 9.13 – 20. 11. 2026
+
+- **Zmluva k eventu**: v detaile eventu tlačidlo „Zmluva“ pripraví vzor zmluvy o technickom zabezpečení podujatia
+  alebo o prenájme techniky. Dodávateľ sa doplní z vystavovateľa cenových ponúk, objednávateľ z organizátora
+  (obchodné meno, sídlo, IČO, konateľ), predmet z eventu (termín, miesto, časy, elektrina, technika). Doplníte cenu,
+  DPH, zálohu, splatnosť, storno podmienky a ďalšie dojednania a vytlačíte ju alebo uložíte ako PDF (aj z mobilu).
+  Je to vzor – pred podpisom ho skontrolujte. Nič sa neukladá.
+
 ### 9.12 – 20. 11. 2026
 
 - **Plagát inventára trussu po sériách**: diely sa delia podľa série (napr. F34 a F34 P) – najprv rovné diely

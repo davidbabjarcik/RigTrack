@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 9.13
+
+- **Event contract**: the “Contract” button in the event detail prepares a template of an event technical services
+  or equipment rental contract. The supplier comes from the quote issuer, the client from the organizer (legal name,
+  address, company ID, director), the subject from the event (dates, venue, times, power, gear). Fill in the price,
+  VAT, deposit, due date, cancellation and other terms and print it or save it as a PDF (also from a phone). It is a
+  template – check it before signing. Nothing is saved.
+
 ### 9.12
 
 - **Truss inventory poster by series**: pieces are grouped by series (e.g. F34 and F34 P) – first all straight
