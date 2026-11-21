@@ -1,37 +1,54 @@
 import { describe, expect, it } from 'vitest'
-import { autoFill, placeIn, readLayout, resizeLayout, unplaced, withoutGone } from './layout'
+import { addSection, autoFill, editSection, placeables, placeIn, readLayout, removeSection, unplaced, withoutGone } from './layout'
 
 const A = '00000000-0000-4000-8000-0000000000a1'
 const B = '00000000-0000-4000-8000-0000000000a2'
 const content = [
   { id: A, name: 'Ukážkový PAR', quantity: 3, trackUnits: true, unitIds: [] },
-  { id: B, name: 'Ukážkový kábel', quantity: 6, trackUnits: false, unitIds: [] },
+  { id: B, name: 'Ukážkový mikrofón', quantity: 10, trackUnits: false, unitIds: [] },
 ]
+const [par1, par2, , mic] = placeables(content)
 
-describe('priehradky v case', () => {
-  it('prázdne rozloženie je case bez priehradok, pokazené sa opraví', () => {
+describe('rozloženie v case', () => {
+  it('prázdne = bez rozloženia; staršia jednoduchá mriežka je jedna časť', () => {
     expect(readLayout({})).toBeNull()
     const layout = readLayout({ rows: 99, cols: 2, cells: [{ items: [{ equipmentId: 'zlé' }, { equipmentId: A, unit: 2 }], note: 'x' }] })!
-    expect(layout.rows).toBe(8)
-    expect(layout.cells).toHaveLength(16)
-    expect(layout.cells[0]).toEqual({ items: [{ equipmentId: A, unit: 2 }], note: 'x' })
+    expect(layout.sections).toHaveLength(1)
+    expect(layout.sections[0]).toMatchObject({ name: 'Priehradky', rows: 8, cols: 2 })
+    expect(layout.sections[0].cells[0]).toEqual({ items: [{ equipmentId: A, unit: 2, count: 0 }], note: 'x' })
   })
 
-  it('rozloží kusy po jednom, presunie a zmena mriežky drží miesta', () => {
-    let layout = autoFill(resizeLayout(null, 2, 3), content)
-    expect(layout.cells.slice(0, 4).map((cell) => cell.items)).toEqual([[{ equipmentId: A, unit: 1 }], [{ equipmentId: A, unit: 2 }], [{ equipmentId: A, unit: 3 }], [{ equipmentId: B, unit: null }]])
+  it('šuplíky: kusy po kusoch, položka s počtom rozdelená do dvoch šuplíkov', () => {
+    let layout = addSection(addSection(null, 'Šuplík 1 – SM 58', 1, 1), 'Šuplík 2', 1, 1)
+    layout = placeIn(layout, { section: 0, cell: 0 }, mic, 6)
+    layout = placeIn(layout, { section: 1, cell: 0 }, mic, 99)
+    expect(layout.sections.map((section) => section.cells[0].items)).toEqual([[{ equipmentId: B, unit: null, count: 6 }], [{ equipmentId: B, unit: null, count: 4 }]])
+    layout = placeIn(layout, { section: 0, cell: 0 }, par1)
+    layout = placeIn(layout, { section: 1, cell: 0 }, par1)
+    expect(layout.sections[0].cells[0].items).toHaveLength(1)
+    expect(unplaced(layout, content).map((item) => item.label)).toEqual(['Ukážkový PAR #2', 'Ukážkový PAR #3'])
+  })
+
+  it('rozloží nezaradené do prázdnych priehradok jednej časti a zmena mriežky drží miesta', () => {
+    let layout = autoFill(addSection(null, 'Priehradky', 2, 3), 0, content)
+    expect(layout.sections[0].cells.slice(0, 4).map((cell) => cell.items)).toEqual([
+      [{ equipmentId: A, unit: 1, count: 1 }],
+      [{ equipmentId: A, unit: 2, count: 1 }],
+      [{ equipmentId: A, unit: 3, count: 1 }],
+      [{ equipmentId: B, unit: null, count: 10 }],
+    ])
     expect(unplaced(layout, content)).toEqual([])
-    layout = placeIn(layout, 5, { equipmentId: A, unit: 1 })
-    expect(layout.cells[0].items).toEqual([])
-    expect(layout.cells[5].items).toEqual([{ equipmentId: A, unit: 1 }])
-    const smaller = resizeLayout(layout, 2, 2)
-    // Riadok 2, stĺpec 1 (pôvodne priehradka 4 s káblom) je teraz priehradka 3.
-    expect(smaller.cells[2].items).toEqual([{ equipmentId: B, unit: null }])
-    expect(unplaced(smaller, content).map((item) => item.label)).toEqual(['Ukážkový PAR #1', 'Ukážkový PAR #3'])
+    layout = editSection(layout, 0, 'Spodok', 2, 2)
+    expect(layout.sections[0].name).toBe('Spodok')
+    expect(layout.sections[0].cells[2].items).toEqual([{ equipmentId: B, unit: null, count: 10 }])
+    expect(unplaced(layout, content).map((item) => item.label)).toEqual(['Ukážkový PAR #3'])
+    expect(removeSection(layout, 0)).toBeNull()
   })
 
-  it('technika, ktorá z case zmizla, sa z priehradok vynechá', () => {
-    const layout = autoFill(resizeLayout(null, 1, 4), content)
-    expect(withoutGone(layout, [content[1]]).cells.flatMap((cell) => cell.items)).toEqual([{ equipmentId: B, unit: null }])
+  it('technika, ktorá z case zmizla alebo jej ubudlo, sa upraví', () => {
+    let layout = placeIn(addSection(null, 'X', 1, 2), { section: 0, cell: 0 }, par2)
+    layout = placeIn(layout, { section: 0, cell: 1 }, mic, 8)
+    const fewer = withoutGone(layout, [{ ...content[1], quantity: 5 }])
+    expect(fewer.sections[0].cells.map((cell) => cell.items)).toEqual([[], [{ equipmentId: B, unit: null, count: 5 }]])
   })
 })

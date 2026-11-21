@@ -143,22 +143,32 @@ test('inventúra: čo chýba a čo je nájdené', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Nájdené (1)' })).toBeVisible()
 })
 
-test('priehradky v case: čo je kde', async ({ page }) => {
+test('rozloženie v case: priehradky a šuplíky', async ({ page }) => {
   await signIn(page)
   const CASE = '00000000-0000-4000-8000-0000000000c7'
   const PAR = '00000000-0000-4000-8000-0000000000b9'
+  const MIC = '00000000-0000-4000-8000-0000000000ba'
   const box = {
-    id: CASE, company_id: COMPANY_ID, name: 'Ukážkový case na PAR', inventory_number: '', location_id: null, label_number: '', label_category: '', label_title: '', label_photo_path: '', photo_path: '',
+    id: CASE, company_id: COMPANY_ID, name: 'Ukážkový case', inventory_number: '', location_id: null, label_number: '', label_category: '', label_title: '', label_photo_path: '', photo_path: '',
     weight_kg: null, width_cm: null, length_cm: null, depth_cm: null, spot_id: null, spot_level: null, note: '', updated_at: '2026-11-01T00:00:00Z',
-    layout: { rows: 2, cols: 3, cells: [{ items: [{ equipmentId: PAR, unit: 1 }], note: '' }, { items: [], note: 'káble' }] },
+    layout: {
+      sections: [
+        { name: 'Priehradky', rows: 2, cols: 3, cells: [{ items: [{ equipmentId: PAR, unit: 1, count: 1 }], note: '' }, { items: [], note: 'káble' }] },
+        { name: 'Šuplík 1 – SM 58', rows: 1, cols: 1, cells: [{ items: [{ equipmentId: MIC, unit: null, count: 6 }], note: 'držiaky' }] },
+      ],
+    },
   }
-  await fakeBackend(page, { cases: [box], equipment: [{ ...piece(PAR, 'Ukážkový PAR', 'available'), case_id: CASE, quantity: 6, track_units: true }] })
+  await fakeBackend(page, {
+    cases: [box],
+    equipment: [{ ...piece(PAR, 'Ukážkový PAR', 'available'), case_id: CASE, quantity: 6, track_units: true }, { ...piece(MIC, 'Ukážkový mikrofón', 'available'), case_id: CASE, quantity: 10 }],
+  })
   await page.goto(`/cases/${CASE}`)
-  await expect(page.getByRole('heading', { name: 'Priehradky' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Priehradka 1' })).toContainText('Ukážkový PAR #1')
-  await expect(page.getByRole('button', { name: 'Priehradka 2' })).toContainText('káble')
-  await expect(page.getByText(/Nezaradené \(5\)/)).toBeVisible()
-  await page.getByRole('button', { name: 'Priehradka 3' }).click()
-  await expect(page.getByLabel('Pridať do priehradky')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Rozložiť nezaradené do prázdnych' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Rozloženie v case' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Priehradky – priehradka 1' })).toContainText('Ukážkový PAR #1')
+  await expect(page.getByRole('button', { name: 'Priehradky – priehradka 2' })).toContainText('káble')
+  await expect(page.getByRole('button', { name: 'Šuplík 1 – SM 58', exact: true })).toContainText('6× Ukážkový mikrofón')
+  await expect(page.getByText(/Nezaradené \(6\): .*4× Ukážkový mikrofón/)).toBeVisible()
+  await page.getByRole('button', { name: 'Šuplík 1 – SM 58', exact: true }).click()
+  await expect(page.getByLabel('Pridať sem')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Pridať časť (šuplík, priehradky)' })).toBeVisible()
 })

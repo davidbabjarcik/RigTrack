@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.17
+
+- **Case layout – drawers and quantities**: compartments now come in sections. A case or rack with drawers has
+  each drawer as its own section (e.g. “Drawer 1 – SM 57, 58”); a foam drawer works as 1 × 1 with a list. Gear
+  without per-piece tracking is placed with a quantity (e.g. 6 of 10 microphones in drawer 1, the rest in drawer 2)
+  and the app shows how many are not placed yet. A section can be renamed, re-gridded or removed; compartments
+  recorded so far are kept.
+
 ### 10.16
 
 - **Case compartments**: case detail has a “Compartments” section – split the case into a grid (e.g. 2 × 3 for a

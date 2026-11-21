@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.17 – 21. 11. 2026
+
+- **Rozloženie v case – šuplíky a počty**: priehradky sa rozšírili na časti. Case alebo rack so šuplíkmi má každý
+  šuplík ako vlastnú časť (napr. „Šuplík 1 – SM 57, 58“); šuplík s molitanom stačí ako 1 × 1 so zoznamom. Technika
+  bez sledovania kusov sa rozkladá s počtom (napr. 6 z 10 mikrofónov v šuplíku 1, zvyšok v šuplíku 2) a appka ukáže,
+  koľko ešte nie je zaradené. Časť sa dá premenovať, zmeniť jej mriežku alebo odstrániť; doteraz zapísané priehradky
+  ostali.
+
 ### 10.16 – 21. 11. 2026
 
 - **Priehradky v case**: v detaile case sekcia „Priehradky“ – case rozdelíte na mriežku (napr. 2 × 3 pri case na
