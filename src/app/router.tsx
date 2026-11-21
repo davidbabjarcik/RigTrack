@@ -127,6 +127,7 @@ const stage = lazyPage(() => import('@/features/stage/StagePage').then((m) => m.
 const trussStorage = lazyPage(() => import('@/features/warehouse/TrussStoragePage').then((m) => m.TrussStoragePage), 'cases.view')
 const warehouse = lazyPage(() => import('@/features/warehouse/WarehousePage').then((m) => m.WarehousePage), 'cases.view')
 const recycleBin = lazyPage(() => import('@/features/bin/RecycleBinPage').then((m) => m.RecycleBinPage))
+const payStatement = lazyPage(() => import('@/features/payouts/PayStatementPage').then((m) => m.PayStatementPage))
 const payouts = lazyPage(() => import('@/features/payouts/PayoutsPage').then((m) => m.PayoutsPage))
 const ordersList = lazyPage(() => import('@/features/orders/OrdersListPage').then((m) => m.OrdersListPage), 'orders.view')
 const orderDetail = lazyPage(() => import('@/features/orders/OrderDetailPage').then((m) => m.OrderDetailPage), 'orders.view')
@@ -254,6 +255,7 @@ export const routes: RouteObject[] = [
               { path: 'events/:id/import', lazy: eventImport },
               { path: 'audit', lazy: audit },
               { path: 'payouts', lazy: payouts },
+              { path: 'payouts/statement', lazy: payStatement },
               { path: 'profit', lazy: profit },
               { path: 'admin/recycle-bin', lazy: recycleBin },
               { path: 'warehouse', lazy: warehouse },

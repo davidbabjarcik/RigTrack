@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { EMPTY_EVENT_DETAILS, type CompanyEvent } from '@/features/events/model'
-import { inYear, lastEditionPayout, paymentSchema, paymentTotals, paymentYears, shareByMember, sortPayments, unpaidByMember, type Payment } from './model'
+import { inYear, lastEditionPayout, monthStatement, paymentMonths, paymentSchema, paymentTotals, paymentYears, shareByMember, sortPayments, unpaidByMember, type Payment } from './model'
 
 const payment = (patch: Partial<Payment>): Payment => ({
   id: 'x', memberId: 'm1', amount: 100, kind: 'reward', happenedOn: '2026-10-01', eventId: null, note: '', paidAt: null, ...patch,
@@ -113,5 +113,19 @@ describe('lastEditionPayout', () => {
     expect(lastEditionPayout(payments, events, 'eva', 'j26')).toBeNull()
     expect(lastEditionPayout(payments, events, '', 'j26')).toBeNull()
     expect(lastEditionPayout(payments, events, 'jano', '')).toBeNull()
+  })
+})
+
+describe('monthStatement', () => {
+  it('zárobok, vyplatené, zálohy a doplatok za mesiac jedného člena', () => {
+    const p = (memberId: string, amount: number, kind: 'reward' | 'advance' | 'bonus', happenedOn: string, paidAt: string | null = null) => ({ memberId, amount, kind, happenedOn, paidAt })
+    const statement = monthStatement(
+      [p('m1', 100.1, 'reward', '2026-11-20'), p('m1', 50, 'bonus', '2026-11-02', '2026-11-03'), p('m1', 30, 'advance', '2026-11-05'), p('m1', 999, 'reward', '2026-10-31'), p('m2', 999, 'reward', '2026-11-10')],
+      'm1',
+      '2026-11',
+    )
+    expect(statement.rows.map((row) => row.happenedOn)).toEqual(['2026-11-02', '2026-11-05', '2026-11-20'])
+    expect(statement).toMatchObject({ earned: 150.1, paid: 50, advances: 30, toPay: 70.1 })
+    expect(paymentMonths([p('m1', 1, 'reward', '2026-10-01'), p('m1', 1, 'reward', '2026-11-01'), p('m2', 1, 'reward', '2026-12-01')], 'm1')).toEqual(['2026-11', '2026-10'])
   })
 })

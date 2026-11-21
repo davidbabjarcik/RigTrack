@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.10 – 21. 11. 2026
+
+- **Výpis odmien za mesiac**: v Odmenách tlačidlo „Výpis za mesiac“ – zoznam odmien, bonusov a záloh člena za
+  zvolený mesiac s akciou a poznámkou, súčty (zárobok, už vyplatené, zálohy) a koľko ostáva doplatiť, s miestom na
+  podpisy. Dá sa vytlačiť alebo uložiť ako PDF. Admin vyberie člena, ostatní vidia len svoj výpis.
+
 ### 10.9 – 21. 11. 2026
 
 - **Návratnosť techniky**: v detaile techniky s nákupnou cenou riadok „Návratnosť“ – koľko kus odhadom zarobil na

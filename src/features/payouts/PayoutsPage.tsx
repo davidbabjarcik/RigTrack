@@ -1,12 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Printer, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Button } from '@/components/ui/button'
+import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
 import { useAuth } from '@/features/auth/auth-context'
 import type { Member } from '@/features/companies/api'
@@ -190,11 +190,14 @@ export function PayoutsPage() {
         title={tx('Odmeny')}
         description={isAdmin ? tx('Odmeny a zálohy členov firmy') : tx('Vaše odmeny a zálohy')}
         action={
-          canManage &&
-          !adding && (
-            <Button onClick={() => setAdding(true)}>
-              <Plus className="size-4" aria-hidden />{tx('Zapísať')}</Button>
-          )
+          <div className="flex flex-wrap gap-2">
+            <LinkButton to={isAdmin && memberFilter ? `/payouts/statement?member=${memberFilter}` : '/payouts/statement'} variant="outline">
+              <Printer className="size-4" aria-hidden />{tx('Výpis za mesiac')}</LinkButton>
+            {canManage && !adding && (
+              <Button onClick={() => setAdding(true)}>
+                <Plus className="size-4" aria-hidden />{tx('Zapísať')}</Button>
+            )}
+          </div>
         }
       />
 

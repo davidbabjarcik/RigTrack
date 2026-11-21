@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.10
+
+- **Monthly pay statement**: Rewards has a “Monthly statement” button – a member's rewards, bonuses and advances for
+  the chosen month with the event and note, totals (earned, already paid, advances) and what is left to pay, with
+  room for signatures. It can be printed or saved as a PDF. An admin picks the member, others see only their own.
+
 ### 10.9
 
 - **Gear payback**: equipment detail with a purchase price has a “Payback” row – how much the piece earned on played

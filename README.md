@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-10.9-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-10.10-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **10.10** | Výpis odmien za mesiac na tlač a do PDF |
 | **10.9** | Návratnosť techniky – kedy sa kus splatil |
 | **10.8** | Šablóny eventov – technika a posádka na nový event jedným ťuknutím |
 | **10.7** | Náhrada zo skladu pri chýbajúcej technike jedným ťuknutím |
@@ -87,7 +88,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **8.18.1** | Oprava zobrazenia údajov v návrhoch do katalógu |
 | **8.18** | Potvrdenie a zmeny údajov z databázy techniky od firiem, používanosť modelov, zapamätané zoradenie techniky |
 | **8.17** | Prepojenie firmy bez IČO (kód), DJ technika, pulty, mikrofóny, bezdrôty, stageboxy, procesory a Technics Hi-Fi v databáze |
-| **8.15** | L-Acoustics v databáze techniky, kompatibilné zosilňovače a pripomienka pri evente |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

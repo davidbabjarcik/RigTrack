@@ -131,3 +131,27 @@ export function lastEditionPayout(
   if (mine.length === 0) return null
   return { event: previous, amount: mine.reduce((sum, payment) => sum + cents(payment.amount), 0) / 100 }
 }
+
+/**
+ * Výpis odmien člena za mesiac (YYYY-MM): zárobok (odmeny, bonusy, iné), z neho už vyplatené, zálohy v mesiaci
+ * a koľko ostáva doplatiť (zárobok − vyplatené − zálohy, nie menej ako 0). Riadky podľa dátumu.
+ */
+export function monthStatement<T extends Pick<Payment, 'memberId' | 'amount' | 'kind' | 'happenedOn' | 'paidAt'>>(payments: T[], memberId: string, month: string) {
+  const rows = payments.filter((payment) => payment.memberId === memberId && payment.happenedOn.startsWith(month)).sort((a, b) => a.happenedOn.localeCompare(b.happenedOn))
+  let earned = 0
+  let paid = 0
+  let advances = 0
+  for (const row of rows) {
+    if (row.kind === 'advance') advances += cents(row.amount)
+    else {
+      earned += cents(row.amount)
+      if (row.paidAt) paid += cents(row.amount)
+    }
+  }
+  return { rows, earned: earned / 100, paid: paid / 100, advances: advances / 100, toPay: Math.max(0, earned - paid - advances) / 100 }
+}
+
+/** Mesiace (YYYY-MM) so záznamami člena, najnovší prvý. */
+export function paymentMonths(payments: Pick<Payment, 'memberId' | 'happenedOn'>[], memberId: string) {
+  return [...new Set(payments.filter((payment) => payment.memberId === memberId).map((payment) => payment.happenedOn.slice(0, 7)))].sort().reverse()
+}
