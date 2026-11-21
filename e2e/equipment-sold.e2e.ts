@@ -127,3 +127,18 @@ test('treba kúpiť: objednávka jedným ťuknutím', async ({ page }) => {
   await expect(page.getByLabel('Názov *')).toHaveValue('Ukážková páska')
   await expect(page.getByLabel('Ku ktorej technike pripočítať')).toHaveValue(ID)
 })
+
+test('inventúra: čo chýba a čo je nájdené', async ({ page }) => {
+  await signIn(page)
+  const A = '00000000-0000-4000-8000-0000000000b7'
+  const B = '00000000-0000-4000-8000-0000000000b8'
+  await page.addInitScript(([companyId, id]) => {
+    localStorage.setItem(`rigtrack.inventory.${companyId}`, JSON.stringify({ spotId: '', startedOn: '2026-11-21', scanned: [{ kind: 'equipment', id, units: [], count: 1 }] }))
+  }, [COMPANY_ID, A])
+  await fakeBackend(page, { equipment: [piece(A, 'Ukážkový pult', 'available'), piece(B, 'Ukážková hlava', 'available')] })
+  await page.goto('/cases')
+  await page.getByRole('link', { name: 'Inventúra' }).click()
+  await expect(page.getByRole('heading', { name: 'Chýba (1)' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Ukážková hlava' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Nájdené (1)' })).toBeVisible()
+})

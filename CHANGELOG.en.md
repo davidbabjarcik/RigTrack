@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.12
+
+- **Stocktake by scanning**: Cases and racks has a “Stocktake” button. Walk through the warehouse with your phone
+  and scan the labels of cases and gear (tracked gear piece by piece); the app shows as you go what was found, what is
+  missing, what is extra and what is out right now (on a running event or an issued loan). You can check the whole
+  warehouse or one spot (also by scanning the spot's label). The browser remembers a stocktake in progress, and the
+  result downloads to Excel.
+
 ### 10.11
 
 - **Consumables – notification and order**: when stock with a set threshold (“Warn at quantity”, e.g. gaffer tape or

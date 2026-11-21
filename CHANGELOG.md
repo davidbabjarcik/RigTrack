@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.12 – 21. 11. 2026
+
+- **Inventúra skenovaním**: v Cases a racks tlačidlo „Inventúra“. Prejdete sklad s mobilom a naskenujete štítky
+  cases a techniky (technika po kusoch po kusoch); appka priebežne ukazuje, čo je nájdené, čo chýba, čo je navyše
+  a čo je práve vonku (na prebiehajúcom evente alebo vydanej výpožičke). Dá sa kontrolovať celý sklad alebo jedno
+  miesto (aj naskenovaním štítku miesta). Rozpracovanú inventúru si prehliadač pamätá, výsledok sa stiahne do Excelu.
+
 ### 10.11 – 21. 11. 2026
 
 - **Spotrebný materiál – upozornenie a objednávka**: keď zásoba s nastavenou hranicou („Upozorniť pri počte“, napr.

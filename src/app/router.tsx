@@ -93,6 +93,7 @@ const sharedOffer = lazyPage(() => import('@/features/offers/SharedOfferPage').t
 const sharedContract = lazyPage(() => import('@/features/events/SharedContractPage').then((m) => m.SharedContractPage))
 const offerPrint = lazyPage(() => import('@/features/offers/OfferPrintPage').then((m) => m.OfferPrintPage), 'offers.view')
 const attendance = lazyPage(() => import('@/features/attendance/AttendancePage').then((m) => m.AttendancePage))
+const inventory = lazyPage(() => import('@/features/scan/InventoryPage').then((m) => m.InventoryPage), 'equipment.view')
 const bulkMove = lazyPage(() => import('@/features/scan/BulkMovePage').then((m) => m.BulkMovePage))
 const qrLabels = lazyPage(() => import('@/features/scan/QrLabelsPage').then((m) => m.QrLabelsPage), 'equipment.view')
 const crewSheet = lazyPage(() => import('@/features/events/CrewSheetPage').then((m) => m.CrewSheetPage), 'events.view')
@@ -235,6 +236,7 @@ export const routes: RouteObject[] = [
               { path: 'shopping', lazy: shopping },
               { path: 'calendar', lazy: calendar },
               { path: 'move', lazy: bulkMove },
+              { path: 'inventory', lazy: inventory },
               { path: 'suggestions', lazy: suggestions },
               { path: 'notifications', lazy: notifications },
               { path: 'panel', lazy: panel },
