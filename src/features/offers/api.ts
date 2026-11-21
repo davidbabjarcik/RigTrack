@@ -133,17 +133,25 @@ export const ISSUER_KIND_LABELS: Record<IssuerKind, string> = { sro: 's.r.o.', z
 export type Issuer = OfferIssuer & { id: string; kind: IssuerKind }
 
 let hasKind = true
+// IBAN a zápis v registri (0185); bez migrácie sa nenačítajú ani neukladajú.
+let hasBank = true
 
 export async function fetchIssuers(companyId: string): Promise<Issuer[]> {
-  const columns = `id, name, address, ico, dic, ic_dph, contact, vat_payer${hasKind ? ', kind' : ''}`
+  const columns = `id, name, address, ico, dic, ic_dph, contact, vat_payer${hasKind ? ', kind' : ''}${hasBank ? ', iban, register_note' : ''}`
   const { data, error } = await getSupabase().from('quote_issuers').select(columns).eq('company_id', companyId).order('sort').order('name')
   // Bez migrácie 0097 nie je druh (s.r.o. / živnosť) – všetci sú „iný“.
+  if (error && hasBank && /iban|register_note/.test(error.message ?? '')) {
+    hasBank = false
+    return fetchIssuers(companyId)
+  }
   if (error && hasKind && /kind/.test(error.message ?? '')) {
     hasKind = false
     return fetchIssuers(companyId)
   }
   if (error) throw error
-  return (data as unknown as { id: string; name: string; address: string; ico: string; dic: string; ic_dph: string; contact: string; vat_payer: boolean; kind?: IssuerKind }[]).map((row) => ({
+  return (data as unknown as { id: string; name: string; address: string; ico: string; dic: string; ic_dph: string; contact: string; vat_payer: boolean; kind?: IssuerKind; iban?: string; register_note?: string }[]).map((row) => ({
+    iban: row.iban ?? '',
+    registerNote: row.register_note ?? '',
     kind: row.kind ?? 'other',
     id: row.id,
     name: row.name,
@@ -161,7 +169,7 @@ export function useIssuers(companyId: string) {
 }
 
 export async function saveIssuer(companyId: string, id: string | null, issuer: OfferIssuer, kind: IssuerKind = 'other') {
-  const row = { ...(hasKind && { kind }), name: issuer.name.trim(), address: issuer.address.trim(), ico: issuer.ico.trim(), dic: issuer.dic.trim(), ic_dph: issuer.icDph.trim(), contact: issuer.contact.trim(), vat_payer: issuer.vatPayer }
+  const row = { ...(hasKind && { kind }), name: issuer.name.trim(), address: issuer.address.trim(), ico: issuer.ico.trim(), dic: issuer.dic.trim(), ic_dph: issuer.icDph.trim(), contact: issuer.contact.trim(), vat_payer: issuer.vatPayer, ...(hasBank && { iban: (issuer.iban ?? '').replace(/\s+/g, '').toUpperCase().slice(0, 40), register_note: (issuer.registerNote ?? '').trim().slice(0, 200) }) }
   const table = getSupabase().from('quote_issuers')
   const { error } = id ? await table.update(row).eq('company_id', companyId).eq('id', id) : await table.insert({ ...row, company_id: companyId })
   if (error) throw error

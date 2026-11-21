@@ -1,4 +1,4 @@
-import { FileText, Plus } from 'lucide-react'
+import { FileText, Plus, Receipt } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -28,10 +28,14 @@ export function OffersPage() {
         title={tx('Cenové ponuky')}
         description={tx('Ponuky pre klientov s časťami, cenami a rozpočtom')}
         action={
-          canEdit ? (
-            <LinkButton to="/offers/new">
-              <Plus className="size-4" aria-hidden />{tx('Nová ponuka')}</LinkButton>
-          ) : undefined
+          <div className="flex flex-wrap gap-2">
+            <LinkButton to="/invoices" variant="outline">
+              <Receipt className="size-4" aria-hidden />{tx('Faktúry')}</LinkButton>
+            {canEdit && (
+              <LinkButton to="/offers/new">
+                <Plus className="size-4" aria-hidden />{tx('Nová ponuka')}</LinkButton>
+            )}
+          </div>
         }
       />
       {offers.isPending ? (

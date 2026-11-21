@@ -35,7 +35,18 @@ export type OfferClient = {
   statutory?: string
 }
 /** Za koho sa ponuka vystavuje (s.r.o., živnosť…). */
-export type OfferIssuer = { name: string; address: string; ico: string; dic: string; icDph: string; contact: string; vatPayer: boolean }
+export type OfferIssuer = {
+  name: string
+  address: string
+  ico: string
+  dic: string
+  icDph: string
+  contact: string
+  vatPayer: boolean
+  /** Na faktúry (0185): účet a zápis v registri (OR / ŽR). */
+  iban?: string
+  registerNote?: string
+}
 export const EMPTY_ISSUER: OfferIssuer = { name: '', address: '', ico: '', dic: '', icDph: '', contact: '', vatPayer: true }
 export type VatMode = 'with' | 'plus' | 'none'
 export type OfferStatus = 'draft' | 'sent' | 'accepted' | 'rejected'

@@ -98,6 +98,8 @@ function IssuerCard({ companyId, kind, hint, placeholder, current }: { companyId
           ) : (
             <p className="self-end pb-3 text-sm text-muted-foreground">{tx('Neplatiteľ DPH nemá IČ DPH.')}</p>
           )}
+          <Field label={tx('IBAN (na faktúry)')} placeholder="SK00 0000 0000 0000 0000 0000" maxLength={42} value={fields.iban ?? ''} onChange={(e) => set({ iban: e.target.value })} />
+          <Field label={tx('Zápis v registri (na faktúry)')} placeholder={tx('napr. OR OS Bratislava I, odd. Sro, vl. č. 12345/B')} maxLength={200} value={fields.registerNote ?? ''} onChange={(e) => set({ registerNote: e.target.value })} />
           <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
             {(['phone', 'email', 'web'] as const).map((key) => (
               <Field

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CalendarPlus, Check, Copy, FileSignature, Link2, Link2Off } from 'lucide-react'
+import { CalendarPlus, Check, Copy, FileSignature, Link2, Link2Off, Receipt } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -105,6 +105,15 @@ export function OfferActions({ companyId, id, draft, canEdit }: { companyId: str
         {draft.eventId && (draft.status === 'accepted' || data?.status === 'accepted') && (
           <LinkButton to={`/events/${draft.eventId}/contract`} size="sm">
             <FileSignature className="size-4" aria-hidden />{tx('Pripraviť zmluvu')}</LinkButton>
+        )}
+        {/* Prijatá ponuka: zálohová a konečná faktúra s cenou a údajmi z ponuky. */}
+        {canEdit && (draft.status === 'accepted' || data?.status === 'accepted') && (
+          <>
+            <LinkButton to={`/invoices/new?offer=${id}&kind=advance`} size="sm" variant="outline">
+              <Receipt className="size-4" aria-hidden />{tx('Zálohová faktúra')}</LinkButton>
+            <LinkButton to={`/invoices/new?offer=${id}&kind=final`} size="sm" variant="outline">
+              <Receipt className="size-4" aria-hidden />{tx('Faktúra')}</LinkButton>
+          </>
         )}
         {canEdit && !draft.eventId && !eventForm && (
           <Button size="sm" variant="outline" onClick={() => setEventForm({ startsOn: todayIso(), endsOn: todayIso() })}>

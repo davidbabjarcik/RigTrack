@@ -87,6 +87,9 @@ const eventDetail = lazyPage(() => import('@/features/events/EventDetailPage').t
 const eventImport = lazyPage(() => import('@/features/events/import/EventImportPage').then((m) => m.EventImportPage), 'events.view')
 const pack = lazyPage(() => import('@/features/pack/PackPage').then((m) => m.PackPage), 'events.view')
 const quote = lazyPage(() => import('@/features/quote/QuotePage').then((m) => m.QuotePage), 'events.view')
+const invoicesList = lazyPage(() => import('@/features/invoices/InvoicesPage').then((m) => m.InvoicesPage), 'offers.view')
+const invoiceForm = lazyPage(() => import('@/features/invoices/InvoiceFormPage').then((m) => m.InvoiceFormPage), 'offers.edit')
+const invoiceDetail = lazyPage(() => import('@/features/invoices/InvoicePage').then((m) => m.InvoicePage), 'offers.view')
 const offersList = lazyPage(() => import('@/features/offers/OffersPage').then((m) => m.OffersPage), 'offers.view')
 const offerEditor = lazyPage(() => import('@/features/offers/OfferEditorPage').then((m) => m.OfferEditorPage), 'offers.view')
 const sharedOffer = lazyPage(() => import('@/features/offers/SharedOfferPage').then((m) => m.SharedOfferPage))
@@ -252,6 +255,9 @@ export const routes: RouteObject[] = [
               { path: 'report', lazy: report },
               { path: 'events', lazy: eventsList },
               { path: 'offers', lazy: offersList },
+              { path: 'invoices', lazy: invoicesList },
+              { path: 'invoices/new', lazy: invoiceForm },
+              { path: 'invoices/:id', lazy: invoiceDetail },
               { path: 'offers/:id', lazy: offerEditor },
               { path: 'events/new', lazy: eventForm },
               { path: 'events/:id', lazy: eventDetail },

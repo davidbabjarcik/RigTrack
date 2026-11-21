@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.15
+
+- **Invoices**: an accepted quote has “Advance invoice” and “Invoice” buttons – supplier, customer and price are filled
+  in from the quote (a VAT-inclusive price is converted to the base), the advance is 50 % and the final invoice
+  deducts paid advances by itself. Lines, dates and the due date can be edited. The number (also the variable symbol)
+  is assigned by the system in order for the year. The printable invoice / PDF has the company ID, tax ID, VAT ID,
+  register entry, IBAN, base and VAT by rate. Once issued it does not change – you mark it as paid or cancel it. A new
+  “Invoices” list (in Quotes) shows unpaid and overdue ones; a notification arrives the day after the due date. The
+  issuer in Settings now has an IBAN and register entry.
+- Technical: migration 0185 (invoices).
+
 ### 10.14
 
 - **Client rating and reviews on Google / Facebook**: after an event ends, its overview has “Create rating link” –

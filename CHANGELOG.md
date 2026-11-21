@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.15 – 21. 11. 2026
+
+- **Faktúry**: pri prijatej cenovej ponuke tlačidlá „Zálohová faktúra“ a „Faktúra“ – dodávateľ, odberateľ a cena sa
+  doplnia z ponuky (pri cene s DPH sa prepočíta základ), záloha je 50 % a konečná faktúra sama odpočíta zaplatené
+  zálohy. Položky, dátumy a splatnosť sa dajú upraviť. Číslo (zároveň variabilný symbol) pridelí systém v poradí za
+  rok. Faktúra na tlač / PDF má IČO, DIČ, IČ DPH, zápis v registri, IBAN, základ a DPH po sadzbách. Vystavená sa už
+  nemení – označíte ju ako zaplatenú alebo stornujete. Nový zoznam „Faktúry“ (v Cenových ponukách) ukazuje
+  nezaplatené a po splatnosti; deň po splatnosti príde upozornenie. Pri vystavovateľovi v Nastaveniach pribudol IBAN
+  a zápis v registri.
+- Technické: migrácia 0185 (faktúry).
+
 ### 10.14 – 21. 11. 2026
 
 - **Hodnotenie od klienta a recenzie na Google / Facebooku**: po skončení eventu je v jeho prehľade „Vytvoriť odkaz

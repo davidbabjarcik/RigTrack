@@ -81,6 +81,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0181', label: 'šablóny eventov', table: 'event_templates', column: 'id' },
   { migration: '0183', label: 'potvrdenie termínu cez odkaz', table: 'event_crew', column: 'invite_token' },
   { migration: '0184', label: 'hodnotenie od klienta', table: 'event_ratings', column: 'token' },
+  { migration: '0185', label: 'faktúry', table: 'invoices', column: 'id' },
 ]
 
 /** Ktoré migrácie v databáze chýbajú (tabuľka alebo stĺpec neexistuje). Prístup cez RLS nevadí – prázdny výsledok nie je chyba. */
