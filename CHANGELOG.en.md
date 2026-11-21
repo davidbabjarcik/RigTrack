@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.7
+
+- **Replacement from stock for missing gear**: when gear is short in an event's dates (it is on another event, on a
+  loan or in service), the warning shows up to 3 replacements from your own stock – same type and category, free in
+  those dates, the same model first. One tap adds them to the event in the missing quantity.
+
 ### 10.6
 
 - **Sold gear for the accountant**: in Statistics, the sold gear link “For the accountant (print, Excel)” opens an

@@ -23,6 +23,7 @@ import { EventReminders } from './EventReminders'
 import { useGearBusyElsewhere } from './elsewhere'
 import { PackagePicker } from '@/features/packages/PackagePicker'
 import { busyElsewhere, eventsSinceCheck, sameGearAt, whereBusy, type CompanyEvent } from './model'
+import { substitutesFor } from './substitutes'
 import { piecesInService } from '@/features/service/model'
 import { useServiceRecords } from '@/features/service/useServiceRecords'
 import { useLinkedEquipment } from '@/features/links/api'
@@ -116,6 +117,7 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
   const short = event.equipment.some((line) => line.quantity > freeOf(line.equipmentId, itemOf(line.equipmentId)?.quantity ?? 0))
   const linked = useLinkedEquipment(companyId, short)
   const grouped = groupByCase(event.equipment)
+  const onEvent = new Set(event.equipment.map((line) => line.equipmentId))
 
   return (
     <CollapsibleSection id="event.equipment" title={<>{tx('Technika (')}{grouped.cases.length + grouped.single.length})</>} actions={
@@ -205,6 +207,10 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                       where={whereBusy(event, line.equipmentId, events, loans.data ?? [], today)}
                       inService={inService.get(line.equipmentId) ?? 0}
                       partners={sameGearAt(piece, linked.data ?? [])}
+                      substitutes={canEdit ? substitutesFor(piece, lendable, (other) => freeOf(other.id, other.quantity), onEvent) : []}
+                      onSubstitute={(equipmentId, count) => addCount.mutate({ equipmentId, count })}
+                      missingCount={line.quantity - Math.max(free, 0)}
+                      busy={busy}
                     />
                   )
                 })}
@@ -272,6 +278,10 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
                     where={whereBusy(event, item.equipmentId, events, loans.data ?? [], today)}
                     inService={inService.get(item.equipmentId) ?? 0}
                     partners={sameGearAt(piece, linked.data ?? [])}
+                    substitutes={canEdit ? substitutesFor(piece, lendable, (other) => freeOf(other.id, other.quantity), onEvent) : []}
+                    onSubstitute={(equipmentId, count) => addCount.mutate({ equipmentId, count })}
+                    missingCount={item.quantity - Math.max(free, 0)}
+                    busy={busy}
                   />
                 )}
                 {otherCompany(item.equipmentId) > 0 && (
@@ -321,12 +331,16 @@ export function EventEquipmentSection({ companyId, event, events, canEdit }: Pro
 }
 
 /** Prečo technika nestačí: kde je v termíne, koľko je v servise a kto z prepojených firiem ju má. */
-function Shortage({ title, missing, where, inService, partners }: {
+function Shortage({ title, missing, where, inService, partners, substitutes, onSubstitute, missingCount, busy }: {
   title?: string
   missing: number
   where: ReturnType<typeof whereBusy>
   inService: number
   partners: { companyName: string; quantity: number }[]
+  substitutes: { item: { id: string; name: string }; free: number }[]
+  onSubstitute: (equipmentId: string, count: number) => void
+  missingCount: number
+  busy: boolean
 }) {
   const term = (from: string, to: string) => (from === to ? formatDate(from) : `${formatDate(from)} – ${formatDate(to)}`)
   return (
@@ -353,6 +367,18 @@ function Shortage({ title, missing, where, inService, partners }: {
         <p className="mt-1 pl-6">
           {tx('Majú ju prepojené firmy:')}{' '}{partners.map((partner) => `${partner.companyName} (${partner.quantity} ks)`).join(', ')}
         </p>
+      )}
+      {/* Náhrada z vlastného skladu: rovnaký druh a kategória, v termíne voľná. */}
+      {substitutes.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 pl-6">
+          <span className="text-muted-foreground">{tx('Náhrada zo skladu:')}</span>
+          {substitutes.map(({ item, free }) => (
+            <Button key={item.id} size="sm" variant="outline" disabled={busy} onClick={() => onSubstitute(item.id, Math.min(free, Math.max(missingCount, 1)))}>
+              <Plus className="size-4" aria-hidden />
+              {tf('{0} ({1} voľné)', item.name, free)}
+            </Button>
+          ))}
+        </div>
       )}
     </div>
   )

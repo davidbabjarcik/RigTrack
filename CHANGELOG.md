@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.7 – 21. 11. 2026
+
+- **Náhrada zo skladu pri chýbajúcej technike**: keď technika v termíne eventu nestačí (je na inom evente, vo
+  výpožičke alebo v servise), pri upozornení sa ukáže až 3 náhrady z vlastného skladu – rovnaký druh a kategória,
+  v termíne voľné, najprv rovnaký model. Jedným ťuknutím sa pridajú na event v chýbajúcom počte.
+
 ### 10.6 – 20. 11. 2026
 
 - **Predaná technika pre účtovníka**: v Štatistikách pri predanej technike odkaz „Pre účtovníka (tlač, Excel)“

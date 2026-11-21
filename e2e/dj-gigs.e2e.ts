@@ -3,8 +3,12 @@ import { COMPANY_ID, USER_ID, fakeBackend, signIn } from './fakeBackend'
 
 // DJ hranie: druh akcie pri evente, vlastná farba v kalendári a „Kto hrá“ namiesto posádky.
 const GIG_ID = '00000000-0000-4000-8000-0000000000f1'
+// Hranie je vždy dnes (miestny dátum), aby test nezávisel od dňa spustenia.
+const now = new Date()
+const DAY = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+const DAY_SK = `${now.getDate()}. ${now.getMonth() + 1}. ${now.getFullYear()}`
 const gig = {
-  id: GIG_ID, company_id: COMPANY_ID, kind: 'dj', name: 'Ukážkový klub', client: '', venue: 'Ukážková ulica', starts_on: '2026-11-20', ends_on: '2026-11-20', status: 'confirmed', note: '',
+  id: GIG_ID, company_id: COMPANY_ID, kind: 'dj', name: 'Ukážkový klub', client: '', venue: 'Ukážková ulica', starts_on: DAY, ends_on: DAY, status: 'confirmed', note: '',
   organizer: '', organizer_person: '', organizer_phone: '', organizer_email: '', description: '', get_in_time: null, show_time: '22:00:00', show_end_time: '02:00:00',
   setting: '', power: '', power_count: null, power_note: '', weather_place: '',
 }
@@ -46,7 +50,7 @@ test('odmena DJ-a pri DJ hraní', async ({ page }) => {
   await fakeBackend(page, {
     events: [gig],
     event_crew: [me],
-    member_payments: [{ id: 'p1', company_id: COMPANY_ID, member_id: USER_ID, amount: 150, kind: 'reward', happened_on: '2026-11-20', event_id: GIG_ID, note: 'DJ hranie', paid_at: null }],
+    member_payments: [{ id: 'p1', company_id: COMPANY_ID, member_id: USER_ID, amount: 150, kind: 'reward', happened_on: DAY, event_id: GIG_ID, note: 'DJ hranie', paid_at: null }],
   })
   await page.goto(`/events/${GIG_ID}?tab=crew`)
   await expect(page.getByText(/Odmena 150,00\s€/)).toBeVisible()
@@ -71,9 +75,9 @@ test('DJ profil na karte a jeho technika na hranie jedným ťuknutím', async ({
     equipment: [pult],
   })
   await page.goto(`/staff/${STAFF_ID}`)
-  await expect(page.getByText('Hraní 2026')).toBeVisible()
+  await expect(page.getByText(`Hraní ${now.getFullYear()}`)).toBeVisible()
   await expect(page.getByText('pri DJ hraní sa pridá jedným ťuknutím')).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Ukážkový klub 20. 11. 2026 · Ukážková ulica' })).toBeVisible()
+  await expect(page.getByRole('link', { name: `Ukážkový klub ${DAY_SK} · Ukážková ulica` })).toBeVisible()
 
   await page.goto(`/events/${GIG_ID}?tab=crew`)
   await expect(page.getByRole('button', { name: 'Pridať jeho techniku (1)' })).toBeVisible()

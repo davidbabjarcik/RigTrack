@@ -120,3 +120,27 @@ test('po skončení eventu sa cenová ponuka neponúka', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Cenová ponuka' })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Zmluva' })).toBeVisible()
 })
+
+test('chýbajúca technika: náhrada zo skladu jedným ťuknutím', async ({ page }) => {
+  await signIn(page)
+  const light = (id: string, name: string, quantity: number) => ({
+    id, company_id: COMPANY_ID, name, kind: 'light', category_id: null, location_id: null, case_id: null, label_role: 'main', quantity, track_units: false, unit_ids: [],
+    rental_price: null, min_quantity: null, manufacturer: '', model: '', serial_number: '', inventory_number: '', mac_address: '', ip_address: '',
+    service_interval_months: null, last_service_on: null, hours_interval_months: null, operating_hours: null, hours_read_on: null, photo_path: '', status: 'available', note: '',
+    updated_at: '2026-11-01T00:00:00Z', owner_staff_id: null, purchased_on: null, unit_purchases: {}, links: [], clone_of: '', capture_match: '', capture_note: '', unit_info: {}, attributes: {},
+  })
+  const OTHER = '00000000-0000-4000-8000-0000000000e2'
+  const HEAD = '00000000-0000-4000-8000-0000000000a1'
+  await fakeBackend(page, {
+    ...fixtures,
+    events: [event, { ...event, id: OTHER, name: 'Ukážkový iný event' }],
+    equipment: [light(HEAD, 'Ukážková hlava', 4), light('00000000-0000-4000-8000-0000000000a5', 'Ukážková iná hlava', 2)],
+    event_equipment: [
+      { company_id: COMPANY_ID, event_id: EVENT_ID, equipment_id: HEAD, quantity: 2, case_id: null },
+      { company_id: COMPANY_ID, event_id: OTHER, equipment_id: HEAD, quantity: 4, case_id: null },
+    ],
+  })
+  await page.goto(`/events/${EVENT_ID}?tab=gear`)
+  await expect(page.getByText('Chýba 2 ks v tomto termíne.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Ukážková iná hlava (2 voľné)' })).toBeEnabled()
+})
