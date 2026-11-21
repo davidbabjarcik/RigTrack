@@ -102,3 +102,17 @@ test('predaná technika pre účtovníka: rok, tabuľka a Excel', async ({ page 
   await page.getByRole('button', { name: 'Stiahnuť (Excel)' }).click()
   expect((await download).suggestedFilename()).toBe('predana-technika-vsetko.csv')
 })
+
+test('návratnosť techniky v detaile', async ({ page }) => {
+  await signIn(page)
+  const ID = '00000000-0000-4000-8000-0000000000b5'
+  const EVENT = '00000000-0000-4000-8000-0000000000e5'
+  await fakeBackend(page, {
+    equipment: [{ ...piece(ID, 'Ukážková hlava', 'available', { purchasePrice: 200 }), rental_price: 50 }],
+    events: [{ id: EVENT, company_id: COMPANY_ID, kind: 'event', name: 'Ukážkový ples', client: '', venue: '', starts_on: '2026-01-10', ends_on: '2026-01-11', status: 'done', note: '', organizer: '', organizer_person: '', organizer_phone: '', organizer_email: '', description: '', get_in_time: null, show_time: null, show_end_time: null, setting: '', power: '', power_count: null, power_note: '', weather_place: '' }],
+    event_equipment: [{ company_id: COMPANY_ID, event_id: EVENT, equipment_id: ID, quantity: 1, case_id: null }],
+  })
+  await page.goto(`/equipment/${ID}`)
+  await expect(page.getByText(/zarobila odhadom 100,00\s€ \(eventy: 1, výpožičky: 0\)/)).toBeVisible()
+  await expect(page.getByText(/50 % nákupnej ceny, chýba 100,00\s€/)).toBeVisible()
+})

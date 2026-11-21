@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.9 – 21. 11. 2026
+
+- **Návratnosť techniky**: v detaile techniky s nákupnou cenou riadok „Návratnosť“ – koľko kus odhadom zarobil na
+  odohraných eventoch a výpožičkách (podľa ceny prenájmu, pri výpožičke s dohodnutou cenou jej podiel) a kedy sa
+  splatil, prípadne koľko ešte chýba. V Štatistikách nový rebríček „Návratnosť techniky“ (top 10 podľa % nákupnej
+  ceny). Vidí to len ten, kto upravuje techniku.
+
 ### 10.8 – 21. 11. 2026
 
 - **Šablóny eventov**: v detaile eventu „Uložiť ako šablónu“ uloží techniku (aj celé cases), posádku, časy, miesto

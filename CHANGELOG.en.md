@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.9
+
+- **Gear payback**: equipment detail with a purchase price has a “Payback” row – how much the piece earned on played
+  events and loans by estimate (by the rental price; for a loan with an agreed price its share) and when it paid for
+  itself, or how much is still missing. Statistics has a new “Gear payback” ranking (top 10 by % of the purchase
+  price). Only those who edit gear can see it.
+
 ### 10.8
 
 - **Event templates**: “Save as template” in an event's detail saves its gear (whole cases too), crew, times, venue

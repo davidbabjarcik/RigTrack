@@ -27,6 +27,7 @@ import { useAuth } from '@/features/auth/auth-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { bothBases, fetchCompanyIncome, METHOD_LABELS, PAYMENT_METHODS } from '@/features/events/income'
 import { useEvents } from '@/features/events/useEvents'
+import { payback } from '@/features/equipment/payback'
 import { fetchPayments, payoutKeys } from '@/features/payouts/api'
 import { can } from '@/lib/permissions'
 import { SelectField } from '@/components/ui/field'
@@ -233,6 +234,14 @@ export function StatsPage() {
   // Hodnota len techniky, ktorú firma má (vyradená a predaná sa nepočíta).
   const value = valueSummary((equipment.data ?? []).filter((item) => !isGone(item.status)), (item) => categories.find((category) => category.id === item.categoryId)?.name ?? tx('Bez kategórie'))
   const sold = soldSummary(equipment.data ?? [])
+  // Návratnosť: koľko % nákupnej ceny technika odhadom zarobila (len s nákupnou cenou aj cenou prenájmu).
+  const paybackRows = (equipment.data ?? [])
+    .filter((item) => !isGone(item.status) && item.rentalPrice)
+    .map((item) => ({ item, result: payback(item, events.data ?? [], loans.data ?? [], todayIso()) }))
+    .filter((row) => row.result.percent !== null)
+    .sort((a, b) => b.result.percent! - a.result.percent!)
+    .slice(0, 10)
+    .map((row) => ({ id: row.item.id, label: row.item.name, value: row.result.percent! }))
 
   // Peniaze vo zvolenom roku.
   const allPayments = payments.data ?? []
@@ -322,6 +331,14 @@ export function StatsPage() {
       />
     ),
     'equipment.soldList': <SoldList rows={sold.rows} />,
+    'equipment.payback': (
+      <Ranking
+        title={tx('Návratnosť techniky – % nákupnej ceny zarobené podľa cenníka')}
+        rows={paybackRows}
+        format={(value) => `${value} %`}
+        empty={tx('Doplňte pri technike nákupnú cenu a cenu prenájmu.')}
+      />
+    ),
     'equipment.packed': <Tile label={tx('Kusov v cases')} value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} ks mimo cases`} />,
     'loans.open': (
       <Tile

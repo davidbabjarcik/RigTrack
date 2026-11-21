@@ -1,4 +1,5 @@
 import { EquipmentPrintStatus } from '@/features/print/EquipmentPrintStatus'
+import { PaybackLine } from './PaybackLine'
 import { LicensesSection } from '@/features/licenses/LicensesPage'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Pencil, QrCode, SlidersHorizontal, Trash2, Wrench } from 'lucide-react'
@@ -228,6 +229,8 @@ export function EquipmentDetailPage() {
       value !== null &&
         `${formatMoney(equipment.attributes.purchasePrice!, 'EUR')} za kus${equipment.quantity > 1 ? ` · spolu ${formatMoney(value, 'EUR')}` : ''}`,
     ],
+    // Návratnosť: odhad zárobku podľa cenníka oproti nákupnej cene (len pre toho, kto vidí ceny).
+    [tx('Návratnosť'), value !== null && value > 0 && <PaybackLine key="payback" companyId={company.companyId} equipment={equipment} />],
     [tx('Posledný servis'), equipment.lastServiceOn && formatDate(equipment.lastServiceOn)],
     [tx('Ďalší servis'), serviceText],
     [tx('Naposledy upravené'), new Date(equipment.updatedAt).toLocaleString('sk-SK', { dateStyle: 'medium', timeStyle: 'short' })],
