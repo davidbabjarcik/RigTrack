@@ -11,6 +11,39 @@ export function isStaleChunkError(error: unknown): boolean {
   return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError|Unable to preload CSS/i.test(text)
 }
 
+/**
+ * Offline úložisko appky (service worker) môže po novej verzii ešte podávať starú úvodnú stránku so starými názvami
+ * súborov – obyčajné obnovenie potom nepomôže. Pred obnovením sa preto úložisko aktualizuje, a keď ani to nestačí,
+ * vymaže (appka si ho pri ďalšom načítaní vytvorí znova). Dáta firmy sa tým nemažú – sú v databáze.
+ */
+export async function refreshOfflineCache(full: boolean) {
+  try {
+    const registrations = (await navigator.serviceWorker?.getRegistrations?.()) ?? []
+    if (full) {
+      await Promise.all(registrations.map((registration) => registration.unregister()))
+      if (typeof caches !== 'undefined') await Promise.all((await caches.keys()).map((key) => caches.delete(key)))
+    } else {
+      await Promise.all(registrations.map((registration) => registration.update().catch(() => undefined)))
+    }
+  } catch {
+    // Bez service workera stačí obyčajné obnovenie.
+  }
+}
+
+const HARD_KEY = 'rigtrack:stale-hard-reload'
+
+/** Druhý pokus, keď obyčajné obnovenie nepomohlo: vymaže offline úložisko a obnoví (najviac raz za 30 s). */
+export function hardReloadForNewVersion(reload: () => void = () => window.location.reload()): boolean {
+  try {
+    if (Date.now() - Number(sessionStorage.getItem(HARD_KEY) ?? 0) < PAUSE_MS) return false
+    sessionStorage.setItem(HARD_KEY, String(Date.now()))
+  } catch {
+    return false
+  }
+  void refreshOfflineCache(true).finally(reload)
+  return true
+}
+
 /** Raz obnoví stránku; vráti false, ak sa už nedávno obnovovala (vtedy sa ukáže bežná chybová obrazovka). */
 export function reloadForNewVersion(reload: () => void = () => window.location.reload()): boolean {
   let last = 0
@@ -30,7 +63,7 @@ export function reloadForNewVersion(reload: () => void = () => window.location.r
     stored = false
   }
   if (!stored && navigation?.type === 'reload') return false
-  reload()
+  void refreshOfflineCache(false).finally(reload)
   return true
 }
 

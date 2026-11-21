@@ -1,4 +1,5 @@
 import type { WheelPlace } from '@/lib/dimensions'
+import { readCheckItems, type CheckItem } from './checkItems'
 import { resolveLookup, resolveOwner } from '@/features/equipment/api'
 import { copyCompanyPhoto, storeCompanyPhoto } from '@/features/equipment/photo'
 import type { Lookup } from '@/features/equipment/model'
@@ -62,11 +63,14 @@ function fallBack(error: { code?: string; message?: string } | null) {
 // PostgREST môže numeric vrátiť ako číslo aj ako text.
 const toNumber = (value: number | string | null) => (value === null ? null : Number(value))
 
-type CheckRow = { case_id: string; checked_at: string; checked_by_name: string; note: string }
+type CheckRow = { case_id: string; checked_at: string; checked_by_name: string; note: string; items?: unknown }
 
 function toCheck(row: CheckRow): CaseCheck {
-  return { checkedAt: row.checked_at, checkedByName: row.checked_by_name, note: row.note }
+  return { checkedAt: row.checked_at, checkedByName: row.checked_by_name, note: row.note, items: readCheckItems(row.items) }
 }
+
+// Položky kontroly (0187); bez migrácie sa kontrola uloží a načíta bez nich.
+let checkItems = true
 
 export async function fetchCases(companyId: string): Promise<Case[]> {
   const db = getSupabase()
@@ -120,19 +124,47 @@ export async function fetchCases(companyId: string): Promise<Case[]> {
 export async function fetchCaseChecks(companyId: string, caseId: string): Promise<CaseCheck[]> {
   const { data, error } = await getSupabase()
     .from('case_checks')
-    .select('case_id, checked_at, checked_by_name, note')
+    .select('case_id, checked_at, checked_by_name, note' + (checkItems ? ', items' : ''))
     .eq('company_id', companyId)
     .eq('case_id', caseId)
     .order('checked_at', { ascending: false })
     .limit(10)
+  if (checkItems && isMissingColumn(error, 'items')) {
+    checkItems = false
+    return fetchCaseChecks(companyId, caseId)
+  }
   if (error) throw error
-  return (data as CheckRow[]).map(toCheck)
+  return (data as unknown as CheckRow[]).map(toCheck)
 }
 
 /** Kto a kedy kontroloval doplní databáza podľa prihláseného používateľa. */
-export async function addCaseCheck(companyId: string, caseId: string, note: string) {
-  const { error } = await getSupabase().from('case_checks').insert({ company_id: companyId, case_id: caseId, note: note.trim() })
+export async function addCaseCheck(companyId: string, caseId: string, note: string, items: CheckItem[] = []) {
+  const row = { company_id: companyId, case_id: caseId, note: note.trim().slice(0, 500), ...(checkItems && items.length > 0 && { items: items.slice(0, 500) }) }
+  const { error } = await getSupabase().from('case_checks').insert(row)
+  if (error && 'items' in row && isMissingColumn(error, 'items')) {
+    checkItems = false
+    return addCaseCheck(companyId, caseId, note, items)
+  }
   if (error) throw error
+}
+
+export type StaffCheck = { caseId: string; checkedAt: string; note: string; items: CheckItem[] }
+
+/** Kontroly cases, ktoré urobil člen (najnovšie prvé). */
+export async function fetchChecksBy(companyId: string, memberId: string): Promise<StaffCheck[]> {
+  const { data, error } = await getSupabase()
+    .from('case_checks')
+    .select('case_id, checked_at, note' + (checkItems ? ', items' : ''))
+    .eq('company_id', companyId)
+    .eq('checked_by', memberId)
+    .order('checked_at', { ascending: false })
+    .limit(30)
+  if (checkItems && isMissingColumn(error, 'items')) {
+    checkItems = false
+    return fetchChecksBy(companyId, memberId)
+  }
+  if (error) throw error
+  return (data as unknown as { case_id: string; checked_at: string; note: string; items?: unknown }[]).map((row) => ({ caseId: row.case_id, checkedAt: row.checked_at, note: row.note, items: readCheckItems(row.items) }))
 }
 
 type SaveArgs = { companyId: string; id: string | null; values: CaseFormValues; locations: Lookup[] }

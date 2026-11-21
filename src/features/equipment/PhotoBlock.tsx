@@ -46,7 +46,7 @@ export function PhotoBlock({ queryKey, name, photoPath, canEdit, onUpload, onRem
         <p role="alert" className="mb-3 text-sm text-destructive">{tx('Fotku sa nepodarilo načítať.')}</p>
       )}
       {canEdit && (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Na mobile ponúkne fotoaparát aj galériu. */}
           <input
             ref={fileInput}

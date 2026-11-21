@@ -17,6 +17,7 @@ import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { StaffCertificates } from './StaffCertificates'
 import { StaffDjSection } from './StaffDjSection'
+import { StaffCaseChecks } from './StaffCaseChecks'
 import { ROLE_LABELS } from '@/lib/roles'
 import { useMembers } from '@/features/companies/useMembers'
 import { clearStaffPhoto, deleteStaff, saveStaff, setStaffPhoto, staffKeys, type StaffFields } from './api'
@@ -262,6 +263,7 @@ export function StaffDetailPage() {
       {person.staffId && <StaffCertificates companyId={companyId} staffId={person.staffId} canEdit={canEdit} />}
 
       <StaffDjSection companyId={companyId} person={person} />
+      {person.memberId && can(company, 'cases.view') && <StaffCaseChecks companyId={companyId} memberId={person.memberId} />}
 
       {person.memberId && (
         <CollapsibleSection id="staff.events" title={tx('Najbližšie eventy')}>

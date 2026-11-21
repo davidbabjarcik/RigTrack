@@ -5,6 +5,20 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.18 – 22. 11. 2026
+
+- **Kontrola case po položkách**: pri „Skontrolované“ je zoznam obsahu – technika po kusoch sa odškrtáva, ostatná
+  má počet s − a + (napr. 8 / 10). Chýbajúce sa samo zapíše do poznámky („Chýba: PAR #2, 2× SM58“) a uloží sa
+  k kontrole.
+- **Kontroly cases na karte zamestnanca**: ktoré cases člen kontroloval, kedy, kde stoja v sklade a čo chýbalo.
+- **Rozloženie v case sa upravuje v úprave case**: v detaile sa už len zobrazuje (a len keď je zapísané).
+- **Hárok s obsahom podľa rozloženia**: pri case s rozložením sa dá vybrať „Celkový zoznam“ alebo „Podľa
+  rozloženia (šuplíky, priehradky)“ – na hárku je potom mriežka s číslami priehradiek a čo v nich je.
+- Stránky pre klienta (hodnotenie, potvrdenie termínu) majú farby appky aj v tmavom režime, bez bieleho pásu.
+- Po novej verzii sa appka s chybou „Failed to fetch dynamically imported module“ sama obnoví aj s offline
+  úložiskom a nehlási to ako chybu. Opravené tlačidlá fotky na karte zamestnanca a zbytočná chyba pri zariadeniach.
+- Technické: migrácia 0187 (kontrola case po položkách).
+
 ### 10.17 – 21. 11. 2026
 
 - **Rozloženie v case – šuplíky a počty**: priehradky sa rozšírili na časti. Case alebo rack so šuplíkmi má každý

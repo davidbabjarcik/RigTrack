@@ -5,6 +5,22 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.18
+
+- **Itemised case check**: “Checked” now shows the content list – tracked gear is ticked off, other gear has a
+  count with − and + (e.g. 8 / 10). What is missing is written into the note (“Missing: PAR #2, 2× SM58”) and saved
+  with the check.
+- **Case checks on a staff card**: which cases a member checked, when, where they stand in the warehouse and what
+  was missing.
+- **The case layout is edited in the case edit page**: the detail only shows it (and only when it is set).
+- **Content sheet by layout**: a case with a layout can print the “Full list” or “By layout (drawers,
+  compartments)” – the sheet then shows the grid with compartment numbers and what is in them.
+- Pages for clients (rating, date confirmation) use the app colours in dark mode too, without a white strip.
+- After a new version, the app recovers from “Failed to fetch dynamically imported module” by itself, including the
+  offline cache, and no longer reports it as an error. Fixed the photo buttons on a staff card and a needless error
+  in devices.
+- Technical: migration 0187 (itemised case check).
+
 ### 10.17
 
 - **Case layout – drawers and quantities**: compartments now come in sections. A case or rack with drawers has

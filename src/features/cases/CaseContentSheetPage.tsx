@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { fetchLayout, layoutKey } from './layoutApi'
 import { markPrinted, printKeys } from '@/features/print/api'
 import { caseContentHash } from './model'
 import { PrintButton } from '@/components/print/PrintButton'
@@ -82,6 +83,10 @@ export function CaseContentSheetPage() {
   })
 
   const current = cases.data?.find((c) => c.id === id)
+  // Rozloženie case (časti, priehradky): hárok môže byť celkovo, alebo podľa rozloženia.
+  const caseLayout = useQuery({ queryKey: layoutKey(companyId, id), queryFn: () => fetchLayout(companyId, id), retry: false })
+  const hasLayout = Boolean(caseLayout.data)
+  const byLayout = hasLayout && Boolean(sheet.byLayout)
   const inside = useMemo(() => (equipment.data ?? []).filter((item) => item.caseId === id), [equipment.data, id])
   // Svetlá (nie príslušenstvo ako háky, mixpult) s DMX módmi.
   const caseLights = useMemo(() => caseLightsOf(inside), [inside])
@@ -91,7 +96,9 @@ export function CaseContentSheetPage() {
   // Poradie typov (čo hore, čo dole / na ktorom hárku).
   const order = useMemo(() => sheet.order ?? [], [sheet.order])
   const accessoryOrder = useMemo(() => sheet.accessoryOrder ?? [], [sheet.accessoryOrder])
-  const { matrix, ordered, pages } = useMemo(() => sheetPagesOf(inside, { order, layout, accessoryOrder }), [inside, order, layout, accessoryOrder])
+  const { matrix, ordered, pages: allPages } = useMemo(() => sheetPagesOf(inside, { order, layout, accessoryOrder }), [inside, order, layout, accessoryOrder])
+  // Podľa rozloženia je to jeden hárok.
+  const pages = byLayout ? allPages.slice(0, 1) : allPages
   // Poradie príslušenstva: ostatné názvy (z iných cases) ostanú v uloženom poradí za týmito.
   const moveAccessory = (name: string, step: -1 | 1) => {
     const names = (matrix.accessories ?? []).map((item) => item.name)
@@ -121,8 +128,9 @@ export function CaseContentSheetPage() {
         footer: branding.data?.labelFooter ?? '',
         logo: logo.data ?? null,
         companyName: company.companyName,
-        sheet: { order, layout, landscape, dmx: dmxInfo, show, accessoryOrder },
+        sheet: { order, layout, landscape, dmx: dmxInfo, show, accessoryOrder, byLayout },
         origin: window.location.origin,
+        caseLayout: caseLayout.data ?? null,
       })
       if (cancelled) return
       rendered.forEach((source, index) => {
@@ -137,7 +145,7 @@ export function CaseContentSheetPage() {
     return () => {
       cancelled = true
     }
-  }, [ready, current, order, layout, accessoryOrder, show, landscape, dmxInfo, colors.data, branding.data, logo.data, company.companyName, equipment.data])
+  }, [ready, current, order, layout, accessoryOrder, show, landscape, dmxInfo, colors.data, branding.data, logo.data, company.companyName, equipment.data, byLayout, caseLayout.data])
 
   // Z tlačovej fronty (?back=/print) sa vráti do nej, inak na case.
   const backTo = backParams.get('back') ?? `/cases/${id}`
@@ -307,7 +315,23 @@ export function CaseContentSheetPage() {
           ))}
         </div>
       )}
-      {matrix.columns.length > 1 && (
+      {hasLayout && (
+        <div role="radiogroup" aria-label="Obsah na hárku" className="mx-auto mb-3 flex w-full max-w-2xl flex-wrap gap-1 rounded-lg bg-muted p-1">
+          {([false, true] as const).map((value) => (
+            <button
+              key={String(value)}
+              type="button"
+              role="radio"
+              aria-checked={byLayout === value}
+              onClick={() => setSheet({ byLayout: value })}
+              className={cn('h-9 flex-1 rounded-md px-3 text-sm', byLayout === value ? 'bg-surface font-medium shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+            >
+              {value ? 'Podľa rozloženia (šuplíky, priehradky)' : 'Celkový zoznam'}
+            </button>
+          ))}
+        </div>
+      )}
+      {!byLayout && matrix.columns.length > 1 && (
         <div role="radiogroup" aria-label="Viac typov káblov na hárku" className="mx-auto mb-3 flex w-full max-w-2xl flex-wrap gap-1 rounded-lg bg-muted p-1">
           {SHEET_LAYOUTS.map((value) => (
             <button

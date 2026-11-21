@@ -156,6 +156,8 @@ export type CaseCheck = {
   checkedAt: string
   checkedByName: string
   note: string
+  /** Čo sa pri kontrole našlo po položkách (0187); staršie kontroly bez zoznamu. */
+  items?: import('./checkItems').CheckItem[]
 }
 
 export const LABEL_CATEGORIES = ['Sound', 'Light', 'Cables', 'Video', 'Truss', 'Stage', 'Rigging', 'Power']

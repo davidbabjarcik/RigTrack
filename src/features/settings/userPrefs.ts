@@ -45,6 +45,8 @@ export type SheetPrefs = {
   accessoryOrder?: string[]
   show?: Record<string, boolean>
   dmx?: 'off' | 'modes' | 'channels'
+  /** Obsah podľa rozloženia v case (časti, priehradky) namiesto súhrnného zoznamu. */
+  byLayout?: boolean
 }
 
 const LOCAL_KEY = 'rigtrack.prefs'

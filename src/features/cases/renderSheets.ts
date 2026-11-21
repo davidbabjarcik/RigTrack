@@ -1,4 +1,6 @@
 import type { CableColor } from '@/features/equipment/cableColors'
+import type { CaseLayout } from './layout'
+import { sheetCompartments } from './layoutApi'
 import type { DmxMode, Equipment } from '@/features/equipment/model'
 import { fetchPhotoBlob } from '@/features/equipment/photo'
 import { qrUrl } from '@/features/scan/qr'
@@ -68,13 +70,18 @@ export type SheetContext = {
   companyName: string
   sheet: SheetPrefs
   origin: string
+  /** Rozloženie case (časti, priehradky); s voľbou „podľa rozloženia“ sa hárok kreslí podľa neho. */
+  caseLayout?: CaseLayout | null
 }
 
 /** Nakreslí hárky s obsahom case (jeden alebo viac podľa rozloženia) – pre stránku case aj hromadnú tlač. */
 export async function renderContentSheets(current: Case, context: SheetContext): Promise<HTMLCanvasElement[]> {
   const options = sheetOptions(context.sheet)
   const inside = context.equipment.filter((item) => item.caseId === current.id)
-  const { pages } = sheetPagesOf(inside, context.sheet)
+  const sheetPages = sheetPagesOf(inside, context.sheet).pages
+  const compartments = context.sheet.byLayout && context.caseLayout ? sheetCompartments(context.caseLayout, inside) : undefined
+  // Podľa rozloženia: jeden hárok s priehradkami.
+  const pages = compartments ? sheetPages.slice(0, 1) : sheetPages
   const bitmap = context.logo ? await createImageBitmap(context.logo).catch(() => null) : null
   // Fotky príslušenstva na karty (bez fotky ostane karta len s názvom a počtom).
   const photos = new Map<string, ImageBitmap | HTMLCanvasElement>()
@@ -117,6 +124,7 @@ export async function renderContentSheets(current: Case, context: SheetContext):
       logo: bitmap,
       companyName: context.companyName,
       photos,
+      compartments,
     })
     stampGenerated(canvas)
     return canvas

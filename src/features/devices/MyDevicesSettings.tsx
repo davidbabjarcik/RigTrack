@@ -174,7 +174,8 @@ export function DeviceList({ companyId, userId, canEdit, empty }: { companyId: s
   const mine = (devices.data ?? []).filter((device) => device.userId === userId)
   return (
     <>
-      {devices.isError && (
+      {/* Chyba len pri prvom načítaní; keď zlyhá len obnova na pozadí (napr. výpadok siete), zoznam ostane. */}
+      {devices.isError && !devices.data && (
         <p role="alert" className="mt-3 text-sm text-destructive">{tx('Zariadenia sa nepodarilo načítať. Táto časť databázy ešte nie je pripravená – kontaktujte vývojára aplikácie.')}</p>
       )}
       {mine.length > 0 ? (

@@ -7,22 +7,32 @@ import { useEvents } from '@/features/events/useEvents'
 import { lastReturns, returnedUnchecked, returnKeys, useRecentPackMarks } from '@/features/pack/returns'
 import { formatDateTime } from '@/lib/format'
 import { addCaseCheck, caseKeys, fetchCaseChecks } from './api'
-import { tx } from '@/lib/i18n'
+import { checkRows, missingCount, missingText, type CheckItem } from './checkItems'
+import { placeables } from './layout'
+import { tf, tx } from '@/lib/i18n'
 
-type Props = { companyId: string; caseId: string; canCheck: boolean }
+type Piece = { id: string; name: string; quantity: number; trackUnits: boolean; unitIds: number[] }
+type Props = { companyId: string; caseId: string; canCheck: boolean; content?: Piece[] }
 
 /** Posledná kontrola obsahu case, jej história a zápis novej kontroly. */
-export function CaseChecks({ companyId, caseId, canCheck }: Props) {
+export function CaseChecks({ companyId, caseId, canCheck, content = [] }: Props) {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [note, setNote] = useState('')
+  // Po položkách: čo sa malo nájsť a koľko sa našlo (na začiatku všetko; odškrtnete, čo chýba).
+  const [rows, setRows] = useState(() => checkRows(content))
+  const labels = new Map(placeables(content).map((item) => [`${item.equipmentId}#${item.unit ?? ''}`, item.label]))
+  const labelOf = (item: { equipmentId: string; unit: number | null }) => labels.get(`${item.equipmentId}#${item.unit ?? ''}`) ?? tx('Technika')
+  const items: CheckItem[] = rows.map((row) => ({ equipmentId: row.equipmentId, unit: row.unit, expected: row.expected, found: row.found }))
+  const missing = missingText(items, labelOf)
+  const setFound = (index: number, found: number) => setRows(rows.map((row, at) => (at === index ? { ...row, found: Math.max(0, Math.min(row.expected, found)) } : row)))
   const checks = useQuery({
     queryKey: caseKeys.checks(companyId, caseId),
     queryFn: () => fetchCaseChecks(companyId, caseId),
   })
 
   const add = useMutation({
-    mutationFn: () => addCaseCheck(companyId, caseId, note),
+    mutationFn: () => addCaseCheck(companyId, caseId, [missing && tf('Chýba: {0}', missing), note.trim()].filter(Boolean).join(' · '), items),
     onSuccess: async () => {
       setOpen(false)
       setNote('')
@@ -66,19 +76,62 @@ export function CaseChecks({ companyId, caseId, canCheck }: Props) {
                 {formatDateTime(last.checkedAt)} · {last.checkedByName || tx('neznámy')}
               </p>
               {last.note && <p className="mt-1 text-sm whitespace-pre-wrap">{last.note}</p>}
+              {last.items && last.items.length > 0 && missingCount(last.items) === 0 && <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-400">{tx('Všetko bolo na mieste.')}</p>}
             </>
           ) : (
             <p className="mt-1 font-medium">{tx('Zatiaľ nekontrolované')}</p>
           )}
         </div>
         {canCheck && !open && (
-          <Button size="sm" onClick={() => setOpen(true)}>
+          <Button
+            size="sm"
+            onClick={() => {
+              setRows(checkRows(content))
+              setOpen(true)
+            }}
+          >
             <ClipboardCheck className="size-4" aria-hidden />{tx('Skontrolované')}</Button>
         )}
       </div>
 
       {open && (
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 border-t pt-4">
+          {rows.length > 0 && (
+            <fieldset className="flex flex-col gap-1">
+              <legend className="mb-1 text-sm font-medium">{tx('Čo v case je (odškrtnite, čo chýba, alebo upravte počet)')}</legend>
+              <ul className="divide-y rounded-lg border">
+                {rows.map((row, index) => (
+                  <li key={`${row.equipmentId}#${row.unit ?? ''}`} className="flex items-center gap-3 px-3 py-2 text-sm">
+                    {row.unit !== null || row.expected === 1 ? (
+                      <label className="flex flex-1 items-center gap-2">
+                        <input type="checkbox" className="size-5" checked={row.found >= row.expected} onChange={(changed) => setFound(index, changed.target.checked ? row.expected : 0)} />
+                        <span className={row.found < row.expected ? 'text-destructive line-through' : undefined}>{row.label}</span>
+                      </label>
+                    ) : (
+                      <>
+                        <span className={row.found < row.expected ? 'flex-1 text-destructive' : 'flex-1'}>{row.label}</span>
+                        <span className="flex items-center gap-1">
+                          <Button size="sm" variant="outline" aria-label={tf('Menej: {0}', row.label)} onClick={() => setFound(index, row.found - 1)}>−</Button>
+                          <input
+                            aria-label={tf('Našlo sa: {0}', row.label)}
+                            inputMode="numeric"
+                            className="h-8 w-14 rounded-md border bg-background text-center tabular-nums"
+                            value={row.found}
+                            onChange={(changed) => setFound(index, Number(changed.target.value.replace(/\D/g, '')) || 0)}
+                          />
+                          <span className="text-muted-foreground tabular-nums">/ {row.expected}</span>
+                          <Button size="sm" variant="outline" aria-label={tf('Viac: {0}', row.label)} onClick={() => setFound(index, row.found + 1)}>+</Button>
+                        </span>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <p className={missing ? 'text-sm text-destructive' : 'text-sm text-emerald-700 dark:text-emerald-400'}>
+                {missing ? tf('Chýba: {0}', missing) : tx('Všetko je na mieste.')}
+              </p>
+            </fieldset>
+          )}
           <Field
             label={tx('Poznámka ku kontrole (nepovinné)')}
             placeholder={tx('napr. všetko je, alebo čo chýba')}

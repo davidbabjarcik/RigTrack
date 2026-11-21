@@ -207,9 +207,9 @@ export function CaseDetailPage() {
         <CasePhoto companyId={companyId} caseId={id} name={current.name} photoPath={current.photoPath} canEdit={canEdit} />
       </div>
 
-      <CaseLayoutSection companyId={companyId} caseId={id} content={content} canEdit={canEdit} />
+      <CaseLayoutSection companyId={companyId} caseId={id} content={content} canEdit={false} />
 
-      <CaseChecks companyId={companyId} caseId={id} canCheck={can(company, 'cases.check') || canEdit} />
+      <CaseChecks companyId={companyId} caseId={id} canCheck={can(company, 'cases.check') || canEdit} content={content} />
 
       <div className="mb-6">
         <UsageHistory companyId={companyId} equipmentIds={(equipment.data ?? []).filter((item) => item.caseId === id).map((item) => item.id)} caseId={id} />

@@ -168,6 +168,15 @@ test('rozloženie v case: priehradky a šuplíky', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Priehradky – priehradka 2' })).toContainText('káble')
   await expect(page.getByRole('button', { name: 'Šuplík 1 – SM 58', exact: true })).toContainText('6× Ukážkový mikrofón')
   await expect(page.getByText(/Nezaradené \(6\): .*4× Ukážkový mikrofón/)).toBeVisible()
+  // V detaile sa rozloženie len zobrazuje; upravuje sa v úprave case.
+  await expect(page.getByRole('button', { name: 'Pridať časť (šuplík, priehradky)' })).toHaveCount(0)
+  // Kontrola po položkách: chýbajúci kus sa odškrtne, počty sa upravia.
+  await page.getByRole('button', { name: 'Skontrolované' }).click()
+  await page.getByRole('checkbox', { name: 'Ukážkový PAR #2' }).uncheck()
+  await page.getByRole('button', { name: 'Menej: Ukážkový mikrofón' }).click()
+  await expect(page.getByText('Chýba: Ukážkový PAR #2, 1× Ukážkový mikrofón')).toBeVisible()
+
+  await page.goto(`/cases/${CASE}/edit`)
   await page.getByRole('button', { name: 'Šuplík 1 – SM 58', exact: true }).click()
   await expect(page.getByLabel('Pridať sem')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Pridať časť (šuplík, priehradky)' })).toBeVisible()

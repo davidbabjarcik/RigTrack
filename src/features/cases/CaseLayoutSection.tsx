@@ -3,8 +3,7 @@ import { LayoutGrid, Plus, Wand2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
-import { getSupabase } from '@/lib/supabase/client'
-import { isMissingColumn } from '@/lib/supabase/errors'
+import { fetchLayout, layoutKey, saveLayout } from './layoutApi'
 import { tf, tx } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
@@ -15,7 +14,6 @@ import {
   MAX_SIDE,
   placeables,
   placeIn,
-  readLayout,
   removeFrom,
   removeSection,
   setNote,
@@ -26,22 +24,6 @@ import {
 } from './layout'
 
 type Piece = { id: string; name: string; quantity: number; trackUnits: boolean; unitIds: number[] }
-
-const layoutKey = (companyId: string, caseId: string) => ['company', companyId, 'cases', caseId, 'layout'] as const
-
-/** Rozloženie case; undefined = stĺpec ešte nie je (migrácia 0186), null = bez rozloženia. */
-async function fetchLayout(companyId: string, caseId: string): Promise<CaseLayout | null | undefined> {
-  const { data, error } = await getSupabase().from('cases').select('layout').eq('company_id', companyId).eq('id', caseId).maybeSingle()
-  if (isMissingColumn(error, 'layout')) return undefined
-  if (error) throw error
-  return readLayout((data as { layout?: unknown } | null)?.layout)
-}
-
-async function saveLayout(companyId: string, caseId: string, layout: CaseLayout | null) {
-  const { data, error } = await getSupabase().from('cases').update({ layout: layout ?? {} }).eq('company_id', companyId).eq('id', caseId).select('id')
-  if (error) throw error
-  if (data.length === 0) throw new Error('Not updated')
-}
 
 const keyOf = (item: { equipmentId: string; unit: number | null }) => `${item.equipmentId}#${item.unit ?? ''}`
 

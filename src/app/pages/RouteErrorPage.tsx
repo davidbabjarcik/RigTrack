@@ -3,15 +3,19 @@ import { useRouteError } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { reportError } from '@/lib/errorReporting'
 import { tx } from '@/lib/i18n'
-import { isStaleChunkError, reloadForNewVersion } from '@/lib/staleChunks'
+import { hardReloadForNewVersion, isStaleChunkError, reloadForNewVersion } from '@/lib/staleChunks'
 
 /** Záchranná obrazovka, keď niektorá stránka spadne alebo sa nepodarí stiahnuť jej kód. */
 export function RouteErrorPage() {
   const error = useRouteError()
   const stale = isStaleChunkError(error)
   useEffect(() => {
-    // Starý súbor po novej verzii: stránka sa raz sama obnoví (nie je to chyba appky, nehlási sa).
-    if (stale && reloadForNewVersion()) return
+    // Starý súbor po novej verzii: stránka sa sama obnoví, a keď to nepomôže, vymaže offline úložisko. Nie je to
+    // chyba appky, preto sa nehlási.
+    if (stale) {
+      if (!reloadForNewVersion()) hardReloadForNewVersion()
+      return
+    }
     // Chyba sa uloží pre vývojára (Nastavenia → Vývojár → Chyby v appke).
     reportError(error, 'render')
   }, [error, stale])

@@ -1,4 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { isGone } from '@/features/equipment/model'
+import { CaseLayoutSection } from './CaseLayoutSection'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useId, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -372,6 +375,8 @@ export function CaseFormPage() {
   // Šablóny sú doplnok: bez nich (alebo pred migráciou) sa case zakladá ako doteraz.
   const templates = useQuery({ queryKey: caseTemplateKeys.list(company.companyId), queryFn: () => fetchCaseTemplates(company.companyId) })
   const current = id ? cases.data?.find((c) => c.id === id) : null
+  // Rozloženie (priehradky, šuplíky) sa nastavuje pri úprave – potrebuje obsah case.
+  const equipment = useQuery({ queryKey: equipmentKeys.list(company.companyId), queryFn: () => fetchEquipmentList(company.companyId), enabled: Boolean(id) })
   // Ponuka: bežné kategórie a tie, ktoré už firma na iných cases použila.
   const labelCategories = [...new Set([...LABEL_CATEGORIES, ...(cases.data ?? []).map((c) => c.labelCategory).filter(Boolean)])]
 
@@ -398,11 +403,19 @@ export function CaseFormPage() {
       />
     )
   }
+  const layout = !can(company, 'cases.edit') ? null : id && current && equipment.data ? (
+    <div className="mt-8 border-t pt-6">
+      <CaseLayoutSection companyId={company.companyId} caseId={id} content={equipment.data.filter((item) => item.caseId === id && !isGone(item.status))} canEdit />
+    </div>
+  ) : !id ? (
+    <p className="mt-6 text-sm text-muted-foreground">{tx('Rozloženie v case (priehradky, šuplíky) nastavíte v úprave, keď case uložíte a pridáte do neho techniku.')}</p>
+  ) : null
 
   return (
     <>
       <PageHeader title={id ? tf('Úprava – {0}', kindWord(current?.kind)) : tx('Nový case / rack / taška')} />
       {body}
+      {layout}
     </>
   )
 }

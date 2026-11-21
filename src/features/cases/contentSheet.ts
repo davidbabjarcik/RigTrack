@@ -116,6 +116,64 @@ export type SheetData = {
   show?: Partial<SheetShow>
   /** Viac typov káblov: v jednej tabuľke (predvolené), alebo každý typ vo vlastnej tabuľke pod sebou. */
   layout?: SheetLayout
+  /** Obsah podľa rozloženia v case (časti a priehradky) namiesto súhrnného zoznamu. */
+  compartments?: SheetCompartments
+}
+
+/** Časti case (šuplíky, priehradky) s mriežkou a čo je v ktorej priehradke – na hárok. */
+export type SheetCompartments = { name: string; cols: number; cells: { lines: string[]; note: string }[] }[]
+
+/** Rozloženie: každá časť s nadpisom a mriežkou priehradiek (číslo, obsah, poznámka); výška podľa počtu riadkov. */
+function drawCompartments(ctx: Ctx, sections: SheetCompartments, top: number, space: number) {
+  const left = MARGIN
+  const width = pageWidth - 2 * MARGIN
+  const TITLE = 140
+  const GAP = 50
+  const gridRows = sections.map((section) => Math.ceil(section.cells.length / section.cols))
+  const totalRows = gridRows.reduce((sum, rows) => sum + rows, 0)
+  const rowHeight = Math.max(140, Math.min(700, (space - sections.length * (TITLE + GAP)) / Math.max(1, totalRows)))
+  let y = top
+  sections.forEach((section, s) => {
+    const single = section.cells.length === 1
+    if (!single || sections.length > 1) y = sectionTitle(ctx, section.name.toUpperCase(), y)
+    const cellWidth = width / section.cols
+    section.cells.forEach((cell, index) => {
+      const x = left + (index % section.cols) * cellWidth
+      const cellY = y + Math.floor(index / section.cols) * rowHeight
+      ctx.strokeStyle = INK
+      ctx.lineWidth = 4
+      roundRect(ctx, x + 10, cellY + 10, cellWidth - 20, rowHeight - 20, 20)
+      ctx.stroke()
+      ctx.lineWidth = LINE
+      if (!single) {
+        font(ctx, 44, 700)
+        ctx.textBaseline = 'top'
+        ctx.fillStyle = MUTED
+        ctx.fillText(String(index + 1), x + 40, cellY + 36)
+        ctx.fillStyle = INK
+      }
+      const textTop = cellY + (single ? 50 : 100)
+      const available = rowHeight - (single ? 80 : 130) - (cell.note ? 60 : 0)
+      const lines = cell.lines.length > 0 ? cell.lines : ['—']
+      const size = Math.max(26, Math.min(single ? 70 : 60, available / (lines.length * 1.2)))
+      font(ctx, size)
+      ctx.textBaseline = 'top'
+      const maxLines = Math.max(1, Math.floor(available / (size * 1.2)))
+      const shown = lines.length > maxLines ? [...lines.slice(0, maxLines - 1), `+ ${lines.length - maxLines + 1} ďalšie`] : lines
+      shown.forEach((line, row) => {
+        font(ctx, fitSize(ctx, line, cellWidth - 80, size, 22))
+        ctx.fillText(ellipsize(ctx, line, cellWidth - 80), x + 40, textTop + row * size * 1.2)
+      })
+      if (cell.note) {
+        font(ctx, 36)
+        ctx.fillStyle = MUTED
+        ctx.fillText(ellipsize(ctx, cell.note, cellWidth - 80), x + 40, cellY + rowHeight - 80)
+        ctx.fillStyle = INK
+      }
+    })
+    y += gridRows[s] * rowHeight + GAP
+  })
+  return y
 }
 
 /** Voliteľné časti hárku: číslo case a QR v hlavičke, v súhrne kusy, hmotnosť, podpis a dátum kontroly. */
@@ -567,6 +625,12 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
       : rows.length > 0
         ? [{ title: columns.length === 1 ? columns[0].toUpperCase() : 'KÁBLE PODĽA DĹŽKY', columns, rows }]
         : []
+  // Podľa rozloženia v case: priehradky namiesto tabuľky káblov a zoznamu.
+  if (data.compartments && data.compartments.length > 0) {
+    tables.length = 0
+    sections.length = 0
+    y = drawCompartments(ctx, data.compartments, y, bottom - footerSpace - dmxSpace - y)
+  }
   const FIRST = 560
   const HEAD_ROW = 130
   const STRIP = 54

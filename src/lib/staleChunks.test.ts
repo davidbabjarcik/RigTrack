@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { isStaleChunkError, reloadForNewVersion } from './staleChunks'
+import { hardReloadForNewVersion, isStaleChunkError, reloadForNewVersion } from './staleChunks'
 
 afterEach(() => {
   sessionStorage.clear()
@@ -14,10 +14,12 @@ describe('staleChunks', () => {
     expect(isStaleChunkError(new Error('Cannot read properties of undefined'))).toBe(false)
   })
 
-  it('reloads once, then not again for a while', () => {
+  it('reloads once, then not again for a while; the hard reload also only once', async () => {
     const reload = vi.fn()
     expect(reloadForNewVersion(reload)).toBe(true)
     expect(reloadForNewVersion(reload)).toBe(false)
-    expect(reload).toHaveBeenCalledTimes(1)
+    expect(hardReloadForNewVersion(reload)).toBe(true)
+    expect(hardReloadForNewVersion(reload)).toBe(false)
+    await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(2))
   })
 })

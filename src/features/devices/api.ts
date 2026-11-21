@@ -36,7 +36,7 @@ export async function fetchDevices(companyId: string): Promise<MemberDevice[]> {
 }
 
 export function useDevices(companyId: string) {
-  return useQuery({ queryKey: deviceKeys.list(companyId), queryFn: () => fetchDevices(companyId), retry: false })
+  return useQuery({ queryKey: deviceKeys.list(companyId), queryFn: () => fetchDevices(companyId), retry: 1 })
 }
 
 /** Nové zariadenie patrí prihlásenému, alebo (pre správcu tímu) členovi `userId`. */
