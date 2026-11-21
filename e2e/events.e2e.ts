@@ -159,3 +159,24 @@ test('šablóna eventu: uloženie z detailu a nový event zo šablóny', async (
   await expect(page.getByLabel('Miesto')).toHaveValue('Ukážková sála')
   await expect(page.getByText('Po uložení sa pridá technika (0 položiek) a posádka (1).')).toBeVisible()
 })
+
+test('hodnotenie od klienta: hviezdičky a potom odkazy na recenzie', async ({ page }) => {
+  await signIn(page)
+  const base = { event: 'Ukážková svadba', startsOn: '2026-11-15', endsOn: '2026-11-15', companyName: 'Ukážková firma', comment: '', links: { google: 'https://g.page/r/ukazka/review', facebook: '', web: '' } }
+  await fakeBackend(page, { 'rpc:get_event_rating': [{ ...base, stars: null, ratedAt: null }, { ...base, stars: 5, ratedAt: '2026-11-16T10:00:00Z' }], 'rpc:rate_event': [null] })
+  await page.goto('/h/00000000-0000-4000-8000-0000000000ab')
+  await expect(page.getByRole('heading', { name: 'Ako sme sa vám páčili?' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Odoslať hodnotenie' })).toBeDisabled()
+  await page.getByRole('button', { name: '5 z 5' }).click()
+  await page.getByRole('button', { name: 'Odoslať hodnotenie' }).click()
+  await expect(page.getByRole('link', { name: 'Ohodnotiť na Google' })).toHaveAttribute('href', 'https://g.page/r/ukazka/review')
+  await expect(page.getByRole('link', { name: 'Ohodnotiť na Facebooku' })).toHaveCount(0)
+})
+
+test('po evente sa ponúkne odkaz na hodnotenie', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, { ...fixtures, events: [{ ...event, starts_on: '2026-01-10', ends_on: '2026-01-11' }], event_ratings: [], 'rpc:create_event_rating': ['00000000-0000-4000-8000-0000000000ab'] })
+  await page.goto(`/events/${EVENT_ID}`)
+  await page.getByRole('button', { name: 'Vytvoriť odkaz na hodnotenie' }).click()
+  await expect(page.getByLabel('Odkaz na hodnotenie pre klienta')).toHaveValue(/\/h\/00000000-0000-4000-8000-0000000000ab$/)
+})

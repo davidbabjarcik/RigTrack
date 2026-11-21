@@ -45,6 +45,7 @@ export const STAT_WIDGETS = [
   { id: 'vehicles.count', section: 'vehicles', kind: 'tile', label: 'Aktívne vozidlá' },
   { id: 'vehicles.due', section: 'vehicles', kind: 'tile', label: 'Termíny na vybavenie' },
   { id: 'vehicles.costs', section: 'vehicles', kind: 'ranking', label: 'Náklady na prevádzku podľa vozidla' },
+  { id: 'people.rating', section: 'people', kind: 'tile', label: 'Hodnotenie od klientov' },
   { id: 'people.hours', section: 'people', kind: 'ranking', label: 'Odpracované hodiny (z výkazov)' },
   { id: 'people.duties', section: 'people', kind: 'ranking', label: 'Kto čo robil najviac (činnosti pri eventoch)' },
   { id: 'people.drives', section: 'people', kind: 'ranking', label: 'Šoféri – najazdené km pri eventoch' },

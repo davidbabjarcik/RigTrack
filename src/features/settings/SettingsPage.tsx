@@ -30,6 +30,7 @@ import { RulesSettings } from '@/features/events/RulesSettings'
 import { PackagesSettings } from '@/features/packages/PackagesSettings'
 import { useCompany, type Membership } from '@/features/companies/company-context'
 import { BrandingSettings } from '@/features/companies/BrandingSettings'
+import { ReviewLinksSettings } from '@/features/companies/ReviewLinksSettings'
 import { CompanyProfileSettings } from '@/features/companies/CompanyProfileSettings'
 import { DeleteCompanySettings } from '@/features/companies/DeleteCompanySettings'
 import { DemoSettings } from '@/features/companies/DemoSettings'
@@ -359,6 +360,12 @@ export function SettingsPage() {
           {isAdmin && (
             <Section title={tx('Logo a štítky na cases')}>
               <BrandingSettings companyId={company.companyId} />
+            </Section>
+          )}
+
+          {isAdmin && (
+            <Section title={tx('Hodnotenie od klientov – odkazy na recenzie')}>
+              <ReviewLinksSettings companyId={company.companyId} />
             </Section>
           )}
 

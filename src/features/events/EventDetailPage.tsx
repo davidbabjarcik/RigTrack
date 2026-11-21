@@ -35,6 +35,7 @@ import { EventStagePlan } from '@/features/stage/EventStagePlan'
 import { EventEquipmentSection } from './EventEquipmentSection'
 import { EventReturnSection } from './EventReturnSection'
 import { SaveTemplateButton } from './SaveTemplateButton'
+import { EventRatingCard } from './EventRatingCard'
 import { EventStatusBadge } from './EventStatusBadge'
 import { describeTimes, POWER_LABELS, SETTING_LABELS, shownStatus } from './model'
 import { EventWeather } from './EventWeather'
@@ -237,6 +238,8 @@ export function EventDetailPage() {
 
       {tab === 'overview' && (
         <>
+          {/* Po skončení: hodnotenie od klienta (požiadať o neho alebo ho ukázať). */}
+          {event.status !== 'cancelled' && event.endsOn < todayIso() && <EventRatingCard companyId={companyId} event={event} canEdit={canEdit} />}
           {(event.setting === 'outdoor' || event.setting === 'mixed') && <EventWeather event={event} />}
           {event.description && (
             <CollapsibleSection id="event.description" title={tx('Popis')}>

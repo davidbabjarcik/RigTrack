@@ -5,6 +5,15 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.14
+
+- **Client rating and reviews on Google / Facebook**: after an event ends, its overview has “Create rating link” –
+  copy the link or e-mail it to the organizer. Without signing in, the client gives 1–5 stars and a note once. Those
+  who give 4–5 see “Rate us on Google / Facebook / our website” buttons (an admin sets the links in Settings); others
+  are thanked and the rating stays with you. A notification arrives, the rating shows in the event detail and the
+  average in Statistics.
+- Technical: migration 0184 (client rating, review links).
+
 ### 10.13
 
 - **External crew confirm through a link**: next to an external crew member (e.g. a DJ or technician without an

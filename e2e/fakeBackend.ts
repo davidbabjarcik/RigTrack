@@ -40,6 +40,7 @@ const json = (route: Route, status: number, body: unknown, headers: Record<strin
 /** Všetky volania na databázu: čítania vrátia prázdno, zápisy „prejdú“, nič neodíde von. */
 export async function fakeBackend(page: Page, fixtures: Record<string, unknown[]> = {}) {
   const requests: string[] = []
+  const rpcCalls = new Map<string, number>()
   await page.route(`${FAKE_SUPABASE}/**`, async (route) => {
     const request = route.request()
     const url = new URL(request.url())
@@ -53,8 +54,13 @@ export async function fakeBackend(page: Page, fixtures: Record<string, unknown[]
     if (url.pathname.startsWith('/rest/v1/rpc/')) {
       const name = url.pathname.split('/').pop()
       if (name === 'my_permissions') return json(route, 200, [])
-      // Odpoveď funkcie z fixtures: { 'rpc:názov': [hodnota] }.
-      if (fixtures[`rpc:${name}`]) return json(route, 200, fixtures[`rpc:${name}`][0])
+      // Odpoveď funkcie z fixtures: { 'rpc:názov': [hodnota, ďalšia…] } – každé volanie ďalšiu, posledná ostáva.
+      const answers = fixtures[`rpc:${name}`]
+      if (answers) {
+        const index = Math.min(rpcCalls.get(name!) ?? 0, answers.length - 1)
+        rpcCalls.set(name!, index + 1)
+        return json(route, 200, answers[index])
+      }
       return json(route, 200, [])
     }
     if (url.pathname.startsWith('/rest/v1/')) {

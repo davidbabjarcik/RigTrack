@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.14 – 21. 11. 2026
+
+- **Hodnotenie od klienta a recenzie na Google / Facebooku**: po skončení eventu je v jeho prehľade „Vytvoriť odkaz
+  na hodnotenie“ – odkaz skopírujete alebo pošlete e-mailom organizátorovi. Klient bez prihlásenia raz dá 1–5
+  hviezdičiek a poznámku. Kto dá 4–5, uvidí tlačidlá „Ohodnotiť na Google / Facebooku / našom webe“ (odkazy nastaví
+  admin v Nastaveniach); kto dá menej, tomu sa poďakujeme a hodnotenie ostane len vám. Prichádza upozornenie,
+  hodnotenie je v detaile eventu a priemer v Štatistikách.
+- Technické: migrácia 0184 (hodnotenie od klienta, odkazy na recenzie).
+
 ### 10.13 – 21. 11. 2026
 
 - **Externista potvrdí termín cez odkaz**: pri externistovi v posádke (napr. DJ alebo technik bez účtu) tlačidlo

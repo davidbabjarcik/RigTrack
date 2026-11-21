@@ -28,6 +28,7 @@ import { memberName, useMembers } from '@/features/companies/useMembers'
 import { bothBases, fetchCompanyIncome, METHOD_LABELS, PAYMENT_METHODS } from '@/features/events/income'
 import { useEvents } from '@/features/events/useEvents'
 import { payback } from '@/features/equipment/payback'
+import { fetchEventRatings, ratingKeys, ratingSummary } from '@/features/events/ratingApi'
 import { fetchPayments, payoutKeys } from '@/features/payouts/api'
 import { can } from '@/lib/permissions'
 import { SelectField } from '@/components/ui/field'
@@ -204,6 +205,7 @@ export function StatsPage() {
   const payments = useQuery({ queryKey: payoutKeys.list(companyId), queryFn: () => fetchPayments(companyId) })
   const income = useQuery({ queryKey: ['company', companyId, 'income'], queryFn: () => fetchCompanyIncome(companyId), enabled: canIncome })
   const events = useEvents(companyId)
+  const ratings = useQuery({ queryKey: ratingKeys.list(companyId), queryFn: () => fetchEventRatings(companyId), retry: false })
   const members = useMembers(companyId)
   const { categories } = useEquipmentLookups(companyId)
   // Ľudia: výkazy času a činnosti pri eventoch (bez migrácie 0077 sa činnosti len neukážu).
@@ -234,6 +236,7 @@ export function StatsPage() {
   // Hodnota len techniky, ktorú firma má (vyradená a predaná sa nepočíta).
   const value = valueSummary((equipment.data ?? []).filter((item) => !isGone(item.status)), (item) => categories.find((category) => category.id === item.categoryId)?.name ?? tx('Bez kategórie'))
   const sold = soldSummary(equipment.data ?? [])
+  const rating = ratingSummary(ratings.data ?? [])
   // Návratnosť: koľko % nákupnej ceny technika odhadom zarobila (len s nákupnou cenou aj cenou prenájmu).
   const paybackRows = (equipment.data ?? [])
     .filter((item) => !isGone(item.status) && item.rentalPrice)
@@ -363,6 +366,13 @@ export function StatsPage() {
     'service.costliest': <Ranking title={tx('Najdrahšia technika na servis')} rows={stats.service.costliest} format={money} empty={tx('Žiadne zapísané náklady.')} />,
     'vehicles.count': <Tile label={tx('Aktívne vozidlá')} value={String(stats.vehicles.count)} />,
     'vehicles.due': <Tile label={tx('Termíny na vybavenie')} value={String(stats.vehicles.due)} hint={tx('po termíne alebo do 30 dní')} />,
+    'people.rating': (
+      <Tile
+        label={tx('Hodnotenie od klientov')}
+        value={rating.average !== null ? `${formatNumber(rating.average)} ★` : '—'}
+        hint={rating.count > 0 ? tf('{0} hodnotení', rating.count) : tx('Po evente pošlite klientovi odkaz na hodnotenie.')}
+      />
+    ),
     'people.hours': (
       <Ranking title={tf('Odpracované hodiny {0} (eventy, firma, doma)', period)} rows={hours} format={(value) => `${formatNumber(value)} h`} empty={tx('Žiadne zapísané výkazy času.')} />
     ),
