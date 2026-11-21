@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.13 – 21. 11. 2026
+
+- **Externista potvrdí termín cez odkaz**: pri externistovi v posádke (napr. DJ alebo technik bez účtu) tlačidlo
+  „Odkaz na potvrdenie termínu“. Cez odkaz bez prihlásenia vidí len názov akcie, termín, časy, miesto a svoju rolu
+  a ťukne „Môžem“ alebo „Nemôžem“ s dôvodom. Odpoveď sa ukáže pri ňom v posádke a tým, čo upravujú eventy, príde
+  upozornenie. Odpoveď sa dá zmeniť, kým event neskončil.
+- Technické: migrácia 0183 (potvrdenie termínu cez odkaz).
+
 ### 10.12 – 21. 11. 2026
 
 - **Inventúra skenovaním**: v Cases a racks tlačidlo „Inventúra“. Prejdete sklad s mobilom a naskenujete štítky

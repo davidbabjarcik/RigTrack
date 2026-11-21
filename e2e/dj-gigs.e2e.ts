@@ -82,3 +82,24 @@ test('DJ profil na karte a jeho technika na hranie jedným ťuknutím', async ({
   await page.goto(`/events/${GIG_ID}?tab=crew`)
   await expect(page.getByRole('button', { name: 'Pridať jeho techniku (1)' })).toBeVisible()
 })
+
+test('externista potvrdí termín cez odkaz bez prihlásenia', async ({ page }) => {
+  await signIn(page)
+  const invite = { name: 'Ukážkový DJ', role: 'DJ', response: 'pending', responseNote: '', event: 'Ukážkový klub', startsOn: DAY, endsOn: DAY, venue: 'Ukážková ulica', status: 'confirmed', getInTime: null, showTime: '22:00:00', showEndTime: null, companyName: 'Ukážková firma' }
+  await fakeBackend(page, { 'rpc:get_crew_invite': [invite], 'rpc:respond_crew_invite': [null] })
+  await page.goto('/u/00000000-0000-4000-8000-0000000000aa')
+  await expect(page.getByRole('heading', { name: 'Ukážkový klub' })).toBeVisible()
+  await expect(page.getByText('začiatok 22:00')).toBeVisible()
+  await page.getByRole('button', { name: 'Nemôžem' }).click()
+  await expect(page.getByRole('button', { name: 'Odoslať' })).toBeDisabled()
+  await page.getByLabel('Prečo nemôžete?').fill('Iné hranie')
+  await expect(page.getByRole('button', { name: 'Odoslať' })).toBeEnabled()
+})
+
+test('pri externistovi je odkaz na potvrdenie termínu', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, { events: [gig], event_crew: [crew], 'rpc:share_crew_invite': ['00000000-0000-4000-8000-0000000000aa'] })
+  await page.goto(`/events/${GIG_ID}?tab=crew`)
+  await page.getByRole('button', { name: 'Odkaz na potvrdenie termínu' }).click()
+  await expect(page.getByLabel('Odkaz na potvrdenie termínu')).toHaveValue(/\/u\/00000000-0000-4000-8000-0000000000aa$/)
+})

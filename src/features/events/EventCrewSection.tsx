@@ -1,3 +1,4 @@
+import { CrewInviteButton } from './CrewInviteButton'
 import { DjGearButton } from './DjGearButton'
 import { DjPayLine } from './DjPayLine'
 import { useCompany } from '@/features/companies/company-context'
@@ -162,6 +163,8 @@ export function EventCrewSection({ companyId, event, events, canEdit }: Props) {
                   <CrewResponseLine companyId={companyId} person={person} mine={person.memberId === userId} />
                   {/* DJ hranie: odmena toho, kto hrá (do Odmien a Zisku z eventov). */}
                   {event.kind === 'dj' && person.memberId && canPay && <DjPayLine companyId={companyId} event={event} memberId={person.memberId} />}
+                  {/* Externista bez účtu: termín potvrdí cez odkaz. */}
+                  {!person.memberId && canEdit && <CrewInviteButton crewId={person.id} />}
                   {/* DJ hranie: jeho vlastná technika na event jedným ťuknutím. */}
                   {event.kind === 'dj' && canEdit && cardOf(person)?.staffId && <DjGearButton companyId={companyId} event={event} staffId={cardOf(person)!.staffId!} />}
                   {elsewhereOf(person.memberId) && (

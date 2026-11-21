@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.13
+
+- **External crew confirm through a link**: next to an external crew member (e.g. a DJ or technician without an
+  account) there is a “Date confirmation link” button. Without signing in, they see only the event name, dates,
+  times, venue and their role and tap “I can” or “I can't” with a reason. The answer shows next to them in the crew
+  and those who edit events get a notification. The answer can be changed until the event ends.
+- Technical: migration 0183 (date confirmation through a link).
+
 ### 10.12
 
 - **Stocktake by scanning**: Cases and racks has a “Stocktake” button. Walk through the warehouse with your phone
