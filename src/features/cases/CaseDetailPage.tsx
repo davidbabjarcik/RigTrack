@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { caseKeys, deleteCase, duplicateCase } from './api'
 import { ResponsibleFor } from '@/features/responsibilities/ResponsibleFor'
 import { CaseChecks } from './CaseChecks'
+import { CaseLayoutSection } from './CaseLayoutSection'
 import { CasePhoto } from './CasePhoto'
 import { formatWeight } from './label'
 import { caseTitle, formatDimensions, kindLabel } from './model'
@@ -205,6 +206,8 @@ export function CaseDetailPage() {
       <div className="mb-6">
         <CasePhoto companyId={companyId} caseId={id} name={current.name} photoPath={current.photoPath} canEdit={canEdit} />
       </div>
+
+      <CaseLayoutSection companyId={companyId} caseId={id} content={content} canEdit={canEdit} />
 
       <CaseChecks companyId={companyId} caseId={id} canCheck={can(company, 'cases.check') || canEdit} />
 

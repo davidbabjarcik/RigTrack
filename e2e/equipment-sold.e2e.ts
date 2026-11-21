@@ -142,3 +142,23 @@ test('inventúra: čo chýba a čo je nájdené', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Ukážková hlava' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Nájdené (1)' })).toBeVisible()
 })
+
+test('priehradky v case: čo je kde', async ({ page }) => {
+  await signIn(page)
+  const CASE = '00000000-0000-4000-8000-0000000000c7'
+  const PAR = '00000000-0000-4000-8000-0000000000b9'
+  const box = {
+    id: CASE, company_id: COMPANY_ID, name: 'Ukážkový case na PAR', inventory_number: '', location_id: null, label_number: '', label_category: '', label_title: '', label_photo_path: '', photo_path: '',
+    weight_kg: null, width_cm: null, length_cm: null, depth_cm: null, spot_id: null, spot_level: null, note: '', updated_at: '2026-11-01T00:00:00Z',
+    layout: { rows: 2, cols: 3, cells: [{ items: [{ equipmentId: PAR, unit: 1 }], note: '' }, { items: [], note: 'káble' }] },
+  }
+  await fakeBackend(page, { cases: [box], equipment: [{ ...piece(PAR, 'Ukážkový PAR', 'available'), case_id: CASE, quantity: 6, track_units: true }] })
+  await page.goto(`/cases/${CASE}`)
+  await expect(page.getByRole('heading', { name: 'Priehradky' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Priehradka 1' })).toContainText('Ukážkový PAR #1')
+  await expect(page.getByRole('button', { name: 'Priehradka 2' })).toContainText('káble')
+  await expect(page.getByText(/Nezaradené \(5\)/)).toBeVisible()
+  await page.getByRole('button', { name: 'Priehradka 3' }).click()
+  await expect(page.getByLabel('Pridať do priehradky')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Rozložiť nezaradené do prázdnych' })).toBeVisible()
+})

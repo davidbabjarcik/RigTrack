@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.16 – 21. 11. 2026
+
+- **Priehradky v case**: v detaile case sekcia „Priehradky“ – case rozdelíte na mriežku (napr. 2 × 3 pri case na
+  šesť svetiel) a ťuknutím na priehradku zapíšete, čo v nej je (technika po kusoch po jednotlivých kusoch, napr.
+  PAR #3) a poznámku (napr. káble). „Rozložiť nezaradené do prázdnych“ dá kusy po jednom do voľných priehradok.
+  Vidno aj, čo ešte nie je zaradené; mriežka sa dá neskôr zmeniť.
+- Technické: migrácia 0186 (priehradky v case).
+
 ### 10.15 – 21. 11. 2026
 
 - **Faktúry**: pri prijatej cenovej ponuke tlačidlá „Zálohová faktúra“ a „Faktúra“ – dodávateľ, odberateľ a cena sa

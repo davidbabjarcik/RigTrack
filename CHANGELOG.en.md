@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.16
+
+- **Case compartments**: case detail has a “Compartments” section – split the case into a grid (e.g. 2 × 3 for a
+  case of six lights) and tap a compartment to record what is in it (tracked gear piece by piece, e.g. PAR #3) and a
+  note (e.g. cables). “Spread unplaced into empty ones” puts the pieces one by one into free compartments. You also
+  see what is not placed yet; the grid can be changed later.
+- Technical: migration 0186 (case compartments).
+
 ### 10.15
 
 - **Invoices**: an accepted quote has “Advance invoice” and “Invoice” buttons – supplier, customer and price are filled
