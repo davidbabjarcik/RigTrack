@@ -116,3 +116,14 @@ test('návratnosť techniky v detaile', async ({ page }) => {
   await expect(page.getByText(/zarobila odhadom 100,00\s€ \(eventy: 1, výpožičky: 0\)/)).toBeVisible()
   await expect(page.getByText(/50 % nákupnej ceny, chýba 100,00\s€/)).toBeVisible()
 })
+
+test('treba kúpiť: objednávka jedným ťuknutím', async ({ page }) => {
+  await signIn(page)
+  const ID = '00000000-0000-4000-8000-0000000000b6'
+  await fakeBackend(page, { equipment: [{ ...piece(ID, 'Ukážková páska', 'available'), kind: 'consumable', quantity: 1, min_quantity: 4 }] })
+  await page.goto('/orders')
+  await page.getByRole('link', { name: 'Objednať' }).click()
+  await expect(page).toHaveURL((url) => url.pathname === '/orders/new' && url.searchParams.get('restock') === ID)
+  await expect(page.getByLabel('Názov *')).toHaveValue('Ukážková páska')
+  await expect(page.getByLabel('Ku ktorej technike pripočítať')).toHaveValue(ID)
+})

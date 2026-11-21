@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Camera, ExternalLink, FileUp, ImageOff, Plus, Store, Tag, Trash2 } from 'lucide-react'
 import { useId, useRef, useState, type DragEvent } from 'react'
 import { useFieldArray, useForm, useWatch } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -29,6 +29,7 @@ import {
   ORDER_SOURCES,
   orderSchema,
   orderTotal,
+  restockItems,
   SOURCE_LABELS,
   supplierProductUrl,
   type OrderFormValues,
@@ -40,7 +41,7 @@ type FormProps = { companyId: string; equipment: Equipment[]; categories: Lookup
 
 type ImportState = { busy: boolean; message: string | null; failed: boolean }
 
-function OrderForm({ companyId, equipment, categories }: FormProps) {
+function OrderForm({ companyId, equipment, categories, restock = [] }: FormProps & { restock?: string[] }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const categoryListId = useId()
@@ -66,7 +67,8 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
       orderedAt: todayIso(),
       currency: 'EUR',
       note: '',
-      items: [EMPTY_ITEM],
+      // Z „Treba kúpiť“: riadky pripočítané k existujúcej technike, počet tak, aby bola zásoba nad hranicou.
+      items: restockItems(equipment, categories, restock),
       ...flagDefaults,
     },
   })
@@ -495,6 +497,8 @@ function OrderForm({ companyId, equipment, categories }: FormProps) {
 
 export function OrderFormPage() {
   const company = useCompany().active!
+  const [params] = useSearchParams()
+  const restock = (params.get('restock') ?? '').split(',').filter(Boolean).slice(0, 100)
   const allowed = can(company, 'orders.edit')
   const lookups = useEquipmentLookups(company.companyId)
   const equipment = useQuery({
@@ -511,7 +515,7 @@ export function OrderFormPage() {
   } else if (lookups.isError || equipment.isError) {
     body = <ErrorBlock message={tx('Údaje sa nepodarilo načítať.')} onRetry={() => void equipment.refetch()} />
   } else {
-    body = <OrderForm companyId={company.companyId} equipment={equipment.data} categories={lookups.categories} />
+    body = <OrderForm companyId={company.companyId} equipment={equipment.data} categories={lookups.categories} restock={restock} />
   }
 
   return (

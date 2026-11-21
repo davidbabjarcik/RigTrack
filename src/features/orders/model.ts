@@ -306,3 +306,28 @@ export function formatTotals(totals: Record<string, number>) {
   if (entries.length === 0) return formatMoney(0, 'EUR')
   return entries.map(([currency, amount]) => formatMoney(amount, currency)).join(' + ')
 }
+
+/**
+ * Riadky objednávky z „Treba kúpiť“: pripočítajú sa k existujúcej technike a počet je taký, aby zásoba bola
+ * po nákupe nad hranicou (aspoň 1). Neznáme id sa vynechajú; bez nich jeden prázdny riadok.
+ */
+export function restockItems(
+  equipment: { id: string; name: string; kind: string; quantity: number; minQuantity: number | null; categoryId: string | null }[],
+  categories: { id: string; name: string }[],
+  ids: string[],
+): OrderItemValues[] {
+  const rows = ids
+    .map((id) => equipment.find((item) => item.id === id))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item))
+    .map((item) => ({
+      ...EMPTY_ITEM,
+      name: item.name,
+      quantity: Math.max(1, (item.minQuantity ?? 0) - item.quantity + 1),
+      mode: 'existing' as const,
+      equipmentId: item.id,
+      equipmentName: item.name,
+      category: categories.find((category) => category.id === item.categoryId)?.name ?? '',
+      kind: item.kind as OrderItemValues['kind'],
+    }))
+  return rows.length > 0 ? rows : [EMPTY_ITEM]
+}

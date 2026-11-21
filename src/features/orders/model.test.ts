@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EMPTY_ITEM, orderSchema, orderTotal, supplierProductUrl } from './model'
+import { EMPTY_ITEM, orderSchema, orderTotal, restockItems, supplierProductUrl } from './model'
 
 const order = (items: object[]) => ({
   source: 'shop',
@@ -62,5 +62,17 @@ describe('orderSchema', () => {
   it('rejects zero quantity and negative prices', () => {
     expect(orderSchema.safeParse(order([item({ quantity: 0 })])).success).toBe(false)
     expect(orderSchema.safeParse(order([item({ unitPrice: -1 })])).success).toBe(false)
+  })
+})
+
+describe('restockItems', () => {
+  it('riadky k existujúcej technike s počtom nad hranicu', () => {
+    const items = restockItems(
+      [{ id: 'a', name: 'Ukážková páska', kind: 'consumable', quantity: 1, minQuantity: 4, categoryId: 'c' }],
+      [{ id: 'c', name: 'Spotrebný' }],
+      ['a', 'neznáme'],
+    )
+    expect(items).toEqual([expect.objectContaining({ name: 'Ukážková páska', quantity: 4, mode: 'existing', equipmentId: 'a', category: 'Spotrebný', kind: 'consumable' })])
+    expect(restockItems([], [], ['x'])).toHaveLength(1)
   })
 })

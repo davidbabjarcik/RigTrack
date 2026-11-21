@@ -1,12 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { ShoppingCart } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { LinkButton } from '@/components/ui/button'
+import { useCompany } from '@/features/companies/company-context'
+import { can } from '@/lib/permissions'
 import { equipmentKeys, fetchEquipmentList } from './api'
 import { needsRestock } from './model'
 import { tx, tf } from '@/lib/i18n'
 
 /** Zoznam „treba kúpiť“: položky, ktorých zásoba klesla na nastavenú hranicu. Bez takých položiek sa nezobrazí. */
 export function RestockList({ companyId }: { companyId: string }) {
+  const canOrder = can(useCompany().active!, 'orders.edit')
   const equipment = useQuery({
     queryKey: equipmentKeys.list(companyId),
     queryFn: () => fetchEquipmentList(companyId),
@@ -19,6 +23,11 @@ export function RestockList({ companyId }: { companyId: string }) {
     <section aria-labelledby="restock-heading" className="mb-6 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
       <h2 id="restock-heading" className="mb-2 flex items-center gap-2 font-medium">
         <ShoppingCart className="size-5 text-destructive" aria-hidden />{tx('Treba kúpiť (')}{low.length})
+        {canOrder && (
+          <LinkButton to={`/orders/new?restock=${low.map((item) => item.id).join(',')}`} size="sm" variant="outline" className="ml-auto">
+            {tx('Objednať')}
+          </LinkButton>
+        )}
       </h2>
       <ul className="divide-y divide-destructive/20">
         {low.map((item) => (

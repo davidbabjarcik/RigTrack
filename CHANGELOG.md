@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.11 – 21. 11. 2026
+
+- **Spotrebný materiál – upozornenie a objednávka**: keď zásoba s nastavenou hranicou („Upozorniť pri počte“, napr.
+  gaffa pásky či batérie) klesne na hranicu, príde upozornenie tým, čo zapisujú objednávky – len raz, kým sa zásoba
+  nedoplní. V zozname „Treba kúpiť“ je tlačidlo „Objednať“, ktoré otvorí novú objednávku s predvyplnenými riadkami
+  (pripočítajú sa k existujúcej technike, počet tak, aby bola zásoba nad hranicou).
+- Technické: migrácia 0182 (upozornenie treba dokúpiť).
+
 ### 10.10 – 21. 11. 2026
 
 - **Výpis odmien za mesiac**: v Odmenách tlačidlo „Výpis za mesiac“ – zoznam odmien, bonusov a záloh člena za

@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.11
+
+- **Consumables – notification and order**: when stock with a set threshold (“Warn at quantity”, e.g. gaffer tape or
+  batteries) drops to the threshold, those who record orders get a notification – only once until it is restocked.
+  The “Need to buy” list has an “Order” button that opens a new order with prefilled lines (added to the existing
+  gear, in a quantity that puts the stock above the threshold).
+- Technical: migration 0182 (restock notification).
+
 ### 10.10
 
 - **Monthly pay statement**: Rewards has a “Monthly statement” button – a member's rewards, bonuses and advances for
