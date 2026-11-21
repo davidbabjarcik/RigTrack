@@ -144,3 +144,18 @@ test('chýbajúca technika: náhrada zo skladu jedným ťuknutím', async ({ pag
   await expect(page.getByText('Chýba 2 ks v tomto termíne.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Ukážková iná hlava (2 voľné)' })).toBeEnabled()
 })
+
+test('šablóna eventu: uloženie z detailu a nový event zo šablóny', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, {
+    ...fixtures,
+    event_templates: [{ id: 't1', company_id: COMPANY_ID, name: 'Ukážková svadba', updated_at: '2026-11-01T00:00:00Z', data: { venue: 'Ukážková sála', power: 'cee32', getInTime: '12:00', equipment: [], crew: [{ memberId: null, name: 'Ukážkový technik', role: 'Zvuk' }] } }],
+  })
+  await page.goto(`/events/${EVENT_ID}`)
+  await expect(page.getByRole('button', { name: 'Uložiť ako šablónu' })).toBeVisible()
+
+  await page.goto('/events/new')
+  await page.getByLabel('Zo šablóny').selectOption({ label: 'Ukážková svadba' })
+  await expect(page.getByLabel('Miesto')).toHaveValue('Ukážková sála')
+  await expect(page.getByText('Po uložení sa pridá technika (0 položiek) a posádka (1).')).toBeVisible()
+})

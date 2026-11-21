@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.8 – 21. 11. 2026
+
+- **Šablóny eventov**: v detaile eventu „Uložiť ako šablónu“ uloží techniku (aj celé cases), posádku, časy, miesto
+  a elektrinu pod názvom, napr. „Svadba – základ“. Pri novom evente vyberiete „Zo šablóny“ – údaje sa vyplnia a po
+  uložení sa pridá technika aj posádka; doplníte len dátum, názov a klienta. Šablónu s rovnakým názvom prepíšete,
+  nepotrebnú zmažete priamo vo výbere.
+- Technické: migrácia 0181 (šablóny eventov).
+
 ### 10.7 – 21. 11. 2026
 
 - **Náhrada zo skladu pri chýbajúcej technike**: keď technika v termíne eventu nestačí (je na inom evente, vo

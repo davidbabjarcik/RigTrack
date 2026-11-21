@@ -13,6 +13,8 @@ import { useCompany } from '@/features/companies/company-context'
 import { formatDate, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
 import { eventKeys, notifyNewEvent, saveEvent } from './api'
+import { applyTemplate } from './applyTemplate'
+import { deleteTemplate, fetchTemplates, templateKeys, type EventTemplate } from './templates'
 import {
   EVENT_KIND_LABELS,
   EVENT_KINDS,
@@ -106,7 +108,27 @@ function EventForm({ companyId, current, events, savedDays, kind: startKind }: F
   const endsOn = useWatch({ control, name: 'endsOn' })
   const dates = startsOn && endsOn && startsOn <= endsOn ? eventDates(startsOn, endsOn).slice(0, 31) : []
   const [edited, setEdited] = useState<Record<string, ProgramRow>>({})
-  const suggested = defaultProgram(dates, savedDays, { getInTime: current?.getInTime ?? '', showTime: current?.showTime ?? '', showEndTime: current?.showEndTime ?? '' })
+  // Šablóna (len pri novom evente): vyplní údaje a po uložení pridá techniku a posádku.
+  const templates = useQuery({ queryKey: templateKeys.list(companyId), queryFn: () => fetchTemplates(companyId), enabled: !current, retry: false })
+  const [template, setTemplate] = useState<EventTemplate | null>(null)
+  const removeTemplate = useMutation({
+    mutationFn: deleteTemplate,
+    onSuccess: () => setTemplate(null),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: templateKeys.list(companyId) }),
+  })
+  const pickTemplate = (picked: EventTemplate | null) => {
+    setTemplate(picked)
+    setEdited({})
+    if (!picked) return
+    const data = picked.data
+    setValue('kind', data.kind, { shouldDirty: true })
+    for (const key of ['venue', 'powerNote', 'description', 'note', 'getInTime', 'showTime', 'showEndTime'] as const) setValue(key, data[key], { shouldDirty: true })
+    setValue('setting', data.setting, { shouldDirty: true })
+    setValue('power', data.power, { shouldDirty: true })
+    setValue('powerCount', data.powerCount, { shouldDirty: true })
+  }
+  const times = current ?? template?.data
+  const suggested = defaultProgram(dates, savedDays, { getInTime: times?.getInTime ?? '', showTime: times?.showTime ?? '', showEndTime: times?.showEndTime ?? '' })
   const program = suggested.map((row) => edited[row.day] ?? row)
   const setRow = (row: ProgramRow) => setEdited({ ...edited, [row.day]: row })
 
@@ -120,6 +142,8 @@ function EventForm({ companyId, current, events, savedDays, kind: startKind }: F
       for (const row of program.filter(worthSaving)) await saveDay(companyId, id, row).catch(() => {})
       // Organizátor do Firmy a kontakty a k eventu (bez migrácie 0059 sa preskočí).
       if (partners.isSuccess) await setEventOrganizer(companyId, id, organizerChoice, values).catch(() => {})
+      // Zo šablóny: technika (celé cases aj jednotlivo) a posádka. Čo sa pridať nedá (napr. predané), sa preskočí.
+      if (!current && template) await applyTemplate(companyId, id, template.data)
       return id
     },
     onSuccess: async (id) => {
@@ -156,6 +180,36 @@ function EventForm({ companyId, current, events, savedDays, kind: startKind }: F
           <p className="mt-1.5 text-sm text-muted-foreground">{tx('Hranie niekoho z firmy ako DJ. Kto hrá, pridáte po uložení v časti „Kto hrá“. V kalendári má vlastnú farbu.')}</p>
         )}
       </fieldset>
+      {!current && (templates.data?.length ?? 0) > 0 && (
+        <div className="flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-3">
+          <SelectField
+            label={tx('Zo šablóny')}
+            className="min-w-56 flex-1"
+            value={template?.id ?? ''}
+            onChange={(changed) => pickTemplate(templates.data?.find((item) => item.id === changed.target.value) ?? null)}
+          >
+            <option value="">{tx('— bez šablóny —')}</option>
+            {templates.data?.map((item) => (
+              <option key={item.id} value={item.id}>{item.name}</option>
+            ))}
+          </SelectField>
+          {template && (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={removeTemplate.isPending}
+              onClick={() => window.confirm(tf('Zmazať šablónu „{0}“? Eventy z nej ostanú.', template.name)) && removeTemplate.mutate(template.id)}
+            >
+              {tx('Zmazať šablónu')}
+            </Button>
+          )}
+          {template && (
+            <p className="w-full text-sm text-muted-foreground">
+              {tf('Po uložení sa pridá technika ({0} položiek) a posádka ({1}). Dátum, názov a klienta doplňte.', template.data.equipment.length, template.data.crew.length)}
+            </p>
+          )}
+        </div>
+      )}
       <Field label={kind === 'dj' ? tx('Názov (napr. klub alebo akcia) *') : tx('Názov eventu *')} autoFocus={!current} list="past-event-names" error={errors.name?.message} {...register('name')} />
       <datalist id="past-event-names">
         {pastEventNames(events).map((past) => (

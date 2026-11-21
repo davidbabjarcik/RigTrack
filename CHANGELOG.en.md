@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.8
+
+- **Event templates**: “Save as template” in an event's detail saves its gear (whole cases too), crew, times, venue
+  and power under a name, e.g. “Wedding – basic”. When creating a new event, pick “From template” – the details are
+  filled in and after saving the gear and crew are added; you only add the date, name and client. A template with the
+  same name is overwritten, and an unneeded one is deleted right in the picker.
+- Technical: migration 0181 (event templates).
+
 ### 10.7
 
 - **Replacement from stock for missing gear**: when gear is short in an event's dates (it is on another event, on a

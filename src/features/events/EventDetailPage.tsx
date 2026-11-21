@@ -34,6 +34,7 @@ import { EventPhotosSection } from './EventPhotosSection'
 import { EventStagePlan } from '@/features/stage/EventStagePlan'
 import { EventEquipmentSection } from './EventEquipmentSection'
 import { EventReturnSection } from './EventReturnSection'
+import { SaveTemplateButton } from './SaveTemplateButton'
 import { EventStatusBadge } from './EventStatusBadge'
 import { describeTimes, POWER_LABELS, SETTING_LABELS, shownStatus } from './model'
 import { EventWeather } from './EventWeather'
@@ -129,6 +130,7 @@ export function EventDetailPage() {
             <LinkButton to={`/events/${id}/contract`} variant="outline" size="sm" title={tx('Vzor zmluvy s klientom z údajov eventu')}>
               <FileSignature className="size-4" aria-hidden />{tx('Zmluva')}</LinkButton>
           )}
+          {canEdit && <SaveTemplateButton companyId={company.companyId} event={event} />}
           <LinkButton to={`/events/${id}/print`} variant="outline" size="sm">
             <Printer className="size-4" aria-hidden />{tx('Tlač / PDF')}</LinkButton>
           {canEdit && (
