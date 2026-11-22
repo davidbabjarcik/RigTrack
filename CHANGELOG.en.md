@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.2.1
+
+- **Mobile – page headers**: buttons (Scan, Poster, Add…) are in a row below the title, not in a column next to it.
+- **Mobile – equipment list**: the name gets up to two lines, the status is below the text and “Available” is not
+  shown on mobile, so the name has room.
+
 ### 11.2
 
 - **Printed items leave the print queue by themselves**: after printing or downloading (PDF, ZIP, PNG), what was

@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.2.1 – 22. 11. 2026
+
+- **Mobil – hlavičky stránok**: tlačidlá (Skenovať, Plagát, Pridať…) sú pod nadpisom v riadku, nie v stĺpci vedľa
+  neho.
+- **Mobil – zoznam techniky**: názov má až dva riadky, stav je pod textom a „Dostupná“ sa na mobile nezobrazuje,
+  aby mal názov miesto.
+
 ### 11.2 – 22. 11. 2026
 
 - **Vytlačené zmizne z tlačovej fronty samo**: po vytlačení alebo stiahnutí (PDF, ZIP, PNG) sa z fronty zmaže to,

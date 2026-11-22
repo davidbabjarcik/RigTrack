@@ -23,7 +23,7 @@ test('predaná technika je stále v Technike a archívna má štítok', async ({
   await page.goto('/equipment')
   await expect(page.getByText('Ukážkový pult', { exact: true })).toBeVisible()
   await expect(page.getByText('Ukážkový starý pult')).toHaveCount(0)
-  await expect(page.getByText('Archívna').first()).toBeVisible()
+  await expect(page.getByText('Archívna').locator('visible=true').first()).toBeVisible()
   await page.getByRole('button', { name: 'Predaná technika (1)' }).click()
   await expect(page.getByText('Ukážkový starý pult')).toBeVisible()
   await expect(page.getByText('Ukážkový pult', { exact: true })).toHaveCount(0)

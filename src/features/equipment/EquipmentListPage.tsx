@@ -148,7 +148,7 @@ export function EquipmentListPage() {
           {color && <span className={`absolute inset-y-0 left-0 w-1.5 ${COLOR_CLASSES[color]}`} aria-hidden />}
           {!sub && <PhotoThumb url={thumbs[item.photoPath]} />}
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-medium">{sub && !byLength ? (item.caseId ? caseLabel(item.caseId) || tx('V case') : tx('Mimo case')) : item.name}</span>
+            <span className="line-clamp-2 font-medium break-words sm:block sm:truncate">{sub && !byLength ? (item.caseId ? caseLabel(item.caseId) || tx('V case') : tx('Mimo case')) : item.name}</span>
             {details.length > 0 && <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>}
             {servicing > 0 && item.status !== 'in_service' && (
               <span className="block text-sm text-sky-700 dark:text-sky-400">{tx('V servise')}{' '}{unitsOut.has(item.id) ? `kus ${formatUnits(unitsOut.get(item.id)!)}` : `${servicing} z ${item.quantity} ks`}
@@ -159,9 +159,11 @@ export function EquipmentListPage() {
               <span className="block text-sm text-accent">{tx('Odčítať prevádzkové hodiny')}</span>
             )}
             {service === 'overdue' && <span className="block text-sm text-destructive">{tx('Servis po termíne')}</span>}
+            {/* Na mobile je stav pod textom (bez „Dostupná“), aby mal názov miesto. */}
+            {item.status !== 'available' && <span className="mt-1 flex sm:hidden"><StatusBadge status={item.status} /></span>}
             {service === 'soon' && <span className="block text-sm text-accent">{tx('Servis do 30 dní')}</span>}
           </span>
-          <StatusBadge status={item.status} />
+          <span className="hidden sm:inline-flex"><StatusBadge status={item.status} /></span>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
       </Link>
     )
@@ -195,11 +197,12 @@ export function EquipmentListPage() {
           <Link to={`/equipment/group?ids=${group.items.map((item) => item.id).join(',')}`} className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-5">
             <PhotoThumb url={thumbs[main.photoPath]} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate font-medium">{cables ? cableBaseName(main.name) : main.name}</span>
+              <span className="line-clamp-2 font-medium break-words sm:block sm:truncate">{cables ? cableBaseName(main.name) : main.name}</span>
               <span className="block truncate text-sm text-muted-foreground">{details.join(' · ')}</span>
               {late && <span className="block text-sm text-accent">{tx('Odčítať prevádzkové hodiny')}</span>}
+              {main.status !== 'available' && <span className="mt-1 flex sm:hidden"><StatusBadge status={main.status} /></span>}
             </span>
-            <StatusBadge status={main.status} />
+            <span className="hidden sm:inline-flex"><StatusBadge status={main.status} /></span>
           </Link>
           <button
             type="button"
