@@ -1,9 +1,9 @@
 import { Plus, Trash2 } from 'lucide-react'
-import { useId } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
-import { useMembers } from '@/features/companies/useMembers'
+import { useStaff } from '@/features/staff/useStaff'
 import { cn } from '@/lib/utils'
+import { MakerNameField } from './MakerNameField'
 
 import { type Maker, type MakerMode, type MakerRow, makersOver } from './makers'
 import { tx, tf } from '@/lib/i18n'
@@ -28,9 +28,9 @@ const MODES: { id: MakerMode; label: string }[] = [
 
 /** Kto káble vyrobil (spájkoval): jeden človek na všetko, alebo pri každej dĺžke kto koľko kusov. */
 export function CableMakersField({ companyId, mode, onMode, oneName, onOneName, rows, onRow }: Props) {
-  const members = useMembers(companyId)
-  const listId = useId()
-  const names = (members.data ?? []).map((member) => member.fullName || member.email)
+  // Výber zo zamestnancov (aj brigádnikov); kto v tíme nie je, zadá sa ako „Iná osoba“.
+  const staff = useStaff(companyId)
+  const names = [...new Set(staff.people.filter((person) => person.active).map((person) => person.name.trim()).filter(Boolean))]
 
   return (
     <div className="sm:col-span-2">
@@ -49,14 +49,9 @@ export function CableMakersField({ companyId, mode, onMode, oneName, onOneName, 
           </button>
         ))}
       </div>
-      <datalist id={listId}>
-        {names.map((name) => (
-          <option key={name} value={name} />
-        ))}
-      </datalist>
 
       {mode === 'one' && (
-        <Field label={tx('Kto vyrobil všetky kusy')} list={listId} maxLength={80} placeholder={tx('meno')} value={oneName} onChange={(event) => onOneName(event.target.value)} />
+        <MakerNameField label={tx('Kto vyrobil všetky kusy')} names={names} value={oneName} onChange={onOneName} />
       )}
 
       {mode === 'split' && (
@@ -77,8 +72,8 @@ export function CableMakersField({ companyId, mode, onMode, oneName, onOneName, 
                 {row.makers.length > 0 && (
                   <ul className="mb-2 flex flex-col gap-2">
                     {row.makers.map((maker, index) => (
-                      <li key={index} className="grid grid-cols-[1fr_6rem_2.5rem] gap-2">
-                        <Field label={`Kto – ${row.title}`} hideLabel list={listId} maxLength={80} placeholder={tx('meno')} value={maker.name} onChange={(event) => set(index, { name: event.target.value })} />
+                      <li key={index} className="grid grid-cols-[1fr_6rem_2.5rem] items-start gap-2">
+                        <MakerNameField label={`Kto – ${row.title}`} hideLabel names={names} value={maker.name} onChange={(name) => set(index, { name })} />
                         <Field
                           label={`Kusov – ${row.title}`}
                           hideLabel

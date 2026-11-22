@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.3
+
+- **Who made the cables – pick from staff**: instead of typing a name there is a list of people from the team
+  (employees and casual workers). For someone outside the team pick “Other person…” and type the name. Works for
+  “All one person” and “Different people”; old entries with a name outside the team stay as another person.
+
 ### 11.2.1
 
 - **Mobile – page headers**: buttons (Scan, Poster, Add…) are in a row below the title, not in a column next to it.

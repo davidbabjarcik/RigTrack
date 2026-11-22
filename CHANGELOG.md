@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.3 – 22. 11. 2026
+
+- **Kto káble vyrobil – výber zo zamestnancov**: namiesto písania mena je zoznam ľudí z tímu (zamestnanci aj
+  brigádnici). Kto v tíme nie je, vyberiete „Iná osoba…“ a meno dopíšete. Platí pre „Všetky jeden človek“ aj „Rôzni
+  ľudia“; staré zápisy s menom mimo tímu ostanú ako iná osoba.
+
 ### 11.2.1 – 22. 11. 2026
 
 - **Mobil – hlavičky stránok**: tlačidlá (Skenovať, Plagát, Pridať…) sú pod nadpisom v riadku, nie v stĺpci vedľa
