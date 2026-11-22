@@ -5,6 +5,15 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.4
+
+- **Software and licences as an IT subcategory**: in Equipment they are no longer a separate block below the list.
+  They are in the filter Kind IT → Type “Software and licences”, via the “IT › Software and licences” link above the
+  list and in search. Add a new program also via Add → Kind IT → Type “Program / licence”.
+- **Thomann – article number on equipment**: can be entered in the equipment form even if not bought at Thomann;
+  the detail has a link to the product. It is prefilled from the equipment database.
+- **Mobile – Equipment**: Scan is just an icon, so Scan, Inventory poster and Add fit in one row.
+
 ### 11.3
 
 - **Who made the cables – pick from staff**: instead of typing a name there is a list of people from the team

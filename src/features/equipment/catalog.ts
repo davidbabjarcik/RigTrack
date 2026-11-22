@@ -29,8 +29,8 @@ export const CATALOG_KEYS = [
 
 /** Polia formulára, ktoré katalóg vyplní (rovnaké názvy ako vo formulári techniky). */
 export const CATALOG_FORM_KEYS = [
-  // Kód Thomann je len v databáze techniky (na objednanie), do formulára techniky sa nevypĺňa.
-  ...CATALOG_KEYS.filter((key) => key !== 'ledPanel' && key !== 'ledProcessor' && key !== 'display' && key !== 'thomannCode' && key !== 'compatibleAmps'),
+  // Kód Thomann sa z databázy techniky predvyplní aj do formulára (odkaz na produkt pri technike).
+  ...CATALOG_KEYS.filter((key) => key !== 'ledPanel' && key !== 'ledProcessor' && key !== 'display' && key !== 'compatibleAmps'),
   'isLedPanel', 'ledPitchMm', 'ledWidthMm', 'ledHeightMm', 'ledPxW', 'ledPxH', 'ledWeightKg', 'ledMaxW', 'ledAvgW',
   'isLedProcessor', 'isDisplay', 'displayType', 'displayResW', 'displayResH', 'displayDiagonalIn', 'displayLumens',
   'procOutputs', 'procPixels', 'procInputs', 'procChip', 'procControl', 'procHdmi', 'procDvi', 'procSdi', 'procDp',

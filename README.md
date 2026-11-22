@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-11.3-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-11.4-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **11.4** | Programy a licencie ako podkategória IT, Thomann číslo pri technike |
 | **11.3** | Kto káble vyrobil – výber zo zamestnancov alebo iná osoba |
 | **11.2.1** | Mobil: hlavičky stránok a zoznam techniky |
 | **11.2** | Vytlačené zmizne z tlačovej fronty samo |
@@ -87,7 +88,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **9.11** | Farby kolieska a gobá s fotkami a DMX hodnotami priamo pri kanáloch |
 | **9.10** | Rozmery case a reprákov s obrázkom, rohmi a kolieskami, celková váha pri evente |
 | **9.9** | Kanály DMX módu ako tabuľka s rozbaľovacím výberom, ikonkami a vložením zoznamu |
-| **9.8** | Tlač z mobilu a tabletu ako A4 a cez PDF, horna a slimák pri suboch spolu |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

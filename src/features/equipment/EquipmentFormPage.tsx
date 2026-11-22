@@ -26,6 +26,7 @@ import {
   DJ_TYPES,
   IT_TYPE_LABELS,
   IT_TYPES,
+  LICENSES,
   APPLIANCE_TYPE_LABELS,
   APPLIANCE_TYPES,
   cableBaseName,
@@ -319,6 +320,7 @@ function toFormValues(equipment: Equipment, categories: Lookup[], locations: Loo
     biamp: equipment.attributes.biamp ?? false,
     hfDriver: equipment.attributes.hfDriver ?? '',
     weightKg: equipment.attributes.weightKg,
+    thomannCode: equipment.attributes.thomannCode ?? '',
     purchasePrice: equipment.attributes.purchasePrice,
     soldOn: equipment.attributes.soldOn ?? '',
     soldTo: equipment.attributes.soldTo ?? '',
@@ -827,13 +829,22 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
 
       {kind === 'it' && (
         <Group title={tx('IT')}>
-          <SelectField label={tx('Typ')} {...register('itType')}>
+          <SelectField
+            label={tx('Typ')}
+            {...register('itType', {
+              // Program / licencia je podkategória IT s vlastným formulárom (počet inštalácií, kľúč, platnosť).
+              onChange: (event) => {
+                if (event.target.value === LICENSES) navigate(`/equipment?it=${LICENSES}&add=license`)
+              },
+            })}
+          >
             <option value="">{tx('— nezadané —')}</option>
             {IT_TYPES.map((type) => (
               <option key={type} value={type}>
                 {tx(IT_TYPE_LABELS[type])}
               </option>
             ))}
+            {!equipment && <option value={LICENSES}>{tx('Program / licencia')}</option>}
           </SelectField>
         </Group>
       )}
@@ -935,6 +946,8 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         </datalist>
 
         <Field label={tx('Váha kusu (kg)')} type="number" inputMode="decimal" min={0} step="0.1" error={errors.weightKg?.message} {...register('weightKg', asOptionalNumber)} />
+        {/* Aj keď sa nekupovalo v Thomanne – pri technike bude odkaz na produkt. */}
+        <Field label={tx('Thomann – číslo artiklu')} autoComplete="off" placeholder={tx('napr. 123456')} error={errors.thomannCode?.message} {...register('thomannCode')} />
         {/* Pri evidencii po kusoch má každý kus svoje sériové a inventárne číslo (nižšie, Údaje po kusoch). */}
         {!simple && !trackUnits && !groupMode && (
           <Field label={tx('Sériové číslo')} autoComplete="off" error={errors.serialNumber?.message} {...register('serialNumber')} />

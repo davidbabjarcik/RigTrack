@@ -5,6 +5,9 @@ import { SelectField } from '@/components/ui/field'
 import {
   advancedFilterCount,
   AUDIO_TYPE_LABELS,
+  IT_TYPE_LABELS,
+  IT_TYPES,
+  LICENSES,
   AUDIO_TYPES,
   CAPTURE_MATCH_LABELS,
   CAPTURE_MATCHES,
@@ -58,7 +61,7 @@ export function AdvancedFilter({ filter, onChange, items, owners, linkedCompanie
           <button
             type="button"
             className="col-span-2 px-2 py-2 text-left text-sm text-accent hover:underline"
-            onClick={() => onChange({ company: '', status: '', categoryId: '', locationId: '', caseId: '', kind: '', audioType: '', owner: '', manufacturer: '', attention: '', capture: '', purchasedYear: '', withNetwork: false, withLinks: false })}
+            onClick={() => onChange({ company: '', status: '', categoryId: '', locationId: '', caseId: '', kind: '', audioType: '', itType: '', owner: '', manufacturer: '', attention: '', capture: '', purchasedYear: '', withNetwork: false, withLinks: false })}
           >{tx('Zrušiť filtre')}</button>
         )}
       </div>
@@ -75,7 +78,7 @@ export function AdvancedFilter({ filter, onChange, items, owners, linkedCompanie
             </SelectField>
           )}
           {children}
-          <SelectField label={tx('Druh')} value={filter.kind ?? ''} onChange={(e) => onChange({ kind: e.target.value as EquipmentFilter['kind'] })}>
+          <SelectField label={tx('Druh')} value={filter.kind ?? ''} onChange={(e) => onChange({ kind: e.target.value as EquipmentFilter['kind'], itType: '' })}>
             <option value="">{tx('Všetky druhy')}</option>
             {EQUIPMENT_KINDS.map((kind) => (
               <option key={kind} value={kind}>
@@ -83,6 +86,17 @@ export function AdvancedFilter({ filter, onChange, items, owners, linkedCompanie
               </option>
             ))}
           </SelectField>
+          {filter.kind === 'it' && (
+            <SelectField label={tx('Typ IT')} value={filter.itType ?? ''} onChange={(e) => onChange({ itType: e.target.value as EquipmentFilter['itType'] })}>
+              <option value="">{tx('Všetky typy')}</option>
+              {IT_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {tx(IT_TYPE_LABELS[type])}
+                </option>
+              ))}
+              <option value={LICENSES}>{tx('Programy a licencie')}</option>
+            </SelectField>
+          )}
           <SelectField label={tx('Typ zvuku')} value={filter.audioType ?? ''} onChange={(e) => onChange({ audioType: e.target.value as EquipmentFilter['audioType'] })}>
             <option value="">{tx('Všetky typy')}</option>
             {AUDIO_TYPES.map((type) => (

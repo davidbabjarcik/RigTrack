@@ -27,6 +27,7 @@ import {
   hoursState,
   needsRestock,
   NO_CASE,
+  LICENSES,
   serviceState,
   STATUS_LABELS,
   type Equipment,
@@ -67,7 +68,7 @@ export function EquipmentListPage() {
   const [params] = useSearchParams()
   // ?case= (technika v case) alebo ?q= (napr. z Moje zodpovednosti: „Beam 7R“).
   const [filter, setFilter] = useState<EquipmentFilter>(() =>
-    params.get('case') ? { ...NO_FILTER, caseId: params.get('case')! } : params.get('q') ? { ...NO_FILTER, search: params.get('q')! } : savedFilter(),
+    params.get('it') === LICENSES ? { ...NO_FILTER, kind: 'it', itType: LICENSES } : params.get('case') ? { ...NO_FILTER, caseId: params.get('case')! } : params.get('q') ? { ...NO_FILTER, search: params.get('q')! } : savedFilter(),
   )
   useEffect(() => {
     try {
@@ -88,6 +89,8 @@ export function EquipmentListPage() {
   })
 
   const set = (patch: Partial<EquipmentFilter>) => setFilter((current) => ({ ...current, ...patch }))
+  const licensesOnly = filter.kind === 'it' && filter.itType === LICENSES
+  const showLicenses = !filter.status && ((filter.kind === 'it' && (!filter.itType || licensesOnly)) || (!filter.kind && filter.search.trim() !== ''))
   const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name
   const staff = useStaff(company.companyId)
   const ownerName = (id: string | null | undefined) => (id ? staff.people.find((person) => person.staffId === id)?.name : undefined)
@@ -232,7 +235,7 @@ export function EquipmentListPage() {
         description={list.data ? tf('{0} z {1} položiek', visible.length, all.length) : undefined}
         action={
           <div className="flex flex-wrap gap-2">
-            <ScanButton />
+            <ScanButton compact />
             <LinkButton to="/equipment/poster" variant="outline">
               <Presentation className="size-4" aria-hidden />{tx('Plagát inventára')}</LinkButton>
             {canWrite && (
@@ -301,6 +304,18 @@ export function EquipmentListPage() {
           </SelectField>
         </AdvancedFilter>
       </div>
+      {/* Odkaz na podkategóriu IT Programy a licencie (inak sú v zozname až pri Druh IT). */}
+      {licensesOnly ? (
+        <button type="button" className="mb-3 inline-flex items-center gap-1 text-sm text-accent hover:underline" onClick={() => set({ kind: '', itType: '' })}>
+          {tx('← Späť na techniku')}
+        </button>
+      ) : (
+        !filter.status && (
+          <button type="button" className="mb-3 mr-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground hover:underline" onClick={() => set({ kind: 'it', itType: LICENSES })}>
+          {tx('IT › Programy a licencie')}
+        </button>
+        )
+      )}
       {/* Predaná technika sa v zozname neukazuje, ale je stále tu – jedným ťuknutím. */}
       {(() => {
         const sold = all.filter((item) => item.status === 'sold').length
@@ -327,7 +342,7 @@ export function EquipmentListPage() {
           <p className="font-medium">{tx('Zatiaľ tu nie je žiadna technika')}</p>
           {canWrite && <p className="mt-1 text-sm text-muted-foreground">{tx('Začnite tlačidlom Pridať.')}</p>}
         </div>
-      ) : ownHidden ? null : visible.length === 0 ? (
+      ) : ownHidden || licensesOnly ? null : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-surface px-6 py-12 text-center">
           <p className="font-medium">{tx('Filtru nič nezodpovedá')}</p>
           <button type="button" className="mt-2 text-sm text-accent hover:underline" onClick={() => setFilter(NO_FILTER)}>{tx('Zrušiť filter')}</button>
@@ -346,10 +361,10 @@ export function EquipmentListPage() {
         </ul>
       )}
       <LinkedEquipmentList items={linkedVisible} />
-      {/* Programy a licencie ako podkategória Techniky (pri filtri na iný druh sa skryjú). */}
-      {(!filter.kind || filter.kind === 'it') && !filter.status && (
-        <div id="licencie" className="mt-6 scroll-mt-20">
-          <LicensesSection search={filter.search} />
+      {/* Programy a licencie sú podkategória IT: pri filtri Druh IT (Typ: všetky alebo Programy a licencie) a pri hľadaní. */}
+      {showLicenses && (
+        <div id="licencie" className={licensesOnly ? 'scroll-mt-20' : 'mt-6 scroll-mt-20'}>
+          <LicensesSection search={filter.search} startAdding={params.get('add') === 'license'} />
         </div>
       )}
     </>

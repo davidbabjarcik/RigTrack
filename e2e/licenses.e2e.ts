@@ -16,9 +16,11 @@ const fixtures = {
 test('licencie programov a certifikácie', async ({ page }, info) => {
   await signIn(page)
   await fakeBackend(page, fixtures)
-  // Programy sú podkategória v Technike, nie samostatná stránka.
+  // Programy sú podkategória IT v Technike – nie samostatná časť pod zoznamom.
   await page.goto('/equipment')
   await expect(page.getByRole('link', { name: 'Licencie programov' })).toHaveCount(0)
+  await expect(page.getByText('Programy a licencie (2)')).toHaveCount(0)
+  await page.getByRole('button', { name: 'IT › Programy a licencie' }).click()
   await expect(page.getByText('Programy a licencie (2)')).toBeVisible()
   await expect(page.getByText('Ukážkový program na mix · Pro')).toBeVisible()
   await expect(page.getByText('trvalá')).toBeVisible()
@@ -30,8 +32,12 @@ test('licencie programov a certifikácie', async ({ page }, info) => {
   // Hľadanie v Technike zúži aj programy; stará adresa vedie do Techniky.
   await page.getByPlaceholder('Názov, výrobca, sériové alebo inventárne číslo').fill('vizualiz')
   await expect(page.getByText('Programy a licencie (1)')).toBeVisible()
+  // Späť na techniku: pri hľadaní sa programy ukážu aj bez filtra IT.
+  await page.getByRole('button', { name: '← Späť na techniku' }).click()
+  await expect(page.getByText('Programy a licencie (1)')).toBeVisible()
   await page.goto('/equipment/licenses')
-  await expect(page).toHaveURL(/\/equipment#licencie$/)
+  await expect(page).toHaveURL(/\/equipment\?it=licenses$/)
+  await expect(page.getByText('Programy a licencie (2)')).toBeVisible()
 
   await page.goto(`/staff/${STAFF_ID}`)
   await expect(page.getByText('Certifikácie (1)')).toBeVisible()

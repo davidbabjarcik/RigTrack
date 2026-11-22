@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.4 – 22. 11. 2026
+
+- **Programy a licencie ako podkategória IT**: v Technike už nie sú samostatne pod zoznamom. Sú vo filtri Druh IT →
+  Typ „Programy a licencie“, cez odkaz „IT › Programy a licencie“ nad zoznamom a pri hľadaní. Nový program pridáte aj
+  cez Pridať → Druh IT → Typ „Program / licencia“.
+- **Thomann – číslo artiklu pri technike**: dá sa zadať vo formulári techniky, aj keď sa nekupovalo v Thomanne;
+  v detaile je odkaz na produkt. Z databázy techniky sa predvyplní.
+- **Mobil – Technika**: Skenovať je len ikona, takže Skenovať, Plagát inventára a Pridať sú v jednom riadku.
+
 ### 11.3 – 22. 11. 2026
 
 - **Kto káble vyrobil – výber zo zamestnancov**: namiesto písania mena je zoznam ľudí z tímu (zamestnanci aj

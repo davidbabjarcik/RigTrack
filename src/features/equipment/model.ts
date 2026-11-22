@@ -667,6 +667,8 @@ export const equipmentSchema = z.object({
   biamp: z.boolean().optional(),
   hfDriver: text(80).optional(),
   weightKg: optionalNumber(10000),
+  // Číslo artiklu v Thomanne (aj keď sa nekupovalo tam) – odkaz na produkt pri technike.
+  thomannCode: text(40).optional(),
   purchasePrice: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(10_000_000).optional(),
   depreciationYears: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Aspoň 1 rok').max(50, 'Najviac 50 rokov').optional(),
   soldOn: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Zadajte dátum').optional(),
@@ -889,6 +891,7 @@ export function attributesFor(
         | 'biamp'
         | 'hfDriver'
         | 'weightKg'
+        | 'thomannCode'
         | 'purchasePrice'
         | 'depreciationYears'
         | 'status'
@@ -1031,6 +1034,7 @@ export function attributesFor(
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipAddress && values.ipPrefix !== undefined) attributes.ipPrefix = values.ipPrefix
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipDhcp && !values.ipAddress) attributes.ipDhcp = true
   if (values.weightKg !== undefined) attributes.weightKg = values.weightKg
+  if (values.thomannCode?.trim()) attributes.thomannCode = values.thomannCode.trim()
   if (values.purchasePrice !== undefined) attributes.purchasePrice = values.purchasePrice
   if (values.status === 'sold') {
     if (values.soldOn) attributes.soldOn = values.soldOn
@@ -1292,6 +1296,8 @@ export type EquipmentFilter = {
   caseId: string
   kind?: EquipmentKind | ''
   audioType?: AudioType | ''
+  /** IT: typ (mobil, notebook…) alebo „licenses“ = podkategória Programy a licencie. */
+  itType?: ItType | typeof LICENSES | ''
   /** Prázdne = všetci, COMPANY_OWNER = firemná, inak id karty zamestnanca. */
   owner?: string
   manufacturer?: string
@@ -1309,6 +1315,8 @@ export type EquipmentFilter = {
 }
 
 export const COMPANY_OWNER = 'company'
+/** Podkategória IT „Programy a licencie“ (vo filtri aj vo formulári techniky). */
+export const LICENSES = 'licenses'
 
 export const EQUIPMENT_SORTS = ['name', 'category', 'newest', 'oldest', 'purchased', 'quantity'] as const
 export type EquipmentSort = (typeof EQUIPMENT_SORTS)[number]
@@ -1323,7 +1331,7 @@ export const SORT_LABELS: Record<EquipmentSort, string> = {
 
 /** Počet zapnutých rozšírených filtrov (na odznak pri tlačidle). */
 export function advancedFilterCount(filter: EquipmentFilter) {
-  return [filter.company, filter.status, filter.categoryId, filter.locationId, filter.caseId, filter.kind, filter.audioType, filter.owner, filter.manufacturer, filter.attention, filter.capture, filter.purchasedYear, filter.withNetwork, filter.withLinks].filter(Boolean).length
+  return [filter.company, filter.status, filter.categoryId, filter.locationId, filter.caseId, filter.kind, filter.audioType, filter.itType, filter.owner, filter.manufacturer, filter.attention, filter.capture, filter.purchasedYear, filter.withNetwork, filter.withLinks].filter(Boolean).length
 }
 
 /** Všetky dátumy nákupu techniky (celá položka aj kusy). */
@@ -1446,6 +1454,9 @@ export function filterEquipment(items: Equipment[], filter: EquipmentFilter, tod
     if (!filter.status && item.status === 'sold') return false
     if (filter.kind && item.kind !== filter.kind) return false
     if (filter.audioType && item.attributes.audioType !== filter.audioType) return false
+    // Podkategória Programy a licencie nie je technika (zobrazí sa zoznam licencií).
+    if (filter.itType === LICENSES) return false
+    if (filter.itType && item.attributes.itType !== filter.itType) return false
     if (filter.owner === COMPANY_OWNER ? item.ownerStaffId : filter.owner && item.ownerStaffId !== filter.owner) return false
     if (filter.manufacturer && normalize(item.manufacturer.trim()) !== normalize(filter.manufacturer.trim())) return false
     if (filter.attention === 'service' && !['overdue', 'soon'].includes(serviceState(item, today).state)) return false

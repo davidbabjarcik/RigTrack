@@ -38,7 +38,7 @@ import { StatusBadge } from './StatusBadge'
 import { useEquipmentLookups } from './useEquipmentLookups'
 import { equipmentValue } from './value'
 import { tx, tf, useT } from '@/lib/i18n'
-import { ampsText, compatibleAmps, findCatalogEntry, useCatalog } from './catalog'
+import { ampsText, compatibleAmps, findCatalogEntry, thomannUrl, useCatalog } from './catalog'
 
 export function EquipmentDetailPage() {
   const { id = '' } = useParams()
@@ -201,6 +201,14 @@ export function EquipmentDetailPage() {
     [tf('Zosilňovače (len {0})', equipment.manufacturer), amps.length > 0 ? ampsText(amps, t) : undefined],
     [tx('Sériové číslo'), equipment.serialNumber],
     [tx('Inventárne číslo'), equipment.inventoryNumber],
+    [
+      'Thomann',
+      equipment.attributes.thomannCode && (
+        <a href={thomannUrl(equipment.attributes.thomannCode)} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+          {equipment.attributes.thomannCode} ↗
+        </a>
+      ),
+    ],
     ['MAC adresa', equipment.macAddress],
     ['IP adresa', equipment.ipAddress && (equipment.attributes.ipPrefix ? `${equipment.ipAddress}/${equipment.attributes.ipPrefix}` : equipment.ipAddress)],
     [

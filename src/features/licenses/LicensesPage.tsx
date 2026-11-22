@@ -102,7 +102,7 @@ function validityText(expiresOn: string | null, today: string) {
  * Programy a licencie ako podkategória v Technike: zbaliteľná skupina pod zoznamom techniky.
  * `search` (text z hľadania v Technike) zúži zoznam; `equipmentId` ukáže len programy na danom počítači.
  */
-export function LicensesSection({ search = '', equipmentId }: { search?: string; equipmentId?: string }) {
+export function LicensesSection({ search = '', equipmentId, startAdding = false }: { search?: string; equipmentId?: string; startAdding?: boolean }) {
   const company = useCompany().active!
   const companyId = company.companyId
   const canEdit = can(company, 'equipment.edit')
@@ -110,7 +110,8 @@ export function LicensesSection({ search = '', equipmentId }: { search?: string;
   const licenses = useLicenses(companyId)
   const keys = useLicenseKeys(companyId, canEdit)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
-  const [editing, setEditing] = useState<string | null>(null)
+  // startAdding: z formulára techniky (Druh IT, Typ Program / licencia) rovno nový program.
+  const [editing, setEditing] = useState<string | null>(startAdding && canEdit ? 'new' : null)
   const remove = useMutation({
     mutationFn: deleteLicense,
     onSettled: () => queryClient.invalidateQueries({ queryKey: licenseKeys.list(companyId) }),
@@ -218,5 +219,5 @@ export function LicensesSection({ search = '', equipmentId }: { search?: string;
 
 /** Stará adresa samostatnej stránky licencií vedie do Techniky, kde sú teraz ako podkategória. */
 export function LicensesPage() {
-  return <Navigate to="/equipment#licencie" replace />
+  return <Navigate to="/equipment?it=licenses" replace />
 }

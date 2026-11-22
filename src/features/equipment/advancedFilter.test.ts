@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COMPANY_OWNER, filterEquipment, purchaseDates, type Equipment, type EquipmentFilter } from './model'
+import { COMPANY_OWNER, filterEquipment, LICENSES, purchaseDates, type Equipment, type EquipmentFilter } from './model'
 
 const base: Equipment = {
   id: '1',
@@ -69,5 +69,12 @@ describe('advanced equipment filter', () => {
 
   it('lists purchase dates of the item and units', () => {
     expect(purchaseDates(base)).toEqual(['2023-05-01', '2025-02-10'])
+  })
+
+  it('IT: typ zúži techniku, Programy a licencie skryjú techniku', () => {
+    const laptop = { ...base, id: 'n', kind: 'it' as const, attributes: { itType: 'laptop' as const } }
+    const phone = { ...base, id: 'm', kind: 'it' as const, attributes: { itType: 'phone' as const } }
+    expect(filterEquipment([laptop, phone], { ...none, kind: 'it', itType: 'laptop' }).map((item) => item.id)).toEqual(['n'])
+    expect(filterEquipment([laptop, phone], { ...none, kind: 'it', itType: LICENSES })).toEqual([])
   })
 })
