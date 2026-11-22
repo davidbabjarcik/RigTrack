@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Download } from 'lucide-react'
+import { ArrowLeft, Download, FileDown } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
@@ -14,6 +14,9 @@ import { can } from '@/lib/permissions'
 import { caseKeys } from './api'
 import { downloadCanvas, fileSlug } from './canvas'
 import { CustomLabelContent } from './CustomLabelContent'
+import { imposeLabels, labelSizeCm, readLabelScale, saveLabelScale } from '@/features/print/imposition'
+import { LabelScaleField } from '@/features/print/LabelScaleField'
+import { buildPdf, canvasJpeg, pageSizePt } from './sheetPdf'
 import { LABEL_HEIGHT, LABEL_WIDTH } from './label'
 import { caseLabelContent, drawCaseLabelFor } from './renderSheets'
 import { useCases } from './useCases'
@@ -25,6 +28,7 @@ export function CaseLabelPage() {
   const companyId = company.companyId
   const canvas = useRef<HTMLCanvasElement>(null)
   const [drawn, setDrawn] = useState(false)
+  const [scale, setScale] = useState(readLabelScale)
   const [withQr, setWithQr] = useState(() => {
     try {
       return localStorage.getItem('rigtrack.label.qr') !== 'off'
@@ -111,6 +115,18 @@ export function CaseLabelPage() {
     )
   }
 
+  // PDF: štítok v zvolenej mierke na A4 so značkami na rezanie.
+  const downloadPdf = async () => {
+    if (!canvas.current) return
+    const pages = imposeLabels([{ canvas: canvas.current, title: current.name }], scale)
+    const images = await Promise.all(pages.map(async (page) => ({ ...(await canvasJpeg(page.canvas)), page: pageSizePt('A4', page.landscape) })))
+    const url = URL.createObjectURL(buildPdf(images, pageSizePt('A4', false)))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileName.replace(/\.png$/, '.pdf')
+    link.click()
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }
   const fileName = `flight-case-label-${fileSlug([current.name, current.labelNumber].filter(Boolean).join('-'))}.png`
 
   return (
@@ -118,10 +134,14 @@ export function CaseLabelPage() {
       {back}
       <PageHeader
         title="Flight case štítok"
-        description={`${current.name} · ${LABEL_WIDTH} × ${LABEL_HEIGHT} px`}
+        description={`${current.name} · ${labelSizeCm(scale)} pri ${scale} %`}
         action={
           <div className="flex flex-wrap gap-2">
             <AddToPrintButton companyId={companyId} kind="case" targetIds={[current.id]} label="case_label" />
+            <Button variant="outline" disabled={!drawn} onClick={() => void downloadPdf()}>
+              <FileDown className="size-4" aria-hidden />
+              PDF na A4
+            </Button>
             <Button disabled={!drawn} onClick={() => canvas.current && downloadCanvas(canvas.current, fileName)}>
               <Download className="size-4" aria-hidden />
               Stiahnuť PNG
@@ -134,6 +154,16 @@ export function CaseLabelPage() {
           Niektorý obrázok sa nepodarilo načítať, štítok je bez neho.
         </p>
       )}
+      <div className="mb-3">
+        <LabelScaleField
+          scale={scale}
+          onChange={(value) => {
+            setScale(value)
+            saveLabelScale(value)
+          }}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">100 % = pôvodná veľkosť. Platí pre PDF a hromadnú tlač, PNG je vždy v plnom rozlíšení.</p>
+      </div>
       <label className="mb-3 flex items-center gap-2 text-sm">
         <input
           type="checkbox"

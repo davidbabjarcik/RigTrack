@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.1
+
+- **Print all at once → ZIP**: downloads a ZIP with separate PDFs – case labels, A4 contents and A5 contents.
+  Everything is on A4: two A5 sheets side by side (or one above the other) on one A4. Added crop marks (lines at the
+  label corners and in line with the cut between A5 sheets). The sheet format from the print queue applies to each
+  case separately.
+- **Case label size in %**: 100 % is the current label; make it smaller or larger with a slider or a number
+  (20–145 %) and see the size in cm right away (e.g. 15.6 × 12.7 cm). As many fit on A4 as the size allows. The
+  label page has a new “PDF on A4” button.
+
 ### 11.0
 
 - **Privacy policy updated** (Slovak and English): event rating by the client, a freelancer's reply to a crew

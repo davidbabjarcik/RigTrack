@@ -86,12 +86,9 @@ export function PrintQueuePage() {
   const missingEquipment = (equipment.data ?? []).filter((item) => !isGone(item.status) && item.kind !== 'consumable' && item.kind !== 'cable' && !hasQr.has(`equipment|${item.id}`))
   const missingCases = (cases.data ?? []).filter((item) => !hasQr.has(`case|${item.id}`))
   const missing = [...missingEquipment.map((item) => ({ kind: 'equipment' as const, targetId: item.id })), ...missingCases.map((item) => ({ kind: 'case' as const, targetId: item.id }))]
-  // Hárky s obsahom: ak majú všetky rovnaký formát, hromadná tlač ho použije.
-  const commonFormat = (list: PrintItem[]) => (list.length > 0 && list.every((item) => item.format && item.format === list[0].format) ? list[0].format : '')
-  const batchLink = (labels: PrintItem[], sheets: PrintItem[]) => {
-    const format = formatParams(commonFormat(sheets))
-    return `/print/batch?labels=${ids(labels)}&contents=${ids(sheets)}${format ? `&${format}` : ''}`
-  }
+  // Hárky s obsahom si nesú formát z fronty (id~A5-portrait); A4 a A5 idú v hromadnej tlači do zvláštnych PDF.
+  const contentTokens = (list: PrintItem[]) => [...new Set(list.map((item) => (item.format ? `${item.targetId}~${item.format}` : item.targetId)))].join(',')
+  const batchLink = (labels: PrintItem[], sheets: PrintItem[]) => `/print/batch?labels=${ids(labels)}&contents=${contentTokens(sheets)}`
   const withFormat = (path: string, item: PrintItem) => {
     const query = [item.format ? formatParams(item.format) : '', 'back=/print'].filter(Boolean).join('&')
     return `${path}${path.includes('?') ? '&' : '?'}${query}`
@@ -190,7 +187,7 @@ export function PrintQueuePage() {
           {group('QR štítky miest v sklade', <Tag className="size-5 text-accent" aria-hidden />, qrSpots, printLink(`/qr/spots?ids=${ids(qrSpots)}&back=/print`, 'Tlačiť na A4'))}
           {caseLabels.length + contents.length > 1 && (
             <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
-              <span className="flex-1">Štítky a obsahy cases môžete vytlačiť všetky naraz (alebo stiahnuť jedno PDF).</span>
+              <span className="flex-1">Štítky a obsahy cases môžete vytlačiť všetky naraz alebo stiahnuť ZIP – zvlášť PDF so štítkami, s obsahmi A4 a A5 (2 na A4), so značkami na rezanie.</span>
               {printLink(batchLink(caseLabels, contents), 'Tlačiť všetko naraz')}
             </div>
           )}

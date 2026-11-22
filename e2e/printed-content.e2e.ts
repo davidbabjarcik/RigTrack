@@ -11,6 +11,7 @@ const gear = {
   updated_at: '2026-11-01T00:00:00Z', owner_staff_id: null, purchased_on: null, unit_purchases: {}, links: [], clone_of: '', capture_match: '', capture_note: '', unit_info: {}, attributes: {},
 }
 // Odtlačok z času tlače nesedí s dnešným obsahom (obsah sa medzitým zmenil).
+const brand = { id: COMPANY_ID, logo_path: '', label_footer: '', logo_style: 'auto' }
 const printed = [{ company_id: COMPANY_ID, kind: 'case', target_id: CASE_ID, label: 'content', printed_at: '2026-11-10T10:00:00Z', content_hash: '0000000000000000' }]
 
 test('zmenený obsah case po tlači hárku: upozornenie pri case aj v Tlači', async ({ page }) => {
@@ -30,4 +31,36 @@ test('nevytlačený hárok a QR štítok pri technike', async ({ page }) => {
   await expect(page.getByText('Hárok s obsahom ešte nebol vytlačený')).toBeVisible()
   await page.goto(`/equipment/${gear.id}`)
   await expect(page.getByText('QR štítok ešte nevytlačený')).toBeVisible()
+})
+
+test('hromadná tlač: ZIP so štítkami, obsahmi A4 a A5 (2 na A4) a mierka štítku', async ({ page }) => {
+  const second = { ...box, id: '00000000-0000-4000-8000-0000000000cc', name: 'Druhý case', label_number: '2' }
+  await signIn(page)
+  await fakeBackend(page, { cases: [box, second], equipment: [gear], companies: [brand] })
+  await page.goto(`/print/batch?labels=${CASE_ID}&contents=${CASE_ID}~A5-portrait,${second.id}~A5-portrait,${second.id}`)
+  // Štítok (1 strana), obsah A4 (1 strana), dva obsahy A5 na jednej A4.
+  await expect(page.getByText('3 strán A4.')).toBeVisible()
+  await expect(page.getByText('= 15,6 × 12,7 cm')).toBeVisible()
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Stiahnuť ZIP' }).click()
+  const file = await download
+  expect(file.suggestedFilename()).toBe('rigtrack-tlac.zip')
+  const bytes = (await import('node:fs')).readFileSync(await file.path()).toString('latin1')
+  for (const name of ['stitky-cases.pdf', 'obsahy-A4.pdf', 'obsahy-A5-2-na-A4.pdf']) expect(bytes).toContain(name)
+
+  await page.getByLabel('Veľkosť štítku case').fill('50')
+  await page.getByLabel('Veľkosť štítku case').press('Enter')
+  await expect(page.getByText('= 7,8 × 6,4 cm')).toBeVisible()
+  await expect(page.getByText('3 strán A4.')).toBeVisible()
+})
+
+test('štítok case: veľkosť v % s rozmerom v cm', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, { cases: [box], equipment: [gear], companies: [brand] })
+  await page.goto(`/cases/${CASE_ID}/label`)
+  await expect(page.getByText('Ukážkový case · 15,6 × 12,7 cm pri 100 %')).toBeVisible()
+  await page.getByLabel('Veľkosť štítku case').fill('80')
+  await page.getByLabel('Veľkosť štítku case').press('Enter')
+  await expect(page.getByText('Ukážkový case · 12,4 × 10,2 cm pri 80 %')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'PDF na A4' })).toBeEnabled()
 })

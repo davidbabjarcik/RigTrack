@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.1 – 22. 11. 2026
+
+- **Tlačiť všetko naraz → ZIP**: stiahne sa ZIP so zvlášť PDF – štítky cases, obsahy A4 a obsahy A5. Všetko je na
+  A4: dva hárky A5 sú vedľa seba (alebo pod sebou) na jednej A4. Pribudli tlačové značky na rezanie (čiarky
+  v rohoch štítkov a v predĺžení rezu medzi A5). Formát hárku z tlačovej fronty platí pre každý case zvlášť.
+- **Veľkosť štítku case v %**: 100 % je doterajší štítok, posuvníkom alebo číslom ho zmenšíte či zväčšíte
+  (20–145 %) a hneď vidíte rozmer v cm (napr. 15,6 × 12,7 cm). Na A4 sa ich zmestí toľko, koľko dovolí veľkosť.
+  Na stránke štítku pribudlo tlačidlo „PDF na A4“.
+
 ### 11.0 – 22. 11. 2026
 
 - **Zásady ochrany osobných údajov doplnené** (slovensky aj anglicky): hodnotenie akcie od klienta, odpoveď
