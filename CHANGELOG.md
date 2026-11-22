@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.12 – 22. 11. 2026
+
+- **Technika bez použitia 12 mesiacov** (Štatistiky → Technika): čo za posledný rok nebolo na žiadnom evente ani
+  výpožičke – najdrahšie hore, s nákupnou cenou a kedy bolo naposledy použité. Kandidáti na predaj; nová technika
+  a spotrebný materiál sa nerátajú.
+- **Odkaz pre klienta**: pri evente „Vytvoriť odkaz“ – jedna stránka s logom, názvom, termínom a miestom akcie
+  a s ponukami a zmluvami, ktoré ste klientovi zdieľali, po akcii aj hodnotenie. Odkaz sa dá kedykoľvek zrušiť.
+- **Fotky pri poškodení po evente**: pri nahlásení „Poškodené“ vo Vrátení po evente sa dá odfotiť poškodenie; fotky
+  sú pri škode v Škodách a úrazoch a vidí ich len ten, kto vidí samotnú škodu.
+- Technické: migrácie 0192 (fotky pri škodách) a 0193 (odkaz pre klienta).
+
 ### 11.11 – 22. 11. 2026
 
 - **Odozva pri skenovaní**: úspech = krátke pípnutie a vibrácia, chyba (nie je v pack liste, cudzí QR) = dve nízke

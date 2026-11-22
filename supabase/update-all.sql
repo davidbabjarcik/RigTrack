@@ -1,4 +1,4 @@
--- RigTrack: aktualizácia databázy – migrácie 0086 až 0191 a opravné 0071 a 0072 v jednom súbore.
+-- RigTrack: aktualizácia databázy – migrácie 0086 až 0193 a opravné 0071 a 0072 v jednom súbore.
 -- Vložte celý súbor do Supabase → SQL Editor a stlačte Run. Spustiť sa dá aj znova (napr. po ďalšej verzii).
 -- Súbor sa generuje príkazom npm run db:update – neupravujte ho ručne.
 
@@ -7666,6 +7666,197 @@ returns jsonb language sql stable security definer set search_path = '' as $$
 $$;
 revoke execute on function public.get_event_rating(uuid) from public;
 grant execute on function public.get_event_rating(uuid) to anon, authenticated;
+
+-- ===== 0192_incident_photos.sql =====
+-- 0192: Fotky pri škodách a úrazoch (napr. poškodenie nahlásené pri vrátení z eventu). Prílohy majú teraz aj druh
+-- 'incident'. Vidí ich len ten, kto vidí samotnú škodu (admin, kto ju zapísal, dotknutý člen); pridať a zmazať
+-- smie admin a ten, kto škodu zapísal. Ostatné prílohy (servis, vozidlá) ostávajú, ako boli.
+
+alter table public.attachments drop constraint if exists attachments_entity_type_check;
+alter table public.attachments add constraint attachments_entity_type_check check (entity_type in ('service', 'vehicle', 'incident'));
+
+create or replace function public.can_view_incident(_incident uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.incidents i
+    where i.id = _incident
+      and (public.has_role(i.company_id, 'admin') or (public.is_company_member(i.company_id) and (i.member_id = auth.uid() or i.created_by = auth.uid())))
+  )
+$$;
+revoke execute on function public.can_view_incident(uuid) from public, anon;
+grant execute on function public.can_view_incident(uuid) to authenticated;
+
+create or replace function public.can_edit_incident(_incident uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.incidents i
+    where i.id = _incident and (public.has_role(i.company_id, 'admin') or i.created_by = auth.uid())
+  )
+$$;
+revoke execute on function public.can_edit_incident(uuid) from public, anon;
+grant execute on function public.can_edit_incident(uuid) to authenticated;
+
+-- Riadky príloh.
+drop policy if exists attachments_select on public.attachments;
+create policy attachments_select on public.attachments for select to authenticated
+  using (
+    deleted_at is null
+    and case entity_type
+      when 'incident' then public.can_view_incident(entity_id)
+      when 'service' then public.can(company_id, 'service.view')
+      else public.can(company_id, 'vehicles.view')
+    end
+  );
+drop policy if exists attachments_insert on public.attachments;
+create policy attachments_insert on public.attachments for insert to authenticated
+  with check (
+    case entity_type
+      when 'incident' then public.can_edit_incident(entity_id) and exists (select 1 from public.incidents i where i.id = entity_id and i.company_id = attachments.company_id)
+      when 'service' then public.can(company_id, 'service.edit')
+      else public.can(company_id, 'vehicles.log')
+    end
+  );
+drop policy if exists attachments_delete on public.attachments;
+create policy attachments_delete on public.attachments for delete to authenticated
+  using (
+    case entity_type
+      when 'incident' then public.can_edit_incident(entity_id)
+      when 'service' then public.can(company_id, 'service.edit')
+      else public.can(company_id, 'vehicles.log')
+    end
+  );
+
+create or replace function public.trash_attachment(_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  update public.attachments set deleted_at = now(), deleted_by_name = public.actor_name()
+  where id = _id and deleted_at is null
+    and case entity_type
+      when 'incident' then public.can_edit_incident(entity_id)
+      when 'service' then public.can(company_id, 'service.edit')
+      else public.can(company_id, 'vehicles.log')
+    end;
+  if not found then
+    raise exception 'Prílohu sa nepodarilo zmazať' using errcode = 'insufficient_privilege';
+  end if;
+end;
+$$;
+
+-- Súbory: cesta {firma}/{druh}/{záznam}/… – pri škodách rovnaké pravidlá ako pri riadkoch, ostatné bez zmeny.
+drop policy if exists attachments_files_select on storage.objects;
+create policy attachments_files_select on storage.objects for select to authenticated
+  using (
+    bucket_id = 'attachments'
+    and public.is_company_member(((storage.foldername(name))[1])::uuid)
+    and (
+      (storage.foldername(name))[2] is distinct from 'incident'
+      or public.can_view_incident(((storage.foldername(name))[3])::uuid)
+    )
+  );
+drop policy if exists attachments_files_insert on storage.objects;
+create policy attachments_files_insert on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'attachments'
+    and case
+      when (storage.foldername(name))[2] = 'incident' then public.is_company_member(((storage.foldername(name))[1])::uuid) and public.can_edit_incident(((storage.foldername(name))[3])::uuid)
+      else public.has_role(((storage.foldername(name))[1])::uuid, 'admin', 'skladnik', 'technik')
+    end
+  );
+drop policy if exists attachments_files_delete on storage.objects;
+create policy attachments_files_delete on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'attachments'
+    and case
+      when (storage.foldername(name))[2] = 'incident' then public.can_edit_incident(((storage.foldername(name))[3])::uuid)
+      else public.has_role(((storage.foldername(name))[1])::uuid, 'admin', 'skladnik', 'technik')
+    end
+  );
+
+-- ===== 0193_client_portal.sql =====
+-- 0193: Jeden odkaz pre klienta k akcii (k/:token): názov, termín, miesto, logo firmy a odkazy na to, čo mu firma
+-- už zdieľala – cenové ponuky a zmluvy s vlastným odkazom a po akcii hodnotenie. Nič nezdieľané sa neukáže.
+-- Odkaz vytvorí a zruší len ten, kto upravuje eventy.
+
+alter table public.events add column if not exists client_token uuid;
+create unique index if not exists events_client_token_idx on public.events (client_token) where client_token is not null;
+
+create or replace function public.share_event_client(_event_id uuid)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare
+  _company uuid;
+  _token uuid;
+begin
+  select company_id, client_token into _company, _token from public.events where id = _event_id;
+  if _company is null or not public.can(_company, 'events.edit') then
+    raise exception 'Event neexistuje alebo nemáte oprávnenie' using errcode = 'insufficient_privilege';
+  end if;
+  if _token is null then
+    _token := gen_random_uuid();
+    update public.events set client_token = _token where id = _event_id;
+  end if;
+  return _token;
+end;
+$$;
+revoke execute on function public.share_event_client(uuid) from public, anon;
+grant execute on function public.share_event_client(uuid) to authenticated;
+
+create or replace function public.unshare_event_client(_event_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare
+  _company uuid;
+begin
+  select company_id into _company from public.events where id = _event_id;
+  if _company is null or not public.can(_company, 'events.edit') then
+    raise exception 'Event neexistuje alebo nemáte oprávnenie' using errcode = 'insufficient_privilege';
+  end if;
+  update public.events set client_token = null where id = _event_id;
+end;
+$$;
+revoke execute on function public.unshare_event_client(uuid) from public, anon;
+grant execute on function public.unshare_event_client(uuid) to authenticated;
+
+-- Pre klienta: len údaje akcie a odkazy na už zdieľané dokumenty (ich tokeny), nič iné.
+create or replace function public.get_event_client(_token uuid)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object(
+    'event', e.name, 'startsOn', e.starts_on, 'endsOn', e.ends_on, 'venue', e.venue, 'status', e.status,
+    'companyName', co.name, 'logoPath', co.logo_path, 'logoStyle', co.logo_style,
+    'offers', coalesce((
+      select jsonb_agg(jsonb_build_object('title', q.title, 'number', q.number, 'status', q.status, 'token', q.share_token) order by q.created_at)
+      from public.quotes q
+      where q.company_id = e.company_id and q.event_id = e.id and q.share_token is not null
+    ), '[]'::jsonb),
+    'contracts', coalesce((
+      select jsonb_agg(jsonb_build_object('number', c.number, 'signed', c.client_signature is not null, 'token', c.share_token) order by c.created_at)
+      from public.event_contracts c
+      where c.company_id = e.company_id and c.event_id = e.id and c.share_token is not null
+    ), '[]'::jsonb),
+    'rating', (
+      select jsonb_build_object('token', r.token, 'rated', r.rated_at is not null)
+      from public.event_ratings r where r.company_id = e.company_id and r.event_id = e.id
+    )
+  )
+  from public.events e
+  join public.companies co on co.id = e.company_id
+  where _token is not null and e.client_token = _token and e.status <> 'cancelled';
+$$;
+revoke execute on function public.get_event_client(uuid) from public;
+grant execute on function public.get_event_client(uuid) to anon, authenticated;
+
+-- Logo firmy sa ukáže aj na stránke pre klienta (nielen pri hodnotení).
+create or replace function public.is_rating_logo(_path text)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.companies c
+    where c.logo_path <> '' and c.logo_path = _path
+      and (
+        exists (select 1 from public.event_ratings r where r.company_id = c.id)
+        or exists (select 1 from public.events e where e.company_id = c.id and e.client_token is not null)
+      )
+  )
+$$;
+revoke execute on function public.is_rating_logo(text) from public;
+grant execute on function public.is_rating_logo(text) to anon, authenticated;
 
 -- ===== 0071_repair_all_columns.sql =====
 -- RigTrack: oprava celej databázy (vygenerované z výslednej schémy).

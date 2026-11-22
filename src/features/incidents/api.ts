@@ -81,7 +81,8 @@ export function useIncidents(companyId: string) {
   return useQuery({ queryKey: incidentKeys.list(companyId), queryFn: () => fetchIncidents(companyId), retry: false })
 }
 
-export async function saveIncident(companyId: string, id: string | null, fields: IncidentFields) {
+/** Uloží škodu / úraz; pri novej vráti jej id (napr. na pridanie fotiek). */
+export async function saveIncident(companyId: string, id: string | null, fields: IncidentFields): Promise<string> {
   const row = {
     kind: fields.kind,
     occurred_on: fields.occurredOn,
@@ -97,8 +98,14 @@ export async function saveIncident(companyId: string, id: string | null, fields:
     resolved: fields.resolved,
   }
   const table = getSupabase().from('incidents')
-  const { error } = id ? await table.update(row).eq('id', id) : await table.insert({ ...row, company_id: companyId })
+  if (id) {
+    const { error } = await table.update(row).eq('id', id)
+    if (error) throw error
+    return id
+  }
+  const { data, error } = await table.insert({ ...row, company_id: companyId }).select('id').single()
   if (error) throw error
+  return (data as { id: string }).id
 }
 
 export async function deleteIncident(id: string) {

@@ -22,3 +22,20 @@ test('ponuka zo šablóny eventu', async ({ page }) => {
   await page.getByRole('button', { name: 'Pridať techniku z eventu' }).first().click()
   await expect(page.getByText('2 × Ukážkový reprák').first()).toBeVisible()
 })
+
+test('stránka pre klienta: zdieľané ponuky, zmluvy a hodnotenie', async ({ page }) => {
+  await fakeBackend(page, {
+    'rpc:get_event_client': [{
+      event: 'Ukážková svadba', startsOn: '2026-12-05', endsOn: '2026-12-05', venue: 'Ukážková sála', status: 'confirmed', companyName: 'Ukážková firma', logoPath: '', logoStyle: 'auto',
+      offers: [{ title: 'Ozvučenie', number: '12', status: 'sent', token: '00000000-0000-4000-8000-0000000000f1' }],
+      contracts: [{ number: 'Z2026-003', signed: false, token: '00000000-0000-4000-8000-0000000000f2' }],
+      rating: null,
+    }],
+  })
+  await page.goto('/k/00000000-0000-4000-8000-0000000000aa')
+  await expect(page.getByRole('heading', { name: 'Ukážková svadba' })).toBeVisible()
+  await expect(page.getByText('5. 12. 2026 · Ukážková sála')).toBeVisible()
+  await expect(page.getByRole('link', { name: /Cenová ponuka č\. 12 – Ozvučenie/ })).toHaveAttribute('href', '/o/00000000-0000-4000-8000-0000000000f1')
+  await expect(page.getByRole('link', { name: /Zmluva č\. Z2026-003/ })).toContainText('Na podpis')
+  await expect(page.getByText('Ako sme sa vám páčili?')).toHaveCount(0)
+})

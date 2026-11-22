@@ -28,6 +28,7 @@ import { memberName, useMembers } from '@/features/companies/useMembers'
 import { bothBases, fetchCompanyIncome, METHOD_LABELS, PAYMENT_METHODS } from '@/features/events/income'
 import { useEvents } from '@/features/events/useEvents'
 import { payback } from '@/features/equipment/payback'
+import { idleEquipment } from '@/features/equipment/idle'
 import { fetchEventRatings, ratingKeys, ratingSummary } from '@/features/events/ratingApi'
 import { fetchPayments, payoutKeys } from '@/features/payouts/api'
 import { can } from '@/lib/permissions'
@@ -246,6 +247,15 @@ export function StatsPage() {
     .slice(0, 10)
     .map((row) => ({ id: row.item.id, label: row.item.name, value: row.result.percent! }))
 
+  // Technika bez eventu aj výpožičky za 12 mesiacov – kandidáti na predaj (najdrahšie hore).
+  const idle = idleEquipment(equipment.data ?? [], events.data ?? [], loans.data ?? [], todayIso())
+  const idleValue = idle.reduce((sum, item) => sum + (item.value ?? 0), 0)
+  const idleRows = idle.slice(0, 15).map((item) => ({
+    id: item.id,
+    label: `${item.name} · ${item.lastUsed ? tf('naposledy {0}', formatDate(item.lastUsed)) : tx('ešte nepoužitá')}`,
+    value: item.value ?? 0,
+  }))
+
   // Peniaze vo zvolenom roku.
   const allPayments = payments.data ?? []
   const yearPayments = allPayments.filter((payment) => inYear(payment.happenedOn, year))
@@ -340,6 +350,14 @@ export function StatsPage() {
         rows={paybackRows}
         format={(value) => `${value} %`}
         empty={tx('Doplňte pri technike nákupnú cenu a cenu prenájmu.')}
+      />
+    ),
+    'equipment.idle': (
+      <Ranking
+        title={idle.length > 0 ? tf('Technika bez použitia 12 mesiacov – {0} položiek, nákupná cena {1}', idle.length, money(idleValue)) : tx('Technika bez použitia 12 mesiacov')}
+        rows={idleRows}
+        format={(value) => (value > 0 ? money(value) : tx('bez ceny'))}
+        empty={tx('Všetka technika bola za posledný rok na evente alebo výpožičke.')}
       />
     ),
     'equipment.packed': <Tile label={tx('Kusov v cases')} value={String(stats.equipment.packed)} hint={`${stats.equipment.unpacked} ks mimo cases`} />,

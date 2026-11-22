@@ -35,6 +35,7 @@ import { EventStagePlan } from '@/features/stage/EventStagePlan'
 import { EventEquipmentSection } from './EventEquipmentSection'
 import { EventReturnSection } from './EventReturnSection'
 import { SaveTemplateButton } from './SaveTemplateButton'
+import { EventClientCard } from './EventClientCard'
 import { EventRatingCard } from './EventRatingCard'
 import { EventStatusBadge } from './EventStatusBadge'
 import { describeTimes, POWER_LABELS, SETTING_LABELS, shownStatus } from './model'
@@ -239,6 +240,7 @@ export function EventDetailPage() {
       {tab === 'overview' && (
         <>
           {/* Po skončení: hodnotenie od klienta (požiadať o neho alebo ho ukázať). */}
+          {event.status !== 'cancelled' && canEdit && <EventClientCard companyId={companyId} event={event} />}
           {event.status !== 'cancelled' && event.endsOn < todayIso() && <EventRatingCard companyId={companyId} event={event} canEdit={canEdit} />}
           {(event.setting === 'outdoor' || event.setting === 'mixed') && <EventWeather event={event} />}
           {event.description && (

@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.12
+
+- **Equipment unused for 12 months** (Statistics → Equipment): what was not on any event or loan in the last year –
+  most expensive first, with purchase price and when it was last used. Candidates for sale; new equipment and
+  consumables are not counted.
+- **Client link**: “Create link” on an event – one page with the logo, name, date and place of the event and the
+  quotes and contracts you shared with the client, after the event also the rating. The link can be revoked anytime.
+- **Photos of damage after an event**: when reporting “Damaged” in the event return you can photograph the damage;
+  photos are with the incident in Damage & injuries and only those who see the incident see them.
+- Technical: migrations 0192 (incident photos) and 0193 (client link).
+
 ### 11.11
 
 - **Scan feedback**: success = a short beep and vibration, error (not in the pack list, foreign QR) = two low beeps

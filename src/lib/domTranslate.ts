@@ -7,7 +7,7 @@ import { lookup } from './i18n'
 const ATTRS = ['placeholder', 'title', 'aria-label', 'alt'] as const
 const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'CODE', 'PRE'])
 /** Stránky, ktoré sa tlačia alebo posielajú klientom (bez podpriečinka appky). */
-export const PRINT_PATH = /(^|\/)(o\/|z\/|u\/|h\/|qr\/|labels\/|print\/batch|networks\/(qr|print)|loans\/[^/]+\/sheet|events\/[^/]+\/(print|patch|dmx|crew|lighting|contract)|offers\/[^/]+\/print|invoices\/[0-9a-f-]{36}|cases\/[^/]+\/label|patch\/[^/]+\/print)/
+export const PRINT_PATH = /(^|\/)(o\/|z\/|u\/|h\/|k\/|qr\/|labels\/|print\/batch|networks\/(qr|print)|loans\/[^/]+\/sheet|events\/[^/]+\/(print|patch|dmx|crew|lighting|contract)|offers\/[^/]+\/print|invoices\/[0-9a-f-]{36}|cases\/[^/]+\/label|patch\/[^/]+\/print)/
 
 function skipped(node: Node | null): boolean {
   for (let el = node instanceof Element ? node : node?.parentElement; el; el = el.parentElement) {

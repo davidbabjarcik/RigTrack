@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField, TextareaField } from '@/components/ui/field'
 import { useAuth } from '@/features/auth/auth-context'
+import { Attachments } from '@/features/attachments/Attachments'
 import { useCompany } from '@/features/companies/company-context'
 import { memberName, useMembers } from '@/features/companies/useMembers'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
@@ -268,6 +269,17 @@ export function IncidentsPage() {
                     <Link to={`/equipment/${item.equipmentId}`} className="ml-3 text-sm text-accent hover:underline">{tx('Technika')}</Link>
                   )}
                   {item.description && <p className="mt-1 text-sm whitespace-pre-wrap">{tx(item.description)}</p>}
+                  {/* Fotky (napr. poškodenie z vrátenia po evente); pridať smie admin a kto škodu zapísal. */}
+                  <div className="mt-2">
+                    <Attachments
+                      companyId={companyId}
+                      entity="incident"
+                      entityId={item.id}
+                      canEdit={admin || item.createdBy === userId}
+                      title={tx('Fotky a prílohy')}
+                      empty={tx('Žiadne fotky.')}
+                    />
+                  </div>
                 </div>
                 {(admin || item.createdBy === userId) && (
                   <span className="flex gap-1">

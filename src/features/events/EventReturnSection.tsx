@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, PackageX, ScanLine, Wrench } from 'lucide-react'
+import { Camera, Check, PackageX, ScanLine, Wrench } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
@@ -7,6 +7,7 @@ import { Button, LinkButton } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCases } from '@/features/cases/useCases'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
+import { uploadAttachment } from '@/features/attachments/api'
 import { incidentKeys, saveIncident, useIncidents, type IncidentKind } from '@/features/incidents/api'
 import { usePackChecks } from '@/features/pack/api'
 import { checkOf, packRows, type PackRow } from '@/features/pack/model'
@@ -34,6 +35,9 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
   const incidents = useIncidents(companyId)
   const [reporting, setReporting] = useState<{ key: string; kind: 'loss' | 'damage' } | null>(null)
   const [note, setNote] = useState('')
+  // Fotky poškodenia – uložia sa ako prílohy k nahlásenej škode.
+  const [photos, setPhotos] = useState<File[]>([])
+  const [photoFailed, setPhotoFailed] = useState(0)
   // Z Prehľadu (…#vratenie) sa stránka posunie na túto sekciu, keď sa načíta.
   const { hash } = useLocation()
   const loaded = Boolean(checks.data)
@@ -42,8 +46,8 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
   }, [hash, loaded])
 
   const report = useMutation({
-    mutationFn: ({ row, kind, text }: { row: PackRow; kind: 'loss' | 'damage'; text: string }) =>
-      saveIncident(companyId, null, {
+    mutationFn: async ({ row, kind, text }: { row: PackRow; kind: 'loss' | 'damage'; text: string }) => {
+      const incidentId = await saveIncident(companyId, null, {
         kind: kind as IncidentKind,
         occurredOn: todayIso(),
         memberId: null,
@@ -56,10 +60,15 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
         cost: null,
         paidBy: '',
         resolved: false,
-      }),
+      })
+      let failed = 0
+      for (const file of kind === 'damage' ? photos : []) await uploadAttachment(companyId, 'incident', incidentId, file).catch(() => failed++)
+      setPhotoFailed(failed)
+    },
     onSuccess: () => {
       setReporting(null)
       setNote('')
+      setPhotos([])
       void queryClient.invalidateQueries({ queryKey: incidentKeys.list(companyId) })
     },
   })
@@ -98,6 +107,7 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
           )
         }
       >
+        {photoFailed > 0 && <p role="alert" className="mb-2 text-sm text-destructive">{tf('Škoda je zapísaná, ale {0} fotiek sa nepodarilo uložiť. Pridajte ich v Škodách a úrazoch.', photoFailed)}</p>}
         <div className="rounded-xl border bg-surface p-4">
           {closed ? (
             <div className="flex flex-wrap items-start gap-3">
@@ -142,9 +152,9 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
                               </Link>
                             ) : (
                               <>
-                                <Button size="sm" variant={open && reporting.kind === 'loss' ? 'default' : 'outline'} onClick={() => setReporting(open && reporting.kind === 'loss' ? null : { key: row.key, kind: 'loss' })}>
+                                <Button size="sm" variant={open && reporting.kind === 'loss' ? 'default' : 'outline'} onClick={() => (setPhotos([]), setReporting(open && reporting.kind === 'loss' ? null : { key: row.key, kind: 'loss' }))}>
                                   <PackageX className="size-4" aria-hidden />{tx('Strata')}</Button>
-                                <Button size="sm" variant={open && reporting.kind === 'damage' ? 'default' : 'outline'} onClick={() => setReporting(open && reporting.kind === 'damage' ? null : { key: row.key, kind: 'damage' })}>
+                                <Button size="sm" variant={open && reporting.kind === 'damage' ? 'default' : 'outline'} onClick={() => (setPhotos([]), setReporting(open && reporting.kind === 'damage' ? null : { key: row.key, kind: 'damage' }))}>
                                   <Wrench className="size-4" aria-hidden />{tx('Poškodené')}</Button>
                               </>
                             )}
@@ -168,9 +178,28 @@ export function EventReturnSection({ company, event }: { company: Membership; ev
                                   onChange={(changeEvent) => setNote(changeEvent.target.value)}
                                 />
                               </label>
+                              {reporting.kind === 'damage' && (
+                                <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border bg-surface px-3 text-sm font-medium hover:bg-muted">
+                                  <Camera className="size-4" aria-hidden />
+                                  {photos.length > 0 ? tf('Fotky: {0}', photos.length) : tx('Odfotiť poškodenie')}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    multiple
+                                    className="sr-only"
+                                    onChange={(changeEvent) => {
+                                      const files = [...(changeEvent.target.files ?? [])].filter((file) => file.type.startsWith('image/') && file.size <= 20 * 1024 * 1024)
+                                      setPhotos((current) => [...current, ...files].slice(0, 10))
+                                      changeEvent.target.value = ''
+                                    }}
+                                  />
+                                </label>
+                              )}
                               <Button type="submit" size="sm" disabled={report.isPending}>
                                 {report.isPending ? 'Zapisujem…' : tf('Nahlásiť: {0}', REPORT_LABELS[reporting.kind].toLowerCase())}
                               </Button>
+                              {report.isError && <p className="basis-full text-sm text-destructive">{tx('Nepodarilo sa zapísať. Skúste to znova.')}</p>}
                             </form>
                           )}
                         </li>

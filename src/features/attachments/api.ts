@@ -4,7 +4,7 @@ import { getSupabase } from '@/lib/supabase/client'
 
 const BUCKET = 'attachments'
 
-export type AttachmentEntity = 'service' | 'vehicle'
+export type AttachmentEntity = 'service' | 'vehicle' | 'incident'
 export type Attachment = { id: string; name: string; path: string; sizeBytes: number; createdAt: string }
 
 export const attachmentKeys = {
