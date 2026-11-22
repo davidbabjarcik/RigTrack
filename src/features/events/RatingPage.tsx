@@ -3,10 +3,13 @@ import { ExternalLink, Star } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { fetchLogoForDisplay, type LogoStyle } from '@/features/companies/branding'
+import { logoClasses } from '@/features/companies/logoStyle'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { fetchPublicRating, rateEvent, type ReviewLinks } from './ratingApi'
 
+const LOGO_STYLES: LogoStyle[] = ['auto', 'original', 'plate', 'white', 'black']
 const LINK_LABELS: Record<keyof ReviewLinks, string> = { google: 'Ohodnotiť na Google', facebook: 'Ohodnotiť na Facebooku', web: 'Ohodnotiť na našom webe' }
 
 /**
@@ -19,6 +22,9 @@ export function RatingPage() {
   const [stars, setStars] = useState(0)
   const [comment, setComment] = useState('')
   const send = useMutation({ mutationFn: () => rateEvent(token, stars, comment), onSuccess: () => void rating.refetch() })
+  // Logo firmy (prispôsobené svetlému aj tmavému režimu); bez loga ostane názov firmy.
+  const logoPath = rating.data?.logoPath ?? ''
+  const logo = useQuery({ queryKey: ['event-rating-logo', logoPath], queryFn: () => fetchLogoForDisplay(logoPath), enabled: Boolean(logoPath), retry: false, staleTime: Infinity })
 
   if (rating.isPending) return <p className="min-h-dvh bg-background p-8 text-center text-sm text-muted-foreground">Načítavam…</p>
   if (rating.isError || !rating.data) {
@@ -32,7 +38,11 @@ export function RatingPage() {
     <div className="min-h-dvh bg-background text-foreground">
     <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-10 sm:py-16">
       <header>
-        <p className="text-sm text-muted-foreground">{data.companyName}</p>
+        {logo.data?.url ? (
+          <img src={logo.data.url} alt={data.companyName} className={cn('mb-2 h-14 max-w-56 object-contain object-left', logoClasses(LOGO_STYLES.includes(data.logoStyle as LogoStyle) ? (data.logoStyle as LogoStyle) : 'auto', logo.data.tone))} />
+        ) : (
+          <p className="text-sm text-muted-foreground">{data.companyName}</p>
+        )}
         <h1 className="mt-1 text-2xl font-semibold">Ako sme sa vám páčili?</h1>
         <p className="mt-1 text-muted-foreground">{data.event} · {when}</p>
       </header>

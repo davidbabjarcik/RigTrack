@@ -41,4 +41,19 @@ describe('hodnotenie od klienta', () => {
     await expect(t.as('boss', 'update public.event_ratings set stars = 1')).rejects.toThrow(/permission/)
     await expect(t.as('boss', `insert into public.event_ratings (company_id, event_id) values ($1, $2)`, [a, event])).rejects.toThrow(/permission/)
   })
+
+  it('logo firmy na stránke hodnotenia: len aktuálne logo firmy, ktorá hodnotenie používa', async () => {
+    const b = (await t.as('outsider', `select id from public.companies where name = 'B'`))[0].id
+    await t.rows(`update public.companies set logo_path = $2 where id = $1`, [a, `${a}/logo.png`])
+    await t.rows(`update public.companies set logo_path = $2 where id = $1`, [b, `${b}/logo.png`])
+    const token = (await t.as('boss', 'select public.create_event_rating($1) as token', [event]))[0].token
+    const [{ data }] = await t.as(null, 'select public.get_event_rating($1) as data', [token])
+    expect(data.logoPath).toBe(`${a}/logo.png`)
+    const logo = async (path: string) => (await t.as(null, 'select public.is_rating_logo($1) as ok', [path]))[0].ok
+    expect(await logo(`${a}/logo.png`)).toBe(true)
+    // Iný súbor tej istej firmy ani logo firmy bez hodnotení nie.
+    expect(await logo(`${a}/ine.png`)).toBe(false)
+    expect(await logo(`${b}/logo.png`)).toBe(false)
+    expect(await logo('')).toBe(false)
+  })
 })

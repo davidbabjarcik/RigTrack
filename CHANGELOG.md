@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.10 – 22. 11. 2026
+
+- **Logo firmy na stránke hodnotenia**: klient vidí hore vaše logo (prispôsobené svetlému aj tmavému režimu) namiesto
+  názvu; bez loga ostane názov. Sprístupní sa len aktuálne logo firmy, ktorá hodnotenie používa – úložisko ostáva
+  súkromné.
+- Technické: migrácia 0191 (logo na stránke hodnotenia).
+
 ### 11.9 – 22. 11. 2026
 
 - **Rovnaké rozloženie aj pre ďalšie cases zo sady**: v úprave rozloženia sa pri sade rovnakých cases (napr.

@@ -43,7 +43,15 @@ export async function createEventRating(eventId: string): Promise<string> {
 
 export const ratingLink = (token: string) => `${window.location.origin}${import.meta.env.BASE_URL}h/${token}`
 
-export type PublicRating = { event: string; startsOn: string; endsOn: string; companyName: string; stars: number | null; comment: string; ratedAt: string | null; links: ReviewLinks }
+export type PublicRating = {
+  event: string
+  startsOn: string
+  endsOn: string
+  companyName: string
+  /** Logo firmy (od 0191; inak chýba). */
+  logoPath?: string
+  logoStyle?: string
+  stars: number | null; comment: string; ratedAt: string | null; links: ReviewLinks }
 
 export async function fetchPublicRating(token: string): Promise<PublicRating | null> {
   const { data, error } = await getSupabase().rpc('get_event_rating', { _token: token })

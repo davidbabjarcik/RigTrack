@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.10
+
+- **Company logo on the rating page**: the client sees your logo at the top (adapted to light and dark mode) instead
+  of the name; without a logo the name stays. Only the current logo of a company that uses ratings is made available –
+  the storage stays private.
+- Technical: migration 0191 (logo on the rating page).
+
 ### 11.9
 
 - **Same layout for other cases in the set**: in layout editing, a set of identical cases (e.g. Blinder case #1, #2,
