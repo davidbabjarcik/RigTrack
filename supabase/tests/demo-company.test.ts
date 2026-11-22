@@ -27,7 +27,8 @@ describe('demo company', () => {
     expect(await t.as('anna', 'select role from public.company_members where company_id = $1', [demo])).toEqual([{ role: 'admin' }])
     const sample = await t.as('anna', 'select count(*)::int as n from public.equipment where company_id = $1', [demo])
     expect(sample[0].n).toBeGreaterThan(10)
-    expect(await t.as('anna', 'select count(*)::int as n from public.events where company_id = $1', [demo])).toEqual([{ n: 2 }])
+    // Dva eventy z pôvodného dema a DJ hranie (11.7).
+    expect(await t.as('anna', 'select count(*)::int as n from public.events where company_id = $1', [demo])).toEqual([{ n: 3 }])
   })
 
   it('belongs to its user only', async () => {
@@ -110,5 +111,27 @@ describe('demo company 4.6', () => {
     expect(placed[0].n).toBeGreaterThan(0)
     const duties = await t.as('anna', `select phase from public.company_duty_types where company_id = $1 order by sort`, [id])
     expect(duties.map((row: { phase: string }) => row.phase)).toEqual(['before', 'event', 'after', 'after', 'after'])
+  })
+})
+
+describe('demo company 11.7', () => {
+  it('shows licences, a template, DJ, a rating, invoices, a case layout, an itemised check and cable makers', async () => {
+    await t.signUp('ema', 'ema@example.com')
+    const demo = (await t.as('ema', 'select public.create_demo_company() as id'))[0].id
+    const count = async (sql: string) => (await t.as('ema', sql, [demo]))[0].n
+    expect(await count(`select count(*)::int as n from public.software_licenses where company_id = $1`)).toBe(2)
+    expect(await count(`select count(*)::int as n from public.staff_certificates where company_id = $1`)).toBe(1)
+    expect(await count(`select count(*)::int as n from public.event_templates where company_id = $1 and name = 'Ukážková svadba'`)).toBe(1)
+    expect(await count(`select count(*)::int as n from public.events where company_id = $1 and kind = 'dj'`)).toBeGreaterThan(0)
+    expect(await count(`select count(*)::int as n from public.event_ratings where company_id = $1 and stars = 5`)).toBe(1)
+    const invoices = await t.as('ema', `select kind, number, paid_on is not null as paid from public.invoices where company_id = $1 order by kind`, [demo])
+    expect(invoices.map((row: { kind: string; paid: boolean }) => [row.kind, row.paid])).toEqual([['advance', true], ['final', false]])
+    expect(invoices.every((row: { number: string }) => /^\d{8}$/.test(row.number))).toBe(true)
+    expect(await count(`select count(*)::int as n from public.cases where company_id = $1 and jsonb_array_length(layout -> 'sections') = 1`)).toBe(1)
+    expect(await count(`select count(*)::int as n from public.case_checks where company_id = $1 and jsonb_array_length(items) = 2`)).toBe(1)
+    expect(await count(`select count(*)::int as n from public.equipment where company_id = $1 and attributes ? 'makers'`)).toBeGreaterThan(0)
+    // Druhé spustenie nič nezdvojí.
+    await t.rows('select public.seed_demo_v11($1)', [demo])
+    expect(await count(`select count(*)::int as n from public.software_licenses where company_id = $1`)).toBe(2)
   })
 })

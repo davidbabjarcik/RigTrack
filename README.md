@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-11.6-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-11.7-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -23,6 +23,10 @@ aj interná agenda firmy. Beží v prehliadači na počítači aj na mobile, dá
 a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 <table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/case-layout.png" alt="Rozloženie v case" /><br /><sub><b>Rozloženie v case</b> – šuplíky a priehradky, čo kde leží</sub></td>
+    <td width="50%"><img src="docs/screenshots/invoice.png" alt="Faktúra" /><br /><sub><b>Faktúry</b> – zálohová a konečná z ponuky, odpočet zálohy</sub></td>
+  </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/plan.png" alt="Plán skladu" /><br /><sub><b>Plán skladu</b> – regály, palety, hliník, miestnosti, dvere a okná</sub></td>
     <td width="50%"><img src="docs/screenshots/rack.png" alt="Regál spredu" /><br /><sub><b>Regál spredu</b> – police, palety a cases poskladané na nich</sub></td>
@@ -51,6 +55,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **11.7** | Demo, úvodná stránka a README s novinkami 8.x–11.x |
 | **11.6** | Týždenný prehľad e-mailom |
 | **11.5** | Thomann v objednávkach, rýchlejšie spustenie |
 | **11.4** | Programy a licencie ako podkategória IT, Thomann číslo pri technike |
@@ -87,7 +92,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **9.14** | Predaná technika ostáva v Technike, archívnu na event pridá len CEO |
 | **9.13** | Zmluva k eventu – vzor z údajov eventu, dodávateľa a organizátora |
 | **9.12** | Plagát trussu po sériách (F34, F34 P): rovné diely, rohy a T-čká, adaptéry |
-| **9.11** | Farby kolieska a gobá s fotkami a DMX hodnotami priamo pri kanáloch |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 
@@ -117,7 +121,11 @@ Kliknutím na modul sa rozbalí, čo všetko vie.
 - **Siete** – Wi-Fi siete s heslom, QR kódom, routerom a DHCP; všetky IP / MAC adresy techniky aj zariadení členov.
 - **Rozmery boxu** reproboxov a subov (pre delay kalkulačku).
 - **Excel** – export a import techniky aj cases (hárok na kategóriu, hárok „Cases“, prázdna šablóna).
-- Pri každej technike história nákupov, servisu, výpožičiek a eventov.
+- Pri každej technike história nákupov, servisu, výpožičiek a eventov, **návratnosť** (kedy sa kus splatil)
+  a **Thomann – číslo artiklu** s odkazom na produkt.
+- **Programy a licencie** ako podkategória IT – počet inštalácií, účet, kľúč (vidí len kto upravuje), platnosť.
+- **Predaná technika** ostáva v evidencii – pre účtovníka tlač a Excel po rokoch, zisk alebo strata.
+- **Kto káble vyrobil** – zamestnanec alebo iná osoba, v štatistikách „najviac káblov spravil“.
 
 </details>
 
@@ -127,7 +135,12 @@ Kliknutím na modul sa rozbalí, čo všetko vie.
 - Obsah, hmotnosť, rozmery, umiestnenie, fotka a kontroly obsahu (kto a kedy).
 - **Šablóny cases** – rozmery sa zadajú raz, nové cases (aj viac naraz) vzniknú výberom šablóny.
 - **Flight case štítok** (PNG) a hárok **FLIGHTCASE CONTENT** (A4) s farbami dĺžok káblov.
-- **Plán skladu** *(vo vývoji)* – regály, palety a zóny zhora, kde ktorý case leží.
+- **Rozloženie v case** – šuplíky a priehradky (rýchle delenie na polovicu, tretiny, 2 × 2…), čo leží v ktorej.
+- **Kontrola case po položkách** – odškrtnúť, čo chýba a koľko; na karte zamestnanca, čo kedy kontroloval.
+- **Inventúra skenovaním** – čo chýba, čo je vonku a čo je navyše.
+- **Hárok s obsahom** celkovo alebo podľa rozloženia; **tlač naraz ako ZIP** (A5 po dvoch na A4, značky rezu),
+  štítok case vo zvolenej veľkosti v % s rozmerom v cm; vytlačené zmizne z tlačovej fronty samo.
+- **Plán skladu** – regály s policami a paletami, palety na zemi, hliník v stohoch, kde ktorý case leží.
 
 </details>
 
@@ -169,6 +182,10 @@ Kliknutím na modul sa rozbalí, čo všetko vie.
 - **Delay kalkulačka** – topy ↔ suby, delay veža, cardioid, end-fire, rovný rad a arc delay s nákresom a odhadom
   smerovosti; počíta s teplotou a rozmermi subu.
 - **Do kalendára** (.ics / Google) a **do kontaktov** (.vcf) pri evente aj výpožičke; sekcie sa dajú zbaliť.
+- **Šablóny eventov** – technika a posádka na nový event jedným ťuknutím; **náhrada zo skladu** pri chýbajúcej technike.
+- **Externista potvrdí termín** cez odkaz bez prihlásenia; **DJ hrania** s odmenou a technikou na hranie.
+- **Hodnotenie od klienta** cez odkaz – pri 4–5 hviezdičkách ponúkne recenziu na Google, Facebooku alebo webe.
+- **Zisk z eventu** – príjmy, náklady (prenájom, subdodávky, auto) a odmeny.
 
 </details>
 
@@ -188,6 +205,18 @@ Kliknutím na modul sa rozbalí, čo všetko vie.
 - Nákupy s položkami, z ktorých vzniká technika; **import faktúr z Thomannu** (PDF v prehliadači).
 - **Nákupy z bazárov** (Bazoš, Hudebnibazar, Kleinanzeigen, Willhaben, eBay, Reverb…) s predajcom.
 - Fotka nákupu; zoznamy „kúpiť“ a „chceme časom“ s fotkami.
+- **Spotrebný materiál** – upozornenie pod hranicou a objednávka jedným ťuknutím; Thomann číslo pri technike
+  sa doplní ako kód tovaru.
+
+</details>
+
+<details>
+<summary><b>💶 Ponuky, zmluvy a faktúry</b></summary>
+
+- **Cenové ponuky** z techniky eventu s DPH alebo bez, história verzií, odkaz pre klienta na prijatie.
+- **Zmluvy** – vzor z údajov eventu, číslo, podpis klienta cez odkaz.
+- **Faktúry** – zálohová a konečná z ponuky (odpočet zaplatenej zálohy), IBAN a variabilný symbol,
+  neplatiteľ DPH, upozornenie po splatnosti; vystavenú faktúru nemožno meniť, len zaplatiť alebo stornovať.
 
 </details>
 
@@ -196,7 +225,9 @@ Kliknutím na modul sa rozbalí, čo všetko vie.
 
 - **Zamestnanci** – tím s fotkou, pozíciou, kontaktom a zručnosťami, kto kedy nemôže a na ktorých eventoch je;
   upozornenie v posádke eventu, keď niekto v termíne nemôže.
-- **Odmeny** – odmeny a zálohy členov, filter podľa rokov, koláčový graf; člen vidí len svoje.
+- **Odmeny** – odmeny a zálohy členov, filter podľa rokov, koláčový graf, **výpis za mesiac** na tlač; člen vidí len svoje.
+- **Certifikácie** pri človeku (napr. práca vo výškach) s platnosťou.
+- **Týždenný prehľad e-mailom** – v pondelok ráno akcie na týždeň, moje úlohy, faktúry po splatnosti a servis.
 - **Úlohy, Návrhy, Kalendár** (zoznam aj mesačná mriežka, export do .ics), **Upozornenia**, **História zmien**.
 - **Štatistiky** (čo vidieť aj v akom poradí si nastaví každý sám) – technika, servis, vozidlá a **peniaze**: príjmy firmy, odmeny a zostatok (s oprávnením)
   a každému jeho vlastné zárobky podľa role, mesiacov a rokov, s koláčovými grafmi.

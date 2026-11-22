@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.7
+
+- **Demo company with what is new in 8.x–11.x**: software and licences, a certificate, an event template, a DJ gig,
+  event costs, a client rating, an advance and final invoice, a case layout, an itemised case check and who made the
+  cables. Existing demo companies were updated.
+- **Home page**: new sections Quotes & invoices, Clients & freelancers, People & pay, Service & checks and new
+  screenshots (case layout, invoice, client rating).
+- **README**: updated modules and new screenshots.
+- Technical: migration 0189 (demo 11.7).
+
 ### 11.6
 
 - **Weekly summary by e-mail**: everyone turns it on in Settings → Account → E-mail notifications. On Monday

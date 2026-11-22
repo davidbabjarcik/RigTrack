@@ -2,15 +2,19 @@ import {
   ArrowRight,
   Boxes,
   CalendarDays,
+  FileText,
   LogIn,
   Printer,
   QrCode,
   Search,
   ShieldCheck,
   Smartphone,
+  Star,
   Ticket,
   UserPlus,
+  Users,
   Warehouse,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -28,8 +32,8 @@ const FEATURES: { icon: LucideIcon; title: Pair; text: Pair }[] = [
     icon: Boxes,
     title: ['Technika a cases', 'Equipment & cases'],
     text: [
-      'Každý kus aj s číslom #1, #2…, sady cases, obsah case a príslušenstvo. Kde čo je, jedným pohľadom.',
-      'Every piece with its number #1, #2…, case sets, case contents and accessories. Where everything is, at a glance.',
+      'Každý kus aj s číslom #1, #2…, sady cases, šuplíky a priehradky v case, kontrola obsahu po položkách.',
+      'Every piece with its number #1, #2…, case sets, drawers and compartments in a case, item-by-item content checks.',
     ],
   },
   {
@@ -60,8 +64,40 @@ const FEATURES: { icon: LucideIcon; title: Pair; text: Pair }[] = [
     icon: Printer,
     title: ['Tlač', 'Printing'],
     text: [
-      'Štítky, obsahy cases, plagát inventára, patch listy a IP tabuľky. Všetko aj do tlačovej fronty.',
-      'Labels, case contents, inventory posters, patch lists and IP tables. Everything also into a print queue.',
+      'Štítky v zvolenej veľkosti, obsahy cases, plagát inventára a patch listy. Všetko naraz ako ZIP so značkami rezu.',
+      'Labels in the size you choose, case contents, inventory posters and patch lists. All at once as a ZIP with crop marks.',
+    ],
+  },
+  {
+    icon: FileText,
+    title: ['Ponuky a faktúry', 'Quotes & invoices'],
+    text: [
+      'Cenová ponuka z techniky eventu, zmluva s podpisom cez odkaz, zálohová a konečná faktúra a pripomienka splatnosti.',
+      'A quote from the event gear, a contract signed via link, advance and final invoices and due-date reminders.',
+    ],
+  },
+  {
+    icon: Star,
+    title: ['Klienti a externisti', 'Clients & freelancers'],
+    text: [
+      'Klient ohodnotí akciu a dostane odkaz na recenziu Google či Facebook. Externista potvrdí termín bez účtu.',
+      'Clients rate the show and get a link to a Google or Facebook review. Freelancers confirm a date without an account.',
+    ],
+  },
+  {
+    icon: Users,
+    title: ['Ľudia a odmeny', 'People & pay'],
+    text: [
+      'Dochádzka, odmeny a výpis za mesiac, certifikácie a týždenný prehľad e-mailom v pondelok ráno.',
+      'Attendance, pay and a monthly statement, certificates and a weekly summary by e-mail on Monday morning.',
+    ],
+  },
+  {
+    icon: Wrench,
+    title: ['Servis a kontroly', 'Service & checks'],
+    text: [
+      'Limity hodín a revízie, inventúra skenovaním, návratnosť techniky a čo treba dokúpiť.',
+      'Hour limits and inspections, stocktake by scanning, equipment payback and what needs buying.',
     ],
   },
   {
@@ -88,10 +124,12 @@ const FEATURES: { icon: LucideIcon; title: Pair; text: Pair }[] = [
 ]
 
 const SHOTS: { src: string; alt: Pair; caption: Pair }[] = [
+  { src: 'case-layout.png', alt: ['Rozloženie v case so šuplíkmi a priehradkami', 'Case layout with drawers and compartments'], caption: ['Rozloženie v case – čo leží v ktorom šuplíku', 'Case layout – what lies in which drawer'] },
+  { src: 'invoice.png', alt: ['Faktúra s odpočtom zálohy', 'Invoice with an advance deducted'], caption: ['Faktúry – zálohová a konečná z ponuky', 'Invoices – advance and final from a quote'] },
+  { src: 'rating.png', alt: ['Hodnotenie akcie klientom', 'Client rating of a show'], caption: ['Hodnotenie od klienta cez odkaz', 'Client rating via a link'] },
   { src: 'rack.png', alt: ['Regál spredu s policami, paletami a cases', 'Rack front view with shelves, pallets and cases'], caption: ['Regál spredu – čo leží na ktorej polici', 'Rack front view – what lies on which shelf'] },
   { src: 'sheet-cables.png', alt: ['Hárok s obsahom case s tabuľkou káblov', 'Case content sheet with a cable table'], caption: ['Hárok s obsahom case na vytlačenie', 'Printable case content sheet'] },
   { src: 'poster.png', alt: ['Plagát inventára techniky', 'Equipment inventory poster'], caption: ['Plagát inventára na stenu skladu', 'Inventory poster for the warehouse wall'] },
-  { src: 'kanban.png', alt: ['Úlohy v kanbane', 'Tasks in a kanban'], caption: ['Úlohy firmy v kanbane', 'Company tasks in a kanban'] },
   { src: 'calendar.png', alt: ['Kalendár eventov a dostupnosti', 'Calendar of events and availability'], caption: ['Kalendár eventov a dostupnosti', 'Calendar of events and availability'] },
   { src: 'stage.png', alt: ['Kalkulačka pódia', 'Stage calculator'], caption: ['Kalkulačky: pódium, LED stena, delay', 'Calculators: stage, LED wall, delay'] },
 ]

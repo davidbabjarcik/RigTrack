@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.7 – 22. 11. 2026
+
+- **Demo firma s novinkami 8.x–11.x**: programy a licencie, certifikácia, šablóna eventu, DJ hranie, náklady
+  eventu, hodnotenie od klienta, zálohová a konečná faktúra, rozloženie v case, kontrola case po položkách a kto
+  vyrobil káble. Existujúce demo firmy sa doplnili.
+- **Úvodná stránka**: nové časti Ponuky a faktúry, Klienti a externisti, Ľudia a odmeny, Servis a kontroly a nové
+  ukážky (rozloženie v case, faktúra, hodnotenie od klienta).
+- **README**: doplnené moduly a nové snímky.
+- Technické: migrácia 0189 (demo 11.7).
+
 ### 11.6 – 22. 11. 2026
 
 - **Týždenný prehľad e-mailom**: v Nastavenia → Účet → E-mailové upozornenia si ho zapne každý. V pondelok ráno príde
