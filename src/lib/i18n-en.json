@@ -3923,6 +3923,7 @@
  "Zmeniť screenshot": "Change screenshot",
  "Zmenu sa nepodarilo uložiť.": "The change could not be saved.",
  "Zmeny sa prenesú do formulára; do databázy sa zapíšu až tlačidlom Uložiť. Výšku a názov prekážky doplníte v poliach formulára.": "Changes are copied to the form; they are written to the database only with the Save button. You fill in the obstacle height and name in the form fields.",
+ "Zmeny v rozložení sa ukladajú hneď.": "Layout changes are saved right away.",
  "Zmeníte šírku a rozostup sa dopočíta (a naopak)": "Change the width and the spacing is recalculated (and vice versa)",
  "Zmluva": "Contract",
  "Zmluva / ponuka": "Contract / quote",

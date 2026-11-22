@@ -5,6 +5,11 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.8.3
+
+- **The case layout is in the edit page above the Save button** (not below it). Layout changes are saved right away
+  and Enter in its fields does not submit the case form.
+
 ### 11.8.2
 
 - **“Last” on accounts is the last activity**: until now it was the last password sign-in – someone who stayed

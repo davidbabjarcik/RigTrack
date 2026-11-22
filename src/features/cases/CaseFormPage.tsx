@@ -3,7 +3,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { isGone } from '@/features/equipment/model'
 import { CaseLayoutSection } from './CaseLayoutSection'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useId, useState } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -33,9 +33,11 @@ type FormProps = {
   /** Názvy existujúcich cases: podľa nich sa číslujú nové. */
   caseNames: string[]
   canManageTemplates: boolean
+  /** Rozloženie v case – vo formulári nad tlačidlami (ukladá sa samo pri každej zmene). */
+  layout?: ReactNode
 }
 
-function CaseForm({ companyId, current, locations, labelCategories, templates, caseNames, canManageTemplates }: FormProps) {
+function CaseForm({ companyId, current, locations, labelCategories, templates, caseNames, canManageTemplates, layout }: FormProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const locationListId = useId()
@@ -346,6 +348,8 @@ function CaseForm({ companyId, current, locations, labelCategories, templates, c
         </p>
       )}
 
+      {layout}
+
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={save.isPending}>
           {save.isPending ? tx('Ukladám…') : !current && copies > 1 ? tf('Vytvoriť {0} cases', copies) : tx('Uložiť')}
@@ -380,6 +384,21 @@ export function CaseFormPage() {
   // Ponuka: bežné kategórie a tie, ktoré už firma na iných cases použila.
   const labelCategories = [...new Set([...LABEL_CATEGORIES, ...(cases.data ?? []).map((c) => c.labelCategory).filter(Boolean)])]
 
+  // Rozloženie je súčasť úpravy (nad Uložiť), ale ukladá sa samo; Enter v jeho poliach neodošle formulár case.
+  const layout = !can(company, 'cases.edit') ? null : id && current && equipment.data ? (
+    <div
+      className="border-t pt-6"
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && (event.target as HTMLElement).tagName === 'INPUT') event.preventDefault()
+      }}
+    >
+      <CaseLayoutSection companyId={company.companyId} caseId={id} content={equipment.data.filter((item) => item.caseId === id && !isGone(item.status))} canEdit />
+      <p className="mt-2 text-xs text-muted-foreground">{tx('Zmeny v rozložení sa ukladajú hneď.')}</p>
+    </div>
+  ) : !id ? (
+    <p className="text-sm text-muted-foreground">{tx('Rozloženie v case (priehradky, šuplíky) nastavíte v úprave, keď case uložíte a pridáte do neho techniku.')}</p>
+  ) : null
+
   let body
   if (!can(company, 'cases.edit')) {
     body = <ErrorBlock message={tx('Na úpravu cases nemáte oprávnenie.')} />
@@ -400,22 +419,15 @@ export function CaseFormPage() {
         templates={templates.data ?? []}
         caseNames={cases.data.map((item) => item.name)}
         canManageTemplates={can(company, 'lookups.manage')}
+        layout={layout}
       />
     )
   }
-  const layout = !can(company, 'cases.edit') ? null : id && current && equipment.data ? (
-    <div className="mt-8 border-t pt-6">
-      <CaseLayoutSection companyId={company.companyId} caseId={id} content={equipment.data.filter((item) => item.caseId === id && !isGone(item.status))} canEdit />
-    </div>
-  ) : !id ? (
-    <p className="mt-6 text-sm text-muted-foreground">{tx('Rozloženie v case (priehradky, šuplíky) nastavíte v úprave, keď case uložíte a pridáte do neho techniku.')}</p>
-  ) : null
 
   return (
     <>
       <PageHeader title={id ? tf('Úprava – {0}', kindWord(current?.kind)) : tx('Nový case / rack / taška')} />
       {body}
-      {layout}
     </>
   )
 }

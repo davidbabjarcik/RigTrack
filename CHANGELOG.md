@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.8.3 – 22. 11. 2026
+
+- **Rozloženie v case je v úprave nad tlačidlom Uložiť** (nie pod ním). Zmeny v rozložení sa ukladajú hneď a Enter
+  v jeho poliach neodošle formulár case.
+
 ### 11.8.2 – 22. 11. 2026
 
 - **„Naposledy“ pri účtoch je posledná aktivita**: doteraz to bol čas posledného prihlásenia heslom – kto ostal
