@@ -156,7 +156,7 @@ export function PrintQueuePage() {
     <>
       <PageHeader
         title="Tlač"
-        description={`Štítky na tlač – QR ${a4 ? 'na A4' : 'na pásku'}, adresy a módy na pásku, štítky a obsah cases (nastavíte v Nastavenia → Zoznamy → Tlač)`}
+        description={`Štítky na tlač – QR ${a4 ? 'na A4' : 'na pásku'}, adresy a módy na pásku, štítky a obsah cases (nastavíte v Nastavenia → Zoznamy → Tlač). Po vytlačení alebo stiahnutí PDF položka z fronty zmizne sama.`}
         action={
           items.length > 0 && (
             <Button variant="outline" disabled={done.isPending} onClick={() => window.confirm('Všetko je vytlačené? Fronta sa vyprázdni.') && done.mutate(items)}>

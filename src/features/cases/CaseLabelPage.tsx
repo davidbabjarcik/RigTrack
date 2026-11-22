@@ -3,6 +3,7 @@ import { ArrowLeft, Download, FileDown } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
+import { useClearPrinted } from '@/features/print/api'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,8 @@ export function CaseLabelPage() {
   const canvas = useRef<HTMLCanvasElement>(null)
   const [drawn, setDrawn] = useState(false)
   const [scale, setScale] = useState(readLabelScale)
+  const clearPrinted = useClearPrinted(companyId)
+  const printedNow = () => clearPrinted([{ kind: 'case', targetId: id, label: 'case_label' }])
   const [withQr, setWithQr] = useState(() => {
     try {
       return localStorage.getItem('rigtrack.label.qr') !== 'off'
@@ -118,6 +121,7 @@ export function CaseLabelPage() {
   // PDF: štítok v zvolenej mierke na A4 so značkami na rezanie.
   const downloadPdf = async () => {
     if (!canvas.current) return
+    printedNow()
     const pages = imposeLabels([{ canvas: canvas.current, title: current.name }], scale)
     const images = await Promise.all(pages.map(async (page) => ({ ...(await canvasJpeg(page.canvas)), page: pageSizePt('A4', page.landscape) })))
     const url = URL.createObjectURL(buildPdf(images, pageSizePt('A4', false)))
@@ -142,7 +146,7 @@ export function CaseLabelPage() {
               <FileDown className="size-4" aria-hidden />
               PDF na A4
             </Button>
-            <Button disabled={!drawn} onClick={() => canvas.current && downloadCanvas(canvas.current, fileName)}>
+            <Button disabled={!drawn} onClick={() => { if (!canvas.current) return; printedNow(); downloadCanvas(canvas.current, fileName) }}>
               <Download className="size-4" aria-hidden />
               Stiahnuť PNG
             </Button>

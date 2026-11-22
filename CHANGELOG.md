@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.2 – 22. 11. 2026
+
+- **Vytlačené zmizne z tlačovej fronty samo**: po vytlačení alebo stiahnutí (PDF, ZIP, PNG) sa z fronty zmaže to,
+  čo sa práve vytlačilo – štítky a obsahy cases, QR štítky (technika, cases, miesta), páska, plagáty, IP / MAC
+  tabuľky a patch listy. Ostatné vo fronte ostane; „Vytlačené – vyprázdniť“ funguje ako doteraz.
+
 ### 11.1 – 22. 11. 2026
 
 - **Tlačiť všetko naraz → ZIP**: stiahne sa ZIP so zvlášť PDF – štítky cases, obsahy A4 a obsahy A5. Všetko je na

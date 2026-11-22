@@ -12,6 +12,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { useDevices } from '@/features/devices/api'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
+import { useClearPrinted } from '@/features/print/api'
 import { formatOf } from '@/features/print/api'
 import { useStaff } from '@/features/staff/useStaff'
 import { can } from '@/lib/permissions'
@@ -28,6 +29,9 @@ export function AddressPrintPage() {
   const [params] = useSearchParams()
   const mode: 'ip' | 'mac' = params.get('tab') === 'mac' ? 'mac' : 'ip'
   const networkFilter = params.get('network') ?? ''
+  const clearPrinted = useClearPrinted(companyId)
+  // Vytlačené zmizne z tlačovej fronty (celá tabuľka alebo vybraná sieť).
+  const printedNow = () => clearPrinted([{ kind: 'network', targetId: networkFilter && networkFilter !== 'none' ? networkFilter : companyId, label: mode }])
   const [paper, setPaper] = useState<'A4' | 'A5'>(params.get('paper') === 'A5' ? 'A5' : 'A4')
   const [landscape, setLandscape] = useState(params.get('landscape') === '1')
   const [printUrls, setPrintUrls] = useState<string[]>([])
@@ -80,6 +84,7 @@ export function AddressPrintPage() {
   const baseName = `${mode === 'ip' ? 'ip-tabulka' : 'mac-adresy'}-${fileSlug(networkName || 'vsetky')}`
   const pdfBlob = async () => buildPdf(await Promise.all(pages.map((canvas) => canvasJpeg(canvas, 0.92))), pageSizePt(paper, landscape))
   const downloadPdf = async () => {
+    printedNow()
     const url = URL.createObjectURL(await pdfBlob())
     const link = document.createElement('a')
     link.href = url
@@ -88,6 +93,7 @@ export function AddressPrintPage() {
     window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
   }
   const downloadPng = async () => {
+    printedNow()
     for (const [index, canvas] of pages.entries()) {
       downloadCanvas(canvas, pages.length > 1 ? `${baseName}-${index + 1}.png` : `${baseName}.png`)
       await new Promise((resolve) => setTimeout(resolve, 300))
@@ -120,7 +126,7 @@ export function AddressPrintPage() {
         </Link>
         <span className="flex-1" />
         <AddToPrintButton companyId={companyId} kind="network" targetIds={[networkFilter && networkFilter !== 'none' ? networkFilter : companyId]} label={mode} format={formatOf(paper, landscape)} />
-        <PrintButton variant="outline" makePdf={pdfBlob} onPrint={print} fileName={baseName} label="Tlačiť" />
+        <PrintButton variant="outline" makePdf={pdfBlob} onPrint={print} onPrinted={printedNow} fileName={baseName} label="Tlačiť" />
         <Button variant="outline" onClick={() => void downloadPdf()}>
           <FileDown className="size-4" aria-hidden />
           PDF

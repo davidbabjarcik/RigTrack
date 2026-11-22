@@ -41,12 +41,15 @@ test('hromadná tlač: ZIP so štítkami, obsahmi A4 a A5 (2 na A4) a mierka št
   // Štítok (1 strana), obsah A4 (1 strana), dva obsahy A5 na jednej A4.
   await expect(page.getByText('3 strán A4.')).toBeVisible()
   await expect(page.getByText('= 15,6 × 12,7 cm')).toBeVisible()
+  const cleared = page.waitForRequest((request) => request.method() === 'DELETE' && request.url().includes('print_queue') && request.url().includes('label=eq.case_label'))
   const download = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Stiahnuť ZIP' }).click()
   const file = await download
   expect(file.suggestedFilename()).toBe('rigtrack-tlac.zip')
   const bytes = (await import('node:fs')).readFileSync(await file.path()).toString('latin1')
   for (const name of ['stitky-cases.pdf', 'obsahy-A4.pdf', 'obsahy-A5-2-na-A4.pdf']) expect(bytes).toContain(name)
+  // Vytlačené zmizne z tlačovej fronty samo.
+  await cleared
 
   await page.getByLabel('Veľkosť štítku case').fill('50')
   await page.getByLabel('Veľkosť štítku case').press('Enter')

@@ -163,10 +163,14 @@ export function PrintBatchPage() {
     link.click()
     window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
   }
-  // Hárky s obsahom: zapamätať tlač aj obsah (pri zmene obsahu appka upozorní na novú tlač).
+  // Zapamätať vytlačené (pri hárku aj obsah – pri zmene appka upozorní na novú tlač); z tlačovej fronty to zmizne.
   const remember = () => {
-    if (!equipment.data || contentIds.length === 0) return
-    void markPrinted(companyId, contentIds.map((caseId) => ({ kind: 'case' as const, targetId: caseId, label: 'content' as const, contentHash: caseContentHash(caseId, equipment.data!) })))
+    if (!equipment.data) return
+    const printed = [
+      ...labelIds.map((caseId) => ({ kind: 'case' as const, targetId: caseId, label: 'case_label' as const })),
+      ...contentIds.map((caseId) => ({ kind: 'case' as const, targetId: caseId, label: 'content' as const, contentHash: caseContentHash(caseId, equipment.data!) })),
+    ]
+    void markPrinted(companyId, printed)
       .then(() => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }))
       .catch(() => undefined)
   }
@@ -249,7 +253,7 @@ export function PrintBatchPage() {
         <p className="rounded-xl border border-dashed bg-surface p-8 text-center text-sm text-muted-foreground">Nie je čo tlačiť – cases sa nenašli.</p>
       ) : (
         <>
-          <p className="mb-3 text-sm text-muted-foreground">{pages.length} strán A4. Po vytlačení vyprázdnite frontu v Tlačovej fronte.</p>
+          <p className="mb-3 text-sm text-muted-foreground">{pages.length} strán A4. Po vytlačení alebo stiahnutí ZIP sa to z tlačovej fronty zmaže samo.</p>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {previews.map((url, index) => (
               <li key={index} className="flex flex-col gap-1">

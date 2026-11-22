@@ -8,6 +8,7 @@ import { dipOn } from '@/features/labels/tape'
 import { portsForUniverse } from '@/features/equipment/dmxNode'
 import { Link, useParams } from 'react-router-dom'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
+import { useClearPrinted } from '@/features/print/api'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { useCompany } from '@/features/companies/company-context'
 import { useEvents } from '@/features/events/useEvents'
@@ -28,6 +29,8 @@ export function DmxPrintPage() {
   const { id = '' } = useParams()
   const company = useCompany().active!
   const companyId = company.companyId
+  const clearPrinted = useClearPrinted(companyId)
+  const printedNow = () => clearPrinted([{ kind: 'event', targetId: id, label: 'dmx' }])
   const events = useEvents(companyId)
   const patch = useDmxPatch(companyId, id)
   // Svetlá s DIP prepínačmi: na papieri aj ktoré prepínače zapnúť.
@@ -56,7 +59,7 @@ export function DmxPrintPage() {
         </Link>
         <div className="flex gap-2">
           <AddToPrintButton light companyId={companyId} kind="event" targetIds={[id]} label="dmx" />
-          <PrintButton sheet={sheet} fileName={`dmx-${event.name}`} marginMm={12} />
+          <PrintButton onPrinted={printedNow} sheet={sheet} fileName={`dmx-${event.name}`} marginMm={12} />
         </div>
       </div>
       <PaperSheet sheetRef={sheet} marginMm={12}>

@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { markPrinted, printKeys } from '@/features/print/api'
+import { markPrinted, printKeys, useClearPrinted } from '@/features/print/api'
 import { PaperSheet } from '@/components/print/PaperSheet'
 import { PrintButton } from '@/components/print/PrintButton'
 import { useQuery } from '@tanstack/react-query'
@@ -48,6 +48,7 @@ export function QrLabelsPage() {
   const { type = 'cases' } = useParams()
   const [params] = useSearchParams()
   const company = useCompany().active!
+  const clearPrinted = useClearPrinted(company.companyId)
   // Páska Brother sa vráti sem (Späť), nie na techniku.
   const here = useLocation()
   const companyPrefs = useCompanyPrefs(company.companyId).data
@@ -162,8 +163,9 @@ export function QrLabelsPage() {
             label="Tlačiť"
             // Zapamätať vytlačené QR štítky (Tlač → Bez QR štítku, stav pri technike a case).
             onPrinted={() =>
-              !isSpots &&
-              void markPrinted(
+              isSpots
+                ? clearPrinted([...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))].map((targetId) => ({ kind: 'spot' as const, targetId, label: 'qr' as const })))
+                : void markPrinted(
                 company.companyId,
                 [...new Set(records.filter((item) => ids.size === 0 || ids.has(item.id)).map((item) => item.id))].map((targetId) => ({ kind: isCases ? ('case' as const) : ('equipment' as const), targetId, label: 'qr' as const })),
               )

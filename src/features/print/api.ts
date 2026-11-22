@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabase } from '@/lib/supabase/client'
 
 /** Veľkosť QR štítkov na A4: koľko sa ich zmestí na stranu (väčšie sa ľahšie skenujú aj iPhonom). */
@@ -134,6 +134,12 @@ export function usePrintedLabels(companyId: string) {
  */
 export async function markPrinted(companyId: string, items: PrintedLabel[]) {
   if (items.length === 0) return
+  await recordPrinted(companyId, items)
+  // Vytlačené zmizne aj z tlačovej fronty.
+  await clearFromPrintQueue(companyId, items).catch(() => undefined)
+}
+
+async function recordPrinted(companyId: string, items: PrintedLabel[]) {
   const viaRpc = await getSupabase().rpc('mark_printed', {
     _company_id: companyId,
     _items: items.map((item) => ({ kind: item.kind, target_id: item.targetId, label: item.label, content_hash: item.contentHash ?? '' })),
@@ -144,6 +150,38 @@ export async function markPrinted(companyId: string, items: PrintedLabel[]) {
   for (let index = 0; index < rows.length; index += 500) {
     const { error } = await getSupabase().from('printed_labels').upsert(rows.slice(index, index + 500), { onConflict: 'company_id,kind,target_id,label', ignoreDuplicates: true })
     if (error) throw error
+  }
+}
+
+/** Čo sa vytlačilo – položky fronty s týmto druhom, cieľom a štítkom sa zmažú. */
+export type QueueEntry = { kind: PrintItem['kind']; targetId: string; label: PrintLabel }
+
+/**
+ * Po vytlačení alebo stiahnutí PDF / ZIP zmaže z tlačovej fronty to, čo sa práve vytlačilo (ostatné ostane).
+ * Mazať smie každý člen firmy (rovnako ako tlačidlom „Vytlačené – vyprázdniť“).
+ */
+export async function clearFromPrintQueue(companyId: string, entries: QueueEntry[]) {
+  const groups = new Map<string, { kind: QueueEntry['kind']; label: PrintLabel; ids: Set<string> }>()
+  for (const entry of entries) {
+    const key = `${entry.kind}|${entry.label}`
+    const group = groups.get(key) ?? { kind: entry.kind, label: entry.label, ids: new Set<string>() }
+    group.ids.add(entry.targetId)
+    groups.set(key, group)
+  }
+  for (const group of groups.values()) {
+    const { error } = await getSupabase().from('print_queue').delete().eq('company_id', companyId).eq('kind', group.kind).eq('label', group.label).in('target_id', [...group.ids])
+    if (error) throw error
+  }
+}
+
+/** Zmaže vytlačené z fronty a obnoví ju; chyba sa ignoruje (položku zmažete aj ručne). */
+export function useClearPrinted(companyId: string) {
+  const queryClient = useQueryClient()
+  return (entries: QueueEntry[]) => {
+    if (entries.length === 0) return
+    void clearFromPrintQueue(companyId, entries)
+      .then(() => queryClient.invalidateQueries({ queryKey: printKeys.queue(companyId) }))
+      .catch(() => undefined)
   }
 }
 

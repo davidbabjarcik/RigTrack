@@ -11,6 +11,7 @@ import { buildPdf, canvasJpeg, pageSizePt } from '@/features/cases/sheetPdf'
 import { brandingKeys, fetchBranding, fetchLogoBlob, logoForLightBackground } from '@/features/companies/branding'
 import { useCompany } from '@/features/companies/company-context'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
+import { useClearPrinted } from '@/features/print/api'
 import { formatOf } from '@/features/print/api'
 import { useLinkedEquipment } from '@/features/links/api'
 import { equipmentKeys, fetchEquipmentList } from './api'
@@ -57,6 +58,8 @@ async function loadPhotos(paths: string[]) {
 export function InventoryPosterPage() {
   const company = useCompany().active!
   const companyId = company.companyId
+  const clearPrinted = useClearPrinted(companyId)
+  const printedNow = () => clearPrinted([{ kind: 'poster', targetId: companyId, label: `poster:${kind}` }])
   const [params, setParams] = useSearchParams()
   const kind = (POSTER_KINDS.includes(params.get('kind') as EquipmentKind) ? params.get('kind') : 'stage') as EquipmentKind
   // Nastavenie sa pamätá pre každý druh zvlášť; pri zmene druhu sa načíta jeho.
@@ -137,6 +140,7 @@ export function InventoryPosterPage() {
   const baseName = `inventar-${fileSlug(settings.title || KIND_LABELS[kind])}`
   const pdfBlob = async () => buildPdf(await Promise.all(pages.map((canvas) => canvasJpeg(canvas, 0.92))), pageSizePt(settings.paper, !settings.portrait))
   const downloadPdf = async () => {
+    printedNow()
     const url = URL.createObjectURL(await pdfBlob())
     const link = document.createElement('a')
     link.href = url
@@ -145,6 +149,7 @@ export function InventoryPosterPage() {
     window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
   }
   const downloadPng = async () => {
+    printedNow()
     for (const [index, canvas] of pages.entries()) {
       downloadCanvas(canvas, pages.length > 1 ? `${baseName}-${index + 1}.png` : `${baseName}.png`)
       await new Promise((resolve) => setTimeout(resolve, 300))
@@ -178,7 +183,7 @@ export function InventoryPosterPage() {
         </Link>
         <span className="flex-1" />
         <AddToPrintButton companyId={companyId} kind="poster" targetIds={[companyId]} label={`poster:${kind}`} format={formatOf(settings.paper, !settings.portrait)} />
-        <PrintButton variant="outline" makePdf={pdfBlob} onPrint={print} fileName={baseName} disabled={!ready} label="Tlačiť" />
+        <PrintButton variant="outline" makePdf={pdfBlob} onPrint={print} onPrinted={printedNow} fileName={baseName} disabled={!ready} label="Tlačiť" />
         <Button variant="outline" disabled={!ready} onClick={() => void downloadPdf()}>
           <FileDown className="size-4" aria-hidden />
           PDF

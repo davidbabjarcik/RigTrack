@@ -11,6 +11,7 @@ import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { useEvents } from '@/features/events/useEvents'
 import { formatDate } from '@/lib/format'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
+import { useClearPrinted } from '@/features/print/api'
 import { usePatch } from './api'
 import { describeSource, patchSummary, STAND_LABELS } from './model'
 
@@ -26,6 +27,8 @@ export function PatchPrintPage() {
   const { id = '' } = useParams()
   const company = useCompany().active!
   const companyId = company.companyId
+  const clearPrinted = useClearPrinted(companyId)
+  const printedNow = () => clearPrinted([{ kind: 'event', targetId: id, label: 'patch' }])
   const events = useEvents(companyId)
   const patch = usePatch(companyId, id)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
@@ -52,7 +55,7 @@ export function PatchPrintPage() {
         </Link>
         <div className="flex gap-2">
         <AddToPrintButton light companyId={companyId} kind="event" targetIds={[id]} label="patch" />
-        <PrintButton sheet={sheet} fileName={`patch-${event.name}`} marginMm={12} />
+        <PrintButton onPrinted={printedNow} sheet={sheet} fileName={`patch-${event.name}`} marginMm={12} />
         </div>
       </div>
       <PaperSheet sheetRef={sheet} marginMm={12}>

@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.2
+
+- **Printed items leave the print queue by themselves**: after printing or downloading (PDF, ZIP, PNG), what was
+  just printed is removed from the queue – case labels and contents, QR labels (equipment, cases, places), tape,
+  posters, IP / MAC tables and patch lists. Everything else stays in the queue; “Printed – empty” works as before.
+
 ### 11.1
 
 - **Print all at once → ZIP**: downloads a ZIP with separate PDFs – case labels, A4 contents and A5 contents.

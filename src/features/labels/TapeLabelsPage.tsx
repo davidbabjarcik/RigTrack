@@ -3,6 +3,7 @@ import { ArrowLeft, Download, Printer, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AddToPrintButton } from '@/features/print/AddToPrintButton'
+import { useClearPrinted } from '@/features/print/api'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button } from '@/components/ui/button'
 import { downloadCanvas, fileSlug } from '@/features/cases/canvas'
@@ -34,6 +35,14 @@ function savedSettings(): { tape: TapeMm; kinds: LabelKind[] } {
 export function TapeLabelsPage() {
   const company = useCompany().active!
   const companyId = company.companyId
+  const clearPrinted = useClearPrinted(companyId)
+  // Vytlačené zmizne z tlačovej fronty: štítky techniky na pásku a QR na pásku (technika aj cases).
+  const printedNow = () =>
+    clearPrinted([
+      ...ids.map((targetId) => ({ kind: 'equipment' as const, targetId, label: 'tape' as const })),
+      ...(settings.kinds.includes('qr') ? ids.map((targetId) => ({ kind: 'equipment' as const, targetId, label: 'qr' as const })) : []),
+      ...caseIds.map((targetId) => ({ kind: 'case' as const, targetId, label: 'qr' as const })),
+    ])
   const [params] = useSearchParams()
   const ids = (params.get('ids') ?? '').split(',').filter(Boolean)
   // ?cases=… – štítky cases a rackov (QR + názov s číslom).
@@ -118,6 +127,7 @@ ${lengths.map((length) => `  .tape-sheet img.tape${length} { page: tape${length}
   const onlyCases = ids.length === 0
   const chip = (on: boolean) => cn('h-9 rounded-lg border px-3 text-sm font-medium', on ? 'border-primary bg-primary text-primary-foreground' : 'bg-surface hover:bg-muted')
   const downloadAll = async () => {
+    printedNow()
     for (const image of images) {
       downloadCanvas(image.canvas, `stitok-${fileSlug(image.name)}.png`)
       await new Promise((resolve) => setTimeout(resolve, 300))
@@ -144,7 +154,7 @@ ${lengths.map((length) => `  .tape-sheet img.tape${length} { page: tape${length}
               <Download className="size-4" aria-hidden />
               PNG ({images.length})
             </Button>
-            <Button disabled={images.length === 0} onClick={() => window.print()}>
+            <Button disabled={images.length === 0} onClick={() => { printedNow(); window.print() }}>
               <Printer className="size-4" aria-hidden />
               Tlačiť
             </Button>
