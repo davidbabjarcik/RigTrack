@@ -121,10 +121,10 @@ export type SheetData = {
 }
 
 /** Časti case (šuplíky, priehradky) s mriežkou a čo je v ktorej priehradke – na hárok. */
-export type SheetCompartments = { name: string; cols: number; cells: { lines: string[]; note: string }[] }[]
+export type SheetCompartments = { name: string; cols: number; cells: { lines: string[]; note: string; photos?: string[] }[] }[]
 
 /** Rozloženie: každá časť s nadpisom a mriežkou priehradiek (číslo, obsah, poznámka); výška podľa počtu riadkov. */
-function drawCompartments(ctx: Ctx, sections: SheetCompartments, top: number, space: number) {
+function drawCompartments(ctx: Ctx, sections: SheetCompartments, top: number, space: number, photos?: Map<string, CanvasImageSource>) {
   const left = MARGIN
   const width = pageWidth - 2 * MARGIN
   const TITLE = 140
@@ -153,8 +153,13 @@ function drawCompartments(ctx: Ctx, sections: SheetCompartments, top: number, sp
         ctx.fillStyle = INK
       }
       const textTop = cellY + (single ? 50 : 100)
-      const available = rowHeight - (single ? 80 : 130) - (cell.note ? 60 : 0)
+      const inner = rowHeight - (single ? 80 : 130) - (cell.note ? 60 : 0)
+      // Fotky techniky v priehradke (max. 3 vedľa seba) pod názvami; text dostane aspoň tretinu miesta.
+      const images = (cell.photos ?? []).map((path) => photos?.get(path)).filter((image): image is CanvasImageSource => Boolean(image)).slice(0, 3)
       const lines = cell.lines.length > 0 ? cell.lines : ['—']
+      const textNeed = lines.length * 1.2 * (single ? 56 : 44)
+      const photoSpace = images.length > 0 ? Math.max(0, Math.min(inner - Math.max(textNeed, inner / 3), inner * 0.7)) : 0
+      const available = inner - photoSpace
       const size = Math.max(26, Math.min(single ? 70 : 60, available / (lines.length * 1.2)))
       font(ctx, size)
       ctx.textBaseline = 'top'
@@ -164,6 +169,18 @@ function drawCompartments(ctx: Ctx, sections: SheetCompartments, top: number, sp
         font(ctx, fitSize(ctx, line, cellWidth - 80, size, 22))
         ctx.fillText(ellipsize(ctx, line, cellWidth - 80), x + 40, textTop + row * size * 1.2)
       })
+      if (photoSpace > 60) {
+        const boxTop = textTop + available + 10
+        const boxHeight = photoSpace - 20
+        const boxWidth = (cellWidth - 80 - (images.length - 1) * 20) / images.length
+        images.forEach((image, i) => {
+          const { width: sourceWidth, height: sourceHeight } = sourceSize(image)
+          const scale = Math.min(boxWidth / sourceWidth, boxHeight / sourceHeight)
+          const w = sourceWidth * scale
+          const h = sourceHeight * scale
+          ctx.drawImage(image, x + 40 + i * (boxWidth + 20) + (boxWidth - w) / 2, boxTop + (boxHeight - h) / 2, w, h)
+        })
+      }
       if (cell.note) {
         font(ctx, 36)
         ctx.fillStyle = MUTED
@@ -629,7 +646,7 @@ export function drawContentSheet(canvas: HTMLCanvasElement, data: SheetData) {
   if (data.compartments && data.compartments.length > 0) {
     tables.length = 0
     sections.length = 0
-    y = drawCompartments(ctx, data.compartments, y, bottom - footerSpace - dmxSpace - y)
+    y = drawCompartments(ctx, data.compartments, y, bottom - footerSpace - dmxSpace - y, data.photos)
   }
   const FIRST = 560
   const HEAD_ROW = 130

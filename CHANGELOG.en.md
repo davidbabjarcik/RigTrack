@@ -5,6 +5,11 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.8.1
+
+- **Sheet by layout with photos**: each compartment shows the photo of the gear in it below the name (several side
+  by side). “Photos without white background” applies too.
+
 ### 11.8
 
 - **Automatic database backup**: every Sunday night a GitHub Action downloads the whole database, encrypts it

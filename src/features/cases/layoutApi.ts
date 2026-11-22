@@ -19,7 +19,7 @@ export async function saveLayout(companyId: string, caseId: string, layout: Case
   if (data.length === 0) throw new Error('Not updated')
 }
 
-type Piece = { id: string; name: string; quantity: number; trackUnits: boolean; unitIds: number[] }
+type Piece = { id: string; name: string; quantity: number; trackUnits: boolean; unitIds: number[]; photoPath?: string }
 
 /** Rozloženie na hárok s obsahom: časti, mriežka a v priehradkách „6× SM58“, „PAR #3“. */
 export function sheetCompartments(layout: CaseLayout, content: Piece[]): SheetCompartments {
@@ -30,9 +30,13 @@ export function sheetCompartments(layout: CaseLayout, content: Piece[]): SheetCo
     if (!piece) return ''
     return piece.unit === null ? `${item.count || piece.quantity}× ${piece.label}` : piece.label
   }
+  // Fotky techniky v priehradke (každá raz), ak sú v obsahu.
+  const photosOf = (cell: { items: { equipmentId: string }[] }) => [
+    ...new Set(cell.items.map((item) => content.find((piece) => piece.id === item.equipmentId)?.photoPath ?? '').filter(Boolean)),
+  ]
   return clean.sections.map((section) => ({
     name: section.name,
     cols: section.cols,
-    cells: section.cells.map((cell) => ({ lines: cell.items.map(label).filter(Boolean), note: cell.note })),
+    cells: section.cells.map((cell) => ({ lines: cell.items.map(label).filter(Boolean), note: cell.note, photos: photosOf(cell) })),
   }))
 }

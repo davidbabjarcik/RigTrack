@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.8.1 – 22. 11. 2026
+
+- **Hárok podľa rozloženia s fotkami**: v každej priehradke je pod názvom aj fotka techniky, ktorá v nej leží (pri
+  viacerých veciach vedľa seba). Platí aj „Fotky bez bieleho pozadia“.
+
 ### 11.8 – 22. 11. 2026
 
 - **Automatická záloha databázy**: každú nedeľu v noci GitHub Action stiahne celú databázu, zašifruje ju (AES-256)

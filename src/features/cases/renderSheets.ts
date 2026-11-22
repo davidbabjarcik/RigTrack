@@ -86,8 +86,10 @@ export async function renderContentSheets(current: Case, context: SheetContext):
   // Fotky príslušenstva na karty (bez fotky ostane karta len s názvom a počtom).
   const photos = new Map<string, ImageBitmap | HTMLCanvasElement>()
   const withPhotos = pages.flatMap((page) => [...page.others, ...(page.accessories ?? [])])
+  // Podľa rozloženia aj fotky techniky v priehradkách.
+  const compartmentPhotos = (compartments ?? []).flatMap((section) => section.cells.flatMap((cell) => cell.photos ?? []))
   await Promise.all(
-    [...new Set(withPhotos.map((item) => item.photoPath).filter((path): path is string => Boolean(path)))].map(async (path) => {
+    [...new Set([...withPhotos.map((item) => item.photoPath), ...compartmentPhotos].filter((path): path is string => Boolean(path)))].map(async (path) => {
       const image = await fetchPhotoBlob(path)
         .then((blob) => createImageBitmap(blob))
         .catch(() => null)
