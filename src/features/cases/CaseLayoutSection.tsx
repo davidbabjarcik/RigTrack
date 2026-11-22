@@ -3,6 +3,7 @@ import { LayoutGrid, Plus, Wand2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
+import { CopyLayoutToSet } from './CopyLayoutToSet'
 import { fetchLayout, layoutKey, saveLayout } from './layoutApi'
 import { tf, tx } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -263,6 +264,7 @@ export function CaseLayoutSection({ companyId, caseId, content, canEdit }: { com
               {free.map((item) => (item.unit === null ? `${item.remaining}× ${item.label}` : item.label)).join(', ')}
             </p>
           )}
+          {canEdit && <CopyLayoutToSet companyId={companyId} caseId={caseId} layout={layout} content={content} />}
           {canEdit && layout.sections.length < MAX_SECTIONS && (
             <div className="rounded-xl border border-dashed p-3">
               {adding ? addForm : (

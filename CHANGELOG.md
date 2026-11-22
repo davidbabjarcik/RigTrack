@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.9 – 22. 11. 2026
+
+- **Rovnaké rozloženie aj pre ďalšie cases zo sady**: v úprave rozloženia sa pri sade rovnakých cases (napr.
+  Blinder case #1, #2, #3) ukáže „Chcete ich poskladať rovnako?“. Vyberiete cases a rozloženie sa prenesie – časti,
+  priehradky a poznámky, technika podľa názvu v rovnakom poradí (#1–#4 v prvom → #5–#8 v druhom).
+
 ### 11.8.3 – 22. 11. 2026
 
 - **Rozloženie v case je v úprave nad tlačidlom Uložiť** (nie pod ním). Zmeny v rozložení sa ukladajú hneď a Enter

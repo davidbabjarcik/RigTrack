@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.9
+
+- **Same layout for other cases in the set**: in layout editing, a set of identical cases (e.g. Blinder case #1, #2,
+  #3) shows “Do you want to pack them the same way?”. Pick the cases and the layout is copied – sections,
+  compartments and notes, gear by name in the same order (#1–#4 in the first → #5–#8 in the second).
+
 ### 11.8.3
 
 - **The case layout is in the edit page above the Save button** (not below it). Layout changes are saved right away

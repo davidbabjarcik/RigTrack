@@ -177,3 +177,54 @@ export function autoFill(layout: CaseLayout, section: number, content: Piece[]):
   return next
 }
 
+
+/**
+ * To isté rozloženie do iného (rovnakého) case: časti, mriežky a poznámky sa skopírujú a technika sa priradí podľa
+ * názvu v poradí – „Blinder #1–#4“ v prvom case sú v druhom „Blinder #5–#8“; pri počtoch sa počet obmedzí na to,
+ * čo v cieľovom case je. Čo v cieli nie je, ostane prázdne. Vráti aj počet priradených položiek.
+ */
+export function copyLayoutTo(layout: CaseLayout, source: Piece[], target: Piece[]): { layout: CaseLayout; placed: number } {
+  const from = placeables(source)
+  const to = placeables(target)
+  const nameOf = (item: { equipmentId: string }, list: Piece[]) => list.find((piece) => piece.id === item.equipmentId)?.name.trim().toLowerCase() ?? ''
+  // Poradie kusov v zdroji a voľné kusy v cieli podľa názvu.
+  const order = (list: Placeable[], pieces: Piece[]) => {
+    const byName = new Map<string, Placeable[]>()
+    for (const item of list) {
+      const key = nameOf(item, pieces)
+      byName.set(key, [...(byName.get(key) ?? []), item])
+    }
+    return byName
+  }
+  const sourceByName = order(from, source)
+  const targetByName = order(to, target)
+  const left = new Map(to.map((item) => [`${item.equipmentId}|${item.unit}`, item.quantity]))
+  let placed = 0
+  const sections = layout.sections.map((section) => ({
+    ...section,
+    cells: section.cells.map((cell) => ({
+      note: cell.note,
+      items: cell.items.flatMap((item): SlotItem[] => {
+        const name = nameOf(item, source)
+        const candidates = targetByName.get(name) ?? []
+        if (item.unit !== null) {
+          // Kus po kuse: rovnaké poradie medzi kusmi s rovnakým názvom.
+          const index = (sourceByName.get(name) ?? []).findIndex((other) => other.equipmentId === item.equipmentId && other.unit === item.unit)
+          const match = candidates.filter((other) => other.unit !== null)[index]
+          if (!match || (left.get(`${match.equipmentId}|${match.unit}`) ?? 0) <= 0) return []
+          left.set(`${match.equipmentId}|${match.unit}`, 0)
+          placed++
+          return [{ equipmentId: match.equipmentId, unit: match.unit, count: 1 }]
+        }
+        const match = candidates.find((other) => other.unit === null && (left.get(`${other.equipmentId}|null`) ?? 0) > 0)
+        if (!match) return []
+        const free = left.get(`${match.equipmentId}|null`) ?? 0
+        const count = Math.min(item.count || match.quantity, free)
+        left.set(`${match.equipmentId}|null`, free - count)
+        placed++
+        return [{ equipmentId: match.equipmentId, unit: null, count }]
+      }),
+    })),
+  }))
+  return { layout: { sections }, placed }
+}

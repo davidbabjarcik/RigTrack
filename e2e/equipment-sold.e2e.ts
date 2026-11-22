@@ -184,3 +184,31 @@ test('rozloženie v case: priehradky a šuplíky', async ({ page }) => {
   await expect(page.getByLabel('Riadky')).toHaveValue('1')
   await expect(page.getByLabel('Stĺpce')).toHaveValue('2')
 })
+
+test('rovnaké rozloženie aj pre ďalšie cases zo sady', async ({ page }) => {
+  await signIn(page)
+  const [ONE, TWO] = ['00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000d2']
+  const [A, B] = ['00000000-0000-4000-8000-0000000000d3', '00000000-0000-4000-8000-0000000000d4']
+  const box = (id: string, number: string, layout: object) => ({
+    id, company_id: COMPANY_ID, name: `Ukážkový blinder case #${number}`, inventory_number: '', location_id: null, label_number: number, label_category: '', label_title: '', label_photo_path: '', photo_path: '',
+    weight_kg: null, width_cm: null, length_cm: null, depth_cm: null, spot_id: null, spot_level: null, note: '', updated_at: '2026-11-01T00:00:00Z', layout,
+  })
+  await fakeBackend(page, {
+    cases: [
+      box(ONE, '1', { sections: [{ name: 'Priehradky', rows: 1, cols: 2, cells: [{ items: [{ equipmentId: A, unit: 1, count: 1 }], note: '' }, { items: [{ equipmentId: A, unit: 2, count: 1 }], note: '' }] }] }),
+      box(TWO, '2', {}),
+    ],
+    equipment: [
+      { ...piece(A, 'Ukážkový blinder', 'available'), case_id: ONE, quantity: 2, track_units: true, unit_ids: [1, 2] },
+      { ...piece(B, 'Ukážkový blinder', 'available'), case_id: TWO, quantity: 2, track_units: true, unit_ids: [3, 4] },
+    ],
+  })
+  await page.goto(`/cases/${ONE}/edit`)
+  await expect(page.getByText('V sade je ďalších 1 rovnakých cases. Chcete ich poskladať rovnako?')).toBeVisible()
+  await page.getByRole('button', { name: 'Rovnaké rozloženie aj pre ďalšie cases' }).click()
+  await expect(page.getByRole('checkbox', { name: 'Ukážkový blinder case #2' })).toBeChecked()
+  const saved = page.waitForRequest((request) => request.method() === 'PATCH' && request.url().includes('/cases') && request.url().includes(TWO))
+  await page.getByRole('button', { name: 'Preniesť do 1' }).click()
+  const body = (await saved).postDataJSON() as { layout: { sections: { cells: { items: { equipmentId: string; unit: number }[] }[] }[] } }
+  expect(body.layout.sections[0].cells.map((cell) => cell.items[0])).toEqual([{ equipmentId: B, unit: 3, count: 1 }, { equipmentId: B, unit: 4, count: 1 }])
+})

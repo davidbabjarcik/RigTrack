@@ -67,7 +67,9 @@ export async function fakeBackend(page: Page, fixtures: Record<string, unknown[]
       const table = url.pathname.slice('/rest/v1/'.length)
       if (request.method() === 'HEAD') return route.fulfill({ status: 200, headers: { 'content-range': '0-0/0', 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range' } })
       if (request.method() !== 'GET') return json(route, 201, [])
-      const rows = tableRows(table, fixtures)
+      // Filter podľa id (?id=eq.…), aby .maybeSingle() pri viacerých riadkoch našiel ten jeden.
+      const wantedId = url.searchParams.get('id')?.match(/^eq\.(.+)$/)?.[1]
+      const rows = tableRows(table, fixtures).filter((row) => !wantedId || (row as { id?: string }).id === undefined || (row as { id?: string }).id === wantedId)
       // .single() / .maybeSingle(): jeden riadok, alebo „nenájdené“ (maybeSingle z toho spraví null).
       if ((request.headers()['accept'] ?? '').includes('vnd.pgrst.object')) {
         return rows.length === 1 ? json(route, 200, rows[0]) : json(route, 406, { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned', details: 'The result contains 0 rows', hint: null })

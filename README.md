@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-11.8.3-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-11.9-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -55,6 +55,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **11.9** | Rovnaké rozloženie aj pre ďalšie cases zo sady |
 | **11.8.3** | Rozloženie v case nad tlačidlom Uložiť |
 | **11.8.2** | „Naposledy“ pri účtoch podľa poslednej aktivity |
 | **11.8.1** | Hárok podľa rozloženia s fotkami techniky |
@@ -91,7 +92,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **9.19** | Pamätá si vytlačené hárky a štítky, upozorní na novú tlač pri zmene obsahu case |
 | **9.18** | Ťahák pre osvetľovača – kanály, farby a gobá svetiel eventu na A4 |
 | **9.17** | Uložené zmluvy s číslom a podpisom, cena z cenovej ponuky |
-| **9.16** | Žiadosť o archívnu techniku – CEO schváli jedným ťuknutím, programy ako skupina v Technike |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

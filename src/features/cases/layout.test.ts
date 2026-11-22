@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addSection, autoFill, editSection, placeables, placeIn, readLayout, removeSection, unplaced, withoutGone } from './layout'
+import { addSection, autoFill, copyLayoutTo, editSection, placeables, placeIn, readLayout, removeSection, unplaced, withoutGone } from './layout'
 
 const A = '00000000-0000-4000-8000-0000000000a1'
 const B = '00000000-0000-4000-8000-0000000000a2'
@@ -52,3 +52,35 @@ describe('rozloženie v case', () => {
     expect(fewer.sections[0].cells.map((cell) => cell.items)).toEqual([[], [{ equipmentId: B, unit: null, count: 5 }]])
   })
 })
+
+describe('copyLayoutTo', () => {
+  const blinder = (id: string, units: number[]) => ({ id, name: 'Ukážkový blinder', quantity: units.length, trackUnits: true, unitIds: units })
+  const cable = (id: string, quantity: number) => ({ id, name: 'Ukážkový kábel', quantity, trackUnits: false, unitIds: [] })
+  const layout = {
+    sections: [
+      { name: 'Priehradky', rows: 1, cols: 3, cells: [
+        { items: [{ equipmentId: 'a', unit: 1, count: 1 }], note: 'vľavo' },
+        { items: [{ equipmentId: 'a', unit: 2, count: 1 }], note: '' },
+        { items: [{ equipmentId: 'k', unit: null, count: 4 }], note: 'káble' },
+      ] },
+    ],
+  }
+
+  it('kusy v rovnakom poradí, počty podľa cieľa, poznámky ostanú', () => {
+    const { layout: copy, placed } = copyLayoutTo(layout, [blinder('a', [1, 2]), cable('k', 4)], [blinder('b', [5, 6]), cable('m', 3)])
+    expect(copy.sections[0].cells.map((cell) => cell.items)).toEqual([
+      [{ equipmentId: 'b', unit: 5, count: 1 }],
+      [{ equipmentId: 'b', unit: 6, count: 1 }],
+      [{ equipmentId: 'm', unit: null, count: 3 }],
+    ])
+    expect(copy.sections[0].cells.map((cell) => cell.note)).toEqual(['vľavo', '', 'káble'])
+    expect(placed).toBe(3)
+  })
+
+  it('čo v cieli chýba, ostane prázdne', () => {
+    const { layout: copy, placed } = copyLayoutTo(layout, [blinder('a', [1, 2]), cable('k', 4)], [blinder('b', [9])])
+    expect(copy.sections[0].cells.map((cell) => cell.items.length)).toEqual([1, 0, 0])
+    expect(placed).toBe(1)
+  })
+})
+
