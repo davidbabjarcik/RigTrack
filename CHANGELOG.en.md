@@ -5,6 +5,11 @@ are shown in Slovak.
 
 ## What's new
 
+### 10.19
+
+- **Quick case split**: when adding or editing a layout section there are buttons with a preview – no split, half
+  side by side, half front and back, thirds, 2 × 2 and 2 × 3. Rows and columns can still be set by hand.
+
 ### 10.18
 
 - **Itemised case check**: “Checked” now shows the content list – tracked gear is ticked off, other gear has a

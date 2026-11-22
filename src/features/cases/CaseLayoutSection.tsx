@@ -28,10 +28,40 @@ type Piece = { id: string; name: string; quantity: number; trackUnits: boolean; 
 const keyOf = (item: { equipmentId: string; unit: number | null }) => `${item.equipmentId}#${item.unit ?? ''}`
 
 /** Názov a mriežka časti (nová časť aj úprava). */
+/** Bežné delenia case: bez delenia, na polovicu (vedľa seba / spredu-zozadu), tretiny, štvrtiny, šestiny. */
+const PRESETS = [
+  { label: 'Bez delenia', rows: 1, cols: 1 },
+  { label: 'Polovica vedľa seba', rows: 1, cols: 2 },
+  { label: 'Polovica spredu a zozadu', rows: 2, cols: 1 },
+  { label: 'Tretiny', rows: 1, cols: 3 },
+  { label: '2 × 2', rows: 2, cols: 2 },
+  { label: '2 × 3', rows: 2, cols: 3 },
+]
+
 function SectionForm({ start, submitLabel, onSubmit, onCancel }: { start: { name: string; rows: number; cols: number }; submitLabel: string; onSubmit: (value: { name: string; rows: number; cols: number }) => void; onCancel?: () => void }) {
   const [value, setValue] = useState(start)
   const sides = Array.from({ length: MAX_SIDE }, (_, index) => index + 1)
   return (
+    <div className="flex flex-col gap-2">
+    <div className="flex flex-wrap gap-1" role="group" aria-label={tx('Rýchle delenie')}>
+      {PRESETS.map((preset) => (
+        <button
+          key={preset.label}
+          type="button"
+          aria-pressed={value.rows === preset.rows && value.cols === preset.cols}
+          onClick={() => setValue({ ...value, rows: preset.rows, cols: preset.cols })}
+          className={cn(
+            'inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm',
+            value.rows === preset.rows && value.cols === preset.cols ? 'border-accent bg-accent/10 font-medium' : 'bg-surface hover:bg-muted',
+          )}
+        >
+          <span aria-hidden className="grid size-5 gap-px rounded-sm border border-current p-px" style={{ gridTemplateColumns: `repeat(${preset.cols}, 1fr)` }}>
+            {Array.from({ length: preset.rows * preset.cols }, (_, index) => <span key={index} className="rounded-[1px] bg-current/40" />)}
+          </span>
+          {tx(preset.label)}
+        </button>
+      ))}
+    </div>
     <div className="flex flex-wrap items-end gap-2">
       <Field label={tx('Názov (napr. Šuplík 1 – SM 58)')} className="min-w-48 flex-1" maxLength={80} value={value.name} onChange={(changed) => setValue({ ...value, name: changed.target.value })} />
       <SelectField label={tx('Riadky')} value={String(value.rows)} onChange={(changed) => setValue({ ...value, rows: Number(changed.target.value) })}>
@@ -42,6 +72,7 @@ function SectionForm({ start, submitLabel, onSubmit, onCancel }: { start: { name
       </SelectField>
       <Button size="sm" onClick={() => onSubmit(value)}>{submitLabel}</Button>
       {onCancel && <Button size="sm" variant="ghost" onClick={onCancel}>{tx('Zrušiť')}</Button>}
+    </div>
     </div>
   )
 }

@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 10.19 – 22. 11. 2026
+
+- **Rýchle delenie case**: pri pridaní alebo úprave časti rozloženia sú tlačidlá s náhľadom – bez delenia,
+  polovica vedľa seba, polovica spredu a zozadu, tretiny, 2 × 2 a 2 × 3. Riadky a stĺpce sa dajú aj naďalej
+  nastaviť ručne.
+
 ### 10.18 – 22. 11. 2026
 
 - **Kontrola case po položkách**: pri „Skontrolované“ je zoznam obsahu – technika po kusoch sa odškrtáva, ostatná
