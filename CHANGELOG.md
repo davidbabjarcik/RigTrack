@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.5 – 22. 11. 2026
+
+- **Thomann v objednávkach**: keď v položke vyberiete techniku, ktorá má Thomann číslo, doplní sa ako kód tovaru.
+  Objednávka z „Treba kúpiť“ ho má rovno a ak ho majú všetky položky, dodávateľ je Thomann (kódy sú odkazy).
+- **Rýchlejšie spustenie**: spojenie so serverom sa nadviaže hneď pri otvorení stránky a skener QR, prihlásenie
+  a úprava menu sa sťahujú až keď ich treba – úvodný balík je menší.
+
 ### 11.4 – 22. 11. 2026
 
 - **Programy a licencie ako podkategória IT**: v Technike už nie sú samostatne pod zoznamom. Sú vo filtri Druh IT →

@@ -312,7 +312,7 @@ export function formatTotals(totals: Record<string, number>) {
  * po nákupe nad hranicou (aspoň 1). Neznáme id sa vynechajú; bez nich jeden prázdny riadok.
  */
 export function restockItems(
-  equipment: { id: string; name: string; kind: string; quantity: number; minQuantity: number | null; categoryId: string | null }[],
+  equipment: { id: string; name: string; kind: string; quantity: number; minQuantity: number | null; categoryId: string | null; attributes?: { thomannCode?: string } }[],
   categories: { id: string; name: string }[],
   ids: string[],
 ): OrderItemValues[] {
@@ -328,6 +328,8 @@ export function restockItems(
       equipmentName: item.name,
       category: categories.find((category) => category.id === item.categoryId)?.name ?? '',
       kind: item.kind as OrderItemValues['kind'],
+      // Thomann číslo zadané pri technike sa predvyplní ako kód tovaru.
+      articleNumber: item.attributes?.thomannCode ?? '',
     }))
   return rows.length > 0 ? rows : [EMPTY_ITEM]
 }

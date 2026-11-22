@@ -23,6 +23,8 @@ function securityHeaders(): Plugin {
       const env = loadEnv(context.server?.config.mode ?? 'production', process.cwd(), 'VITE_')
       const supabase = (process.env.VITE_SUPABASE_URL || env.VITE_SUPABASE_URL || 'https://*.supabase.co').replace(/\/$/, '')
       const realtime = supabase.replace(/^https:/, 'wss:')
+      // Spojenie so Supabase sa nadviaže hneď pri načítaní stránky (rýchlejší prvý dotaz), len pri presnej adrese.
+      const preconnect = supabase.includes('*') ? '' : `\n    <link rel="preconnect" href="${supabase}" crossorigin />`
       const policy = [
         "default-src 'self'",
         // Cloudflare Turnstile (overenie, že nie ste robot) pri prihlásení.
@@ -42,7 +44,7 @@ function securityHeaders(): Plugin {
       ].join('; ')
       return html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy" content="${policy}" />
-    <meta name="referrer" content="strict-origin-when-cross-origin" />`)
+    <meta name="referrer" content="strict-origin-when-cross-origin" />${preconnect}`)
     },
   }
 }

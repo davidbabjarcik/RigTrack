@@ -16,9 +16,10 @@ describe('router', () => {
     ['/', 'Prehľad'],
     ['/more', 'Viac'],
     ['/more/customize', 'Prispôsobiť lištu'],
-  ])('renders %s', (path, heading) => {
+  ])('renders %s', async (path, heading) => {
     renderAt(path)
-    expect(screen.getByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
+    // Niektoré stránky sa načítajú lenivo (až pri otvorení).
+    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
   })
 
   it('shows NotFound for unknown routes', () => {

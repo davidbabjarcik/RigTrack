@@ -42,6 +42,8 @@ type FormProps = { companyId: string; equipment: Equipment[]; categories: Lookup
 type ImportState = { busy: boolean; message: string | null; failed: boolean }
 
 function OrderForm({ companyId, equipment, categories, restock = [] }: FormProps & { restock?: string[] }) {
+  const restockRows = restock.map((id) => equipment.find((item) => item.id === id)).filter(Boolean)
+  const restockFromThomann = restockRows.length > 0 && restockRows.every((item) => item!.attributes.thomannCode)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const categoryListId = useId()
@@ -61,7 +63,8 @@ function OrderForm({ companyId, equipment, categories, restock = [] }: FormProps
     resolver: zodResolver(orderSchema),
     defaultValues: {
       source: 'shop',
-      supplier: '',
+      // Všetko z „Treba kúpiť“ má Thomann číslo – dodávateľ Thomann (kódy sa stanú odkazmi).
+      supplier: restockFromThomann ? 'Thomann' : '',
       seller: '',
       orderNumber: '',
       orderedAt: todayIso(),
@@ -421,7 +424,13 @@ function OrderForm({ companyId, equipment, categories, restock = [] }: FormProps
                 <SelectField
                   label={mode === 'link' ? tx('Ktorá technika to je') : tx('Ku ktorej technike pripočítať')}
                   error={itemErrors?.equipmentId?.message}
-                  {...register(`items.${index}.equipmentId`)}
+                  {...register(`items.${index}.equipmentId`, {
+                    // Thomann číslo zadané pri technike sa doplní ako kód tovaru (ak je prázdny).
+                    onChange: (event) => {
+                      const code = equipment.find((piece) => piece.id === event.target.value)?.attributes.thomannCode
+                      if (code && !item?.articleNumber) setValue(`items.${index}.articleNumber`, code)
+                    },
+                  })}
                 >
                   <option value="">{tx('— vyberte —')}</option>
                   {equipment.map((piece) => (

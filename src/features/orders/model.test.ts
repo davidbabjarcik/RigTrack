@@ -75,4 +75,9 @@ describe('restockItems', () => {
     expect(items).toEqual([expect.objectContaining({ name: 'Ukážková páska', quantity: 4, mode: 'existing', equipmentId: 'a', category: 'Spotrebný', kind: 'consumable' })])
     expect(restockItems([], [], ['x'])).toHaveLength(1)
   })
+
+  it('Thomann číslo pri technike je kód tovaru', () => {
+    const [item] = restockItems([{ id: 'a', name: 'Ukážkový kábel', kind: 'cable', quantity: 0, minQuantity: 2, categoryId: null, attributes: { thomannCode: '123456' } }], [], ['a'])
+    expect(item.articleNumber).toBe('123456')
+  })
 })

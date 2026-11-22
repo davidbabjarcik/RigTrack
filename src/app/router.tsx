@@ -3,9 +3,6 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-do
 import { BackendRequired } from '@/components/feedback/BackendRequired'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { CenteredLayout } from '@/components/layout/CenteredLayout'
-import { AuthPage } from '@/features/auth/AuthPage'
-import { UpdatePasswordPage } from '@/features/auth/UpdatePasswordPage'
-import { CustomizeMenuPage } from './pages/CustomizeMenuPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { MorePage } from './pages/MorePage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -119,6 +116,10 @@ const bugReport = lazyPage(() => import('@/features/bugs/BugReportPage').then((m
 const technicians = lazyPage(() => import('@/features/technicians/TechniciansPage').then((m) => m.TechniciansPage))
 const delay = lazyPage(() => import('@/features/delay/DelayPage').then((m) => m.DelayPage))
 // Verejná stránka (aj bez prihlásenia a firmy), preto bez lazyPage.
+// Prihlásenie až keď treba – prihlásený používateľ ho pri štarte nesťahuje.
+const auth = async () => ({ Component: (await import('@/features/auth/AuthPage')).AuthPage })
+const updatePassword = async () => ({ Component: (await import('@/features/auth/UpdatePasswordPage')).UpdatePasswordPage })
+const customizeMenu = async () => ({ Component: (await import('./pages/CustomizeMenuPage')).CustomizeMenuPage })
 const changelog = async () => ({ Component: (await import('@/features/changelog/ChangelogPage')).ChangelogPage })
 const privacy = async () => ({ Component: (await import('@/features/legal/LegalPages')).PrivacyPage })
 const cookies = async () => ({ Component: (await import('@/features/legal/LegalPages')).CookiesPage })
@@ -151,8 +152,8 @@ export const routes: RouteObject[] = [
     element: <CenteredLayout />,
     errorElement: <RouteErrorPage />,
     children: [
-      { path: 'auth', element: <AuthPage /> },
-      { path: 'auth/update-password', element: <UpdatePasswordPage /> },
+      { path: 'auth', lazy: auth },
+      { path: 'auth/update-password', lazy: updatePassword },
       { path: 'changelog', lazy: changelog },
       { path: 'about', lazy: about },
       { path: 'help', lazy: help },
@@ -287,7 +288,7 @@ export const routes: RouteObject[] = [
               { path: 'orders/stats', lazy: orderStats },
               { path: 'orders/:id', lazy: orderDetail },
               { path: 'more', element: <MorePage /> },
-              { path: 'more/customize', element: <CustomizeMenuPage /> },
+              { path: 'more/customize', lazy: customizeMenu },
               { path: '*', element: <NotFoundPage /> },
             ],
           },

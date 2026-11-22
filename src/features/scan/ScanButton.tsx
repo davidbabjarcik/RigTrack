@@ -1,10 +1,12 @@
 import { ScanLine } from 'lucide-react'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { LiveScanner } from './LiveScanner'
 import { parseQr, qrPath } from './qr'
 import { useT, tx } from '@/lib/i18n'
+
+// Skener (kamera, dekódovanie QR) sa načíta až po ťuknutí na Skenovať.
+const LiveScanner = lazy(() => import('./LiveScanner').then((module) => ({ default: module.LiveScanner })))
 
 /** „Skenovať“: QR zo štítku otvorí detail techniky alebo case. */
 export function ScanButton({ label = tx('Skenovať'), compact = false }: { label?: string; compact?: boolean }) {
@@ -19,6 +21,7 @@ export function ScanButton({ label = tx('Skenovať'), compact = false }: { label
         <span className={compact ? 'max-sm:sr-only' : undefined}>{label}</span>
       </Button>
       {open && (
+        <Suspense fallback={null}>
         <LiveScanner
           title={t('Skenovať štítok', 'Scan a label')}
           onClose={() => setOpen(false)}
@@ -29,6 +32,7 @@ export function ScanButton({ label = tx('Skenovať'), compact = false }: { label
             navigate(qrPath(target))
           }}
         />
+        </Suspense>
       )}
     </>
   )

@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.5
+
+- **Thomann in orders**: when you pick equipment with a Thomann number in an item, it is filled in as the product
+  code. An order from “Needs buying” has it right away, and if all items have one, the supplier is Thomann (codes
+  become links).
+- **Faster start**: the connection to the server opens as soon as the page loads, and the QR scanner, sign-in and
+  menu editing are downloaded only when needed – the initial bundle is smaller.
+
 ### 11.4
 
 - **Software and licences as an IT subcategory**: in Equipment they are no longer a separate block below the list.
