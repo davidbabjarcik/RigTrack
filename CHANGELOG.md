@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.8 – 22. 11. 2026
+
+- **Automatická záloha databázy**: každú nedeľu v noci GitHub Action stiahne celú databázu, zašifruje ju (AES-256)
+  a uloží na 30 dní. Do verejného repozitára sa nikdy neukladá. Nastavenie je v README (dve tajomstvá v GitHube).
+
 ### 11.7 – 22. 11. 2026
 
 - **Demo firma s novinkami 8.x–11.x**: programy a licencie, certifikácia, šablóna eventu, DJ hranie, náklady

@@ -1,0 +1,79 @@
+# Týždenná záloha databázy RigTracku (role, schéma a dáta) cez Supabase CLI.
+#
+# Repozitár je verejný, preto sa záloha NEUKLADÁ do repozitára: zašifruje sa (GPG, AES-256) heslom
+# BACKUP_PASSPHRASE a uloží ako artefakt behu na 30 dní. Bez hesla sa súbor nedá otvoriť.
+#
+# Nastavenie (raz, GitHub → Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL     – Session pooler connection string (Supabase → Connect), napr.
+#                         postgresql://postgres.<ref>:<heslo>@aws-0-<región>.pooler.supabase.com:5432/postgres
+#   BACKUP_PASSPHRASE   – dlhé náhodné heslo na šifrovanie (ulož si ho aj mimo GitHubu)
+# Kým tajomstvá chýbajú, záloha sa preskočí.
+#
+# Obnova: stiahni artefakt, potom
+#   gpg --decrypt rigtrack-backup.tar.gz.gpg > rigtrack-backup.tar.gz && tar -xzf rigtrack-backup.tar.gz
+
+name: Záloha databázy
+
+on:
+  schedule:
+    - cron: '0 2 * * 0' # nedeľa 2:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Sú nastavené tajomstvá?
+        id: check
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "Chýba SUPABASE_DB_URL alebo BACKUP_PASSPHRASE – záloha sa preskočí."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: supabase/setup-cli@v1
+        if: steps.check.outputs.ready == 'true'
+        with:
+          version: latest
+
+      - name: Záloha (role, schéma, dáta)
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+          supabase db dump --remote="$SUPABASE_DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --remote="$SUPABASE_DB_URL" -f backup/schema.sql
+          supabase db dump --remote="$SUPABASE_DB_URL" -f backup/data.sql --data-only --use-copy -x "storage.buckets_vectors" -x "storage.vector_indexes"
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > backup/created-at.txt
+
+      - name: Zašifrovať
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          tar -czf rigtrack-backup.tar.gz backup
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 \
+            -o rigtrack-backup.tar.gz.gpg rigtrack-backup.tar.gz <<< "$BACKUP_PASSPHRASE"
+          # Nešifrované súbory hneď preč.
+          rm -rf backup rigtrack-backup.tar.gz
+          ls -la rigtrack-backup.tar.gz.gpg
+
+      - uses: actions/upload-artifact@v4
+        if: steps.check.outputs.ready == 'true'
+        with:
+          name: rigtrack-backup-${{ github.run_id }}
+          path: rigtrack-backup.tar.gz.gpg
+          retention-days: 30
+          if-no-files-found: error

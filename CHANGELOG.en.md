@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.8
+
+- **Automatic database backup**: every Sunday night a GitHub Action downloads the whole database, encrypts it
+  (AES-256) and keeps it for 30 days. It is never stored in the public repository. Setup is in the README (two
+  secrets in GitHub).
+
 ### 11.7
 
 - **Demo company with what is new in 8.x–11.x**: software and licences, a certificate, an event template, a DJ gig,

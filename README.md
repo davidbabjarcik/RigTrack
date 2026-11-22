@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-11.7-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-11.8-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -55,6 +55,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **11.8** | Automatická šifrovaná záloha databázy |
 | **11.7** | Demo, úvodná stránka a README s novinkami 8.x–11.x |
 | **11.6** | Týždenný prehľad e-mailom |
 | **11.5** | Thomann v objednávkach, rýchlejšie spustenie |
@@ -91,7 +92,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **9.15** | Nakladanie s váhou obsahu cases a reprákmi mimo cases, oprava rozmerov case |
 | **9.14** | Predaná technika ostáva v Technike, archívnu na event pridá len CEO |
 | **9.13** | Zmluva k eventu – vzor z údajov eventu, dodávateľa a organizátora |
-| **9.12** | Plagát trussu po sériách (F34, F34 P): rovné diely, rohy a T-čká, adaptéry |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 
@@ -341,6 +341,23 @@ npx supabase functions deploy weekly-digest --no-verify-jwt
 Ak sú nastavené push upozornenia, viac netreba – použije sa to isté tajomstvo a adresa z Vault. Inak v SQL Editore
 ulož do Vault `weekly_digest_url` (`https://<ref-projektu>.supabase.co/functions/v1/weekly-digest`) a
 `weekly_digest_secret` (náhodný reťazec) a ten istý reťazec nastav ako `WEEKLY_DIGEST_SECRET` v Edge Functions → Secrets.
+
+</details>
+
+<details>
+<summary><b>Automatická záloha databázy</b></summary>
+
+Každú nedeľu v noci GitHub Action `Záloha databázy` stiahne celú databázu (role, schéma, dáta) cez Supabase CLI,
+**zašifruje ju** (GPG, AES-256) a uloží ako artefakt behu na 30 dní. Repozitár je verejný, preto sa záloha do neho
+nikdy neukladá a bez hesla sa nedá otvoriť.
+
+1. V GitHub → Settings → Secrets and variables → Actions pridaj:
+   - `SUPABASE_DB_URL` – Session pooler connection string zo Supabase → Connect (GitHub podporuje len IPv4),
+   - `BACKUP_PASSPHRASE` – dlhé náhodné heslo; ulož si ho aj inde, bez neho zálohu neotvoríš.
+2. Vyskúšaj: Actions → Záloha databázy → Run workflow.
+3. Obnova: stiahni artefakt a `gpg --decrypt rigtrack-backup.tar.gz.gpg > rigtrack-backup.tar.gz && tar -xzf rigtrack-backup.tar.gz`.
+
+Kým tajomstvá chýbajú, záloha sa len preskočí.
 
 </details>
 
