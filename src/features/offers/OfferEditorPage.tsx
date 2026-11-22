@@ -12,6 +12,7 @@ import { memberName, useMembers } from '@/features/companies/useMembers'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { eventDates } from '@/features/events/plan'
 import { useEvents } from '@/features/events/useEvents'
+import { fetchTemplates as fetchEventTemplates, templateKeys as eventTemplateKeys } from '@/features/events/templates'
 import { partnerKeys, savePartner, usePartners } from '@/features/partners/api'
 import { LEGAL_FORM_LABELS, LEGAL_FORMS, statutoryLabel } from '@/features/partners/legalForms'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
@@ -97,6 +98,8 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const events = useEvents(companyId)
+  const eventTemplates = useQuery({ queryKey: eventTemplateKeys.list(companyId), queryFn: () => fetchEventTemplates(companyId), retry: false })
+  const [templateId, setTemplateId] = useState('')
   const issuers = useIssuers(companyId)
   const partners = usePartners(companyId)
   const templates = useTemplates(companyId)
@@ -138,7 +141,14 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
 
   const event = events.data?.find((item) => item.id === draft.eventId)
   const days = event ? eventDates(event.startsOn, event.endsOn).length : 1
-  const eventItems = event && equipment.data ? itemsFromEquipment(event.equipment, equipment.data) : undefined
+  // Technika zo šablóny eventu (napr. Ukážková svadba), keď ponuka nie je k eventu alebo event techniku nemá.
+  const eventTemplate = eventTemplates.data?.find((item) => item.id === templateId)
+  const eventItems =
+    event && equipment.data && event.equipment.length > 0
+      ? itemsFromEquipment(event.equipment, equipment.data)
+      : eventTemplate && equipment.data
+        ? itemsFromEquipment(eventTemplate.data.equipment, equipment.data) || undefined
+        : undefined
   const sum = sumPrices(draft.sections)
   const total = draft.totalOverride ?? sum
   const remaining = draft.budget === null ? null : Math.round((draft.budget - sum) * 100) / 100
@@ -232,6 +242,25 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
                 </option>
               ))}
           </SelectField>
+          {(eventTemplates.data ?? []).length > 0 && (
+            <SelectField
+              label={tx('Technika zo šablóny eventu (nepovinné)')}
+              value={templateId}
+              onChange={(e) => {
+                setTemplateId(e.target.value)
+                const chosen = eventTemplates.data?.find((item) => item.id === e.target.value)
+                if (chosen && !draft.place.trim() && chosen.data.venue) set({ place: chosen.data.venue })
+              }}
+            >
+              <option value="">{tx('— bez šablóny —')}</option>
+              {(eventTemplates.data ?? []).map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </SelectField>
+          )}
+          {templateId && !(event && event.equipment.length > 0) && (
+            <p className="self-end pb-2 text-sm text-muted-foreground sm:col-span-2">{tx('Techniku zo šablóny doplníte v časti ponuky tlačidlom „Pridať techniku z eventu“.')}</p>
+          )}
           <Field label={tx('Podujatie')} className="sm:col-span-2" maxLength={200} value={draft.title} onChange={(e) => set({ title: e.target.value })} />
           <Field label={tx('Miesto dodania')} maxLength={200} value={draft.place} onChange={(e) => set({ place: e.target.value })} />
           <Field label={tx('Termín dodania')} maxLength={200} placeholder={tx('napr. 12. 6. 2026')} value={draft.serviceDates} onChange={(e) => set({ serviceDates: e.target.value })} />

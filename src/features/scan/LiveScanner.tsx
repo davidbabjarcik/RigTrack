@@ -1,8 +1,9 @@
-import { Flashlight, FlashlightOff, X } from 'lucide-react'
+import { Flashlight, FlashlightOff, Volume2, VolumeX, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { QrScanButton } from '@/features/networks/QrScanButton'
 import { tx } from '@/lib/i18n'
+import { readScanSound, saveScanSound, scanFeedback, scanOutcome, unlockScanAudio } from './scanFeedback'
 
 type Detector = { detect: (source: HTMLVideoElement) => Promise<{ rawValue: string }[]> }
 type DetectorClass = { new (options: { formats: string[] }): Detector; getSupportedFormats?: () => Promise<string[]> }
@@ -41,6 +42,22 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
   const [message, setMessage] = useState('')
   const [failed, setFailed] = useState(false)
   const handler = useRef(onResult)
+  // Pípnutie pri skenovaní (dá sa stlmiť); zvuk sa odomkne pri otvorení a pri každom ťuknutí.
+  const [sound, setSound] = useState(readScanSound)
+  const soundRef = useRef(sound)
+  useEffect(() => {
+    soundRef.current = sound
+  }, [sound])
+  const notOurs = tx('Tento QR kód nie je z RigTracku.')
+  const respond = (text: string) => {
+    const result = handler.current(text)
+    scanFeedback(scanOutcome(result, notOurs), soundRef.current)
+    if (result) setMessage(result)
+  }
+  const respondRef = useRef(respond)
+  useEffect(() => {
+    respondRef.current = respond
+  })
   // Blesk (baterka) zadnej kamery – len kde to prehliadač dovolí (hlavne Android Chrome).
   const track = useRef<MediaStreamTrack | null>(null)
   const [torchAvailable, setTorchAvailable] = useState(false)
@@ -63,6 +80,7 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
     let stopped = false
     let timer = 0
     const last = { text: '', at: 0 }
+    unlockScanAudio()
     ;(async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
@@ -81,9 +99,7 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
             if (text && (text !== last.text || now - last.at > 2500)) {
               last.text = text
               last.at = now
-              navigator.vibrate?.(60)
-              const result = handler.current(text)
-              if (result) setMessage(result)
+              respondRef.current(text)
             }
           } catch {
             // Jedna nepodarená snímka nevadí, skúsi sa ďalšia.
@@ -103,7 +119,7 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
   }, [])
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black text-white" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="fixed inset-0 z-50 flex flex-col bg-black text-white" role="dialog" aria-modal="true" aria-label={title} onPointerDown={unlockScanAudio}>
       <div className="flex items-center justify-between gap-3 p-3">
         <p className="font-medium">{title}</p>
         <div className="flex gap-2">
@@ -113,6 +129,19 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
               {torch ? tx('Vypnúť blesk') : 'Blesk'}
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            aria-pressed={sound}
+            aria-label={sound ? tx('Vypnúť zvuk') : tx('Zapnúť zvuk')}
+            className="bg-black text-white"
+            onClick={() => {
+              setSound(!sound)
+              saveScanSound(!sound)
+            }}
+          >
+            {sound ? <Volume2 className="size-4" aria-hidden /> : <VolumeX className="size-4" aria-hidden />}
+          </Button>
           <Button variant="outline" size="sm" className="bg-black text-white" onClick={onClose}>
             <X className="size-4" aria-hidden />{tx('Zavrieť')}</Button>
         </div>
@@ -122,10 +151,7 @@ export function LiveScanner({ title, onResult, onClose }: Props) {
           <p>{tx('Kamera sa nespustila (chýba povolenie alebo ju používa iná appka). QR kód môžete aj odfotiť:')}</p>
           <QrScanButton
             label={tx('Odfotiť QR kód')}
-            onText={(text) => {
-              const result = handler.current(text)
-              if (result) setMessage(result)
-            }}
+            onText={(text) => respondRef.current(text)}
           />
         </div>
       ) : (

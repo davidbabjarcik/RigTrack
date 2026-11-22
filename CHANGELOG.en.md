@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.11
+
+- **Scan feedback**: success = a short beep and vibration, error (not in the pack list, foreign QR) = two low beeps
+  and a longer vibration, info = a light vibration. Sound can be muted in the scanner. (iPhone does not support
+  vibration from the browser, there is only sound.)
+- **Damage photos when a loan is returned**: “Photograph the damage” on a damaged piece – photos are saved as
+  attachments to the service record that opens.
+- **Quote from an event template**: pick a template (e.g. Ukážková svadba) in a new quote – the place is prefilled
+  and the gear is added to a quote section with “Add gear from event”.
+
 ### 11.10
 
 - **Company logo on the rating page**: the client sees your logo at the top (adapted to light and dark mode) instead

@@ -64,3 +64,31 @@ export async function collectAttachmentFiles(companyId: string, entity: Attachme
     if (attachments.length > 0) await getSupabase().storage.from(BUCKET).remove(attachments.map((attachment) => attachment.path))
   }
 }
+
+/**
+ * Fotky poškodenia pri vrátení: priložia sa k najnovšiemu otvorenému servisnému záznamu kusu (ten pri vrátení
+ * otvorí databáza). Vráti, koľko fotiek sa nepodarilo uložiť (napr. bez oprávnenia na prílohy).
+ */
+export async function attachDamagePhotos(companyId: string, photos: { equipmentId: string; files: File[] }[]) {
+  let failed = 0
+  for (const { equipmentId, files } of photos) {
+    if (files.length === 0) continue
+    const { data } = await getSupabase()
+      .from('service_records')
+      .select('id')
+      .eq('company_id', companyId)
+      .eq('equipment_id', equipmentId)
+      .neq('status', 'done')
+      .order('created_at', { ascending: false })
+      .limit(1)
+    const recordId = (data as { id: string }[] | null)?.[0]?.id
+    for (const file of files) {
+      if (!recordId) {
+        failed++
+        continue
+      }
+      await uploadAttachment(companyId, 'service', recordId, file).catch(() => failed++)
+    }
+  }
+  return failed
+}

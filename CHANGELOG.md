@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.11 – 22. 11. 2026
+
+- **Odozva pri skenovaní**: úspech = krátke pípnutie a vibrácia, chyba (nie je v pack liste, cudzí QR) = dve nízke
+  pípnutia a dlhšia vibrácia, informácia = jemná vibrácia. Zvuk sa dá v skeneri stlmiť. (iPhone vibráciu z
+  prehliadača nepodporuje, tam je len zvuk.)
+- **Fotky poškodenia pri vrátení výpožičky**: pri poškodenom kuse „Odfotiť poškodenie“ – fotky sa uložia ako prílohy
+  k servisnému záznamu, ktorý sa otvorí.
+- **Cenová ponuka zo šablóny eventu**: v novej ponuke výber šablóny (napr. Ukážková svadba) – miesto sa predvyplní
+  a technika sa doplní do časti ponuky tlačidlom „Pridať techniku z eventu“.
+
 ### 11.10 – 22. 11. 2026
 
 - **Logo firmy na stránke hodnotenia**: klient vidí hore vaše logo (prispôsobené svetlému aj tmavému režimu) namiesto

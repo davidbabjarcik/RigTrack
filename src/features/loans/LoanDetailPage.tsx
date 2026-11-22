@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
-import { ArrowLeft, FileText, Package, PackageCheck, PackageOpen, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, Camera, FileText, Package, PackageCheck, PackageOpen, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -17,6 +17,7 @@ import { UnitPicker } from '@/features/equipment/UnitPicker'
 import { usePhotoThumbs } from '@/features/equipment/usePhotoThumbs'
 import { formatDate, formatDateTime, formatMoney, todayIso } from '@/lib/format'
 import { can } from '@/lib/permissions'
+import { attachDamagePhotos } from '@/features/attachments/api'
 import { deleteLoan, issueLoan, returnLoan } from './api'
 import { LoanStatusBadge } from './LoanStatusBadge'
 import { describeContent, describeDamage, formatUnits, groupByCase, linePerDay, loanPricing, type LoanDamage } from './model'
@@ -35,6 +36,9 @@ export function LoanDetailPage() {
   const queryClient = useQueryClient()
   const [returning, setReturning] = useState(false)
   const [damage, setDamage] = useState<Record<string, Omit<LoanDamage, 'equipmentId'>>>({})
+  // Fotky poškodenia (k servisnému záznamu, ktorý sa pri vrátení otvorí).
+  const [photos, setPhotos] = useState<Record<string, File[]>>({})
+  const [photoFailed, setPhotoFailed] = useState(0)
 
   const loans = useLoans(companyId)
   const userId = useAuth().session?.user.id
@@ -52,14 +56,18 @@ export function LoanDetailPage() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['company', companyId] })
   const issue = useMutation({ mutationFn: () => issueLoan(id), onSettled: refresh })
   const giveBack = useMutation({
-    mutationFn: () =>
-      returnLoan(
-        id,
-        Object.entries(damage)
-          .filter(([, entry]) => entry.quantity > 0)
-          .map(([equipmentId, entry]) => ({ equipmentId, ...entry })),
-      ),
-    onSuccess: () => setReturning(false),
+    mutationFn: async () => {
+      const damaged = Object.entries(damage)
+        .filter(([, entry]) => entry.quantity > 0)
+        .map(([equipmentId, entry]) => ({ equipmentId, ...entry }))
+      await returnLoan(id, damaged)
+      const withPhotos = damaged.map((entry) => ({ equipmentId: entry.equipmentId, files: photos[entry.equipmentId] ?? [] })).filter((entry) => entry.files.length > 0)
+      setPhotoFailed(withPhotos.length > 0 ? await attachDamagePhotos(companyId, withPhotos) : 0)
+    },
+    onSuccess: () => {
+      setReturning(false)
+      setPhotos({})
+    },
     onSettled: refresh,
   })
   const remove = useMutation({
@@ -142,6 +150,7 @@ export function LoanDetailPage() {
         </div>
       </header>
 
+      {photoFailed > 0 && <p role="alert" className="mb-4 text-sm text-destructive">{tf('Výpožička je vrátená, ale {0} fotiek sa nepodarilo uložiť k servisu. Pridajte ich v Servise.', photoFailed)}</p>}
       {(issue.isError || giveBack.isError || remove.isError) && (
         <p role="alert" className="mb-4 text-sm text-destructive">{tx('Zmena sa nepodarila. Obnovte stránku a skúste to znova.')}</p>
       )}
@@ -191,6 +200,32 @@ export function LoanDetailPage() {
                       />
                       <span>{name}{' '}{tx('— poškodené')}</span>
                     </label>
+                  )}
+                  {(entry?.quantity ?? 0) > 0 && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border bg-surface px-3 text-sm font-medium hover:bg-muted">
+                        <Camera className="size-4" aria-hidden />
+                        {tx('Odfotiť poškodenie')}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          multiple
+                          className="sr-only"
+                          onChange={(event) => {
+                            const files = [...(event.target.files ?? [])].filter((file) => file.type.startsWith('image/') && file.size <= 20 * 1024 * 1024)
+                            setPhotos((current) => ({ ...current, [item.equipmentId]: [...(current[item.equipmentId] ?? []), ...files].slice(0, 10) }))
+                            event.target.value = ''
+                          }}
+                        />
+                      </label>
+                      {(photos[item.equipmentId]?.length ?? 0) > 0 && (
+                        <span className="text-sm text-muted-foreground">
+                          {tf('{0} fotiek – pridajú sa k servisnému záznamu', photos[item.equipmentId].length)}{' '}
+                          <button type="button" className="text-accent hover:underline" onClick={() => setPhotos((current) => ({ ...current, [item.equipmentId]: [] }))}>{tx('Zrušiť fotky')}</button>
+                        </span>
+                      )}
+                    </div>
                   )}
                 </li>
               )
