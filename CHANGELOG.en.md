@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.6
+
+- **Weekly summary by e-mail**: everyone turns it on in Settings → Account → E-mail notifications. On Monday
+  morning an e-mail arrives with events for the coming week, my tasks, overdue invoices and service / inspections –
+  only what the person may see in the company. When there is nothing, no e-mail is sent.
+- Technical: migration 0188 (weekly e-mail) and Edge Function weekly-digest.
+
 ### 11.5
 
 - **Thomann in orders**: when you pick equipment with a Thomann number in an item, it is filled in as the product

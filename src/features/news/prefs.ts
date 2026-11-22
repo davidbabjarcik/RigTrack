@@ -2,18 +2,29 @@ import { getSupabase } from '@/lib/supabase/client'
 
 export const prefsKey = (companyId: string) => ['company', companyId, 'notification-prefs'] as const
 
-export async function fetchEmailNewEvent(companyId: string) {
-  const { data, error } = await getSupabase().from('notification_prefs').select('email_new_event').eq('company_id', companyId).maybeSingle()
+export type EmailPrefsValue = { newEvent: boolean; weekly: boolean }
+
+/** Moje e-mailové nastavenia vo firme. Bez migrácie 0188 len e-mail o novom evente (týždenný = null). */
+export async function fetchEmailPrefs(companyId: string): Promise<EmailPrefsValue & { weeklyReady: boolean }> {
+  const db = getSupabase()
+  const full = await db.from('notification_prefs').select('email_new_event, email_weekly').eq('company_id', companyId).maybeSingle()
+  if (!full.error) {
+    const row = full.data as { email_new_event: boolean; email_weekly: boolean } | null
+    return { newEvent: Boolean(row?.email_new_event), weekly: Boolean(row?.email_weekly), weeklyReady: true }
+  }
+  if (!/email_weekly/.test(full.error.message ?? '')) throw full.error
+  const { data, error } = await db.from('notification_prefs').select('email_new_event').eq('company_id', companyId).maybeSingle()
   if (error) throw error
-  return Boolean((data as { email_new_event: boolean } | null)?.email_new_event)
+  return { newEvent: Boolean((data as { email_new_event: boolean } | null)?.email_new_event), weekly: false, weeklyReady: false }
 }
 
-export async function saveEmailNewEvent(companyId: string, value: boolean) {
+/** Uloží jednu voľbu (riadok sa založí pri prvej zmene). */
+export async function saveEmailPref(companyId: string, patch: { email_new_event?: boolean; email_weekly?: boolean }) {
   const db = getSupabase()
-  const updated = await db.from('notification_prefs').update({ email_new_event: value }).eq('company_id', companyId).select('company_id')
+  const updated = await db.from('notification_prefs').update(patch).eq('company_id', companyId).select('company_id')
   if (updated.error) throw updated.error
   if (updated.data.length === 0) {
-    const inserted = await db.from('notification_prefs').insert({ company_id: companyId, email_new_event: value })
+    const inserted = await db.from('notification_prefs').insert({ company_id: companyId, ...patch })
     if (inserted.error) throw inserted.error
   }
 }

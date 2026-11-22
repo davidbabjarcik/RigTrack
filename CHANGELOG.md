@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.6 – 22. 11. 2026
+
+- **Týždenný prehľad e-mailom**: v Nastavenia → Účet → E-mailové upozornenia si ho zapne každý. V pondelok ráno príde
+  e-mail s akciami na najbližší týždeň, mojimi úlohami, faktúrami po splatnosti a servisom / revíziami – len to, čo
+  človek vo firme smie vidieť. Keď nie je nič, e-mail nepríde.
+- Technické: migrácia 0188 (týždenný e-mail) a Edge Function weekly-digest.
+
 ### 11.5 – 22. 11. 2026
 
 - **Thomann v objednávkach**: keď v položke vyberiete techniku, ktorá má Thomann číslo, doplní sa ako kód tovaru.

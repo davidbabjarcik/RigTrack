@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-11.5-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-11.6-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **11.6** | Týždenný prehľad e-mailom |
 | **11.5** | Thomann v objednávkach, rýchlejšie spustenie |
 | **11.4** | Programy a licencie ako podkategória IT, Thomann číslo pri technike |
 | **11.3** | Kto káble vyrobil – výber zo zamestnancov alebo iná osoba |
@@ -87,7 +88,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **9.13** | Zmluva k eventu – vzor z údajov eventu, dodávateľa a organizátora |
 | **9.12** | Plagát trussu po sériách (F34, F34 P): rovné diely, rohy a T-čká, adaptéry |
 | **9.11** | Farby kolieska a gobá s fotkami a DMX hodnotami priamo pri kanáloch |
-| **9.10** | Rozmery case a reprákov s obrázkom, rohmi a kolieskami, celková váha pri evente |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 
@@ -300,6 +300,16 @@ Hlásenia fungujú v aplikácii hneď po migrácii `0048`. Aby chodili aj e-mail
    ```
 E-mail dostanú vývojári a admini firmy, v ktorej bola chyba nahlásená. Kým funkcia nie je nasadená,
 hlásenia sa len uložia a ukážu v aplikácii.
+
+**Týždenný prehľad e-mailom** (migrácia `0188`): v pondelok ráno ho databáza pošle každému, kto si ho zapol v
+Nastavenia → Účet (akcie na týždeň, moje úlohy, faktúry po splatnosti, servis – podľa oprávnení).
+
+```bash
+npx supabase functions deploy weekly-digest --no-verify-jwt
+```
+Ak sú nastavené push upozornenia, viac netreba – použije sa to isté tajomstvo a adresa z Vault. Inak v SQL Editore
+ulož do Vault `weekly_digest_url` (`https://<ref-projektu>.supabase.co/functions/v1/weekly-digest`) a
+`weekly_digest_secret` (náhodný reťazec) a ten istý reťazec nastav ako `WEEKLY_DIGEST_SECRET` v Edge Functions → Secrets.
 
 </details>
 

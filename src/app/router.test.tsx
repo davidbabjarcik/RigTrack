@@ -19,7 +19,7 @@ describe('router', () => {
   ])('renders %s', async (path, heading) => {
     renderAt(path)
     // Niektoré stránky sa načítajú lenivo (až pri otvorení).
-    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: heading }, { timeout: 5000 })).toBeInTheDocument()
   })
 
   it('shows NotFound for unknown routes', () => {

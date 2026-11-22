@@ -514,11 +514,9 @@ export function SettingsPage() {
           <Section title={`Moje zariadenia (${company.companyName})`}>
             <MyDevicesSettings companyId={company.companyId} userId={user.id} />
           </Section>
-          {isAdminRole(company.role) && (
-            <Section title={tx('E-mailové upozornenia')}>
-              <EmailPrefs companyId={company.companyId} />
-            </Section>
-          )}
+          <Section title={tx('E-mailové upozornenia')}>
+            <EmailPrefs companyId={company.companyId} isAdmin={isAdminRole(company.role)} />
+          </Section>
           <Section title={tx('Aplikácia na ploche')}>
             <InstallGuide />
           </Section>
