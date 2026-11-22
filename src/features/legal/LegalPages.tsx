@@ -9,8 +9,8 @@ import { useLang, useT } from '@/lib/i18n'
 // automatické mazanie) a z údajov, ktoré dodal prevádzkovateľ (3. 11. 2026). Anglická verzia je preklad; pri rozpore
 // platí slovenská.
 
-const UPDATED = '3. 11. 2026'
-const UPDATED_EN = '3 November 2026'
+const UPDATED = '22. 11. 2026'
+const UPDATED_EN = '22 November 2026'
 const OPERATOR = 'Dávid Babjarčík'
 const CONTACT = 'davidbabjarcik@gmail.com'
 const Mail = () => (
@@ -136,6 +136,21 @@ export function PrivacyPage() {
             <td>firma</td>
           </tr>
           <tr>
+            <td>Hodnotenie akcie</td>
+            <td>počet hviezdičiek (1–5), nepovinný komentár (najviac 1000 znakov) a čas hodnotenia, ktoré klient zadá cez odkaz bez prihlásenia</td>
+            <td>od klienta (odkaz mu pošle firma)</td>
+          </tr>
+          <tr>
+            <td>Odpoveď na pozvánku do posádky</td>
+            <td>odpoveď „môžem / nemôžem“ a pri „nemôžem“ dôvod (najviac 300 znakov), zadané cez odkaz bez prihlásenia</td>
+            <td>od člena posádky (externistu)</td>
+          </tr>
+          <tr>
+            <td>Faktúry</td>
+            <td>údaje odberateľa (názov alebo meno, adresa, IČO, DIČ, IČ DPH), údaje vystavovateľa vrátane IBAN, položky, sumy, dátumy a úhrada</td>
+            <td>firma</td>
+          </tr>
+          <tr>
             <td>Súbory</td>
             <td>fotky techniky, cases, eventov, dokumenty eventov, prílohy, logo firmy, snímky obrazovky pri nahlásení chyby</td>
             <td>nahrajú používatelia</td>
@@ -179,12 +194,23 @@ export function PrivacyPage() {
         <li>Dobrovoľné údaje v profile (narodeniny, meniny, sociálne siete, fotka) – súhlas, čl. 6 ods. 1 písm. a); dajú sa kedykoľvek zmazať.</li>
         <li>Overenie dochádzky polohou – súhlas (zapína sa v appke na zariadení) a oprávnený záujem firmy na evidencii práce.</li>
         <li>Bezpečnosť (ochrana prihlásenia, história zmien, zachytávanie chýb) – oprávnený záujem na bezpečnej a funkčnej aplikácii, čl. 6 ods. 1 písm. f).</li>
+        <li>
+          Hodnotenie akcie – oprávnený záujem firmy na spätnej väzbe, čl. 6 ods. 1 písm. f); hodnotenie je dobrovoľné. Odkazy na Google, Facebook a
+          web firmy otvorí až klient sám, RigTrack tam nič neposiela.
+        </li>
+        <li>Pozvánka do posádky – príprava spolupráce na akcii, čl. 6 ods. 1 písm. b).</li>
+        <li>Faktúry – zákonná povinnosť firmy (zákon o DPH, zákon o účtovníctve), čl. 6 ods. 1 písm. c); zodpovedá firma.</li>
         <li>Push upozornenia a funkčné ukladanie v prehliadači – súhlas.</li>
       </ul>
 
       <h2>4. Ako dlho údaje uchovávame</h2>
       <ul>
         <li>Účet a údaje firmy: počas používania aplikácie; po zmazaní firmy alebo účtu sa zmažú. Zmazané položky ostanú v koši firmy, kým ich admin nevyprázdni.</li>
+        <li>Hodnotenie akcie: zmaže sa spolu s akciou.</li>
+        <li>
+          Faktúry: vystavenú faktúru nemožno v aplikácii upraviť ani zmazať (len označiť ako uhradenú alebo stornovanú); ostáva, kým existuje firma.
+          Firma ju musí uchovávať podľa zákona o účtovníctve (10 rokov).
+        </li>
         <li>Automaticky zachytené chyby appky: vyriešené 90 dní, ostatné najviac 180 dní (automatické mazanie).</li>
         <li>Záznamy o pokusoch o prihlásenie: 30 dní; blokovanie sa zmaže deň po skončení (automatické mazanie).</li>
         <li>Zálohy databázy a prevádzkové logy hostingu: podľa podmienok poskytovateľov (Supabase, GitHub) – spravidla dni až týždne.</li>
@@ -453,6 +479,21 @@ function PrivacyEn() {
             <td>company</td>
           </tr>
           <tr>
+            <td>Event rating</td>
+            <td>number of stars (1–5), an optional comment (at most 1000 characters) and the time of rating, entered by the client through a link without signing in</td>
+            <td>from the client (the company sends them the link)</td>
+          </tr>
+          <tr>
+            <td>Reply to a crew invitation</td>
+            <td>the reply “I can / I can't” and, with “I can't”, the reason (at most 300 characters), entered through a link without signing in</td>
+            <td>from the crew member (freelancer)</td>
+          </tr>
+          <tr>
+            <td>Invoices</td>
+            <td>customer details (name, address, company ID, tax ID, VAT ID), issuer details including IBAN, items, amounts, dates and payment</td>
+            <td>company</td>
+          </tr>
+          <tr>
             <td>Files</td>
             <td>photos of equipment, cases, events, event documents, attachments, company logo, screenshots when reporting a bug</td>
             <td>uploaded by users</td>
@@ -496,12 +537,23 @@ function PrivacyEn() {
         <li>Voluntary profile data (birthday, name day, social networks, photo) – consent, Art. 6(1)(a); can be deleted at any time.</li>
         <li>Attendance check by location – consent (switched on in the app on the device) and the company's legitimate interest in recording work.</li>
         <li>Security (sign-in protection, change history, error capture) – legitimate interest in a secure and working application, Art. 6(1)(f).</li>
+        <li>
+          Event rating – the company's legitimate interest in feedback, Art. 6(1)(f); rating is voluntary. The links to Google, Facebook and the
+          company's website are opened only by the client, RigTrack sends nothing there.
+        </li>
+        <li>Crew invitation – preparing cooperation on an event, Art. 6(1)(b).</li>
+        <li>Invoices – the company's legal obligation (VAT Act, Accounting Act), Art. 6(1)(c); the company is responsible.</li>
         <li>Push notifications and functional browser storage – consent.</li>
       </ul>
 
       <h2>4. How long we keep data</h2>
       <ul>
         <li>Account and company data: while the application is used; deleted when the company or account is deleted. Deleted items stay in the company's bin until the admin empties it.</li>
+        <li>Event rating: deleted together with the event.</li>
+        <li>
+          Invoices: an issued invoice cannot be edited or deleted in the application (only marked as paid or cancelled); it stays while the company
+          exists. The company must keep it under the Accounting Act (10 years).
+        </li>
         <li>Automatically captured app errors: resolved ones 90 days, others at most 180 days (automatic deletion).</li>
         <li>Records of sign-in attempts: 30 days; a lock is deleted one day after it ends (automatic deletion).</li>
         <li>Database backups and hosting logs: according to the providers' terms (Supabase, GitHub) – usually days to weeks.</li>

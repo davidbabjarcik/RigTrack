@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.0 – 22. 11. 2026
+
+- **Zásady ochrany osobných údajov doplnené** (slovensky aj anglicky): hodnotenie akcie od klienta, odpoveď
+  externistu na pozvánku do posádky a faktúry – aké údaje sa ukladajú, prečo a ako dlho. Platné od 22. 11. 2026.
+
 ### 10.19 – 22. 11. 2026
 
 - **Rýchle delenie case**: pri pridaní alebo úprave časti rozloženia sú tlačidlá s náhľadom – bez delenia,

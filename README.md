@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-10.19-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-11.0-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -51,6 +51,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **11.0** | Zásady ochrany osobných údajov – hodnotenie, pozvánky, faktúry |
 | **10.19** | Rýchle delenie case – na polovicu, tretiny, 2 × 2 |
 | **10.18** | Kontrola case po položkách, hárok podľa rozloženia, kontroly na karte zamestnanca |
 | **10.17** | Rozloženie v case – šuplíky a rozdelenie počtov |
@@ -87,7 +88,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **9.6** | DMX módy s ikonkami a predvolenými hodnotami, farby svetla (miešanie a farebné koliesko) |
 | **9.5** | Licencie programov pri technike, certifikácie pri ľuďoch |
 | **9.4** | Zisk z eventov – rozpis pri evente, prehľad za mesiac a rok, poradie klientov |
-| **9.3** | Detail eventu na karty, viac áut v jeden deň v doprave, prehľadnejší kalendár |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

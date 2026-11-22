@@ -5,6 +5,11 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.0
+
+- **Privacy policy updated** (Slovak and English): event rating by the client, a freelancer's reply to a crew
+  invitation and invoices – what data is stored, why and for how long. Effective from 22 November 2026.
+
 ### 10.19
 
 - **Quick case split**: when adding or editing a layout section there are buttons with a preview – no split, half
