@@ -42,7 +42,7 @@ export function DeveloperUsers() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <p className="flex-1 text-sm text-muted-foreground">{users.data.length}{' '}{tx('účtov · zoradené podľa posledného prihlásenia')}</p>
+        <p className="flex-1 text-sm text-muted-foreground">{users.data.length}{' '}{tx('účtov · zoradené podľa poslednej aktivity')}</p>
         <input
           aria-label={tx('Hľadať účet')}
           placeholder={tx('Hľadať e-mail, meno, firmu…')}

@@ -84,7 +84,7 @@ export function DemoInvitesAdmin() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{invite.email}</span>
                   <span className="block text-muted-foreground">
-                    {[invite.note, `pozvaný ${formatDate(invite.invited_at.slice(0, 10))}`, invite.last_sign_in_at && `naposledy prihlásený ${formatDate(invite.last_sign_in_at.slice(0, 10))}`].filter(Boolean).join(' · ')}
+                    {[invite.note, `pozvaný ${formatDate(invite.invited_at.slice(0, 10))}`, invite.last_sign_in_at && `naposledy aktívny ${formatDate(invite.last_sign_in_at.slice(0, 10))}`].filter(Boolean).join(' · ')}
                   </span>
                   {state && (
                     <span className={cn('mt-0.5 block font-medium', state.tone === 'ok' ? 'text-emerald-600 dark:text-emerald-400' : state.tone === 'wait' ? 'text-accent' : 'text-muted-foreground')}>{state.text}</span>

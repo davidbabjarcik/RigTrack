@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.8.2 – 22. 11. 2026
+
+- **„Naposledy“ pri účtoch je posledná aktivita**: doteraz to bol čas posledného prihlásenia heslom – kto ostal
+  prihlásený, mal starý dátum (napr. demo založené deň po „poslednom prihlásení“). Platí pre pozvánky do dema, účty
+  vo Vývojárovi a stav účtov členov v Nastaveniach.
+- Technické: migrácia 0190 (posledná aktivita účtu).
+
 ### 11.8.1 – 22. 11. 2026
 
 - **Hárok podľa rozloženia s fotkami**: v každej priehradke je pod názvom aj fotka techniky, ktorá v nej leží (pri

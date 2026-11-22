@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.8.2
+
+- **“Last” on accounts is the last activity**: until now it was the last password sign-in – someone who stayed
+  signed in showed an old date (e.g. a demo created a day after the “last sign-in”). Applies to demo invitations,
+  accounts in Developer and member account status in Settings.
+- Technical: migration 0190 (last account activity).
+
 ### 11.8.1
 
 - **Sheet by layout with photos**: each compartment shows the photo of the gear in it below the name (several side
