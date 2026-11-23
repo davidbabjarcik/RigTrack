@@ -34,9 +34,9 @@ function Editor({ event, initial }: { event: CompanyEvent; initial: Synoptic }) 
   const eventRacks = (racks.data ?? []).filter((rack) => rack.eventId === event.id)
   const node = draft.nodes.find((item) => item.id === selected) ?? null
   const link = draft.links.find((item) => item.id === selected) ?? null
-  // Plocha editora: aspoň 1200 × 700, rastie s kresbou (mierka sa pri ťahaní nemení).
+  // Plocha editora: aspoň 900 × 460, rastie s kresbou (mierka sa pri ťahaní nemení).
   const box = bounds(draft.nodes)
-  const area = { width: Math.max(1200, box.x + box.width + 200), height: Math.max(700, box.y + box.height + 150) }
+  const area = { width: Math.max(900, box.x + box.width + 120), height: Math.max(460, box.y + box.height + 100) }
 
   const change = (next: (value: Draft) => Draft) => {
     setDraft(next)
@@ -174,7 +174,7 @@ function Editor({ event, initial }: { event: CompanyEvent; initial: Synoptic }) 
                 setSelected(null)
                 setConnectFrom(null)
               }}
-              className="h-auto min-w-[48rem] select-none"
+              className="h-auto w-full min-w-[36rem] select-none"
             />
           </div>
           {warnings.length > 0 && (

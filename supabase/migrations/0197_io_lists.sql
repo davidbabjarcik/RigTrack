@@ -42,7 +42,7 @@ grant update (number, name, kind, mix, destination, equipment_id, stereo, note) 
 
 -- Verzie input / output listu.
 alter table public.doc_versions drop constraint if exists doc_versions_doc_type_check;
-alter table public.doc_versions add constraint doc_versions_doc_type_check check (doc_type in ('rack', 'iolist'));
+alter table public.doc_versions add constraint doc_versions_doc_type_check check (doc_type in ('rack', 'iolist')) not valid;
 drop policy if exists doc_versions_select on public.doc_versions;
 create policy doc_versions_select on public.doc_versions for select to authenticated
   using (case doc_type when 'rack' then public.can(company_id, 'racks.view') else public.can(company_id, 'events.view') end);

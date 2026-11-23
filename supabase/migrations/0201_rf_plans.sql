@@ -97,11 +97,12 @@ $$;
 revoke execute on function public.save_rf_plan(uuid, integer, jsonb, jsonb, jsonb, text, text) from public, anon;
 grant execute on function public.save_rf_plan(uuid, integer, jsonb, jsonb, jsonb, text, text) to authenticated;
 
+-- (not valid: pri opakovanom behu update-all.sql už môžu existovať novšie typy; plnú kontrolu robí 0205.)
 -- Verzie a zdieľanie aj pre HF plán (práva ako pri akcii).
 alter table public.doc_versions drop constraint if exists doc_versions_doc_type_check;
-alter table public.doc_versions add constraint doc_versions_doc_type_check check (doc_type in ('rack', 'iolist', 'stageplot', 'synoptic', 'rfplan'));
+alter table public.doc_versions add constraint doc_versions_doc_type_check check (doc_type in ('rack', 'iolist', 'stageplot', 'synoptic', 'rfplan')) not valid;
 alter table public.doc_shares drop constraint if exists doc_shares_doc_type_check;
-alter table public.doc_shares add constraint doc_shares_doc_type_check check (doc_type in ('rack', 'iolist', 'stageplot', 'synoptic', 'rfplan'));
+alter table public.doc_shares add constraint doc_shares_doc_type_check check (doc_type in ('rack', 'iolist', 'stageplot', 'synoptic', 'rfplan')) not valid;
 
 create or replace function public.can_view_doc(_company uuid, _doc_type text)
 returns boolean language sql stable security definer set search_path = '' as $$

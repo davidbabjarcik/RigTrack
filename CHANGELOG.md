@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.8 – 23. 11. 2026
+
+- **Demo firma s podkladmi akcie**: ukážkový festival má rack 19", input / output list s insertmi a farbami, stage plán,
+  synoptiku, HF plán, site plán a harmonogram s dvoma pódiami (všetko s verziou 1), turné s druhou zastávkou a dopyt na
+  prenájom s odpoveďou jednej požičovne. Doplní sa aj do existujúcich demo firiem.
+- **Úvodná stránka a README**: nové funkcie „Podklady k akcii“ a „Prenájom a turné“, ukážky stage plánu, HF plánu
+  a synoptiky, v README nový modul Podklady k akcii.
+- Editor synoptiky: kresba sa prispôsobí šírke stĺpca, text je čitateľnejší.
+- Oprava: opakované spustenie súboru `update-all.sql` už nespadne, keď sú v databáze novšie druhy dokumentov.
+- Technické: migrácia 0206 (demo s podkladmi akcie).
+
 ### 12.7 – 23. 11. 2026
 
 - **Verzie harmonogramu**: v harmonograme akcie tlačidlo „Uložiť verziu“ – číslovaná snímka celého harmonogramu.

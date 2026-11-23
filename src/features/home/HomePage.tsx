@@ -6,8 +6,10 @@ import {
   LogIn,
   Printer,
   QrCode,
+  Route,
   Search,
   ShieldCheck,
+  SlidersHorizontal,
   Smartphone,
   Star,
   Ticket,
@@ -58,6 +60,22 @@ const FEATURES: { icon: LucideIcon; title: Pair; text: Pair }[] = [
     text: [
       'Technika, posádka, balenie pri odchode aj návrate a čo sa nevrátilo – aj bez signálu.',
       'Gear, crew, packing out and back in, and what did not come back – even offline.',
+    ],
+  },
+  {
+    icon: SlidersHorizontal,
+    title: ['Podklady k akcii', 'Show documents'],
+    text: [
+      'Input a output list, scéna pre X32 / M32, stage plán, synoptika, HF plán, site plán, racky a harmonogram – s verziami, PDF a odkazom pre zvukára či klub.',
+      'Input and output lists, an X32 / M32 scene, stage plot, signal flow, RF plan, site plan, racks and schedule – with versions, PDFs and a link for the engineer or venue.',
+    ],
+  },
+  {
+    icon: Route,
+    title: ['Prenájom a turné', 'Rentals & tours'],
+    text: [
+      'Dopyt viacerým požičovniam naraz a porovnanie ich odpovedí, turné so zastávkami a podkladmi skopírovanými na ďalšie mestá.',
+      'One request to several rental companies with their answers compared, tours with stops and documents copied to the next cities.',
     ],
   },
   {
@@ -124,6 +142,9 @@ const FEATURES: { icon: LucideIcon; title: Pair; text: Pair }[] = [
 ]
 
 const SHOTS: { src: string; alt: Pair; caption: Pair }[] = [
+  { src: 'stage-plot.png', alt: ['Stage plán pódia v mierke', 'Stage plot to scale'], caption: ['Stage plán – pódium v mierke s kanálmi z input listu', 'Stage plot – the stage to scale with input list channels'] },
+  { src: 'rf-plan.png', alt: ['HF frekvenčný plán so spektrom', 'RF frequency plan with a spectrum'], caption: ['HF plán – intermodulácie a TV kanály', 'RF plan – intermodulation and TV channels'] },
+  { src: 'synoptic.png', alt: ['Synoptika zapojenia', 'Signal flow diagram'], caption: ['Synoptika – zapojenie, káble a dĺžky', 'Signal flow – connections, cables and lengths'] },
   { src: 'case-layout.png', alt: ['Rozloženie v case so šuplíkmi a priehradkami', 'Case layout with drawers and compartments'], caption: ['Rozloženie v case – čo leží v ktorom šuplíku', 'Case layout – what lies in which drawer'] },
   { src: 'invoice.png', alt: ['Faktúra s odpočtom zálohy', 'Invoice with an advance deducted'], caption: ['Faktúry – zálohová a konečná z ponuky', 'Invoices – advance and final from a quote'] },
   { src: 'rating.png', alt: ['Hodnotenie akcie klientom', 'Client rating of a show'], caption: ['Hodnotenie od klienta cez odkaz', 'Client rating via a link'] },

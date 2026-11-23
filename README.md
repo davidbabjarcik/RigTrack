@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-12.7-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-12.8-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -24,20 +24,28 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 <table>
   <tr>
+    <td width="50%"><img src="docs/screenshots/stage-plot.png" alt="Stage plán" /><br /><sub><b>Stage plán</b> – pódium v mierke s kanálmi z input listu, PDF A4 / A3</sub></td>
+    <td width="50%"><img src="docs/screenshots/rf-plan.png" alt="HF frekvenčný plán" /><br /><sub><b>HF plán</b> – intermodulácie, TV kanály a návrh frekvencií</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/synoptic.png" alt="Synoptika" /><br /><sub><b>Synoptika</b> – zapojenie signálu, káble a dĺžky</sub></td>
+    <td width="50%"><img src="docs/screenshots/rack.png" alt="Regál spredu" /><br /><sub><b>Regál spredu</b> – police, palety a cases poskladané na nich</sub></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="docs/screenshots/case-layout.png" alt="Rozloženie v case" /><br /><sub><b>Rozloženie v case</b> – šuplíky a priehradky, čo kde leží</sub></td>
     <td width="50%"><img src="docs/screenshots/invoice.png" alt="Faktúra" /><br /><sub><b>Faktúry</b> – zálohová a konečná z ponuky, odpočet zálohy</sub></td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/plan.png" alt="Plán skladu" /><br /><sub><b>Plán skladu</b> – regály, palety, hliník, miestnosti, dvere a okná</sub></td>
-    <td width="50%"><img src="docs/screenshots/rack.png" alt="Regál spredu" /><br /><sub><b>Regál spredu</b> – police, palety a cases poskladané na nich</sub></td>
+    <td width="50%"><img src="docs/screenshots/truss.png" alt="Hliník v sklade" /><br /><sub><b>Hliník v sklade</b> – stohy trussov zhora aj spredu</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/truss.png" alt="Hliník v sklade" /><br /><sub><b>Hliník v sklade</b> – stohy trussov zhora aj spredu</sub></td>
     <td><img src="docs/screenshots/poster.png" alt="Plagát inventára" /><br /><sub><b>Plagát inventára</b> – na tlač, do PDF aj PNG</sub></td>
+    <td><img src="docs/screenshots/ip.png" alt="IP tabuľka" /><br /><sub><b>IP tabuľka</b> – tlač A4 / A5, duplicitné IP červené</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/ip.png" alt="IP tabuľka" /><br /><sub><b>IP tabuľka</b> – tlač A4 / A5, duplicitné IP červené</sub></td>
     <td><img src="docs/screenshots/sheet-cables.png" alt="Hárok s obsahom káblového case" /><br /><sub><b>Obsah case</b> – káble podľa dĺžky a farby, príslušenstvo, QR</sub></td>
+    <td><img src="docs/screenshots/dmx.png" alt="DMX patch list" /><br /><sub><b>DMX patch list</b> – zo svetiel eventu, kontrola adries, tlač</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/kanban.png" alt="Kanban úloh" /><br /><sub><b>Úlohy</b> – kanban podľa priority, stavu, kategórie či človeka</sub></td>
@@ -45,7 +53,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
   </tr>
   <tr>
     <td><img src="docs/screenshots/stage.png" alt="Pódium Nivtec" /><br /><sub><b>Pódium Nivtec</b> – dosky, nohy a poradie stavania</sub></td>
-    <td><img src="docs/screenshots/dmx.png" alt="DMX patch list" /><br /><sub><b>DMX patch list</b> – zo svetiel eventu, kontrola adries, tlač</sub></td>
+    <td></td>
   </tr>
 </table>
 
@@ -55,6 +63,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **12.8** | Demo, úvodná stránka a README s podkladmi akcie |
 | **12.7** | Verzie a zdieľanie harmonogramu akcie |
 | **12.6** | Site plán akcie na mape – trasy káblov s dĺžkou, káble do pack listu, PDF a zdieľanie |
 | **12.5** | Harmonogram akcie, festivalový režim s pódiami a turné s kopírovaním podkladov |
@@ -91,7 +100,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **10.18** | Kontrola case po položkách, hárok podľa rozloženia, kontroly na karte zamestnanca |
 | **10.17** | Rozloženie v case – šuplíky a rozdelenie počtov |
 | **10.16** | Priehradky v case – čo je v ktorej priehradke |
-| **10.15** | Faktúry – zálohová a konečná z ponuky, splatnosť a upozornenie |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 
@@ -186,6 +194,33 @@ Kliknutím na modul sa rozbalí, čo všetko vie.
 - **Externista potvrdí termín** cez odkaz bez prihlásenia; **DJ hrania** s odmenou a technikou na hranie.
 - **Hodnotenie od klienta** cez odkaz – pri 4–5 hviezdičkách ponúkne recenziu na Google, Facebooku alebo webe.
 - **Zisk z eventu** – príjmy, náklady (prenájom, subdodávky, auto) a odmeny.
+
+</details>
+
+<details>
+<summary><b>🎚️ Podklady k akcii</b></summary>
+
+- **Input / output list** – kanály s mikrofónom, stageboxom, phantomom, insertom a farbou, výstupy (wedge, IEM, PA,
+  nahrávanie) s mixom a cieľom; varovania (duplicitný vstup, kondenzátor bez phantomu, viac kanálov ako pult),
+  CSV tam a späť, **návrh z PDF ridera**, technika z listu do pack listu.
+- **Scéna Behringer X32 / M32** – do scény uloženej z pultu zapíše mená a farby kanálov, phantom podľa routingu
+  a mená busov; ostatné nastavenia scény ostanú.
+- **Racky 19"** – osadenie spredu aj zozadu ťahaním, váha, príkon a hĺbka, varovania, PDF, šablóny a kusy do pack listu.
+- **Stage plán** – pôdorys pódia v mierke (bicie, aparáty, mikrofóny, monitory, DI, stagebox, elektrina) s kanálmi
+  z input listu, PDF A4 / A3 v presnej mierke.
+- **Synoptika** – blokové zapojenie (pult, stageboxy, racky, zosilňovače, reproduktory) so signálom, káblom a dĺžkou,
+  súhrn káblov, PDF.
+- **HF frekvenčný plán** – intermodulácie 3. rádu (2 aj 3 vysielače) a voliteľne 5. rádu, odstupy, vysielané TV kanály
+  (UHF 21–48), návrh frekvencií, spektrum, PDF a CSV.
+- **Site plán** – mapa OpenStreetMap so značkami (pódium, FOH, rozvádzač, vykládka…) a trasami káblov s dĺžkou;
+  káble sa doplnia do pack listu, PDF.
+- **Harmonogram** – get-in, soundcheck, otvorenie, vystúpenia, prestavby a curfew po dňoch, pri festivale po pódiách
+  vedľa seba; upozornenie na prekryv a krátku prestavbu, tlač.
+- **Verzie a zdieľanie** – každý podklad má číslované verzie; odkaz len na čítanie pre konkrétneho príjemcu
+  (zvukár, klub, kapela) s platnosťou, zrušením, záznamom zobrazení a zvýraznenými zmenami od posledného zobrazenia.
+- **Turné** – séria akcií; podklady (input list, stage plán, synoptika, HF plán, harmonogram) sa skopírujú na ďalšie zastávky.
+- **Dopyty na prenájom** – čo chýba, pošle sa viacerým požičovniam naraz; každá vyplní dostupnosť a cenu cez vlastný
+  odkaz a odpovede sa porovnajú.
 
 </details>
 

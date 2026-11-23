@@ -20,7 +20,7 @@ const piece = (id: string, name: string, extra: object = {}) => ({
 async function tidy(page: import('@playwright/test').Page) {
   const decline = page.getByRole('button', { name: 'Odmietnuť nepovinné' })
   if (await decline.isVisible().catch(() => false)) await decline.click()
-  for (const text of ['Doplňte svoj profil', 'Chýbajú vaše zariadenia:']) {
+  for (const text of ['Doplňte svoj profil', 'Chýbajú vaše zariadenia:', 'Zapnite dvojfaktorové prihlásenie']) {
     const notice = page.getByText(text, { exact: true }).first()
     if (await notice.isVisible().catch(() => false)) await notice.evaluate((element) => element.closest('[class*="rounded-xl"]')?.remove())
   }
@@ -91,4 +91,66 @@ test('hodnotenie od klienta', async ({ page }) => {
   await page.getByRole('button', { name: '5 z 5' }).click()
   await page.getByLabel('Čo sa vám páčilo alebo čo zlepšiť (nepovinné)').fill('Všetko klapalo, zvuk bol výborný. Ďakujeme!')
   await shot(page, 'rating', { x: 320, y: 40, width: 640, height: 470 })
+})
+
+// Podklady akcie (12.x): stage plán, synoptika a HF plán na jednej ukážkovej akcii.
+const SHOW = '00000000-0000-4000-8000-0000000000e1'
+const showEvent = {
+  id: SHOW, company_id: COMPANY_ID, name: 'Ukážkový festival', client: '', venue: 'Ukážkové námestie', starts_on: '2026-12-01', ends_on: '2026-12-01', status: 'confirmed', note: '',
+  organizer: '', organizer_person: '', organizer_phone: '', organizer_email: '', description: '', get_in_time: null, show_time: null, show_end_time: null,
+  setting: 'outdoor', power: '', power_count: 1, power_note: '', weather_place: '',
+}
+const showPatch = ['Kick', 'Snare', 'Hi-hat', 'Tom', 'Basa DI', 'Gitara 1', 'Gitara 2', 'Klávesy L', 'Klávesy R', 'Spev 1', 'Spev 2'].map((name, index) => ({
+  id: `p${index + 1}`, company_id: COMPANY_ID, event_id: SHOW, channel: index + 1, name, stagebox: 'SB1', stagebox_input: index + 1, source: 'mic', equipment_id: null, capsule_id: null, connector: '', stand: '', phantom: false, note: '', insert_note: '', color: '',
+}))
+
+test('stage plán', async ({ page }) => {
+  await signIn(page)
+  const item = (id: string, kind: string, x: number, y: number, w: number, d: number, channel: number | null, label = '', rot = 0) => ({ id, kind, x, y, rot, w, d, label, channel })
+  await fakeBackend(page, {
+    events: [showEvent],
+    event_patch: showPatch,
+    stage_plots: [{
+      event_id: SHOW, company_id: COMPANY_ID, width_m: 10, depth_m: 6, note: '', version: 3, updated_at: '2026-11-20T10:00:00Z',
+      items: [item('a', 'riser', 5, 1.4, 3, 2, null), item('b', 'drums', 5, 1.4, 2, 1.8, 1, 'Bicie'), item('c', 'amp_bass', 2.2, 1.8, 0.8, 0.5, 5), item('d', 'amp_guitar', 7.8, 1.8, 0.7, 0.35, 6), item('e', 'keys', 8.2, 3.6, 1.4, 0.6, 8, '', 345), item('f', 'vocal', 5, 4.6, 0.45, 0.45, 10), item('g', 'vocal', 3, 4.4, 0.45, 0.45, 11), item('h', 'wedge', 5, 5.4, 0.6, 0.45, null, 'Mix 1', 180), item('i', 'wedge', 3, 5.3, 0.6, 0.45, null, 'Mix 2', 180), item('j', 'stagebox', 9.2, 0.6, 0.6, 0.4, null, 'SB1'), item('k', 'power', 0.6, 0.4, 0.35, 0.25, null)],
+    }],
+  })
+  await page.goto(`/events/${SHOW}/stage-plot`)
+  await expect(page.getByRole('heading', { name: 'Stage plán' })).toBeVisible()
+  await tidy(page)
+  await page.getByRole('heading', { name: 'Stage plán' }).scrollIntoViewIfNeeded()
+  await shot(page, 'stage-plot')
+})
+
+test('synoptika', async ({ page }) => {
+  await signIn(page)
+  const node = (id: string, kind: string, label: string, detail: string, x: number, y: number) => ({ id, kind, label, detail, x, y, equipment_id: null, rack_id: null })
+  const link = (id: string, from: string, to: string, signal: string, cable: string, length: number, count = 1) => ({ id, from, to, signal, cable, length_m: length, count, label: '' })
+  await fakeBackend(page, {
+    events: [showEvent],
+    event_synoptics: [{
+      event_id: SHOW, company_id: COMPANY_ID, note: '', version: 2, updated_at: '2026-11-20T10:00:00Z',
+      nodes: [node('n1', 'console', 'FOH pult', 'réžia', 40, 120), node('n2', 'stagebox', 'Stagebox SB1', 'pódium vpravo', 400, 120), node('n3', 'rack', 'Amp rack', '6 U', 400, 300), node('n4', 'speaker', 'PA vľavo', '', 760, 220), node('n5', 'speaker', 'PA vpravo', '', 760, 380), node('n6', 'power', 'Rozvádzač', '32 A', 40, 300)],
+      links: [link('l1', 'n1', 'n2', 'aes50', 'CAT6', 50, 2), link('l2', 'n2', 'n3', 'analog', 'Multipár 8', 5), link('l3', 'n3', 'n4', 'analog', 'NL4', 15), link('l4', 'n3', 'n5', 'analog', 'NL4', 15), link('l5', 'n6', 'n3', 'power', 'CEE 32 A', 25)],
+    }],
+  })
+  await page.goto(`/events/${SHOW}/synoptic`)
+  await expect(page.getByRole('heading', { name: 'Synoptika' })).toBeVisible()
+  await shot(page, 'synoptic')
+})
+
+test('HF plán', async ({ page }) => {
+  await signIn(page)
+  const ch = (id: string, name: string, kind: string, freq: number, locked = false) => ({ id, name, kind, equipment_id: null, min_mhz: 606, max_mhz: 630, freq_mhz: freq, locked })
+  await fakeBackend(page, {
+    events: [showEvent],
+    event_rf_plans: [{
+      event_id: SHOW, company_id: COMPANY_ID, place: 'Ukážkové námestie', note: '', version: 1, updated_at: '2026-11-20T10:00:00Z', excluded_tv: [38],
+      settings: { spacing_khz: 350, imd3_khz: 100, imd5_khz: 50, fifth: false, step_khz: 25 },
+      channels: [ch('c1', 'Spev 1', 'mic', 614.125, true), ch('c2', 'Spev 2', 'mic', 614.875), ch('c3', 'IEM bicie', 'iem', 616.375), ch('c4', 'IEM gitara', 'iem', 619.625)],
+    }],
+  })
+  await page.goto(`/events/${SHOW}/rf`)
+  await expect(page.getByRole('heading', { name: 'HF frekvenčný plán' })).toBeVisible()
+  await shot(page, 'rf-plan')
 })

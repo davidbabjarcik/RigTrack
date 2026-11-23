@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.8
+
+- **Demo company with show documents**: the sample festival has a 19" rack, an input / output list with inserts and
+  colours, a stage plot, signal flow, RF plan, site plan and a two-stage schedule (all at version 1), a tour with a
+  second stop and a rental request answered by one rental company. Existing demo companies are filled in too.
+- **Home page and README**: new features “Show documents” and “Rentals & tours”, stage plot, RF plan and signal flow
+  screenshots, a new Show documents module in the README.
+- Signal flow editor: the drawing fits the column width, the text is easier to read.
+- Fix: running `update-all.sql` again no longer fails when the database already contains newer document types.
+- Technical: migration 0206 (demo with show documents).
+
 ### 12.7
 
 - **Schedule versions**: a “Save version” button in the event schedule – a numbered snapshot of the whole schedule.

@@ -27,8 +27,8 @@ describe('demo company', () => {
     expect(await t.as('anna', 'select role from public.company_members where company_id = $1', [demo])).toEqual([{ role: 'admin' }])
     const sample = await t.as('anna', 'select count(*)::int as n from public.equipment where company_id = $1', [demo])
     expect(sample[0].n).toBeGreaterThan(10)
-    // Dva eventy z pôvodného dema a DJ hranie (11.7).
-    expect(await t.as('anna', 'select count(*)::int as n from public.events where company_id = $1', [demo])).toEqual([{ n: 3 }])
+    // Dva eventy z pôvodného dema, DJ hranie (11.7) a druhá zastávka turné (12.8).
+    expect(await t.as('anna', 'select count(*)::int as n from public.events where company_id = $1', [demo])).toEqual([{ n: 4 }])
   })
 
   it('belongs to its user only', async () => {
@@ -133,5 +133,28 @@ describe('demo company 11.7', () => {
     // Druhé spustenie nič nezdvojí.
     await t.rows('select public.seed_demo_v11($1)', [demo])
     expect(await count(`select count(*)::int as n from public.software_licenses where company_id = $1`)).toBe(2)
+  })
+})
+
+describe('demo company 12.8', () => {
+  it('shows event documents: I/O list, stage plot, signal flow, RF plan, site plan, schedule, a rack, a tour and a rental request', async () => {
+    await t.signUp('filip', 'filip@example.com')
+    const demo = (await t.as('filip', 'select public.create_demo_company() as id'))[0].id
+    const n = async (sql: string) => Number((await t.as('filip', sql, [demo]))[0].n)
+    expect(await n(`select count(*)::int as n from public.event_outputs where company_id = $1`)).toBe(5)
+    expect(await n(`select count(*)::int as n from public.event_patch where company_id = $1 and color <> ''`)).toBeGreaterThan(0)
+    expect(await n(`select count(*)::int as n from public.stage_plots where company_id = $1 and jsonb_array_length(items) = 11`)).toBe(1)
+    expect(await n(`select count(*)::int as n from public.event_synoptics where company_id = $1 and jsonb_array_length(links) = 5`)).toBe(1)
+    expect(await n(`select count(*)::int as n from public.event_rf_plans where company_id = $1 and jsonb_array_length(channels) = 4`)).toBe(1)
+    expect(await n(`select count(*)::int as n from public.event_site_plans where company_id = $1 and jsonb_array_length(routes) = 2`)).toBe(1)
+    expect(await n(`select count(*)::int as n from public.event_schedule_items where company_id = $1`)).toBe(8)
+    expect(await n(`select count(*)::int as n from public.rack_designs where company_id = $1 and event_id is not null`)).toBe(1)
+    expect(await n(`select count(*)::int as n from public.events where company_id = $1 and tour_id is not null`)).toBe(2)
+    expect(await n(`select count(*)::int as n from public.rental_quotes where company_id = $1`)).toBe(2)
+    expect(await n(`select count(distinct doc_type)::int as n from public.doc_versions where company_id = $1`)).toBe(6)
+    // Druhé spustenie nič nezdvojí.
+    await t.rows('select public.seed_demo_v12($1)', [demo])
+    expect(await n(`select count(*)::int as n from public.event_outputs where company_id = $1`)).toBe(5)
+    expect(await n(`select count(*)::int as n from public.tours where company_id = $1`)).toBe(1)
   })
 })
