@@ -129,9 +129,17 @@ function InvoiceForm({ companyId, start }: { companyId: string; start: InvoiceDr
 /** Nová faktúra: prázdna alebo z cenovej ponuky (?offer=…&kind=advance|final). */
 export function InvoiceFormPage() {
   const company = useCompany().active!
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const offerId = params.get('offer') ?? ''
   const kind: InvoiceKind = params.get('kind') === 'advance' ? 'advance' : 'final'
+  // Záloha z ponuky: koľko % z ceny (predvolene 50 %, rýchla voľba 25 % / 50 %, alebo vlastné 1–100 %).
+  const pct = Math.min(100, Math.max(1, Math.round(Number(params.get('pct')) || 50)))
+  const [customPct, setCustomPct] = useState('')
+  const choosePct = (value: number) => {
+    const next = new URLSearchParams(params)
+    next.set('pct', String(Math.min(100, Math.max(1, Math.round(value)))))
+    setParams(next, { replace: true })
+  }
   const offer = useOffer(company.companyId, offerId)
   const invoices = useInvoices(company.companyId)
   const issuers = useIssuers(company.companyId)
@@ -141,12 +149,41 @@ export function InvoiceFormPage() {
   else if ((offerId && offer.isPending) || invoices.isPending || issuers.isPending) body = <LoadingBlock />
   else {
     const start: InvoiceDraft = offer.data
-      ? draftFromOffer(offer.data, kind, today, invoices.data ?? [])
+      ? draftFromOffer(offer.data, kind, today, invoices.data ?? [], pct)
       : { kind, eventId: null, offerId: null, issuer: EMPTY_ISSUER, client: EMPTY_CLIENT, lines: [EMPTY_LINE], issuedOn: today, deliveredOn: today, dueOn: dueAfter(today, 14), note: '' }
     // Vystavovateľ z ponuky nemá IBAN ani zápis v registri – doplnia sa z aktuálnych nastavení (podľa IČO alebo názvu).
     const saved = issuers.data?.find((item) => (start.issuer.ico && item.ico === start.issuer.ico) || item.name === start.issuer.name) ?? (start.issuer.name ? undefined : issuers.data?.[0])
     if (saved) start.issuer = { ...start.issuer, ...(start.issuer.name ? {} : { name: saved.name, address: saved.address, ico: saved.ico, dic: saved.dic, icDph: saved.icDph, contact: saved.contact, vatPayer: saved.vatPayer }), iban: start.issuer.iban || saved.iban, registerNote: start.issuer.registerNote || saved.registerNote }
-    body = <InvoiceForm key={`${offerId}-${kind}`} companyId={company.companyId} start={start} />
+    body = (
+      <>
+        {kind === 'advance' && offer.data && (
+          <div className="mb-4 flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-3 text-sm" role="group" aria-label={tx('Výška zálohy')}>
+            <span className="basis-full font-medium">{tx('Výška zálohy z ceny ponuky')}</span>
+            {[25, 50].map((value) => (
+              <Button key={value} type="button" size="sm" variant={pct === value ? 'default' : 'outline'} aria-pressed={pct === value} onClick={() => choosePct(value)}>
+                {value} %
+              </Button>
+            ))}
+            <label className="flex items-center gap-1">
+              <input
+                aria-label={tx('Vlastné percento zálohy')}
+                inputMode="numeric"
+                placeholder={tx('iné %')}
+                className="h-9 w-20 rounded-lg border bg-background px-2"
+                value={customPct}
+                onChange={(event) => setCustomPct(event.target.value.replace(/\D/g, '').slice(0, 3))}
+                onKeyDown={(event) => event.key === 'Enter' && customPct && (event.preventDefault(), choosePct(Number(customPct)))}
+              />
+              <Button type="button" size="sm" variant={![25, 50].includes(pct) ? 'default' : 'outline'} disabled={!customPct} onClick={() => choosePct(Number(customPct))}>
+                {tx('Použiť')}
+              </Button>
+            </label>
+            {![25, 50].includes(pct) && <span className="text-muted-foreground">{tf('Teraz {0} %', pct)}</span>}
+          </div>
+        )}
+        <InvoiceForm key={`${offerId}-${kind}-${pct}`} companyId={company.companyId} start={start} />
+      </>
+    )
   }
   return (
     <>

@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.15
+
+- **Advance 25 % or 50 %**: an advance invoice from an accepted quote lets you pick the amount – 25 %, 50 % or a
+  custom percentage.
+- **Complete the details of equipment you added**: whoever added equipment missing a photo, make and model or
+  category sees a prompt at the top with links to edit it (e.g. newly added microphones). “Later” hides it for 3
+  days.
+
 ### 11.14
 
 - **19" racks (part 1)**: new Racks menu item – a rack with a name, type (shock-mount flight case, open, desk),

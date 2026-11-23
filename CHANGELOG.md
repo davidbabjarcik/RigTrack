@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.15 – 23. 11. 2026
+
+- **Záloha 25 % alebo 50 %**: pri zálohovej faktúre z prijatej ponuky sa vyberie výška zálohy – 25 %, 50 % alebo
+  vlastné percento.
+- **Doplňte údaje k pridanej technike**: kto pridal techniku a chýba jej fotka, výrobca a model alebo kategória,
+  tomu sa hore ukáže výzva s odkazmi na úpravu (napr. pridané mikrofóny). „Neskôr“ ju skryje na 3 dni.
+
 ### 11.14 – 23. 11. 2026
 
 - **Racky 19" (1. časť)**: nová položka Racky v menu – rack s názvom, typom (shock-mount flightcase, otvorený,

@@ -35,3 +35,15 @@ test('nový rack: kontrola výšky', async ({ page }) => {
   await page.getByRole('button', { name: 'Uložiť' }).click()
   await expect(page.getByText('Výška racku je 2 až 48 U.')).toBeVisible()
 })
+
+test('výzva doplniť údaje k pridanej technike', async ({ page }) => {
+  await signIn(page, { incompleteNotice: true })
+  await fakeBackend(page, {
+    equipment: [{ id: '00000000-0000-4000-8000-0000000000e9', company_id: COMPANY_ID, name: 'Ukážkový mikrofón', kind: 'audio', manufacturer: '', model: '', photo_path: '', category_id: null, status: 'available', created_at: new Date().toISOString() }],
+  })
+  await page.goto('/')
+  await expect(page.getByText('Doplňte údaje k technike, ktorú ste pridali:')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Ukážkový mikrofón' })).toHaveAttribute('href', '/equipment/00000000-0000-4000-8000-0000000000e9/edit')
+  await page.getByRole('button', { name: 'Neskôr' }).click()
+  await expect(page.getByText('Doplňte údaje k technike, ktorú ste pridali:')).toHaveCount(0)
+})

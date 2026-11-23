@@ -30,6 +30,8 @@ describe('faktúry', () => {
     const advance = draftFromOffer(offer('with'), 'advance', '2026-11-21')
     expect(advance.lines).toEqual([{ label: 'Záloha 50 % – Podľa cenovej ponuky č. CP-7 – Ukážková svadba', quantity: 1, unit: 'ks', unitPrice: 500, vatRate: 23 }])
     expect(advance.dueOn).toBe('2026-12-05')
+    // Záloha 25 % (voľba pri vystavení).
+    expect(draftFromOffer(offer('with'), 'advance', '2026-11-21', [], 25).lines[0]).toMatchObject({ label: 'Záloha 25 % – Podľa cenovej ponuky č. CP-7 – Ukážková svadba', unitPrice: 250 })
     const final = draftFromOffer(offer('with'), 'final', '2026-11-21', [
       { number: '20260001', totalNet: 500, paidOn: '2026-11-22', cancelledAt: null, kind: 'advance', offerId: 'o1', lines: [{ label: '', quantity: 1, unit: 'ks', unitPrice: 500, vatRate: 23 }] },
       { number: '20260002', totalNet: 500, paidOn: null, cancelledAt: null, kind: 'advance', offerId: 'o1', lines: [] },

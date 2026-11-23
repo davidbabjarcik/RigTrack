@@ -15,14 +15,17 @@ const session = { access_token: accessToken, refresh_token: 'e2e-refresh', token
 const consentVersion = readFileSync('src/lib/consent.ts', 'utf8').match(/CONSENT_VERSION = '([^']+)'/)?.[1] ?? ''
 
 /** Prihlásenie a súhlas sú už v prehliadači uložené – appka sa otvorí rovno vo firme. */
-export async function signIn(page: Page) {
+export async function signIn(page: Page, { incompleteNotice = false } = {}) {
   await page.addInitScript(
-    ({ session, consent, company }) => {
+    ({ session, consent, company, hideIncomplete }) => {
       localStorage.setItem('sb-127-auth-token', JSON.stringify(session))
+      // Výzva „doplňte údaje k pridanej technike“ by sa ukázala vo všetkých testoch (testovací používateľ „pridal“
+      // všetku techniku) – skrytá, okrem testu, ktorý ju overuje.
+      if (hideIncomplete) localStorage.setItem('rigtrack:incomplete-hidden-until', String(Date.now() + 86_400_000))
       localStorage.setItem('rigtrack:consent', JSON.stringify({ functional: true, analytics: false, marketing: false, version: consent, at: new Date().toISOString(), synced: true }))
       localStorage.setItem('rigtrack:active-company', company)
     },
-    { session, consent: consentVersion, company: COMPANY_ID },
+    { session, consent: consentVersion, company: COMPANY_ID, hideIncomplete: !incompleteNotice },
   )
 }
 

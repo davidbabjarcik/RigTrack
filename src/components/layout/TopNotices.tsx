@@ -19,6 +19,7 @@ import { yearReportYear } from '@/features/report/model'
 import { APP_VERSION } from '@/lib/version'
 import { tx } from '@/lib/i18n'
 import { listTotpFactors, mfaKeys } from '@/features/auth/mfa'
+import { fetchMyIncomplete, incompleteKey } from '@/features/equipment/incomplete'
 import { isAdminRole } from '@/lib/roles'
 
 /** Novinky vo firme (nový event, priradenie do posádky) s tlačidlom „prečítané“. */
@@ -153,7 +154,70 @@ export function TopNotices() {
     <>
       <Notices companyId={company.companyId} userId={userId} />
       {isAdminRole(company.role) && <MfaNotice />}
+      {can(company, 'equipment.edit') && <IncompleteEquipmentNotice companyId={company.companyId} userId={userId} />}
     </>
+  )
+}
+
+const INCOMPLETE_KEY = 'rigtrack:incomplete-hidden-until'
+
+/**
+ * Kto pridal techniku a chýbajú jej údaje (fotka, výrobca a model, kategória), tomu sa hore ukáže výzva, nech ich
+ * doplní – s odkazmi na úpravu. „Neskôr“ ju skryje na 3 dni.
+ */
+function IncompleteEquipmentNotice({ companyId, userId }: { companyId: string; userId: string }) {
+  const items = useQuery({ queryKey: incompleteKey(companyId, userId), queryFn: () => fetchMyIncomplete(companyId, userId), staleTime: 60_000 })
+  const [hiddenUntil, setHiddenUntil] = useState(() => {
+    try {
+      return Number(localStorage.getItem(INCOMPLETE_KEY)) || 0
+    } catch {
+      return 0
+    }
+  })
+  const [open, setOpen] = useState(false)
+  // Čas sa číta raz pri vykreslení (výzva sa ukáže znova po obnovení stránky po troch dňoch).
+  const [now] = useState(() => Date.now())
+  if (!items.data || items.data.length === 0 || hiddenUntil > now) return null
+  const list = items.data
+  return (
+    <div className="mx-auto flex w-full max-w-5xl px-4 pt-2 md:px-8 print:hidden">
+      <div className="flex flex-1 flex-col gap-2 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+        <div className="flex items-start gap-3">
+          <Sparkles className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+          <button type="button" className="flex-1 text-left hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>
+            <span className="font-medium">{list.length === 1 ? tx('Doplňte údaje k technike, ktorú ste pridali:') : tx('Doplňte údaje k technike, ktorú ste pridali')}</span>{' '}
+            {list.length === 1 ? `${list[0].name} – chýba ${list[0].missing.join(', ')}` : `(${list.length}) – ${list.slice(0, 3).map((item) => item.name).join(', ')}${list.length > 3 ? '…' : ''}`}
+          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const until = Date.now() + 3 * 86_400_000
+              setHiddenUntil(until)
+              try {
+                localStorage.setItem(INCOMPLETE_KEY, String(until))
+              } catch {
+                // Bez úložiska sa len nezapamätá.
+              }
+            }}
+          >
+            {tx('Neskôr')}
+          </Button>
+        </div>
+        {(open || list.length === 1) && (
+          <ul className="flex flex-col gap-1 pl-8">
+            {list.map((item) => (
+              <li key={item.id}>
+                <Link to={`/equipment/${item.id}/edit`} className="text-accent hover:underline">
+                  {item.name}
+                </Link>{' '}
+                <span className="text-muted-foreground">– {tx('chýba')} {item.missing.join(', ')}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   )
 }
 
