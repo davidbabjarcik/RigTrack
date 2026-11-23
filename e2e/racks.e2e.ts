@@ -77,3 +77,25 @@ test('editor racku: pridanie z panela, úprava, späť a uloženie', async ({ pa
   expect(body._slots).toEqual([expect.objectContaining({ equipmentId: AMP, bottomU: 1, heightU: 2, side: 'front' })])
   await expect(page.getByRole('button', { name: 'Uložené (verzia 4)' })).toBeVisible()
 })
+
+test('šablóna racku: vloženie do akcie a PDF', async ({ page }) => {
+  await signIn(page)
+  const EVENT = '00000000-0000-4000-8000-0000000000ee'
+  const NEW = '00000000-0000-4000-8000-0000000000ef'
+  const day = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10)
+  await fakeBackend(page, {
+    rack_designs: [rack],
+    rack_slots: [slot('s1', 'front', 1, 1, { accessory: 'pdu' })],
+    events: [{ id: EVENT, company_id: COMPANY_ID, kind: 'event', name: 'Ukážková svadba', client: '', venue: '', starts_on: day, ends_on: day, status: 'planned', note: '' }],
+    'rpc:copy_rack': [NEW],
+  })
+  await page.goto(`/racks/${RACK}`)
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'PDF' }).click()
+  expect((await download).suggestedFilename()).toBe('rack-Ukážkový_FOH_rack.pdf')
+  await page.getByLabel('Vložiť šablónu do akcie').selectOption({ label: `Ukážková svadba (${Number(day.slice(8))}. ${Number(day.slice(5, 7))}. ${day.slice(0, 4)})` })
+  const copied = page.waitForRequest((request) => request.url().includes('/rpc/copy_rack'))
+  await page.getByRole('button', { name: 'Vložiť do akcie' }).click()
+  expect((await copied).postDataJSON()).toEqual({ _rack_id: RACK, _name: 'Ukážkový FOH rack', _as_template: false, _event_id: EVENT })
+  await expect(page).toHaveURL(new RegExp(`/racks/${NEW}$`))
+})

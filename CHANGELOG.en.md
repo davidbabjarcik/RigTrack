@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.17
+
+- **19" racks (part 3) – PDF**: a PDF button in the rack detail – A4 portrait, header with the company logo, name
+  and contact from Settings, event, date and version, front and rear to scale side by side, a table (U, side, device,
+  serial number, kg, W), summary, warnings and notes. Readable in black and white too (accessories hatched).
+- **Rack templates**: “Save as template” (e.g. FOH rack, amp rack) and “Insert into event” on a template – a copy of
+  the rack is created for the event and its pieces are added to the event equipment (pack list, reserved for the
+  dates). A new Racks section on the event with the list and adding from a template; “Add pieces to the event pack
+  list” on a rack for an event.
+- Technical: migration 0196 (rack templates and event link).
+
 ### 11.16
 
 - **19" racks (part 2) – fitting editor**: “Edit fitting” in the rack detail. On the left equipment from the

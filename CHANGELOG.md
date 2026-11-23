@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.17 – 23. 11. 2026
+
+- **Racky 19" (3. časť) – PDF**: v detaile racku tlačidlo PDF – A4 na výšku, hlavička s logom, názvom a kontaktom
+  firmy z Nastavení, akcia, dátum a verzia, predok a zadok v mierke vedľa seba, tabuľka (U, strana, zariadenie,
+  sériové číslo, kg, W), súhrn, varovania a poznámky. Čitateľné aj čiernobielo (doplnky šrafované).
+- **Šablóny rackov**: „Uložiť ako šablónu“ (napr. FOH rack, Amp rack) a pri šablóne „Vložiť do akcie“ – vznikne
+  kópia racku k akcii a jej kusy sa pridajú do techniky akcie (pack list, rezervácia v termíne). Pri evente nová časť
+  Racky so zoznamom a pridaním zo šablóny; pri racku k akcii „Pridať kusy do pack listu akcie“.
+- Technické: migrácia 0196 (šablóny rackov a väzba na akciu).
+
 ### 11.16 – 23. 11. 2026
 
 - **Racky 19" (2. časť) – editor osadenia**: v detaile racku „Upraviť osadenie“. Vľavo technika zo skladu (aj po

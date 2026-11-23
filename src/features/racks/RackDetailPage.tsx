@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, ArrowLeft, LayoutGrid, Pencil, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, BookmarkPlus, FileDown, LayoutGrid, PackagePlus, Pencil, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -11,8 +12,12 @@ import { useEvents } from '@/features/events/useEvents'
 import { formatDate } from '@/lib/format'
 import { tf, tx } from '@/lib/i18n'
 import { can } from '@/lib/permissions'
-import { deleteRack, fetchRacks, fetchSlots, rackKeys } from './api'
+import { copyRack, deleteRack, fetchRacks, fetchSlots, rackKeys, rackToEvent } from './api'
 import { useCatalog } from '@/features/equipment/catalog'
+import { brandingKeys, fetchBranding, fetchLogoBlob, logoForLightBackground } from '@/features/companies/branding'
+import { fileSlug } from '@/features/cases/canvas'
+import { todayIso } from '@/lib/format'
+import { rackPdf } from './rackPdf'
 import { rackSummary, rackWarnings, slotInfo, type FitSlot } from './fit'
 import { RACK_RAIL_LABELS, RACK_TYPE_LABELS, rackHeightMm } from './model'
 import { RackGrid } from './RackGrid'
@@ -30,6 +35,64 @@ export function RackDetailPage() {
   const cases = useCases(companyId)
   const events = useEvents(companyId)
   const catalog = useCatalog()
+  const [eventForTemplate, setEventForTemplate] = useState('')
+  const [notice, setNotice] = useState('')
+  const refresh = () => Promise.all([queryClient.invalidateQueries({ queryKey: rackKeys.list(companyId) }), queryClient.invalidateQueries({ queryKey: ['company', companyId, 'events'] })])
+  const asTemplate = useMutation({
+    mutationFn: (name: string) => copyRack(id, name, true, null),
+    onSuccess: async (newId) => {
+      await refresh()
+      navigate(`/racks/${newId}`)
+    },
+  })
+  const intoEvent = useMutation({
+    mutationFn: () => copyRack(id, racks.data?.find((item) => item.id === id)?.name ?? '', false, eventForTemplate),
+    onSuccess: async (newId) => {
+      await refresh()
+      navigate(`/racks/${newId}`)
+    },
+  })
+  const toPackList = useMutation({
+    mutationFn: () => rackToEvent(id),
+    onSuccess: async (count) => {
+      await refresh()
+      setNotice(tf('Do techniky akcie pridané alebo doplnené: {0} položiek (pack list, rezervácia v termíne akcie).', count))
+    },
+  })
+  const branding = useQuery({ queryKey: brandingKeys.branding(companyId), queryFn: () => fetchBranding(companyId) })
+  // PDF: logo, názov a kontakt firmy z Nastavení, sériové čísla kusov z techniky.
+  const pdf = useMutation({
+    mutationFn: async () => {
+      const current = racks.data?.find((item) => item.id === id)
+      if (!current) return
+      const logoPath = branding.data?.logoPath ?? ''
+      const logo = logoPath ? await fetchLogoBlob(logoPath).then(logoForLightBackground).then((blob) => createImageBitmap(blob)).catch(() => null) : null
+      const sources = { equipment: equipment.data ?? [], catalog: catalog.data ?? [] }
+      const event = current.eventId ? events.data?.find((item) => item.id === current.eventId) : undefined
+      const blob = await rackPdf({
+        rack: current,
+        slots: (slots.data ?? []).map(({ id: key, ...slot }) => ({ ...slot, key })),
+        sources,
+        companyName: company.companyName,
+        logo,
+        contact: branding.data?.labelFooter ?? '',
+        event: event ? { name: event.name, startsOn: event.startsOn, endsOn: event.endsOn } : null,
+        serialOf: (slot) => {
+          const item = slot.equipmentId ? equipment.data?.find((piece) => piece.id === slot.equipmentId) : undefined
+          if (!item) return ''
+          return (slot.unit ? item.unitInfo?.[String(slot.unit)]?.serial : '') || (slot.unit ? '' : item.serialNumber) || ''
+        },
+        generatedOn: todayIso(),
+      })
+      logo?.close()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `rack-${fileSlug(current.name)}.pdf`
+      link.click()
+      window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    },
+  })
   const remove = useMutation({
     mutationFn: () => deleteRack(companyId, id),
     onSuccess: async () => {
@@ -83,6 +146,10 @@ export function RackDetailPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" disabled={pdf.isPending || !slots.data || !equipment.data} onClick={() => pdf.mutate()}>
+            <FileDown className="size-4" aria-hidden />
+            {pdf.isPending ? tx('Pripravujem PDF…') : 'PDF'}
+          </Button>
           {can(company, 'racks.edit') && (
             <LinkButton to={`/racks/${rack.id}/fit`}>
               <LayoutGrid className="size-4" aria-hidden />
@@ -104,6 +171,49 @@ export function RackDetailPage() {
         </div>
       </header>
       {rack.note && <p className="mb-4 rounded-xl border bg-surface p-3 text-sm whitespace-pre-wrap">{rack.note}</p>}
+      {can(company, 'racks.edit') && (
+        <div className="mb-4 flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-3 text-sm">
+          {rack.isTemplate ? (
+            <>
+              <label className="flex min-w-56 flex-1 flex-col gap-1 font-medium">
+                {tx('Vložiť šablónu do akcie')}
+                <select className="h-10 rounded-lg border bg-background px-2 font-normal" value={eventForTemplate} onChange={(changed) => setEventForTemplate(changed.target.value)}>
+                  <option value="">{tx('— vyberte akciu —')}</option>
+                  {(events.data ?? [])
+                    .filter((item) => item.endsOn >= todayIso())
+                    .sort((a, b) => a.startsOn.localeCompare(b.startsOn))
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} ({formatDate(item.startsOn)})
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <Button disabled={!eventForTemplate || intoEvent.isPending} onClick={() => intoEvent.mutate()}>
+                <PackagePlus className="size-4" aria-hidden />
+                {tx('Vložiť do akcie')}
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" disabled={asTemplate.isPending} onClick={() => {
+              const name = window.prompt(tx('Názov šablóny:'), rack.name)
+              if (name?.trim()) asTemplate.mutate(name.trim())
+            }}>
+              <BookmarkPlus className="size-4" aria-hidden />
+              {tx('Uložiť ako šablónu')}
+            </Button>
+          )}
+          {rack.eventId && can(company, 'events.edit') && (
+            <Button variant="outline" disabled={toPackList.isPending || list.every((slot) => !slot.equipmentId)} onClick={() => toPackList.mutate()}>
+              <PackagePlus className="size-4" aria-hidden />
+              {tx('Pridať kusy do pack listu akcie')}
+            </Button>
+          )}
+          {rack.isTemplate && <p className="basis-full text-xs text-muted-foreground">{tx('Vznikne kópia racku k akcii a jej kusy sa pridajú do techniky akcie (rezervácia).')}</p>}
+          {notice && <p role="status" className="basis-full text-emerald-700 dark:text-emerald-400">{notice}</p>}
+          {(asTemplate.isError || intoEvent.isError || toPackList.isError) && <p role="alert" className="basis-full text-destructive">{tx('Nepodarilo sa – skontrolujte oprávnenia alebo kolízie techniky v termíne akcie.')}</p>}
+        </div>
+      )}
 
       {list.length > 0 && (
         <p className="mb-3 text-sm">

@@ -33,6 +33,7 @@ import { EventProfitSection } from '@/features/profit/EventProfitSection'
 import { EventPhotosSection } from './EventPhotosSection'
 import { EventStagePlan } from '@/features/stage/EventStagePlan'
 import { EventEquipmentSection } from './EventEquipmentSection'
+import { EventRacksSection } from '@/features/racks/EventRacksSection'
 import { EventReturnSection } from './EventReturnSection'
 import { SaveTemplateButton } from './SaveTemplateButton'
 import { EventClientCard } from './EventClientCard'
@@ -260,6 +261,7 @@ export function EventDetailPage() {
       {tab === 'gear' && (
         <>
           <EventEquipmentSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+          {can(company, 'racks.view') && <EventRacksSection company={company} event={event} />}
           <EventReturnSection company={company} event={event} />
           <EventStagePlan companyId={companyId} eventId={event.id} />
           <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />

@@ -134,3 +134,17 @@ export async function saveSlots(rackId: string, expectedVersion: number, slots: 
   if (error) throw error
   return data as number
 }
+
+/** Kópia racku s osadením – ako šablóna alebo do akcie (vtedy sa kusy pridajú do techniky akcie). Vráti id. */
+export async function copyRack(rackId: string, name: string, asTemplate: boolean, eventId: string | null): Promise<string> {
+  const { data, error } = await getSupabase().rpc('copy_rack', { _rack_id: rackId, _name: name, _as_template: asTemplate, _event_id: eventId })
+  if (error) throw error
+  return data as string
+}
+
+/** Kusy z racku do techniky jeho akcie (pack list, rezervácia). Vráti počet položiek. */
+export async function rackToEvent(rackId: string): Promise<number> {
+  const { data, error } = await getSupabase().rpc('rack_to_event', { _rack_id: rackId })
+  if (error) throw error
+  return data as number
+}
