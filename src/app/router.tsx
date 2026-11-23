@@ -62,6 +62,7 @@ const rackForm = lazyPage(() => import('@/features/racks/RackFormPage').then((m)
 const rackDetail = lazyPage(() => import('@/features/racks/RackDetailPage').then((m) => m.RackDetailPage), 'racks.view')
 const stagePlotEditor = lazyPage(() => import('@/features/stageplot/StagePlotEditorPage').then((m) => m.StagePlotEditorPage), 'events.edit')
 const synopticEditor = lazyPage(() => import('@/features/synoptic/SynopticEditorPage').then((m) => m.SynopticEditorPage), 'events.edit')
+const rfPlanEditor = lazyPage(() => import('@/features/rfplan/RfPlanEditorPage').then((m) => m.RfPlanEditorPage), 'events.edit')
 const rackEditor = lazyPage(() => import('@/features/racks/RackEditorPage').then((m) => m.RackEditorPage), 'racks.edit')
 const caseDetail = lazyPage(() => import('@/features/cases/CaseDetailPage').then((m) => m.CaseDetailPage), 'cases.view')
 const caseForm = lazyPage(() => import('@/features/cases/CaseFormPage').then((m) => m.CaseFormPage), 'cases.view')
@@ -279,6 +280,7 @@ export const routes: RouteObject[] = [
               { path: 'events/:id', lazy: eventDetail },
               { path: 'events/:id/stage-plot', lazy: stagePlotEditor },
               { path: 'events/:id/synoptic', lazy: synopticEditor },
+              { path: 'events/:id/rf', lazy: rfPlanEditor },
               { path: 'events/:id/edit', lazy: eventForm },
               { path: 'events/:id/pack', lazy: pack },
               { path: 'events/:id/crew', lazy: crewSheet },

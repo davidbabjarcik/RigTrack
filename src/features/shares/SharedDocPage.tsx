@@ -11,9 +11,11 @@ import { formatDate, formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { channelLegend, KIND_INFO } from '@/features/stageplot/model'
 import { StagePlotSvg } from '@/features/stageplot/StagePlotSvg'
+import { analyze, formatMhz, RF_KIND_LABELS, toKhz, tvChannelOf } from '@/features/rfplan/rf'
+import { Spectrum } from '@/features/rfplan/Spectrum'
 import { cableSummary } from '@/features/synoptic/model'
 import { SynopticSvg } from '@/features/synoptic/SynopticSvg'
-import { changedKeys, fetchSharedDoc, removedRows, type SharedInput, type SharedIoList, type SharedOutput, type SharedRack, type SharedSlot, type SharedStagePlot, type SharedSynoptic } from './api'
+import { changedKeys, fetchSharedDoc, removedRows, type SharedInput, type SharedIoList, type SharedOutput, type SharedRack, type SharedSlot, type SharedRfPlan, type SharedStagePlot, type SharedSynoptic } from './api'
 
 const LOGO_STYLES: LogoStyle[] = ['auto', 'original', 'plate', 'white', 'black']
 const changedRow = 'bg-amber-100 dark:bg-amber-950'
@@ -183,6 +185,39 @@ function Synoptic({ data, previous, names }: { data: SharedSynoptic; previous: S
   )
 }
 
+function RfPlan({ data, previous, names }: { data: SharedRfPlan; previous: SharedRfPlan | null; names: Record<string, string> }) {
+  const channels = data.channels.map((channel) => ({ ...channel, min_mhz: Number(channel.min_mhz), max_mhz: Number(channel.max_mhz), freq_mhz: channel.freq_mhz === null ? null : Number(channel.freq_mhz) }))
+  const issues = analyze(channels, data.settings, data.excluded_tv)
+  const changed = changedKeys(data.channels, previous?.channels, (channel) => channel.id)
+  const sorted = [...channels].sort((a, b) => (a.freq_mhz ?? 1e9) - (b.freq_mhz ?? 1e9))
+  return (
+    <section className="flex flex-col gap-3">
+      {data.place && <p className="text-sm text-muted-foreground">{`Miesto: ${data.place}`}</p>}
+      <div className="rounded-xl border bg-white p-2 text-black">
+        <Spectrum channels={channels} settings={data.settings} excludedTv={data.excluded_tv} className="h-auto w-full" />
+      </div>
+      <p className="text-sm text-muted-foreground">{`Odstup ${data.settings.spacing_khz} kHz · IM 3. rádu ±${data.settings.imd3_khz} kHz${data.settings.fifth ? ` · IM 5. rádu ±${data.settings.imd5_khz} kHz` : ''} · vylúčené TV kanály: ${data.excluded_tv.join(', ') || 'žiadne'}`}</p>
+      <Table head={['Frekvencia (MHz)', 'Kanál', 'Druh', 'TV', 'Pásmo', 'Stav']}>
+        {sorted.map((channel) => {
+          const khz = channel.freq_mhz === null ? null : toKhz(channel.freq_mhz)
+          const list = (issues.get(channel.id) ?? []).filter((issue) => issue.kind !== 'missing')
+          return (
+            <tr key={channel.id} className={cn('border-t', changed.has(channel.id) && changedRow)}>
+              <td className="px-2 py-1 font-mono font-semibold">{khz === null ? '—' : formatMhz(khz)}</td>
+              <td className="px-2 py-1">{channel.name}</td>
+              <td className="px-2 py-1">{[RF_KIND_LABELS[channel.kind], channel.equipment_id ? names[channel.equipment_id] : ''].filter(Boolean).join(' · ')}</td>
+              <td className="px-2 py-1">{khz === null ? '' : (tvChannelOf(khz) ?? '')}</td>
+              <td className="px-2 py-1 whitespace-nowrap">{`${channel.min_mhz}–${channel.max_mhz}`}</td>
+              <td className={cn('px-2 py-1 text-xs', list.length > 0 && 'text-destructive')}>{list.length > 0 ? list.map((issue) => issue.text).join('; ') : 'OK'}</td>
+            </tr>
+          )
+        })}
+      </Table>
+      {data.note && <p className="text-sm whitespace-pre-line">{data.note}</p>}
+    </section>
+  )
+}
+
 /**
  * Zdieľaný dokument akcie pre externého príjemcu (d/:token) – len na čítanie, bez prihlásenia: hlavička s logom
  * a kontaktom firmy, posledná uložená verzia a zvýraznené zmeny od posledného zobrazenia. Stránka je len po slovensky.
@@ -200,7 +235,7 @@ export function SharedDocPage() {
   const data = doc.data
   const style = LOGO_STYLES.includes(data.logoStyle as LogoStyle) ? (data.logoStyle as LogoStyle) : 'auto'
   const when = data.startsOn && data.endsOn ? (data.startsOn === data.endsOn ? formatDate(data.startsOn) : `${formatDate(data.startsOn)} – ${formatDate(data.endsOn)}`) : ''
-  const heading = data.docType === 'rack' ? `Rack – ${data.title}` : data.docType === 'stageplot' ? 'Stage plán' : data.docType === 'synoptic' ? 'Synoptika' : 'Input / output list'
+  const heading = data.docType === 'rack' ? `Rack – ${data.title}` : data.docType === 'stageplot' ? 'Stage plán' : data.docType === 'synoptic' ? 'Synoptika' : data.docType === 'rfplan' ? 'HF frekvenčný plán' : 'Input / output list'
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -236,6 +271,8 @@ export function SharedDocPage() {
           <StagePlot data={data.data} previous={data.previous} />
         ) : data.docType === 'synoptic' ? (
           <Synoptic data={data.data} previous={data.previous} names={data.names} />
+        ) : data.docType === 'rfplan' ? (
+          <RfPlan data={data.data} previous={data.previous} names={data.names} />
         ) : (
           <IoList data={data.data} previous={data.previous} names={data.names} />
         )}

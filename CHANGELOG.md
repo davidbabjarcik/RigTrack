@@ -5,6 +5,18 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.3 – 23. 11. 2026
+
+- **HF frekvenčný plán akcie**: v detaile akcie (Technika) nová časť HF plán – bezdrôtové kanály (mikrofóny, IEM, iné)
+  s pásmom vysielača a frekvenciou, voliteľne z techniky akcie. Kontrola odstupu nosných, intermodulácií 3. rádu (2 aj 3
+  vysielače) a voliteľne 5. rádu, frekvencií mimo pásma a v TV kanáloch vysielaných v mieste akcie (UHF 21–48,
+  470–694 MHz, kanál 8 MHz).
+- **Návrh frekvencií**: kanálom bez frekvencie navrhne kompatibilné frekvencie (zamknuté a zadané ostanú), s krokom
+  25 kHz. Spektrum s TV kanálmi, nosnými a intermodulačnými produktmi.
+- **PDF** (A4 na šírku) s hlavičkou firmy, spektrom a tabuľkou kanálov, **CSV** export, verzie a zdieľanie odkazom.
+  Výpočet je pomôcka – pred akciou overte spektrum skenom na mieste.
+- Technické: migrácia 0201 (HF plány akcií).
+
 ### 12.2 – 23. 11. 2026
 
 - **Synoptika akcie**: v detaile akcie (Technika) nová časť Synoptika – blokové zapojenie signálu. Uzly: pult, stagebox,

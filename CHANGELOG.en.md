@@ -5,6 +5,18 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.3
+
+- **Event RF frequency plan**: a new RF plan section in the event detail (Equipment) – wireless channels (microphones,
+  IEM, other) with the transmitter band and frequency, optionally from the event equipment. Checks carrier spacing,
+  3rd-order intermodulation (2 and 3 transmitters) and optionally 5th order, frequencies outside the band and in TV
+  channels broadcast at the venue (UHF 21–48, 470–694 MHz, 8 MHz channels).
+- **Frequency suggestion**: proposes compatible frequencies for channels without one (locked and entered ones stay),
+  in 25 kHz steps. A spectrum view with TV channels, carriers and intermodulation products.
+- **PDF** (A4 landscape) with the company header, spectrum and channel table, **CSV** export, versions and sharing by
+  link. The calculation is an aid – always verify the spectrum with an on-site scan.
+- Technical: migration 0201 (event RF plans).
+
 ### 12.2
 
 - **Event signal flow**: a new Signal flow section in the event detail (Equipment) – a block diagram of the signal path.

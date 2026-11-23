@@ -1,10 +1,11 @@
+import type { RfChannel, RfSettings } from '@/features/rfplan/rf'
 import type { StageItem } from '@/features/stageplot/model'
 import type { SynLink, SynNode } from '@/features/synoptic/model'
 import { getSupabase } from '@/lib/supabase/client'
 
 // Zdieľanie dokumentov akcie (rack, input / output list) – odkaz pre konkrétneho príjemcu, len na čítanie.
 
-export type DocType = 'rack' | 'iolist' | 'stageplot' | 'synoptic'
+export type DocType = 'rack' | 'iolist' | 'stageplot' | 'synoptic' | 'rfplan'
 
 export type DocShare = {
   id: string
@@ -84,6 +85,7 @@ export type SharedOutput = { number: number; name: string; kind: string; mix: st
 export type SharedSlot = { side: 'front' | 'rear'; bottom_u: number; height_u: number; width: string; col: number; equipment_id: string | null; catalog_id: string | null; accessory: string | null; label: string; weight_kg: number | null; power_w: number | null }
 export type SharedRack = { rack: { name: string; rack_type: string; units: number; depth_mm: number | null; rails: string; note: string }; slots: SharedSlot[] }
 export type SharedIoList = { inputs: SharedInput[]; outputs: SharedOutput[] }
+export type SharedRfPlan = { channels: RfChannel[]; settings: RfSettings; excluded_tv: number[]; place: string; note: string }
 export type SharedSynoptic = { nodes: SynNode[]; links: SynLink[]; note: string }
 export type SharedStagePlot = { plot: { width_m: number; depth_m: number; note: string }; items: StageItem[]; inputs: { channel: number; name: string }[] }
 
@@ -104,7 +106,8 @@ export type SharedDoc = {
   venue: string | null
 } & ({ docType: 'rack'; data: SharedRack; previous: SharedRack | null } | { docType: 'iolist'; data: SharedIoList; previous: SharedIoList | null }
   | { docType: 'stageplot'; data: SharedStagePlot; previous: SharedStagePlot | null }
-  | { docType: 'synoptic'; data: SharedSynoptic; previous: SharedSynoptic | null })
+  | { docType: 'synoptic'; data: SharedSynoptic; previous: SharedSynoptic | null }
+  | { docType: 'rfplan'; data: SharedRfPlan; previous: SharedRfPlan | null })
 
 export async function fetchSharedDoc(token: string): Promise<SharedDoc | null> {
   const { data, error } = await getSupabase().rpc('get_shared_doc', { _token: token })
