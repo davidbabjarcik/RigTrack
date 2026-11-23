@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.19 – 23. 11. 2026
+
+- **Scéna Behringer X32 / M32**: v input liste tlačidlo „Scéna X32 / M32“ – vyberiete scénu (.scn) uloženú z pultu
+  na USB a RigTrack do nej zapíše mená a farby kanálov 1–32, phantom 48 V podľa routingu vstupov (lokálne vstupy,
+  stagebox na AES50 A / B) a mená busov z výstupov („Mix 3“ → bus 3). Pred stiahnutím ukáže presne zmenené riadky;
+  ostatné nastavenia scény (zisk, EQ, dynamika, routing) ostanú bez zmeny. Mená sa skrátia na 12 znakov bez
+  diakritiky. Súbor sa spracuje len v prehliadači, nikam sa neposiela.
+
 ### 11.18 – 23. 11. 2026
 
 - **Input / output listy akcie**: patch zvuku je teraz input list – pri kanáli aj insert (napr. gate, comp) a farba

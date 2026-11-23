@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-11.18-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-11.19-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -55,6 +55,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **11.19** | Scéna Behringer X32 / M32 z input listu |
 | **11.18** | Input / output listy akcie – výstupy, varovania, CSV a návrh z ridera |
 | **11.17** | Racky 19" – PDF a šablóny s väzbou na akciu a pack list |
 | **11.16** | Racky 19" – 2. časť: editor osadenia, varovania a súhrn |
@@ -91,7 +92,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **10.9** | Návratnosť techniky – kedy sa kus splatil |
 | **10.8** | Šablóny eventov – technika a posádka na nový event jedným ťuknutím |
 | **10.7** | Náhrada zo skladu pri chýbajúcej technike jedným ťuknutím |
-| **10.6** | Predaná technika pre účtovníka – tlač a Excel po rokoch |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

@@ -9,6 +9,7 @@ import { tf, tx } from '@/lib/i18n'
 import { applySoundTemplate } from './dmxApi'
 import { inputsCsv, ioWarnings, outputsCsv, parseInputsCsv, parseRider, standCounts, usedEquipment } from './ioTools'
 import { PATCH_SOURCE_LABELS, type PatchFields, type PatchLine } from './model'
+import { X32SceneTool } from './X32SceneTool'
 import { fetchIoVersionCount, OUTPUT_KIND_LABELS, saveIoVersion, type OutputLine } from './outputs'
 
 function download(name: string, text: string) {
@@ -158,6 +159,7 @@ export function IoTools({ companyId, event, lines, outputs, equipment, canEdit, 
             )}
           </>
         )}
+        {lines.length > 0 && <X32SceneTool eventName={event.name} lines={lines} outputs={outputs} />}
         <input ref={csvInput} type="file" accept=".csv,text/csv,.txt" className="sr-only" tabIndex={-1} onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ''; if (file) void readCsv(file) }} />
         <input ref={riderInput} type="file" accept="application/pdf,.pdf" className="sr-only" tabIndex={-1} onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ''; if (file) void readRider(file) }} />
       </div>

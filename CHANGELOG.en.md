@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.19
+
+- **Behringer X32 / M32 scene**: a “X32 / M32 scene” button in the input list – pick a scene (.scn) saved from the
+  console to USB and RigTrack writes channel 1–32 names and colours, 48 V phantom power according to the input routing
+  (local inputs, stagebox on AES50 A / B) and bus names from the outputs (“Mix 3” → bus 3). The exact changed lines
+  are shown before download; all other scene settings (gain, EQ, dynamics, routing) stay unchanged. Names are cut to 12
+  characters without diacritics. The file is processed only in the browser and is not uploaded anywhere.
+
 ### 11.18
 
 - **Event input / output lists**: the sound patch is now an input list – each channel also has an insert (e.g.
