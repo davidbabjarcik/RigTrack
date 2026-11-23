@@ -5,6 +5,21 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.16
+
+- **19" racks (part 2) – fitting editor**: “Edit fitting” in the rack detail. On the left equipment from the
+  warehouse (also by piece #1, #2), models from the equipment database with a height in U and accessories (blank,
+  shelf, vent, patch panel, PDU, drawer, lamp) with search and filters sound / light / video / power / network. Tap
+  to add it to the first free place, or drag it with the mouse. Move by dragging (long-press on touch screens), front
+  and rear, half and third width devices side by side, duplicate, remove, undo / redo (also Ctrl+Z / Ctrl+Y). Colour by
+  kind.
+- **Warnings** (never blocking): overlap, overhang, device deeper than the rack, front and rear together too deep,
+  contents over the max load, heavy items high up (centre of gravity), rear support, power without a PDU or over the
+  PDU, empty U without a blank.
+- **Summary**: used and free U, contents weight and total with the rack, power, number of items – also in the rack
+  detail.
+- Saving creates a new version; if someone else saved in the meantime, the app warns instead of overwriting.
+
 ### 11.15
 
 - **Advance 25 % or 50 %**: an advance invoice from an accepted quote lets you pick the amount – 25 %, 50 % or a

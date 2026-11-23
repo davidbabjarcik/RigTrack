@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, LayoutGrid, Pencil, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -12,8 +12,10 @@ import { formatDate } from '@/lib/format'
 import { tf, tx } from '@/lib/i18n'
 import { can } from '@/lib/permissions'
 import { deleteRack, fetchRacks, fetchSlots, rackKeys } from './api'
-import { ACCESSORY_LABELS, RACK_RAIL_LABELS, RACK_TYPE_LABELS, rackHeightMm, type RackSlot } from './model'
-import { RackView } from './RackView'
+import { useCatalog } from '@/features/equipment/catalog'
+import { rackSummary, rackWarnings, slotInfo, type FitSlot } from './fit'
+import { RACK_RAIL_LABELS, RACK_TYPE_LABELS, rackHeightMm } from './model'
+import { RackGrid } from './RackGrid'
 
 /** Detail racku: údaje, predok a zadok po U a zoznam osadenia. */
 export function RackDetailPage() {
@@ -27,6 +29,7 @@ export function RackDetailPage() {
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const cases = useCases(companyId)
   const events = useEvents(companyId)
+  const catalog = useCatalog()
   const remove = useMutation({
     mutationFn: () => deleteRack(companyId, id),
     onSuccess: async () => {
@@ -39,16 +42,13 @@ export function RackDetailPage() {
   const rack = racks.data?.find((item) => item.id === id)
   if (racks.isError || !rack) return <ErrorBlock message={tx('Tento rack neexistuje alebo k nemu nemáte prístup.')} />
 
-  const labelOf = (slot: RackSlot) => {
-    if (slot.label) return slot.label
-    if (slot.accessory) return tx(ACCESSORY_LABELS[slot.accessory])
-    const item = slot.equipmentId ? equipment.data?.find((piece) => piece.id === slot.equipmentId) : undefined
-    if (item) return `${item.name}${slot.unit ? ` #${slot.unit}` : ''}`
-    return tx('Zariadenie')
-  }
+  const sources = { equipment: equipment.data ?? [], catalog: catalog.data ?? [] }
+  const describe = (slot: FitSlot) => slotInfo(slot, sources)
   const box = rack.caseId ? cases.data?.find((item) => item.id === rack.caseId) : undefined
   const event = rack.eventId ? events.data?.find((item) => item.id === rack.eventId) : undefined
-  const list = slots.data ?? []
+  const list: FitSlot[] = (slots.data ?? []).map(({ id: key, ...slot }) => ({ ...slot, key }))
+  const summary = rackSummary(rack, list, sources)
+  const warnings = rackWarnings(rack, list, sources).filter((warning) => warning.level === 'warn')
 
   return (
     <>
@@ -84,6 +84,12 @@ export function RackDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           {can(company, 'racks.edit') && (
+            <LinkButton to={`/racks/${rack.id}/fit`}>
+              <LayoutGrid className="size-4" aria-hidden />
+              {tx('Upraviť osadenie')}
+            </LinkButton>
+          )}
+          {can(company, 'racks.edit') && (
             <LinkButton to={`/racks/${rack.id}/edit`} variant="outline">
               <Pencil className="size-4" aria-hidden />
               {tx('Upraviť údaje')}
@@ -99,12 +105,31 @@ export function RackDetailPage() {
       </header>
       {rack.note && <p className="mb-4 rounded-xl border bg-surface p-3 text-sm whitespace-pre-wrap">{rack.note}</p>}
 
+      {list.length > 0 && (
+        <p className="mb-3 text-sm">
+          {[tf('Obsadené {0} U', summary.usedU), tf('Voľné {0} U', summary.freeU), tf('Spolu {0} kg', summary.totalKg), tf('Príkon {0} W', summary.powerW)].join(' · ')}
+        </p>
+      )}
+      {warnings.length > 0 && (
+        <ul className="mb-3 flex flex-col gap-1 text-sm">
+          {warnings.map((warning, index) => (
+            <li key={index} className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-2 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+              {warning.text}
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="grid gap-6 sm:grid-cols-2">
-        <RackView units={rack.units} slots={list} side="front" labelOf={labelOf} title={tx('Predok')} />
-        <RackView units={rack.units} slots={list} side="rear" labelOf={labelOf} title={tx('Zadok')} />
+        {(['front', 'rear'] as const).map((side) => (
+          <figure key={side} className="flex flex-col gap-1">
+            <figcaption className="text-sm font-medium">{side === 'front' ? tx('Predok') : tx('Zadok')}</figcaption>
+            <RackGrid units={rack.units} slots={list} side={side} selected={null} flagged={new Set()} describe={describe} onSelect={() => undefined} />
+          </figure>
+        ))}
       </div>
       {list.length === 0 && (
-        <p className="mt-3 text-sm text-muted-foreground">{tx('Rack je zatiaľ prázdny. Osadzovať zariadenia bude možné v editore racku.')}</p>
+        <p className="mt-3 text-sm text-muted-foreground">{tx('Rack je zatiaľ prázdny – zariadenia pridáte tlačidlom Upraviť osadenie.')}</p>
       )}
       {remove.isError && <p role="alert" className="mt-3 text-sm text-destructive">{tx('Rack sa nepodarilo zmazať.')}</p>}
     </>

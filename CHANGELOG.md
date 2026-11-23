@@ -5,6 +5,18 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.16 – 23. 11. 2026
+
+- **Racky 19" (2. časť) – editor osadenia**: v detaile racku „Upraviť osadenie“. Vľavo technika zo skladu (aj po
+  kusoch #1, #2), modely z databázy techniky s výškou v U a doplnky (záslepka, polička, ventilácia, patch panel, PDU,
+  šuflík, lampa) s hľadaním a filtrami zvuk / svetlo / video / napájanie / sieť. Ťuknutím sa pridá na prvé voľné
+  miesto, myšou sa dá aj potiahnuť. Presun ťahaním (na dotykovom displeji po podržaní), predok a zadok, polovičné a
+  tretinové zariadenia vedľa seba, duplikovanie, odobratie, späť / znova (aj Ctrl+Z / Ctrl+Y). Farba podľa druhu.
+- **Varovania** (nič neblokujú): prekrytie, presah, zariadenie hlbšie ako rack, predok a zadok spolu hlbšie, obsah
+  nad nosnosť, ťažké kusy vysoko (ťažisko), zadné uchytenie, príkon bez PDU alebo nad PDU, prázdne U bez záslepky.
+- **Súhrn**: obsadené a voľné U, hmotnosť obsahu aj s rackom, príkon, počet položiek – aj v detaile racku.
+- Uloženie je nová verzia; ak medzitým uložil niekto iný, appka upozorní namiesto prepísania.
+
 ### 11.15 – 23. 11. 2026
 
 - **Záloha 25 % alebo 50 %**: pri zálohovej faktúre z prijatej ponuky sa vyberie výška zálohy – 25 %, 50 % alebo

@@ -60,6 +60,7 @@ const casesList = lazyPage(() => import('@/features/cases/CasesListPage').then((
 const racksList = lazyPage(() => import('@/features/racks/RacksPage').then((m) => m.RacksPage), 'racks.view')
 const rackForm = lazyPage(() => import('@/features/racks/RackFormPage').then((m) => m.RackFormPage), 'racks.edit')
 const rackDetail = lazyPage(() => import('@/features/racks/RackDetailPage').then((m) => m.RackDetailPage), 'racks.view')
+const rackEditor = lazyPage(() => import('@/features/racks/RackEditorPage').then((m) => m.RackEditorPage), 'racks.edit')
 const caseDetail = lazyPage(() => import('@/features/cases/CaseDetailPage').then((m) => m.CaseDetailPage), 'cases.view')
 const caseForm = lazyPage(() => import('@/features/cases/CaseFormPage').then((m) => m.CaseFormPage), 'cases.view')
 const caseLabel = lazyPage(() => import('@/features/cases/CaseLabelPage').then((m) => m.CaseLabelPage), 'cases.view')
@@ -228,6 +229,7 @@ export const routes: RouteObject[] = [
               { path: 'racks/new', lazy: rackForm },
               { path: 'racks/:id', lazy: rackDetail },
               { path: 'racks/:id/edit', lazy: rackForm },
+              { path: 'racks/:id/fit', lazy: rackEditor },
               { path: 'cases/new', lazy: caseForm },
               { path: 'cases/group', lazy: caseGroup },
               { path: 'cases/:id', lazy: caseDetail },

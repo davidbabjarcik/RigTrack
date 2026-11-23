@@ -21,9 +21,10 @@ test('racky: zoznam a detail s predkom a zadkom', async ({ page }) => {
   await page.getByRole('link', { name: /Ukážkový FOH rack/ }).click()
   await expect(page.getByRole('heading', { name: 'Ukážkový FOH rack' })).toBeVisible()
   await expect(page.getByText(/6 U \(267 mm\) · hĺbka 450 mm/)).toBeVisible()
-  await expect(page.getByTitle('Ukážkový pult')).toBeVisible()
-  await expect(page.getByTitle('Záslepka')).toBeVisible()
-  await expect(page.getByTitle('PDU (napájanie)')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Ukážkový pult, U 1–2' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Záslepka, U 3' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'PDU (napájanie), U 1' })).toBeVisible()
+  await expect(page.getByText('Obsadené 3 U · Voľné 3 U · Spolu 18 kg · Príkon 0 W')).toBeVisible()
 })
 
 test('nový rack: kontrola výšky', async ({ page }) => {
@@ -46,4 +47,33 @@ test('výzva doplniť údaje k pridanej technike', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Ukážkový mikrofón' })).toHaveAttribute('href', '/equipment/00000000-0000-4000-8000-0000000000e9/edit')
   await page.getByRole('button', { name: 'Neskôr' }).click()
   await expect(page.getByText('Doplňte údaje k technike, ktorú ste pridali:')).toHaveCount(0)
+})
+
+test('editor racku: pridanie z panela, úprava, späť a uloženie', async ({ page }) => {
+  await signIn(page)
+  const AMP = '00000000-0000-4000-8000-0000000000e3'
+  await fakeBackend(page, {
+    rack_designs: [rack],
+    rack_slots: [],
+    equipment: [{ id: AMP, company_id: COMPANY_ID, name: 'Ukážkový zosilňovač', kind: 'audio', manufacturer: 'Ukážka', model: 'A2', quantity: 1, track_units: false, unit_ids: [], status: 'available', photo_path: 'x.jpg', category_id: 'c', attributes: { rackU: 2, weightKg: 22, powerW: 1200, depthMm: 400 }, updated_at: '2026-11-01T00:00:00Z' }],
+    'rpc:save_rack': [4],
+  })
+  await page.goto(`/racks/${RACK}/fit`)
+  await page.getByRole('button', { name: /Ukážkový zosilňovač/ }).first().click()
+  await expect(page.getByRole('button', { name: 'Ukážkový zosilňovač, U 1–2' })).toBeVisible()
+  await expect(page.getByText('Príkon 1200 W a v racku nie je PDU')).toBeVisible()
+  await expect(page.getByText('Obsadené 2 U')).toBeVisible()
+  // Doplnok a späť.
+  await page.getByRole('tab', { name: 'Doplnky' }).click()
+  await page.getByRole('button', { name: /Záslepka/ }).click()
+  await expect(page.getByRole('button', { name: 'Záslepka, U 3' })).toBeVisible()
+  await page.getByRole('button', { name: 'Späť' }).click()
+  await expect(page.getByRole('button', { name: 'Záslepka, U 3' })).toHaveCount(0)
+  // Uloženie: celé osadenie s verziou racku.
+  const saved = page.waitForRequest((request) => request.url().includes('/rpc/save_rack'))
+  await page.getByRole('button', { name: 'Uložiť' }).click()
+  const body = (await saved).postDataJSON() as { _expected_version: number; _slots: { equipmentId: string; bottomU: number; heightU: number }[] }
+  expect(body._expected_version).toBe(3)
+  expect(body._slots).toEqual([expect.objectContaining({ equipmentId: AMP, bottomU: 1, heightU: 2, side: 'front' })])
+  await expect(page.getByRole('button', { name: 'Uložené (verzia 4)' })).toBeVisible()
 })
