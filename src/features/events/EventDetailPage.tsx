@@ -30,6 +30,8 @@ import { EventStagePlotSection } from '@/features/stageplot/EventStagePlotSectio
 import { EventSynopticSection } from '@/features/synoptic/EventSynopticSection'
 import { EventRfPlanSection } from '@/features/rfplan/EventRfPlanSection'
 import { EventRentalsSection } from '@/features/rentals/EventRentalsSection'
+import { EventScheduleSection } from '@/features/schedule/EventScheduleSection'
+import { EventTourField } from '@/features/tours/EventTourField'
 import { DmxPatchSection } from '@/features/patch/DmxPatchSection'
 import { usePartners } from '@/features/partners/api'
 import { EventDocumentsSection } from './EventDocumentsSection'
@@ -260,6 +262,8 @@ export function EventDetailPage() {
             </CollapsibleSection>
           )}
           <EventPlanSection companyId={companyId} event={event} canEdit={canEdit} />
+          <EventScheduleSection companyId={companyId} event={event} canEdit={canEdit} />
+          <EventTourField companyId={companyId} eventId={event.id} canEdit={canEdit} />
           <EventSharesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />
         </>
       )}

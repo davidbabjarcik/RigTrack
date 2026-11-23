@@ -86,6 +86,9 @@ const caseGroup = lazyPage(() => import('@/features/cases/CaseGroupPage').then((
 const checks = lazyPage(() => import('@/features/checks/ChecksPage').then((m) => m.ChecksPage), 'equipment.view')
 const panel = lazyPage(() => import('@/features/dashboard/PanelPage').then((m) => m.PanelPage))
 const stats = lazyPage(() => import('@/features/stats/StatsPage').then((m) => m.StatsPage))
+const toursList = lazyPage(() => import('@/features/tours/ToursPage').then((m) => m.ToursPage), 'events.view')
+const tourDetail = lazyPage(() => import('@/features/tours/TourDetailPage').then((m) => m.TourDetailPage), 'events.view')
+const schedulePrint = lazyPage(() => import('@/features/schedule/SchedulePrintPage').then((m) => m.SchedulePrintPage), 'events.view')
 const eventsList = lazyPage(() => import('@/features/events/EventsListPage').then((m) => m.EventsListPage), 'events.view')
 const eventDetail = lazyPage(() => import('@/features/events/EventDetailPage').then((m) => m.EventDetailPage), 'events.view')
 const eventImport = lazyPage(() => import('@/features/events/import/EventImportPage').then((m) => m.EventImportPage), 'events.view')
@@ -196,6 +199,7 @@ export const routes: RouteObject[] = [
           { path: 'events/:id/print', lazy: eventPrint },
           { path: 'events/:id/contract', lazy: eventContract },
           { path: 'events/:id/patch', lazy: patchPrint },
+          { path: 'events/:id/schedule', lazy: schedulePrint },
           { path: 'events/:id/dmx', lazy: dmxPrint },
           { path: 'events/:id/lighting', lazy: lightingSheet },
           { path: 'events/:id/quote', lazy: quote },
@@ -273,6 +277,8 @@ export const routes: RouteObject[] = [
               { path: 'attendance', lazy: attendance },
               { path: 'report', lazy: report },
               { path: 'events', lazy: eventsList },
+              { path: 'tours', lazy: toursList },
+              { path: 'tours/:id', lazy: tourDetail },
               { path: 'offers', lazy: offersList },
               { path: 'invoices', lazy: invoicesList },
               { path: 'invoices/new', lazy: invoiceForm },

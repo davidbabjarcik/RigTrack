@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-12.4-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-12.5-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -55,6 +55,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **12.5** | Harmonogram akcie, festivalový režim s pódiami a turné s kopírovaním podkladov |
 | **12.4** | Dopyty na prenájom – odkaz pre dodávateľov, odpovede po riadkoch a porovnanie |
 | **12.3** | HF frekvenčný plán – intermodulácie, TV kanály, návrh frekvencií, PDF a zdieľanie |
 | **12.2** | Synoptika akcie – blokové zapojenie, káble a dĺžky, PDF A4/A3, verzie a zdieľanie |
@@ -91,7 +92,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **10.15** | Faktúry – zálohová a konečná z ponuky, splatnosť a upozornenie |
 | **10.14** | Hodnotenie od klienta a presmerovanie na recenzie Google a Facebook |
 | **10.13** | Externista potvrdí termín cez odkaz bez prihlásenia |
-| **10.12** | Inventúra skenovaním – čo chýba, čo je vonku a čo je navyše |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

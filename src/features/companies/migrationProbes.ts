@@ -93,6 +93,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0200', label: 'synoptika', table: 'event_synoptics', column: 'links' },
   { migration: '0201', label: 'HF plán', table: 'event_rf_plans', column: 'channels' },
   { migration: '0202', label: 'dopyty na prenájom', table: 'rental_requests', column: 'needed_from' },
+  { migration: '0203', label: 'harmonogram a turné', table: 'event_schedule_items', column: 'stage' },
 ]
 
 /** Ktoré migrácie v databáze chýbajú (tabuľka alebo stĺpec neexistuje). Prístup cez RLS nevadí – prázdny výsledok nie je chyba. */

@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.5 – 23. 11. 2026
+
+- **Harmonogram akcie**: v prehľade akcie nová časť Harmonogram – get-in, stavba, soundcheck, otvorenie brán,
+  vystúpenia, prestavby, pauzy, curfew a demontáž s časom od – do po dňoch (aj cez polnoc). Upozorní na prekryv na
+  pódiu a na krátku prestavbu (menej ako 15 min). Tlač na A4.
+- **Festivalový režim**: pri položke sa zadá pódium – pódiá sa v harmonograme aj v tlači zobrazia vedľa seba.
+- **Turné**: nová stránka Turné (z Eventov) – séria akcií so zastávkami podľa dátumu. Pri akcii sa vyberie, do ktorého
+  turné patrí. **Kopírovanie podkladov** medzi zastávkami: input / output list, stage plán, synoptika, HF plán (bez
+  frekvencií – miesto je iné) a harmonogram (posunutý podľa dátumu akcie).
+- Technické: migrácia 0203 (harmonogram, turné).
+
 ### 12.4 – 23. 11. 2026
 
 - **Dopyty na prenájom**: v detaile akcie (Technika) nová časť Dopyty na prenájom – vyberiete, čo chýba (z techniky akcie

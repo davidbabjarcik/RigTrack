@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.5
+
+- **Event schedule**: a new Schedule section in the event overview – get-in, build, soundcheck, doors, performances,
+  changeovers, breaks, curfew and teardown with start – end times per day (also past midnight). Warns about overlaps on
+  a stage and short changeovers (under 15 min). A4 print.
+- **Festival mode**: enter a stage for an item – stages are shown side by side in the schedule and the print.
+- **Tours**: a new Tours page (from Events) – a series of events with stops by date. Each event can be assigned to a
+  tour. **Copying documents** between stops: input / output list, stage plot, signal flow, RF plan (without frequencies
+  – the venue differs) and schedule (shifted by the event date).
+- Technical: migration 0203 (schedule, tours).
+
 ### 12.4
 
 - **Rental requests**: a new Rental requests section in the event detail (Equipment) – pick what is missing (from the

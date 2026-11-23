@@ -1,4 +1,4 @@
-import { ChevronRight, Disc3, Plus } from 'lucide-react'
+import { ChevronRight, Disc3, Plus, Route } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
@@ -35,6 +35,8 @@ export function EventsListPage() {
         action={
           canEdit && (
             <div className="flex flex-wrap gap-2">
+              <LinkButton to="/tours" variant="outline">
+                <Route className="size-4" aria-hidden />{tx('Turné')}</LinkButton>
               <LinkButton to="/events/new?kind=dj" variant="outline">
                 <Disc3 className="size-4" aria-hidden />{tx('DJ hranie')}</LinkButton>
               <LinkButton to="/events/new">
