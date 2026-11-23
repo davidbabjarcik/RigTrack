@@ -5,6 +5,18 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.4
+
+- **Rental requests**: a new Rental requests section in the event detail (Equipment) – pick what is missing (from the
+  event equipment with the quantity pre-filled as the shortfall against your own pieces, or custom items), dates and a
+  note, and add suppliers from contacts or new ones. Each gets their own link (also by e-mail).
+- **Supplier answer without sign-in**: per line how many pieces they have and the price per piece for the whole period,
+  with a note and a message; they can change it while the request is open. They see only your company, dates, venue and
+  items – not the client or other suppliers.
+- **Comparison**: an items × suppliers table, the cheapest per item, totals, coverage and the cheapest complete
+  supplier. Each supplier shows a status (not opened / opened / answered), link revocation and closing the request.
+- Technical: migration 0202 (rental requests).
+
 ### 12.3
 
 - **Event RF frequency plan**: a new RF plan section in the event detail (Equipment) – wireless channels (microphones,

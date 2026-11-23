@@ -29,6 +29,7 @@ import { DocSharesSection } from '@/features/shares/DocSharesSection'
 import { EventStagePlotSection } from '@/features/stageplot/EventStagePlotSection'
 import { EventSynopticSection } from '@/features/synoptic/EventSynopticSection'
 import { EventRfPlanSection } from '@/features/rfplan/EventRfPlanSection'
+import { EventRentalsSection } from '@/features/rentals/EventRentalsSection'
 import { DmxPatchSection } from '@/features/patch/DmxPatchSection'
 import { usePartners } from '@/features/partners/api'
 import { EventDocumentsSection } from './EventDocumentsSection'
@@ -271,6 +272,7 @@ export function EventDetailPage() {
           <EventStagePlotSection companyId={companyId} companyName={company.companyName} event={event} canEdit={canEdit} />
           <EventSynopticSection companyId={companyId} companyName={company.companyName} event={event} canEdit={canEdit} />
           <EventRfPlanSection companyId={companyId} companyName={company.companyName} event={event} canEdit={canEdit} />
+          <EventRentalsSection companyId={companyId} event={event} canEdit={canEdit} />
           <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
           <DocSharesSection
             companyId={companyId}

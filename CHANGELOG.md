@@ -5,6 +5,18 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.4 – 23. 11. 2026
+
+- **Dopyty na prenájom**: v detaile akcie (Technika) nová časť Dopyty na prenájom – vyberiete, čo chýba (z techniky akcie
+  s predvyplneným počtom, koľko chýba oproti vlastným kusom, alebo vlastné položky), termín a poznámku a pridáte
+  dodávateľov z kontaktov alebo nových. Každý dostane vlastný odkaz (aj e-mailom).
+- **Odpoveď dodávateľa bez prihlásenia**: po riadkoch koľko kusov má a cenu za kus za celé obdobie, s poznámkou a správou;
+  odpoveď môže meniť, kým je dopyt otvorený. Vidí len vašu firmu, termín, miesto a položky – nie klienta ani ostatných
+  dodávateľov.
+- **Porovnanie**: tabuľka položky × dodávatelia, najlacnejší pri každej položke, súčty, pokrytie a najlacnejší
+  kompletný dodávateľ. Pri každom dodávateľovi stav (neotvoril / otvoril / odpovedal), zrušenie odkazu, uzavretie dopytu.
+- Technické: migrácia 0202 (dopyty na prenájom).
+
 ### 12.3 – 23. 11. 2026
 
 - **HF frekvenčný plán akcie**: v detaile akcie (Technika) nová časť HF plán – bezdrôtové kanály (mikrofóny, IEM, iné)
