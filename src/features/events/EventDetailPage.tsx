@@ -30,6 +30,7 @@ import { EventStagePlotSection } from '@/features/stageplot/EventStagePlotSectio
 import { EventSynopticSection } from '@/features/synoptic/EventSynopticSection'
 import { EventRfPlanSection } from '@/features/rfplan/EventRfPlanSection'
 import { EventRentalsSection } from '@/features/rentals/EventRentalsSection'
+import { EventSitePlanSection } from '@/features/siteplan/EventSitePlanSection'
 import { EventScheduleSection } from '@/features/schedule/EventScheduleSection'
 import { EventTourField } from '@/features/tours/EventTourField'
 import { DmxPatchSection } from '@/features/patch/DmxPatchSection'
@@ -276,6 +277,7 @@ export function EventDetailPage() {
           <EventStagePlotSection companyId={companyId} companyName={company.companyName} event={event} canEdit={canEdit} />
           <EventSynopticSection companyId={companyId} companyName={company.companyName} event={event} canEdit={canEdit} />
           <EventRfPlanSection companyId={companyId} companyName={company.companyName} event={event} canEdit={canEdit} />
+          <EventSitePlanSection companyId={companyId} companyName={company.companyName} event={event} canEdit={canEdit} />
           <EventRentalsSection companyId={companyId} event={event} canEdit={canEdit} />
           <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
           <DocSharesSection

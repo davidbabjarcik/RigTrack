@@ -31,7 +31,8 @@ function securityHeaders(): Plugin {
         "script-src 'self' https://challenges.cloudflare.com",
         // React <style> pri tlači a inline štýly komponentov.
         "style-src 'self' 'unsafe-inline'",
-        `img-src 'self' data: blob: ${supabase}`,
+        // Dlaždice mapy OpenStreetMap (site plán akcie).
+        `img-src 'self' data: blob: ${supabase} https://tile.openstreetmap.org`,
         "font-src 'self' data:",
         `connect-src 'self' ${supabase} ${realtime} https://api.open-meteo.com https://geocoding-api.open-meteo.com https://nominatim.openstreetmap.org https://router.project-osrm.org`,
         "worker-src 'self' blob:",

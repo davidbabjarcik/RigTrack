@@ -13,9 +13,12 @@ import { channelLegend, KIND_INFO } from '@/features/stageplot/model'
 import { StagePlotSvg } from '@/features/stageplot/StagePlotSvg'
 import { analyze, formatMhz, RF_KIND_LABELS, toKhz, tvChannelOf } from '@/features/rfplan/rf'
 import { Spectrum } from '@/features/rfplan/Spectrum'
+import { routeLength } from '@/features/siteplan/geo'
+import { MapCanvas } from '@/features/siteplan/MapCanvas'
+import { MARKER_LABELS, ROUTE_LABELS } from '@/features/siteplan/model'
 import { cableSummary } from '@/features/synoptic/model'
 import { SynopticSvg } from '@/features/synoptic/SynopticSvg'
-import { changedKeys, fetchSharedDoc, removedRows, type SharedInput, type SharedIoList, type SharedOutput, type SharedRack, type SharedSlot, type SharedRfPlan, type SharedStagePlot, type SharedSynoptic } from './api'
+import { changedKeys, fetchSharedDoc, removedRows, type SharedInput, type SharedIoList, type SharedOutput, type SharedRack, type SharedSlot, type SharedRfPlan, type SharedSitePlan, type SharedStagePlot, type SharedSynoptic } from './api'
 
 const LOGO_STYLES: LogoStyle[] = ['auto', 'original', 'plate', 'white', 'black']
 const changedRow = 'bg-amber-100 dark:bg-amber-950'
@@ -218,6 +221,31 @@ function RfPlan({ data, previous, names }: { data: SharedRfPlan; previous: Share
   )
 }
 
+function SitePlan({ data, names }: { data: SharedSitePlan; names: Record<string, string> }) {
+  const view = { lat: Number(data.view.lat), lon: Number(data.view.lon), zoom: Number(data.view.zoom) }
+  const markers = data.markers.map((marker) => ({ ...marker, lat: Number(marker.lat), lon: Number(marker.lon) }))
+  const routes = data.routes.map((route) => ({ ...route, points: route.points.map(([lat, lon]) => [Number(lat), Number(lon)] as [number, number]) }))
+  return (
+    <section className="flex flex-col gap-3">
+      <MapCanvas view={view} markers={markers} routes={routes} height={460} />
+      {routes.length > 0 && (
+        <Table head={['Trasa', 'Druh', 'Dĺžka s rezervou', 'Kábel']}>
+          {routes.map((route) => (
+            <tr key={route.id} className="border-t">
+              <td className="px-2 py-1">{route.label || '—'}</td>
+              <td className="px-2 py-1">{ROUTE_LABELS[route.kind]}</td>
+              <td className="px-2 py-1">{`${routeLength(route.points, route.slack_pct).withSlack} m`}</td>
+              <td className="px-2 py-1">{route.equipment_id ? (names[route.equipment_id] ?? '') : ''}</td>
+            </tr>
+          ))}
+        </Table>
+      )}
+      {markers.length > 0 && <p className="text-sm text-muted-foreground">{markers.map((marker) => marker.label || MARKER_LABELS[marker.kind]).join(' · ')}</p>}
+      {data.note && <p className="text-sm whitespace-pre-line">{data.note}</p>}
+    </section>
+  )
+}
+
 /**
  * Zdieľaný dokument akcie pre externého príjemcu (d/:token) – len na čítanie, bez prihlásenia: hlavička s logom
  * a kontaktom firmy, posledná uložená verzia a zvýraznené zmeny od posledného zobrazenia. Stránka je len po slovensky.
@@ -235,7 +263,7 @@ export function SharedDocPage() {
   const data = doc.data
   const style = LOGO_STYLES.includes(data.logoStyle as LogoStyle) ? (data.logoStyle as LogoStyle) : 'auto'
   const when = data.startsOn && data.endsOn ? (data.startsOn === data.endsOn ? formatDate(data.startsOn) : `${formatDate(data.startsOn)} – ${formatDate(data.endsOn)}`) : ''
-  const heading = data.docType === 'rack' ? `Rack – ${data.title}` : data.docType === 'stageplot' ? 'Stage plán' : data.docType === 'synoptic' ? 'Synoptika' : data.docType === 'rfplan' ? 'HF frekvenčný plán' : 'Input / output list'
+  const heading = data.docType === 'rack' ? `Rack – ${data.title}` : data.docType === 'stageplot' ? 'Stage plán' : data.docType === 'synoptic' ? 'Synoptika' : data.docType === 'rfplan' ? 'HF frekvenčný plán' : data.docType === 'siteplan' ? 'Site plán' : 'Input / output list'
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -273,6 +301,8 @@ export function SharedDocPage() {
           <Synoptic data={data.data} previous={data.previous} names={data.names} />
         ) : data.docType === 'rfplan' ? (
           <RfPlan data={data.data} previous={data.previous} names={data.names} />
+        ) : data.docType === 'siteplan' ? (
+          <SitePlan data={data.data} names={data.names} />
         ) : (
           <IoList data={data.data} previous={data.previous} names={data.names} />
         )}

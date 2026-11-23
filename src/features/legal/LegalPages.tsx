@@ -9,8 +9,8 @@ import { useLang, useT } from '@/lib/i18n'
 // automatické mazanie) a z údajov, ktoré dodal prevádzkovateľ (3. 11. 2026). Anglická verzia je preklad; pri rozpore
 // platí slovenská.
 
-const UPDATED = '22. 11. 2026'
-const UPDATED_EN = '22 November 2026'
+const UPDATED = '23. 11. 2026'
+const UPDATED_EN = '23 November 2026'
 const OPERATOR = 'Dávid Babjarčík'
 const CONTACT = 'davidbabjarcik@gmail.com'
 const Mail = () => (
@@ -223,6 +223,7 @@ export function PrivacyPage() {
         <li>GitHub Inc. / Microsoft (USA) – hosting webovej aplikácie (GitHub Pages).</li>
         <li>Cloudflare, Inc. (USA) – Turnstile, overenie, že nie ste robot, pri prihlásení, registrácii a obnove hesla (ochrana pred zneužitím účtov); spracúva technické údaje prehliadača a IP adresu, bez reklamných cookies.</li>
         <li>OpenStreetMap Foundation (Nominatim) – vyhľadanie adresy, keď ju zadáte (napr. miesto eventu, sklad, domov); posiela sa len hľadaný text.</li>
+        <li>OpenStreetMap Foundation (mapové dlaždice) – mapa v site pláne akcie; prehliadač načíta obrázky mapy pre zobrazené miesto (bez vašich údajov z RigTracku).</li>
         <li>OSRM (router.project-osrm.org) – výpočet trasy a kilometrov zo skladu na miesto eventu; posielajú sa len súradnice.</li>
         <li>Open-Meteo (Švajčiarsko) – počasie pre miesto eventu; posielajú sa len súradnice.</li>
         <li>Poskytovateľ push upozornení vášho prehliadača (napr. Google, Apple, Mozilla) – len ak upozornenia zapnete.</li>
@@ -566,6 +567,7 @@ function PrivacyEn() {
         <li>GitHub Inc. / Microsoft (USA) – hosting of the web application (GitHub Pages).</li>
         <li>Cloudflare, Inc. (USA) – Turnstile, the check that you are not a robot when signing in, registering and resetting a password (protection against account abuse); processes technical browser data and the IP address, without advertising cookies.</li>
         <li>OpenStreetMap Foundation (Nominatim) – address search when you enter one (e.g. event venue, warehouse, home); only the search text is sent.</li>
+        <li>OpenStreetMap Foundation (map tiles) – the map in the event site plan; the browser loads map images for the shown area (without your RigTrack data).</li>
         <li>OSRM (router.project-osrm.org) – calculation of the route and kilometres from the warehouse to the event venue; only coordinates are sent.</li>
         <li>Open-Meteo (Switzerland) – weather for the event venue; only coordinates are sent.</li>
         <li>The push notification provider of your browser (e.g. Google, Apple, Mozilla) – only if you switch notifications on.</li>

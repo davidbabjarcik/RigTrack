@@ -70,7 +70,7 @@ function ShareRow({ share, canEdit, onRevoke, revoking }: { share: DocShare; can
  * Zdieľanie dokumentu (rack, input / output list) s externými ľuďmi: odkaz pre konkrétneho príjemcu len na čítanie,
  * s platnosťou, zrušením a záznamom zobrazení. Príjemca vidí poslednú uloženú verziu a zmeny od svojho posledného zobrazenia.
  */
-const TITLES: Record<DocType, string> = { rack: 'Zdieľanie racku ({0})', iolist: 'Zdieľanie input listu ({0})', stageplot: 'Zdieľanie stage plánu ({0})', synoptic: 'Zdieľanie synoptiky ({0})', rfplan: 'Zdieľanie HF plánu ({0})' }
+const TITLES: Record<DocType, string> = { rack: 'Zdieľanie racku ({0})', iolist: 'Zdieľanie input listu ({0})', stageplot: 'Zdieľanie stage plánu ({0})', synoptic: 'Zdieľanie synoptiky ({0})', rfplan: 'Zdieľanie HF plánu ({0})', siteplan: 'Zdieľanie site plánu ({0})' }
 
 export function DocSharesSection({ companyId, docType, docId, canEdit, hint }: { companyId: string; docType: DocType; docId: string; canEdit: boolean; hint: string }) {
   const queryClient = useQueryClient()

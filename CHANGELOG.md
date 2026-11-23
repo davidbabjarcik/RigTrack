@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.6 – 23. 11. 2026
+
+- **Site plán akcie**: v detaile akcie (Technika) nová časť Site plán – mapa OpenStreetMap s vyhľadaním miesta. Značky
+  (pódium, FOH, rozvádzač, generátor, vykládka, vstup, stan, WC, bar, zdravotníci, delay veža, popis) sa dajú ťahať.
+- **Trasy káblov** (elektrina, audio, sieť, DMX, voda): klikáte body po zemi, dĺžka sa počíta zo súradníc, s rezervou
+  v percentách. K trase sa vyberie kábel z techniky (s dĺžkou) a vypočíta sa počet kusov; **Káble do techniky akcie**
+  ich doplní do pack listu.
+- **PDF** (A4 na šírku) s hlavičkou firmy, ostrou mapou, mierkou, legendou a dĺžkami trás. Verzie a zdieľanie odkazom.
+- Ochrana súkromia: doplnené mapové dlaždice OpenStreetMap (prehliadač načíta obrázky mapy pre zobrazené miesto).
+- Technické: migrácia 0204 (site plány akcií).
+
 ### 12.5 – 23. 11. 2026
 
 - **Harmonogram akcie**: v prehľade akcie nová časť Harmonogram – get-in, stavba, soundcheck, otvorenie brán,

@@ -5,6 +5,19 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.6
+
+- **Event site plan**: a new Site plan section in the event detail (Equipment) – an OpenStreetMap map with place search.
+  Markers (stage, FOH, distribution board, generator, unloading, entrance, tent, WC, bar, first aid, delay tower, label)
+  can be dragged.
+- **Cable routes** (power, audio, network, DMX, water): click points on the ground, the length is computed from the
+  coordinates, with slack in percent. Pick a cable from your equipment (with its length) and the number of pieces is
+  computed; **Cables to event equipment** adds them to the pack list.
+- **PDF** (A4 landscape) with the company header, a sharp map, scale bar, legend and route lengths. Versions and sharing
+  by link.
+- Privacy: OpenStreetMap map tiles added (the browser loads map images for the shown area).
+- Technical: migration 0204 (event site plans).
+
 ### 12.5
 
 - **Event schedule**: a new Schedule section in the event overview – get-in, build, soundcheck, doors, performances,
