@@ -90,6 +90,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0197', label: 'input / output listy', table: 'event_outputs', column: 'kind' },
   { migration: '0198', label: 'zdieľanie dokumentov', table: 'doc_shares', column: 'token' },
   { migration: '0199', label: 'stage plán', table: 'stage_plots', column: 'items' },
+  { migration: '0200', label: 'synoptika', table: 'event_synoptics', column: 'links' },
 ]
 
 /** Ktoré migrácie v databáze chýbajú (tabuľka alebo stĺpec neexistuje). Prístup cez RLS nevadí – prázdny výsledok nie je chyba. */

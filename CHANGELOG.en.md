@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.2
+
+- **Event signal flow**: a new Signal flow section in the event detail (Equipment) – a block diagram of the signal path.
+  Nodes: console, stagebox, rack, amplifier, speaker, processor, source, network, power, video, lighting; they can also be
+  added from the event equipment and racks. Connections with signal (analogue, AES50, Dante, MADI, AES/EBU, Ethernet,
+  fibre, DMX, video, power), cable, length and count – each signal has its own line style, readable in black and white.
+- **Cable summary** (pieces and metres by type) and warnings: a connection without length, a node without connections.
+- **PDF A4 or A3** landscape with the company header from Settings, the diagram and the cable summary. Every save is a new
+  version; the signal flow can be shared by link.
+- Technical: migration 0200 (event signal flows).
+
 ### 12.1
 
 - **Event stage plot**: a new Stage plot section in the event detail (Equipment) – a top view of the stage to scale

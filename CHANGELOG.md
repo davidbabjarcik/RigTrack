@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.2 – 23. 11. 2026
+
+- **Synoptika akcie**: v detaile akcie (Technika) nová časť Synoptika – blokové zapojenie signálu. Uzly: pult, stagebox,
+  rack, zosilňovač, reproduktor, procesor, zdroj, sieť, elektrina, video, svetlo; pridať sa dajú aj z techniky a rackov
+  akcie. Prepojenia so signálom (analóg, AES50, Dante, MADI, AES/EBU, Ethernet, optika, DMX, video, elektrina), káblom,
+  dĺžkou a počtom – každý signál má inú čiaru, čitateľné aj čiernobielo.
+- **Súhrn káblov** (kusy a metre podľa typu) a upozornenia: prepojenie bez dĺžky, uzol bez prepojenia.
+- **PDF A4 alebo A3** na šírku s hlavičkou firmy z Nastavení, kresbou a súhrnom káblov. Každé uloženie je nová verzia;
+  synoptika sa dá zdieľať odkazom.
+- Technické: migrácia 0200 (synoptiky akcií).
+
 ### 12.1 – 23. 11. 2026
 
 - **Stage plán akcie**: v detaile akcie (Technika) nová časť Stage plán – pôdorys pódia zhora v mierke (šírka a hĺbka

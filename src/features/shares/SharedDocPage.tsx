@@ -11,7 +11,9 @@ import { formatDate, formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { channelLegend, KIND_INFO } from '@/features/stageplot/model'
 import { StagePlotSvg } from '@/features/stageplot/StagePlotSvg'
-import { changedKeys, fetchSharedDoc, removedRows, type SharedInput, type SharedIoList, type SharedOutput, type SharedRack, type SharedSlot, type SharedStagePlot } from './api'
+import { cableSummary } from '@/features/synoptic/model'
+import { SynopticSvg } from '@/features/synoptic/SynopticSvg'
+import { changedKeys, fetchSharedDoc, removedRows, type SharedInput, type SharedIoList, type SharedOutput, type SharedRack, type SharedSlot, type SharedStagePlot, type SharedSynoptic } from './api'
 
 const LOGO_STYLES: LogoStyle[] = ['auto', 'original', 'plate', 'white', 'black']
 const changedRow = 'bg-amber-100 dark:bg-amber-950'
@@ -156,6 +158,31 @@ function StagePlot({ data, previous }: { data: SharedStagePlot; previous: Shared
   )
 }
 
+function Synoptic({ data, previous, names }: { data: SharedSynoptic; previous: SharedSynoptic | null; names: Record<string, string> }) {
+  const summary = cableSummary(data.links)
+  const changed = previous ? changedKeys(data.links, previous.links, (link) => link.id).size + changedKeys(data.nodes, previous.nodes, (node) => node.id).size : 0
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="overflow-auto rounded-xl border bg-white p-2 text-black">
+        <SynopticSvg nodes={data.nodes} links={data.links} names={names} className="h-auto w-full min-w-[40rem]" />
+      </div>
+      {previous && changed > 0 && <p className="text-sm text-amber-900 dark:text-amber-200">{`Zmenené alebo nové uzly a prepojenia: ${changed}`}</p>}
+      {summary.length > 0 && (
+        <Table head={['Kábel', 'Kusov', 'Spolu metrov']}>
+          {summary.map((row) => (
+            <tr key={row.cable} className="border-t">
+              <td className="px-2 py-1">{row.cable}</td>
+              <td className="px-2 py-1">{row.pieces}</td>
+              <td className="px-2 py-1">{[row.meters ? row.meters.toLocaleString('sk-SK') : '', row.missing ? `(${row.missing}× bez dĺžky)` : ''].filter(Boolean).join(' ')}</td>
+            </tr>
+          ))}
+        </Table>
+      )}
+      {data.note && <p className="text-sm whitespace-pre-line">{data.note}</p>}
+    </section>
+  )
+}
+
 /**
  * Zdieľaný dokument akcie pre externého príjemcu (d/:token) – len na čítanie, bez prihlásenia: hlavička s logom
  * a kontaktom firmy, posledná uložená verzia a zvýraznené zmeny od posledného zobrazenia. Stránka je len po slovensky.
@@ -173,7 +200,7 @@ export function SharedDocPage() {
   const data = doc.data
   const style = LOGO_STYLES.includes(data.logoStyle as LogoStyle) ? (data.logoStyle as LogoStyle) : 'auto'
   const when = data.startsOn && data.endsOn ? (data.startsOn === data.endsOn ? formatDate(data.startsOn) : `${formatDate(data.startsOn)} – ${formatDate(data.endsOn)}`) : ''
-  const heading = data.docType === 'rack' ? `Rack – ${data.title}` : data.docType === 'stageplot' ? 'Stage plán' : 'Input / output list'
+  const heading = data.docType === 'rack' ? `Rack – ${data.title}` : data.docType === 'stageplot' ? 'Stage plán' : data.docType === 'synoptic' ? 'Synoptika' : 'Input / output list'
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -207,6 +234,8 @@ export function SharedDocPage() {
           <Rack data={data.data} previous={data.previous} names={data.names} />
         ) : data.docType === 'stageplot' ? (
           <StagePlot data={data.data} previous={data.previous} />
+        ) : data.docType === 'synoptic' ? (
+          <Synoptic data={data.data} previous={data.previous} names={data.names} />
         ) : (
           <IoList data={data.data} previous={data.previous} names={data.names} />
         )}
