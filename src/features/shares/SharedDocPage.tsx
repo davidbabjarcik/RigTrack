@@ -9,7 +9,9 @@ import { OUTPUT_KIND_LABELS, type OutputKind } from '@/features/patch/outputs'
 import { ACCESSORY_LABELS, RACK_TYPE_LABELS, type Accessory, type RackType } from '@/features/racks/model'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { changedKeys, fetchSharedDoc, removedRows, type SharedInput, type SharedIoList, type SharedOutput, type SharedRack, type SharedSlot } from './api'
+import { channelLegend, KIND_INFO } from '@/features/stageplot/model'
+import { StagePlotSvg } from '@/features/stageplot/StagePlotSvg'
+import { changedKeys, fetchSharedDoc, removedRows, type SharedInput, type SharedIoList, type SharedOutput, type SharedRack, type SharedSlot, type SharedStagePlot } from './api'
 
 const LOGO_STYLES: LogoStyle[] = ['auto', 'original', 'plate', 'white', 'black']
 const changedRow = 'bg-amber-100 dark:bg-amber-950'
@@ -122,6 +124,38 @@ function Rack({ data, previous, names }: { data: SharedRack; previous: SharedRac
   )
 }
 
+function StagePlot({ data, previous }: { data: SharedStagePlot; previous: SharedStagePlot | null }) {
+  const channelName = (channel: number) => data.inputs.find((row) => row.channel === channel)?.name
+  const changed = changedKeys(data.items, previous?.items, (item) => item.id)
+  const removed = removedRows(data.items, previous?.items, (item) => item.id)
+  const legend = channelLegend(data.items, channelName)
+  return (
+    <section className="flex flex-col gap-3">
+      <p className="text-sm text-muted-foreground">{`Pódium ${Number(data.plot.width_m).toLocaleString('sk-SK')} × ${Number(data.plot.depth_m).toLocaleString('sk-SK')} m · pohľad zhora, publikum dole · mriežka 1 m`}</p>
+      <div className="rounded-xl border bg-white p-2 text-black">
+        <StagePlotSvg widthM={Number(data.plot.width_m)} depthM={Number(data.plot.depth_m)} items={data.items} channelName={channelName} className="h-auto w-full" />
+      </div>
+      {previous && (changed.size > 0 || removed.length > 0) && (
+        <p className="text-sm text-amber-900 dark:text-amber-200">
+          {[changed.size > 0 && `Zmenené alebo nové položky: ${data.items.filter((item) => changed.has(item.id)).map((item) => item.label || KIND_INFO[item.kind]?.label).join(', ')}`, removed.length > 0 && `Odstránené: ${removed.map((item) => item.label || KIND_INFO[item.kind]?.label).join(', ')}`].filter(Boolean).join(' · ')}
+        </p>
+      )}
+      {legend.length > 0 && (
+        <Table head={['Kanál', 'Názov', 'Na pódiu']}>
+          {legend.map((row, index) => (
+            <tr key={index} className="border-t">
+              <td className="px-2 py-1 font-mono font-semibold">{row.channel}</td>
+              <td className="px-2 py-1">{row.name}</td>
+              <td className="px-2 py-1">{[row.kind, row.label].filter(Boolean).join(' – ')}</td>
+            </tr>
+          ))}
+        </Table>
+      )}
+      {data.plot.note && <p className="text-sm whitespace-pre-line">{data.plot.note}</p>}
+    </section>
+  )
+}
+
 /**
  * Zdieľaný dokument akcie pre externého príjemcu (d/:token) – len na čítanie, bez prihlásenia: hlavička s logom
  * a kontaktom firmy, posledná uložená verzia a zvýraznené zmeny od posledného zobrazenia. Stránka je len po slovensky.
@@ -139,7 +173,7 @@ export function SharedDocPage() {
   const data = doc.data
   const style = LOGO_STYLES.includes(data.logoStyle as LogoStyle) ? (data.logoStyle as LogoStyle) : 'auto'
   const when = data.startsOn && data.endsOn ? (data.startsOn === data.endsOn ? formatDate(data.startsOn) : `${formatDate(data.startsOn)} – ${formatDate(data.endsOn)}`) : ''
-  const heading = data.docType === 'rack' ? `Rack – ${data.title}` : 'Input / output list'
+  const heading = data.docType === 'rack' ? `Rack – ${data.title}` : data.docType === 'stageplot' ? 'Stage plán' : 'Input / output list'
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -169,7 +203,13 @@ export function SharedDocPage() {
             </p>
           )}
         </div>
-        {data.docType === 'rack' ? <Rack data={data.data} previous={data.previous} names={data.names} /> : <IoList data={data.data} previous={data.previous} names={data.names} />}
+        {data.docType === 'rack' ? (
+          <Rack data={data.data} previous={data.previous} names={data.names} />
+        ) : data.docType === 'stageplot' ? (
+          <StagePlot data={data.data} previous={data.previous} />
+        ) : (
+          <IoList data={data.data} previous={data.previous} names={data.names} />
+        )}
         <p className="text-xs text-muted-foreground print:hidden">Dokument je len na čítanie. Pri otázkach kontaktujte {data.companyName}.</p>
       </main>
     </div>

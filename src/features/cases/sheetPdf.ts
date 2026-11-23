@@ -4,8 +4,8 @@
 const MM_TO_PT = 72 / 25.4
 
 /** Veľkosť strany v bodoch (pt). */
-export function pageSizePt(paper: 'A4' | 'A5', landscape: boolean) {
-  const [w, h] = paper === 'A5' ? [148, 210] : [210, 297]
+export function pageSizePt(paper: 'A3' | 'A4' | 'A5', landscape: boolean) {
+  const [w, h] = paper === 'A5' ? [148, 210] : paper === 'A3' ? [297, 420] : [210, 297]
   const [width, height] = landscape ? [h, w] : [w, h]
   return { width: width * MM_TO_PT, height: height * MM_TO_PT }
 }

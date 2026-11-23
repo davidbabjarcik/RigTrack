@@ -5,6 +5,19 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.1
+
+- **Event stage plot**: a new Stage plot section in the event detail (Equipment) – a top view of the stage to scale
+  (width and depth in metres, 1 m grid, audience at the bottom). Items: drums, riser, guitar and bass amp, keys, vocalist,
+  microphone, monitor, sidefill, IEM, DI, stagebox, power, musician, DJ table and a text label. Drag with mouse or finger,
+  arrow keys, rotation, size, duplicate.
+- **Linked to the input list**: pick a channel for an item – the plot shows its name and “CH 5”, the PDF a channel legend.
+- **PDF A4 or A3** landscape at an exact scale (1 : 25, 1 : 50…) with a scale bar, a header with the company logo, name and
+  contact from Settings, version and note. Every save is a new version; the stage plot can be shared by link like racks
+  and input lists.
+- Sharing sections have their own title (rack / input list / stage plot).
+- Technical: migration 0199 (event stage plots).
+
 ### 12.0
 
 - **Sharing event documents**: a new Sharing section on racks and on the event input / output list – a read-only link

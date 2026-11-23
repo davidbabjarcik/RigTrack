@@ -70,6 +70,8 @@ function ShareRow({ share, canEdit, onRevoke, revoking }: { share: DocShare; can
  * Zdieľanie dokumentu (rack, input / output list) s externými ľuďmi: odkaz pre konkrétneho príjemcu len na čítanie,
  * s platnosťou, zrušením a záznamom zobrazení. Príjemca vidí poslednú uloženú verziu a zmeny od svojho posledného zobrazenia.
  */
+const TITLES: Record<DocType, string> = { rack: 'Zdieľanie racku ({0})', iolist: 'Zdieľanie input listu ({0})', stageplot: 'Zdieľanie stage plánu ({0})' }
+
 export function DocSharesSection({ companyId, docType, docId, canEdit, hint }: { companyId: string; docType: DocType; docId: string; canEdit: boolean; hint: string }) {
   const queryClient = useQueryClient()
   const key = shareKeys.ofDoc(companyId, docType, docId)
@@ -95,7 +97,7 @@ export function DocSharesSection({ companyId, docType, docId, canEdit, hint }: {
     if (recipient.trim()) create.mutate()
   }
   return (
-    <CollapsibleSection id={`share.${docType}`} title={tf('Zdieľanie ({0})', list.filter((share) => shareState(share, today()) === 'active').length)}>
+    <CollapsibleSection id={`share.${docType}`} title={tf(TITLES[docType], list.filter((share) => shareState(share, today()) === 'active').length)}>
       <p className="mb-2 text-sm text-muted-foreground">{hint}</p>
       {list.length > 0 && (
         <ul className="mb-3 divide-y overflow-hidden rounded-xl border bg-surface text-sm">

@@ -5,6 +5,18 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.1 – 23. 11. 2026
+
+- **Stage plán akcie**: v detaile akcie (Technika) nová časť Stage plán – pôdorys pódia zhora v mierke (šírka a hĺbka
+  v metroch, mriežka 1 m, publikum dole). Položky: bicie, rizer, gitarový a basový aparát, klávesy, spevák, mikrofón,
+  monitor, sidefill, IEM, DI, stagebox, elektrina, hudobník, DJ stôl a popis. Ťahanie myšou aj prstom, šípky, otáčanie,
+  rozmer, duplikovanie.
+- **Prepojenie s input listom**: k položke sa vyberie kanál – na pláne sa ukáže jeho názov a „CH 5“, v PDF legenda kanálov.
+- **PDF A4 alebo A3** na šírku v presnej mierke (1 : 25, 1 : 50…) s mierkou, hlavičkou s logom, názvom a kontaktom firmy
+  z Nastavení, verziou a poznámkou. Každé uloženie je nová verzia; stage plán sa dá zdieľať odkazom ako rack a input list.
+- Sekcie zdieľania majú vlastný názov (racku / input listu / stage plánu).
+- Technické: migrácia 0199 (stage plány akcií).
+
 ### 12.0 – 23. 11. 2026
 
 - **Zdieľanie dokumentov akcie**: pri racku a pri input / output liste akcie nová časť Zdieľanie – odkaz len na čítanie

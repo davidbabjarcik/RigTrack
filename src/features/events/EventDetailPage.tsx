@@ -26,6 +26,7 @@ import { EventCapsulesSection } from '@/features/capsules/EventCapsulesSection'
 import { EventSharesSection } from '@/features/links/EventSharesSection'
 import { PatchSection } from '@/features/patch/PatchSection'
 import { DocSharesSection } from '@/features/shares/DocSharesSection'
+import { EventStagePlotSection } from '@/features/stageplot/EventStagePlotSection'
 import { DmxPatchSection } from '@/features/patch/DmxPatchSection'
 import { usePartners } from '@/features/partners/api'
 import { EventDocumentsSection } from './EventDocumentsSection'
@@ -265,6 +266,7 @@ export function EventDetailPage() {
           {can(company, 'racks.view') && <EventRacksSection company={company} event={event} />}
           <EventReturnSection company={company} event={event} />
           <EventStagePlan companyId={companyId} eventId={event.id} />
+          <EventStagePlotSection companyId={companyId} companyName={company.companyName} event={event} canEdit={canEdit} />
           <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
           <DocSharesSection
             companyId={companyId}
