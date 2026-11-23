@@ -369,6 +369,11 @@ export type EquipmentAttributes = {
   subDesign?: 'direct' | 'horn' | 'snail'
   /** Váha jedného kusu (kg). */
   weightKg?: number
+  /** 19" rack: výška v U, šírka (celá / 1/2 / 1/3 – napr. prijímače v rack kite), hĺbka v mm, zadné uchytenie. */
+  rackU?: number
+  rackWidth?: 'full' | 'half' | 'third'
+  depthMm?: number
+  rearSupport?: boolean
   /** Nákupná cena jedného kusu (€) a za koľko rokov sa odpíše do nuly. */
   purchasePrice?: number
   depreciationYears?: number
@@ -667,6 +672,10 @@ export const equipmentSchema = z.object({
   biamp: z.boolean().optional(),
   hfDriver: text(80).optional(),
   weightKg: optionalNumber(10000),
+  rackU: z.number('Zadajte číslo').int('Celé číslo').min(1, 'Aspoň 1 U').max(48, 'Najviac 48 U').optional(),
+  rackWidth: z.enum(['full', 'half', 'third', '']).optional(),
+  depthMm: z.number('Zadajte číslo').int('Celé číslo').min(1).max(2000, 'Najviac 2000 mm').optional(),
+  rearSupport: z.boolean().optional(),
   // Číslo artiklu v Thomanne (aj keď sa nekupovalo tam) – odkaz na produkt pri technike.
   thomannCode: text(40).optional(),
   purchasePrice: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(10_000_000).optional(),
@@ -891,6 +900,10 @@ export function attributesFor(
         | 'biamp'
         | 'hfDriver'
         | 'weightKg'
+        | 'rackU'
+        | 'rackWidth'
+        | 'depthMm'
+        | 'rearSupport'
         | 'thomannCode'
         | 'purchasePrice'
         | 'depreciationYears'
@@ -1034,6 +1047,10 @@ export function attributesFor(
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipAddress && values.ipPrefix !== undefined) attributes.ipPrefix = values.ipPrefix
   if (!isSimpleKind(values.kind, values.category ?? '') && values.ipDhcp && !values.ipAddress) attributes.ipDhcp = true
   if (values.weightKg !== undefined) attributes.weightKg = values.weightKg
+  if (values.rackU !== undefined) attributes.rackU = values.rackU
+  if (values.rackU !== undefined && values.rackWidth && values.rackWidth !== 'full') attributes.rackWidth = values.rackWidth
+  if (values.depthMm !== undefined) attributes.depthMm = values.depthMm
+  if (values.rackU !== undefined && values.rearSupport) attributes.rearSupport = true
   if (values.thomannCode?.trim()) attributes.thomannCode = values.thomannCode.trim()
   if (values.purchasePrice !== undefined) attributes.purchasePrice = values.purchasePrice
   if (values.status === 'sold') {

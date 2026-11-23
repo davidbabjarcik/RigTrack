@@ -17,7 +17,7 @@ export const CATALOG_KINDS: EquipmentKind[] = ['audio', 'light', 'video', 'dj', 
  * IP adries, poznámok, servisu, farby, stavu a ďalších údajov konkrétneho kusa alebo firmy.
  */
 export const CATALOG_KEYS = [
-  'connector', 'powerW', 'lightSource', 'lightType', 'cableVariant', 'dipSwitches', 'nodeProtocols', 'nodePorts',
+  'connector', 'powerW', 'rackU', 'rackWidth', 'depthMm', 'rearSupport', 'lightSource', 'lightType', 'cableVariant', 'dipSwitches', 'nodeProtocols', 'nodePorts',
   'trussType', 'trussShape', 'stageType', 'stageSize', 'audioType', 'djType', 'videoType', 'cameraSensor', 'hdmiOut',
   'itType', 'applianceType', 'ampKind', 'ampPresetSlots', 'mixerKind', 'mixerChannels', 'micKind', 'cableType',
   'rfRange', 'micType', 'wirelessRx', 'wirelessTxs', 'powered', 'rmsW', 'peakW', 'woofer', 'maxSplDb', 'connectors',

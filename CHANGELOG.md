@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.14 – 23. 11. 2026
+
+- **Racky 19" (1. časť)**: nová položka Racky v menu – rack s názvom, typom (shock-mount flightcase, otvorený,
+  stolový), výškou v U, hĺbkou, lištami, nosnosťou a vlastnou hmotnosťou, voliteľne k akcii a k fyzickému racku zo
+  skladu, aj ako šablóna. V detaile predok a zadok po U (číslované zdola). Každé uloženie osadenia bude verzia
+  (história zmien). Nové oprávnenia Racky (vidieť / upravovať / mazať).
+- **Technika do racku**: pri technike výška v U, šírka (celá, 1/2, 1/3), hĺbka a či potrebuje zadné uchytenie;
+  databáza techniky ich vie predvyplniť.
+- Technické: migrácia 0195 (racky, osadenie, história verzií dokumentov).
+
 ### 11.13 – 23. 11. 2026
 
 - **Dvojfaktorové prihlásenie (2FA)**: v Nastavenia → Účet sa dá zapnúť – QR kód do aplikácie v mobile (Google

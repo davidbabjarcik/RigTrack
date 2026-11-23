@@ -7,6 +7,12 @@ export function isMissingColumn(error: { code?: string; message?: string } | nul
   return error.code === '42703' || error.code === 'PGRST204' || error.code === 'PGRST200' || (error.message ?? '').includes(column)
 }
 
+/** Chýba v databáze tabuľka (ešte nespustená migrácia)? Postgres 42P01, PostgREST PGRST205. */
+export function isMissingTable(error: { code?: string; message?: string } | null | undefined, table: string) {
+  if (!error) return false
+  return error.code === '42P01' || error.code === 'PGRST205' || ((error.message ?? '').includes(table) && /does not exist|could not find/i.test(error.message ?? ''))
+}
+
 /** Krátky technický dôvod chyby do hlášky (pomôže pri nahlásení chyby). */
 export function errorDetail(error: unknown) {
   if (!error || typeof error !== 'object') return ''

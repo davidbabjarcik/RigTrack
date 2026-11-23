@@ -86,6 +86,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0187', label: 'kontrola case po položkách', table: 'case_checks', column: 'items' },
   { migration: '0188', label: 'týždenný e-mail', table: 'notification_prefs', column: 'email_weekly' },
   { migration: '0193', label: 'odkaz pre klienta', table: 'events', column: 'client_token' },
+  { migration: '0195', label: 'racky 19"', table: 'rack_designs', column: 'units' },
 ]
 
 /** Ktoré migrácie v databáze chýbajú (tabuľka alebo stĺpec neexistuje). Prístup cez RLS nevadí – prázdny výsledok nie je chyba. */

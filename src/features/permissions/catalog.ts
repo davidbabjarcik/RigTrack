@@ -37,6 +37,7 @@ export const PERMISSION_GROUPS = [
     { key: 'warehouse.manage', label: 'Spravovať sklad (rozmery, regály, police, palety)', roles: KEEPER },
   ]),
   group('cases', 'Cases', [...crud('cases', ALL_AND_HELPER), { key: 'cases.check', label: 'Kontrolovať obsah cases', roles: STAFF }]),
+  group('racks', 'Racky (osadenie po U)', [...crud('racks', ALL_AND_HELPER)]),
   group('orders', 'Objednávky a nákupné ceny', [
     { key: 'orders.view', label: 'Vidieť', roles: KEEPER },
     { key: 'orders.edit', label: 'Pridávať a upravovať', roles: KEEPER },

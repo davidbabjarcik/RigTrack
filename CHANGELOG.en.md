@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.14
+
+- **19" racks (part 1)**: new Racks menu item – a rack with a name, type (shock-mount flight case, open, desk),
+  height in U, depth, rails, max load and own weight, optionally for an event and a physical rack from the warehouse,
+  also as a template. The detail shows front and rear by U (numbered from the bottom). Every save of the fitting will
+  be a version (change history). New Racks permissions (view / edit / delete).
+- **Equipment for racks**: height in U, width (full, 1/2, 1/3), depth and whether it needs rear support; the
+  equipment database can prefill them.
+- Technical: migration 0195 (racks, fitting, document version history).
+
 ### 11.13
 
 - **Two-factor sign-in (2FA)**: turn it on in Settings → Account – a QR code for an app on your phone (Google

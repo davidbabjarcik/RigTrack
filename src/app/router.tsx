@@ -57,6 +57,9 @@ const incidents = lazyPage(() => import('@/features/incidents/IncidentsPage').th
 const orderStats = lazyPage(() => import('@/features/orders/OrderStatsPage').then((m) => m.OrderStatsPage), 'orders.view')
 const cableSet = lazyPage(() => import('@/features/equipment/CableSetPage').then((m) => m.CableSetPage), 'equipment.view')
 const casesList = lazyPage(() => import('@/features/cases/CasesListPage').then((m) => m.CasesListPage), 'cases.view')
+const racksList = lazyPage(() => import('@/features/racks/RacksPage').then((m) => m.RacksPage), 'racks.view')
+const rackForm = lazyPage(() => import('@/features/racks/RackFormPage').then((m) => m.RackFormPage), 'racks.edit')
+const rackDetail = lazyPage(() => import('@/features/racks/RackDetailPage').then((m) => m.RackDetailPage), 'racks.view')
 const caseDetail = lazyPage(() => import('@/features/cases/CaseDetailPage').then((m) => m.CaseDetailPage), 'cases.view')
 const caseForm = lazyPage(() => import('@/features/cases/CaseFormPage').then((m) => m.CaseFormPage), 'cases.view')
 const caseLabel = lazyPage(() => import('@/features/cases/CaseLabelPage').then((m) => m.CaseLabelPage), 'cases.view')
@@ -221,6 +224,10 @@ export const routes: RouteObject[] = [
               { path: 'equipment/:id/presets', lazy: ampPresets },
               { path: 'equipment/:id/edit', lazy: equipmentForm },
               { path: 'cases', lazy: casesList },
+              { path: 'racks', lazy: racksList },
+              { path: 'racks/new', lazy: rackForm },
+              { path: 'racks/:id', lazy: rackDetail },
+              { path: 'racks/:id/edit', lazy: rackForm },
               { path: 'cases/new', lazy: caseForm },
               { path: 'cases/group', lazy: caseGroup },
               { path: 'cases/:id', lazy: caseDetail },

@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Briefcase, Building2, Cable, Calculator, CalendarDays, Car, ChartColumn, ClipboardCheck, Coffee, FileText, LayoutDashboard, Lightbulb, ListTodo, PiggyBank, Printer, Receipt, Settings, ShieldAlert, Speaker, StickyNote, Ticket, Timer, Users, Wallet, Warehouse, Wifi, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, Briefcase, Building2, Cable, Calculator, CalendarDays, Car, ChartColumn, ClipboardCheck, Coffee, FileText, LayoutDashboard, Lightbulb, ListTodo, PiggyBank, Printer, Receipt, Server, Settings, ShieldAlert, Speaker, StickyNote, Ticket, Timer, Users, Wallet, Warehouse, Wifi, Wrench, type LucideIcon } from 'lucide-react'
 import type { PermissionKey } from '@/features/permissions/catalog'
 import { can, type Permitted } from './permissions'
 import type { Lang } from './i18n'
@@ -22,6 +22,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Prehľad', to: '/', icon: LayoutDashboard, description: 'Súhrn stavu techniky a najbližších akcií' },
   { id: 'equipment', permission: 'equipment.view', label: 'Technika', to: '/equipment', icon: Speaker, description: 'Evidencia kusov techniky' },
   { id: 'cases', permission: 'cases.view', label: 'Cases a racks', to: '/cases', icon: Briefcase, description: 'Cases, racky a ich obsah' },
+  { id: 'racks', permission: 'racks.view', label: 'Racky', to: '/racks', icon: Server, description: 'Osadenie 19" rackov po U' },
   { id: 'warehouse', permission: 'cases.view', label: 'Sklad', to: '/warehouse', icon: Warehouse, description: 'Plán skladu a kde ktorý case leží' },
   {
     id: 'orders',
@@ -70,6 +71,7 @@ const NAV_EN: Record<string, [string, string]> = {
   dashboard: ['Overview', 'Summary of equipment and upcoming events'],
   equipment: ['Equipment', 'Inventory of every piece of gear'],
   cases: ['Cases & racks', 'Cases, racks and what is inside'],
+  racks: ['Racks', 'Fitting 19" racks by U'],
   warehouse: ['Warehouse', 'Warehouse plan and where each case lies'],
   orders: ['Orders', 'Purchases, their items and the wantlist'],
   vehicles: ['Vehicles', 'Vans, inspections, vignettes and insurance'],
