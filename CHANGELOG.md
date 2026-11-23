@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.0 – 23. 11. 2026
+
+- **Zdieľanie dokumentov akcie**: pri racku a pri input / output liste akcie nová časť Zdieľanie – odkaz len na čítanie
+  pre konkrétneho príjemcu (napr. technik klubu, prenajímateľ) s nepovinnou platnosťou do dátumu. Odkaz sa dá kedykoľvek
+  zrušiť; pri každom vidno, koľkokrát a kedy ho príjemca otvoril a ktorú verziu videl.
+- **Stránka pre príjemcu** (bez prihlásenia): hlavička s logom, názvom a kontaktom firmy z Nastavení, akcia, termín a miesto,
+  posledná uložená verzia dokumentu a tlač / PDF. Riadky zmenené od jeho poslednej návštevy sú zvýraznené a odstránené
+  vypísané. Príjemca vidí len to, čo je v dokumente – nič iné z firmy.
+- Technické: migrácia 0198 (odkazy na dokumenty a záznam zobrazení).
+
 ### 11.19 – 23. 11. 2026
 
 - **Scéna Behringer X32 / M32**: v input liste tlačidlo „Scéna X32 / M32“ – vyberiete scénu (.scn) uloženú z pultu

@@ -10,6 +10,7 @@ import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
 import { useEvents } from '@/features/events/useEvents'
 import { formatDate } from '@/lib/format'
+import { DocSharesSection } from '@/features/shares/DocSharesSection'
 import { tf, tx } from '@/lib/i18n'
 import { can } from '@/lib/permissions'
 import { copyRack, deleteRack, fetchRacks, fetchSlots, rackKeys, rackToEvent } from './api'
@@ -242,6 +243,15 @@ export function RackDetailPage() {
         <p className="mt-3 text-sm text-muted-foreground">{tx('Rack je zatiaľ prázdny – zariadenia pridáte tlačidlom Upraviť osadenie.')}</p>
       )}
       {remove.isError && <p role="alert" className="mt-3 text-sm text-destructive">{tx('Rack sa nepodarilo zmazať.')}</p>}
+      <div className="mt-6">
+        <DocSharesSection
+          companyId={companyId}
+          docType="rack"
+          docId={rack.id}
+          canEdit={can(company, 'racks.edit')}
+          hint={tx('Odkaz len na čítanie pre konkrétneho človeka (napr. technik klubu, prenajímateľ). Uvidí poslednú uloženú verziu osadenia a zmeny od svojho posledného zobrazenia.')}
+        />
+      </div>
     </>
   )
 }

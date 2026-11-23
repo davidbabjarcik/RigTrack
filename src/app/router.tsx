@@ -96,6 +96,7 @@ const offerEditor = lazyPage(() => import('@/features/offers/OfferEditorPage').t
 const sharedOffer = lazyPage(() => import('@/features/offers/SharedOfferPage').then((m) => m.SharedOfferPage))
 const ratingPage = lazyPage(() => import('@/features/events/RatingPage').then((m) => m.RatingPage))
 const clientPortal = lazyPage(() => import('@/features/events/ClientPortalPage').then((m) => m.ClientPortalPage))
+const sharedDoc = lazyPage(() => import('@/features/shares/SharedDocPage').then((m) => m.SharedDocPage))
 const crewInvite = lazyPage(() => import('@/features/events/CrewInvitePage').then((m) => m.CrewInvitePage))
 const sharedContract = lazyPage(() => import('@/features/events/SharedContractPage').then((m) => m.SharedContractPage))
 const offerPrint = lazyPage(() => import('@/features/offers/OfferPrintPage').then((m) => m.OfferPrintPage), 'offers.view')
@@ -152,6 +153,7 @@ export const routes: RouteObject[] = [
   { path: 'u/:token', lazy: crewInvite, errorElement: <RouteErrorPage /> },
   { path: 'h/:token', lazy: ratingPage, errorElement: <RouteErrorPage /> },
   { path: 'k/:token', lazy: clientPortal, errorElement: <RouteErrorPage /> },
+  { path: 'd/:token', lazy: sharedDoc, errorElement: <RouteErrorPage /> },
   // Úvodná stránka RigTracku (aj pre prihlásených); neprihlásený ju vidí aj na „/“.
   { path: 'home', lazy: home, errorElement: <RouteErrorPage /> },
   {

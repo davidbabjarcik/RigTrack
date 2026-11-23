@@ -51,3 +51,31 @@ test('scéna X32 / M32: mená, farby a phantom do scény z pultu', async ({ page
   expect((await download).suggestedFilename()).toBe('Ukazkovy_koncert.scn')
   await page.screenshot({ path: info.outputPath(`x32-scena-${info.project.name}.png`), fullPage: true })
 })
+
+test('zdieľanie input listu: zoznam odkazov a stránka pre príjemcu so zmenami', async ({ page }, info) => {
+  await signIn(page)
+  const share = { id: 's1', company_id: COMPANY_ID, doc_type: 'iolist', doc_id: EVENT_ID, recipient: 'FOH technik klubu', token: 'a'.repeat(64), expires_on: null, revoked_at: null, created_at: '2026-11-20T10:00:00Z', view_count: 2, last_viewed_at: '2026-11-21T18:30:00Z', last_viewed_version: 1, doc_share_views: [{ version: 1, viewed_at: '2026-11-21T18:30:00Z' }] }
+  const input = (channel: number, name: string, phantom = false) => ({ channel, name, source: 'mic', equipment_id: channel === 1 ? MIC : null, stagebox: 'SB1', stagebox_input: channel, phantom, stand: 'tall', insert_note: '', color: channel === 1 ? 'red' : '', note: '' })
+  const doc = {
+    docType: 'iolist', recipient: 'FOH technik klubu', title: '', version: 2, savedAt: '2026-11-22T09:00:00Z', previousVersion: 1,
+    data: { inputs: [input(1, 'Spev'), input(2, 'Gitara', true)], outputs: [{ number: 1, name: 'Wedge spev', kind: 'wedge', mix: 'Mix 1', destination: 'SB1 OUT 1', equipment_id: null, stereo: false, note: '' }] },
+    previous: { inputs: [input(1, 'Spev'), input(2, 'Gitara'), input(3, 'Basa')], outputs: [] },
+    names: { [MIC]: 'Ukážkový kondenzátor' }, companyName: 'Ukážková firma', logoPath: '', logoStyle: 'auto', contact: 'info@example.com',
+    event: 'Ukážkový koncert', startsOn: '2026-11-15', endsOn: '2026-11-15', venue: 'Sála',
+  }
+  await fakeBackend(page, { events: [event], equipment: [mic], event_patch: [patch('p1', 1, 'Spev')], doc_shares: [share], 'rpc:get_shared_doc': [doc] })
+  await page.goto(`/events/${EVENT_ID}?tab=gear`)
+  await expect(page.getByText('FOH technik klubu')).toBeVisible()
+  await expect(page.getByText(/zobrazený 2× · naposledy .* \(verzia 1\)/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Kopírovať odkaz' })).toBeVisible()
+
+  await page.goto(`/d/${'a'.repeat(64)}`)
+  await expect(page.getByRole('heading', { name: 'Input / output list' })).toBeVisible()
+  await expect(page.getByText('Ukážkový koncert · 15. 11. 2026 · Sála')).toBeVisible()
+  await expect(page.getByText(/Od vašej poslednej návštevy \(verzia 1\)/)).toBeVisible()
+  await expect(page.getByRole('row', { name: /Gitara/ })).toHaveClass(/bg-amber-100/)
+  await expect(page.getByRole('row', { name: /Spev Ukážkový kondenzátor/ })).not.toHaveClass(/bg-amber-100/)
+  await expect(page.getByText('3 Basa')).toBeVisible()
+  await expect(page.getByRole('row', { name: /Wedge spev/ })).toHaveClass(/bg-amber-100/)
+  await page.screenshot({ path: info.outputPath(`zdielany-input-list-${info.project.name}.png`), fullPage: true })
+})

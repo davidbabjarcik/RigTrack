@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.0
+
+- **Sharing event documents**: a new Sharing section on racks and on the event input / output list – a read-only link
+  for a specific recipient (e.g. a venue technician or rental company) with an optional expiry date. A link can be revoked
+  at any time; each one shows how many times and when the recipient opened it and which version they saw.
+- **Recipient page** (no sign-in): a header with the company logo, name and contact from Settings, the event, dates and
+  venue, the latest saved version of the document and print / PDF. Rows changed since their last visit are highlighted
+  and removed rows listed. The recipient sees only what is in the document – nothing else from the company.
+- Technical: migration 0198 (document links and view log).
+
 ### 11.19
 
 - **Behringer X32 / M32 scene**: a “X32 / M32 scene” button in the input list – pick a scene (.scn) saved from the

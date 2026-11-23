@@ -25,6 +25,7 @@ import { EventPartnersSection } from '@/features/partners/EventPartnersSection'
 import { EventCapsulesSection } from '@/features/capsules/EventCapsulesSection'
 import { EventSharesSection } from '@/features/links/EventSharesSection'
 import { PatchSection } from '@/features/patch/PatchSection'
+import { DocSharesSection } from '@/features/shares/DocSharesSection'
 import { DmxPatchSection } from '@/features/patch/DmxPatchSection'
 import { usePartners } from '@/features/partners/api'
 import { EventDocumentsSection } from './EventDocumentsSection'
@@ -265,6 +266,13 @@ export function EventDetailPage() {
           <EventReturnSection company={company} event={event} />
           <EventStagePlan companyId={companyId} eventId={event.id} />
           <PatchSection companyId={companyId} event={event} events={events.data} canEdit={canEdit} />
+          <DocSharesSection
+            companyId={companyId}
+            docType="iolist"
+            docId={event.id}
+            canEdit={canEdit}
+            hint={tx('Input / output list pre zvukára, klub alebo prenajímateľa – odkaz len na čítanie. Uvidí poslednú uloženú verziu (Uložiť verziu) a zmeny od svojho posledného zobrazenia.')}
+          />
           <DmxPatchSection companyId={companyId} event={event} canEdit={canEdit} />
           {can(company, 'equipment.view') && <EventPowerSection companyId={companyId} event={event} canEdit={canEdit} />}
           {can(company, 'equipment.view') && <EventCapsulesSection companyId={companyId} eventId={event.id} canEdit={canEdit} />}
