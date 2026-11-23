@@ -5,6 +5,19 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.18 – 23. 11. 2026
+
+- **Input / output listy akcie**: patch zvuku je teraz input list – pri kanáli aj insert (napr. gate, comp) a farba
+  na pulte. Nová časť **Výstupy** (wedge, IEM, sidefill, PA, sub, delay, fill, nahrávanie, efekt) s mixom, cieľom
+  na stageboxe, technikou a stereo.
+- **Varovania**: rovnaký vstup stageboxu na viacerých kanáloch, kondenzátorový mikrofón bez phantomu, viac kanálov
+  ako má pult na akcii, viac kusov techniky v liste, než má firma. Súhrn stojanov podľa druhu.
+- **CSV a rider**: export vstupov aj výstupov do CSV (otvorí ho Excel), import CSV a návrh input listu z PDF ridera –
+  vždy najprv náhľad, potom „Nahradiť“ alebo „Pridať za koniec“. Mikrofóny sa skúsia nájsť v technike.
+- **Do techniky akcie** doplní mikrofóny, DI a monitory z listu do pack listu; **Uložiť verziu** robí číslované snímky
+  listu. Tlač input listu má verziu, stĺpec Insert a tabuľku výstupov.
+- Technické: migrácia 0197 (výstupy akcie, insert a farba kanála, verzie input listu).
+
 ### 11.17 – 23. 11. 2026
 
 - **Racky 19" (3. časť) – PDF**: v detaile racku tlačidlo PDF – A4 na výšku, hlavička s logom, názvom a kontaktom

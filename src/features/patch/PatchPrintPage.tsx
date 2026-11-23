@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
+import { fetchIoVersionCount, OUTPUT_KIND_LABELS, useOutputs } from './outputs'
 import { useCapsules } from '@/features/capsules/api'
 import { useCompany } from '@/features/companies/company-context'
 import { equipmentKeys, fetchEquipmentList } from '@/features/equipment/api'
@@ -33,6 +34,8 @@ export function PatchPrintPage() {
   const patch = usePatch(companyId, id)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const capsules = useCapsules(companyId)
+  const outputs = useOutputs(companyId, id)
+  const versions = useQuery({ queryKey: ['company', companyId, 'events', id, 'io-versions'], queryFn: () => fetchIoVersionCount(companyId, id) })
 
   if (events.isPending || patch.isPending) return <LoadingBlock />
   const event = events.data?.find((item) => item.id === id)
@@ -60,9 +63,9 @@ export function PatchPrintPage() {
       </div>
       <PaperSheet sheetRef={sheet} marginMm={12}>
       <header className="mb-4 border-b border-neutral-400 pb-2">
-        <h1 className="text-xl font-bold">Patch list – {event.name}</h1>
+        <h1 className="text-xl font-bold">Input list – {event.name}</h1>
         <p className="text-sm text-neutral-700">
-          {[event.startsOn === event.endsOn ? formatDate(event.startsOn) : `${formatDate(event.startsOn)} – ${formatDate(event.endsOn)}`, event.venue, company.companyName].filter(Boolean).join(' · ')}
+          {[event.startsOn === event.endsOn ? formatDate(event.startsOn) : `${formatDate(event.startsOn)} – ${formatDate(event.endsOn)}`, event.venue, company.companyName, versions.data ? `verzia ${versions.data}` : ''].filter(Boolean).join(' · ')}
         </p>
       </header>
       <table className="w-full border-collapse text-sm">
@@ -74,6 +77,7 @@ export function PatchPrintPage() {
             <th className="py-1 pr-2">Zdroj</th>
             <th className="py-1 pr-2">Stojan</th>
             <th className="py-1 pr-2">48V</th>
+            <th className="py-1 pr-2">Insert</th>
             <th className="py-1">Poznámka</th>
           </tr>
         </thead>
@@ -86,11 +90,41 @@ export function PatchPrintPage() {
               <td className="py-1 pr-2">{describeSource(line, equipmentName, capsuleName)}</td>
               <td className="py-1 pr-2">{line.stand ? STAND_LABELS[line.stand] : ''}</td>
               <td className="py-1 pr-2">{line.phantom ? '✓' : ''}</td>
+              <td className="py-1 pr-2">{line.insertNote}</td>
               <td className="py-1">{line.note}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      {(outputs.data ?? []).length > 0 && (
+        <section className="mt-5 break-inside-avoid">
+          <h2 className="mb-1 text-base font-bold">Výstupy</h2>
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b-2 border-black text-left">
+                <th className="w-10 py-1 pr-2">Out</th>
+                <th className="py-1 pr-2">Čo</th>
+                <th className="py-1 pr-2">Druh</th>
+                <th className="py-1 pr-2">Mix</th>
+                <th className="py-1 pr-2">Cieľ</th>
+                <th className="py-1">Poznámka</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(outputs.data ?? []).map((output) => (
+                <tr key={output.id} className="border-b border-neutral-300 align-top">
+                  <td className="py-1 pr-2 font-mono font-bold">{output.number}</td>
+                  <td className="py-1 pr-2 font-medium">{output.name}{output.stereo ? ' (stereo)' : ''}</td>
+                  <td className="py-1 pr-2">{OUTPUT_KIND_LABELS[output.kind]}</td>
+                  <td className="py-1 pr-2">{output.mix}</td>
+                  <td className="py-1 pr-2 font-mono">{output.destination}</td>
+                  <td className="py-1">{[output.equipmentId && equipmentName(output.equipmentId), output.note].filter(Boolean).join(' · ')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
       {summary.items.length > 0 && (
         <section className="mt-5 break-inside-avoid">
           <h2 className="text-xs font-semibold tracking-wide text-neutral-600 uppercase">Na prípravu</h2>

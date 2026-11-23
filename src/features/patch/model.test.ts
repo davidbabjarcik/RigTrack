@@ -14,6 +14,8 @@ const line = (patch: Partial<PatchLine>): PatchLine => ({
   stand: '',
   phantom: false,
   note: '',
+  insertNote: '',
+  color: '',
   ...patch,
 })
 const names: Record<string, string> = { sm58: 'Shure SM58', ulxd: 'Shure ULX-D', b58: 'Beta 58A' }

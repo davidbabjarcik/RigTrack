@@ -13,7 +13,13 @@ import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { copyPatch, deletePatchLine, patchKeys, savePatchLine, usePatch } from './api'
 import { applySoundTemplate, dmxKeys, savePatchTemplate, usePatchTemplates } from './dmxApi'
+import { IoTools } from './IoToolbar'
+import { OutputsSection } from './OutputsSection'
+import { useOutputs } from './outputs'
 import {
+  CHANNEL_COLOR_CSS,
+  CHANNEL_COLOR_LABELS,
+  CHANNEL_COLORS,
   CONNECTOR_LABELS,
   CONNECTORS,
   describeSource,
@@ -131,6 +137,15 @@ function LineForm({ initial, equipment, capsules, onSave, onCancel, onDelete, sa
       </SelectField>
       <label className="flex items-end gap-2 pb-3 text-sm">
         <input type="checkbox" className="size-4" checked={fields.phantom} onChange={(e) => set({ phantom: e.target.checked })} />{tx('Phantom 48 V')}</label>
+      <Field label={tx('Insert')} maxLength={60} placeholder={tx('napr. Gate, Comp')} value={fields.insertNote} onChange={(e) => set({ insertNote: e.target.value })} />
+      <SelectField label={tx('Farba na pulte')} value={fields.color} onChange={(e) => set({ color: e.target.value as PatchFields['color'] })}>
+        <option value="">—</option>
+        {CHANNEL_COLORS.map((color) => (
+          <option key={color} value={color}>
+            {tx(CHANNEL_COLOR_LABELS[color])}
+          </option>
+        ))}
+      </SelectField>
       <Field label={tx('Poznámka')} className="col-span-2 sm:col-span-3" maxLength={200} value={fields.note} onChange={(e) => set({ note: e.target.value })} />
       <div className="col-span-2 flex flex-wrap gap-2 sm:col-span-6">
         <Button type="submit" size="sm" disabled={saving}>{tx('Uložiť')}</Button>
@@ -151,6 +166,7 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
   const patch = usePatch(companyId, event.id)
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const capsules = useCapsules(companyId)
+  const outputs = useOutputs(companyId, event.id)
   const [editing, setEditing] = useState<string | null>(null)
   const [copyFrom, setCopyFrom] = useState('')
   const refresh = () => queryClient.invalidateQueries({ queryKey: key })
@@ -200,7 +216,7 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
   return (
     <CollapsibleSection
       id="event.patch"
-      title={`Patch list zvuku (${lines.length})`}
+      title={tx('Input list – patch zvuku') + ` (${lines.length})`}
       actions={
         lines.length > 0 && (
           <LinkButton to={`/events/${event.id}/patch`} variant="outline" size="sm">
@@ -208,6 +224,15 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
         )
       }
     >
+      <IoTools
+        companyId={companyId}
+        event={event}
+        lines={lines}
+        outputs={outputs.data ?? []}
+        equipment={items}
+        canEdit={canEdit}
+        onChanged={() => void refresh()}
+      />
       {duplicates.size > 0 && <p className="mb-2 text-sm text-destructive">{tx('Kanál')}{' '}{[...duplicates].join(', ')}{' '}{tx('je v patch liste viackrát.')}</p>}
       {lines.length > 0 && (
         <ul className="mb-3 divide-y overflow-hidden rounded-xl border bg-surface text-sm">
@@ -225,10 +250,11 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
                   className="flex w-full items-center gap-3 px-3 py-2 text-left enabled:hover:bg-muted"
                 >
                   <span className={cn('w-8 shrink-0 text-right font-mono font-semibold', duplicates.has(line.channel) && 'text-destructive')}>{line.channel}</span>
+                  <span className="size-3 shrink-0 rounded-full border" style={line.color ? { background: CHANNEL_COLOR_CSS[line.color] } : undefined} title={line.color ? tx(CHANNEL_COLOR_LABELS[line.color]) : undefined} aria-hidden />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{line.name || '—'}</span>
                     <span className="block truncate text-muted-foreground">
-                      {[describeSource(line, equipmentName, capsuleName), line.stand && STAND_LABELS[line.stand], line.phantom && '48 V', line.note].filter(Boolean).join(' · ')}
+                      {[describeSource(line, equipmentName, capsuleName), line.stand && STAND_LABELS[line.stand], line.phantom && '48 V', line.insertNote && `insert ${line.insertNote}`, line.note].filter(Boolean).join(' · ')}
                     </span>
                   </span>
                   <span className="shrink-0 font-mono text-muted-foreground">{[line.stagebox, line.stageboxInput].filter((value) => value !== null && value !== '').join('/')}</span>
@@ -305,6 +331,11 @@ export function PatchSection({ companyId, event, events, canEdit }: { companyId:
       )}
       {saveTemplate.isSuccess && <p className="mt-2 text-sm text-muted-foreground">{tx('Šablóna je uložená (Patch listy).')}</p>}
       {(save.isError || remove.isError || copy.isError || fromTemplate.isError || saveTemplate.isError) && <p className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>}
+      {outputs.data && (
+        <div className="mt-4">
+          <OutputsSection companyId={companyId} eventId={event.id} outputs={outputs.data} equipment={items} canEdit={canEdit} />
+        </div>
+      )}
     </CollapsibleSection>
   )
 }

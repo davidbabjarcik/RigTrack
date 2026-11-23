@@ -5,6 +5,19 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.18
+
+- **Event input / output lists**: the sound patch is now an input list – each channel also has an insert (e.g.
+  gate, comp) and a console colour. A new **Outputs** section (wedge, IEM, sidefill, PA, sub, delay, fill, recording,
+  effect) with mix, stagebox destination, equipment and stereo.
+- **Warnings**: the same stagebox input on several channels, a condenser microphone without phantom power, more
+  channels than the event console has, more pieces in the list than the company owns. A stand summary by type.
+- **CSV and rider**: CSV export of inputs and outputs (opens in Excel), CSV import and an input list suggestion from a
+  PDF rider – always a preview first, then “Replace” or “Append”. Microphones are matched to your equipment.
+- **To event equipment** adds microphones, DIs and monitors from the list to the pack list; **Save version** keeps
+  numbered snapshots of the list. The printed input list shows the version, an Insert column and the outputs table.
+- Technical: migration 0197 (event outputs, channel insert and colour, input list versions).
+
 ### 11.17
 
 - **19" racks (part 3) – PDF**: a PDF button in the rack detail – A4 portrait, header with the company logo, name

@@ -18,6 +18,12 @@ export const STANDS = ['short', 'tall', 'clamp', 'none'] as const
 export type Stand = (typeof STANDS)[number]
 export const STAND_LABELS: Record<Stand, string> = { short: 'Nízky stojan', tall: 'Vysoký stojan', clamp: 'Klipsa', none: 'Bez stojana' }
 
+/** Farba kanála (scribble strip pultu). */
+export const CHANNEL_COLORS = ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'] as const
+export type ChannelColor = (typeof CHANNEL_COLORS)[number]
+export const CHANNEL_COLOR_LABELS: Record<ChannelColor, string> = { red: 'Červená', green: 'Zelená', yellow: 'Žltá', blue: 'Modrá', magenta: 'Fialová', cyan: 'Tyrkysová', white: 'Biela' }
+export const CHANNEL_COLOR_CSS: Record<ChannelColor, string> = { red: '#ef4444', green: '#22c55e', yellow: '#eab308', blue: '#3b82f6', magenta: '#d946ef', cyan: '#06b6d4', white: '#e5e7eb' }
+
 export type PatchLine = {
   id: string
   channel: number
@@ -31,6 +37,9 @@ export type PatchLine = {
   stand: Stand | ''
   phantom: boolean
   note: string
+  /** Insert (napr. Gate, Comp) – od 0197. */
+  insertNote: string
+  color: ChannelColor | ''
 }
 
 export type PatchFields = Omit<PatchLine, 'id'>
@@ -47,6 +56,8 @@ export const EMPTY_LINE: PatchFields = {
   stand: '',
   phantom: false,
   note: '',
+  insertNote: '',
+  color: '',
 }
 
 /** Ďalší voľný kanál a ďalší vstup na tom istom stageboxe ako posledný riadok. */

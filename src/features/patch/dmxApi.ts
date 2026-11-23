@@ -110,6 +110,8 @@ export async function applySoundTemplate(companyId: string, eventId: string, lin
       stand: line.stand,
       phantom: line.phantom,
       note: line.note,
+      insert_note: line.insertNote ?? '',
+      color: line.color ?? '',
       company_id: companyId,
       event_id: eventId,
     })),

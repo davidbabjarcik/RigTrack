@@ -17,9 +17,11 @@ type Row = {
   stand: Stand | ''
   phantom: boolean
   note: string
+  insert_note?: string
+  color?: PatchLine['color']
 }
 
-const COLUMNS = 'id, channel, name, stagebox, stagebox_input, source, equipment_id, capsule_id, connector, stand, phantom, note'
+const COLUMNS = 'id, channel, name, stagebox, stagebox_input, source, equipment_id, capsule_id, connector, stand, phantom, note, insert_note, color'
 
 const toLine = (row: Row): PatchLine => ({
   id: row.id,
@@ -34,6 +36,8 @@ const toLine = (row: Row): PatchLine => ({
   stand: row.stand,
   phantom: row.phantom,
   note: row.note,
+  insertNote: row.insert_note ?? '',
+  color: row.color ?? '',
 })
 
 const toRow = (fields: PatchFields) => ({
@@ -49,6 +53,8 @@ const toRow = (fields: PatchFields) => ({
   stand: fields.stand,
   phantom: fields.phantom,
   note: fields.note.trim(),
+  insert_note: (fields.insertNote ?? '').trim(),
+  color: fields.color ?? '',
 })
 
 export async function fetchPatch(companyId: string, eventId: string): Promise<PatchLine[]> {
