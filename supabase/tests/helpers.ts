@@ -14,6 +14,12 @@ const SUPABASE_STUB = `
     last_sign_in_at timestamptz,
     raw_user_meta_data jsonb default '{}'
   );
+  create table auth.mfa_factors (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid,
+    status text,
+    factor_type text
+  );
   create function auth.jwt() returns jsonb language sql stable as
     $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
   create function auth.uid() returns uuid language sql stable as
@@ -94,9 +100,9 @@ export async function createTestDb() {
       users[name] = row.id
     },
 
-    /** Dotaz ako prihlásený používateľ (alebo anon, ak name = null). */
-    async as(name: string | null, sql: string, params: unknown[] = []): Promise<Row[]> {
-      const claims = name ? JSON.stringify({ sub: users[name] }) : ''
+    /** Dotaz ako prihlásený používateľ (alebo anon, ak name = null); `extra` doplní tvrdenia tokenu (napr. aal). */
+    async as(name: string | null, sql: string, params: unknown[] = [], extra: Record<string, unknown> = {}): Promise<Row[]> {
+      const claims = name ? JSON.stringify({ sub: users[name], ...extra }) : ''
       await db.query(`select set_config('request.jwt.claims', $1, false)`, [claims])
       await db.exec(`set role ${name ? 'authenticated' : 'anon'}`)
       try {

@@ -39,3 +39,11 @@ test('stránka pre klienta: zdieľané ponuky, zmluvy a hodnotenie', async ({ pa
   await expect(page.getByRole('link', { name: /Zmluva č\. Z2026-003/ })).toContainText('Na podpis')
   await expect(page.getByText('Ako sme sa vám páčili?')).toHaveCount(0)
 })
+
+test('nastavenia: dvojfaktorové prihlásenie sa dá zapnúť', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, {})
+  await page.goto('/settings?tab=account')
+  await expect(page.getByText('Dvojfaktorové prihlásenie je vypnuté')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Zapnúť dvojfaktorové prihlásenie' })).toBeVisible()
+})

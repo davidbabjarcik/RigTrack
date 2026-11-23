@@ -42,6 +42,7 @@ import { CompanyIssuersSettings } from '@/features/offers/CompanyIssuersSettings
 import { ResponsibilitiesSettings } from '@/features/responsibilities/ResponsibilitiesSettings'
 import { DutySettings } from '@/features/duties/DutySettings'
 import { EmailPrefs } from '@/features/news/EmailPrefs'
+import { MfaSettings } from '@/features/auth/MfaSettings'
 import { LookupSettings } from '@/features/equipment/LookupSettings'
 import { useEquipmentLookups } from '@/features/equipment/useEquipmentLookups'
 import { PermissionsSettings } from '@/features/permissions/PermissionsSettings'
@@ -504,6 +505,9 @@ export function SettingsPage() {
           </Section>
           <Section title={tx('Poradie techniky (moje zameranie)')}>
             <KindOrderSettings />
+          </Section>
+          <Section title={tx('Dvojfaktorové prihlásenie (2FA)')}>
+            <MfaSettings recommended={isAdminRole(company.role)} />
           </Section>
           <Section title={tx('Upozornenia na mobil')}>
             <PushSettings userId={user.id} />

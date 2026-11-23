@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 11.13 – 23. 11. 2026
+
+- **Dvojfaktorové prihlásenie (2FA)**: v Nastavenia → Účet sa dá zapnúť – QR kód do aplikácie v mobile (Google
+  Authenticator, Microsoft Authenticator…) a overenie prvým kódom. Potom sa pri prihlásení zadáva aj 6-miestny kód.
+  Chráni to aj databáza: bez kódu sa k dátam nedostane nikto, ani s vaším heslom a ani mimo appky. Kto 2FA nemá,
+  pre toho sa nič nemení. Adminom a CEO bez 2FA appka odporučí zapnúť ho (upozornenie sa dá skryť).
+- Technické: migrácia 0194 (2FA v databáze).
+
 ### 11.12 – 22. 11. 2026
 
 - **Technika bez použitia 12 mesiacov** (Štatistiky → Technika): čo za posledný rok nebolo na žiadnom evente ani

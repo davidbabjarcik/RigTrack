@@ -1,3 +1,4 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { LoadingScreen } from '@/components/feedback/LoadingScreen'
@@ -8,6 +9,8 @@ import type { PermissionKey } from '@/features/permissions/catalog'
 import { can } from '@/lib/permissions'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
 import { FoundPage } from '@/features/scan/FoundPage'
+import { MfaChallenge } from '@/features/auth/MfaChallenge'
+import { mfaKeys, needsMfaCode } from '@/features/auth/mfa'
 import { tx } from '@/lib/i18n'
 
 // Guardy sú iba UX. Dáta chráni RLS v databáze.
@@ -18,6 +21,10 @@ const HomePage = lazy(() => import('@/features/home/HomePage').then((module) => 
 export function RequireAuth() {
   const { session, loading } = useAuth()
   const location = useLocation()
+  const queryClient = useQueryClient()
+  // 2FA: kto ho má zapnuté a prihlásil sa len heslom, zadá najprv kód z mobilu (inak databáza dáta nevydá).
+  const token = session?.access_token ?? ''
+  const mfa = useQuery({ queryKey: mfaKeys.state(token), queryFn: needsMfaCode, enabled: Boolean(token) && isSupabaseConfigured, staleTime: Infinity })
 
   // Bez backendu nie je čo chrániť; shell ostáva prístupný na vývoj UI.
   if (!isSupabaseConfigured) return <Outlet />
@@ -38,6 +45,8 @@ export function RequireAuth() {
     }
     return <Navigate to="/auth" replace state={{ from: location.pathname + location.search }} />
   }
+  if (mfa.isPending) return <LoadingScreen />
+  if (mfa.data) return <MfaChallenge onDone={() => queryClient.setQueryData(mfaKeys.state(token), false)} />
   return <Outlet />
 }
 

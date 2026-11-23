@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-11.12-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-11.13-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -55,6 +55,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **11.13** | Dvojfaktorové prihlásenie (2FA) |
 | **11.12** | Technika bez použitia, odkaz pre klienta, fotky pri poškodení po evente |
 | **11.11** | Pípnutie pri skenovaní, fotky poškodenia pri vrátení, ponuka zo šablóny eventu |
 | **11.10** | Logo firmy na stránke hodnotenia |
@@ -91,7 +92,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **10.3** | Nakladanie podľa poradia vykládky – čo sa vykladá skôr, je pri dverách |
 | **10.2** | Klient podpíše zmluvu cez odkaz, zmluva z prijatej ponuky jedným ťuknutím |
 | **10.1** | Predaná technika v štatistikách – kúpa, predaj, zisk alebo strata |
-| **10.0** | Odmena za DJ hranie priamo pri tom, kto hrá – do Odmien aj Zisku z eventov |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

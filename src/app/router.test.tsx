@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
@@ -8,7 +9,11 @@ vi.mock('virtual:pwa-register/react', () => ({
 }))
 
 function renderAt(path: string) {
-  render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />)
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />
+    </QueryClientProvider>,
+  )
 }
 
 describe('router', () => {

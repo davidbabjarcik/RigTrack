@@ -5,6 +5,15 @@ are shown in Slovak.
 
 ## What's new
 
+### 11.13
+
+- **Two-factor sign-in (2FA)**: turn it on in Settings → Account – a QR code for an app on your phone (Google
+  Authenticator, Microsoft Authenticator…) and confirmation with the first code. After that a 6-digit code is also
+  required at sign-in. The database enforces it too: without the code nobody gets to the data, not even with your
+  password and not outside the app. Nothing changes for those without 2FA. Admins and CEOs without 2FA get a
+  recommendation to turn it on (the notice can be hidden).
+- Technical: migration 0194 (2FA in the database).
+
 ### 11.12
 
 - **Equipment unused for 12 months** (Statistics → Equipment): what was not on any event or loan in the last year –

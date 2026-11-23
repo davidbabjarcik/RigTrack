@@ -1,6 +1,6 @@
 import { profileComplete, usePersonalProfile } from '@/features/profile/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bell, CheckCheck, FileChartColumn, Gift, Smartphone, Sparkles, UserRoundPen, X } from 'lucide-react'
+import { Bell, CheckCheck, FileChartColumn, Gift, ShieldCheck, Smartphone, Sparkles, UserRoundPen, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,8 @@ import { can } from '@/lib/permissions'
 import { yearReportYear } from '@/features/report/model'
 import { APP_VERSION } from '@/lib/version'
 import { tx } from '@/lib/i18n'
+import { listTotpFactors, mfaKeys } from '@/features/auth/mfa'
+import { isAdminRole } from '@/lib/roles'
 
 /** Novinky vo firme (nový event, priradenie do posádky) s tlačidlom „prečítané“. */
 function NewsBell({ companyId, userId }: { companyId: string; userId: string }) {
@@ -147,7 +149,54 @@ export function TopNotices() {
   const userId = useAuth().session?.user.id
   // Bez firmy a prihlásenia (napr. vývoj bez backendu) nie je čo ukazovať.
   if (!company || !userId) return null
-  return <Notices companyId={company.companyId} userId={userId} />
+  return (
+    <>
+      <Notices companyId={company.companyId} userId={userId} />
+      {isAdminRole(company.role) && <MfaNotice />}
+    </>
+  )
+}
+
+const MFA_HINT_KEY = 'rigtrack:mfa-hint-hidden'
+
+/** Admin / CEO bez 2FA: odporúčanie zapnúť ho (dá sa skryť). */
+function MfaNotice() {
+  const factors = useQuery({ queryKey: mfaKeys.factors, queryFn: listTotpFactors, retry: false, staleTime: 5 * 60_000 })
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem(MFA_HINT_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  if (hidden || !factors.isSuccess || factors.data.some((factor) => factor.verified)) return null
+  return (
+    <div className="mx-auto flex w-full max-w-5xl px-4 pt-2 md:px-8 print:hidden">
+      <div className="flex flex-1 items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+        <ShieldCheck className="size-5 shrink-0 text-accent" aria-hidden />
+        <Link to="/settings?tab=account" className="flex-1 hover:underline">
+          <span className="font-medium">{tx('Zapnite dvojfaktorové prihlásenie')}</span>{' '}
+          {tx('– ako admin máte prístup k celej firme. Okrem hesla aj kód z mobilu (Nastavenia → Účet).')}
+        </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="size-8 p-0"
+          aria-label={tx('Skryť')}
+          onClick={() => {
+            setHidden(true)
+            try {
+              localStorage.setItem(MFA_HINT_KEY, '1')
+            } catch {
+              // Bez úložiska sa len nezapamätá.
+            }
+          }}
+        >
+          <X className="size-4" aria-hidden />
+        </Button>
+      </div>
+    </div>
+  )
 }
 
 function Notices({ companyId, userId }: { companyId: string; userId: string }) {
