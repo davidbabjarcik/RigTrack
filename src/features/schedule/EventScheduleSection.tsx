@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Printer, Trash2 } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { History, Plus, Printer, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { CollapsibleSection } from '@/components/layout/CollapsibleSection'
 import { Button, LinkButton } from '@/components/ui/button'
@@ -8,7 +8,8 @@ import type { CompanyEvent } from '@/features/events/model'
 import { formatDate } from '@/lib/format'
 import { tf, tx } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { deleteScheduleItem, saveScheduleItem, scheduleKeys, useSchedule } from './api'
+import { DocSharesSection } from '@/features/shares/DocSharesSection'
+import { deleteScheduleItem, fetchScheduleVersionCount, saveScheduleItem, saveScheduleVersion, scheduleKeys, useSchedule } from './api'
 import { eventDays, groupSchedule, SCHEDULE_KIND_LABELS, SCHEDULE_KINDS, scheduleWarnings, type ScheduleFields, type ScheduleItem, type ScheduleKind } from './model'
 
 function ItemForm({ initial, days, stages, onSave, onCancel, onDelete, saving }: { initial: ScheduleFields; days: string[]; stages: string[]; onSave: (fields: ScheduleFields) => void; onCancel: () => void; onDelete?: () => void; saving: boolean }) {
@@ -64,6 +65,16 @@ export function EventScheduleSection({ companyId, event, canEdit }: { companyId:
   const refresh = () => queryClient.invalidateQueries({ queryKey: scheduleKeys.ofEvent(companyId, event.id) })
   const save = useMutation({ mutationFn: ({ id, fields }: { id: string | null; fields: ScheduleFields }) => saveScheduleItem(companyId, event.id, id, fields), onSuccess: () => setEditing(null), onSettled: refresh })
   const remove = useMutation({ mutationFn: deleteScheduleItem, onSuccess: () => setEditing(null), onSettled: refresh })
+  const versions = useQuery({ queryKey: [...scheduleKeys.ofEvent(companyId, event.id), 'versions'], queryFn: () => fetchScheduleVersionCount(companyId, event.id) })
+  const [notice, setNotice] = useState('')
+  const version = useMutation({
+    mutationFn: () => saveScheduleVersion(event.id),
+    onSuccess: async (next) => {
+      setNotice(tf('Uložená verzia {0} harmonogramu.', next))
+      await versions.refetch()
+      await queryClient.invalidateQueries({ queryKey: ['company', companyId, 'doc-shares'] })
+    },
+  })
   if (!schedule.data) return null
   const items = schedule.data
   const days = eventDays(event)
@@ -77,6 +88,7 @@ export function EventScheduleSection({ companyId, event, canEdit }: { companyId:
   )
 
   return (
+    <>
     <CollapsibleSection
       id="event.schedule"
       title={tf('Harmonogram ({0})', items.length)}
@@ -126,12 +138,24 @@ export function EventScheduleSection({ companyId, event, canEdit }: { companyId:
       ))}
       {canEdit && editing === 'new' && <div className="mb-3">{form(null)}</div>}
       {canEdit && editing !== 'new' && (
-        <Button variant="outline" size="sm" onClick={() => setEditing('new')}>
-          <Plus className="size-4" aria-hidden />{tx('Pridať do harmonogramu')}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={() => setEditing('new')}>
+            <Plus className="size-4" aria-hidden />{tx('Pridať do harmonogramu')}
+          </Button>
+          {items.length > 0 && (
+            <Button variant="ghost" size="sm" disabled={version.isPending} onClick={() => version.mutate()}>
+              <History className="size-4" aria-hidden />{tf('Uložiť verziu ({0})', versions.data ?? 0)}
+            </Button>
+          )}
+        </div>
       )}
+      {notice && <p role="status" className="mt-2 text-sm text-emerald-700 dark:text-emerald-400">{notice}</p>}
       {items.length === 0 && editing !== 'new' && <p className="mt-2 text-sm text-muted-foreground">{tx('Podrobný časový plán: get-in, soundcheck, otvorenie, vystúpenia, prestavby a koniec. Pri festivale zadajte pódium – zobrazia sa vedľa seba.')}</p>}
-      {(save.isError || remove.isError) && <p role="alert" className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>}
+      {(save.isError || remove.isError || version.isError) && <p role="alert" className="mt-2 text-sm text-destructive">{tx('Zmena sa nepodarila.')}</p>}
     </CollapsibleSection>
+    {items.length > 0 && (
+      <DocSharesSection companyId={companyId} docType="schedule" docId={event.id} canEdit={canEdit} hint={tx('Harmonogram pre kapely, klub alebo produkciu – odkaz len na čítanie s poslednou uloženou verziou (Uložiť verziu) a zmenami od posledného zobrazenia.')} />
+    )}
+    </>
   )
 }

@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.7 – 23. 11. 2026
+
+- **Verzie harmonogramu**: v harmonograme akcie tlačidlo „Uložiť verziu“ – číslovaná snímka celého harmonogramu.
+- **Zdieľanie harmonogramu** odkazom pre kapely, klub alebo produkciu (ako pri ostatných podkladoch akcie): príjemca
+  vidí poslednú uloženú verziu po dňoch a pódiách, zmenené časy sú zvýraznené a odstránené položky vypísané. Pri prvom
+  zdieľaní sa verzia uloží sama.
+- Technické: migrácia 0205 (verzie a zdieľanie harmonogramu).
+
 ### 12.6 – 23. 11. 2026
 
 - **Site plán akcie**: v detaile akcie (Technika) nová časť Site plán – mapa OpenStreetMap s vyhľadaním miesta. Značky

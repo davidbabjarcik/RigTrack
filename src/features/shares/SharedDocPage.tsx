@@ -13,12 +13,13 @@ import { channelLegend, KIND_INFO } from '@/features/stageplot/model'
 import { StagePlotSvg } from '@/features/stageplot/StagePlotSvg'
 import { analyze, formatMhz, RF_KIND_LABELS, toKhz, tvChannelOf } from '@/features/rfplan/rf'
 import { Spectrum } from '@/features/rfplan/Spectrum'
+import { SCHEDULE_KIND_LABELS, type ScheduleKind } from '@/features/schedule/model'
 import { routeLength } from '@/features/siteplan/geo'
 import { MapCanvas } from '@/features/siteplan/MapCanvas'
 import { MARKER_LABELS, ROUTE_LABELS } from '@/features/siteplan/model'
 import { cableSummary } from '@/features/synoptic/model'
 import { SynopticSvg } from '@/features/synoptic/SynopticSvg'
-import { changedKeys, fetchSharedDoc, removedRows, type SharedInput, type SharedIoList, type SharedOutput, type SharedRack, type SharedSlot, type SharedRfPlan, type SharedSitePlan, type SharedStagePlot, type SharedSynoptic } from './api'
+import { changedKeys, fetchSharedDoc, removedRows, type SharedInput, type SharedIoList, type SharedOutput, type SharedRack, type SharedSlot, type SharedRfPlan, type SharedSchedule, type SharedScheduleItem, type SharedSitePlan, type SharedStagePlot, type SharedSynoptic } from './api'
 
 const LOGO_STYLES: LogoStyle[] = ['auto', 'original', 'plate', 'white', 'black']
 const changedRow = 'bg-amber-100 dark:bg-amber-950'
@@ -246,6 +247,46 @@ function SitePlan({ data, names }: { data: SharedSitePlan; names: Record<string,
   )
 }
 
+function Schedule({ data, previous }: { data: SharedSchedule; previous: SharedSchedule | null }) {
+  const key = (item: SharedScheduleItem) => item.id
+  const changed = changedKeys(data.items, previous?.items, key)
+  const removed = removedRows(data.items, previous?.items, key)
+  const days = new Map<string, Map<string, SharedScheduleItem[]>>()
+  for (const item of [...data.items].sort((a, b) => a.day.localeCompare(b.day) || a.starts_at.localeCompare(b.starts_at))) {
+    const stages = days.get(item.day) ?? new Map<string, SharedScheduleItem[]>()
+    stages.set(item.stage, [...(stages.get(item.stage) ?? []), item])
+    days.set(item.day, stages)
+  }
+  return (
+    <section className="flex flex-col gap-4">
+      {[...days].map(([day, stages]) => (
+        <div key={day}>
+          <h2 className="mb-2 font-semibold">{formatDate(day)}</h2>
+          <div className={cn('grid gap-3', stages.size > 1 && 'md:grid-cols-2 xl:grid-cols-3')}>
+            {[...stages].map(([stage, list]) => (
+              <div key={stage}>
+                {(stages.size > 1 || stage) && <p className="mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">{stage || 'Bez pódia'}</p>}
+                <Table head={['Čas', 'Program']}>
+                  {list.map((item) => (
+                    <tr key={item.id} className={cn('border-t align-top', changed.has(item.id) && changedRow)}>
+                      <td className="px-2 py-1 font-mono whitespace-nowrap">{item.ends_at ? `${item.starts_at}–${item.ends_at}` : item.starts_at}</td>
+                      <td className="px-2 py-1">
+                        <span className={item.kind === 'act' ? 'font-semibold' : ''}>{item.title}</span>
+                        <span className="block text-xs text-muted-foreground">{[SCHEDULE_KIND_LABELS[item.kind as ScheduleKind] ?? '', item.note].filter(Boolean).join(' · ')}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </Table>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+      <Removed items={removed.map((item) => `${item.starts_at} ${item.title}`)} />
+    </section>
+  )
+}
+
 /**
  * Zdieľaný dokument akcie pre externého príjemcu (d/:token) – len na čítanie, bez prihlásenia: hlavička s logom
  * a kontaktom firmy, posledná uložená verzia a zvýraznené zmeny od posledného zobrazenia. Stránka je len po slovensky.
@@ -263,7 +304,7 @@ export function SharedDocPage() {
   const data = doc.data
   const style = LOGO_STYLES.includes(data.logoStyle as LogoStyle) ? (data.logoStyle as LogoStyle) : 'auto'
   const when = data.startsOn && data.endsOn ? (data.startsOn === data.endsOn ? formatDate(data.startsOn) : `${formatDate(data.startsOn)} – ${formatDate(data.endsOn)}`) : ''
-  const heading = data.docType === 'rack' ? `Rack – ${data.title}` : data.docType === 'stageplot' ? 'Stage plán' : data.docType === 'synoptic' ? 'Synoptika' : data.docType === 'rfplan' ? 'HF frekvenčný plán' : data.docType === 'siteplan' ? 'Site plán' : 'Input / output list'
+  const heading = data.docType === 'rack' ? `Rack – ${data.title}` : data.docType === 'stageplot' ? 'Stage plán' : data.docType === 'synoptic' ? 'Synoptika' : data.docType === 'rfplan' ? 'HF frekvenčný plán' : data.docType === 'siteplan' ? 'Site plán' : data.docType === 'schedule' ? 'Harmonogram' : 'Input / output list'
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -303,6 +344,8 @@ export function SharedDocPage() {
           <RfPlan data={data.data} previous={data.previous} names={data.names} />
         ) : data.docType === 'siteplan' ? (
           <SitePlan data={data.data} names={data.names} />
+        ) : data.docType === 'schedule' ? (
+          <Schedule data={data.data} previous={data.previous} />
         ) : (
           <IoList data={data.data} previous={data.previous} names={data.names} />
         )}

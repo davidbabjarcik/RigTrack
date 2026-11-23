@@ -26,6 +26,19 @@ export async function saveScheduleItem(companyId: string, eventId: string, id: s
   if (error) throw error
 }
 
+/** Uloží verziu harmonogramu (snímka pre zdieľanie); vráti číslo verzie. */
+export async function saveScheduleVersion(eventId: string): Promise<number> {
+  const { data, error } = await getSupabase().rpc('save_schedule_version', { _event_id: eventId })
+  if (error) throw error
+  return data as number
+}
+
+export async function fetchScheduleVersionCount(companyId: string, eventId: string): Promise<number> {
+  const { count, error } = await getSupabase().from('doc_versions').select('id', { count: 'exact', head: true }).eq('company_id', companyId).eq('doc_type', 'schedule').eq('doc_id', eventId)
+  if (error) return 0
+  return count ?? 0
+}
+
 export async function deleteScheduleItem(id: string) {
   const { error } = await getSupabase().from('event_schedule_items').delete().eq('id', id)
   if (error) throw error

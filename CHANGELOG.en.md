@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.7
+
+- **Schedule versions**: a “Save version” button in the event schedule – a numbered snapshot of the whole schedule.
+- **Schedule sharing** by link for bands, the venue or production (like the other event documents): the recipient sees
+  the latest saved version by day and stage, changed times are highlighted and removed items listed. The first share
+  saves a version automatically.
+- Technical: migration 0205 (schedule versions and sharing).
+
 ### 12.6
 
 - **Event site plan**: a new Site plan section in the event detail (Equipment) – an OpenStreetMap map with place search.

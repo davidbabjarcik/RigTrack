@@ -49,3 +49,29 @@ test('turné: zastávky a kopírovanie podkladov', async ({ page }, info) => {
   await expect(page.getByText('Podklady skopírované do 1 akcií.')).toBeVisible()
   await page.screenshot({ path: info.outputPath(`turne-${info.project.name}.png`), fullPage: true })
 })
+
+test('harmonogram: uloženie verzie a stránka pre príjemcu so zmenou', async ({ page }, info) => {
+  await signIn(page)
+  await fakeBackend(page, { events: [event(E1, 'Ukážkový festival', '2026-12-01')], event_schedule_items: [slot('s2', 'Hlavné', '20:00', '21:00', 'act', 'Ukážková kapela 1')], 'rpc:save_schedule_version': [1] })
+  await page.goto(`/events/${E1}`)
+  const request = page.waitForRequest((req) => req.url().includes('/rpc/save_schedule_version'))
+  await page.getByRole('button', { name: 'Uložiť verziu (0)' }).click()
+  expect((await request).postDataJSON()).toEqual({ _event_id: E1 })
+  await expect(page.getByText('Uložená verzia 1 harmonogramu.')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Zdieľanie harmonogramu/ })).toBeVisible()
+
+  const item = (id: string, from: string, to: string, title: string) => ({ id, day: '2026-12-01', starts_at: from, ends_at: to, stage: 'Hlavné', kind: 'act', title, note: '' })
+  const doc = {
+    docType: 'schedule', recipient: 'Ukážková kapela', title: '', version: 2, savedAt: '2026-11-22T09:00:00Z', previousVersion: 1, names: {},
+    data: { items: [item('a', '20:30', '21:30', 'Ukážková kapela 1'), item('b', '22:00', '23:00', 'Ukážková kapela 2')] },
+    previous: { items: [item('a', '20:00', '21:00', 'Ukážková kapela 1'), item('b', '22:00', '23:00', 'Ukážková kapela 2'), item('c', '23:30', '00:30', 'Ukážkový DJ')] },
+    companyName: 'Ukážková firma', logoPath: '', logoStyle: 'auto', contact: '', event: 'Ukážkový festival', startsOn: '2026-12-01', endsOn: '2026-12-01', venue: 'Námestie',
+  }
+  await fakeBackend(page, { 'rpc:get_shared_doc': [doc] })
+  await page.goto(`/d/${'b'.repeat(64)}`)
+  await expect(page.getByRole('heading', { name: 'Harmonogram' })).toBeVisible()
+  await expect(page.getByRole('row', { name: /20:30–21:30/ })).toHaveClass(/bg-amber-100/)
+  await expect(page.getByRole('row', { name: /22:00–23:00/ })).not.toHaveClass(/bg-amber-100/)
+  await expect(page.getByText('23:30 Ukážkový DJ')).toBeVisible()
+  await page.screenshot({ path: info.outputPath(`harmonogram-zdielany-${info.project.name}.png`), fullPage: true })
+})
