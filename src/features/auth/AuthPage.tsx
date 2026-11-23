@@ -8,6 +8,8 @@ import { useAuth } from './auth-context'
 import { formatRemaining, loginLockStatus, signInGuarded, TURNSTILE_SITE_KEY, type Lock } from './loginGuard'
 import { Turnstile, type TurnstileHandle } from './Turnstile'
 import { useLang, useT } from '@/lib/i18n'
+import { PasswordHint } from './PasswordHint'
+import { PASSWORD_MIN, passwordOk } from './passwordRules'
 
 type Mode = 'signin' | 'signup' | 'reset'
 
@@ -117,6 +119,10 @@ function AuthForm() {
         } else setError(lang === 'en' ? (SERVER_EN[result.message] ?? result.message) : result.message)
       }
     } else if (mode === 'signup') {
+      if (!passwordOk(password)) {
+        setError(t('Heslo nespĺňa požiadavky pod políčkom.', 'The password does not meet the requirements below the field.'))
+        return
+      }
       const { error } = await auth.signUp({
         email,
         password,
@@ -125,7 +131,7 @@ function AuthForm() {
       if (error) {
         setError(
           error.code === 'weak_password'
-            ? t('Heslo je príliš slabé. Zvoľte dlhšie.', 'The password is too weak. Choose a longer one.')
+            ? t('Heslo je príliš slabé – potrebuje aspoň 10 znakov, malé a veľké písmeno, číslicu a symbol.', 'The password is too weak – it needs at least 10 characters, a lowercase and an uppercase letter, a digit and a symbol.')
             : error.code === 'captcha_failed'
               ? t('Overenie, že nie ste robot, zlyhalo. Skúste to znova.', 'The human check failed. Please try again.')
             : error.status === 403 || /pozv/i.test(error.message)
@@ -198,11 +204,12 @@ function AuthForm() {
             type="password"
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
             required
-            minLength={mode === 'signup' ? 8 : undefined}
+            minLength={mode === 'signup' ? PASSWORD_MIN : undefined}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         )}
+        {mode === 'signup' && <PasswordHint password={password} lang={lang === 'en' ? 'en' : 'sk'} />}
 
         {TURNSTILE_SITE_KEY !== '' && !locked && <Turnstile ref={captchaRef} onToken={setCaptcha} onUnavailable={setCaptchaDown} />}
 

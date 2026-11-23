@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.8.1
+
+- **Stronger passwords**: when creating an account and setting a new password, a list of requirements (at least 10
+  characters, a lowercase and an uppercase letter, a digit, a symbol) is shown below the field with the met ones ticked.
+  A weak password is not even sent and the error says exactly what is missing. The same rules apply in Supabase Auth.
+
 ### 12.8
 
 - **Demo company with show documents**: the sample festival has a 19" rack, an input / output list with inserts and

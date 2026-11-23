@@ -814,6 +814,8 @@
  "Heslo": "Password",
  "Heslo Wi-Fi má aspoň 8 znakov": "The Wi-Fi password has at least 8 characters",
  "Heslo do správy": "Admin password",
+ "Heslo je príliš slabé – potrebuje aspoň 10 znakov, malé a veľké písmeno, číslicu a symbol.": "The password is too weak – it needs at least 10 characters, a lowercase and an uppercase letter, a digit and a symbol.",
+ "Heslo nespĺňa požiadavky pod políčkom.": "The password does not meet the requirements below the field.",
  "Heslo nevidíte – nemáte oprávnenie „Vidieť heslá Wi-Fi“.": "You can't see the password – you don't have the “See Wi-Fi passwords” permission.",
  "Heslo sa nepodarilo zmeniť. Skúste iné alebo to zopakujte.": "The password could not be changed. Try a different one or try again.",
  "História": "History",

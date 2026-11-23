@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.8.1 – 24. 11. 2026
+
+- **Silnejšie heslá**: pri vytvorení účtu a pri novom hesle je pod políčkom zoznam požiadaviek (aspoň 10 znakov, malé
+  a veľké písmeno, číslica, symbol) so zaškrtnutím splnených. Slabé heslo sa ani neodošle a chyba presne povie, čo
+  chýba. Rovnaké pravidlá platia aj v Supabase Auth.
+
 ### 12.8 – 23. 11. 2026
 
 - **Demo firma s podkladmi akcie**: ukážkový festival má rack 19", input / output list s insertmi a farbami, stage plán,

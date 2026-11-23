@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-12.8-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-12.8.1-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -63,6 +63,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **12.8.1** | Požiadavky na silné heslo pri vytvorení účtu a zmene hesla |
 | **12.8** | Demo, úvodná stránka a README s podkladmi akcie |
 | **12.7** | Verzie a zdieľanie harmonogramu akcie |
 | **12.6** | Site plán akcie na mape – trasy káblov s dĺžkou, káble do pack listu, PDF a zdieľanie |
@@ -99,7 +100,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **10.19** | Rýchle delenie case – na polovicu, tretiny, 2 × 2 |
 | **10.18** | Kontrola case po položkách, hárok podľa rozloženia, kontroly na karte zamestnanca |
 | **10.17** | Rozloženie v case – šuplíky a rozdelenie počtov |
-| **10.16** | Priehradky v case – čo je v ktorej priehradke |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from './auth-context'
-import { tx } from '@/lib/i18n'
+import { tx, useLang } from '@/lib/i18n'
+import { PasswordHint } from './PasswordHint'
+import { PASSWORD_MIN, passwordOk } from './passwordRules'
 
 function UpdatePasswordForm() {
   const { session, loading } = useAuth()
@@ -14,6 +16,7 @@ function UpdatePasswordForm() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const lang = useLang()
 
   if (loading) return <LoadingScreen />
   // Odkaz z e-mailu prihlási používateľa; bez session je odkaz neplatný alebo expirovaný.
@@ -28,11 +31,12 @@ function UpdatePasswordForm() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (!passwordOk(password)) return setError(tx('Heslo nespĺňa požiadavky pod políčkom.'))
     setBusy(true)
     setError(null)
     const { error } = await getSupabase().auth.updateUser({ password })
     setBusy(false)
-    if (error) setError(tx('Heslo sa nepodarilo zmeniť. Skúste iné alebo to zopakujte.'))
+    if (error) setError(error.code === 'weak_password' ? tx('Heslo je príliš slabé – potrebuje aspoň 10 znakov, malé a veľké písmeno, číslicu a symbol.') : tx('Heslo sa nepodarilo zmeniť. Skúste iné alebo to zopakujte.'))
     else navigate('/', { replace: true })
   }
 
@@ -45,10 +49,11 @@ function UpdatePasswordForm() {
           type="password"
           autoComplete="new-password"
           required
-          minLength={8}
+          minLength={PASSWORD_MIN}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <PasswordHint password={password} lang={lang === 'en' ? 'en' : 'sk'} />
         {error && (
           <p role="alert" className="text-sm text-destructive">
             {error}
