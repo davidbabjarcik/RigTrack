@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.8.3 – 24. 11. 2026
+
+- Pri technike sa výška do racku (U), šírka v racku, zadné uchytenie a hĺbka pýtajú len pri technike, ktorá do racku
+  môže ísť – nie pri hliníku, pódiu, kábloch a spotrebnom materiáli. Ak už je U vyplnené, polia ostanú.
+
 ### 12.8.2 – 24. 11. 2026
 
 - **Výrobca zo zoznamu značiek**: pri úprave techniky „Vybrať zo zoznamu značiek“ už nezmaže výrobcu a model – značku

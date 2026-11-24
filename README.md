@@ -6,7 +6,7 @@
 
 **Technika, cases, eventy a ľudia pre event a AV firmy – na jednom mieste.**
 
-![verzia](https://img.shields.io/badge/verzia-12.8.2-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-12.8.3-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -63,6 +63,7 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **12.8.3** | Polia pre rack len pri technike do racku |
 | **12.8.2** | Výrobca zo zoznamu bez mazania, odkaz na Thomann, kategória v upozornení |
 | **12.8.1** | Požiadavky na silné heslo pri vytvorení účtu a zmene hesla |
 | **12.8** | Demo, úvodná stránka a README s podkladmi akcie |
@@ -99,7 +100,6 @@ a jeden účet obslúži viac firiem – každá vidí len svoje dáta.
 | **11.1** | Tlač naraz ako ZIP (A5 po dvoch na A4, značky rezu), veľkosť štítku case v % |
 | **11.0** | Zásady ochrany osobných údajov – hodnotenie, pozvánky, faktúry |
 | **10.19** | Rýchle delenie case – na polovicu, tretiny, 2 × 2 |
-| **10.18** | Kontrola case po položkách, hárok podľa rozloženia, kontroly na karte zamestnanca |
 
 Celý zoznam zmien je v **[CHANGELOG.md](CHANGELOG.md)** (a v appke v „Čo je nové“).
 

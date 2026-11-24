@@ -5,6 +5,11 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.8.3
+
+- The rack height (U), rack width, rear support and depth are asked only for equipment that can go into a rack – not for
+  truss, stage, cables and consumables. If U is already filled in, the fields stay.
+
 ### 12.8.2
 
 - **Manufacturer from the brand list**: when editing equipment, “Choose from the brand list” no longer clears the

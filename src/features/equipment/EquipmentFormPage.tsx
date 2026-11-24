@@ -443,6 +443,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const kind = useWatch({ control, name: 'kind' })
   const status = useWatch({ control, name: 'status' })
   const rackU = useWatch({ control, name: 'rackU' })
+  const rackable = !['truss', 'stage', 'cable', 'consumable'].includes(kind)
   const nameValue = useWatch({ control, name: 'name' })
   // Spoločný katalóg techniky: značka → model; model z katalógu doplní technické údaje.
   const catalog = useCatalog().data ?? []
@@ -953,22 +954,27 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         </datalist>
 
         <Field label={tx('Váha kusu (kg)')} type="number" inputMode="decimal" min={0} step="0.1" error={errors.weightKg?.message} {...register('weightKg', asOptionalNumber)} />
-        {/* 19" rack (pre osadenie racku): výška v U, šírka, hĺbka a či potrebuje zadné uchytenie. */}
-        <Field label={tx('Do racku – výška (U)')} type="number" inputMode="numeric" min={1} max={48} placeholder={tx('nie je do racku')} error={errors.rackU?.message} {...register('rackU', asOptionalNumber)} />
-        {rackU !== undefined && Number.isFinite(rackU) && (
+        {/* 19" rack (pre osadenie racku): výška v U, šírka, hĺbka a či potrebuje zadné uchytenie. Hliník, pódium,
+            káble a spotrebný materiál do racku nepatria – ak už U majú vyplnené, polia ostanú, aby sa údaj nestratil. */}
+        {(rackable || (rackU !== undefined && Number.isFinite(rackU))) && (
           <>
-            <SelectField label={tx('Šírka v racku')} {...register('rackWidth')}>
-              <option value="full">{tx('Celá šírka (19")')}</option>
-              <option value="half">{tx('1/2 šírky')}</option>
-              <option value="third">{tx('1/3 šírky')}</option>
-            </SelectField>
-            <label className="flex items-center gap-2 self-end pb-3 text-sm">
-              <input type="checkbox" className="size-4" {...register('rearSupport')} />
-              {tx('Potrebuje zadné uchytenie (ťažké, hlboké)')}
-            </label>
+          <Field label={tx('Do racku – výška (U)')} type="number" inputMode="numeric" min={1} max={48} placeholder={tx('nie je do racku')} error={errors.rackU?.message} {...register('rackU', asOptionalNumber)} />
+          {rackU !== undefined && Number.isFinite(rackU) && (
+            <>
+              <SelectField label={tx('Šírka v racku')} {...register('rackWidth')}>
+                <option value="full">{tx('Celá šírka (19")')}</option>
+                <option value="half">{tx('1/2 šírky')}</option>
+                <option value="third">{tx('1/3 šírky')}</option>
+              </SelectField>
+              <label className="flex items-center gap-2 self-end pb-3 text-sm">
+                <input type="checkbox" className="size-4" {...register('rearSupport')} />
+                {tx('Potrebuje zadné uchytenie (ťažké, hlboké)')}
+              </label>
+            </>
+          )}
+          <Field label={tx('Hĺbka (mm)')} type="number" inputMode="numeric" min={1} max={2000} error={errors.depthMm?.message} {...register('depthMm', asOptionalNumber)} />
           </>
         )}
-        <Field label={tx('Hĺbka (mm)')} type="number" inputMode="numeric" min={1} max={2000} error={errors.depthMm?.message} {...register('depthMm', asOptionalNumber)} />
         {/* Aj keď sa nekupovalo v Thomanne – pri technike bude odkaz na produkt. */}
         <Field label={tx('Thomann – číslo artiklu')} autoComplete="off" placeholder={tx('napr. 123456')} error={errors.thomannCode?.message} {...register('thomannCode')} />
         {/* Pri evidencii po kusoch má každý kus svoje sériové a inventárne číslo (nižšie, Údaje po kusoch). */}
