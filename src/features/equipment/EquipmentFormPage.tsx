@@ -443,6 +443,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const kind = useWatch({ control, name: 'kind' })
   const status = useWatch({ control, name: 'status' })
   const rackU = useWatch({ control, name: 'rackU' })
+  const nameValue = useWatch({ control, name: 'name' })
   // Spoločný katalóg techniky: značka → model; model z katalógu doplní technické údaje.
   const catalog = useCatalog().data ?? []
   const manufacturerValue = useWatch({ control, name: 'manufacturer' }) ?? ''
@@ -639,6 +640,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
             onManufacturer={(value) => setValue('manufacturer', value, { shouldDirty: true })}
             onModel={(value) => setValue('model', value, { shouldDirty: true })}
             onPick={applyCatalog}
+            name={nameValue ?? ''}
           />
         ) : (
         <Field

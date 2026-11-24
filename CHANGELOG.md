@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.8.2 – 24. 11. 2026
+
+- **Výrobca zo zoznamu značiek**: pri úprave techniky „Vybrať zo zoznamu značiek“ už nezmaže výrobcu a model – značku
+  sa pokúsi nájsť sama (aj podľa názvu, napr. „Avolites Quartz“ → Avolites), model ponechá a pribudne tlačidlo
+  „Vrátiť pôvodné“.
+- Oprava: odkaz na produkt v Thomanne podľa čísla artiklu (správny tvar adresy).
+- Oprava: upozornenie „Doplňte údaje k technike“ hlási chýbajúcu kategóriu len vtedy, keď firma kategórie používa.
+
 ### 12.8.1 – 24. 11. 2026
 
 - **Silnejšie heslá**: pri vytvorení účtu a pri novom hesle je pod políčkom zoznam požiadaviek (aspoň 10 znakov, malé

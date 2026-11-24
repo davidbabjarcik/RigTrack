@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.8.2
+
+- **Manufacturer from the brand list**: when editing equipment, “Choose from the brand list” no longer clears the
+  manufacturer and model – it tries to find the brand itself (also from the name, e.g. “Avolites Quartz” → Avolites),
+  keeps the model and adds a “Restore original” button.
+- Fix: the Thomann product link by article number (correct address format).
+- Fix: the “Complete the equipment details” notice reports a missing category only when the company uses categories.
+
 ### 12.8.1
 
 - **Stronger passwords**: when creating an account and setting a new password, a list of requirements (at least 10

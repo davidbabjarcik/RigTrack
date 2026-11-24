@@ -3782,6 +3782,7 @@
  "Vrátiť": "Undo",
  "Vrátiť predvolené (sivá, modrá, žltá, červená)": "Restore defaults (grey, blue, yellow, red)",
  "Vrátiť predvolené poradie": "Restore default order",
+ "Vrátiť pôvodné: {0}": "Restore original: {0}",
  "Vstup": "Input",
  "Vstup výška (px)": "Input height (px)",
  "Vstup šírka (px)": "Input width (px)",

@@ -1,7 +1,7 @@
-import { BookCheck, Info, ShieldAlert } from 'lucide-react'
+import { BookCheck, Info, ShieldAlert, Undo2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Field, SelectField } from '@/components/ui/field'
-import { ampsText, catalogBrands, catalogModels, compatibleAmps, findCatalogEntry, type CatalogEntry } from './catalog'
+import { ampsText, catalogBrands, guessBrand, catalogModels, compatibleAmps, findCatalogEntry, type CatalogEntry } from './catalog'
 import type { EquipmentKind } from './model'
 import { tf, tx, useT } from '@/lib/i18n'
 
@@ -29,13 +29,15 @@ type Props = {
   onModel: (value: string) => void
   /** Model vybraný z katalógu – formulár doplní jeho údaje. */
   onPick: (entry: CatalogEntry) => void
+  /** Názov techniky – pomôže uhádnuť značku pri prechode na zoznam (napr. „Avolites Quartz“). */
+  name?: string
 }
 
 /**
  * Výrobca a model zo spoločného katalógu: najprv značka (napr. JBL), potom jej model. Na konci zoznamu „Iná
  * značka / Iný model…“ – dopíše sa ručne a po uložení ide ako návrh do katalógu na overenie.
  */
-export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturerError, modelError, onManufacturer, onModel, onPick }: Props) {
+export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturerError, modelError, onManufacturer, onModel, onPick, name = '' }: Props) {
   const brands = catalogBrands(catalog, kind)
   const brand = brands.find((value) => value.toLowerCase() === manufacturer.trim().toLowerCase())
   const models = brand ? catalogModels(catalog, kind, brand) : []
@@ -43,6 +45,8 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
   // Vlastná značka / model: keď je zadané niečo mimo katalógu, alebo to človek zvolil.
   const [ownBrand, setOwnBrand] = useState(() => Boolean(manufacturer.trim()) && !brand)
   const [ownModel, setOwnModel] = useState(() => Boolean(model.trim()) && !known)
+  // Pôvodné hodnoty pred prechodom na zoznam – dajú sa jedným klikom vrátiť.
+  const [previous, setPrevious] = useState<{ manufacturer: string; model: string } | null>(null)
   const freeBrand = ownBrand || brands.length === 0
   const freeModel = freeBrand || ownModel || models.length === 0
   const t = useT()
@@ -64,10 +68,20 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
                 type="button"
                 className="text-accent hover:underline"
                 onClick={() => {
+                  setPrevious({ manufacturer, model })
                   setOwnBrand(false)
-                  setOwnModel(false)
-                  onManufacturer('')
-                  onModel('')
+                  // Značka sa skúsi nájsť sama; model ostane (zo zoznamu, alebo ako vlastný).
+                  const guessed = guessBrand(brands, manufacturer, name, model)
+                  onManufacturer(guessed ?? '')
+                  const entry = guessed ? findCatalogEntry(catalog, kind, guessed, model) : undefined
+                  if (entry) {
+                    setOwnModel(false)
+                    onModel(entry.model)
+                    onPick(entry)
+                  } else {
+                    setOwnModel(Boolean(guessed && model.trim()))
+                    onModel(guessed ? model : '')
+                  }
                 }}
               >{tx('Vybrať zo zoznamu značiek')}</button>
             ) : undefined}</Hint>
@@ -99,6 +113,24 @@ export function CatalogPicker({ kind, catalog, manufacturer, model, manufacturer
           ))}
           <option value={OTHER}>{tx('+ Iná značka (pridať)…')}</option>
         </SelectField>
+      )}
+      {previous && (previous.manufacturer.trim() || previous.model.trim()) && (previous.manufacturer !== manufacturer || previous.model !== model) && (
+        <p className="-mt-2 text-xs sm:col-span-2">
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-accent hover:underline"
+            onClick={() => {
+              setOwnBrand(!brands.some((value) => value.toLowerCase() === previous.manufacturer.trim().toLowerCase()))
+              setOwnModel(true)
+              onManufacturer(previous.manufacturer)
+              onModel(previous.model)
+              setPrevious(null)
+            }}
+          >
+            <Undo2 className="size-3.5" aria-hidden />
+            {tf('Vrátiť pôvodné: {0}', [previous.manufacturer, previous.model].filter((part) => part.trim()).join(' '))}
+          </button>
+        </p>
       )}
 
       {freeModel ? (

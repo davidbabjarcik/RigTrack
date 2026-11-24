@@ -122,7 +122,7 @@ export function ampReminders(
 export function thomannUrl(code: string) {
   const value = code.trim()
   if (!value) return ''
-  return /^\d{3,9}$/.test(value) ? `https://www.thomann.de/intl/prod_AR${value}.html` : `https://www.thomann.de/intl/search_dir.html?sw=${encodeURIComponent(value)}`
+  return /^\d{3,9}$/.test(value) ? `https://www.thomann.de/intl/prod_AR_${value}.html` : `https://www.thomann.de/intl/search_dir.html?sw=${encodeURIComponent(value)}`
 }
 
 /** Ktoré dôležité údaje modelu chýbajú (podľa druhu a typu) – pre Vývojár → Databáza techniky. */
@@ -333,4 +333,12 @@ export async function updateCatalogEntry(entry: Pick<CatalogEntry, 'id' | 'kind'
 export async function deleteCatalogEntry(id: string) {
   const { error } = await getSupabase().rpc('delete_catalog_entry', { _id: id })
   if (error) throw error
+}
+
+const norm = (text: string) => text.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[^a-z0-9]+/g, ' ').trim()
+
+/** Značka zo zoznamu podľa výrobcu, názvu alebo modelu (celé slovo, najdlhšia zhoda). */
+export function guessBrand(brands: string[], ...texts: string[]): string | undefined {
+  const words = ` ${texts.map(norm).join(' ')} `
+  return [...brands].sort((a, b) => b.length - a.length).find((brand) => norm(brand) && words.includes(` ${norm(brand)} `))
 }

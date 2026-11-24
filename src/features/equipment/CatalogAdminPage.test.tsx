@@ -49,7 +49,7 @@ describe('catalog helpers', () => {
   })
 
   it('links a Thomann article number to the product, other text to search', () => {
-    expect(thomannUrl('123456')).toBe('https://www.thomann.de/intl/prod_AR123456.html')
+    expect(thomannUrl('123456')).toBe('https://www.thomann.de/intl/prod_AR_123456.html')
     expect(thomannUrl('VRX932')).toBe('https://www.thomann.de/intl/search_dir.html?sw=VRX932')
     expect(thomannUrl(' ')).toBe('')
   })
