@@ -260,6 +260,8 @@ export type EquipmentAttributes = {
   lengthM?: number
   /** Kábel: kto ho vyrobil a koľko kusov (z 10 XLR spravil 8 Jano a 2 Fero). */
   makers?: { name: string; count: number }[]
+  /** Kábel kúpený hotový (nikto ho nevyrábal). */
+  boughtReady?: boolean
   powerW?: number
   lightSource?: LightSource
   /** Typ hliníka (1–4-point, ground support, príslušenstvo, stojany / lifty). */
@@ -693,6 +695,7 @@ export const equipmentSchema = z.object({
   boxFloorGapCm: optionalNumber(100),
   subDelayMs: z.number('Zadajte číslo').min(0, 'Nemôže byť záporné').max(200, 'Najviac 200 ms').optional(),
   makers: z.array(z.object({ name: z.string().trim().max(80).catch(''), count: z.number().int().min(0).max(100000).catch(0) })).max(10).optional(),
+  boughtReady: z.boolean().optional(),
   dmxModes: z
     .array(
       z.object({
@@ -851,6 +854,7 @@ export function attributesFor(
         | 'wheelColors'
         | 'gobos'
         | 'makers'
+        | 'boughtReady'
         | 'audioType'
         | 'djType'
         | 'videoType'
@@ -1112,7 +1116,8 @@ export function attributesFor(
   if (lighting && values.dmxModes?.length) attributes.dmxModes = values.dmxModes.map((mode) => ({ name: mode.name.trim(), channels: mode.channels, ...(mode.map?.trim() ? { map: mode.map.replace(/\s+$/, '') } : {}) }))
   if (values.kind === 'cable') {
     const makers = (values.makers ?? []).filter((maker) => maker.name.trim() && maker.count > 0).map((maker) => ({ name: maker.name.trim(), count: maker.count }))
-    if (makers.length > 0) attributes.makers = makers
+    if (values.boughtReady) attributes.boughtReady = true
+    else if (makers.length > 0) attributes.makers = makers
   }
   // Pixely sa dajú zadať priamo, alebo sa dopočítajú z rozmeru a pixel pitchu (500 mm / P3.9 = 128 px).
   const pitch = values.ledPitchMm
@@ -1178,7 +1183,7 @@ export function describeProcessor(spec: LedProcessorSpec) {
 
 /** Krátky popis údajov druhu do zoznamu a detailu, napr. „XLR · 5 m“ alebo „200 W · LED“. */
 /** `makers: false` – bez „vyrobil …“ (napr. v zozname techniky; vidno to v detaile a pri dĺžkach kábla). */
-export const makersText = (a: EquipmentAttributes) => (a.makers?.length ? `vyrobil ${a.makers.map((maker) => `${maker.name} ${maker.count}×`).join(', ')}` : '')
+export const makersText = (a: EquipmentAttributes) => (a.boughtReady ? 'kúpené hotové' : a.makers?.length ? `vyrobil ${a.makers.map((maker) => `${maker.name} ${maker.count}×`).join(', ')}` : '')
 
 export function describeAttributes(item: Pick<Equipment, 'attributes'>, options: { makers?: boolean } = {}) {
   const a = item.attributes

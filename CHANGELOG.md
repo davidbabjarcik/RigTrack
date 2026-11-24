@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.8.4 – 24. 11. 2026
+
+- **Káble kúpené hotové**: pri „Kto káble vyrobil“ nová voľba „Kúpené hotové“ – v detaile sa ukáže „kúpené hotové“
+  a do štatistiky „kto spravil najviac káblov“ sa nerátajú.
+- „Upozorniť, keď ostane (ks)“ sa pýta len pri spotrebnom materiáli (druh alebo kategória označená ako spotrebná);
+  ak je hranica už vyplnená, pole ostane.
+- Oprava: po nahratí alebo zmazaní fotky techniky sa hneď obnoví aj zoznam a upozornenie „Doplňte údaje k technike“
+  (predtým ešte hlásilo chýbajúcu fotku).
+
 ### 12.8.3 – 24. 11. 2026
 
 - Pri technike sa výška do racku (U), šírka v racku, zadné uchytenie a hĺbka pýtajú len pri technike, ktorá do racku

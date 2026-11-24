@@ -5,6 +5,15 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.8.4
+
+- **Cables bought ready-made**: a new “Bought ready-made” option in “Who made the cables” – the detail shows “bought
+  ready-made” and they do not count in the “who made the most cables” statistics.
+- “Warn when only (pcs) left” is asked only for consumables (kind or a category marked as consumable); if the limit is
+  already filled in, the field stays.
+- Fix: after uploading or removing an equipment photo, the list and the “Complete the equipment details” notice refresh
+  right away (it used to still report a missing photo).
+
 ### 12.8.3
 
 - The rack height (U), rack width, rear support and depth are asked only for equipment that can go into a rack – not for

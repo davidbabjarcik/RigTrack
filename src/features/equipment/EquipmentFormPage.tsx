@@ -444,6 +444,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const status = useWatch({ control, name: 'status' })
   const rackU = useWatch({ control, name: 'rackU' })
   const rackable = !['truss', 'stage', 'cable', 'consumable'].includes(kind)
+  const minQuantity = useWatch({ control, name: 'minQuantity' })
   const nameValue = useWatch({ control, name: 'name' })
   // Spoločný katalóg techniky: značka → model; model z katalógu doplní technické údaje.
   const catalog = useCatalog().data ?? []
@@ -506,6 +507,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const stageType = useWatch({ control, name: 'stageType' })
   const stageBrandList = useId()
   const simple = isSimpleKind(kind, categoryText ?? '')
+  const consumable = kind === 'consumable' || categories.some((category) => category.consumable && category.name.trim().toLowerCase() === (categoryText ?? '').trim().toLowerCase())
   // Neuložené farby dĺžok podľa dĺžky; uložia sa spolu s káblom.
   const [colorEdits, setColorEdits] = useState<Record<number, ColorEdit>>({})
   const connectorValue = useWatch({ control, name: 'connector' })
@@ -513,7 +515,8 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
   const [extraLengths, setExtraLengths] = useState<{ lengthM: number; quantity: number; makers?: Maker[] }[]>([])
   // Kto káble vyrobil: nič, jeden človek na všetky kusy, alebo pri každej dĺžke kto koľko.
   const savedMakers = equipment?.attributes.makers ?? []
-  const [makerMode, setMakerMode] = useState<MakerMode>(() => makerModeOf(savedMakers, equipment?.quantity ?? 0))
+  const savedBought = Boolean(equipment?.attributes.boughtReady)
+  const [makerMode, setMakerMode] = useState<MakerMode>(() => makerModeOf(savedMakers, equipment?.quantity ?? 0, savedBought))
   const [oneMaker, setOneMaker] = useState(() => (makerModeOf(savedMakers, equipment?.quantity ?? 0) === 'one' ? savedMakers[0].name : ''))
   const mainMakers = useWatch({ control, name: 'makers' }) ?? []
   // Nový bežný kábel: dĺžky a počty v jednom zozname (počet kusov dole sa vtedy neukazuje).
@@ -543,6 +546,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
               // Nový kábel s dĺžkou: aj prvá dĺžka má dĺžku v názve („XLR 5 m“), rovnako ako ďalšie dĺžky.
               name: multiLength && values.lengthM ? cableName(cableBaseName(values.name), values.lengthM) : values.name,
               makers: makersToSave(makerMode, oneMaker, values.quantity, values.makers ?? []),
+              boughtReady: makerMode === 'bought',
             }
           : values,
         categories,
@@ -569,7 +573,7 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
         const known = [...categories]
         for (const extra of extraLengths.filter((row) => row.lengthM > 0 && row.quantity > 0)) {
           const makers = makersToSave(makerMode, oneMaker, extra.quantity, extra.makers ?? [])
-          await saveEquipment({ companyId, id: null, values: { ...values, name: cableName(base, extra.lengthM), lengthM: extra.lengthM, quantity: extra.quantity, makers }, categories: known, locations, addresses: canAddresses })
+          await saveEquipment({ companyId, id: null, values: { ...values, name: cableName(base, extra.lengthM), lengthM: extra.lengthM, quantity: extra.quantity, makers, boughtReady: makerMode === 'bought' }, categories: known, locations, addresses: canAddresses })
         }
       }
       return id
@@ -1007,16 +1011,19 @@ function EquipmentForm({ companyId, equipment, copyFrom, categories, locations, 
             {...register('quantity', { valueAsNumber: true })}
           />
         )}
-        <Field
-          label={tx('Upozorniť, keď ostane (ks)')}
-          type="number"
-          inputMode="numeric"
-          min={0}
-          step={1}
-          placeholder={tx('nevyplnené = nesledovať')}
-          error={errors.minQuantity?.message}
-          {...register('minQuantity', asOptionalNumber)}
-        />
+        {/* Hranica „treba dokúpiť“ len pri spotrebnom materiáli (druh alebo kategória); vyplnená ostane viditeľná. */}
+        {(consumable || (minQuantity !== undefined && Number.isFinite(minQuantity))) && (
+          <Field
+            label={tx('Upozorniť, keď ostane (ks)')}
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={1}
+            placeholder={tx('nevyplnené = nesledovať')}
+            error={errors.minQuantity?.message}
+            {...register('minQuantity', asOptionalNumber)}
+          />
+        )}
         <Field
           label={tx('Cena prenájmu za kus a deň (€)')}
           type="number"

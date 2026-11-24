@@ -15,7 +15,8 @@ export function EquipmentPhoto({ companyId, equipmentId, name, photoPath, canEdi
       canEdit={canEdit}
       onUpload={(file) => uploadEquipmentPhoto(companyId, equipmentId, file, photoPath)}
       onRemove={() => trashPhoto('equipment', equipmentId)}
-      onChanged={() => queryClient.invalidateQueries({ queryKey: equipmentKeys.detail(companyId, equipmentId) })}
+      // Celá technika firmy (detail, zoznam aj upozornenie „doplňte údaje“ – chýbajúca fotka).
+      onChanged={() => queryClient.invalidateQueries({ queryKey: equipmentKeys.list(companyId) })}
     />
   )
 }

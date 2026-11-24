@@ -1,12 +1,13 @@
-// Kto kábel vyrobil: režim (nikto / jeden / rozdelené) a riadky po dĺžkach.
+// Kto kábel vyrobil: režim (nezadávať / jeden / rozdelené / kúpené hotové) a riadky po dĺžkach.
 
 export type Maker = { name: string; count: number }
-export type MakerMode = 'none' | 'one' | 'split'
+export type MakerMode = 'none' | 'one' | 'split' | 'bought'
 /** Jedna dĺžka kábla (alebo celá položka) a kto z jej kusov koľko vyrobil. */
 export type MakerRow = { key: string; title: string; quantity: number; makers: Maker[] }
 
 /** Počiatočný režim podľa uložených údajov: nič, jeden človek na všetko, alebo rozdelené. */
-export function makerModeOf(makers: Maker[], quantity: number): MakerMode {
+export function makerModeOf(makers: Maker[], quantity: number, bought = false): MakerMode {
+  if (bought) return 'bought'
   if (makers.length === 0) return 'none'
   return makers.length === 1 && makers[0].count >= quantity ? 'one' : 'split'
 }

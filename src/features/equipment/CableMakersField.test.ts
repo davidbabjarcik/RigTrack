@@ -19,3 +19,12 @@ describe('cable makers', () => {
     expect(makersOver({ quantity: 10, makers: [{ name: 'a', count: 2 }] })).toBe(false)
   })
 })
+
+describe('kúpené hotové', () => {
+  it('režim zo uložených údajov a popis', async () => {
+    const { makerModeOf } = await import('./makers')
+    const { makersText } = await import('./model')
+    expect(makerModeOf([], 10, true)).toBe('bought')
+    expect(makersText({ boughtReady: true })).toBe('kúpené hotové')
+  })
+})

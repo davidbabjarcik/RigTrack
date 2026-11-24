@@ -24,6 +24,7 @@ const MODES: { id: MakerMode; label: string }[] = [
   { id: 'none', label: 'Nezadávať' },
   { id: 'one', label: 'Všetky jeden človek' },
   { id: 'split', label: 'Rôzni ľudia' },
+  { id: 'bought', label: 'Kúpené hotové' },
 ]
 
 /** Kto káble vyrobil (spájkoval): jeden človek na všetko, alebo pri každej dĺžke kto koľko kusov. */
@@ -102,7 +103,8 @@ export function CableMakersField({ companyId, mode, onMode, oneName, onOneName, 
           })}
         </ul>
       )}
-      {mode !== 'none' && <p className="mt-1 text-xs text-muted-foreground">{tx('V Štatistikách potom uvidíte, kto spravil najviac káblov.')}</p>}
+      {mode === 'bought' && <p className="text-xs text-muted-foreground">{tx('Káble sú kúpené hotové – do štatistiky „kto spravil najviac káblov“ sa nerátajú.')}</p>}
+      {(mode === 'one' || mode === 'split') && <p className="mt-1 text-xs text-muted-foreground">{tx('V Štatistikách potom uvidíte, kto spravil najviac káblov.')}</p>}
     </div>
   )
 }
