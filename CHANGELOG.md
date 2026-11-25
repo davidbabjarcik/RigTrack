@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.8.5 – 26. 11. 2026
+
+- Oprava: keď sa po novej verzii stránka sama obnovuje, už sa neukáže „Niečo sa pokazilo“ ani sa neuloží falošné
+  hlásenie chyby (napr. pri otvorení Novinky v Safari) – namiesto toho „Načítavam novú verziu RigTracku…“.
+
 ### 12.8.4 – 24. 11. 2026
 
 - **Káble kúpené hotové**: pri „Kto káble vyrobil“ nová voľba „Kúpené hotové“ – v detaile sa ukáže „kúpené hotové“

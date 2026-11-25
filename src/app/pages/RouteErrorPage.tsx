@@ -3,7 +3,7 @@ import { useRouteError } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { reportError } from '@/lib/errorReporting'
 import { tx } from '@/lib/i18n'
-import { hardReloadForNewVersion, isStaleChunkError, reloadForNewVersion } from '@/lib/staleChunks'
+import { hardReloadForNewVersion, isStaleChunkError, reloadForNewVersion, staleReloadInProgress } from '@/lib/staleChunks'
 
 /** Záchranná obrazovka, keď niektorá stránka spadne alebo sa nepodarí stiahnuť jej kód. */
 export function RouteErrorPage() {
@@ -13,12 +13,16 @@ export function RouteErrorPage() {
     // Starý súbor po novej verzii: stránka sa sama obnoví, a keď to nepomôže, vymaže offline úložisko. Nie je to
     // chyba appky, preto sa nehlási.
     if (stale) {
-      if (!reloadForNewVersion()) hardReloadForNewVersion()
+      // Obnova už beží (spustila ju udalosť vite:preloadError) – netreba ďalšiu.
+      if (!staleReloadInProgress() && !reloadForNewVersion()) hardReloadForNewVersion()
       return
     }
     // Chyba sa uloží pre vývojára (Nastavenia → Vývojár → Chyby v appke).
     reportError(error, 'render')
   }, [error, stale])
+  if (stale) {
+    return <p role="status" className="flex min-h-dvh items-center justify-center px-4 text-sm text-muted-foreground">{tx('Načítavam novú verziu RigTracku…')}</p>
+  }
   return (
     <div role="alert" className="flex min-h-dvh flex-col items-center justify-center gap-4 px-4 text-center">
       <p className="text-xl font-semibold">{tx('Niečo sa pokazilo')}</p>

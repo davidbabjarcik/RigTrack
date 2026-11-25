@@ -5,6 +5,11 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.8.5
+
+- Fix: while the page reloads itself after a new version, “Something went wrong” is no longer shown and no false error
+  report is saved (e.g. when opening What's new in Safari) – “Loading the new version of RigTrack…” is shown instead.
+
 ### 12.8.4
 
 - **Cables bought ready-made**: a new “Bought ready-made” option in “Who made the cables” – the detail shows “bought

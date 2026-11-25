@@ -5,10 +5,18 @@
 const KEY = 'rigtrack:stale-reload'
 const PAUSE_MS = 30_000
 
-/** Chyba je „starý súbor po novej verzii“ (rôzne prehliadače ju hlásia inak). */
+// Keď sa stránka práve obnovuje na novú verziu, zlyhaný import stránky vráti prázdny modul a Safari hlási
+// „undefined is not an object (evaluating '(await …import(…)).ChangelogPage')“. Taká chyba je len dôsledok
+// obnovy – neukazuje sa ani neukladá.
+let reloadingAt = 0
+const RELOADING_MS = 15_000
+export const staleReloadInProgress = () => reloadingAt > 0 && Date.now() - reloadingAt < RELOADING_MS
+
+/** Chyba je „starý súbor po novej verzii“ (rôzne prehliadače ju hlásia inak) alebo jej dôsledok počas obnovy. */
 export function isStaleChunkError(error: unknown): boolean {
+  if (staleReloadInProgress()) return true
   const text = error instanceof Error ? `${error.name} ${error.message}` : String(error ?? '')
-  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError|Unable to preload CSS/i.test(text)
+  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError|Unable to preload CSS|__vite__mapDeps/i.test(text)
 }
 
 /**
@@ -70,6 +78,9 @@ export function reloadForNewVersion(reload: () => void = () => window.location.r
 /** Vite hlási zlyhané načítanie súborov stránky udalosťou vite:preloadError. */
 export function installStaleChunkReload() {
   window.addEventListener('vite:preloadError', (event) => {
-    if (reloadForNewVersion()) event.preventDefault()
+    if (reloadForNewVersion()) {
+      reloadingAt = Date.now()
+      event.preventDefault()
+    }
   })
 }
