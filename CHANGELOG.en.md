@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.11
+
+- **Rack summary at the top**: the rack editor and detail show four figures – devices (and how many accessories),
+  occupied U out of the full height, weight with contents and how many devices have no weight, power draw in W and
+  current in A at 230 V.
+- The current at 230 V is also in the summary of the rack PDF.
+
 ### 12.10.3
 
 - **Cases and racks on one page**: no switch – 19" racks are in Cases & racks right below the list of cases with a

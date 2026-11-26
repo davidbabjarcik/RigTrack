@@ -229,7 +229,7 @@ export function rackPages(data: RackPdfContext): HTMLCanvasElement[] {
   // Súhrn a varovania.
   const summary = rackSummary(data.rack, data.slots, data.sources)
   font(ctx, 38, 700)
-  ctx.fillText(`Obsadené ${summary.usedU} U · voľné ${summary.freeU} U · obsah ${String(summary.contentsKg).replace('.', ',')} kg · spolu s rackom ${String(summary.totalKg).replace('.', ',')} kg · príkon ${summary.powerW} W`, M, y)
+  ctx.fillText(`Obsadené ${summary.usedU} U · voľné ${summary.freeU} U · obsah ${String(summary.contentsKg).replace('.', ',')} kg · spolu s rackom ${String(summary.totalKg).replace('.', ',')} kg · príkon ${summary.powerW} W (${String(summary.amps).replace('.', ',')} A pri 230 V)`, M, y)
   y += 70
   const warnings = rackWarnings(data.rack, data.slots, data.sources).filter((warning) => warning.level === 'warn')
   font(ctx, 32, 500)

@@ -12,6 +12,7 @@ import { tf, tx } from '@/lib/i18n'
 import { can } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import { fetchRacks, fetchSlots, rackKeys, saveSlots } from './api'
+import { RackStats } from './RackStats'
 import { freePlace, newSlot, overlaps, rackSummary, rackWarnings, slotInfo, type FitSlot, type Sources } from './fit'
 import { ACCESSORIES, ACCESSORY_LABELS, SLOT_WIDTH_LABELS, SLOT_WIDTHS, type Accessory, type RackDesign, type SlotWidth } from './model'
 import { kindColor, targetAt, type DropTarget } from './gridUtils'
@@ -177,6 +178,9 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
 
   return (
     <div className="grid gap-4 lg:grid-cols-[18rem_1fr_18rem]">
+      <div className="lg:col-span-3">
+        <RackStats summary={summary} />
+      </div>
       {/* Panel: čo pridať */}
       <aside className="flex flex-col gap-2 rounded-xl border bg-surface p-3 lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto" aria-label={tx('Pridať do racku')}>
         <div className="flex gap-1 rounded-lg bg-muted p-1 text-sm" role="tablist">
@@ -291,17 +295,6 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
         ) : (
           <p className="rounded-xl border border-dashed bg-surface p-3 text-sm text-muted-foreground">{tx('Kliknite na zariadenie v racku – tu ho upravíte (šírka, výška, hmotnosť…).')}</p>
         )}
-        <div className="rounded-xl border bg-surface p-3 text-sm">
-          <p className="mb-1 font-medium">{tx('Súhrn')}</p>
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-1">
-            <li>{tf('Obsadené {0} U', summary.usedU)}</li>
-            <li>{tf('Voľné {0} U', summary.freeU)}</li>
-            <li>{tf('Obsah {0} kg', summary.contentsKg)}</li>
-            <li>{tf('Spolu {0} kg', summary.totalKg)}</li>
-            <li>{tf('Príkon {0} W', summary.powerW)}</li>
-            <li>{tf('Položiek {0}', summary.items)}</li>
-          </ul>
-        </div>
         {warnings.length > 0 && (
           <ul className="flex flex-col gap-1 text-sm" aria-label={tx('Varovania')}>
             {warnings.map((warning, index) => (

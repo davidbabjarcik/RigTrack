@@ -19,6 +19,7 @@ import { brandingKeys, fetchBranding, fetchLogoBlob, logoForLightBackground } fr
 import { fileSlug } from '@/features/cases/canvas'
 import { todayIso } from '@/lib/format'
 import { rackPdf } from './rackPdf'
+import { RackStats } from './RackStats'
 import { rackSummary, rackWarnings, slotInfo, type FitSlot } from './fit'
 import { RACK_RAIL_LABELS, RACK_TYPE_LABELS, rackHeightMm } from './model'
 import { RackGrid } from './RackGrid'
@@ -217,9 +218,9 @@ export function RackDetailPage() {
       )}
 
       {list.length > 0 && (
-        <p className="mb-3 text-sm">
-          {[tf('Obsadené {0} U', summary.usedU), tf('Voľné {0} U', summary.freeU), tf('Spolu {0} kg', summary.totalKg), tf('Príkon {0} W', summary.powerW)].join(' · ')}
-        </p>
+        <div className="mb-3">
+          <RackStats summary={summary} />
+        </div>
       )}
       {warnings.length > 0 && (
         <ul className="mb-3 flex flex-col gap-1 text-sm">

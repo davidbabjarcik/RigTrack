@@ -46,7 +46,8 @@ describe('osadenie racku', () => {
 
   it('súhrn a rozsahy', () => {
     const summary = rackSummary(rack, [slot('amp', { equipmentId: 'amp', heightU: 2 }), slot('b', { accessory: 'blank', bottomU: 3 })], sources)
-    expect(summary).toEqual({ usedU: 3, freeU: 3, contentsKg: 20, totalKg: 35, powerW: 1500, items: 1 })
+    expect(summary).toEqual({ usedU: 3, freeU: 3, units: 6, contentsKg: 20, totalKg: 35, powerW: 1500, amps: 6.5, items: 1, devices: 1, noWeight: 0 })
+    expect(rackSummary(rack, [slot('x', { label: 'Bez údajov' })], sources)).toMatchObject({ devices: 1, noWeight: 1, powerW: 0, amps: 0 })
     expect(compactRanges([1, 2, 3, 7, 9, 10])).toBe('1–3, 7, 9–10')
   })
 })

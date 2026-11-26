@@ -28,7 +28,12 @@ test('racky: zoznam a detail s predkom a zadkom', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Ukážkový pult, U 1–2' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Záslepka, U 3' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'PDU (napájanie), U 1' })).toBeVisible()
-  await expect(page.getByText('Obsadené 3 U · Voľné 3 U · Spolu 18 kg · Príkon 0 W')).toBeVisible()
+  // Súhrn hore: prístroje, obsadené U, hmotnosť a prúd pri 230 V.
+  await expect(page.getByText('3 / 6 U')).toBeVisible()
+  await expect(page.getByText('spredu · voľné 3 U')).toBeVisible()
+  await expect(page.getByText('18 kg', { exact: true })).toBeVisible()
+  await expect(page.getByText('obsah 0 kg · 1 bez hmotnosti')).toBeVisible()
+  await expect(page.getByText('0 A pri 230 V')).toBeVisible()
 })
 
 test('nový rack: kontrola výšky', async ({ page }) => {
@@ -66,7 +71,8 @@ test('editor racku: pridanie z panela, úprava, späť a uloženie', async ({ pa
   await page.getByRole('button', { name: /Ukážkový zosilňovač/ }).first().click()
   await expect(page.getByRole('button', { name: 'Ukážkový zosilňovač, U 1–2' })).toBeVisible()
   await expect(page.getByText('Príkon 1200 W a v racku nie je PDU')).toBeVisible()
-  await expect(page.getByText('Obsadené 2 U')).toBeVisible()
+  await expect(page.getByText('2 / 6 U')).toBeVisible()
+  await expect(page.getByText('5,2 A pri 230 V')).toBeVisible()
   // Doplnok a späť.
   await page.getByRole('tab', { name: 'Doplnky' }).click()
   await page.getByRole('button', { name: /Záslepka/ }).click()

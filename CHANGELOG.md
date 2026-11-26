@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.11 – 26. 11. 2026
+
+- **Súhrn racku hore**: v editore aj v detaile racku štyri čísla – prístroje (a koľko doplnkov), obsadené U
+  z celkovej výšky, hmotnosť s obsahom a koľko prístrojov nemá zadanú hmotnosť, príkon vo W a prúd v A pri 230 V.
+- Prúd pri 230 V je aj v súhrne v PDF racku.
+
 ### 12.10.3 – 26. 11. 2026
 
 - **Cases a racky na jednej stránke**: bez prepínača – racky 19" sú v Cases a racks hneď pod zoznamom cases

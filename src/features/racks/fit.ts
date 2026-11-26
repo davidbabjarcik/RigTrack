@@ -164,17 +164,29 @@ export function compactRanges(values: number[]) {
   return parts.join(', ')
 }
 
-/** Súhrn: obsadené / voľné U (predok), hmotnosť racku s obsahom, príkon, počet položiek. */
+/** Prúd pri 230 V z príkonu vo W (na 1 desatinné miesto). */
+export const ampsAt230 = (watts: number) => Math.round((watts / 230) * 10) / 10
+
+/**
+ * Súhrn: obsadené / voľné U (predok), hmotnosť racku s obsahom, príkon a prúd pri 230 V, počet položiek
+ * a prístrojov (bez doplnkov) a koľko prístrojov nemá zadanú hmotnosť.
+ */
 export function rackSummary(rack: Pick<RackDesign, 'units' | 'ownWeightKg'>, slots: FitSlot[], sources: Sources) {
   const used = new Set<number>()
   for (const slot of slots.filter((item) => item.side === 'front')) for (let u = slot.bottomU; u <= topU(slot); u++) if (u >= 1 && u <= rack.units) used.add(u)
   const contents = slots.reduce((sum, slot) => sum + (slotInfo(slot, sources).weightKg ?? 0), 0)
+  const devices = slots.filter((slot) => !slot.accessory)
+  const powerW = slots.reduce((sum, slot) => sum + (slotInfo(slot, sources).powerW ?? 0), 0)
   return {
     usedU: used.size,
     freeU: rack.units - used.size,
+    units: rack.units,
     contentsKg: round(contents),
     totalKg: round(contents + (rack.ownWeightKg ?? 0)),
-    powerW: slots.reduce((sum, slot) => sum + (slotInfo(slot, sources).powerW ?? 0), 0),
+    powerW,
+    amps: ampsAt230(powerW),
     items: slots.filter((slot) => slot.accessory !== 'blank').length,
+    devices: devices.length,
+    noWeight: devices.filter((slot) => slotInfo(slot, sources).weightKg == null).length,
   }
 }
