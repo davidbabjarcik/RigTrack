@@ -18,15 +18,22 @@ import { isSupabaseConfigured } from '@/lib/supabase/client'
 import { LanguageSync } from './LanguageToggle'
 
 
-function SidebarLink({ item }: { item: Pick<NavItem, 'label' | 'to' | 'icon'> }) {
+/** Položka menu ostane zvýraznená aj na príbuzných adresách (napr. /racks pod Cases a racks). */
+function useAlsoActive(also: string[] | undefined) {
+  const { pathname } = useLocation()
+  return !!also?.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+}
+
+function SidebarLink({ item }: { item: Pick<NavItem, 'label' | 'to' | 'icon' | 'also'> }) {
+  const also = useAlsoActive(item.also)
   return (
     <NavLink
       to={item.to}
       end={item.to === '/'}
-      className={({ isActive }) =>
+      className={({ isActive: exact }) =>
         cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-          isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+          exact || also ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
         )
       }
     >
@@ -36,15 +43,16 @@ function SidebarLink({ item }: { item: Pick<NavItem, 'label' | 'to' | 'icon'> })
   )
 }
 
-function TabLink({ item }: { item: Pick<NavItem, 'label' | 'to' | 'icon'> }) {
+function TabLink({ item }: { item: Pick<NavItem, 'label' | 'to' | 'icon' | 'also'> }) {
+  const also = useAlsoActive(item.also)
   return (
     <NavLink
       to={item.to}
       end={item.to === '/'}
-      className={({ isActive }) =>
+      className={({ isActive: exact }) =>
         cn(
           'flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium',
-          isActive ? 'text-accent' : 'text-muted-foreground',
+          exact || also ? 'text-accent' : 'text-muted-foreground',
         )
       }
     >

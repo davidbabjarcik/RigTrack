@@ -3,6 +3,7 @@ import { ChevronRight, Plus, Server } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { CasesTabs } from '@/components/layout/ModuleTabs'
 import { LinkButton } from '@/components/ui/button'
 import { caseTitle } from '@/features/cases/model'
 import { useCases } from '@/features/cases/useCases'
@@ -35,6 +36,7 @@ export function RacksPage() {
 
   return (
     <>
+      <CasesTabs />
       <PageHeader
         title={tx('Racky')}
         description={tx('Osadenie 19" rackov po jednotkách U – predok, zadok, hmotnosť a príkon.')}

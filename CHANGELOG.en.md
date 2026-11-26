@@ -5,6 +5,11 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.10.2
+
+- **Cases and racks together**: the menu has a single Cases & racks item. Its page switches between Cases and 19" racks,
+  and the item stays highlighted in racks too. Members who can only see racks reach them through the same item.
+
 ### 12.10.1
 
 - **2FA shows as RigTrack in the authenticator**: when you turn on two-factor sign-in, the account in the app

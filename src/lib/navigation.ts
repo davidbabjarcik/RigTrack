@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Briefcase, Building2, Cable, Calculator, CalendarDays, Car, ChartColumn, ClipboardCheck, Coffee, FileText, LayoutDashboard, Lightbulb, ListTodo, PiggyBank, Printer, Receipt, Server, Settings, ShieldAlert, Speaker, StickyNote, Ticket, Timer, Users, Wallet, Warehouse, Wifi, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, Briefcase, Building2, Cable, Calculator, CalendarDays, Car, ChartColumn, ClipboardCheck, Coffee, FileText, LayoutDashboard, Lightbulb, ListTodo, PiggyBank, Printer, Receipt, Settings, ShieldAlert, Speaker, StickyNote, Ticket, Timer, Users, Wallet, Warehouse, Wifi, Wrench, type LucideIcon } from 'lucide-react'
 import type { PermissionKey } from '@/features/permissions/catalog'
 import { can, type Permitted } from './permissions'
 import type { Lang } from './i18n'
@@ -16,13 +16,23 @@ export type NavItem = {
   hiddenFor?: Role[]
   /** Bez hlavného oprávnenia sa položka ukáže s inou adresou (napr. Servis → len Žiadosti o servis). */
   fallback?: { to: string; permission?: PermissionKey }
+  /** Ďalšie adresy, pri ktorých je položka v menu zvýraznená (napr. Racky pod Cases a racks). */
+  also?: string[]
 }
 
 export const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Prehľad', to: '/', icon: LayoutDashboard, description: 'Súhrn stavu techniky a najbližších akcií' },
   { id: 'equipment', permission: 'equipment.view', label: 'Technika', to: '/equipment', icon: Speaker, description: 'Evidencia kusov techniky' },
-  { id: 'cases', permission: 'cases.view', label: 'Cases a racks', to: '/cases', icon: Briefcase, description: 'Cases, racky a ich obsah' },
-  { id: 'racks', permission: 'racks.view', label: 'Racky', to: '/racks', icon: Server, description: 'Osadenie 19" rackov po U' },
+  {
+    id: 'cases',
+    permission: 'cases.view',
+    label: 'Cases a racks',
+    to: '/cases',
+    icon: Briefcase,
+    description: 'Cases, ich obsah a osadenie 19" rackov po U',
+    also: ['/racks'],
+    fallback: { to: '/racks', permission: 'racks.view' },
+  },
   { id: 'warehouse', permission: 'cases.view', label: 'Sklad', to: '/warehouse', icon: Warehouse, description: 'Plán skladu a kde ktorý case leží' },
   {
     id: 'orders',
@@ -70,8 +80,7 @@ export const NAV_ITEMS: NavItem[] = [
 const NAV_EN: Record<string, [string, string]> = {
   dashboard: ['Overview', 'Summary of equipment and upcoming events'],
   equipment: ['Equipment', 'Inventory of every piece of gear'],
-  cases: ['Cases & racks', 'Cases, racks and what is inside'],
-  racks: ['Racks', 'Fitting 19" racks by U'],
+  cases: ['Cases & racks', 'Cases, what is inside and fitting 19" racks by U'],
   warehouse: ['Warehouse', 'Warehouse plan and where each case lies'],
   orders: ['Orders', 'Purchases, their items and the wantlist'],
   vehicles: ['Vehicles', 'Vans, inspections, vignettes and insurance'],

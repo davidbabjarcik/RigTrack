@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.10.2 – 26. 11. 2026
+
+- **Cases a racky spolu**: v menu je jedna položka Cases a racks. Na jej stránke sa prepína medzi Cases a Racky 19";
+  položka ostáva zvýraznená aj v rackoch. Kto vidí len racky, dostane sa k nim tou istou položkou.
+
 ### 12.10.1 – 26. 11. 2026
 
 - **2FA v autentifikátore ako RigTrack**: pri zapnutí dvojfaktorového prihlásenia sa účet v aplikácii
