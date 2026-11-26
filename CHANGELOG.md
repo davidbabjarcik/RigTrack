@@ -5,6 +5,11 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.10.3 – 26. 11. 2026
+
+- **Cases a racky na jednej stránke**: bez prepínača – racky 19" sú v Cases a racks hneď pod zoznamom cases
+  s tlačidlom Nový rack. Návrat z racku vráti stránku na racky.
+
 ### 12.10.2 – 26. 11. 2026
 
 - **Cases a racky spolu**: v menu je jedna položka Cases a racks. Na jej stránke sa prepína medzi Cases a Racky 19";

@@ -16,6 +16,10 @@ test('racky: zoznam a detail s predkom a zadkom', async ({ page }) => {
     rack_slots: [slot('s1', 'front', 1, 2, { label: 'Ukážkový pult' }), slot('s2', 'front', 3, 1, { accessory: 'blank' }), slot('s3', 'rear', 1, 1, { accessory: 'pdu' })],
   })
   await page.goto('/racks')
+  // Racky sú na stránke Cases a racks pod zoznamom cases, bez prepínača.
+  await expect(page).toHaveURL(/\/cases#racks$/)
+  await expect(page.getByRole('heading', { name: 'Cases a racks' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Racky 19"' })).toBeVisible()
   await expect(page.getByRole('link', { name: /Ukážkový FOH rack/ })).toContainText('6 U · Shock-mount flightcase')
   await expect(page.getByText('šablóna')).toBeVisible()
   await page.getByRole('link', { name: /Ukážkový FOH rack/ }).click()

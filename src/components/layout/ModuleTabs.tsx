@@ -47,15 +47,3 @@ export function CalculatorTabs() {
   )
 }
 
-/** Cases | Racky 19" – podľa oprávnení. */
-export function CasesTabs() {
-  const company = useCompany().active
-  return (
-    <SectionTabs
-      tabs={[
-        { to: '/cases', label: tx('Cases'), shown: !company || can(company, 'cases.view') },
-        { to: '/racks', label: tx('Racky 19"'), shown: !company || can(company, 'racks.view') },
-      ]}
-    />
-  )
-}

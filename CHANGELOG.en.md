@@ -5,6 +5,11 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.10.3
+
+- **Cases and racks on one page**: no switch – 19" racks are in Cases & racks right below the list of cases with a
+  New rack button. Going back from a rack returns to the racks.
+
 ### 12.10.2
 
 - **Cases and racks together**: the menu has a single Cases & racks item. Its page switches between Cases and 19" racks,

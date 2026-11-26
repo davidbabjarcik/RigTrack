@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorBlock, LoadingBlock } from '@/components/feedback/QueryState'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { CasesTabs } from '@/components/layout/ModuleTabs'
+import { RacksSection } from '@/features/racks/RacksPage'
 import { ScanButton } from '@/features/scan/ScanButton'
 import { Button, LinkButton } from '@/components/ui/button'
 import { Field, SelectField } from '@/components/ui/field'
@@ -145,7 +145,6 @@ export function CasesListPage() {
 
   return (
     <>
-      <CasesTabs />
       <PageHeader
         title={tx('Cases a racks')}
         description={cases.data ? `${visible.length} z ${all.length}` : undefined}
@@ -355,6 +354,7 @@ export function CasesListPage() {
           })}
         </ul>
       )}
+      <RacksSection />
     </>
   )
 }
