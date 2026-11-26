@@ -5,6 +5,12 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.10.1
+
+- **2FA shows as RigTrack in the authenticator**: when you turn on two-factor sign-in, the account in the app
+  (Google Authenticator, Microsoft Authenticator…) is saved under the name RigTrack instead of the site address.
+  An account added earlier can be renamed in the authenticator, or 2FA can be turned off and on again.
+
 ### 12.10
 
 - **Show password**: the password field at sign-in, sign-up and password change has an eye icon – it shows the typed

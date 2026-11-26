@@ -39,7 +39,7 @@ export async function verifyLoginCode(code: string) {
 export async function startEnroll(): Promise<{ factorId: string; qr: string; secret: string }> {
   const db = getSupabase()
   for (const factor of (await listTotpFactors()).filter((item) => !item.verified)) await db.auth.mfa.unenroll({ factorId: factor.id })
-  const { data, error } = await db.auth.mfa.enroll({ factorType: 'totp', friendlyName: `RigTrack ${new Date().toISOString().slice(0, 16)}` })
+  const { data, error } = await db.auth.mfa.enroll({ factorType: 'totp', issuer: 'RigTrack', friendlyName: `RigTrack ${new Date().toISOString().slice(0, 16)}` })
   if (error) throw error
   return { factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret }
 }

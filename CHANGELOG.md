@@ -5,6 +5,12 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.10.1 – 26. 11. 2026
+
+- **2FA v autentifikátore ako RigTrack**: pri zapnutí dvojfaktorového prihlásenia sa účet v aplikácii
+  (Google Authenticator, Microsoft Authenticator…) uloží pod názvom RigTrack namiesto adresy stránky.
+  Už pridaný účet sa dá premenovať priamo v autentifikátore alebo 2FA vypnúť a znova zapnúť.
+
 ### 12.10 – 26. 11. 2026
 
 - **Zobraziť heslo**: pri prihlásení, vytvorení účtu a zmene hesla je v poli s heslom ikona oka – ukáže napísané
