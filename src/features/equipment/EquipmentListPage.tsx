@@ -353,7 +353,7 @@ export function EquipmentListPage() {
             <Fragment key={group.key}>
               {/* Triedenie podľa kategórie / druhu: nadpis pri každej novej skupine. */}
               {byGroup && (index === 0 || equipmentGroupLabel(groups[index - 1].items[0], sortContext) !== equipmentGroupLabel(group.items[0], sortContext)) && (
-                <li className="bg-muted/60 px-4 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{equipmentGroupLabel(group.items[0], sortContext)}</li>
+                <li className="bg-muted/60 px-4 py-1.5 text-xs font-medium text-muted-foreground">{equipmentGroupLabel(group.items[0], sortContext)}</li>
               )}
               {renderGroup(group)}
             </Fragment>

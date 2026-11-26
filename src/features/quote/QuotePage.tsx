@@ -56,7 +56,7 @@ function QuoteDocument({ doc, number }: { doc: QuoteDoc; number?: string }) {
     <>
       <header className="mb-6 flex flex-wrap justify-between gap-4 border-b border-neutral-400 pb-3">
         <div>
-          <h1 className="text-2xl font-bold">{tx('Cenová ponuka')}{number && tf(' č. {0}', number)}</h1>
+          <h1 className="text-2xl font-semibold">{tx('Cenová ponuka')}{number && tf(' č. {0}', number)}</h1>
           <p className="text-sm">
             {doc.eventName} · {doc.eventDates}
             {doc.venue && ` · ${doc.venue}`}
@@ -118,7 +118,7 @@ function QuoteDocument({ doc, number }: { doc: QuoteDoc; number?: string }) {
             </div>
           </>
         )}
-        <div className="flex justify-between border-t-2 border-black pt-1 text-base font-bold">
+        <div className="flex justify-between border-t-2 border-black pt-1 text-base font-semibold">
           <dt>{tx('Spolu')}{doc.withVat ? tx(' s DPH') : ''}</dt>
           <dd>{money(doc.total)}</dd>
         </div>

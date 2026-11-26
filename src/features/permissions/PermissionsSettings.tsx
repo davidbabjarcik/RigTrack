@@ -208,7 +208,7 @@ function PermissionGroupRows({ label, columns, children }: { label: string; colu
   return (
     <>
       <tr className="border-b bg-muted/60">
-        <th colSpan={columns} scope="colgroup" className="px-4 py-1.5 text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <th colSpan={columns} scope="colgroup" className="px-4 py-1.5 text-left text-xs font-medium text-muted-foreground">
           {label}
         </th>
       </tr>

@@ -45,7 +45,7 @@ export function ChangelogPage() {
         <nav aria-label={tx('Verzie')} className="sticky top-4 hidden max-h-[calc(100dvh-2rem)] overflow-y-auto pr-2 lg:block">
           {majors.map((group) => (
             <div key={group.major} className="mb-4">
-              <p className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{tx('Verzia')}{' '}{group.major}</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">{tx('Verzia')}{' '}{group.major}</p>
               <ul className="flex flex-col">
                 {group.versions.map((version) => (
                   <li key={version}>

@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.9
+
+- **A calmer look**: a neutral graphite colour scale in both light and dark mode – dark mode no longer has a blue tint,
+  primary buttons are light in dark mode and amber stays on selection, links and things that matter. Amber text in light
+  mode is darker so it reads well.
+- Interface type is semibold instead of bold; group labels (equipment list, permissions, what's new, schedule) are no
+  longer uppercase with wide tracking. Printed documents (invoices, contracts, prints) stay unchanged.
+- Home page: features as a clear two-column list instead of a grid of cards, no highlighted part of the headline.
+- Progress bars (packing, quote budget) move more smoothly on slower phones.
+
 ### 12.8.5
 
 - Fix: while the page reloads itself after a new version, “Something went wrong” is no longer shown and no false error

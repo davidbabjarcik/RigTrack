@@ -265,7 +265,7 @@ function Schedule({ data, previous }: { data: SharedSchedule; previous: SharedSc
           <div className={cn('grid gap-3', stages.size > 1 && 'md:grid-cols-2 xl:grid-cols-3')}>
             {[...stages].map(([stage, list]) => (
               <div key={stage}>
-                {(stages.size > 1 || stage) && <p className="mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">{stage || 'Bez pódia'}</p>}
+                {(stages.size > 1 || stage) && <p className="mb-1 text-xs font-medium text-muted-foreground">{stage || 'Bez pódia'}</p>}
                 <Table head={['Čas', 'Program']}>
                   {list.map((item) => (
                     <tr key={item.id} className={cn('border-t align-top', changed.has(item.id) && changedRow)}>

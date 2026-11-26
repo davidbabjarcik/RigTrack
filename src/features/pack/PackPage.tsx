@@ -217,7 +217,7 @@ export function PackPage() {
       </div>
 
       <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
-        <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${progress.total > 0 ? (progress.done / progress.total) * 100 : 0}%` }} />
+        <div className="h-full w-full origin-left rounded-full bg-accent transition-transform" style={{ transform: `scaleX(${progress.total > 0 ? progress.done / progress.total : 0})` }} />
       </div>
 
       {phase === 'back' && missingBack.length > 0 && (

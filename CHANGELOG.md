@@ -5,6 +5,16 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.9 – 26. 11. 2026
+
+- **Pokojnejší vzhľad**: neutrálna grafitová škála farieb vo svetlom aj tmavom režime – tmavý režim už nemá modrý nádych,
+  hlavné tlačidlá sú v tmavom režime svetlé a jantárová farba zostala na výbere, odkazoch a dôležitých veciach.
+  Svetlý jantár v texte je tmavší, aby bol dobre čitateľný.
+- Písmo v rozhraní polotučné namiesto tučného; popisky skupín (zoznam techniky, oprávnenia, novinky, harmonogram)
+  bez veľkých písmen a riedenia. Tlačové dokumenty (faktúry, zmluvy, tlače) ostávajú bez zmeny.
+- Úvodná stránka: funkcie ako prehľadný zoznam v dvoch stĺpcoch namiesto mriežky kartičiek, bez zvýraznených častí nadpisu.
+- Ukazovatele priebehu (balenie, rozpočet ponuky) sa posúvajú plynulejšie aj na slabších telefónoch.
+
 ### 12.8.5 – 26. 11. 2026
 
 - Oprava: keď sa po novej verzii stránka sama obnovuje, už sa neukáže „Niečo sa pokazilo“ ani sa neuloží falošné

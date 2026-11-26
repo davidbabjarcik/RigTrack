@@ -7,7 +7,7 @@ import { useSyncExternalStore } from 'react'
 export type Theme = 'light' | 'dark'
 
 export const THEME_STORAGE_KEY = 'rigtrack:theme'
-const THEME_COLORS: Record<Theme, string> = { light: '#f8fafc', dark: '#0b1120' }
+const THEME_COLORS: Record<Theme, string> = { light: '#fafafa', dark: '#141415' }
 
 /** Uložená voľba používateľa; null = riadiť sa zariadením. Čokoľvek iné v úložisku sa ignoruje. */
 export function parseStoredTheme(value: string | null): Theme | null {

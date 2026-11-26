@@ -230,7 +230,7 @@ export function EventLoadingSection({ companyId, event }: Props) {
                   {order.map((placement, index) => (
                     <li key={placement.id} className="flex gap-2">
                       <span
-                        className="inline-flex size-5 shrink-0 items-center justify-center rounded text-[11px] font-bold text-neutral-900 tabular-nums"
+                        className="inline-flex size-5 shrink-0 items-center justify-center rounded text-[11px] font-semibold text-neutral-900 tabular-nums"
                         style={{ backgroundColor: LOAD_FILLS[index % LOAD_FILLS.length] }}
                       >
                         {index + 1}

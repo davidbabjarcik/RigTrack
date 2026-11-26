@@ -206,12 +206,12 @@ export function HomePage() {
       <main className="flex-1">
         <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:py-20 lg:grid-cols-[1.05fr_1fr]">
           <div>
-            <p className="mb-3 inline-flex items-center gap-2 rounded-full border bg-surface px-3 py-1 text-xs font-medium text-muted-foreground">
-              <Smartphone className="size-3.5 text-accent" aria-hidden />
+            <p className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <Smartphone className="size-4" aria-hidden />
               {t('Na mobile aj na PC, funguje aj offline', 'On phone and PC, works offline too')}
             </p>
-            <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
-              {t('Technika, cases a eventy', 'Equipment, cases and events')} <span className="text-accent">{t('na jednom mieste', 'in one place')}</span>
+            <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+              {t('Technika, cases a eventy', 'Equipment, cases and events')} {t('na jednom mieste', 'in one place')}
             </h1>
             <p className="mt-4 max-w-xl text-lg text-pretty text-muted-foreground">
               {t(
@@ -255,12 +255,15 @@ export function HomePage() {
             <p className="mt-2 max-w-2xl text-muted-foreground">
               {t('To, čo sa inak rieši v tabuľkách, na papieri a v správach – prehľadne a pre celú firmu.', 'What you would otherwise juggle in spreadsheets, on paper and in messages – clear and for the whole company.')}
             </p>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Zoznam namiesto mriežky rovnakých kartičiek: ikona v jednom stĺpci, nadpis a veta, jemné deliace čiary. */}
+            <ul className="mt-8 grid gap-x-12 sm:grid-cols-2">
               {FEATURES.map((feature) => (
-                <li key={feature.title[0]} className="rounded-2xl border bg-surface p-5">
-                  <feature.icon className="size-6 text-accent" aria-hidden />
-                  <h3 className="mt-3 font-semibold">{pick(feature.title)}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{pick(feature.text)}</p>
+                <li key={feature.title[0]} className="flex gap-4 border-t py-5">
+                  <feature.icon className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+                  <div>
+                    <h3 className="font-medium">{pick(feature.title)}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{pick(feature.text)}</p>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -291,7 +294,7 @@ export function HomePage() {
             <ol className="mt-8 grid gap-4 md:grid-cols-3">
               {STEPS.map((step, index) => (
                 <li key={step.title[0]} className="rounded-2xl border bg-surface p-5">
-                  <span className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{index + 1}</span>
+                  <span className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">{index + 1}</span>
                   <h3 className="mt-3 font-semibold">{pick(step.title)}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">{pick(step.text)}</p>
                 </li>

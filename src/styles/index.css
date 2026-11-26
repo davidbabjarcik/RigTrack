@@ -5,31 +5,34 @@
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 :root {
-  --background: #f8fafc;
+  /* Grafitová neutrálna škála (plochy, text, linky) a jeden jantárový akcent – farbu nesú obsah a podklady akcie. */
+  --background: #fafafa;
   --surface: #ffffff;
-  --foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --border: #e2e8f0;
-  --primary: #0f172a;
-  --primary-foreground: #f8fafc;
-  --accent: #d97706;
+  --foreground: #171717;
+  --muted: #f4f4f5;
+  --muted-foreground: #66666b;
+  --border: #e6e6e8;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  /* Tmavší jantár, aby mal text v akcente kontrast aspoň 4,5 : 1 na bielej. */
+  --accent: #b45309;
   --accent-foreground: #ffffff;
   --destructive: #dc2626;
 }
 
 :root[data-theme='dark'] {
-  --background: #0b1120;
-  --surface: #111827;
-  --foreground: #f1f5f9;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --border: #1f2937;
-  --primary: #f59e0b;
-  --primary-foreground: #0f172a;
+  /* Neutrálny grafit bez modrého nádychu; hlavné tlačidlo je svetlé, jantár len pre výber a dôležité veci. */
+  --background: #141415;
+  --surface: #19191b;
+  --foreground: #ededed;
+  --muted: #232325;
+  --muted-foreground: #a1a1a6;
+  --border: #2a2a2d;
+  --primary: #ededed;
+  --primary-foreground: #141415;
   --accent: #f59e0b;
-  --accent-foreground: #0f172a;
-  --destructive: #f87171;
+  --accent-foreground: #141415;
+  --destructive: #e5484d;
 }
 
 @theme inline {

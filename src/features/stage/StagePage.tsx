@@ -156,7 +156,7 @@ export function StageDrawing({ request, plan, mainId, showLegs = false }: { requ
           return (
             <g key={`n-${order}`}>
               <circle cx={cx} cy={cy - 4} r={10} className={order === 1 ? 'fill-emerald-600' : 'fill-background stroke-foreground/40'} strokeWidth={1} />
-              <text x={cx} y={cy} textAnchor="middle" className={cn('text-[11px] font-bold', order === 1 ? 'fill-white' : 'fill-foreground')}>
+              <text x={cx} y={cy} textAnchor="middle" className={cn('text-[11px] font-semibold', order === 1 ? 'fill-white' : 'fill-foreground')}>
                 {order}
               </text>
               <text x={cx} y={cy + 17} textAnchor="middle" className="fill-muted-foreground text-[9px]">
@@ -172,7 +172,7 @@ export function StageDrawing({ request, plan, mainId, showLegs = false }: { requ
       {!showLegs && plan.firstDeck && (
         <g>
           <circle cx={X(plan.firstDeck.x + plan.firstDeck.w / 2)} cy={Y(plan.firstDeck.y + plan.firstDeck.d / 2)} r={11} className="fill-emerald-600" />
-          <text x={X(plan.firstDeck.x + plan.firstDeck.w / 2)} y={Y(plan.firstDeck.y + plan.firstDeck.d / 2) + 4.5} textAnchor="middle" className="fill-white text-[13px] font-bold">
+          <text x={X(plan.firstDeck.x + plan.firstDeck.w / 2)} y={Y(plan.firstDeck.y + plan.firstDeck.d / 2) + 4.5} textAnchor="middle" className="fill-white text-[13px] font-semibold">
             1
           </text>
         </g>
@@ -621,7 +621,7 @@ export function StagePage() {
               {groups.map((group) => (
                 <tbody key={group} className="divide-y border-b last:border-b-0">
                   <tr className="bg-muted/50">
-                    <th colSpan={3} className="px-4 py-1.5 text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    <th colSpan={3} className="px-4 py-1.5 text-left text-xs font-medium text-muted-foreground">
                       <span className="inline-flex items-center gap-2">
                         <PartIcon kind={GROUP_ICONS[group] ?? 'accessory'} className="size-5" />
                         {group}

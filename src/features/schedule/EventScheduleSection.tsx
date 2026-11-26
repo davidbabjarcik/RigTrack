@@ -113,7 +113,7 @@ export function EventScheduleSection({ companyId, event, canEdit }: { companyId:
           <div className={cn('grid gap-3', byStage.size > 1 && 'md:grid-cols-2 xl:grid-cols-3')}>
             {[...byStage].map(([stage, list]) => (
               <div key={stage}>
-                {byStage.size > 1 || stage ? <p className="mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">{stage || tx('Bez pódia')}</p> : null}
+                {byStage.size > 1 || stage ? <p className="mb-1 text-xs font-medium text-muted-foreground">{stage || tx('Bez pódia')}</p> : null}
                 <ul className="divide-y overflow-hidden rounded-xl border bg-surface text-sm">
                   {list.map((item) =>
                     editing === item.id ? (

@@ -14,7 +14,7 @@ export function SupplierBadge({ supplier, source = 'shop', className }: Props) {
     <span
       aria-hidden
       className={cn(
-        'flex size-12 shrink-0 items-center justify-center rounded-lg border text-xl font-bold',
+        'flex size-12 shrink-0 items-center justify-center rounded-lg border text-xl font-semibold',
         thomann
           ? 'border-transparent bg-[#00a3a6] font-serif text-3xl leading-none text-white lowercase'
           : source === 'marketplace'

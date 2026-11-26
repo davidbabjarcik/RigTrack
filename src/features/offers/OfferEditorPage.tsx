@@ -215,7 +215,7 @@ function OfferEditor({ id, initial }: { id: string | null; initial: OfferFields 
         </div>
         {draft.budget !== null && draft.budget > 0 && (
           <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
-            <div className={cn('h-full rounded-full transition-all', remaining !== null && remaining < 0 ? 'bg-destructive' : 'bg-accent')} style={{ width: `${used}%` }} />
+            <div className={cn('h-full w-full origin-left rounded-full transition-transform', remaining !== null && remaining < 0 ? 'bg-destructive' : 'bg-accent')} style={{ transform: `scaleX(${Math.max(0, Math.min(100, used)) / 100})` }} />
           </div>
         )}
       </div>

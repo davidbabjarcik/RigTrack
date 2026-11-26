@@ -64,7 +64,7 @@ function InboxBell({ userId, className }: { userId: string; className?: string }
       >
         <Bell className="size-5" aria-hidden />
         {unread.length > 0 && (
-          <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+          <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-accent-foreground">
             {unread.length > 9 ? '9+' : unread.length}
           </span>
         )}

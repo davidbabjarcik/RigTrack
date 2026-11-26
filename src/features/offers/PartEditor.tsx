@@ -72,7 +72,7 @@ export function PartEditor({ part, index, subIndex, equipment, defaultDays, rema
   return (
     <div className={cn('flex flex-col gap-3 rounded-xl border p-4', isSub ? 'bg-background' : 'bg-surface')}>
       <div className="flex items-center gap-2">
-        <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-accent/15 px-2 text-sm font-bold text-accent">{code}</span>
+        <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-accent/15 px-2 text-sm font-semibold text-accent">{code}</span>
         <Field label={tf('Názov časti {0}', code)} hideLabel className="flex-1" placeholder={isSub ? tx('napr. Ozvučenie') : tx('napr. Kompletné technické zabezpečenie')} maxLength={160} value={part.title} onChange={(e) => set({ title: e.target.value })} />
         <Button variant="ghost" size="sm" aria-label={tf('Posunúť {0} vyššie', code)} onClick={() => onMove(-1)}>
           <ArrowUp className="size-4" aria-hidden />

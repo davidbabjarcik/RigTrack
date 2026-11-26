@@ -11,7 +11,7 @@ export function ObstacleLegend({ obstacles }: Props) {
       {obstacles.map((obstacle, index) => (
         <li key={index} className="flex items-center gap-1.5">
           <span
-            className="inline-flex size-5 shrink-0 items-center justify-center rounded text-[11px] font-bold text-white"
+            className="inline-flex size-5 shrink-0 items-center justify-center rounded text-[11px] font-semibold text-white"
             style={{ backgroundColor: obstacleFill(index) }}
           >
             {obstacleLetter(index)}
