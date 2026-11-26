@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.10
+
+- **Show password**: the password field at sign-in, sign-up and password change has an eye icon – it shows the typed
+  password and hides it again on a second click.
+- **New home page**: a short headline with the stage plot, features in four groups (warehouse and equipment, events,
+  event paperwork, company), larger previews of the synoptic and RF plan and a three-step guide.
+- **Rewritten README** and all screenshots retaken from the demo company in the new look.
+
 ### 12.9
 
 - **A calmer look**: a neutral graphite colour scale in both light and dark mode – dark mode no longer has a blue tint,

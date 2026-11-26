@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { BackendRequired } from '@/components/feedback/BackendRequired'
 import { Button } from '@/components/ui/button'
-import { Field } from '@/components/ui/field'
+import { Field, PasswordField } from '@/components/ui/field'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from './auth-context'
 import { formatRemaining, loginLockStatus, signInGuarded, TURNSTILE_SITE_KEY, type Lock } from './loginGuard'
@@ -199,9 +199,8 @@ function AuthForm() {
           </label>
         )}
         {mode !== 'reset' && (
-          <Field
+          <PasswordField
             label={t('Heslo', 'Password')}
-            type="password"
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
             required
             minLength={mode === 'signup' ? PASSWORD_MIN : undefined}

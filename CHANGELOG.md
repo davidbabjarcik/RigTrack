@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.10 – 26. 11. 2026
+
+- **Zobraziť heslo**: pri prihlásení, vytvorení účtu a zmene hesla je v poli s heslom ikona oka – ukáže napísané
+  heslo a druhým kliknutím ho znova skryje.
+- **Nová úvodná stránka**: krátky nadpis so stage plánom, funkcie v štyroch skupinách (sklad a technika, akcie,
+  podklady k akcii, firma), väčšie ukážky synoptiky a HF plánu a postup v troch krokoch.
+- **Prepísané README** a všetky snímky obrazovky nanovo z ukážkovej firmy v novom vzhľade.
+
 ### 12.9 – 26. 11. 2026
 
 - **Pokojnejší vzhľad**: neutrálna grafitová škála farieb vo svetlom aj tmavom režime – tmavý režim už nemá modrý nádych,

@@ -1,11 +1,14 @@
+import { Eye, EyeOff } from 'lucide-react'
 import {
   useId,
+  useState,
   type InputHTMLAttributes,
   type ReactNode,
   type Ref,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react'
+import { tx } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 const controlClass =
@@ -52,6 +55,29 @@ export function Field({ label, hideLabel, error, className, id, ...props }: Inpu
   return (
     <FieldWrapper id={fieldId} label={label} hideLabel={hideLabel} error={error} className={className}>
       <input id={fieldId} className={cn(controlClass, 'h-11')} {...aria} {...props} />
+    </FieldWrapper>
+  )
+}
+
+/** Heslo s ikonou oka – zobrazí alebo skryje napísané heslo (len v tomto políčku, nikam sa neposiela). */
+export function PasswordField({ label, hideLabel, error, className, id, ...props }: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & Common) {
+  const { fieldId, aria } = useFieldProps(id, error)
+  const [visible, setVisible] = useState(false)
+  return (
+    <FieldWrapper id={fieldId} label={label} hideLabel={hideLabel} error={error} className={className}>
+      <div className="relative">
+        <input id={fieldId} type={visible ? 'text' : 'password'} className={cn(controlClass, 'h-11 pr-11')} autoCapitalize="none" autoCorrect="off" spellCheck={false} {...aria} {...props} />
+        <button
+          type="button"
+          onClick={() => setVisible((value) => !value)}
+          aria-label={visible ? tx('Skryť heslo') : tx('Zobraziť heslo')}
+          aria-pressed={visible}
+          aria-controls={fieldId}
+          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {visible ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
+        </button>
+      </div>
     </FieldWrapper>
   )
 }

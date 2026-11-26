@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { BackendRequired } from '@/components/feedback/BackendRequired'
 import { LoadingScreen } from '@/components/feedback/LoadingScreen'
 import { Button } from '@/components/ui/button'
-import { Field } from '@/components/ui/field'
+import { PasswordField } from '@/components/ui/field'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from './auth-context'
 import { tx, useLang } from '@/lib/i18n'
@@ -44,9 +44,8 @@ function UpdatePasswordForm() {
     <div className="rounded-2xl border bg-surface p-6">
       <h1 className="mb-5 text-xl font-semibold">{tx('Nové heslo')}</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Field
+        <PasswordField
           label={tx('Nové heslo')}
-          type="password"
           autoComplete="new-password"
           required
           minLength={PASSWORD_MIN}
