@@ -1,3 +1,5 @@
+import type { StoredLink } from './links'
+
 // Racky 19" po jednotkách U: návrh racku (rack_designs) a jeho osadenie (rack_slots). 1 U = 44,45 mm.
 
 export const RACK_TYPES = ['shock', 'open', 'desk'] as const
@@ -39,9 +41,11 @@ export type RackDesign = {
   isTemplate: boolean
   version: number
   updatedAt: string
+  /** Prepojenia (12.14) – menia sa len pri uložení osadenia. */
+  links: StoredLink[]
 }
 
-export type RackFields = Omit<RackDesign, 'id' | 'version' | 'updatedAt'>
+export type RackFields = Omit<RackDesign, 'id' | 'version' | 'updatedAt' | 'links'>
 
 export const EMPTY_RACK: RackFields = {
   name: '',

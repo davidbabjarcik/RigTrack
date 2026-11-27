@@ -1,5 +1,6 @@
 import { getSupabase } from '@/lib/supabase/client'
 import { isMissingTable } from '@/lib/supabase/errors'
+import type { StoredLink } from './links'
 import type { RackDesign, RackFields, RackSlot } from './model'
 
 export const rackKeys = {
@@ -24,6 +25,7 @@ type Row = {
   is_template: boolean
   version: number
   updated_at: string
+  links?: StoredLink[] | null
 }
 
 const toRack = (row: Row): RackDesign => ({
@@ -41,6 +43,7 @@ const toRack = (row: Row): RackDesign => ({
   isTemplate: row.is_template,
   version: row.version,
   updatedAt: row.updated_at,
+  links: Array.isArray(row.links) ? row.links : [],
 })
 
 const toRow = (fields: RackFields) => ({
@@ -59,10 +62,13 @@ const toRow = (fields: RackFields) => ({
 
 /** Racky firmy; bez migrácie 0195 null (modul ešte nie je pripravený). */
 export async function fetchRacks(companyId: string): Promise<RackDesign[] | null> {
-  const { data, error } = await getSupabase().from('rack_designs').select(COLUMNS).eq('company_id', companyId).order('name')
+  const load = (columns: string) => getSupabase().from('rack_designs').select(columns).eq('company_id', companyId).order('name')
+  let { data, error } = await load(`${COLUMNS}, links`)
   if (isMissingTable(error, 'rack_designs')) return null
+  // Bez migrácie 0208 (prepojenia) stĺpec links chýba – racky sa načítajú bez neho.
+  if (error) ({ data, error } = await load(COLUMNS))
   if (error) throw error
-  return (data as Row[]).map(toRack)
+  return (data as unknown as Row[]).map(toRack)
 }
 
 export async function createRack(companyId: string, fields: RackFields): Promise<string> {
@@ -129,8 +135,13 @@ export async function fetchSlots(companyId: string, rackId: string): Promise<Rac
 }
 
 /** Uloží celé osadenie naraz; vráti novú verziu. Ak medzitým uložil niekto iný, hodí chybu. */
-export async function saveSlots(rackId: string, expectedVersion: number, slots: Omit<RackSlot, 'id'>[]): Promise<number> {
-  const { data, error } = await getSupabase().rpc('save_rack', { _rack_id: rackId, _expected_version: expectedVersion, _slots: slots })
+export async function saveSlots(rackId: string, expectedVersion: number, slots: Omit<RackSlot, 'id'>[], links: StoredLink[] = []): Promise<number> {
+  let { data, error } = await getSupabase().rpc('save_rack', { _rack_id: rackId, _expected_version: expectedVersion, _slots: slots, _links: links })
+  // Databáza bez migrácie 0208: bez prepojení sa uloží osadenie; s prepojeniami radšej chyba než ich strata.
+  if (error?.code === 'PGRST202') {
+    if (links.length > 0) throw new Error('Prepojenia ešte nie sú v databáze pripravené (migrácia 0208).')
+    ;({ data, error } = await getSupabase().rpc('save_rack', { _rack_id: rackId, _expected_version: expectedVersion, _slots: slots }))
+  }
   if (error) throw error
   return data as number
 }

@@ -18,8 +18,11 @@ import { ACCESSORIES, ACCESSORY_LABELS, SLOT_WIDTH_LABELS, SLOT_WIDTHS, type Acc
 import { kindColor, targetAt, type DropTarget } from './gridUtils'
 import { RackGrid } from './RackGrid'
 import { catalogMatch, RACK_CATEGORIES, rackCategory, withCatalog, type RackCategory } from './library'
+import { cableFor, compatible, estimateLength, fromStored, portsResolver, toStored, type RackLink, type SlotPorts } from './links'
+import { RackLinks, SlotConnections } from './RackLinks'
 
 type Candidate = { id: string; name: string; detail: string; kind: string; category: RackCategory | 'accessory'; maker: string; attributes: EquipmentAttributes; source: { equipmentId?: string; unit?: number | null; catalogId?: string; accessory?: Accessory }; used: boolean }
+type Doc = { slots: FitSlot[]; links: RackLink[] }
 
 let counter = 0
 const nextKey = () => `n${Date.now().toString(36)}${(counter++).toString(36)}`
@@ -28,9 +31,11 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
   const queryClient = useQueryClient()
   const equipment = useQuery({ queryKey: equipmentKeys.list(companyId), queryFn: () => fetchEquipmentList(companyId) })
   const catalog = useCatalog()
-  const [history, setHistory] = useState<{ past: FitSlot[][]; present: FitSlot[]; future: FitSlot[][] }>({ past: [], present: initial, future: [] })
-  const slots = history.present
-  const [saved, setSaved] = useState(initial)
+  // Osadenie a prepojenia spolu (späť / znova vracia oboje).
+  const [history, setHistory] = useState<{ past: Doc[]; present: Doc; future: Doc[] }>(() => ({ past: [], present: { slots: initial, links: fromStored(rack.links, initial, (index) => `l${index}`) }, future: [] }))
+  const slots = history.present.slots
+  const links = history.present.links
+  const [saved, setSaved] = useState(history.present)
   const [version, setVersion] = useState(rack.version)
   const [side, setSide] = useState<'front' | 'rear'>('front')
   const [selected, setSelected] = useState<string | null>(null)
@@ -40,10 +45,19 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
   const [tab, setTab] = useState<'library' | 'accessories'>('library')
   const gridRef = useRef<HTMLDivElement | null>(null)
   const [panelDrag, setPanelDrag] = useState<{ candidate: Candidate; hover: DropTarget | null } | null>(null)
-  const dirty = JSON.stringify(slots) !== JSON.stringify(saved)
+  const dirty = JSON.stringify(history.present) !== JSON.stringify(saved)
 
   const sources: Sources = useMemo(() => ({ equipment: equipment.data ?? [], catalog: catalog.data ?? [] }), [equipment.data, catalog.data])
-  const commit = useCallback((next: FitSlot[]) => setHistory((current) => ({ past: [...current.past, current.present].slice(-100), present: next, future: [] })), [])
+  // Zmena osadenia: prepojenia na odobrané sloty zmiznú.
+  const commit = useCallback(
+    (next: FitSlot[], nextLinks?: RackLink[]) =>
+      setHistory((current) => {
+        const keys = new Set(next.map((slot) => slot.key))
+        const kept = (nextLinks ?? current.present.links).filter((link) => keys.has(link.from) && keys.has(link.to))
+        return { past: [...current.past, current.present].slice(-100), present: { slots: next, links: kept }, future: [] }
+      }),
+    [],
+  )
   const undo = () => setHistory((current) => (current.past.length === 0 ? current : { past: current.past.slice(0, -1), present: current.past[current.past.length - 1], future: [current.present, ...current.future] }))
   const redo = () => setHistory((current) => (current.future.length === 0 ? current : { past: [...current.past, current.present], present: current.future[0], future: current.future.slice(1) }))
 
@@ -71,16 +85,27 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
   }, [dirty])
 
   const save = useMutation({
-    mutationFn: () => saveSlots(rack.id, version, slots.map(({ key: _key, ...slot }) => (void _key, slot))),
+    mutationFn: () => saveSlots(rack.id, version, slots.map(({ key: _key, ...slot }) => (void _key, slot)), toStored(links, slots)),
     onSuccess: async (next) => {
       setVersion(next)
-      setSaved(slots)
+      setSaved({ slots, links })
       await queryClient.invalidateQueries({ queryKey: rackKeys.list(companyId) })
       await queryClient.invalidateQueries({ queryKey: rackKeys.slots(companyId, rack.id) })
     },
   })
 
   const describe = (slot: FitSlot) => slotInfo(slot, sources)
+  const resolve: SlotPorts = portsResolver(describe)
+  const connect = (fromKey: string, fromPort: string, toKey: string, toPort: string) => {
+    const a = slots.find((slot) => slot.key === fromKey)
+    const b = slots.find((slot) => slot.key === toKey)
+    const pa = a && resolve(a).ports.find((port) => port.id === fromPort)
+    const pb = b && resolve(b).ports.find((port) => port.id === toPort)
+    if (!a || !b || !pa || !pb || !compatible(pa, pb)) return
+    commit(slots, [...links, { key: nextKey(), from: fromKey, fromPort, to: toKey, toPort, cable: cableFor(pa, pb), lengthM: estimateLength(a, b), label: '' }])
+  }
+  const updateLink = (key: string, patch: Partial<RackLink>) => commit(slots, links.map((link) => (link.key === key ? { ...link, ...patch } : link)))
+  const removeLink = (key: string) => commit(slots, links.filter((link) => link.key !== key))
   const warnings = rackWarnings(rack, slots, sources)
   const summary = rackSummary(rack, slots, sources)
   const flagged = new Set(warnings.filter((warning) => warning.level === 'warn').flatMap((warning) => warning.keys))
@@ -304,9 +329,12 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
             gridRef={gridRef}
             hover={panelDrag?.hover ?? null}
             preview={panelDrag ? { heightU: Math.max(1, panelDrag.candidate.attributes.rackU ?? 1), width: panelDrag.candidate.attributes.rackWidth ?? 'full' } : null}
+            links={links}
+            resolve={resolve}
           />
         </div>
         <p className="text-center text-xs text-muted-foreground">{tx('Presun: potiahnite zariadenie (na dotykovom displeji ho chvíľu podržte). Späť a znova aj Ctrl+Z / Ctrl+Y.')}</p>
+        <RackLinks slots={slots} links={links} resolve={resolve} onChange={updateLink} onRemove={removeLink} />
       </section>
 
       {/* Vybrané zariadenie, súhrn a varovania */}
@@ -323,6 +351,9 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
               setSelected(null)
             }}
           />
+        ) : null}
+        {current ? (
+          <SlotConnections slot={current} slots={slots} links={links} resolve={resolve} onConnect={connect} onRemove={removeLink} />
         ) : (
           <p className="rounded-xl border border-dashed bg-surface p-3 text-sm text-muted-foreground">{tx('Kliknite na zariadenie v racku – tu ho upravíte (šírka, výška, hmotnosť…).')}</p>
         )}

@@ -23,6 +23,8 @@ import { RackStats } from './RackStats'
 import { rackSummary, rackWarnings, slotInfo, type FitSlot } from './fit'
 import { RACK_RAIL_LABELS, RACK_TYPE_LABELS, rackHeightMm } from './model'
 import { RackGrid } from './RackGrid'
+import { fromStored, portsResolver } from './links'
+import { RackLinks } from './RackLinks'
 
 /** Detail racku: údaje, predok a zadok po U a zoznam osadenia. */
 export function RackDetailPage() {
@@ -71,9 +73,11 @@ export function RackDetailPage() {
       const logo = logoPath ? await fetchLogoBlob(logoPath).then(logoForLightBackground).then((blob) => createImageBitmap(blob)).catch(() => null) : null
       const sources = { equipment: equipment.data ?? [], catalog: catalog.data ?? [] }
       const event = current.eventId ? events.data?.find((item) => item.id === current.eventId) : undefined
+      const pdfSlots: FitSlot[] = (slots.data ?? []).map(({ id: key, ...slot }) => ({ ...slot, key }))
       const blob = await rackPdf({
         rack: current,
-        slots: (slots.data ?? []).map(({ id: key, ...slot }) => ({ ...slot, key })),
+        slots: pdfSlots,
+        links: fromStored(current.links, pdfSlots, (index) => `l${index}`),
         sources,
         companyName: company.companyName,
         logo,
@@ -112,6 +116,8 @@ export function RackDetailPage() {
   const box = rack.caseId ? cases.data?.find((item) => item.id === rack.caseId) : undefined
   const event = rack.eventId ? events.data?.find((item) => item.id === rack.eventId) : undefined
   const list: FitSlot[] = (slots.data ?? []).map(({ id: key, ...slot }) => ({ ...slot, key }))
+  const links = fromStored(rack.links, list, (index) => `l${index}`)
+  const resolve = portsResolver(describe)
   const summary = rackSummary(rack, list, sources)
   const warnings = rackWarnings(rack, list, sources).filter((warning) => warning.level === 'warn')
 
@@ -236,9 +242,12 @@ export function RackDetailPage() {
         {(['front', 'rear'] as const).map((side) => (
           <figure key={side} className="flex flex-col gap-1">
             <figcaption className="text-sm font-medium">{side === 'front' ? tx('Predok') : tx('Zadok')}</figcaption>
-            <RackGrid units={rack.units} slots={list} side={side} selected={null} flagged={new Set()} describe={describe} onSelect={() => undefined} />
+            <RackGrid units={rack.units} slots={list} side={side} selected={null} flagged={new Set()} describe={describe} onSelect={() => undefined} links={links} resolve={resolve} />
           </figure>
         ))}
+      </div>
+      <div className="mt-4">
+        <RackLinks slots={list} links={links} resolve={resolve} readOnly />
       </div>
       {list.length === 0 && (
         <p className="mt-3 text-sm text-muted-foreground">{tx('Rack je zatiaľ prázdny – zariadenia pridáte tlačidlom Upraviť osadenie.')}</p>

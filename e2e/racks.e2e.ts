@@ -138,3 +138,40 @@ test('knižnica racku: kategórie, výrobca, môj materiál a databáza', async 
   await expect(page.getByRole('button', { name: 'Vzorka Z4, U 1–2' })).toBeVisible()
   await expect(page.getByText('3,5 A pri 230 V')).toBeVisible()
 })
+
+test('prepojenia: kábel medzi prístrojmi, súhrn a uloženie', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, {
+    rack_designs: [{ ...rack, links: [{ from: 3, fromPort: 'out-1', to: 2, toPort: 'power', cable: 'power', lengthM: 0.5, label: '' }] }],
+    rack_slots: [
+      slot('s1', 'front', 1, 1, { catalog_id: 'p' }),
+      slot('s2', 'front', 2, 2, { catalog_id: 'a' }),
+      slot('s3', 'front', 4, 1, { accessory: 'pdu' }),
+    ],
+    equipment_catalog: [
+      { id: 'p', kind: 'audio', manufacturer: 'Ukážka', model: 'P1', attributes: { audioType: 'processor', rackU: 1 }, verified: false },
+      { id: 'a', kind: 'audio', manufacturer: 'Ukážka', model: 'Z2', attributes: { audioType: 'amplifier', rackU: 2 }, verified: false },
+    ],
+    'rpc:save_rack': [4],
+  })
+  await page.goto(`/racks/${RACK}/fit`)
+  await expect(page.getByRole('heading', { name: 'Káble (1)' })).toBeVisible()
+  await page.getByRole('button', { name: 'Ukážka Z2, U 2–3' }).click()
+  const connections = page.getByLabel('Prepojenia')
+  await expect(connections.getByText('Napájanie → PDU (napájanie) · Zásuvka 1')).toBeVisible()
+  await connections.getByLabel('Port').selectOption({ label: 'Vstup A' })
+  await connections.getByLabel('Pripojiť k').selectOption({ label: 'Ukážka P1 · Výstup 1' })
+  await connections.getByRole('button', { name: 'Prepojiť' }).click()
+  await expect(page.getByRole('heading', { name: 'Káble (2)' })).toBeVisible()
+  await expect(page.getByText('1× XLR (signálový) 0,5 m · 1× Napájací 0,5 m')).toBeVisible()
+  const saved = page.waitForRequest((request) => request.url().includes('/rpc/save_rack'))
+  await page.getByRole('button', { name: 'Uložiť' }).click()
+  const body = (await saved).postDataJSON() as { _links: unknown[] }
+  expect(body._links).toEqual([
+    { from: 3, fromPort: 'out-1', to: 2, toPort: 'power', cable: 'power', lengthM: 0.5, label: '' },
+    { from: 1, fromPort: 'out-1', to: 2, toPort: 'in-1', cable: 'XLR', lengthM: 0.5, label: '' },
+  ])
+  // Odobratie zariadenia zruší aj jeho káble.
+  await page.getByRole('button', { name: 'Odobrať', exact: true }).click()
+  await expect(page.getByText('Káble: zatiaľ žiadne.', { exact: false })).toBeVisible()
+})

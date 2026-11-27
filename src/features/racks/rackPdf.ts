@@ -3,6 +3,7 @@ import { buildPdf, canvasJpeg, pageSizePt } from '@/features/cases/sheetPdf'
 import { formatDate } from '@/lib/format'
 import { partsOf, rackSummary, rackWarnings, slotInfo, topU, type FitSlot, type Sources } from './fit'
 import { faceShapes, type Shape } from './faces'
+import { CABLE_LABELS, cableSummary, endText, portsResolver, summaryText, type RackLink } from './links'
 import { RACK_RAIL_LABELS, RACK_TYPE_LABELS, rackHeightMm, type RackDesign } from './model'
 
 // PDF racku pre požičovňu / sklad: A4 na výšku pri 300 dpi, čitateľné aj čiernobielo (vzory namiesto farieb).
@@ -17,6 +18,7 @@ const LINE = '#999999'
 export type RackPdfContext = {
   rack: RackDesign
   slots: FitSlot[]
+  links: RackLink[]
   sources: Sources
   companyName: string
   logo: CanvasImageSource | null
@@ -255,6 +257,36 @@ export function rackPages(data: RackPdfContext): HTMLCanvasElement[] {
       y = tableHeader(ctx, header(ctx, data, pages.length + 1))
     }
     y = tableRow(ctx, row, y)
+  }
+
+  // Káble: zoznam prepojení a súhrn pre balenie.
+  if (data.links.length > 0) {
+    const resolve = portsResolver((slot) => slotInfo(slot, data.sources))
+    const lines = [
+      ...data.links.map((link, index) => `${index + 1}. ${endText(data.slots, resolve, link.from, link.fromPort)} → ${endText(data.slots, resolve, link.to, link.toPort)} · ${CABLE_LABELS[link.cable]}${link.lengthM !== null ? ` ${String(link.lengthM).replace('.', ',')} m` : ''}${link.label ? ` · ${link.label}` : ''}`),
+    ]
+    const newPage = () => {
+      pages.push(canvas)
+      ;({ canvas, ctx } = page())
+      y = header(ctx, data, pages.length + 1)
+    }
+    if (y + 220 > H - M) newPage()
+    y += 40
+    font(ctx, 36, 800)
+    ctx.fillText(`Káble (${data.links.length})`, M, y)
+    y += 56
+    font(ctx, 30, 600)
+    ctx.fillText(ellipsize(ctx, `Spolu: ${cableSummary(data.links).map((row) => summaryText(row)).join(', ')}`, W - 2 * M), M, y)
+    y += 54
+    font(ctx, 30, 500)
+    for (const line of lines) {
+      if (y + 46 > H - M - 100) {
+        newPage()
+        font(ctx, 30, 500)
+      }
+      ctx.fillText(ellipsize(ctx, line, W - 2 * M), M, y)
+      y += 46
+    }
   }
 
   if (data.rack.note) {

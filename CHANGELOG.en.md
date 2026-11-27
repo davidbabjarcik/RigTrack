@@ -5,6 +5,18 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.14
+
+- **Connections and cables in the rack**: the selected device has a Connections part – pick its port and only free
+  ports of other devices that can be connected are offered (output to input, power to socket, antenna to antenna…).
+  Cable type (XLR, speakON NL4, power, network, BNC, DMX, video) and length from the distance in U are filled in and
+  can be changed, with a label.
+- **Cables drawn at the rear** coloured by type; the rack detail lists the cables with a packing summary
+  (e.g. 4× speakON NL4 1 m). The rack PDF has the cables and the summary too.
+- Connections are saved together with the fitting (one version, Undo / Redo includes cables); copying a rack to an
+  event or a template keeps them. Removing a device removes its cables.
+- Migration `0208_rack_links.sql`.
+
 ### 12.13
 
 - **Devices in the rack are drawn**: front and rear panel by type – amplifiers with grille, LEDs and display,

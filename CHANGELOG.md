@@ -5,6 +5,18 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.14 – 27. 11. 2026
+
+- **Prepojenia a káble v racku**: pri vybranom zariadení časť Prepojenia – vyberiete jeho port a ponúknu sa len
+  voľné porty iných zariadení, ktoré sa dajú spojiť (výstup do vstupu, napájanie do zásuvky, anténa do antény…).
+  Typ kábla (XLR, speakON NL4, napájací, sieťový, BNC, DMX, video) a dĺžka podľa vzdialenosti v U sa doplnia samé,
+  dajú sa zmeniť, aj s popisom.
+- **Káble nakreslené zozadu** farebne podľa typu, v detaile racku zoznam káblov a súhrn na balenie
+  (napr. 4× speakON NL4 1 m). V PDF racku sú káble so súhrnom tiež.
+- Prepojenia sa ukladajú spolu s osadením (jedna verzia, Späť / Znova vracia aj káble), kópia racku do akcie
+  a šablóny ich berie so sebou. Odobratie zariadenia zruší aj jeho káble.
+- Migrácia `0208_rack_links.sql`.
+
 ### 12.13 – 27. 11. 2026
 
 - **Prístroje v racku nakreslené**: predný aj zadný panel podľa druhu – zosilňovače s mriežkou, LED a displejom,

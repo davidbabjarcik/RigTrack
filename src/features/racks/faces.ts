@@ -32,6 +32,13 @@ const C = {
   vent: '#141414',
 }
 
+/** Počet kanálov HF prijímača / in-ear vysielača podľa modelu (dvojitý, štvorkanálový); úzky = 1, široký = 2. */
+export function channelCount(name: string, width: FaceInput['width']) {
+  if (/\b(ad4q|ad4qe|ulxd4q|slxd4q)\b|em 4|quad/i.test(name)) return 4
+  if (/\b(ad4d|ad4de|ulxd4d|slxd4d|blx88|p10t)\b|em 2|dual|glxd4r/i.test(name)) return 2
+  return width === 'full' ? 2 : 1
+}
+
 /** Tvary predného alebo zadného panela prístroja (prvý tvar je plocha panela). */
 export function faceShapes(input: FaceInput): Shape[] {
   const U = Math.max(1, input.heightU)
@@ -131,9 +138,7 @@ export function faceShapes(input: FaceInput): Shape[] {
     return s
   }
 
-  const name = input.name.toLowerCase()
-  // Počet kanálov HF / in-ear (dvojitý, štvorkanálový podľa modelu).
-  const channels = /\b(4q|ad4q|ulxd4q|slxd4q)|em 4|quad/i.test(name) ? 4 : /\b(ad4d|ulxd4d|slxd4d)|em 2|dual|4d\b|blx88|glxd4r/i.test(name) ? 2 : narrow ? 1 : 2
+  const channels = channelCount(input.name, input.width)
 
   switch (input.category) {
     case 'amp':

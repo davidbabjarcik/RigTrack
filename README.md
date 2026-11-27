@@ -6,7 +6,7 @@
 
 **Sklad, akcie a podklady pre zvukové a svetelné firmy.**
 
-![verzia](https://img.shields.io/badge/verzia-12.13-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-12.14-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -63,6 +63,7 @@ dá sa pridať na plochu a jeden účet obslúži viac firiem – každá vidí 
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **12.14** | Prepojenia a káble medzi prístrojmi v racku |
 | **12.13** | Prístroje v racku nakreslené spredu aj zozadu |
 | **12.12** | Knižnica prístrojov v editore racku – kategórie, výrobca, môj materiál a databáza |
 | **12.11** | Súhrn racku – prístroje, U, hmotnosť a prúd pri 230 V |
@@ -72,7 +73,6 @@ dá sa pridať na plochu a jeden účet obslúži viac firiem – každá vidí 
 | **12.10** | Zobraziť heslo, nová úvodná stránka, README a snímky |
 | **12.9** | Pokojnejší vzhľad – grafitové farby, písmo a úvodná stránka |
 | **12.8.5** | Bez falošnej chyby pri obnove na novú verziu |
-| **12.8.4** | Káble kúpené hotové, minimum len pri spotrebnom materiáli, obnovenie upozornenia po fotke |
 
 Celý zoznam zmien je v [CHANGELOG.md](CHANGELOG.md) a v aplikácii v „Čo je nové“.
 

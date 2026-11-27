@@ -4,6 +4,7 @@ import { partsOf, type FitSlot } from './fit'
 import { DeviceFace } from './DeviceFace'
 import { kindColor, ROW_PX, targetAt, type DropTarget } from './gridUtils'
 import type { RackCategory } from './library'
+import { CABLE_COLORS, type RackLink, type SlotPorts } from './links'
 
 type Props = {
   units: number
@@ -20,10 +21,13 @@ type Props = {
   preview?: { heightU: number; width: FitSlot['width'] } | null
   gridRef?: React.RefObject<HTMLDivElement | null>
   hover?: DropTarget | null
+  /** Káble (kreslia sa v pohľade zozadu). */
+  links?: RackLink[]
+  resolve?: SlotPorts
 }
 
 /** Mriežka racku na úpravu: U zdola, sloty na pozíciách, ťahanie na presun, výber kliknutím. */
-export function RackGrid({ units, slots, side, selected, flagged, describe, onSelect, onMove, preview, gridRef, hover }: Props) {
+export function RackGrid({ units, slots, side, selected, flagged, describe, onSelect, onMove, preview, gridRef, hover, links = [], resolve }: Props) {
   const own = useRef<HTMLDivElement | null>(null)
   const ref = gridRef ?? own
   const [drag, setDrag] = useState<{ key: string; grabU: number; target: DropTarget | null } | null>(null)
@@ -139,8 +143,54 @@ export function RackGrid({ units, slots, side, selected, flagged, describe, onSe
             </button>
           )
         })}
+        {side === 'rear' && resolve && links.length > 0 && <Cables units={units} slots={slots} links={links} resolve={resolve} />}
         {ghost && <div className="pointer-events-none absolute rounded-sm border-2 border-dashed border-accent bg-accent/20" style={place(ghost)} aria-hidden />}
       </div>
     </div>
+  )
+}
+
+/**
+ * Káble zozadu: oblúk od portu k portu (poloha portu podľa poradia v zozname portov). Prístroje osadené spredu sú
+ * zozadu zrkadlovo.
+ */
+function Cables({ units, slots, links, resolve }: { units: number; slots: FitSlot[]; links: RackLink[]; resolve: SlotPorts }) {
+  const height = units * ROW_PX
+  const point = (key: string, portId: string) => {
+    const slot = slots.find((item) => item.key === key)
+    if (!slot) return null
+    const ports = resolve(slot).ports
+    const index = Math.max(0, ports.findIndex((port) => port.id === portId))
+    const [from, to] = partsOf(slot)
+    const [first, last] = slot.side === 'front' ? [5 - to, 5 - from] : [from, to]
+    const left = first / 6
+    const width = (last - first + 1) / 6
+    const fraction = ports.length > 1 ? 0.08 + (0.84 * index) / (ports.length - 1) : 0.5
+    // Zadný panel sa kreslí tak, ako ho vidno zozadu – poradie portov zľava doprava.
+    const x = left + width * fraction
+    const y = height - (slot.bottomU - 1 + slot.heightU / 2) * ROW_PX
+    return { x: x * 1000, y }
+  }
+  return (
+    <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox={`0 0 1000 ${height}`} preserveAspectRatio="none" aria-hidden>
+      {links.map((link) => {
+        const a = point(link.from, link.fromPort)
+        const b = point(link.to, link.toPort)
+        if (!a || !b) return null
+        const sag = Math.min(60, 12 + Math.abs(a.y - b.y) * 0.25)
+        return (
+          <path
+            key={link.key}
+            d={`M ${a.x} ${a.y} C ${a.x} ${a.y + sag}, ${b.x} ${b.y + sag}, ${b.x} ${b.y}`}
+            fill="none"
+            stroke={CABLE_COLORS[link.cable]}
+            strokeWidth={3}
+            strokeLinecap="round"
+            opacity={0.9}
+            vectorEffect="non-scaling-stroke"
+          />
+        )
+      })}
+    </svg>
   )
 }

@@ -95,6 +95,7 @@ export const MIGRATION_PROBES: { migration: string; label: string; table: string
   { migration: '0202', label: 'dopyty na prenájom', table: 'rental_requests', column: 'needed_from' },
   { migration: '0203', label: 'harmonogram a turné', table: 'event_schedule_items', column: 'stage' },
   { migration: '0204', label: 'site plán', table: 'event_site_plans', column: 'routes' },
+  { migration: '0208', label: 'prepojenia v racku', table: 'rack_designs', column: 'links' },
 ]
 
 /** Ktoré migrácie v databáze chýbajú (tabuľka alebo stĺpec neexistuje). Prístup cez RLS nevadí – prázdny výsledok nie je chyba. */

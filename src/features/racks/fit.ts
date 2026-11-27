@@ -44,6 +44,7 @@ export function slotInfo(slot: FitSlot, sources: Sources) {
     name,
     subtitle: subtitle && subtitle !== name ? subtitle : '',
     kind: item?.kind ?? (entry ? entry.kind ?? 'audio' : slot.accessory ? 'accessory' : 'general'),
+    attributes,
     category: slot.accessory ? null : rackCategory(item?.kind ?? entry?.kind ?? 'general', attributes),
     weightKg: slot.weightKg ?? attributes.weightKg ?? null,
     powerW: slot.powerW ?? attributes.powerW ?? null,
