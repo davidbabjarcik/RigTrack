@@ -5,6 +5,15 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.13 – 27. 11. 2026
+
+- **Prístroje v racku nakreslené**: predný aj zadný panel podľa druhu – zosilňovače s mriežkou, LED a displejom,
+  zozadu ventilátory, speakON, XLR, etherCON a powerCON; HF prijímače a in-ear vysielače s displejmi podľa počtu
+  kanálov a anténami BNC; stageboxy s radmi XLR; procesory, mixy, anténne rozbočovače, nabíjačky, napájanie,
+  switche a DMX prevodníky. Doplnky tiež (záslepka, mriežka, police, patch panel, PDU so zásuvkami, šuplík, lampa).
+- **Pohľad zozadu ukáže aj zadné panely** prístrojov osadených spredu (zrkadlovo), pod tým, čo je osadené zozadu.
+- V PDF racku sú kresby panelov svetlo pod názvom, aby ostal čitateľný aj čiernobielo.
+
 ### 12.12 – 27. 11. 2026
 
 - **Knižnica prístrojov v editore racku**: karta Knižnica s kategóriami (stageboxy, mixy, zosilňovače, procesory,

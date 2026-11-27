@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { cn } from '@/lib/utils'
 import { partsOf, type FitSlot } from './fit'
+import { DeviceFace } from './DeviceFace'
 import { kindColor, ROW_PX, targetAt, type DropTarget } from './gridUtils'
+import type { RackCategory } from './library'
 
 type Props = {
   units: number
@@ -10,7 +12,7 @@ type Props = {
   selected: string | null
   flagged: Set<string>
   /** Názov, druh (farba) a podnázov slotu. */
-  describe: (slot: FitSlot) => { name: string; subtitle: string; kind: string }
+  describe: (slot: FitSlot) => { name: string; subtitle: string; kind: string; category?: RackCategory | null }
   onSelect: (key: string | null) => void
   /** Presun slotu ťahaním (myšou hneď, prstom po dlhšom podržaní). */
   onMove?: (key: string, target: DropTarget) => void
@@ -73,8 +75,12 @@ export function RackGrid({ units, slots, side, selected, flagged, describe, onSe
   const ghostSlot = drag ? shown.find((slot) => slot.key === drag.key) : undefined
   const ghost = drag?.target && ghostSlot ? { ...ghostSlot, ...drag.target } : hover && preview ? { heightU: preview.heightU, width: preview.width, ...hover } : null
 
-  const place = (slot: Pick<FitSlot, 'bottomU' | 'heightU' | 'width' | 'col'>) => {
-    const [first, last] = partsOf(slot)
+  // Zozadu sú vidno aj zadné panely prístrojov osadených spredu (zrkadlovo), pod tými, čo sú osadené zozadu.
+  const backs = side === 'rear' ? slots.filter((slot) => slot.side === 'front') : []
+
+  const place = (slot: Pick<FitSlot, 'bottomU' | 'heightU' | 'width' | 'col'>, mirror = false) => {
+    const [from, to] = partsOf(slot)
+    const [first, last] = mirror ? [5 - to, 5 - from] : [from, to]
     return {
       bottom: (slot.bottomU - 1) * ROW_PX + 1,
       height: slot.heightU * ROW_PX - 2,
@@ -96,6 +102,15 @@ export function RackGrid({ units, slots, side, selected, flagged, describe, onSe
         {Array.from({ length: units }, (_, index) => (
           <div key={index} className="pointer-events-none absolute inset-x-0 border-t border-neutral-800" style={{ bottom: index * ROW_PX, height: ROW_PX }} aria-hidden />
         ))}
+        {backs.map((slot) => {
+          const info = describe(slot)
+          return (
+            <div key={`back-${slot.key}`} className="pointer-events-none absolute overflow-hidden rounded-sm border border-neutral-600 opacity-80" style={place(slot, true)} aria-hidden>
+              <DeviceFace category={info.category ?? null} accessory={slot.accessory} side="rear" heightU={slot.heightU} width={slot.width} name={`${info.name} ${info.subtitle}`} />
+              <span className="relative m-0.5 inline-block max-w-[calc(100%-0.25rem)] truncate rounded bg-black/70 px-1 text-[10px] leading-tight text-neutral-300">{info.name}</span>
+            </div>
+          )
+        })}
         {shown.map((slot) => {
           const info = describe(slot)
           return (
@@ -109,8 +124,8 @@ export function RackGrid({ units, slots, side, selected, flagged, describe, onSe
               onPointerUp={cancelPress}
               onPointerLeave={cancelPress}
               className={cn(
-                'absolute flex flex-col justify-center overflow-hidden rounded-sm border-2 px-2 text-left text-xs leading-tight font-medium',
-                kindColor(info.kind),
+                'absolute flex flex-col items-start justify-center overflow-hidden rounded-sm border-2 bg-neutral-800 px-2 text-left text-xs leading-tight font-medium text-white',
+                kindColor(info.kind).split(' ')[0],
                 selected === slot.key && 'ring-2 ring-accent ring-offset-1 ring-offset-neutral-900',
                 flagged.has(slot.key) && 'outline-2 outline-red-500 outline-dashed',
                 drag?.key === slot.key && 'opacity-40',
@@ -118,8 +133,9 @@ export function RackGrid({ units, slots, side, selected, flagged, describe, onSe
               )}
               style={place(slot)}
             >
-              <span className="truncate">{info.name}</span>
-              {info.subtitle && slot.heightU > 1 && <span className="truncate text-[10px] font-normal opacity-75">{info.subtitle}</span>}
+              <DeviceFace category={info.category ?? null} accessory={slot.accessory} side={slot.side === side ? 'front' : 'rear'} heightU={slot.heightU} width={slot.width} name={`${info.name} ${info.subtitle}`} />
+              <span className="relative max-w-full truncate rounded bg-black/70 px-1">{info.name}</span>
+              {info.subtitle && slot.heightU > 1 && <span className="relative mt-0.5 max-w-full truncate rounded bg-black/70 px-1 text-[10px] font-normal text-neutral-300">{info.subtitle}</span>}
             </button>
           )
         })}

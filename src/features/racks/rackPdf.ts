@@ -2,6 +2,7 @@ import { ellipsize, font, INK, sourceSize } from '@/features/cases/canvas'
 import { buildPdf, canvasJpeg, pageSizePt } from '@/features/cases/sheetPdf'
 import { formatDate } from '@/lib/format'
 import { partsOf, rackSummary, rackWarnings, slotInfo, topU, type FitSlot, type Sources } from './fit'
+import { faceShapes, type Shape } from './faces'
 import { RACK_RAIL_LABELS, RACK_TYPE_LABELS, rackHeightMm, type RackDesign } from './model'
 
 // PDF racku pre požičovňu / sklad: A4 na výšku pri 300 dpi, čitateľné aj čiernobielo (vzory namiesto farieb).
@@ -119,12 +120,18 @@ function drawSide(ctx: CanvasRenderingContext2D, data: RackPdfContext, side: 'fr
       }
       ctx.restore()
     }
+    // Kresba panela (displeje, konektory…) svetlo a šedo, aby text ostal čitateľný aj čiernobielo.
+    drawFace(ctx, faceShapes({ category: info.category, accessory: slot.accessory, side: 'front', heightU: slot.heightU, width: slot.width, name: `${info.name} ${info.subtitle}` }), sx, sy, sw, sh, slot.heightU)
     ctx.lineWidth = 4
     ctx.strokeStyle = INK
     ctx.strokeRect(sx, sy, sw, sh)
     ctx.fillStyle = INK
     const size = Math.max(20, Math.min(36, rowH * 0.5))
     font(ctx, size, 700)
+    const label = ellipsize(ctx, info.name, sw - 24)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(sx + 6, sy + Math.max(6, sh / 2 - size / 2 - (info.subtitle && slot.heightU > 1 ? size / 2 : 0)) - 4, ctx.measureText(label).width + 12, size + 8)
+    ctx.fillStyle = INK
     ctx.fillText(ellipsize(ctx, info.name, sw - 24), sx + 12, sy + Math.max(6, sh / 2 - size / 2 - (info.subtitle && slot.heightU > 1 ? size / 2 : 0)))
     if (info.subtitle && slot.heightU > 1) {
       font(ctx, size * 0.75, 500)
@@ -274,4 +281,44 @@ export function rackPages(data: RackPdfContext): HTMLCanvasElement[] {
 export async function rackPdf(data: RackPdfContext): Promise<Blob> {
   const images = await Promise.all(rackPages(data).map(async (canvas) => ({ ...(await canvasJpeg(canvas, 0.92)), page: pageSizePt('A4', false) })))
   return buildPdf(images, pageSizePt('A4', false))
+}
+
+/** Tvary panela do PDF: šedé, priehľadné, orezané na slot. */
+function drawFace(ctx: CanvasRenderingContext2D, shapes: Shape[], sx: number, sy: number, sw: number, sh: number, heightU: number) {
+  const perU = sh / Math.max(1, heightU)
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(sx, sy, sw, sh)
+  ctx.clip()
+  ctx.globalAlpha = 0.35
+  ctx.filter = 'grayscale(1)'
+  // Plochu panela (prvý tvar) vynechá – PDF ostáva svetlé.
+  for (const shape of shapes.slice(1)) {
+    ctx.lineWidth = 2
+    if (shape.t === 'rect') {
+      ctx.fillStyle = shape.fill
+      ctx.fillRect(sx + shape.x * sw, sy + shape.y * perU, shape.w * sw, shape.h * perU)
+      if (shape.stroke) {
+        ctx.strokeStyle = shape.stroke
+        ctx.strokeRect(sx + shape.x * sw, sy + shape.y * perU, shape.w * sw, shape.h * perU)
+      }
+    } else if (shape.t === 'circle') {
+      ctx.beginPath()
+      ctx.arc(sx + shape.x * sw, sy + shape.y * perU, shape.r * perU, 0, Math.PI * 2)
+      ctx.fillStyle = shape.fill
+      ctx.fill()
+      if (shape.stroke) {
+        ctx.strokeStyle = shape.stroke
+        ctx.stroke()
+      }
+    } else {
+      ctx.beginPath()
+      ctx.moveTo(sx + shape.x1 * sw, sy + shape.y1 * perU)
+      ctx.lineTo(sx + shape.x2 * sw, sy + shape.y2 * perU)
+      ctx.strokeStyle = shape.stroke
+      ctx.lineWidth = (shape.width ?? 1) * 2
+      ctx.stroke()
+    }
+  }
+  ctx.restore()
 }

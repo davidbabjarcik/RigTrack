@@ -5,6 +5,16 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.13
+
+- **Devices in the rack are drawn**: front and rear panel by type – amplifiers with grille, LEDs and display,
+  fans, speakON, XLR, etherCON and powerCON at the back; wireless receivers and in-ear transmitters with a display per
+  channel and BNC antennas; stageboxes with rows of XLR; processors, mixers, antenna splitters, chargers, power,
+  switches and DMX nodes. Accessories too (blank, vent, shelf, patch panel, PDU with sockets, drawer, lamp).
+- **The rear view also shows the rear panels** of devices mounted at the front (mirrored), under what is mounted at
+  the rear.
+- The rack PDF has the panel drawings in light grey under the name, so it stays readable in black and white.
+
 ### 12.12
 
 - **Device library in the rack editor**: a Library tab with categories (stageboxes, mixers, amplifiers, processors,

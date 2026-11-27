@@ -1,5 +1,5 @@
 import type { Equipment, EquipmentAttributes } from '@/features/equipment/model'
-import { catalogMatch, withCatalog } from './library'
+import { catalogMatch, rackCategory, withCatalog } from './library'
 import { ACCESSORY_LABELS, type Accessory, type RackDesign, type RackSlot, type SlotWidth } from './model'
 
 // Osadenie racku: polohy v mriežke, údaje zariadení (z techniky / katalógu / ručne), varovania a súhrn.
@@ -44,6 +44,7 @@ export function slotInfo(slot: FitSlot, sources: Sources) {
     name,
     subtitle: subtitle && subtitle !== name ? subtitle : '',
     kind: item?.kind ?? (entry ? entry.kind ?? 'audio' : slot.accessory ? 'accessory' : 'general'),
+    category: slot.accessory ? null : rackCategory(item?.kind ?? entry?.kind ?? 'general', attributes),
     weightKg: slot.weightKg ?? attributes.weightKg ?? null,
     powerW: slot.powerW ?? attributes.powerW ?? null,
     depthMm: slot.depthMm ?? attributes.depthMm ?? null,
