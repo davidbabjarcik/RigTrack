@@ -1,4 +1,4 @@
-import { Cable as CableIcon, Link2, Trash2, X } from 'lucide-react'
+import { Cable as CableIcon, Link2, Trash2, Wand2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { tf, tx } from '@/lib/i18n'
@@ -8,10 +8,24 @@ import { CABLE_COLORS, CABLE_LABELS, CABLES, cableSummary, compatible, endText, 
 const field = 'h-8 rounded-lg border bg-background px-2 text-sm'
 
 /** Zoznam káblov v racku: odkiaľ, kam, typ, dĺžka a popis; súhrn pre balenie. */
-export function RackLinks({ slots, links, resolve, onChange, onRemove, readOnly = false }: { slots: FitSlot[]; links: RackLink[]; resolve: SlotPorts; onChange?: (key: string, patch: Partial<RackLink>) => void; onRemove?: (key: string) => void; readOnly?: boolean }) {
+export function RackLinks({ slots, links, resolve, onChange, onRemove, onAuto, notice, readOnly = false }: { slots: FitSlot[]; links: RackLink[]; resolve: SlotPorts; onChange?: (key: string, patch: Partial<RackLink>) => void; onRemove?: (key: string) => void; onAuto?: () => void; notice?: string; readOnly?: boolean }) {
+  const auto = onAuto && slots.length > 1 && (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button size="sm" variant="outline" onClick={onAuto}>
+        <Wand2 className="size-4" aria-hidden />
+        {tx('Zapojiť automaticky')}
+      </Button>
+      {notice && <span role="status" className="text-sm text-muted-foreground">{notice}</span>}
+    </div>
+  )
   if (links.length === 0) {
     if (readOnly) return null
-    return <p className="rounded-xl border border-dashed bg-surface p-3 text-sm text-muted-foreground">{tx('Káble: zatiaľ žiadne. Vyberte zariadenie a v časti Prepojenia ho spojte s iným.')}</p>
+    return (
+      <div className="flex flex-col gap-2 rounded-xl border border-dashed bg-surface p-3 text-sm text-muted-foreground">
+        <p>{tx('Káble: zatiaľ žiadne. Vyberte zariadenie a v časti Prepojenia ho spojte s iným, alebo ich zapojte automaticky.')}</p>
+        {auto}
+      </div>
+    )
   }
   const summary = cableSummary(links)
   return (
@@ -21,6 +35,7 @@ export function RackLinks({ slots, links, resolve, onChange, onRemove, readOnly 
         {tf('Káble ({0})', links.length)}
       </h2>
       <p className="mb-2 text-sm text-muted-foreground">{summary.map((row) => summaryText(row, tx)).join(' · ')}</p>
+      {auto}
       <ul className="flex flex-col divide-y text-sm">
         {links.map((link) => (
           <li key={link.key} className="flex flex-wrap items-center gap-2 py-2">

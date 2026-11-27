@@ -5,6 +5,14 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.15 – 27. 11. 2026
+
+- **Zapojiť automaticky** v editore racku: voľné porty sa pospájajú podľa bežnej praxe – napájanie každého
+  zariadenia do najbližšej zásuvky PDU / rozvádzača, anténny rozbočovač do HF prijímačov (A do A, B do B), in-ear
+  vysielače do kombinéra, prijímače do vstupov mixu / stageboxu, mix / stagebox do procesora a procesor do
+  zosilňovačov (bez procesora rovno do zosilňovačov), zvyšné výstupy do in-ear a sieť do switchu.
+- Hotové prepojenia ostanú, pridajú sa len nové; počet sa ukáže a Späť ich vráti naraz.
+
 ### 12.14 – 27. 11. 2026
 
 - **Prepojenia a káble v racku**: pri vybranom zariadení časť Prepojenia – vyberiete jeho port a ponúknu sa len

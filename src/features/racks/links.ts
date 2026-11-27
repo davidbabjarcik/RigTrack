@@ -186,3 +186,71 @@ export const portsResolver =
     const info = describe(slot)
     return { name: info.name, ports: portsOf({ category: info.category, accessory: slot.accessory, name: `${info.name} ${info.subtitle}`, width: slot.width, attributes: info.attributes }) }
   }
+
+type End = { slot: FitSlot; port: Port }
+
+/**
+ * Automatické zapojenie voľných portov podľa bežnej praxe:
+ * napájanie do najbližšej zásuvky PDU / rozvádzača, anténny rozbočovač do HF prijímačov (A → A, B → B),
+ * in-ear vysielače do kombinéra, HF prijímače do vstupov mixu / stageboxu, výstupy mixu / stageboxu do procesora
+ * a z procesora do zosilňovačov (bez procesora rovno do zosilňovačov), zvyšné výstupy do in-ear vysielačov
+ * a sieť do switchu. Existujúce prepojenia ostanú; vráti len nové.
+ */
+export function autoWire(slots: FitSlot[], links: RackLink[], resolve: SlotPorts, key: () => string, categoryOf: (slot: FitSlot) => RackCategory | null): RackLink[] {
+  const used = new Set(links.flatMap((link) => [`${link.from}|${link.fromPort}`, `${link.to}|${link.toPort}`]))
+  const added: RackLink[] = []
+  const ordered = [...slots].sort((a, b) => b.bottomU + b.heightU - (a.bottomU + a.heightU) || a.col - b.col)
+  const ends = (filter: (slot: FitSlot) => boolean, port: (port: Port) => boolean): End[] =>
+    ordered.filter(filter).flatMap((slot) => resolve(slot).ports.filter((item) => port(item) && !used.has(`${slot.key}|${item.id}`)).map((item) => ({ slot, port: item })))
+  const link = (from: End, to: End) => {
+    used.add(`${from.slot.key}|${from.port.id}`)
+    used.add(`${to.slot.key}|${to.port.id}`)
+    added.push({ key: key(), from: from.slot.key, fromPort: from.port.id, to: to.slot.key, toPort: to.port.id, cable: cableFor(from.port, to.port), lengthM: estimateLength(from.slot, to.slot), label: '' })
+  }
+  /** Spáruje zdroje a ciele v poradí (každý port najviac raz). */
+  const pair = (sources: End[], targets: End[]) => {
+    const free = targets.filter((target) => !used.has(`${target.slot.key}|${target.port.id}`))
+    for (const source of sources) {
+      if (used.has(`${source.slot.key}|${source.port.id}`)) continue
+      const index = free.findIndex((target) => target.slot.key !== source.slot.key && compatible(source.port, target.port))
+      if (index < 0) continue
+      link(source, free[index])
+      free.splice(index, 1)
+    }
+  }
+  const is = (...categories: RackCategory[]) => (slot: FitSlot) => categories.includes(categoryOf(slot) as RackCategory)
+  const prefix = (text: string) => (port: Port) => port.id.startsWith(text)
+
+  // Napájanie: každé zariadenie do najbližšej voľnej zásuvky.
+  const outlets = (): End[] => ends((slot) => slot.accessory === 'pdu' || categoryOf(slot) === 'power', (port) => port.kind === 'power' && port.dir === 'out')
+  for (const device of ends((slot) => slot.accessory !== 'pdu' && categoryOf(slot) !== 'power', (port) => port.id === 'power')) {
+    const nearest = outlets().sort((a, b) => Math.abs(a.slot.bottomU - device.slot.bottomU) - Math.abs(b.slot.bottomU - device.slot.bottomU))[0]
+    if (nearest) link(nearest, device)
+  }
+
+  // Antény: rozbočovač → prijímače (A do A, B do B); in-ear vysielače → kombinér.
+  const isCombiner = (slot: FitSlot) => resolve(slot).ports.some((port) => port.id === 'ant' && port.dir === 'out')
+  const splitters = (slot: FitSlot) => is('antenna')(slot) && !isCombiner(slot)
+  pair(ends(splitters, prefix('a-')), ends(is('wireless'), (port) => port.id === 'ant-a'))
+  pair(ends(splitters, prefix('b-')), ends(is('wireless'), (port) => port.id === 'ant-b'))
+  pair(ends(is('iem'), prefix('rf-')), ends((slot) => is('antenna')(slot) && isCombiner(slot), prefix('in-')))
+
+  // Signál: prijímače do mixu / stageboxu, mix / stagebox do procesora, procesor do zosilňovačov.
+  const consoles = is('mixer', 'stagebox')
+  pair(ends(is('wireless'), (port) => port.kind === 'audio' && port.dir === 'out'), ends(consoles, (port) => port.kind === 'audio' && port.dir === 'in'))
+  const audioIn = (port: Port) => port.kind === 'audio' && port.dir === 'in'
+  const audioOut = (port: Port) => port.kind === 'audio' && port.dir === 'out'
+  if (ordered.some(is('processor'))) {
+    pair(ends(consoles, audioOut).slice(0, ends(is('processor'), audioIn).length), ends(is('processor'), audioIn))
+    pair(ends(is('processor'), audioOut), ends(is('amp'), audioIn))
+  } else {
+    pair(ends(consoles, audioOut), ends(is('amp'), audioIn))
+  }
+  pair(ends(consoles, audioOut), ends(is('iem'), audioIn))
+
+  // Sieť: všetko so sieťovým portom do switchu.
+  const firstPerSlot = (list: End[]) => list.filter((end, index) => list.findIndex((other) => other.slot.key === end.slot.key) === index)
+  const switched = new Set(links.filter((item) => [item.from, item.to].some((key) => slots.some((slot) => slot.key === key && is('network')(slot)))).flatMap((item) => [item.from, item.to]))
+  pair(firstPerSlot(ends((slot) => !is('network')(slot) && !switched.has(slot.key), (port) => port.kind === 'network')), ends(is('network'), (port) => port.kind === 'network'))
+  return added
+}

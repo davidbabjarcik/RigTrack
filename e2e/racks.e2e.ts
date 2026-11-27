@@ -175,3 +175,24 @@ test('prepojenia: kábel medzi prístrojmi, súhrn a uloženie', async ({ page }
   await page.getByRole('button', { name: 'Odobrať', exact: true }).click()
   await expect(page.getByText('Káble: zatiaľ žiadne.', { exact: false })).toBeVisible()
 })
+
+test('automatické zapojenie a späť', async ({ page }) => {
+  await signIn(page)
+  await fakeBackend(page, {
+    rack_designs: [rack],
+    rack_slots: [slot('s1', 'front', 1, 1, { catalog_id: 'p' }), slot('s2', 'front', 2, 2, { catalog_id: 'a' }), slot('s3', 'front', 4, 1, { accessory: 'pdu' })],
+    equipment_catalog: [
+      { id: 'p', kind: 'audio', manufacturer: 'Ukážka', model: 'P1', attributes: { audioType: 'processor', rackU: 1 }, verified: false },
+      { id: 'a', kind: 'audio', manufacturer: 'Ukážka', model: 'Z2', attributes: { audioType: 'amplifier', rackU: 2 }, verified: false },
+    ],
+  })
+  await page.goto(`/racks/${RACK}/fit`)
+  await page.getByRole('button', { name: 'Zapojiť automaticky' }).click()
+  // 2 napájacie + 4 výstupy procesora do zosilňovača.
+  await expect(page.getByRole('heading', { name: 'Káble (6)' })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'Pridané káble: 6.' })).toBeVisible()
+  await page.getByRole('button', { name: 'Zapojiť automaticky' }).click()
+  await expect(page.getByText('Nie je čo zapojiť – voľné porty k sebe nepasujú.')).toBeVisible()
+  await page.getByRole('button', { name: 'Späť' }).click()
+  await expect(page.getByText('Káble: zatiaľ žiadne.', { exact: false })).toBeVisible()
+})

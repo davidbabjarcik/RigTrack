@@ -18,7 +18,7 @@ import { ACCESSORIES, ACCESSORY_LABELS, SLOT_WIDTH_LABELS, SLOT_WIDTHS, type Acc
 import { kindColor, targetAt, type DropTarget } from './gridUtils'
 import { RackGrid } from './RackGrid'
 import { catalogMatch, RACK_CATEGORIES, rackCategory, withCatalog, type RackCategory } from './library'
-import { cableFor, compatible, estimateLength, fromStored, portsResolver, toStored, type RackLink, type SlotPorts } from './links'
+import { autoWire, cableFor, compatible, estimateLength, fromStored, portsResolver, toStored, type RackLink, type SlotPorts } from './links'
 import { RackLinks, SlotConnections } from './RackLinks'
 
 type Candidate = { id: string; name: string; detail: string; kind: string; category: RackCategory | 'accessory'; maker: string; attributes: EquipmentAttributes; source: { equipmentId?: string; unit?: number | null; catalogId?: string; accessory?: Accessory }; used: boolean }
@@ -106,6 +106,13 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
   }
   const updateLink = (key: string, patch: Partial<RackLink>) => commit(slots, links.map((link) => (link.key === key ? { ...link, ...patch } : link)))
   const removeLink = (key: string) => commit(slots, links.filter((link) => link.key !== key))
+  const [autoNotice, setAutoNotice] = useState('')
+  const wireAll = () => {
+    const added = autoWire(slots, links, resolve, nextKey, (slot) => describe(slot).category)
+    if (added.length === 0) return setAutoNotice(tx('Nie je čo zapojiť – voľné porty k sebe nepasujú.'))
+    commit(slots, [...links, ...added])
+    setAutoNotice(tf('Pridané káble: {0}. Skontrolujte ich; Späť ich vráti.', added.length))
+  }
   const warnings = rackWarnings(rack, slots, sources)
   const summary = rackSummary(rack, slots, sources)
   const flagged = new Set(warnings.filter((warning) => warning.level === 'warn').flatMap((warning) => warning.keys))
@@ -334,7 +341,7 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
           />
         </div>
         <p className="text-center text-xs text-muted-foreground">{tx('Presun: potiahnite zariadenie (na dotykovom displeji ho chvíľu podržte). Späť a znova aj Ctrl+Z / Ctrl+Y.')}</p>
-        <RackLinks slots={slots} links={links} resolve={resolve} onChange={updateLink} onRemove={removeLink} />
+        <RackLinks slots={slots} links={links} resolve={resolve} onChange={updateLink} onRemove={removeLink} onAuto={wireAll} notice={autoNotice} />
       </section>
 
       {/* Vybrané zariadenie, súhrn a varovania */}

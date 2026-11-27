@@ -5,6 +5,14 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.15
+
+- **Connect automatically** in the rack editor: free ports are connected the usual way – every device's power to
+  the nearest PDU / distro socket, the antenna splitter to wireless receivers (A to A, B to B), in-ear transmitters to
+  the combiner, receivers to mixer / stagebox inputs, mixer / stagebox to the processor and the processor to the
+  amplifiers (without a processor straight to the amplifiers), remaining outputs to in-ears and network to the switch.
+- Existing connections stay, only new ones are added; the count is shown and Undo removes them at once.
+
 ### 12.14
 
 - **Connections and cables in the rack**: the selected device has a Connections part – pick its port and only free
