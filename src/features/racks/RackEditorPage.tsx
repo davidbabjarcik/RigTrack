@@ -17,17 +17,9 @@ import { freePlace, newSlot, overlaps, rackSummary, rackWarnings, slotInfo, type
 import { ACCESSORIES, ACCESSORY_LABELS, SLOT_WIDTH_LABELS, SLOT_WIDTHS, type Accessory, type RackDesign, type SlotWidth } from './model'
 import { kindColor, targetAt, type DropTarget } from './gridUtils'
 import { RackGrid } from './RackGrid'
+import { catalogMatch, RACK_CATEGORIES, rackCategory, withCatalog, type RackCategory } from './library'
 
-const FILTERS = [
-  { id: 'all', label: 'Všetko', kinds: [] as string[] },
-  { id: 'audio', label: 'Zvuk', kinds: ['audio', 'dj'] },
-  { id: 'light', label: 'Svetlo', kinds: ['light'] },
-  { id: 'video', label: 'Video', kinds: ['video'] },
-  { id: 'power', label: 'Napájanie', kinds: ['appliance'] },
-  { id: 'network', label: 'Sieť', kinds: ['it'] },
-] as const
-
-type Candidate = { id: string; name: string; detail: string; kind: string; attributes: EquipmentAttributes; source: { equipmentId?: string; unit?: number | null; catalogId?: string; accessory?: Accessory }; used: boolean }
+type Candidate = { id: string; name: string; detail: string; kind: string; category: RackCategory | 'accessory'; maker: string; attributes: EquipmentAttributes; source: { equipmentId?: string; unit?: number | null; catalogId?: string; accessory?: Accessory }; used: boolean }
 
 let counter = 0
 const nextKey = () => `n${Date.now().toString(36)}${(counter++).toString(36)}`
@@ -43,8 +35,9 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
   const [side, setSide] = useState<'front' | 'rear'>('front')
   const [selected, setSelected] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]['id']>('all')
-  const [tab, setTab] = useState<'stock' | 'catalog' | 'accessories'>('stock')
+  const [category, setCategory] = useState<RackCategory | 'all'>('all')
+  const [maker, setMaker] = useState('')
+  const [tab, setTab] = useState<'library' | 'accessories'>('library')
   const gridRef = useRef<HTMLDivElement | null>(null)
   const [panelDrag, setPanelDrag] = useState<{ candidate: Candidate; hover: DropTarget | null } | null>(null)
   const dirty = JSON.stringify(slots) !== JSON.stringify(saved)
@@ -99,35 +92,63 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
     const normal = text.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
     return words.every((word) => normal.includes(word))
   }
-  const kinds = FILTERS.find((item) => item.id === filter)!.kinds as readonly string[]
+  // Knižnica: navrchu technika firmy (Môj materiál), pod ňou modely z databázy techniky s výškou v U.
+  const catalogData = catalog.data ?? []
   const usedPieces = new Set(slots.map((slot) => `${slot.equipmentId}|${slot.unit ?? ''}`))
-  const stock: Candidate[] = (equipment.data ?? [])
-    .filter((item) => !['sold', 'retired', 'archived'].includes(item.status) && (item.attributes.rackU !== undefined || ['audio', 'video', 'it', 'dj', 'appliance', 'light'].includes(item.kind)))
-    .filter((item) => kinds.length === 0 || kinds.includes(item.kind))
-    .filter((item) => matches([item.name, item.manufacturer, item.model].join(' ')))
-    .sort((a, b) => Number(b.attributes.rackU !== undefined) - Number(a.attributes.rackU !== undefined) || a.name.localeCompare(b.name, 'sk'))
-    .flatMap((item): Candidate[] => {
-      const detail = [item.attributes.rackU ? `${item.attributes.rackU} U` : tx('U nezadané'), item.attributes.rackWidth && item.attributes.rackWidth !== 'full' ? tx(SLOT_WIDTH_LABELS[item.attributes.rackWidth]) : ''].filter(Boolean).join(' · ')
+  const detailOf = (attributes: EquipmentAttributes) =>
+    [
+      attributes.rackU ? `${attributes.rackU} U` : tx('U nezadané'),
+      attributes.rackWidth && attributes.rackWidth !== 'full' ? tx(SLOT_WIDTH_LABELS[attributes.rackWidth]) : '',
+      attributes.weightKg !== undefined ? `${String(attributes.weightKg).replace('.', ',')} kg` : '',
+      attributes.powerW !== undefined ? `${attributes.powerW} W` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ')
+  const stockAll: Candidate[] = (equipment.data ?? [])
+    .filter((item) => !['sold', 'retired', 'archived'].includes(item.status))
+    .map((item) => ({ item, attributes: withCatalog(item.attributes, catalogMatch(item, catalogData)) }))
+    .filter(({ item, attributes }) => attributes.rackU !== undefined || ['audio', 'video', 'it', 'dj', 'appliance', 'light'].includes(item.kind))
+    .filter(({ item }) => matches([item.name, item.manufacturer, item.model].join(' ')))
+    .sort((a, b) => Number(b.attributes.rackU !== undefined) - Number(a.attributes.rackU !== undefined) || a.item.name.localeCompare(b.item.name, 'sk'))
+    .flatMap(({ item, attributes }): Candidate[] => {
+      const base = { kind: item.kind, category: rackCategory(item.kind, attributes), maker: item.manufacturer.trim(), attributes }
       if (item.trackUnits && item.unitIds.length > 0) {
-        return item.unitIds.slice(0, 40).map((unit) => ({ id: `${item.id}#${unit}`, name: `${item.name} #${unit}`, detail, kind: item.kind, attributes: item.attributes, source: { equipmentId: item.id, unit }, used: usedPieces.has(`${item.id}|${unit}`) }))
+        return item.unitIds.slice(0, 40).map((unit) => ({ ...base, id: `${item.id}#${unit}`, name: `${item.name} #${unit}`, detail: detailOf(attributes), source: { equipmentId: item.id, unit }, used: usedPieces.has(`${item.id}|${unit}`) }))
       }
-      return [{ id: item.id, name: item.name, detail: [detail, item.quantity > 1 ? `${item.quantity} ks` : ''].filter(Boolean).join(' · '), kind: item.kind, attributes: item.attributes, source: { equipmentId: item.id }, used: !item.quantity || slots.filter((slot) => slot.equipmentId === item.id).length >= item.quantity }]
+      return [{ ...base, id: item.id, name: item.name, detail: [detailOf(attributes), item.quantity > 1 ? `${item.quantity} ks` : ''].filter(Boolean).join(' · '), source: { equipmentId: item.id }, used: !item.quantity || slots.filter((slot) => slot.equipmentId === item.id).length >= item.quantity }]
     })
-    .slice(0, 80)
-  const models: Candidate[] = (catalog.data ?? [])
-    .filter((entry) => entry.attributes.rackU !== undefined && (kinds.length === 0 || kinds.includes(entry.kind)) && matches(`${entry.manufacturer} ${entry.model}`))
-    .slice(0, 60)
-    .map((entry) => ({ id: entry.id, name: [entry.manufacturer, entry.model].filter(Boolean).join(' '), detail: `${entry.attributes.rackU} U`, kind: entry.kind, attributes: entry.attributes, source: { catalogId: entry.id }, used: false }))
+  const modelsAll: Candidate[] = catalogData
+    .filter((entry) => entry.attributes.rackU !== undefined && matches(`${entry.manufacturer} ${entry.model}`))
+    .map((entry) => ({
+      id: entry.id,
+      name: [entry.manufacturer, entry.model].filter(Boolean).join(' '),
+      detail: [detailOf(entry.attributes), entry.verified ? '' : tx('neoverené')].filter(Boolean).join(' · '),
+      kind: entry.kind,
+      category: rackCategory(entry.kind, entry.attributes),
+      maker: entry.manufacturer,
+      attributes: entry.attributes,
+      source: { catalogId: entry.id },
+      used: false,
+    }))
+  const inCategory = (candidate: Candidate) => category === 'all' || candidate.category === category
+  const byMaker = (candidate: Candidate) => !maker || candidate.maker.toLowerCase() === maker.toLowerCase()
+  const counts = new Map<string, number>()
+  for (const candidate of [...stockAll, ...modelsAll].filter(byMaker)) counts.set(candidate.category, (counts.get(candidate.category) ?? 0) + 1)
+  const makers = [...new Map([...stockAll, ...modelsAll].filter(inCategory).filter((candidate) => candidate.maker).map((candidate) => [candidate.maker.toLowerCase(), candidate.maker])).values()].sort((a, b) => a.localeCompare(b, 'sk'))
+  const stock = stockAll.filter(inCategory).filter(byMaker).slice(0, 80)
+  const modelsMatching = modelsAll.filter(inCategory).filter(byMaker)
+  const models = modelsMatching.slice(0, 60)
   const accessories: Candidate[] = ACCESSORIES.filter((accessory) => matches(ACCESSORY_LABELS[accessory])).map((accessory) => ({
     id: accessory,
     name: tx(ACCESSORY_LABELS[accessory]),
     detail: accessory === 'drawer' ? '2 U' : '1 U',
     kind: 'accessory',
+    category: 'accessory',
+    maker: '',
     attributes: { rackU: accessory === 'drawer' ? 2 : 1 },
     source: { accessory },
     used: false,
   }))
-  const list = tab === 'stock' ? stock : tab === 'catalog' ? models : accessories
 
   const add = (candidate: Candidate, at?: DropTarget) => {
     const slot = newSlot(nextKey(), candidate.source, candidate.attributes, { side, bottomU: at?.bottomU ?? 1, col: at?.col })
@@ -184,7 +205,7 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
       {/* Panel: čo pridať */}
       <aside className="flex flex-col gap-2 rounded-xl border bg-surface p-3 lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto" aria-label={tx('Pridať do racku')}>
         <div className="flex gap-1 rounded-lg bg-muted p-1 text-sm" role="tablist">
-          {([['stock', 'Sklad'], ['catalog', 'Databáza'], ['accessories', 'Doplnky']] as const).map(([id, label]) => (
+          {([['library', 'Knižnica'], ['accessories', 'Doplnky']] as const).map(([id, label]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={cn('flex-1 rounded-md px-2 py-1 font-medium', tab === id ? 'bg-surface shadow-sm' : 'text-muted-foreground')}>
               {tx(label)}
             </button>
@@ -194,39 +215,49 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
           <Search className="pointer-events-none absolute top-2.5 left-2 size-4 text-muted-foreground" aria-hidden />
           <input aria-label={tx('Hľadať zariadenie')} className="h-9 w-full rounded-lg border bg-background pr-2 pl-8 text-sm" placeholder={tx('Hľadať…')} value={search} onChange={(event) => setSearch(event.target.value)} />
         </label>
-        {tab !== 'accessories' && (
-          <div className="flex flex-wrap gap-1">
-            {FILTERS.map((item) => (
-              <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => setFilter(item.id)} className={cn('rounded-full border px-2 py-0.5 text-xs', filter === item.id ? 'border-accent bg-accent/15 text-accent' : 'text-muted-foreground')}>
-                {tx(item.label)}
-              </button>
-            ))}
-          </div>
+        {tab === 'library' && (
+          <>
+            <div className="flex flex-wrap gap-1" aria-label={tx('Kategória')}>
+              {[{ id: 'all' as const, label: 'Všetko' }, ...RACK_CATEGORIES.filter((item) => counts.has(item.id) || item.id === category)].map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-pressed={category === item.id}
+                  onClick={() => {
+                    setCategory(item.id)
+                    setMaker('')
+                  }}
+                  className={cn('rounded-full border px-2 py-0.5 text-xs', category === item.id ? 'border-accent bg-accent/15 text-accent' : 'text-muted-foreground')}
+                >
+                  {tx(item.label)}
+                </button>
+              ))}
+            </div>
+            {makers.length > 1 && (
+              <select aria-label={tx('Výrobca')} className="h-8 rounded-lg border bg-background px-2 text-sm" value={maker} onChange={(event) => setMaker(event.target.value)}>
+                <option value="">{tx('Všetci výrobcovia')}</option>
+                {makers.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </>
         )}
         <p className="text-xs text-muted-foreground">{tx('Ťuknite na zariadenie (pridá sa na prvé voľné miesto) alebo ho potiahnite do racku.')}</p>
-        <ul className="flex flex-col gap-1">
-          {list.length === 0 && <li className="text-sm text-muted-foreground">{tab === 'catalog' ? tx('V databáze techniky nič s výškou v U nezodpovedá.') : tx('Nič nezodpovedá.')}</li>}
-          {list.map((candidate) => (
-            <li key={candidate.id}>
-              <button
-                type="button"
-                disabled={candidate.used}
-                onClick={() => add(candidate)}
-                onPointerDown={(event) => {
-                  if (candidate.used || event.pointerType !== 'mouse') return
-                  setPanelDrag({ candidate, hover: null })
-                }}
-                className={cn('flex w-full items-center gap-2 rounded-lg border-l-4 px-2 py-1.5 text-left text-sm hover:bg-muted disabled:opacity-40', kindColor(candidate.kind).split(' ')[0])}
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">{candidate.name}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{candidate.used ? tx('už v racku') : candidate.detail}</span>
-                </span>
-                <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-              </button>
-            </li>
-          ))}
-        </ul>
+        {tab === 'library' ? (
+          <>
+            <h3 className="mt-1 text-xs font-semibold text-muted-foreground">{tx('Môj materiál')}</h3>
+            <CandidateList list={stock} empty={tx('Z vašej techniky nič nezodpovedá.')} onAdd={add} onDrag={(candidate) => setPanelDrag({ candidate, hover: null })} />
+            <h3 className="mt-2 text-xs font-semibold text-muted-foreground">{tx('Databáza techniky')}</h3>
+            <CandidateList list={models} empty={tx('V databáze techniky nič s výškou v U nezodpovedá.')} onAdd={add} onDrag={(candidate) => setPanelDrag({ candidate, hover: null })} />
+            {modelsMatching.length > models.length && <p className="text-xs text-muted-foreground">{tf('Zobrazených {0} z {1} – zúžte hľadanie.', models.length, modelsMatching.length)}</p>}
+            {models.length > 0 && <p className="text-xs text-muted-foreground">{tx('Údaje z databázy sú podľa výrobcov; pri neoverených skontrolujte hmotnosť a príkon.')}</p>}
+          </>
+        ) : (
+          <CandidateList list={accessories} empty={tx('Nič nezodpovedá.')} onAdd={add} onDrag={(candidate) => setPanelDrag({ candidate, hover: null })} />
+        )}
       </aside>
 
       {/* Rack */}
@@ -318,6 +349,34 @@ function Editor({ companyId, rack, initial }: { companyId: string; rack: RackDes
         )}
       </aside>
     </div>
+  )
+}
+
+function CandidateList({ list, empty, onAdd, onDrag }: { list: Candidate[]; empty: string; onAdd: (candidate: Candidate) => void; onDrag: (candidate: Candidate) => void }) {
+  return (
+    <ul className="flex flex-col gap-1">
+      {list.length === 0 && <li className="text-sm text-muted-foreground">{empty}</li>}
+      {list.map((candidate) => (
+        <li key={candidate.id}>
+          <button
+            type="button"
+            disabled={candidate.used}
+            onClick={() => onAdd(candidate)}
+            onPointerDown={(event) => {
+              if (candidate.used || event.pointerType !== 'mouse') return
+              onDrag(candidate)
+            }}
+            className={cn('flex w-full items-center gap-2 rounded-lg border-l-4 px-2 py-1.5 text-left text-sm hover:bg-muted disabled:opacity-40', kindColor(candidate.kind).split(' ')[0])}
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium">{candidate.name}</span>
+              <span className="block truncate text-xs text-muted-foreground">{candidate.used ? tx('už v racku') : candidate.detail}</span>
+            </span>
+            <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+          </button>
+        </li>
+      ))}
+    </ul>
   )
 }
 

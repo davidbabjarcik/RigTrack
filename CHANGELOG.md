@@ -5,6 +5,17 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.12 – 27. 11. 2026
+
+- **Knižnica prístrojov v editore racku**: karta Knižnica s kategóriami (stageboxy, mixy, zosilňovače, procesory,
+  HF prijímače, in-ear vysielače, antény a rozbočovače, nabíjačky, napájanie, sieť, video, svetlo), výberom výrobcu
+  a vyhľadávaním. Navrchu Môj materiál (technika firmy), pod ním modely z databázy techniky.
+- **Údaje do racku v databáze techniky**: bežné zosilňovače, HF prijímače, in-ear vysielače, stageboxy, procesory,
+  rackové mixy, anténne rozbočovače, nabíjačky, rozvádzače, switche a DMX prevodníky majú výšku v U, šírku,
+  hmotnosť, príkon a hĺbku podľa výrobcov (neoverené – v zozname je to vidieť).
+- Technika firmy bez zadanej výšky v U, hmotnosti alebo príkonu ich v racku vezme z rovnakého modelu v databáze –
+  zadané pri technike majú prednosť.
+
 ### 12.11 – 26. 11. 2026
 
 - **Súhrn racku hore**: v editore aj v detaile racku štyri čísla – prístroje (a koľko doplnkov), obsadené U

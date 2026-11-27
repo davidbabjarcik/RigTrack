@@ -5,6 +5,17 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.12
+
+- **Device library in the rack editor**: a Library tab with categories (stageboxes, mixers, amplifiers, processors,
+  wireless receivers, in-ear transmitters, antennas and splitters, chargers, power, network, video, lighting),
+  a manufacturer filter and search. My equipment (the company's gear) on top, models from the equipment database below.
+- **Rack data in the equipment database**: common amplifiers, wireless receivers, in-ear transmitters, stageboxes,
+  processors, rack mixers, antenna splitters, chargers, power distros, switches and DMX nodes have height in U, width,
+  weight, power draw and depth from the manufacturers (unverified – marked in the list).
+- Company equipment without height in U, weight or power draw takes them in the rack from the same model in the
+  database – values entered on the equipment take precedence.
+
 ### 12.11
 
 - **Rack summary at the top**: the rack editor and detail show four figures – devices (and how many accessories),

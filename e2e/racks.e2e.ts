@@ -109,3 +109,32 @@ test('šablóna racku: vloženie do akcie a PDF', async ({ page }) => {
   expect((await copied).postDataJSON()).toEqual({ _rack_id: RACK, _name: 'Ukážkový FOH rack', _as_template: false, _event_id: EVENT })
   await expect(page).toHaveURL(new RegExp(`/racks/${NEW}$`))
 })
+
+test('knižnica racku: kategórie, výrobca, môj materiál a databáza', async ({ page }) => {
+  await signIn(page)
+  const MINE = '00000000-0000-4000-8000-0000000000e4'
+  await fakeBackend(page, {
+    rack_designs: [rack],
+    rack_slots: [],
+    // Vlastná technika bez U – výšku, hmotnosť a príkon doplní rovnaký model z databázy.
+    equipment: [{ id: MINE, company_id: COMPANY_ID, name: 'Ukážkový prijímač', kind: 'audio', manufacturer: 'Ukážka', model: 'R2', quantity: 1, track_units: false, unit_ids: [], status: 'available', photo_path: '', category_id: null, attributes: { audioType: 'wireless' }, updated_at: '2026-11-01T00:00:00Z' }],
+    equipment_catalog: [
+      { id: 'c1', kind: 'audio', manufacturer: 'Ukážka', model: 'R2', attributes: { audioType: 'wireless', rackU: 1, rackWidth: 'half', weightKg: 1.5, powerW: 15 }, verified: false },
+      { id: 'c2', kind: 'audio', manufacturer: 'Vzorka', model: 'Z4', attributes: { audioType: 'amplifier', rackU: 2, weightKg: 12, powerW: 800 }, verified: false },
+      { id: 'c3', kind: 'audio', manufacturer: 'Vzorka', model: 'A8', attributes: { audioType: 'other', rackRole: 'antenna', rackU: 1 }, verified: true },
+    ],
+  })
+  await page.goto(`/racks/${RACK}/fit`)
+  await expect(page.getByRole('heading', { name: 'Môj materiál' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Ukážkový prijímač.*1 U · 1\/2 šírky · 1,5 kg · 15 W/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Zosilňovače' }).click()
+  await expect(page.getByRole('button', { name: /Vzorka Z4.*2 U · 12 kg · 800 W · neoverené/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Ukážkový prijímač/ })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Všetko' }).click()
+  await page.getByLabel('Výrobca').selectOption('Vzorka')
+  await expect(page.getByRole('button', { name: /Vzorka A8/ })).toBeVisible()
+  await expect(page.getByText('Z vašej techniky nič nezodpovedá.')).toBeVisible()
+  await page.getByRole('button', { name: /Vzorka Z4/ }).click()
+  await expect(page.getByRole('button', { name: 'Vzorka Z4, U 1–2' })).toBeVisible()
+  await expect(page.getByText('3,5 A pri 230 V')).toBeVisible()
+})

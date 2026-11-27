@@ -374,6 +374,8 @@ export type EquipmentAttributes = {
   /** 19" rack: výška v U, šírka (celá / 1/2 / 1/3 – napr. prijímače v rack kite), hĺbka v mm, zadné uchytenie. */
   rackU?: number
   rackWidth?: 'full' | 'half' | 'third'
+  /** Kategória v knižnici racku (len z databázy techniky). */
+  rackRole?: string
   depthMm?: number
   rearSupport?: boolean
   /** Nákupná cena jedného kusu (€) a za koľko rokov sa odpíše do nuly. */

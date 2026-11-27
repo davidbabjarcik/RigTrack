@@ -1,4 +1,5 @@
 import type { Equipment, EquipmentAttributes } from '@/features/equipment/model'
+import { catalogMatch, withCatalog } from './library'
 import { ACCESSORY_LABELS, type Accessory, type RackDesign, type RackSlot, type SlotWidth } from './model'
 
 // Osadenie racku: polohy v mriežke, údaje zariadení (z techniky / katalógu / ručne), varovania a súhrn.
@@ -6,7 +7,7 @@ import { ACCESSORY_LABELS, type Accessory, type RackDesign, type RackSlot, type 
 
 export type FitSlot = Omit<RackSlot, 'id'> & { key: string }
 
-type CatalogLike = { id: string; manufacturer: string; model: string; attributes: EquipmentAttributes }
+type CatalogLike = { id: string; kind?: string; manufacturer: string; model: string; attributes: EquipmentAttributes }
 export type Sources = { equipment: Pick<Equipment, 'id' | 'name' | 'manufacturer' | 'model' | 'kind' | 'attributes'>[]; catalog: CatalogLike[] }
 
 export const columnsOf = (width: SlotWidth) => (width === 'full' ? 1 : width === 'half' ? 2 : 3)
@@ -31,7 +32,8 @@ export function overlaps(a: FitSlot, b: FitSlot) {
 export function slotInfo(slot: FitSlot, sources: Sources) {
   const item = slot.equipmentId ? sources.equipment.find((piece) => piece.id === slot.equipmentId) : undefined
   const entry = slot.catalogId ? sources.catalog.find((model) => model.id === slot.catalogId) : undefined
-  const attributes = item?.attributes ?? entry?.attributes ?? {}
+  // Technika firmy bez hmotnosti / príkonu / hĺbky: doplní ich rovnaký model z databázy techniky.
+  const attributes = item ? withCatalog(item.attributes, catalogMatch(item, sources.catalog)) : entry?.attributes ?? {}
   const name = slot.label
     || (slot.accessory ? ACCESSORY_LABELS[slot.accessory] : '')
     || (item ? `${item.name}${slot.unit ? ` #${slot.unit}` : ''}` : '')
@@ -41,7 +43,7 @@ export function slotInfo(slot: FitSlot, sources: Sources) {
   return {
     name,
     subtitle: subtitle && subtitle !== name ? subtitle : '',
-    kind: item?.kind ?? (entry ? 'audio' : slot.accessory ? 'accessory' : 'general'),
+    kind: item?.kind ?? (entry ? entry.kind ?? 'audio' : slot.accessory ? 'accessory' : 'general'),
     weightKg: slot.weightKg ?? attributes.weightKg ?? null,
     powerW: slot.powerW ?? attributes.powerW ?? null,
     depthMm: slot.depthMm ?? attributes.depthMm ?? null,

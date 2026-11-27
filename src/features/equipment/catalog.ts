@@ -24,13 +24,13 @@ export const CATALOG_KEYS = [
   'poleMount', 'subDesign', 'programW', 'maxSplPeakDb', 'sensitivityDb', 'impedanceOhm', 'freqRange', 'freqResponse',
   'coverage', 'crossover', 'biamp', 'hfDriver', 'weightKg', 'boxWidthCm', 'boxDepthCm', 'boxHeightCm', 'dmxModes',
   'ampW2', 'ampW4', 'ampW8', 'ampBridge4', 'ampBridge8', 'lengthM', 'thomannCode', 'compatibleAmps',
-  'ledPanel', 'ledProcessor', 'display',
+  'ledPanel', 'ledProcessor', 'display', 'rackRole',
 ] as const
 
 /** Polia formulára, ktoré katalóg vyplní (rovnaké názvy ako vo formulári techniky). */
 export const CATALOG_FORM_KEYS = [
   // Kód Thomann sa z databázy techniky predvyplní aj do formulára (odkaz na produkt pri technike).
-  ...CATALOG_KEYS.filter((key) => key !== 'ledPanel' && key !== 'ledProcessor' && key !== 'display' && key !== 'compatibleAmps'),
+  ...CATALOG_KEYS.filter((key) => key !== 'ledPanel' && key !== 'ledProcessor' && key !== 'display' && key !== 'compatibleAmps' && key !== 'rackRole'),
   'isLedPanel', 'ledPitchMm', 'ledWidthMm', 'ledHeightMm', 'ledPxW', 'ledPxH', 'ledWeightKg', 'ledMaxW', 'ledAvgW',
   'isLedProcessor', 'isDisplay', 'displayType', 'displayResW', 'displayResH', 'displayDiagonalIn', 'displayLumens',
   'procOutputs', 'procPixels', 'procInputs', 'procChip', 'procControl', 'procHdmi', 'procDvi', 'procSdi', 'procDp',
