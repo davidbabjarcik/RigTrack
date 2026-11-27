@@ -171,12 +171,30 @@ export const summaryText = (row: ReturnType<typeof cableSummary>[number], label:
 
 export type SlotPorts = (slot: FitSlot) => { name: string; ports: Port[] }
 
+const PORT_WORDS = /^(DMX vstup|Napájanie|Výstup|Vstup|Zásuvka|Anténa|Sieť)(.*)$/
+/** Názov portu v jazyku rozhrania (prekladá sa len úvodné slovo: „Výstup 3 (NL4)“ → „Output 3 (NL4)“). */
+export const portLabel = (label: string, translate: (text: string) => string = (text) => text) => {
+  const match = label.match(PORT_WORDS)
+  return match ? `${translate(match[1])}${match[2]}` : label
+}
+
+/** Názov portu len podľa jeho id (zdieľaný rack nemá údaje o prístrojoch): „out-3“ → „Výstup 3“. */
+export function portLabelFromId(id: string, accessory?: string | null) {
+  if (accessory === 'pdu' && /^out-\d+$/.test(id)) return `Zásuvka ${id.slice(4)}`
+  const fixed: Record<string, string> = { power: 'Napájanie', net: 'Sieť', 'net-a': 'Sieť A', 'net-b': 'Sieť B', in: 'Vstup', ant: 'Anténa', 'ant-a': 'Anténa A', 'ant-b': 'Anténa B', 'dmx-in': 'DMX vstup' }
+  if (fixed[id]) return fixed[id]
+  const match = id.match(/^(in|out|rf|a|b|p|port|dmx)-(\d+)$/)
+  if (!match) return id
+  const words: Record<string, string> = { in: 'Vstup ', out: 'Výstup ', rf: 'Anténa ', a: 'Výstup A', b: 'Výstup B', p: 'Patch ', port: 'Port ', dmx: 'DMX ' }
+  return `${words[match[1]]}${match[2]}`
+}
+
 /** Popis konca prepojenia: „Zosilňovač · Výstup 1 (NL4)“. */
-export function endText(slots: FitSlot[], resolve: SlotPorts, key: string, portId: string) {
+export function endText(slots: FitSlot[], resolve: SlotPorts, key: string, portId: string, translate?: (text: string) => string) {
   const slot = slots.find((item) => item.key === key)
   if (!slot) return '?'
   const { name, ports } = resolve(slot)
-  return `${name} · ${ports.find((port) => port.id === portId)?.label ?? portId}`
+  return `${name} · ${portLabel(ports.find((port) => port.id === portId)?.label ?? portId, translate)}`
 }
 
 /** Porty slotov podľa údajov zariadenia (slotInfo). */

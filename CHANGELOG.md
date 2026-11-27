@@ -5,6 +5,13 @@ v **Nastavenia → O aplikácii → Čo je nové**.
 
 ## Čo je nové
 
+### 12.16 – 27. 11. 2026
+
+- **Zdieľaný rack ukazuje aj káble**: príjemca odkazu vidí zoznam prepojení (odkiaľ, kam, typ kábla, dĺžka, popis)
+  a súhrn na balenie (napr. 4× speakON NL4 1 m) z poslednej uloženej verzie.
+- Názvy portov (Vstup, Výstup, Zásuvka, Anténa, Sieť…) sú v anglickom rozhraní po anglicky.
+- Migrácia `0209_shared_rack_links.sql`.
+
 ### 12.15 – 27. 11. 2026
 
 - **Zapojiť automaticky** v editore racku: voľné porty sa pospájajú podľa bežnej praxe – napájanie každého

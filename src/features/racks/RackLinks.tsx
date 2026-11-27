@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { tf, tx } from '@/lib/i18n'
 import type { FitSlot } from './fit'
-import { CABLE_COLORS, CABLE_LABELS, CABLES, cableSummary, compatible, endText, summaryText, type Cable, type RackLink, type SlotPorts } from './links'
+import { CABLE_COLORS, CABLE_LABELS, CABLES, cableSummary, compatible, endText, portLabel, summaryText, type Cable, type RackLink, type SlotPorts } from './links'
 
 const field = 'h-8 rounded-lg border bg-background px-2 text-sm'
 
@@ -41,8 +41,8 @@ export function RackLinks({ slots, links, resolve, onChange, onRemove, onAuto, n
           <li key={link.key} className="flex flex-wrap items-center gap-2 py-2">
             <span className="size-3 shrink-0 rounded-full" style={{ background: CABLE_COLORS[link.cable] }} aria-hidden />
             <span className="min-w-0 flex-1 basis-56">
-              <span className="block break-words">{endText(slots, resolve, link.from, link.fromPort)}</span>
-              <span className="block break-words text-muted-foreground">→ {endText(slots, resolve, link.to, link.toPort)}</span>
+              <span className="block break-words">{endText(slots, resolve, link.from, link.fromPort, tx)}</span>
+              <span className="block break-words text-muted-foreground">→ {endText(slots, resolve, link.to, link.toPort, tx)}</span>
             </span>
             {readOnly ? (
               <span className="text-muted-foreground">
@@ -98,7 +98,7 @@ export function SlotConnections({ slot, slots, links, resolve, onConnect, onRemo
         .filter((other) => other.key !== slot.key)
         .flatMap((other) => {
           const info = resolve(other)
-          return info.ports.filter((port) => !used.has(`${other.key}|${port.id}`) && compatible(own, port)).map((port) => ({ value: `${other.key}|${port.id}`, label: `${info.name} · ${port.label}` }))
+          return info.ports.filter((port) => !used.has(`${other.key}|${port.id}`) && compatible(own, port)).map((port) => ({ value: `${other.key}|${port.id}`, label: `${info.name} · ${portLabel(port.label, tx)}` }))
         })
     : []
   const mine = links.filter((link) => link.from === slot.key || link.to === slot.key)
@@ -113,12 +113,12 @@ export function SlotConnections({ slot, slots, links, resolve, onConnect, onRemo
         <ul className="flex flex-col gap-1">
           {mine.map((link) => {
             const outgoing = link.from === slot.key
-            const ownPort = ports.find((port) => port.id === (outgoing ? link.fromPort : link.toPort))?.label ?? ''
+            const ownPort = portLabel(ports.find((port) => port.id === (outgoing ? link.fromPort : link.toPort))?.label ?? '', tx)
             return (
               <li key={link.key} className="flex items-start gap-2">
                 <span className="mt-1.5 size-2.5 shrink-0 rounded-full" style={{ background: CABLE_COLORS[link.cable] }} aria-hidden />
                 <span className="min-w-0 flex-1 break-words">
-                  {ownPort} → {outgoing ? endText(slots, resolve, link.to, link.toPort) : endText(slots, resolve, link.from, link.fromPort)}
+                  {ownPort} → {outgoing ? endText(slots, resolve, link.to, link.toPort, tx) : endText(slots, resolve, link.from, link.fromPort, tx)}
                 </span>
                 <button type="button" className="rounded p-0.5 text-muted-foreground hover:bg-muted" aria-label={tf('Odpojiť {0}', ownPort)} onClick={() => onRemove(link.key)}>
                   <X className="size-4" aria-hidden />
@@ -142,7 +142,7 @@ export function SlotConnections({ slot, slots, links, resolve, onConnect, onRemo
             >
               {free.map((port) => (
                 <option key={port.id} value={port.id}>
-                  {port.label}
+                  {portLabel(port.label, tx)}
                 </option>
               ))}
             </select>

@@ -196,3 +196,19 @@ test('automatické zapojenie a späť', async ({ page }) => {
   await page.getByRole('button', { name: 'Späť' }).click()
   await expect(page.getByText('Káble: zatiaľ žiadne.', { exact: false })).toBeVisible()
 })
+
+test('zdieľaný rack ukáže káble a súhrn', async ({ page }) => {
+  const slot = (bottom: number, label: string, accessory: string | null = null) => ({ side: 'front', bottom_u: bottom, height_u: 1, width: 'full', col: 0, equipment_id: null, catalog_id: null, accessory, label, weight_kg: null, power_w: null })
+  const rack = { rack: { name: 'Ukážkový rack', rack_type: 'shock', units: 6, depth_mm: null, rails: 'front', note: '' }, slots: [slot(3, 'Ukážkový zosilňovač'), slot(1, 'PDU', 'pdu')] }
+  const doc = {
+    docType: 'rack', recipient: 'Ukážková firma', title: 'Ukážkový rack', version: 2, savedAt: '2026-11-27T09:00:00Z', previousVersion: null, names: {},
+    data: { ...rack, links: [{ from: 1, fromPort: 'power', to: 2, toPort: 'out-1', cable: 'power', lengthM: 0.5, label: '' }] }, previous: null,
+    companyName: 'Ukážková firma', logoPath: '', logoStyle: 'auto', contact: '', event: '', startsOn: null, endsOn: null, venue: '',
+  }
+  await fakeBackend(page, { 'rpc:get_shared_doc': [doc] })
+  await page.goto(`/d/${'c'.repeat(64)}`)
+  await expect(page.getByRole('heading', { name: 'Káble (1)' })).toBeVisible()
+  await expect(page.getByText('1× Napájací 0,5 m')).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'U3 Ukážkový zosilňovač · Napájanie' })).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'U1 PDU (napájanie) – PDU · Zásuvka 1' })).toBeVisible()
+})

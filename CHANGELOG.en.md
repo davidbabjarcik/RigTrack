@@ -5,6 +5,13 @@ are shown in Slovak.
 
 ## What's new
 
+### 12.16
+
+- **A shared rack shows the cables too**: the link recipient sees the list of connections (from, to, cable type,
+  length, label) and a packing summary (e.g. 4× speakON NL4 1 m) from the last saved version.
+- Port names (Input, Output, Socket, Antenna, Network…) are in English in the English interface.
+- Migration `0209_shared_rack_links.sql`.
+
 ### 12.15
 
 - **Connect automatically** in the rack editor: free ports are connected the usual way – every device's power to

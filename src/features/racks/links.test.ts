@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cableFor, cableSummary, compatible, estimateLength, fromStored, portsOf, summaryText, toStored, type RackLink } from './links'
+import { cableFor, cableSummary, compatible, estimateLength, fromStored, portLabel, portLabelFromId, portsOf, summaryText, toStored, type RackLink } from './links'
 
 const ports = (category: Parameters<typeof portsOf>[0]['category'], name = 'Ukážka', width: 'full' | 'half' = 'full') => portsOf({ category, accessory: null, name, width })
 
@@ -51,5 +51,23 @@ describe('prepojenia v racku', () => {
       { cable: 'NL4', lengthM: 2 },
     ])
     expect(rows.map((row) => summaryText(row))).toEqual(['1× XLR (signálový) 1 m', '2× speakON NL4 2 m'])
+  })
+})
+
+describe('názvy portov', () => {
+  it('preloží úvodné slovo a zvyšok nechá', () => {
+    const en: Record<string, string> = { Výstup: 'Output', 'DMX vstup': 'DMX in' }
+    const t = (text: string) => en[text] ?? text
+    expect(portLabel('Výstup 3 (NL4)', t)).toBe('Output 3 (NL4)')
+    expect(portLabel('DMX vstup', t)).toBe('DMX in')
+    expect(portLabel('Port 4', t)).toBe('Port 4')
+  })
+  it('odvodí názov z id portu', () => {
+    expect(portLabelFromId('out-3')).toBe('Výstup 3')
+    expect(portLabelFromId('a-2')).toBe('Výstup A2')
+    expect(portLabelFromId('ant-b')).toBe('Anténa B')
+    expect(portLabelFromId('power')).toBe('Napájanie')
+    expect(portLabelFromId('out-2', 'pdu')).toBe('Zásuvka 2')
+    expect(portLabelFromId('neznámy')).toBe('neznámy')
   })
 })

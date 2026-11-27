@@ -6,6 +6,7 @@ import { fetchLogoForDisplay, type LogoStyle } from '@/features/companies/brandi
 import { logoClasses } from '@/features/companies/logoStyle'
 import { CHANNEL_COLOR_CSS, PATCH_SOURCE_LABELS, STAND_LABELS, type ChannelColor, type PatchSource, type Stand } from '@/features/patch/model'
 import { OUTPUT_KIND_LABELS, type OutputKind } from '@/features/patch/outputs'
+import { CABLE_COLORS, CABLE_LABELS, CABLES, cableSummary as rackCableSummary, portLabelFromId, summaryText } from '@/features/racks/links'
 import { ACCESSORY_LABELS, RACK_TYPE_LABELS, type Accessory, type RackType } from '@/features/racks/model'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -127,7 +128,39 @@ function Rack({ data, previous, names }: { data: SharedRack; previous: SharedRac
         ))}
       </Table>
       <Removed items={removedRows(data.slots, previous?.slots, key).map((slot) => `${units(slot)} ${label(slot)}`)} />
+      <RackCables data={data} label={label} units={units} />
       {data.rack.note && <p className="mt-2 text-sm whitespace-pre-line">{data.rack.note}</p>}
+    </section>
+  )
+}
+
+/** Káble zdieľaného racku: odkiaľ, kam, typ a dĺžka, súhrn na balenie. */
+function RackCables({ data, label, units }: { data: SharedRack; label: (slot: SharedSlot) => string; units: (slot: SharedSlot) => string }) {
+  const links = (data.links ?? []).map((link) => ({ ...link, cable: CABLES.includes(link.cable) ? link.cable : ('other' as const), lengthM: link.lengthM === null || link.lengthM === undefined ? null : Number(link.lengthM) }))
+  if (links.length === 0) return null
+  const end = (index: number, port: string) => {
+    const slot = data.slots[index - 1]
+    return slot ? `${units(slot)} ${label(slot)} · ${portLabelFromId(port, slot.accessory)}` : '?'
+  }
+  const length = (value: number | null) => (value !== null ? `${String(value).replace('.', ',')} m` : '')
+  return (
+    <section className="mt-4">
+      <h2 className="mb-1 font-semibold">Káble ({links.length})</h2>
+      <p className="mb-2 text-sm text-muted-foreground">{rackCableSummary(links).map((row) => summaryText(row)).join(' · ')}</p>
+      <Table head={['Odkiaľ', 'Kam', 'Kábel', 'Dĺžka', 'Popis']}>
+        {links.map((link, index) => (
+          <tr key={index} className="border-t">
+            <td className="px-2 py-1">{end(link.from, link.fromPort)}</td>
+            <td className="px-2 py-1">{end(link.to, link.toPort)}</td>
+            <td className="px-2 py-1 whitespace-nowrap">
+              <span className="mr-1.5 inline-block size-2.5 rounded-full align-middle" style={{ background: CABLE_COLORS[link.cable] }} aria-hidden />
+              {CABLE_LABELS[link.cable]}
+            </td>
+            <td className="px-2 py-1 whitespace-nowrap">{length(link.lengthM)}</td>
+            <td className="px-2 py-1 text-muted-foreground">{link.label}</td>
+          </tr>
+        ))}
+      </Table>
     </section>
   )
 }

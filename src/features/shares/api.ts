@@ -1,3 +1,4 @@
+import type { StoredLink } from '@/features/racks/links'
 import type { RfChannel, RfSettings } from '@/features/rfplan/rf'
 import type { MapView } from '@/features/siteplan/geo'
 import type { SiteMarker, SiteRoute } from '@/features/siteplan/model'
@@ -85,7 +86,7 @@ export function shareState(share: Pick<DocShare, 'revokedAt' | 'expiresOn'>, tod
 export type SharedInput = { channel: number; name: string; source: string; equipment_id: string | null; stagebox: string; stagebox_input: number | null; phantom: boolean; stand: string; insert_note: string; color: string; note: string }
 export type SharedOutput = { number: number; name: string; kind: string; mix: string; destination: string; equipment_id: string | null; stereo: boolean; note: string }
 export type SharedSlot = { side: 'front' | 'rear'; bottom_u: number; height_u: number; width: string; col: number; equipment_id: string | null; catalog_id: string | null; accessory: string | null; label: string; weight_kg: number | null; power_w: number | null }
-export type SharedRack = { rack: { name: string; rack_type: string; units: number; depth_mm: number | null; rails: string; note: string }; slots: SharedSlot[] }
+export type SharedRack = { rack: { name: string; rack_type: string; units: number; depth_mm: number | null; rails: string; note: string }; slots: SharedSlot[]; links?: StoredLink[] }
 export type SharedIoList = { inputs: SharedInput[]; outputs: SharedOutput[] }
 export type SharedScheduleItem = { id: string; day: string; starts_at: string; ends_at: string | null; stage: string; kind: string; title: string; note: string }
 export type SharedSchedule = { items: SharedScheduleItem[] }

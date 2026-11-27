@@ -6,7 +6,7 @@
 
 **Sklad, akcie a podklady pre zvukové a svetelné firmy.**
 
-![verzia](https://img.shields.io/badge/verzia-12.15-f59e0b)
+![verzia](https://img.shields.io/badge/verzia-12.16-f59e0b)
 ![PWA](https://img.shields.io/badge/PWA-mobil%20aj%20PC-0ea5e9)
 ![React](https://img.shields.io/badge/React-TypeScript-3178c6)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ecf8e)
@@ -63,6 +63,7 @@ dá sa pridať na plochu a jeden účet obslúži viac firiem – každá vidí 
 
 | Verzia | Čo pribudlo |
 |---|---|
+| **12.16** | Káble v zdieľanom racku, názvy portov po anglicky |
 | **12.15** | Automatické zapojenie káblov v racku |
 | **12.14** | Prepojenia a káble medzi prístrojmi v racku |
 | **12.13** | Prístroje v racku nakreslené spredu aj zozadu |
@@ -72,7 +73,6 @@ dá sa pridať na plochu a jeden účet obslúži viac firiem – každá vidí 
 | **12.10.2** | Cases a racky v jednej položke menu |
 | **12.10.1** | 2FA v autentifikátore pod názvom RigTrack |
 | **12.10** | Zobraziť heslo, nová úvodná stránka, README a snímky |
-| **12.9** | Pokojnejší vzhľad – grafitové farby, písmo a úvodná stránka |
 
 Celý zoznam zmien je v [CHANGELOG.md](CHANGELOG.md) a v aplikácii v „Čo je nové“.
 
